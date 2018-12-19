@@ -13,7 +13,7 @@ class H5zZfp(MakefilePackage):
     homepage = "http://h5z-zfp.readthedocs.io/en/latest"
     git      = "https://github.com/LLNL/H5Z-ZFP.git"
 
-    version('develop', tag='master')
+    version('develop', branch='master')
     version('0.8.0', commit='af165c4')
     version('0.7.0', commit='58ac811')
 
