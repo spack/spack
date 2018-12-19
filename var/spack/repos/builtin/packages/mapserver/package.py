@@ -18,10 +18,8 @@ class Mapserver(CMakePackage):
 
     version('7.2.1', sha256='9459a7057d5a85be66a41096a5d804f74665381186c37077c94b56e784db6102')
 
-    variant('python', default=False,
-            description='Enable Python mapscript support')
-    variant('curl', default=False,
-            description='Enable Curl HTTP support (required for wms/wfs client, and remote SLD)')
+    variant('python', default=False, description='Enable Python mapscript support')
+    variant('curl', default=False, description='Enable Curl HTTP support (required for wms/wfs client, and remote SLD)')
     variant('ruby', default=False, description='Enable Ruby mapscript support')
     variant('java', default=False, description='Enable Java mapscript support')
     variant('perl', default=False, description='Enable Perl mapscript support')
@@ -54,7 +52,7 @@ class Mapserver(CMakePackage):
         sitepackages = os.path.join(self.spec.prefix.lib,
                                     pyversiondir,
                                     "site-packages")
-        filter_file('\${PYTHON_SITE_PACKAGES}',
+        filter_file(r'\${PYTHON_SITE_PACKAGES}',
                     sitepackages,
                     'mapscript/python/CMakeLists.txt')
 
