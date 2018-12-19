@@ -81,7 +81,7 @@ class Zoltan(Package):
                                .format(spec['metis'].prefix.lib))
             if '+int64' in spec['metis']:
                 config_args.append('--with-id-type=ulong')
-            if '~int64' in spec['metis']:
+            else:
                 config_args.append('--with-id-type=uint')
 
         if '+mpi' in spec:
