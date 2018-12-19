@@ -35,7 +35,7 @@ class Dakota(CMakePackage):
             description='Enables the build of shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
 
-    # Generic 'lapack' dependency won't work, dakota requires
+    # Generic 'lapack' provider won't work, dakota searches for
     # 'LAPACKConfig.cmake' or 'lapack-config.cmake' on the path
     depends_on('netlib-lapack')
 
