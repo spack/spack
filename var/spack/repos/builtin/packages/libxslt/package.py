@@ -21,19 +21,37 @@ class Libxslt(AutotoolsPackage):
     version('1.1.28', '9667bf6f9310b957254fdcf6596600b7')
     version('1.1.26', 'e61d0364a30146aaa3001296f853b2b9')
 
-    variant('crypto',  default=True,
-            description='Build libexslt with crypto support')
+    variant('crypto', default=True, description='Build libexslt with crypto support')
+    variant('python', default=False, description='Build Python bindings')
 
-    depends_on("libiconv")
-    depends_on("libxml2")
-    depends_on("xz")
-    depends_on("zlib")
-    depends_on("libgcrypt", when="+crypto")
+    depends_on('pkgconfig@0.9.0:', type='build')
+    depends_on('libiconv')
+    depends_on('libxml2')
+    depends_on('libxml2+python', when='+python')
+    depends_on('xz')
+    depends_on('zlib')
+    depends_on('libgcrypt', when='+crypto')
+
+    extends('python+shared', when='+python')
 
     def configure_args(self):
         args = []
-        if '~crypto' in self.spec:
-            args.append('--without-crypto')
-        else:
+
+        if '+crypto' in self.spec:
             args.append('--with-crypto')
+        else:
+            args.append('--without-crypto')
+
+        if '+python' in self.spec:
+            args.append('--with-python={0}'.format(self.spec['python'].home))
+        else:
+            args.append('--without-python')
+
         return args
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def import_module_test(self):
+        if '+python' in self.spec:
+            with working_dir('spack-test', create=True):
+                python('-c', 'import libxslt')
