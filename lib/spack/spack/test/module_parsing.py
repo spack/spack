@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import pytest
 import subprocess
 import os
@@ -58,6 +39,7 @@ def save_env():
 
 def test_get_path_from_module(save_env):
     lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
+             'prepend-path CRAY_LD_LIBRARY_PATH /path/to/lib',
              'setenv MOD_DIR /path/to',
              'setenv LDFLAGS -Wl,-rpath/path/to/lib',
              'setenv LDFLAGS -L/path/to/lib',
@@ -67,7 +49,6 @@ def test_get_path_from_module(save_env):
         module_func = '() { eval `echo ' + line + ' bash filler`\n}'
         os.environ['BASH_FUNC_module()'] = module_func
         path = get_path_from_module('mod')
-
         assert path == '/path/to'
 
     os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
@@ -77,6 +58,8 @@ def test_get_path_from_module(save_env):
 
 
 def test_get_path_from_module_contents():
+    # A line with "MODULEPATH" appears early on, and the test confirms that it
+    # is not extracted as the package's path
     module_show_output = """
 os.environ["MODULEPATH"] = "/path/to/modules1:/path/to/modules2";
 ----------------------------------------------------------------------------
@@ -94,6 +77,16 @@ prepend_path("MANPATH","/path/to/cmake/cmake-3.9.2/share/man")
     module_show_lines = module_show_output.split('\n')
     assert (get_path_from_module_contents(module_show_lines, 'cmake-3.9.2') ==
             '/path/to/cmake-3.9.2')
+
+
+def test_pkg_dir_from_module_name():
+    module_show_lines = ['setenv FOO_BAR_DIR /path/to/foo-bar']
+
+    assert (get_path_from_module_contents(module_show_lines, 'foo-bar') ==
+            '/path/to/foo-bar')
+
+    assert (get_path_from_module_contents(module_show_lines, 'foo-bar/1.0') ==
+            '/path/to/foo-bar')
 
 
 def test_get_argument_from_module_line():

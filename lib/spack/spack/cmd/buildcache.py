@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import argparse
 
 import llnl.util.tty as tty
@@ -50,7 +31,7 @@ def setup_parser(subparser):
     create.add_argument('-u', '--unsigned', action='store_true',
                         help="create unsigned buildcache" +
                              " tarballs for testing")
-    create.add_argument('-a', '--allow_root', action='store_true',
+    create.add_argument('-a', '--allow-root', action='store_true',
                         help="allow install root string in binary files " +
                              "after RPATH substitution")
     create.add_argument('-k', '--key', metavar='key',
@@ -69,7 +50,7 @@ def setup_parser(subparser):
                          help="overwrite install directory if it exists.")
     install.add_argument('-m', '--multiple', action='store_true',
                          help="allow all matching packages ")
-    install.add_argument('-a', '--allow_root', action='store_true',
+    install.add_argument('-a', '--allow-root', action='store_true',
                          help="allow install root string in binary files " +
                               "after RPATH substitution")
     install.add_argument('-u', '--unsigned', action='store_true',
@@ -77,7 +58,7 @@ def setup_parser(subparser):
                               " tarballs for testing")
     install.add_argument(
         'packages', nargs=argparse.REMAINDER,
-        help="specs of packages to install biuldache for")
+        help="specs of packages to install buildcache for")
     install.set_defaults(func=installtarball)
 
     listcache = subparsers.add_parser('list', help=listspecs.__doc__)
@@ -254,6 +235,7 @@ def install_tarball(spec, args):
             tty.msg('Installing buildcache for spec %s' % spec.format())
             bindist.extract_tarball(spec, tarball, args.allow_root,
                                     args.unsigned, args.force)
+            spack.hooks.post_install(spec)
             spack.store.store.reindex()
         else:
             tty.die('Download of binary cache file for spec %s failed.' %

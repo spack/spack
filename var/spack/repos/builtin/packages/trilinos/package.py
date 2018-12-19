@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import sys
 from spack import *
@@ -77,12 +58,14 @@ class Trilinos(CMakePackage):
             description='Build python wrappers')
 
     # Build options
+    variant('complex', default=False,
+            description='Enable complex numbers in Trilinos')
+    variant('explicit_template_instantiation',  default=True,
+            description='Enable explicit template instantiation (ETI)')
+    variant('float', default=False,
+            description='Enable single precision (float) numbers in Trilinos')
     variant('fortran',      default=True,
             description='Compile with Fortran support')
-    variant('instantiate',  default=True,
-            description='Compile with explicit instantiation')
-    variant('instantiate_cmplx', default=False,
-            description='Compile with explicit instantiation for complex')
     variant('openmp',       default=False,
             description='Enable OpenMP')
     variant('shared',       default=True,
@@ -111,7 +94,7 @@ class Trilinos(CMakePackage):
             description='Compile with parallel-netcdf')
     variant('suite-sparse', default=True,
             description='Compile with SuiteSparse solvers')
-    variant('superlu-dist', default=True,
+    variant('superlu-dist', default=False,
             description='Compile with SuperluDist solvers')
     variant('superlu',      default=False,
             description='Compile with SuperLU solvers')
@@ -261,8 +244,21 @@ class Trilinos(CMakePackage):
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
     # deprecated SuperLUDist v3.3 together with an Amesos patch is working.
     conflicts('+superlu-dist', when='@11.4.1:11.14.3')
+    # see https://github.com/trilinos/Trilinos/issues/3566
+    conflicts('+superlu-dist', when='+float+amesos2+explicit_template_instantiation^superlu-dist@5.3.0:')
+    # Amesos, conflicting types of double and complex SLU_D
+    # see
+    # https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
+    # and
+    # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
+    conflicts('+superlu-dist', when='+complex+amesos2')
     # PnetCDF was only added after v12.10.1
     conflicts('+pnetcdf', when='@0:12.10.1')
+    # https://github.com/trilinos/Trilinos/issues/2994
+    conflicts(
+        '+shared', when='+stk platform=darwin',
+        msg='Cannot build Trilinos with STK as a shared library on Darwin.'
+    )
 
     # ###################### Dependencies ##########################
 
@@ -303,13 +299,12 @@ class Trilinos(CMakePackage):
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
-    # FIXME: concretizer bug? 'hl' req by netcdf is affecting this code.
+    # We need hdf5+hl to match with netcdf during concretization
     depends_on('hdf5+hl+mpi', when='+hdf5')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
-    patch('superlu_dist_v5.4.0.patch', when='@develop')
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
@@ -582,13 +577,7 @@ class Trilinos(CMakePackage):
             ])
 
         if '+superlu-dist' in spec:
-            # Amesos, conflicting types of double and complex SLU_D
-            # see
-            # https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
-            # and
-            # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
             options.extend([
-                '-DTeuchos_ENABLE_COMPLEX:BOOL=OFF',
                 '-DKokkosTSQR_ENABLE_Complex:BOOL=OFF'
             ])
             options.extend([
@@ -650,7 +639,7 @@ class Trilinos(CMakePackage):
             ])
         else:
             options.extend([
-                '-DTPL_ENABLE_GGNS:BOOL=OFF'
+                '-DTPL_ENABLE_CGNS:BOOL=OFF'
             ])
 
         # ################# Miscellaneous Stuff ######################
@@ -678,19 +667,34 @@ class Trilinos(CMakePackage):
                     '-DTrilinos_ENABLE_Fortran=ON'
                 ])
 
-        # Explicit instantiation
-        if '+instantiate' in spec:
+        float_s = 'ON' if '+float' in spec else 'OFF'
+        complex_s = 'ON' if '+complex' in spec else 'OFF'
+        complex_float_s = 'ON' if ('+complex' in spec and
+                                   '+float' in spec) else 'OFF'
+        if '+teuchos' in spec:
             options.extend([
-                '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON'
+                '-DTeuchos_ENABLE_COMPLEX=%s' % complex_s,
+                '-DTeuchos_ENABLE_FLOAT=%s' % float_s
             ])
-            if '+tpetra' in spec:
-                options.extend([
-                    '-DTpetra_INST_DOUBLE:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG:BOOL=ON'
-                    '-DTpetra_INST_COMPLEX_DOUBLE=%s' % (
-                        'ON' if '+instantiate_cmplx' in spec else 'OFF'
-                    )
-                ])
+
+        # Explicit Template Instantiation (ETI) in Tpetra
+        # NOTE: Trilinos will soon move to fixed std::uint64_t for GO and
+        # std::int32_t or std::int64_t for local.
+        options.append(
+            '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=%s' % (
+                'ON' if '+explicit_template_instantiation' in spec else 'OFF'
+            )
+        )
+
+        if '+explicit_template_instantiation' in spec and '+tpetra' in spec:
+            options.extend([
+                '-DTpetra_INST_DOUBLE:BOOL=ON',
+                '-DTpetra_INST_INT_LONG:BOOL=ON',
+                '-DTpetra_INST_COMPLEX_DOUBLE=%s' % complex_s,
+                '-DTpetra_INST_COMPLEX_FLOAT=%s' % complex_float_s,
+                '-DTpetra_INST_FLOAT=%s' % float_s,
+                '-DTpetra_INST_SERIAL=ON'
+            ])
 
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):

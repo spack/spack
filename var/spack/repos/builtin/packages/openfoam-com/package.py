@@ -1,27 +1,10 @@
-##############################################################################
-# Copyright (c) 2017-2018 Mark Olesen, OpenCFD Ltd.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file was authored by Mark Olesen <mark.olesen@esi-group.com>
-# and is released as part of spack under the LGPL license.
-# LLNL-CODE-647188
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
-#
-# License
-# -------
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# Author: Mark Olesen <mark.olesen@esi-group.com>
 #
 # Legal Notice
 # ------------
@@ -63,7 +46,7 @@ import re
 import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications
 import llnl.util.tty as tty
 
 
@@ -489,9 +472,14 @@ class OpenfoamCom(Package):
            Where needed, apply filter as an alternative to normal patching."""
         add_extra_files(self, self.common, self.assets)
 
-        # Avoid WM_PROJECT_INST_DIR for ThirdParty, site or jobControl.
-        #
-        # Filtering: bashrc,cshrc (using a patch is less flexible)
+    @when('@:1806')
+    def patch(self):
+        """Adjust OpenFOAM build for spack.
+           Where needed, apply filter as an alternative to normal patching."""
+        add_extra_files(self, self.common, self.assets)
+
+        # Avoid WM_PROJECT_INST_DIR for ThirdParty
+        # This modification is non-critical
         edits = {
             'WM_THIRD_PARTY_DIR':
             r'$WM_PROJECT_DIR/ThirdParty  #SPACK: No separate third-party',
@@ -501,18 +489,10 @@ class OpenfoamCom(Package):
             posix=join_path('etc', 'bashrc'),
             cshell=join_path('etc', 'cshrc'))
 
-        # Filtering: settings
-        edits = {
-            'FOAM_EXT_LIBBIN': '#SPACK: No separate third-party',  # ie, unset
-        }
-        rewrite_environ_files(  # etc/config.{csh,sh}/settings
-            edits,
-            posix=join_path('etc', 'config.sh', 'settings'),
-            cshell=join_path('etc', 'config.csh', 'settings'))
-
-        # The following filtering is non-vital. It simply prevents 'site' dirs
-        # from the the wrong level (likely non-existent anyhow) from being
-        # added to PATH, LD_LIBRARY_PATH.
+        # The following filtering is non-critical.
+        # It simply prevents 'site' dirs at the wrong level
+        # (likely non-existent anyhow) from being added to
+        # PATH, LD_LIBRARY_PATH.
         for rcdir in ['config.sh', 'config.csh']:
             rcfile = join_path('etc', rcdir, 'settings')
             if os.path.isfile(rcfile):
@@ -652,15 +632,43 @@ class OpenfoamCom(Package):
         builder = Executable(self.build_script)
         builder(*args)
 
-    def install(self, spec, prefix):
-        """Install under the projectdir"""
+    def install_write_location(self):
+        """Set the installation location (projectdir) in bashrc,cshrc."""
+        mkdirp(self.projectdir)
+
+        # Filtering: bashrc, cshrc
+        edits = {
+            'WM_PROJECT_DIR': self.projectdir,
+        }
+        etc_dir = join_path(self.projectdir, 'etc')
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            edits,
+            posix=join_path(etc_dir, 'bashrc'),
+            cshell=join_path(etc_dir, 'cshrc'))
+
+    @when('@:1806')
+    def install_write_location(self):
+        """Set the installation location (projectdir) in bashrc,cshrc.
+        In 1806 and earlier, had WM_PROJECT_INST_DIR as the prefix
+        directory where WM_PROJECT_DIR was installed.
+        """
         mkdirp(self.projectdir)
         projdir = os.path.basename(self.projectdir)
+
         # Filtering: bashrc, cshrc
         edits = {
             'WM_PROJECT_INST_DIR': os.path.dirname(self.projectdir),
             'WM_PROJECT_DIR': join_path('$WM_PROJECT_INST_DIR', projdir),
         }
+        etc_dir = join_path(self.projectdir, 'etc')
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            edits,
+            posix=join_path(etc_dir, 'bashrc'),
+            cshell=join_path(etc_dir, 'cshrc'))
+
+    def install(self, spec, prefix):
+        """Install under the projectdir"""
+        mkdirp(self.projectdir)
 
         # All top-level files, except spack build info and possibly Allwmake
         if '+source' in spec:
@@ -701,11 +709,7 @@ class OpenfoamCom(Package):
                 ignore=ignore,
                 symlinks=True)
 
-        etc_dir = join_path(self.projectdir, 'etc')
-        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
-            edits,
-            posix=join_path(etc_dir, 'bashrc'),
-            cshell=join_path(etc_dir, 'cshrc'))
+        self.install_write_location()
         self.install_links()
 
     def install_links(self):
