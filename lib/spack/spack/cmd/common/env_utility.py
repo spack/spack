@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import shlex
 
 import llnl.util.tty as tty
 import spack.build_environment as build_environment
@@ -26,6 +27,9 @@ def setup_parser(subparser):
         help="dump a pickled source-able environment to FILE"
     )
     subparser.add_argument(
+        '-c', '--command', dest='build_command', default=None,
+        help="command to run in the build environment")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         metavar='spec [--] [cmd]...',
         help="specs of package environment to emulate")
@@ -40,23 +44,7 @@ def emulate_env_utility(cmd_name, context, args):
     if not args.spec:
         tty.die("spack %s requires a spec." % cmd_name)
 
-    # Specs may have spaces in them, so if they do, require that the
-    # caller put a '--' between the spec and the command to be
-    # executed.  If there is no '--', assume that the spec is the
-    # first argument.
-    sep = '--'
-    if sep in args.spec:
-        s = args.spec.index(sep)
-        spec = args.spec[:s]
-        cmd = args.spec[s + 1:]
-    else:
-        spec = args.spec[0]
-        cmd = args.spec[1:]
-
-    if not spec:
-        tty.die("spack %s requires a spec." % cmd_name)
-
-    specs = spack.cmd.parse_specs(spec, concretize=False)
+    specs = spack.cmd.parse_specs(args.spec, concretize=False)
     if len(specs) > 1:
         tty.die("spack %s only takes one spec." % cmd_name)
     spec = specs[0]
@@ -76,8 +64,9 @@ def emulate_env_utility(cmd_name, context, args):
             "Pickling a source-able environment to {0}".format(args.pickle))
         pickle_environment(args.pickle)
 
-    if cmd:
+    if args.build_command:
         # Execute the command with the new environment
+        cmd = shlex.split(args.build_command)
         os.execvp(cmd[0], cmd)
 
     elif not bool(args.pickle or args.dump):

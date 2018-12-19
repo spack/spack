@@ -12,8 +12,7 @@ build_env = SpackCommand('build-env')
 
 
 @pytest.mark.parametrize('pkg', [
-    ('zlib',),
-    ('zlib', '--')
+    ('zlib',)
 ])
 @pytest.mark.usefixtures('config')
 def test_it_just_runs(pkg):
