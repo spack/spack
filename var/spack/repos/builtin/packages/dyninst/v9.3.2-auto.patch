@@ -5,7 +5,7 @@ syntax.
 
 
 diff --git a/dyninstAPI/src/BPatch.C b/dyninstAPI/src/BPatch.C
-index ebf7db0..49fe69f 100644
+index ebf7db0c4..49fe69f9a 100644
 --- a/dyninstAPI/src/BPatch.C
 +++ b/dyninstAPI/src/BPatch.C
 @@ -166,16 +166,16 @@ BPatch::BPatch()
@@ -30,7 +30,7 @@ index ebf7db0..49fe69f 100644
      }
      delete sTypes;
 diff --git a/dyninstAPI/src/BPatch_collections.C b/dyninstAPI/src/BPatch_collections.C
-index f4e2986..9a7ca39 100644
+index f4e2986a3..129f8b74a 100644
 --- a/dyninstAPI/src/BPatch_collections.C
 +++ b/dyninstAPI/src/BPatch_collections.C
 @@ -172,12 +172,12 @@ BPatch_typeCollection::~BPatch_typeCollection()
@@ -45,13 +45,13 @@ index f4e2986..9a7ca39 100644
  
 -    for(const auto& t: typesByID) {
 -        t.second->decrRefCount();
-+    for(auto t = typesByName.begin(); t != typesByName.end(); ++t) {
++    for(auto t = typesByID.begin(); t != typesByID.end(); ++t) {
 +        t->second->decrRefCount();
      }
  }
  
 diff --git a/symtabAPI/src/Collections.C b/symtabAPI/src/Collections.C
-index 7431dd6..43c339f 100644
+index 7431dd6bf..43c339f45 100644
 --- a/symtabAPI/src/Collections.C
 +++ b/symtabAPI/src/Collections.C
 @@ -318,12 +318,12 @@ typeCollection::typeCollection() :
