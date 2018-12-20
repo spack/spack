@@ -13,11 +13,11 @@ class R3d(MakefilePackage):
     homepage = "https://github.com/devonmpowell/r3d"
     url      = "https://github.com/devonmpowell/r3d.git"
 
-    version('181219', git=url, commit='47308f68c782ed3227d3dab1eff24d41f6421f21')
+    version('2018-12-19', git=url, commit='47308f68c782ed3227d3dab1eff24d41f6421f21')
 
     variant("test",  default=False, description="Build R3D regression tests")
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
 
         make_args = [
             'CC={0}'.format(spack_cc),
@@ -25,18 +25,23 @@ class R3d(MakefilePackage):
 
         make('libr3d.a', *make_args)
 
+        if '+test' in spec:
+            with working_dir('tests'):
+                make('all', *make_args)
+
+
+    def install(self, spec, prefix):
+
         # R3D does not have an install target so create our own here.
         mkdirp(prefix.include)
-        _my_headers = find('.', '*.h', recursive=False)
-        for _my_header in _my_headers:
-            install(_my_header, prefix.include)
+        my_headers = find('.', '*.h', recursive=False)
+        for my_header in my_headers:
+            install(my_header, prefix.include)
         mkdirp(prefix.lib)
         install('libr3d.a', prefix.lib)
 
         if '+test' in spec:
-
             with working_dir('tests'):
-                make('all', *make_args)
 
                 # R3D does not have an install target so create our own here.
                 mkdirp(prefix.test)
