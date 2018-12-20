@@ -53,6 +53,7 @@ class Dyninst(CMakePackage):
 
     patch('stat_dysect.patch', when='+stat_dysect')
     patch('stackanalysis_h.patch', when='@9.2.0')
+    patch('v9.3.2-auto.patch', when='@9.3.2 %gcc@:4.7.99')
 
     # Versions 9.3.x used cotire, but have no knob to turn it off.
     # Cotire has no real use for one-time builds and can break
