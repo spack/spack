@@ -255,7 +255,7 @@ class OperatingSystem(object):
         clist = [comp for cl in compiler_lists for comp in cl]
         return clist
 
-    def find_compiler(self, cmp_cls, *path):
+    def find_compiler(self, cmp_cls, *search_paths):
         """Try to find the given type of compiler in the user's
            environment. For each set of compilers found, this returns
            compiler objects with the cc, cxx, f77, fc paths and the
@@ -268,24 +268,24 @@ class OperatingSystem(object):
         """
         dicts = mp.parmap(
             lambda t: cmp_cls._find_matches_in_path(*t),
-            [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(path),
-             (cmp_cls.cxx_names, cmp_cls.cxx_version) + tuple(path),
-             (cmp_cls.f77_names, cmp_cls.f77_version) + tuple(path),
-             (cmp_cls.fc_names,  cmp_cls.fc_version)  + tuple(path)])
+            [('cc',) + tuple(search_paths), ('cxx',) + tuple(search_paths),
+             ('f77',) + tuple(search_paths), ('fc',) + tuple(search_paths)])
 
-        all_keys = set()
-        for d in dicts:
-            all_keys.update(d)
+        all_keys = set(key for d in dicts for key in d)
+
+        # Skip compilers with unknown version
+        def has_known_version(x):
+            """Returns True if the key has not an unknown version."""
+            version, _, _ = x
+            return version != 'unknown'
+
+        valid_keys = filter(has_known_version, all_keys)
 
         compilers = {}
-        for k in all_keys:
-            ver, pre, suf = k
+        for k in valid_keys:
+            ver, _, _ = k
 
-            # Skip compilers with unknown version.
-            if ver == 'unknown':
-                continue
-
-            paths = tuple(pn[k] if k in pn else None for pn in dicts)
+            paths = tuple(pn.get(k, None) for pn in dicts)
             spec = spack.spec.CompilerSpec(cmp_cls.name, ver)
 
             if ver in compilers:

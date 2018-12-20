@@ -249,37 +249,58 @@ class Compiler(object):
         return cls.default_version(fc)
 
     @classmethod
-    def _find_matches_in_path(cls, compiler_names, detect_version, *path):
-        """Finds compilers in the paths supplied.
+    def _find_matches_in_path(cls, compiler_language, *search_paths):
+        """Finds compilers for a given language in the paths supplied.
 
-           Looks for all combinations of ``compiler_names`` with the
-           ``prefixes`` and ``suffixes`` defined for this compiler
-           class.  If any compilers match the compiler_names,
-           prefixes, or suffixes, uses ``detect_version`` to figure
-           out what version the compiler is.
+        Looks for all combinations of ``compiler_names`` with the
+        ``prefixes`` and ``suffixes`` defined for this compiler
+        class.  If any compilers match the compiler_names,
+        prefixes, or suffixes, uses ``detect_version`` to figure
+        out what version the compiler is.
 
-           This returns a dict with compilers grouped by (prefix,
-           suffix, version) tuples.  This can be further organized by
-           find().
+        Args:
+            compiler_language (str): language of the compiler (either
+                'cc', 'cxx', 'f77' or 'fc')
+
+            *search_paths (list of paths): paths where to look for a
+                compiler
+
+        Returns:
+            Dictionary with compilers grouped by (version, prefix, suffix)
+            tuples.
         """
+        def is_accessible_dir(x):
+            """Returns True if the argument is an accessible directory."""
+            return os.path.isdir(x) and os.access(x, os.R_OK | os.X_OK)
+
+        # Select accessible directories
+        search_directories = filter(is_accessible_dir, search_paths)
+
+        # Get compiler names and the callback to detect their versions
+        compiler_names = getattr(cls, '{0}_names'.format(compiler_language))
+        detect_version = getattr(cls, '{0}_version'.format(compiler_language))
+
+        # Compile all the regular expressions used for files beforehand
         prefixes = [''] + cls.prefixes
         suffixes = [''] + cls.suffixes
+        regexp_fmt = r'^({0}){1}({2})$'
+        search_regexps = [
+            re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
+            for prefix, name, suffix in
+            itertools.product(prefixes, compiler_names, suffixes)
+        ]
 
+        # Select only the files matching a regexp
         checks = []
-        for directory in path:
-            if not (os.path.isdir(directory) and
-                    os.access(directory, os.R_OK | os.X_OK)):
-                continue
-
-            files = os.listdir(directory)
-            for exe in files:
-                full_path = os.path.join(directory, exe)
-
-                prod = itertools.product(prefixes, compiler_names, suffixes)
-                for pre, name, suf in prod:
-                    regex = r'^(%s)%s(%s)$' % (pre, re.escape(name), suf)
-
-                    match = re.match(regex, exe)
+        for d in search_directories:
+            # Only select actual files, use the full path
+            files = filter(
+                os.path.isfile, [os.path.join(d, f) for f in os.listdir(d)]
+            )
+            for full_path in files:
+                file = os.path.basename(full_path)
+                for regexp in search_regexps:
+                    match = regexp.match(file)
                     if match:
                         key = (full_path,) + match.groups() + (detect_version,)
                         checks.append(key)
