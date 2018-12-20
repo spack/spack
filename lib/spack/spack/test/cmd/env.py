@@ -735,33 +735,3 @@ def test_env_activate_view_fails(
     """Sanity check on env activate to make sure it requires shell support"""
     out = env('activate', 'test')
     assert "To initialize spack's shell commands:" in out
-
-
-def test_env_activate_deactivate_in_shell(
-    tmpdir, mock_stage, mock_fetch, install_mockery
-):
-    base_dir = tmpdir.mkdir('base')
-    env_dir = base_dir.join('env')
-    view_dir = base_dir.join('view')
-
-    setup_script = os.path.join(spack.paths.share_path, 'setup-env.sh')
-
-    cmds = ''
-    cmds += 'cd %s;' % base_dir
-    cmds += '. %s;' % setup_script
-    cmds += 'spack env create -d %s --with-view %s;' % (env_dir, view_dir)
-    cmds += 'spack -E %s install --fake mpileaks;' % env_dir
-    cmds += 'spack env activate -pd %s;' % env_dir
-    cmds += 'echo "PATH is $PATH";'
-    cmds += 'spack env deactivate;'
-    cmds += 'echo "PATH is $PATH";'
-
-    subshell = sp.Popen(cmds, stdout=sp.PIPE, stderr=sp.STDOUT,
-                        executable='/bin/bash', shell=True)
-    subshell.wait()
-    output, _ = subshell.communicate()
-    lines = filter(lambda x: x.startswith('PATH is'), output.split('\n'))
-
-    assert len(lines) == 2
-    assert str(view_dir) in lines[0]
-    assert str(view_dir) not in lines[1]
