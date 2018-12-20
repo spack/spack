@@ -32,15 +32,27 @@ RUN pacman -Sy --noconfirm                                     \
         sudo         tcl                                       \
  && echo 'nobody ALL=(ALL) NOPASSWD: ALL' >                    \
         /etc/sudoers.d/nobody-sudo                             \
- && sudo -u nobody git clone --depth 1                         \
-        https://aur.archlinux.org/lua-posix.git /tmp/lua-posix \
- && sudo -u nobody git clone --depth 1                         \
-        https://aur.archlinux.org/lmod.git /tmp/lmod           \
+ && sudo -u nobody git clone                                   \
+        'https://aur.archlinux.org/lua-std-_debug.git'         \
+        '/tmp/lua-std-_debug'                                  \
+ && sudo -u nobody git clone                                   \
+        'https://aur.archlinux.org/lua-std-normalize.git'      \
+        '/tmp/lua-std-normalize'                               \
+ && sudo -u nobody git clone                                   \
+        'https://aur.archlinux.org/lua-posix.git'              \
+        '/tmp/lua-posix'                                       \
+ && (  cd /tmp/lua-std-_debug                                  \
+ &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
+ && (  cd /tmp/lua-std-normalize                               \
+ &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
  && (  cd /tmp/lua-posix                                       \
-    && sudo -u nobody makepkg -si --asdeps --noconfirm )       \
+ &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
+ && sudo -u nobody git clone                                   \
+        'https://aur.archlinux.org/lmod.git' '/tmp/lmod'       \
  && (  cd /tmp/lmod                                            \
-    && sudo -u nobody makepkg -si --noconfirm )                \
- && rm -rf /tmp/lua-posix /tmp/lmod /etc/sudoers.d/nobody-sudo
+ &&    sudo -u nobody makepkg -si --noconfirm )                \
+ && rm -rf /tmp/lua-std-_debug /tmp/lua-std-normalize          \
+           /tmp/lmod /etc/sudoers.d/nobody-sudo
 
 MASK [[ $DISTRO =~ (centos|rhel.*) ]]
 RUN yum update -y
