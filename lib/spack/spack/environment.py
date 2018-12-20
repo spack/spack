@@ -755,11 +755,19 @@ class Environment(object):
 
     def _shell_vars(self):
         updates = [
-            ('PATH', ['bin'])
+            ('PATH', ['bin']),
+            ('MANPATH', ['man', 'share/man']),
+            ('ACLOCAL_PATH', ['share/aclocal']),
+            ('LD_LIBRARY_PATH', ['lib', 'lib64']),
+            ('LIBRARY_PATH', ['lib', 'lib64']),
+            ('CPATH', ['include']),
+            ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig']),
+            ('CMAKE_PREFIX_PATH', ['']),
         ]
         path_updates = list()
         for var, subdirs in updates:
-            paths = list(os.path.join(self._view_path, x) for x in subdirs)
+            paths = filter(lambda x: os.path.exists(x),
+                           list(os.path.join(self._view_path, x) for x in subdirs))
             path_updates.append((var, paths))
         return path_updates
 
