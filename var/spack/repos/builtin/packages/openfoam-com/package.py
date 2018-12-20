@@ -264,6 +264,7 @@ class OpenfoamCom(Package):
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')  # Needs credentials
+    version('1812', '6a315687b3601eeece7ff7c7aed3d9a5')
     version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
     version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
@@ -575,6 +576,7 @@ class OpenfoamCom(Package):
                 'METIS_ARCH_PATH': spec['metis'].prefix,
             }
 
+        # ParaView_INCLUDE_DIR is not used in 1812, but has no ill-effect
         if '+paraview' in spec:
             pvmajor = 'paraview-{0}'.format(spec['paraview'].version.up_to(2))
             self.etc_config['paraview'] = [
