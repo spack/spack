@@ -729,7 +729,9 @@ def test_env_updates_view_force_remove(
             os.listdir(str(view_dir.join('.spack'))) == [])
 
 
-def test_env_activate_view_fails(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_activate_view_fails(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
     """Sanity check on env activate to make sure it requires shell support"""
     out = env('activate', 'test')
     assert "To initialize spack's shell commands:" in out
@@ -749,7 +751,7 @@ def test_env_activate_deactivate_in_shell(
     cmds += '. %s;' % setup_script
     cmds += 'spack env create -d %s --with-view %s;' % (env_dir, view_dir)
     cmds += 'spack -E %s install --fake mpileaks;' % env_dir
-    cmds += 'spack env activate -vpd %s;' % env_dir
+    cmds += 'spack env activate -pd %s;' % env_dir
     cmds += 'echo "PATH is $PATH";'
     cmds += 'spack env deactivate;'
     cmds += 'echo "PATH is $PATH";'

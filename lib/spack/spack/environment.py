@@ -24,8 +24,7 @@ import spack.config
 from spack.spec import Spec
 from spack.filesystem_view import YamlFilesystemView
 
-from spack.util.environment import (
-    BashShellPathModifications, CshShellPathModifications)
+from spack.util.environment import EnvironmentModifications
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -125,7 +124,6 @@ def activate(
             cmds += 'if (! $?SPACK_OLD_PROMPT ) '
             cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
             cmds += 'set prompt="%s ${prompt}";\n' % prompt
-        shell_modifications = CshShellPathModifications()
     else:
         if 'color' in os.environ['TERM'] and prompt:
             prompt = colorize('@G{%s} ' % prompt, color=True)
@@ -136,12 +134,9 @@ def activate(
             cmds += 'if [ -z "${SPACK_OLD_PS1}" ]; then\n'
             cmds += 'export SPACK_OLD_PS1="${PS1}"; fi;\n'
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
-        shell_modifications = BashShellPathModifications()
 
     if add_view and env._view_path:
-        env.add_view_to_shell(shell_modifications)
-        for cmd in shell_modifications.as_shell_commands():
-            cmds += cmd + ';\n'
+        cmds += env.add_view_to_shell(shell)
 
     return cmds
 
@@ -174,7 +169,6 @@ def deactivate(shell='sh'):
         cmds += 'set prompt="$SPACK_OLD_PROMPT" && '
         cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
         cmds += 'unalias despacktivate;\n'
-        shell_modifications = CshShellPathModifications()
     else:
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
         cmds += 'unalias despacktivate;\n'
@@ -182,11 +176,8 @@ def deactivate(shell='sh'):
         cmds += 'export PS1="$SPACK_OLD_PS1";\n'
         cmds += 'unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
         cmds += 'fi;\n'
-        shell_modifications = BashShellPathModifications()
 
-    _active_environment.rm_view_from_shell(shell_modifications)
-    for cmd in shell_modifications.as_shell_commands():
-        cmds += cmd + ';\n'
+    cmds += _active_environment.rm_view_from_shell(shell)
 
     tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
     _active_environment = None
@@ -771,15 +762,19 @@ class Environment(object):
             path_updates.append((var, paths))
         return path_updates
 
-    def add_view_to_shell(self, shell_modifications):
+    def add_view_to_shell(self, shell):
+        env_mod = EnvironmentModifications()
         for var, paths in self._shell_vars():
             for path in paths:
-                shell_modifications.prepend_path(var, path)
+                env_mod.prepend_path(var, path)
+        return env_mod.shell_modifications(shell)
 
-    def rm_view_from_shell(self, shell_modifications):
+    def rm_view_from_shell(self, shell):
+        env_mod = EnvironmentModifications()
         for var, paths in self._shell_vars():
             for path in paths:
-                shell_modifications.remove_path(var, path)
+                env_mod.remove_path(var, path)
+        return env_mod.shell_modifications(shell)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.

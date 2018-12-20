@@ -54,12 +54,19 @@ def env_activate_setup_parser(subparser):
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to activate the environment")
 
+    view_options = subparser.add_mutually_exclusive_group()
+    view_options.add_argument(
+        '-v', '--with-view', action='store_const', dest='with_view',
+        const=True, default=True,
+        help="Update PATH etc. with associated view")
+    view_options.add_argument(
+        '-V', '--without-view', action='store_const', dest='with_view',
+        const=False, default=True,
+        help="Do not update PATH etc. with associated view")
+
     subparser.add_argument(
         '-d', '--dir', action='store_true', default=False,
         help="force spack to treat env as a directory, not a name")
-    subparser.add_argument(
-        '-v', '--with-view', action='store_true', default=False,
-        help="Update PATH etc. with associated view")
     subparser.add_argument(
         '-p', '--prompt', action='store_true', default=False,
         help="decorate the command line prompt when activating")
