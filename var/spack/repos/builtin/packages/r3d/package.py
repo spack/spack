@@ -29,7 +29,6 @@ class R3d(MakefilePackage):
             with working_dir('tests'):
                 make('all', *make_args)
 
-
     def install(self, spec, prefix):
 
         # R3D does not have an install target so create our own here.
