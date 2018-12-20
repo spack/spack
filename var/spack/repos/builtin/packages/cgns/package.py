@@ -13,7 +13,10 @@ class Cgns(CMakePackage):
 
     homepage = "http://cgns.github.io/"
     url      = "https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz"
+    git      = "https://github.com/CGNS/CGNS"
 
+    version('develop', branch='develop')
+    version('master', branch='master')
     version('3.3.1', '65c55998270c3e125e28ec5c3742e15d')
     version('3.3.0', '64e5e8d97144c1462bee9ea6b2a81d7f')
 
