@@ -11,7 +11,7 @@ class PyH5py(PythonPackage):
     HDF5 library from Python."""
 
     homepage = "http://www.h5py.org/"
-    url      = "https://pypi.io/packages/source/h/h5py/h5py-2.8.0.tar.gz"
+    url      = "https://pypi.io/packages/source/h/h5py/h5py-2.9.0.tar.gz"
 
     import_modules = ['h5py', 'h5py._hl']
    
