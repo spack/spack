@@ -13,6 +13,7 @@ import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.tty.color import colorize
 
 import spack.error
 import spack.repo
@@ -23,6 +24,8 @@ import spack.config
 from spack.spec import Spec
 from spack.filesystem_view import YamlFilesystemView
 
+from spack.util.environment import (
+    BashShellPathModifications, CshShellPathModifications)
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -82,7 +85,9 @@ def validate_env_name(name):
     return name
 
 
-def activate(env, use_env_repo=False):
+def activate(
+    env, use_env_repo=False, add_view=True, shell='sh', prompt=None
+):
     """Activate an environment.
 
     To activate an environment, we add its configuration scope to the
@@ -93,8 +98,12 @@ def activate(env, use_env_repo=False):
         env (Environment): the environment to activate
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
+        add_view (bool): generate commands to add view to path variables
+        shell (string): One of `sh`, `csh`.
+        prompt (string): string to add to the users prompt, or None
 
-    TODO: Add support for views here.  Activation should set up the shell
+    Returns:
+        cmds: Shell commands to activate environment.
     TODO: environment to use the activated spack environment.
     """
     global _active_environment
@@ -106,13 +115,45 @@ def activate(env, use_env_repo=False):
 
     tty.debug("Using environmennt '%s'" % _active_environment.name)
 
+    # Construct the commands to run
+    cmds = ''
+    if shell == 'csh':
+        # TODO: figure out how to make color work for csh
+        cmds += 'setenv SPACK_ENV %s;\n' % env.path
+        cmds += 'alias despacktivate "spack env deactivate";\n'
+        if prompt:
+            cmds += 'if (! $?SPACK_OLD_PROMPT ) '
+            cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
+            cmds += 'set prompt="%s ${prompt}";\n' % prompt
+        shell_modifications = CshShellPathModifications()
+    else:
+        if 'color' in os.environ['TERM'] and prompt:
+            prompt = colorize('@G{%s} ' % prompt, color=True)
 
-def deactivate():
+        cmds += 'export SPACK_ENV=%s;\n' % env.path
+        cmds += "alias despacktivate='spack env deactivate';\n"
+        if prompt:
+            cmds += 'if [ -z "${SPACK_OLD_PS1}" ]; then\n'
+            cmds += 'export SPACK_OLD_PS1="${PS1}"; fi;\n'
+            cmds += 'export PS1="%s ${PS1}";\n' % prompt
+        shell_modifications = BashShellPathModifications()
+
+    if add_view and env._view_path:
+        env.add_view_to_shell(shell_modifications)
+        for cmd in shell_modifications.as_shell_commands():
+            cmds += cmd + ';\n'
+
+    return cmds
+
+
+def deactivate(shell='sh'):
     """Undo any configuration or repo settings modified by ``activate()``.
 
+    Arguments:
+        shell (string): One of `sh`, `csh`. Shell style to use.
+
     Returns:
-        (bool): True if an environment was deactivated, False if no
-        environment was active.
+        (string): shell commands for `shell` to undo environment variables
 
     """
     global _active_environment
@@ -126,8 +167,31 @@ def deactivate():
     if _active_environment._repo:
         spack.repo.path.remove(_active_environment._repo)
 
+    cmds = ''
+    if shell == 'csh':
+        cmds += 'unsetenv SPACK_ENV;\n'
+        cmds += 'if ( $?SPACK_OLD_PROMPT ) '
+        cmds += 'set prompt="$SPACK_OLD_PROMPT" && '
+        cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
+        cmds += 'unalias despacktivate;\n'
+        shell_modifications = CshShellPathModifications()
+    else:
+        cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
+        cmds += 'unalias despacktivate;\n'
+        cmds += 'if [ -n "$SPACK_OLD_PS1" ]; then\n'
+        cmds += 'export PS1="$SPACK_OLD_PS1";\n'
+        cmds += 'unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
+        cmds += 'fi;\n'
+        shell_modifications = BashShellPathModifications()
+
+    _active_environment.rm_view_from_shell(shell_modifications)
+    for cmd in shell_modifications.as_shell_commands():
+        cmds += cmd + ';\n'
+
     tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
     _active_environment = None
+
+    return cmds
 
 
 def find_environment(args):

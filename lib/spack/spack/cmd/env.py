@@ -53,10 +53,10 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to activate the environment")
-    shells.add_argument(
+
+    subparser.add_argument(
         '-d', '--dir', action='store_true', default=False,
         help="force spack to treat env as a directory, not a name")
-
     subparser.add_argument(
         '-v', '--with-view', action='store_true', default=False,
         help="Update PATH etc. with associated view")
@@ -100,33 +100,13 @@ def env_activate(args):
     if spack_env == os.environ.get('SPACK_ENV'):
         tty.die("Environment %s is already active" % args.activate_env)
 
-    if args.shell == 'csh':
-        # TODO: figure out how to make color work for csh
-        sys.stdout.write('setenv SPACK_ENV %s;\n' % spack_env)
-        sys.stdout.write('alias despacktivate "spack env deactivate";\n')
-        if args.prompt:
-            sys.stdout.write('if (! $?SPACK_OLD_PROMPT ) '
-                             'setenv SPACK_OLD_PROMPT "${prompt}";\n')
-            sys.stdout.write('set prompt="%s ${prompt}";\n' % env_prompt)
-        shell_modifications = CshShellPathModifications()
-    else:
-        if 'color' in os.environ['TERM']:
-            env_prompt = colorize('@G{%s} ' % env_prompt, color=True)
-
-        sys.stdout.write('export SPACK_ENV=%s;\n' % spack_env)
-        sys.stdout.write("alias despacktivate='spack env deactivate';\n")
-        if args.prompt:
-            sys.stdout.write('if [ -z "${SPACK_OLD_PS1}" ]; then\n')
-            sys.stdout.write('export SPACK_OLD_PS1="${PS1}"; fi;\n')
-            sys.stdout.write('export PS1="%s ${PS1}";\n' % env_prompt)
-        shell_modifications = BashShellPathModifications()
-
-    active_env = ev.get_env(namedtuple('args', ['env'])(env), 'activate')
-    if args.with_view and active_env._view_path:
-        active_env.add_view_to_shell(shell_modifications)
-        for cmd in shell_modifications.as_shell_commands():
-            sys.stdout.write(cmd + ';\n')
-
+    active_env = ev.get_env(namedtuple('args', ['env'])(env),
+                            'activate')
+    cmds = ev.activate(
+        active_env, add_view=args.with_view, shell=args.shell,
+        prompt=env_prompt if args.prompt else None
+    )
+    sys.stdout.write(cmds)
 
 #
 # env deactivate
@@ -160,27 +140,9 @@ def env_deactivate(args):
     if 'SPACK_ENV' not in os.environ:
         tty.die('No environment is currently active.')
 
-    if args.shell == 'csh':
-        sys.stdout.write('unsetenv SPACK_ENV;\n')
-        sys.stdout.write('if ( $?SPACK_OLD_PROMPT ) '
-                         'set prompt="$SPACK_OLD_PROMPT" && '
-                         'unsetenv SPACK_OLD_PROMPT;\n')
-        sys.stdout.write('unalias despacktivate;\n')
-        shell_modifications = CshShellPathModifications()
-    else:
-        sys.stdout.write('unset SPACK_ENV; export SPACK_ENV;\n')
-        sys.stdout.write('unalias despacktivate;\n')
-        sys.stdout.write('if [ -n "$SPACK_OLD_PS1" ]; then\n')
-        sys.stdout.write('export PS1="$SPACK_OLD_PS1";\n')
-        sys.stdout.write('unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n')
-        sys.stdout.write('fi;\n')
-        shell_modifications = BashShellPathModifications()
-
-    active_env = ev.get_env(namedtuple('args', [])(), 'deactivate')
-    active_env.rm_view_from_shell(shell_modifications)
-    for cmd in shell_modifications.as_shell_commands():
-        sys.stdout.write(cmd + ';\n')
-
+#    active_env = ev.get_env(namedtuple('args', [])(), 'deactivate')
+    cmds = ev.deactivate(shell=args.shell)
+    sys.stdout.write(cmds)
 
 #
 # env create
