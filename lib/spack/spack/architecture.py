@@ -56,12 +56,12 @@ set. The user can set the front-end and back-end operating setting by the class
 attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
+import collections
 import os
 import inspect
 import itertools
 import platform as py_platform
 
-import llnl.util.multiproc as mp
 import llnl.util.tty as tty
 from llnl.util.lang import memoized, list_modules, key_ordering
 
@@ -246,7 +246,8 @@ class OperatingSystem(object):
         # NOTE: we import spack.compilers here to avoid init order cycles
         import spack.compilers
         types = spack.compilers.all_compiler_types()
-        compiler_lists = mp.parmap(
+        # TODO: was parmap before
+        compiler_lists = map(
             lambda cmp_cls: self.find_compiler(cmp_cls, *paths),
             types)
 
@@ -266,24 +267,41 @@ class OperatingSystem(object):
            prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
            be grouped with g++-mp-4.7 and gfortran-mp-4.7.
         """
-        dicts = mp.parmap(
-            lambda t: cmp_cls._find_matches_in_path(*t),
-            [('cc',) + tuple(search_paths), ('cxx',) + tuple(search_paths),
-             ('f77',) + tuple(search_paths), ('fc',) + tuple(search_paths)])
+        # The commands returned here are already sorted by language
+        commands = cmp_cls.search_compiler_commands(*search_paths)
 
-        all_keys = set(key for d in dicts for key in d)
+        def invoke(f):
+            return f()
+
+        compilers = map(invoke, commands)
+
+        # Remove search with no results
+        compilers = filter(None, compilers)
 
         # Skip compilers with unknown version
-        def has_known_version(x):
+        def has_known_version(compiler_entry):
             """Returns True if the key has not an unknown version."""
-            version, _, _ = x
-            return version != 'unknown'
+            compiler_key, _ = compiler_entry
+            return compiler_key.version != 'unknown'
 
-        valid_keys = filter(has_known_version, all_keys)
+        compilers = filter(has_known_version, compilers)
+
+        compilers_by_language = collections.defaultdict(dict)
+        language_key = lambda x: x[0].language
+        for language, group in itertools.groupby(compilers, language_key):
+            # The 'successful' list is ordered like the input paths.
+            # Reverse it here so that the dict creation (last insert wins)
+            # does not spoil the intended precedence.
+            compilers_by_language[language] = dict(reversed(list(group)))
+
+        dicts = [compilers_by_language[language]
+                 for language in ('cc', 'cxx', 'f77', 'fc')]
+
+        valid_keys = set(key for d in dicts for key in d)
 
         compilers = {}
         for k in valid_keys:
-            ver, _, _ = k
+            ver = k.version
 
             paths = tuple(pn.get(k, None) for pn in dicts)
             spec = spack.spec.CompilerSpec(cmp_cls.name, ver)

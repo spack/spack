@@ -3,18 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import os
 import re
 import itertools
 
 import llnl.util.lang
 import llnl.util.tty as tty
-import llnl.util.multiproc as mp
 
 import spack.error
 import spack.spec
 import spack.architecture
-from spack.util.executable import Executable, ProcessError
+import spack.util.executable
 
 __all__ = ['Compiler']
 
@@ -249,19 +249,11 @@ class Compiler(object):
         return cls.default_version(fc)
 
     @classmethod
-    def _find_matches_in_path(cls, compiler_language, *search_paths):
-        """Finds compilers for a given language in the paths supplied.
-
-        Looks for all combinations of ``compiler_names`` with the
-        ``prefixes`` and ``suffixes`` defined for this compiler
-        class.  If any compilers match the compiler_names,
-        prefixes, or suffixes, uses ``detect_version`` to figure
-        out what version the compiler is.
+    def search_compiler_commands(cls, *search_paths):
+        """Returns a list of commands that, when invoked, search for compilers
+        in the paths supplied.
 
         Args:
-            compiler_language (str): language of the compiler (either
-                'cc', 'cxx', 'f77' or 'fc')
-
             *search_paths (list of paths): paths where to look for a
                 compiler
 
@@ -276,43 +268,42 @@ class Compiler(object):
         # Select accessible directories
         search_directories = filter(is_accessible_dir, search_paths)
 
-        # Get compiler names and the callback to detect their versions
-        compiler_names = getattr(cls, '{0}_names'.format(compiler_language))
-        detect_version = getattr(cls, '{0}_version'.format(compiler_language))
+        search_args = []
+        for language in ('cc', 'cxx', 'f77', 'fc'):
 
-        # Compile all the regular expressions used for files beforehand
-        prefixes = [''] + cls.prefixes
-        suffixes = [''] + cls.suffixes
-        regexp_fmt = r'^({0}){1}({2})$'
-        search_regexps = [
-            re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
-            for prefix, name, suffix in
-            itertools.product(prefixes, compiler_names, suffixes)
-        ]
+            # Get compiler names and the callback to detect their versions
+            compiler_names = getattr(cls, '{0}_names'.format(language))
+            detect_version = getattr(cls, '{0}_version'.format(language))
 
-        # Select only the files matching a regexp
-        checks = []
-        for d in search_directories:
-            # Only select actual files, use the full path
-            files = filter(
-                os.path.isfile, [os.path.join(d, f) for f in os.listdir(d)]
-            )
-            for full_path in files:
-                file = os.path.basename(full_path)
-                for regexp in search_regexps:
-                    match = regexp.match(file)
-                    if match:
-                        key = (full_path,) + match.groups() + (detect_version,)
-                        checks.append(key)
+            # Compile all the regular expressions used for files beforehand.
+            # This searches for any combination of <prefix><name><suffix>
+            # defined for the compiler
+            prefixes = [''] + cls.prefixes
+            suffixes = [''] + cls.suffixes
+            regexp_fmt = r'^({0}){1}({2})$'
+            search_regexps = [
+                re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
+                for prefix, name, suffix in
+                itertools.product(prefixes, compiler_names, suffixes)
+            ]
 
-        successful = [k for k in mp.parmap(_get_versioned_tuple, checks)
-                      if k is not None]
+            # Select only the files matching a regexp
+            for d in search_directories:
+                # Only select actual files, use the full path
+                files = filter(
+                    os.path.isfile, [os.path.join(d, f) for f in os.listdir(d)]
+                )
+                for full_path in files:
+                    file = os.path.basename(full_path)
+                    for regexp in search_regexps:
+                        match = regexp.match(file)
+                        if match:
+                            key = (detect_version, full_path, cls, language) \
+                                + tuple(match.groups())
+                            search_args.append(key)
 
-        # The 'successful' list is ordered like the input paths.
-        # Reverse it here so that the dict creation (last insert wins)
-        # does not spoil the intented precedence.
-        successful.reverse()
-        return dict(((v, p, s), path) for v, p, s, path in successful)
+        commands = [detect_version_command(*args) for args in search_args]
+        return commands
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
@@ -330,26 +321,49 @@ class Compiler(object):
                 str(self.operating_system)))))
 
 
-def _get_versioned_tuple(compiler_check_tuple):
-    full_path, prefix, suffix, detect_version = compiler_check_tuple
-    try:
-        version = detect_version(full_path)
-        if (not version) or (not str(version).strip()):
+CompilerKey = collections.namedtuple('CompilerKey', [
+    'os', 'cmp_cls', 'language', 'version', 'prefix', 'suffix'
+])
+
+
+def detect_version_command(callback, path, cmp_cls, lang, prefix, suffix):
+    """Returns a command that, when invoked, searches for a compiler and
+    detects its version.
+
+    Args:
+        callback (callable): function that given the full path to search
+            returns a tuple of (CompilerKey, full path) or None
+        path (path): absolute path to search
+        cmp_cls (Compiler): compiler class for this specific compiler
+        lang (str): language of the compiler
+        prefix (str): prefix of the compiler name
+        suffix (str): suffix of the compiler name
+
+    Returns:
+        Callable to be invoked.
+    """
+    def _detect_version():
+        try:
+            version = callback(path)
+            if (not version) or (not str(version).strip()):
+                tty.debug(
+                    "Couldn't get version for compiler %s" % path)
+                return None
+            return CompilerKey(
+                None, cmp_cls, lang, version, prefix, suffix
+            ), path
+        except spack.util.executable.ProcessError as e:
             tty.debug(
-                "Couldn't get version for compiler %s" % full_path)
+                "Couldn't get version for compiler %s" % path, e)
             return None
-        return (version, prefix, suffix, full_path)
-    except ProcessError as e:
-        tty.debug(
-            "Couldn't get version for compiler %s" % full_path, e)
-        return None
-    except Exception as e:
-        # Catching "Exception" here is fine because it just
-        # means something went wrong running a candidate executable.
-        tty.debug("Error while executing candidate compiler %s"
-                  % full_path,
-                  "%s: %s" % (e.__class__.__name__, e))
-        return None
+        except Exception as e:
+            # Catching "Exception" here is fine because it just
+            # means something went wrong running a candidate executable.
+            tty.debug("Error while executing candidate compiler %s"
+                      % path,
+                      "%s: %s" % (e.__class__.__name__, e))
+            return None
+    return _detect_version
 
 
 class CompilerAccessError(spack.error.SpackError):

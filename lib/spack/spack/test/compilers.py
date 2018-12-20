@@ -23,7 +23,7 @@ import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.compilers.fj
 
-from spack.compiler import _get_versioned_tuple, Compiler
+from spack.compiler import detect_version_command, Compiler, CompilerKey
 
 
 def test_get_compiler_duplicates(config):
@@ -46,16 +46,20 @@ def test_all_compilers(config):
 
 
 def test_version_detection_is_empty():
-    no_version = lambda x: None
-    compiler_check_tuple = ('/usr/bin/gcc', '', r'\d\d', no_version)
-    assert not _get_versioned_tuple(compiler_check_tuple)
+    command = detect_version_command(
+        callback=lambda x: None, path='/usr/bin/gcc', cmp_cls=None,
+        lang='cc', prefix='', suffix=r'\d\d'
+    )
+    assert command() is None
 
 
 def test_version_detection_is_successful():
-    version = lambda x: '4.9'
-    compiler_check_tuple = ('/usr/bin/gcc', '', r'\d\d', version)
-    assert _get_versioned_tuple(compiler_check_tuple) == (
-        '4.9', '', r'\d\d', '/usr/bin/gcc')
+    command = detect_version_command(
+        callback=lambda x: '4.9', path='/usr/bin/gcc', cmp_cls=None,
+        lang='cc', prefix='', suffix=r'\d\d'
+    )
+    correct = CompilerKey(None, None, 'cc', '4.9', '', r'\d\d'), '/usr/bin/gcc'
+    assert command() == correct
 
 
 def test_compiler_flags_from_config_are_grouped():
