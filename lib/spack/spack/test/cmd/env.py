@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import subprocess as sp
 from six import StringIO
 
 import pytest

@@ -758,7 +758,8 @@ class Environment(object):
         path_updates = list()
         for var, subdirs in updates:
             paths = filter(lambda x: os.path.exists(x),
-                           list(os.path.join(self._view_path, x) for x in subdirs))
+                           list(os.path.join(self._view_path, x)
+                                for x in subdirs))
             path_updates.append((var, paths))
         return path_updates
 

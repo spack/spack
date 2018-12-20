@@ -31,7 +31,7 @@ _shell_set_strings = {
 }
 
 
-_shell__unset_strings = {
+_shell_unset_strings = {
     'sh': 'unset {};\n',
     'csh': 'unsetenv {};\n',
 }
@@ -208,48 +208,6 @@ class RemovePath(NameValueModifier):
         env[self.name] = self.separator.join(directories)
 
 
-class ShellPathModifications(object):
-    def __init__(self, env=None):
-        self.vars_to_set = {}
-        self.env = env or os.environ
-
-    def read_var(self, var):
-        val = list(self.env.get(var, '').split(':'))
-        if var not in self.vars_to_set:
-            self.vars_to_set[var] = val
-
-    def prepend_path(self, var, path):
-        self.read_var(var)
-        self.vars_to_set[var].insert(0, path)
-
-    def remove_path(self, var, path):
-        self.read_var(var)
-        vals = self.vars_to_set[var]
-        norm_vals = list(os.path.normpath(x) for x in vals)
-        norm_path = os.path.normpath(path)
-        new_vals = list(x for x in norm_vals if not (x == norm_path))
-        self.vars_to_set[var] = new_vals
-
-    def set_cmd(self, var, val):
-        raise NotImplementedError()
-
-    def as_shell_commands(self):
-        cmds = list()
-        for var, paths in self.vars_to_set.items():
-            cmds.append(self.set_cmd(var, ':'.join(paths)))
-        return cmds
-
-
-class CshShellPathModifications(ShellPathModifications):
-    def set_cmd(self, var, val):
-        return 'setenv {0} {1}'.format(var, val)
-
-
-class BashShellPathModifications(ShellPathModifications):
-    def set_cmd(self, var, val):
-        return 'export {0}={1}'.format(var, val)
-
-
 class EnvironmentModifications(object):
     """Keeps track of requests to modify the current environment.
 
@@ -418,7 +376,7 @@ class EnvironmentModifications(object):
                 x.execute(os.environ)
 
     def shell_modifications(self, shell='sh'):
-        """returns shell code to apply the modifications and clears the list."""
+        """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()
         new_env = os.environ.copy()
 
@@ -434,7 +392,8 @@ class EnvironmentModifications(object):
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    cmds += _shell_set_strings[shell].format(name, new_env[name])
+                    cmds += _shell_set_strings[shell].format(name,
+                                                             new_env[name])
         return cmds
 
     @staticmethod

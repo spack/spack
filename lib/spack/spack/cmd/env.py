@@ -20,8 +20,7 @@ import spack.cmd.modules
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.util.string as string
-from spack.util.environment import (
-    BashShellPathModifications, CshShellPathModifications)
+
 
 description = "manage virtual environments"
 section = "environments"
@@ -115,6 +114,7 @@ def env_activate(args):
     )
     sys.stdout.write(cmds)
 
+
 #
 # env deactivate
 #
@@ -147,9 +147,9 @@ def env_deactivate(args):
     if 'SPACK_ENV' not in os.environ:
         tty.die('No environment is currently active.')
 
-#    active_env = ev.get_env(namedtuple('args', [])(), 'deactivate')
     cmds = ev.deactivate(shell=args.shell)
     sys.stdout.write(cmds)
+
 
 #
 # env create
