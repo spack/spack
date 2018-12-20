@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# Maintainer comments
+# Maintainer comments:
 # 18/12/2018: fix python detection
 
 from spack import *
