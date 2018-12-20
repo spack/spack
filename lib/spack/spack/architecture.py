@@ -58,6 +58,7 @@ will be responsible for compiler detection.
 """
 import os
 import inspect
+import itertools
 import platform as py_platform
 
 import llnl.util.multiproc as mp
@@ -231,28 +232,13 @@ class OperatingSystem(object):
     def _cmp_key(self):
         return (self.name, self.version)
 
-    def find_compilers(self, *paths):
+    def find_compilers(self, *path_hints):
         """
         Return a list of compilers found in the supplied paths.
         This invokes the find() method for each Compiler class,
         and appends the compilers detected to a list.
         """
-        if not paths:
-            paths = get_path('PATH')
-        # Make sure path elements exist, and include /bin directories
-        # under prefixes.
-        filtered_path = []
-        for p in paths:
-            # Eliminate symlinks and just take the real directories.
-            p = os.path.realpath(p)
-            if not os.path.isdir(p):
-                continue
-            filtered_path.append(p)
-
-            # Check for a bin directory, add it if it exists
-            bin = os.path.join(p, 'bin')
-            if os.path.isdir(bin):
-                filtered_path.append(os.path.realpath(bin))
+        paths = executable_search_paths(path_hints or get_path('PATH'))
 
         # Once the paths are cleaned up, do a search for each type of
         # compiler.  We can spawn a bunch of parallel searches to reduce
@@ -261,7 +247,7 @@ class OperatingSystem(object):
         import spack.compilers
         types = spack.compilers.all_compiler_types()
         compiler_lists = mp.parmap(
-            lambda cmp_cls: self.find_compiler(cmp_cls, *filtered_path),
+            lambda cmp_cls: self.find_compiler(cmp_cls, *paths),
             types)
 
         # ensure all the version calls we made are cached in the parent
@@ -319,10 +305,10 @@ class OperatingSystem(object):
         return list(compilers.values())
 
     def to_dict(self):
-        d = {}
-        d['name'] = self.name
-        d['version'] = self.version
-        return d
+        return {
+            'name': self.name,
+            'version': self.version
+        }
 
 
 @key_ordering
@@ -493,3 +479,30 @@ def sys_type():
     """
     arch = Arch(platform(), 'default_os', 'default_target')
     return str(arch)
+
+
+def executable_search_paths(path_hints):
+    """Given a list of path hints returns a list of paths where
+    to search for an executable.
+
+    Args:
+        path_hints (list of paths): list of paths taken into
+            consideration for a search
+
+    Returns:
+        A list containing the real path of every existing directory
+        in `path_hints` and its `bin` subdirectory if it exists.
+    """
+    # Select the realpath of existing directories
+    existing_paths = filter(os.path.isdir, map(os.path.realpath, path_hints))
+
+    # Adding their 'bin' subdirectory
+    def maybe_add_bin(path):
+        bin_subdirectory = os.path.realpath(os.path.join(path, 'bin'))
+        if os.path.isdir(bin_subdirectory):
+            return [path, bin_subdirectory]
+        return [path]
+
+    return list(itertools.chain.from_iterable(
+        map(maybe_add_bin, existing_paths))
+    )

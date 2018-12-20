@@ -6,6 +6,7 @@
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
+import itertools
 import os
 
 from llnl.util.lang import list_modules
@@ -177,17 +178,20 @@ def all_compiler_specs(scope=None, init_config=True):
 
 
 def find_compilers(*paths):
-    """Return a list of compilers found in the supplied paths.
-       This invokes the find_compilers() method for each operating
-       system associated with the host platform, and appends
-       the compilers detected to a list.
+    """List of compilers found in the supplied paths.
+
+    This function invokes the find_compilers() method for each operating
+    system associated with the host platform.
+
+    Args:
+        *paths: paths where to search for compilers
+
+    Returns:
+        List of compilers found in the supplied paths
     """
-    # Find compilers for each operating system class
-    oss = all_os_classes()
-    compiler_lists = []
-    for o in oss:
-        compiler_lists.extend(o.find_compilers(*paths))
-    return compiler_lists
+    return list(itertools.chain.from_iterable(
+        o.find_compilers(*paths) for o in all_os_classes()
+    ))
 
 
 def supported_compilers():

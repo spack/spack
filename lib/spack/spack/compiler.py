@@ -15,7 +15,6 @@ import spack.error
 import spack.spec
 import spack.architecture
 from spack.util.executable import Executable, ProcessError
-from spack.util.environment import get_path
 
 __all__ = ['Compiler']
 
@@ -263,9 +262,6 @@ class Compiler(object):
            suffix, version) tuples.  This can be further organized by
            find().
         """
-        if not path:
-            path = get_path('PATH')
-
         prefixes = [''] + cls.prefixes
         suffixes = [''] + cls.suffixes
 
