@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# Maintainer comments:
+# 18/12/2018: fix python detection
+
 from spack import *
 
 
@@ -75,22 +78,52 @@ class Tfel(CMakePackage):
     variant('java', default=False,
             description='Enables java interface')
 
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
+
     depends_on('java', when='+java')
-    depends_on('python', when='+python')
-    depends_on('python', when='+python_bindings')
+    depends_on('python', when='+python',
+               type=('build', 'link', 'run'))
+    depends_on('python', when='+python_bindings',
+               type=('build', 'link', 'run'))
     depends_on('boost+python', when='+python_bindings')
+
+    extends('python', when='+python_bindings')
 
     def cmake_args(self):
 
         args = []
 
-        for i in ['fortran', 'java', 'castem', 'aster',
-                  'abaqus', 'calculix', 'ansys',
-                  'europlexus', 'cyrano', 'lsdyna',
-                  'python', 'python_bindings']:
+        for i in ['fortran', 'java', 'aster', 'abaqus', 'calculix',
+                  'ansys', 'europlexus', 'cyrano', 'lsdyna', 'python']:
             if '+' + i in self.spec:
                 args.append("-Denable-{0}=ON".format(i))
             else:
                 args.append("-Denable-{0}=OFF".format(i))
+
+        if '+castem' in self.spec:
+            args.append("-Dlocal-castem-header=ON")
+        else:
+            args.append("-Dlocal-castem-header=OFF")
+
+        if '+python_bindings' in self.spec:
+            args.append("-Denable-python-bindings=ON")
+        else:
+            args.append("-Denable-python-bindings=OFF")
+
+        if(('+python' in self.spec) or
+           ('+python_bindings' in self.spec)):
+            python = self.spec['python']
+            args.append('-DPYTHON_LIBRARY={0}'.
+                        format(python.libs[0]))
+            args.append('-DPYTHON_INCLUDE_DIR={0}'.
+                        format(python.headers.directories[0]))
+            args.append('-DPython_ADDITIONAL_VERSIONS={0}'.
+                        format(python.version.up_to(2)))
+
+        if '+python_bindings' in self.spec:
+            args.append('-DBOOST_ROOT={0}'.
+                        format(self.spec['boost'].prefix))
 
         return args
