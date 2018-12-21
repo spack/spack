@@ -142,13 +142,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    def apply(self, stage):
-        """Retrieve the patch in a temporary stage, computes
-        self.path and calls `super().apply(stage)`
-
-        Args:
-            stage: stage for the package that needs to be patched
-        """
+    def _stage(self, root_stage):
         # use archive digest for compressed archives
         fetch_digest = self.sha256
         if self.archive_sha256:
@@ -156,10 +150,25 @@ class UrlPatch(Patch):
 
         fetcher = fs.URLFetchStrategy(self.url, fetch_digest)
         mirror = os.path.join(
-            os.path.dirname(stage.mirror_path),
+            os.path.dirname(root_stage.mirror_path),
             os.path.basename(self.url))
 
-        with spack.stage.Stage(fetcher, mirror_path=mirror) as patch_stage:
+        return spack.stage.Stage(fetcher, mirror_path=mirror)
+
+    def archive(self, root_stage):
+        with self._stage(root_stage) as patch_stage:
+            patch_stage.fetch()
+            patch_stage.check()
+            patch_stage.cache_local()
+
+    def apply(self, root_stage):
+        """Retrieve the patch in a temporary stage, computes
+        self.path and calls `super().apply(stage)`
+
+        Args:
+            stage: stage for the package that needs to be patched
+        """
+        with self._stage(root_stage) as patch_stage:
             patch_stage.fetch()
             patch_stage.check()
             patch_stage.cache_local()
@@ -194,7 +203,7 @@ class UrlPatch(Patch):
                         "sha256 checksum failed for %s" % self.path,
                         "Expected %s but got %s" % (self.sha256, checker.sum))
 
-            apply_patch(stage, self.path, self.level, self.working_dir)
+            apply_patch(root_stage, self.path, self.level, self.working_dir)
 
     def to_dict(self):
         data = super(UrlPatch, self).to_dict()

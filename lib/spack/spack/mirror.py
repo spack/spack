@@ -212,7 +212,10 @@ def create(path, specs, **kwargs):
 def add_single_spec(spec, mirror_root, categories, **kwargs):
     tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
     try:
-        spec.package.do_patch()
+        spec.package.do_stage()
+        for p in spec.patches:
+            if hasattr(p, 'archive'):
+                p.archive(spec.package.stage)
         spec.package.do_clean()
 
     except Exception as e:
