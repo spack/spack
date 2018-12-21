@@ -104,10 +104,11 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-    - stage: 'docker build'
+    - python: '3.6'
+      stage: 'docker build'
       sudo: required
       os: linux
-      language: generic
+      language: python
       env: TEST_SUITE=docker
   allow_failures:
     - env: TEST_SUITE=docker
