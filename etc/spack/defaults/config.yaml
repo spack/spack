@@ -48,7 +48,6 @@ config:
   # The build stage can be purged with `spack clean --stage`.
   build_stage:
     - $tempdir
-    - /nfs/tmp2/$user
     - $spack/var/spack/stage
 
 
