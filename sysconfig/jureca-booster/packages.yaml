@@ -19,6 +19,11 @@ packages:
             cmake@3.9.4: /usr/local/software/jurecabooster/Stages/2017b/software/CMake/3.9.4-GCCcore-5.4.0/
         version: [3.9.4]
         buildable: False
+    flex:
+        paths:
+            flex@2.6.4: /usr/local/software/jureca/Stages/2018a/software/flex/2.6.4-GCCcore-7.3.0
+        buildable: False
+        version: [2.6.4]
     gettext:
         paths:
             gettext@0.19.8: /usr
@@ -40,6 +45,11 @@ packages:
             m4@1.4.16: /usr
         buildable: False
         version: [1.4.16]
+    perl:
+        paths:
+            perl@5.16.3: /usr
+        buildable: False
+        version: [5.16.3]
     pkg-config:
         paths:
             pkg-config@0.29.1: /usr

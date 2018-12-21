@@ -31,9 +31,7 @@ compilers:
     environment: {}
     extra_rpaths: []
     flags: {}
-    modules:
-    - Architecture/Haswell
-    - Intel
+    modules: []
     operating_system: centos7
     paths:
       cc: /usr/local/software/jureca/Stages/2018a/software/icc/2018.2.199-GCC-5.5.0/compilers_and_libraries_2018.2.199/linux/bin/intel64/icc
