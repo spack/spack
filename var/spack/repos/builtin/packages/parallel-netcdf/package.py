@@ -12,9 +12,14 @@ class ParallelNetcdf(AutotoolsPackage):
     Unidata's NetCDF."""
 
     homepage = "https://trac.mcs.anl.gov/projects/parallel-netcdf"
-    url      = "http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-1.6.1.tar.gz"
-    list_url = "http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html"
+    git      = "https://github.com/Parallel-NetCDF/PnetCDF"
+    url      = "https://parallel-netcdf.github.io/Release/parallel-netcdf-1.11.0.tar.gz"
+    list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
+    version('develop', branch='develop')
+    version('master', branch='master')
+    version('1.11.0', sha256='a18a1a43e6c4fd7ef5827dbe90e9dcf1363b758f513af1f1356ed6c651195a9f',
+            url="https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz")
     version('1.10.0', sha256='ed189228b933cfeac3b7b4f8944eb00e4ff2b72cf143365b1a77890980663a09')
     version('1.9.0',  sha256='356e1e1fae14bc6c4236ec11435cfea0ff6bde2591531a4a329f9508a01fbe98')
     version('1.8.1',  sha256='8d7d4c9c7b39bb1cbbcf087e0d726551c50f0cc30d44aed3df63daf3772c9043')
