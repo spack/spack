@@ -14,37 +14,12 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
-    version('3.25.3', '00ebf97be13928941940cc71de3d67e9f852698233cd98ce2d178fd08092f3dd',
-            url='https://www.sqlite.org/2018/sqlite-autoconf-3250300.tar.gz')
-    version('3.23.1', '0edbfd75ececb95e8e6448d6ff33df82774c9646',
-            url='https://www.sqlite.org/2018/sqlite-autoconf-3230100.tar.gz')
-    version('3.22.0', '2fb24ec12001926d5209d2da90d252b9825366ac',
-            url='https://www.sqlite.org/2018/sqlite-autoconf-3220000.tar.gz')
-    version('3.21.0', '7913de4c3126ba3c24689cb7a199ea31',
-            url='https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz')
-    version('3.20.0', 'e262a28b73cc330e7e83520c8ce14e4d',
-            url='https://www.sqlite.org/2017/sqlite-autoconf-3200000.tar.gz')
-    version('3.18.0', 'a6687a8ae1f66abc8df739aeadecfd0c',
-            url='https://www.sqlite.org/2017/sqlite-autoconf-3180000.tar.gz')
-    version('3.8.10.2', 'a18bfc015cd49a1e7a961b7b77bc3b37',
-            url='https://www.sqlite.org/2015/sqlite-autoconf-3081002.tar.gz')
-    version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
-            url='https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
+    version('3.26.0', '9af2df1a6da5db6e2ecf3f463625f16740e036e9',
+            url='https://sqlite.org/2018/sqlite-autoconf-3260000.tar.gz')
+    # All versions prior to 3.26.0 are vulnerable to Magellan, see
+    # https://blade.tencent.com/magellan/index_en.html
 
     depends_on('readline')
-
-    # On some platforms (e.g., PPC) the include chain includes termios.h which
-    # defines a macro B0. Sqlite has a shell.c source file that declares a
-    # variable named B0 and will fail to compile when the macro is found. The
-    # following patch undefines the macro in shell.c
-    patch('sqlite_b0.patch', when='@3.18.0:3.21.0')
-
-    # Starting version 3.17.0, SQLite uses compiler built-ins
-    # __builtin_sub_overflow(), __builtin_add_overflow(), and
-    # __builtin_mul_overflow(), which are not supported by Intel compiler.
-    # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
-    # compiler is used.
-    patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
 
     variant('functions', default=False,
             description='Provide mathematical and string extension functions '

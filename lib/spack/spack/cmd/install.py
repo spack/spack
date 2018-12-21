@@ -141,6 +141,24 @@ packages. If neither are chosen, don't run tests for any packages."""
         default=None,
         help="CDash URL where reports will be uploaded"
     )
+    subparser.add_argument(
+        '--cdash-build',
+        default=None,
+        help="""The name of the build that will be reported to CDash.
+Defaults to spec of the package to install."""
+    )
+    subparser.add_argument(
+        '--cdash-site',
+        default=None,
+        help="""The site name that will be reported to CDash.
+Defaults to current system hostname."""
+    )
+    subparser.add_argument(
+        '--cdash-track',
+        default='Experimental',
+        help="""Results will be reported to this group on CDash.
+Defaults to Experimental."""
+    )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
@@ -160,7 +178,7 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
     # handle active environment, if any
     def install(spec, kwargs):
-        env = ev.get_env(cli_args, 'install', required=False)
+        env = ev.get_env(cli_args, 'install')
         if env:
             env.install(abstract_spec, spec, **kwargs)
             env.write()
@@ -194,7 +212,7 @@ def install(parser, args, **kwargs):
     if not args.package and not args.specfiles:
         # if there are no args but an active environment or spack.yaml file
         # then install the packages from it.
-        env = ev.get_env(args, 'install', required=False)
+        env = ev.get_env(args, 'install')
         if env:
             if not args.only_concrete:
                 env.concretize()
@@ -224,9 +242,7 @@ def install(parser, args, **kwargs):
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
-    reporter = spack.report.collect_info(args.log_format,
-                                         ' '.join(args.package),
-                                         args.cdash_upload_url)
+    reporter = spack.report.collect_info(args.log_format, args)
     if args.log_file:
         reporter.filename = args.log_file
 

@@ -1,7 +1,7 @@
 ---
 name: Bug report 
 about: Report a bug in the core of Spack (command not working as expected, etc.) 
-
+labels: bug
 ---
 
 

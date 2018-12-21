@@ -22,9 +22,11 @@ class Phist(CMakePackage):
     url      = "https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz"
     git      = "https://bitbucket.org/essex/phist/phist.git"
 
+    maintainers = ['jthies']
+
     version('develop', branch='devel')
     version('master', branch='master')
-    version('1.7.5', sha256='7658e7d568d74e3c4338312ee07c5313a9505bc8f25709dc0cabb9525a5bba89')
+    version('1.7.5', sha256='f11fe27f2aa13d69eb285cc0f32c33c1603fa1286b84e54c81856c6f2bdef500')
     version('1.7.4', sha256='ef0c97fda9984f53011020aff3e61523833320f5f5719af2f2ed84463cccb98b')
     version('1.7.3', sha256='ab2d853c9ba13bcd3069fcc61c359cb412466a2e4b22ebbd2f5263cffa685126')
     version('1.7.2', sha256='29b504d78b5efd57b87d2ca6e20bc8a32b1ba55b40f5a5b7189cc0d28e43bcc0')
