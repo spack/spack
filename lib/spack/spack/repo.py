@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import abc
 import collections
 import os
 import stat
@@ -14,7 +15,7 @@ import re
 import traceback
 import json
 from contextlib import contextmanager
-from six import string_types
+from six import string_types, add_metaclass
 
 try:
     from collections.abc import Mapping
@@ -230,111 +231,153 @@ class TagIndex(Mapping):
             self._tag_dict[tag].append(package.name)
 
 
-@llnl.util.lang.memoized
-def make_provider_index_cache(packages_path, namespace):
-    """Lazily updates the provider index cache associated with a repository,
-    if need be, then returns it. Caches results for later look-ups.
+@add_metaclass(abc.ABCMeta)
+class Indexer(object):
+    """Adaptor for indexes that need to be generated when repos are updated."""
 
-    Args:
-        packages_path: path of the repository
-        namespace: namespace of the repository
+    def create(self):
+        self.index = self._create()
 
-    Returns:
-        instance of ProviderIndex
+    @abc.abstractmethod
+    def _create(self):
+        """Create an empty index and return it."""
+
+    @abc.abstractmethod
+    def read(self, stream):
+        """Read this index from a provided file object."""
+
+    @abc.abstractmethod
+    def update(self, pkg_fullname):
+        """Update the index in memory with information about a package."""
+
+    @abc.abstractmethod
+    def write(self, stream):
+        """Write the index to a file object."""
+
+
+class TagIndexer(Indexer):
+    """Lifecycle methods for a TagIndex on a Repo."""
+    def _create(self):
+        return TagIndex()
+
+    def read(self, stream):
+        self.index = TagIndex.from_json(stream)
+
+    def update(self, pkg_fullname):
+        self.index.update_package(pkg_fullname)
+
+    def write(self, stream):
+        self.index.to_json(stream)
+
+
+class ProviderIndexer(Indexer):
+    """Lifecycle methods for virtual package providers."""
+    def _create(self):
+        return ProviderIndex()
+
+    def read(self, stream):
+        self.index = ProviderIndex.from_yaml(stream)
+
+    def update(self, pkg_fullname):
+        self.index.remove_provider(pkg_fullname)
+        self.index.update(pkg_fullname)
+
+    def write(self, stream):
+        self.index.to_yaml(stream)
+
+
+class RepoIndex(object):
+    """Container class that manages a set of Indexers for a Repo.
+
+    This class is responsible for checking packages in a repository for
+    updates (using ``FastPackageChecker``) and for regenerating indexes
+    when they're needed.
+
+    ``Indexers`` shoudl be added to the ``RepoIndex`` using
+    ``add_index(name, indexer)``, and they should support the interface
+    defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
+    and update stored indices.
+
+    Generated indexes are accessed by name via ``__getitem__()``.
+
     """
-    # Map that goes from package names to stat info
-    fast_package_checker = FastPackageChecker(packages_path)
+    def __init__(self, package_checker, namespace):
+        self.checker = package_checker
+        self.packages_path = self.checker.packages_path
+        self.namespace = namespace
 
-    # Filename of the provider index cache
-    cache_filename = 'providers/{0}-index.yaml'.format(namespace)
+        self.indexers = {}
+        self.indexes = {}
 
-    # Compute which packages needs to be updated in the cache
-    misc_cache = spack.caches.misc_cache
-    index_mtime = misc_cache.mtime(cache_filename)
+    def add_indexer(self, name, indexer):
+        """Add an indexer to the repo index.
 
-    needs_update = [
-        x for x, sinfo in fast_package_checker.items()
-        if sinfo.st_mtime > index_mtime
-    ]
+        Arguments:
+            name (str): name of this indexer
 
-    # Read the old ProviderIndex, or make a new one.
-    index_existed = misc_cache.init_entry(cache_filename)
+            indexer (object): an object that supports create(), read(),
+                write(), and get_index() operations
 
-    if index_existed and not needs_update:
+        """
+        self.indexers[name] = indexer
 
-        # If the provider index exists and doesn't need an update
-        # just read from it
-        with misc_cache.read_transaction(cache_filename) as f:
-            index = ProviderIndex.from_yaml(f)
+    def __getitem__(self, name):
+        """Get the index with the specified name, reindexing if needed."""
+        indexer = self.indexers.get(name)
+        if not indexer:
+            raise KeyError('no such index: %s' % name)
 
-    else:
+        if name not in self.indexes:
+            self._build_all_indexes()
 
-        # Otherwise we need a write transaction to update it
-        with misc_cache.write_transaction(cache_filename) as (old, new):
+        return self.indexes[name]
 
-            index = ProviderIndex.from_yaml(old) if old else ProviderIndex()
+    def _build_all_indexes(self):
+        """Build all the indexes at once.
 
-            for pkg_name in needs_update:
-                namespaced_name = '{0}.{1}'.format(namespace, pkg_name)
-                index.remove_provider(namespaced_name)
-                index.update(namespaced_name)
+        We regenerate *all* indexes whenever *any* index needs an update,
+        because the main bottleneck here is loading all the packages.  It
+        can take tens of seconds to regenerate sequentially, and we'd
+        rather only pay that cost once rather than on several
+        invocations.
 
-            index.to_yaml(new)
+        """
+        for name, indexer in self.indexers.items():
+            self.indexes[name] = self._build_index(name, indexer)
 
-    return index
+    def _build_index(self, name, indexer):
+        """Determine which packages need an update, and update indexes."""
 
+        # Filename of the provider index cache (we assume they're all json)
+        cache_filename = '{0}/{1}-index.json'.format(name, self.namespace)
 
-@llnl.util.lang.memoized
-def make_tag_index_cache(packages_path, namespace):
-    """Lazily updates the tag index cache associated with a repository,
-    if need be, then returns it. Caches results for later look-ups.
+        # Compute which packages needs to be updated in the cache
+        misc_cache = spack.caches.misc_cache
+        index_mtime = misc_cache.mtime(cache_filename)
 
-    Args:
-        packages_path: path of the repository
-        namespace: namespace of the repository
+        needs_update = [
+            x for x, sinfo in self.checker.items()
+            if sinfo.st_mtime > index_mtime
+        ]
 
-    Returns:
-        instance of TagIndex
-    """
-    # Map that goes from package names to stat info
-    fast_package_checker = FastPackageChecker(packages_path)
+        index_existed = misc_cache.init_entry(cache_filename)
+        if index_existed and not needs_update:
+            # If the index exists and doesn't need an update, read it
+            with misc_cache.read_transaction(cache_filename) as f:
+                indexer.read(f)
 
-    # Filename of the provider index cache
-    cache_filename = 'tags/{0}-index.json'.format(namespace)
+        else:
+            # Otherwise update it and rewrite the cache file
+            with misc_cache.write_transaction(cache_filename) as (old, new):
+                indexer.read(old) if old else indexer.create()
 
-    # Compute which packages needs to be updated in the cache
-    misc_cache = spack.caches.misc_cache
-    index_mtime = misc_cache.mtime(cache_filename)
+                for pkg_name in needs_update:
+                    namespaced_name = '%s.%s' % (self.namespace, pkg_name)
+                    indexer.update(namespaced_name)
 
-    needs_update = [
-        x for x, sinfo in fast_package_checker.items()
-        if sinfo.st_mtime > index_mtime
-    ]
+                indexer.write(new)
 
-    # Read the old ProviderIndex, or make a new one.
-    index_existed = misc_cache.init_entry(cache_filename)
-
-    if index_existed and not needs_update:
-
-        # If the provider index exists and doesn't need an update
-        # just read from it
-        with misc_cache.read_transaction(cache_filename) as f:
-            index = TagIndex.from_json(f)
-
-    else:
-
-        # Otherwise we need a write transaction to update it
-        with misc_cache.write_transaction(cache_filename) as (old, new):
-
-            index = TagIndex.from_json(old) if old else TagIndex()
-
-            for pkg_name in needs_update:
-                namespaced_name = '{0}.{1}'.format(namespace, pkg_name)
-                index.update_package(namespaced_name)
-
-            index.to_json(new)
-
-    return index
+        return indexer.index
 
 
 class RepoPath(object):
@@ -658,11 +701,8 @@ class Repo(object):
         # Maps that goes from package name to corresponding file stat
         self._fast_package_checker = None
 
-        # Index of virtual dependencies, computed lazily
-        self._provider_index = None
-
-        # Index of tags, computed lazily
-        self._tag_index = None
+        # Indexes for this repository, computed lazily
+        self._repo_index = None
 
         # make sure the namespace for packages in this repo exists.
         self._create_namespace()
@@ -848,26 +888,23 @@ class Repo(object):
         self._instances.clear()
 
     @property
+    def index(self):
+        """Construct the index for this repo lazily."""
+        if self._repo_index is None:
+            self._repo_index = RepoIndex(self._pkg_checker, self.namespace)
+            self._repo_index.add_indexer('providers', ProviderIndexer())
+            self._repo_index.add_indexer('tags', TagIndexer())
+        return self._repo_index
+
+    @property
     def provider_index(self):
         """A provider index with names *specific* to this repo."""
-
-        if self._provider_index is None:
-            self._provider_index = make_provider_index_cache(
-                self.packages_path, self.namespace
-            )
-
-        return self._provider_index
+        return self.index['providers']
 
     @property
     def tag_index(self):
-        """A provider index with names *specific* to this repo."""
-
-        if self._tag_index is None:
-            self._tag_index = make_tag_index_cache(
-                self.packages_path, self.namespace
-            )
-
-        return self._tag_index
+        """Index of tags and which packages they're defined on."""
+        return self.index['tags']
 
     @_autospec
     def providers_for(self, vpkg_spec):
