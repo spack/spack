@@ -5,6 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+unset CURRENTLY_BUILDING_DOCKER_IMAGE
+
 if [ "$1" '=' 'docker-shell' ] ; then
     if [ -t 0 ] ; then
         exec bash -il

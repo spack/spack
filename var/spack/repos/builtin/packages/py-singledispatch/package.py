@@ -16,7 +16,4 @@ class PySingledispatch(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
-
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-ordereddict', when="^python@:2.6", type=('build', 'run'))
+    depends_on('py-ordereddict', when="^python@:2.6", type=('build', 'run'))

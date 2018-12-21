@@ -24,6 +24,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.3', 'cd106babbae091604fee40c258737c84dec048949be779eaef5a745df3dc8de4')
     version('3.10.2', '63ed950653ae9b8d19daea47e24c0338')
     version('3.10.1', '2d0d5a9bd8112a4147a2a23f7f62a906')
     version('3.10.0', '0240c2ce8c54e47b3531a743ee844d41')
@@ -116,7 +117,7 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
+    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     # Hypre does not support complex numbers.

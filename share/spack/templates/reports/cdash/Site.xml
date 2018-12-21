@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Site BuildName="{{ install_command }}"
+<Site BuildName="{{ buildname }}"
       BuildStamp="{{ buildstamp }}"
-      Name="{{ hostname }}"
+      Name="{{ site }}"
       OSName="{{ osname }}"
 >
 

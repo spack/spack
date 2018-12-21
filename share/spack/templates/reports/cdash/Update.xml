@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Update>
-  <Site>{{ hostname }}</Site>
-  <BuildName>{{ install_command }}</BuildName>
+  <Site>{{ site }}</Site>
+  <BuildName>{{ buildname }}</BuildName>
   <BuildStamp>{{ buildstamp }}</BuildStamp>
-  <StartTime>{{ starttime }}</StartTime>
-  <EndTime>{{ endtime }}</EndTime>
-{% if msg %}
-  <UpdateReturnStatus>{{ msg }}</UpdateReturnStatus>
+  <StartTime>{{ update.starttime }}</StartTime>
+  <UpdateCommand></UpdateCommand>
+  <UpdateType>GIT</UpdateType>
+  <Revision>{{ update.revision }}</Revision>
+  <EndTime>{{ update.endtime }}</EndTime>
+{% if update.log %}
+  <UpdateReturnStatus>{{ update.log }}</UpdateReturnStatus>
 {% endif %}
 </Update>
