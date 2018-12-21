@@ -15,7 +15,9 @@ class Manta(CMakePackage):
     depends_on('boost@1.58.0:', type='build')
     depends_on('cmake@2.8.12:', type='build')
     depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
+    depends_on('zlib')
 
+    version('1.5.0', sha256='9aa1a59c9cb8d2dd33724a42959c9398aff7840c5bf3c895d2483a8093b3d2dc')
     version('1.4.0', '582d10f3bc56aecfa5c24931af3742b4')
     version('1.3.2', '83f43fe1a12605c1e9803d1020b24bd1')
     version('1.3.1', 'e315caff775878872ee300ed34e8adae')
