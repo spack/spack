@@ -25,6 +25,7 @@ class PyBreathe(PythonPackage):
     version('4.7.0',  sha256='5629c67f5adb41f39375d36c5f0d60d34b1230be268125e535205d77f69211e4')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-sphinx @1.7.55:',     type=('build', 'run'))
-    depends_on('py-docutils @0.11:',   type=('build', 'run'))
+    depends_on('py-sphinx @1.7.5:', type=('build', 'run'))
+    depends_on('py-docutils @0.11:', type=('build', 'run'))
+    depends_on('py-six@1.4:', type=('build', 'run'))
     depends_on('doxygen @1.8.4:')
