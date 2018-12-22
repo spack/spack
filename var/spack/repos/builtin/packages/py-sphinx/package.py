@@ -9,7 +9,7 @@ from spack import *
 class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
     homepage = "http://sphinx-doc.org"
-    url      = "https://pypi.io/packages/source/S/Sphinx/Sphinx-1.6.1.tar.gz"
+    url      = "https://github.com/sphinx-doc/sphinx/archive/v1.8.2.tar.gz"
 
     import_modules = [
         'sphinx', 'sphinx.testing', 'sphinx.ext', 'sphinx.pycode',
@@ -21,6 +21,15 @@ class PySphinx(PythonPackage):
         'sphinx.environment.collectors', 'sphinx.environment.adapters'
     ]
 
+    version('1.8.2',   sha256='ee8fc3eadd4b13e8af77a38028c521e0f0fabe1e9e6eeab1a779e4f54329da22')
+    version('1.8.1',   sha256='3ca0ff96399444078bef0185f45a8a587d0b306d1348a1b071c838d846a3c25d')
+    version('1.8.0b1', sha256='c41fab93251d1b87f7087baad1575627ef395b5b51e6c3dde7fd79b91cf2722f')
+    version('1.8.0',   sha256='7fa7e460ffcd4d276012dda5a662c4ce6c46454435c010c7382f3e6a4f16509f')
+    version('1.7.9',   sha256='4c4777383f0f53a7689fa1d24155e90088fc111c0f45993f8d98b0e8b9e60236')
+    version('1.7.8',   sha256='bffee8f401e7f239e3b82822f9279143545f3c4f9c9f0c7ffae001002419fcef')
+    version('1.7.7',   sha256='bcad5233d8800d209cefec8d8b0279f7f4648d1fb90fddd32c166ad75ade3b9e')
+    version('1.7.6',   sha256='7c3bce7ff32eb6142f918512fce48f8b1b209e668b9a5dbbefbb01cc2bb9288a')
+    version('1.7.5',   sha256='2e93f4330dc44fc07d31e0de5d4f81e9281a78739208792fd08619b65c81c853')
     version('1.7.4', '95f3b83f521314600e5b09e99cf32c46')
     version('1.6.3', 'c5ad61f4e0974375ca2c2b58ef8d5411')
     version('1.6.1', '26cb1cdca7aa4afc8c925d926b6268e7')
