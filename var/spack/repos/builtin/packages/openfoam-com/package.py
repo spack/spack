@@ -1,27 +1,10 @@
-##############################################################################
-# Copyright (c) 2017-2018 Mark Olesen, OpenCFD Ltd.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file was authored by Mark Olesen <mark.olesen@esi-group.com>
-# and is released as part of spack under the LGPL license.
-# LLNL-CODE-647188
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
-#
-# License
-# -------
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# Author: Mark Olesen <mark.olesen@esi-group.com>
 #
 # Legal Notice
 # ------------
@@ -60,11 +43,10 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications
 import llnl.util.tty as tty
 
 
@@ -276,16 +258,17 @@ class OpenfoamCom(Package):
 
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
-    gitrepo  = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
     url      = "https://sourceforge.net/projects/openfoamplus/files/v1706/OpenFOAM-v1706.tgz"
+    git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
     list_url = "https://sourceforge.net/projects/openfoamplus/files/"
     list_depth = 2
 
+    version('develop', branch='develop', submodules='True')  # Needs credentials
+    version('1812', '6a315687b3601eeece7ff7c7aed3d9a5')
     version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
     version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
     version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
-    version('develop', branch='develop', git=gitrepo, submodules='True')  # Needs credentials
 
     variant('float32', default=False,
             description='Use single-precision')
@@ -356,6 +339,7 @@ class OpenfoamCom(Package):
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
+    patch('1806-have-kahip.patch', when='@1806')
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -489,9 +473,14 @@ class OpenfoamCom(Package):
            Where needed, apply filter as an alternative to normal patching."""
         add_extra_files(self, self.common, self.assets)
 
-        # Avoid WM_PROJECT_INST_DIR for ThirdParty, site or jobControl.
-        #
-        # Filtering: bashrc,cshrc (using a patch is less flexible)
+    @when('@:1806')
+    def patch(self):
+        """Adjust OpenFOAM build for spack.
+           Where needed, apply filter as an alternative to normal patching."""
+        add_extra_files(self, self.common, self.assets)
+
+        # Avoid WM_PROJECT_INST_DIR for ThirdParty
+        # This modification is non-critical
         edits = {
             'WM_THIRD_PARTY_DIR':
             r'$WM_PROJECT_DIR/ThirdParty  #SPACK: No separate third-party',
@@ -501,18 +490,10 @@ class OpenfoamCom(Package):
             posix=join_path('etc', 'bashrc'),
             cshell=join_path('etc', 'cshrc'))
 
-        # Filtering: settings
-        edits = {
-            'FOAM_EXT_LIBBIN': '#SPACK: No separate third-party',  # ie, unset
-        }
-        rewrite_environ_files(  # etc/config.{csh,sh}/settings
-            edits,
-            posix=join_path('etc', 'config.sh', 'settings'),
-            cshell=join_path('etc', 'config.csh', 'settings'))
-
-        # The following filtering is non-vital. It simply prevents 'site' dirs
-        # from the the wrong level (likely non-existent anyhow) from being
-        # added to PATH, LD_LIBRARY_PATH.
+        # The following filtering is non-critical.
+        # It simply prevents 'site' dirs at the wrong level
+        # (likely non-existent anyhow) from being added to
+        # PATH, LD_LIBRARY_PATH.
         for rcdir in ['config.sh', 'config.csh']:
             rcfile = join_path('etc', rcdir, 'settings')
             if os.path.isfile(rcfile):
@@ -595,6 +576,7 @@ class OpenfoamCom(Package):
                 'METIS_ARCH_PATH': spec['metis'].prefix,
             }
 
+        # ParaView_INCLUDE_DIR is not used in 1812, but has no ill-effect
         if '+paraview' in spec:
             pvmajor = 'paraview-{0}'.format(spec['paraview'].version.up_to(2))
             self.etc_config['paraview'] = [
@@ -608,7 +590,7 @@ class OpenfoamCom(Package):
             self.etc_config['vtk'] = [
                 ('VTK_DIR', spec['vtk'].prefix),
                 ('LD_LIBRARY_PATH',
-                 foamAddLib(pkglib(spec['vtk'], '${VTK_DIR}'))),
+                 foam_add_lib(pkglib(spec['vtk'], '${VTK_DIR}'))),
             ]
 
         # Optional
@@ -652,15 +634,43 @@ class OpenfoamCom(Package):
         builder = Executable(self.build_script)
         builder(*args)
 
-    def install(self, spec, prefix):
-        """Install under the projectdir"""
+    def install_write_location(self):
+        """Set the installation location (projectdir) in bashrc,cshrc."""
+        mkdirp(self.projectdir)
+
+        # Filtering: bashrc, cshrc
+        edits = {
+            'WM_PROJECT_DIR': self.projectdir,
+        }
+        etc_dir = join_path(self.projectdir, 'etc')
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            edits,
+            posix=join_path(etc_dir, 'bashrc'),
+            cshell=join_path(etc_dir, 'cshrc'))
+
+    @when('@:1806')
+    def install_write_location(self):
+        """Set the installation location (projectdir) in bashrc,cshrc.
+        In 1806 and earlier, had WM_PROJECT_INST_DIR as the prefix
+        directory where WM_PROJECT_DIR was installed.
+        """
         mkdirp(self.projectdir)
         projdir = os.path.basename(self.projectdir)
+
         # Filtering: bashrc, cshrc
         edits = {
             'WM_PROJECT_INST_DIR': os.path.dirname(self.projectdir),
             'WM_PROJECT_DIR': join_path('$WM_PROJECT_INST_DIR', projdir),
         }
+        etc_dir = join_path(self.projectdir, 'etc')
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            edits,
+            posix=join_path(etc_dir, 'bashrc'),
+            cshell=join_path(etc_dir, 'cshrc'))
+
+    def install(self, spec, prefix):
+        """Install under the projectdir"""
+        mkdirp(self.projectdir)
 
         # All top-level files, except spack build info and possibly Allwmake
         if '+source' in spec:
@@ -692,19 +702,16 @@ class OpenfoamCom(Package):
             dirs.extend(['doc'])
 
         # Install platforms (and doc) skipping intermediate targets
-        ignored = ['src', 'applications', 'html', 'Guides']
+        relative_ignore_paths = ['src', 'applications', 'html', 'Guides']
+        ignore = lambda p: p in relative_ignore_paths
         for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d),
-                ignore=shutil.ignore_patterns(*ignored),
+                ignore=ignore,
                 symlinks=True)
 
-        etc_dir = join_path(self.projectdir, 'etc')
-        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
-            edits,
-            posix=join_path(etc_dir, 'bashrc'),
-            cshell=join_path(etc_dir, 'cshrc'))
+        self.install_write_location()
         self.install_links()
 
     def install_links(self):

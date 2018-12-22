@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 import numbers
@@ -42,16 +23,14 @@ class Nek5000(Package):
        dynamics"""
 
     homepage = "https://nek5000.mcs.anl.gov/"
-    url      = "https://github.com/Nek5000/Nek5000"
+    url      = "https://github.com/Nek5000/Nek5000/releases/download/v17.0/Nek5000-v17.0.tar.gz"
+    git      = "https://github.com/Nek5000/Nek5000.git"
 
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
             'spectral-elements', 'fluid', 'ecp', 'ecp-apps']
 
-    version('17.0', '6a13bfad2ce023897010dd88f54a0a87',
-            url="https://github.com/Nek5000/Nek5000/releases/download/"
-                    "v17.0/Nek5000-v17.0.tar.gz")
-    version('develop', git='https://github.com/Nek5000/Nek5000.git',
-        branch='master')
+    version('develop', branch='master')
+    version('17.0', '6a13bfad2ce023897010dd88f54a0a87')
 
     # MPI, Profiling and Visit variants
     variant('mpi',       default=True, description='Build with MPI.')

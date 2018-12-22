@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -38,6 +19,7 @@ class Moab(AutotoolsPackage):
     homepage = "https://bitbucket.org/fathomteam/moab"
     url = "http://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
 
+    version('5.0.2', '00a6f96f2e6591ab087548839fa3825e')
     version('5.0.0', '1840ca02366f4d3237d44af63e239e3b')
     version('4.9.2', '540931a604c180bbd3c1bb3ee8c51dd0')
     version('4.9.1', '19cc2189fa266181ad9109b18d0b2ab8')
@@ -60,6 +42,7 @@ class Moab(AutotoolsPackage):
     variant('irel', default=False, description='Enable irel interface')
     variant('fbigeom', default=False, description='Enable fbigeom interface')
     variant('coupler', default=True, description='Enable mbcoupler tool')
+    variant('dagmc', default=False, description='Enable dagmc tool')
 
     variant("debug", default=False, description='enable debug symbols')
     variant('shared', default=False,
@@ -161,6 +144,11 @@ class Moab(AutotoolsPackage):
             options.append('--enable-mbcoupler')
         else:
             options.append('--disable-mbcoupler')
+
+        if '+dagmc' in spec:
+            options.append('--enable-dagmc')
+        else:
+            options.append('--disable-dagmc')
 
         if '+metis' in spec:
             options.append('--with-metis=%s' % spec['metis'].prefix)

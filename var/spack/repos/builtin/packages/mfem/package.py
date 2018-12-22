@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 import shutil
@@ -33,7 +14,7 @@ class Mfem(Package):
     tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC']
 
     homepage = 'http://www.mfem.org'
-    url      = 'https://github.com/mfem/mfem'
+    git      = 'https://github.com/mfem/mfem.git'
 
     maintainers = ['goxberry', 'tzanio', 'markcmiller86', 'acfisher',
                    'v-dobrev']
@@ -62,8 +43,7 @@ class Mfem(Package):
 
     # 'develop' is a special version that is always larger (or newer) than any
     # other version.
-    version('develop',
-            git='https://github.com/mfem/mfem', branch='master')
+    version('develop', branch='master')
 
     version('3.4.0',
             '4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
@@ -74,8 +54,7 @@ class Mfem(Package):
             'b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
             url='https://goo.gl/Kd7Jk8', extension='.tar.gz')
 
-    version('laghos-v1.0', git='https://github.com/mfem/mfem',
-            tag='laghos-v1.0')
+    version('laghos-v1.0', tag='laghos-v1.0')
 
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
@@ -196,7 +175,7 @@ class Mfem(Package):
     #            when='+petsc')
     depends_on('mpfr', when='+mpfr')
     depends_on('netcdf', when='+netcdf')
-    depends_on('libunwind', when='+libunwind')
+    depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:', when='+conduit')
@@ -205,7 +184,7 @@ class Mfem(Package):
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
     patch('mfem-3.3-3.4-petsc-3.9.patch',
-          when='@3.3.0:3.4.0,develop +petsc ^petsc@3.9.0:')
+          when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
 
     phases = ['configure', 'build', 'install']
 
@@ -375,7 +354,7 @@ class Mfem(Package):
                 ld_flags_from_dirs([spec['gnutls'].prefix.lib], ['gnutls'])]
 
         if '+libunwind' in spec:
-            libunwind = spec['libunwind']
+            libunwind = spec['unwind']
             headers = find_headers('libunwind', libunwind.prefix.include)
             headers.add_macro('-g')
             libs = find_optional_library('libunwind', libunwind.prefix)
@@ -442,7 +421,7 @@ class Mfem(Package):
             # installed shared mfem library:
             with working_dir('config'):
                 os.rename('config.mk', 'config.mk.orig')
-                shutil.copyfile(str(self.config_mk), 'config.mk')
+                copy(str(self.config_mk), 'config.mk')
                 shutil.copystat('config.mk.orig', 'config.mk')
 
         if '+examples' in spec:

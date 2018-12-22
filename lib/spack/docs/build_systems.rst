@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 .. _build-systems:
 
@@ -33,6 +38,7 @@ on these ideas for each distinct build system that Spack supports:
 
    build_systems/autotoolspackage
    build_systems/cmakepackage
+   build_systems/mesonpackage
    build_systems/qmakepackage
 
 .. toctree::
