@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyM2r(PythonPackage):
-    """M2R converts a markdown file including reStructuredText (rst) markups to 
+    """M2R converts a markdown file including reStructuredText (rst) markups to
     a valid rst format."""
 
     homepage = "https://github.com/miyakogi/m2r"

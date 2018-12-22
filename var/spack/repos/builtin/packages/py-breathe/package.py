@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyBreathe(PythonPackage):
-    """This is an extension to reStructuredText and Sphinx to be able to read 
+    """This is an extension to reStructuredText and Sphinx to be able to read
     and render the Doxygen xml output."""
 
     homepage = "https://github.com/michaeljones/breathe"
