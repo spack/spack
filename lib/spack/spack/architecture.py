@@ -56,15 +56,15 @@ set. The user can set the front-end and back-end operating setting by the class
 attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
-import collections
 import os
 import inspect
 import itertools
-import platform as py_platform
 
+import llnl.util.multiproc
 import llnl.util.tty as tty
 from llnl.util.lang import memoized, list_modules, key_ordering
 
+import spack.compiler
 import spack.paths
 import spack.error as serr
 from spack.util.naming import mod_to_class
@@ -230,7 +230,30 @@ class OperatingSystem(object):
         return self.__str__()
 
     def _cmp_key(self):
-        return (self.name, self.version)
+        return self.name, self.version
+
+    def search_compiler_commands(self, *path_hints):
+        """Returns a list of commands that, when invoked, search for
+        compilers tied to this OS.
+
+        Args:
+            *path_hints (list of paths): path where to look for compilers
+
+        Returns:
+             List of callable functions.
+        """
+        # Turn the path hints into paths that are to be searched
+        paths = executable_search_paths(path_hints or get_path('PATH'))
+
+        # NOTE: we import spack.compilers here to avoid init order cycles
+        import spack.compilers
+
+        commands = []
+        for compiler_cls in spack.compilers.all_compiler_types():
+            commands.extend(
+                compiler_cls.search_compiler_commands(self, *paths)
+            )
+        return commands
 
     def find_compilers(self, *path_hints):
         """
@@ -238,89 +261,10 @@ class OperatingSystem(object):
         This invokes the find() method for each Compiler class,
         and appends the compilers detected to a list.
         """
-        paths = executable_search_paths(path_hints or get_path('PATH'))
-
-        # Once the paths are cleaned up, do a search for each type of
-        # compiler.  We can spawn a bunch of parallel searches to reduce
-        # the overhead of spelunking all these directories.
-        # NOTE: we import spack.compilers here to avoid init order cycles
-        import spack.compilers
-        types = spack.compilers.all_compiler_types()
-        # TODO: was parmap before
-        compiler_lists = map(
-            lambda cmp_cls: self.find_compiler(cmp_cls, *paths),
-            types)
-
-        # ensure all the version calls we made are cached in the parent
-        # process, as well.  This speeds up Spack a lot.
-        clist = [comp for cl in compiler_lists for comp in cl]
-        return clist
-
-    def find_compiler(self, cmp_cls, *search_paths):
-        """Try to find the given type of compiler in the user's
-           environment. For each set of compilers found, this returns
-           compiler objects with the cc, cxx, f77, fc paths and the
-           version filled in.
-
-           This will search for compilers with the names in cc_names,
-           cxx_names, etc. and it will group them if they have common
-           prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
-           be grouped with g++-mp-4.7 and gfortran-mp-4.7.
-        """
-        # The commands returned here are already sorted by language
-        commands = cmp_cls.search_compiler_commands(*search_paths)
-
-        def invoke(f):
-            return f()
-
-        compilers = map(invoke, commands)
-
-        # Remove search with no results
-        compilers = filter(None, compilers)
-
-        # Skip compilers with unknown version
-        def has_known_version(compiler_entry):
-            """Returns True if the key has not an unknown version."""
-            compiler_key, _ = compiler_entry
-            return compiler_key.version != 'unknown'
-
-        compilers = filter(has_known_version, compilers)
-
-        compilers_by_language = collections.defaultdict(dict)
-        language_key = lambda x: x[0].language
-        for language, group in itertools.groupby(compilers, language_key):
-            # The 'successful' list is ordered like the input paths.
-            # Reverse it here so that the dict creation (last insert wins)
-            # does not spoil the intended precedence.
-            compilers_by_language[language] = dict(reversed(list(group)))
-
-        dicts = [compilers_by_language[language]
-                 for language in ('cc', 'cxx', 'f77', 'fc')]
-
-        valid_keys = set(key for d in dicts for key in d)
-
-        compilers = {}
-        for k in valid_keys:
-            ver = k.version
-
-            paths = tuple(pn.get(k, None) for pn in dicts)
-            spec = spack.spec.CompilerSpec(cmp_cls.name, ver)
-
-            if ver in compilers:
-                prev = compilers[ver]
-
-                # prefer the one with more compilers.
-                prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
-                newcount = len([p for p in paths if p is not None])
-                prevcount = len([p for p in prev_paths if p is not None])
-
-                # Don't add if it's not an improvement over prev compiler.
-                if newcount <= prevcount:
-                    continue
-
-            compilers[ver] = cmp_cls(spec, self, py_platform.machine(), paths)
-
-        return list(compilers.values())
+        commands = self.search_compiler_commands(*path_hints)
+        compilers = llnl.util.multiproc.execute(commands)
+        compilers = spack.compiler.discard_invalid(compilers)
+        return spack.compiler.make_compiler_list(compilers)
 
     def to_dict(self):
         return {

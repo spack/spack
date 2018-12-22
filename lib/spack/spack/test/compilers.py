@@ -47,16 +47,16 @@ def test_all_compilers(config):
 
 def test_version_detection_is_empty():
     command = detect_version_command(
-        callback=lambda x: None, path='/usr/bin/gcc', cmp_cls=None,
-        lang='cc', prefix='', suffix=r'\d\d'
+        callback=lambda x: None, path='/usr/bin/gcc', operating_system=None,
+        cmp_cls=None, lang='cc', prefix='', suffix=r'\d\d'
     )
     assert command() is None
 
 
 def test_version_detection_is_successful():
     command = detect_version_command(
-        callback=lambda x: '4.9', path='/usr/bin/gcc', cmp_cls=None,
-        lang='cc', prefix='', suffix=r'\d\d'
+        callback=lambda x: '4.9', path='/usr/bin/gcc', operating_system=None,
+        cmp_cls=None, lang='cc', prefix='', suffix=r'\d\d'
     )
     correct = CompilerKey(None, None, 'cc', '4.9', '', r'\d\d'), '/usr/bin/gcc'
     assert command() == correct

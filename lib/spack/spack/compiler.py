@@ -8,7 +8,10 @@ import os
 import re
 import itertools
 
+import platform as py_platform
+
 import llnl.util.lang
+import llnl.util.multiproc
 import llnl.util.tty as tty
 
 import spack.error
@@ -249,11 +252,12 @@ class Compiler(object):
         return cls.default_version(fc)
 
     @classmethod
-    def search_compiler_commands(cls, *search_paths):
+    def search_compiler_commands(cls, operating_system, *search_paths):
         """Returns a list of commands that, when invoked, search for compilers
         in the paths supplied.
 
         Args:
+            operating_system (OperatingSystem): the OS requesting the search
             *search_paths (list of paths): paths where to look for a
                 compiler
 
@@ -266,7 +270,7 @@ class Compiler(object):
             return os.path.isdir(x) and os.access(x, os.R_OK | os.X_OK)
 
         # Select accessible directories
-        search_directories = filter(is_accessible_dir, search_paths)
+        search_directories = list(filter(is_accessible_dir, search_paths))
 
         search_args = []
         for language in ('cc', 'cxx', 'f77', 'fc'):
@@ -298,12 +302,15 @@ class Compiler(object):
                     for regexp in search_regexps:
                         match = regexp.match(file)
                         if match:
-                            key = (detect_version, full_path, cls, language) \
-                                + tuple(match.groups())
+                            key = (detect_version, full_path, operating_system,
+                                   cls, language) + tuple(match.groups())
                             search_args.append(key)
 
-        commands = [detect_version_command(*args) for args in search_args]
-        return commands
+        # The 'successful' list is ordered like the input paths.
+        # Reverse it here so that the dict creation (last insert wins)
+        # does not spoil the intended precedence.
+        return [detect_version_command(*args)
+                for args in reversed(search_args)]
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
@@ -326,44 +333,98 @@ CompilerKey = collections.namedtuple('CompilerKey', [
 ])
 
 
-def detect_version_command(callback, path, cmp_cls, lang, prefix, suffix):
-    """Returns a command that, when invoked, searches for a compiler and
-    detects its version.
+@llnl.util.multiproc.deferred
+def detect_version_command(
+        callback, path, operating_system, cmp_cls, lang, prefix, suffix
+):
+    """Search for a compiler and eventually detect its version.
 
     Args:
         callback (callable): function that given the full path to search
             returns a tuple of (CompilerKey, full path) or None
         path (path): absolute path to search
+        operating_system (OperatingSystem): the OS for which we are
+            looking for a compiler
         cmp_cls (Compiler): compiler class for this specific compiler
         lang (str): language of the compiler
         prefix (str): prefix of the compiler name
         suffix (str): suffix of the compiler name
 
     Returns:
-        Callable to be invoked.
+        A (CompilerKey, path) tuple if anything is found, else None
     """
-    def _detect_version():
-        try:
-            version = callback(path)
-            if (not version) or (not str(version).strip()):
-                tty.debug(
-                    "Couldn't get version for compiler %s" % path)
-                return None
-            return CompilerKey(
-                None, cmp_cls, lang, version, prefix, suffix
-            ), path
-        except spack.util.executable.ProcessError as e:
+    try:
+        version = callback(path)
+        if (not version) or (not str(version).strip()):
             tty.debug(
-                "Couldn't get version for compiler %s" % path, e)
+                "Couldn't get version for compiler %s" % path)
             return None
-        except Exception as e:
-            # Catching "Exception" here is fine because it just
-            # means something went wrong running a candidate executable.
-            tty.debug("Error while executing candidate compiler %s"
-                      % path,
-                      "%s: %s" % (e.__class__.__name__, e))
-            return None
-    return _detect_version
+        return CompilerKey(
+            operating_system, cmp_cls, lang, version, prefix, suffix
+        ), path
+    except spack.util.executable.ProcessError as e:
+        tty.debug(
+            "Couldn't get version for compiler %s" % path, e)
+        return None
+    except Exception as e:
+        # Catching "Exception" here is fine because it just
+        # means something went wrong running a candidate executable.
+        tty.debug("Error while executing candidate compiler %s"
+                  % path,
+                  "%s: %s" % (e.__class__.__name__, e))
+        return None
+
+
+def discard_invalid(compilers):
+    # Remove search with no results
+    compilers = filter(None, compilers)
+
+    # Skip compilers with unknown version
+    def has_known_version(compiler_entry):
+        """Returns True if the key has not an unknown version."""
+        compiler_key, _ = compiler_entry
+        return compiler_key.version != 'unknown'
+
+    return filter(has_known_version, compilers)
+
+
+def make_compiler_list(compilers):
+    # Group by (os, compiler type, version), (prefix, suffix), language
+    def sort_key_fn(item):
+        key, _ = item
+        return (key.os, str(key.cmp_cls), key.version), \
+               (key.prefix, key.suffix), key.language
+
+    compilers_s = sorted(compilers, key=sort_key_fn)
+    cmp_cls_d = {str(key.cmp_cls): key.cmp_cls for key, _ in compilers_s}
+
+    compilers_d = {}
+    for sort_key, group in itertools.groupby(compilers_s, sort_key_fn):
+        compiler_entry, ps, language = sort_key
+        by_compiler_entry = compilers_d.setdefault(compiler_entry, {})
+        by_ps = by_compiler_entry.setdefault(ps, {})
+        by_ps[language] = list(x[1] for x in group).pop()
+
+    # For each (os, compiler type, version) select the compiler
+    # with most entries and add it to a list
+    compilers = []
+    for compiler_entry, by_compiler_entry in compilers_d.items():
+        # Select the (prefix, suffix) match with most entries
+        max_lang, max_ps = max(
+            (len(by_compiler_entry[ps]), ps) for ps in by_compiler_entry
+        )
+
+        # Add it to the list of compilers
+        operating_system, cmp_cls_key, version = compiler_entry
+        cmp_cls = cmp_cls_d[cmp_cls_key]
+        spec = spack.spec.CompilerSpec(cmp_cls.name, version)
+        paths = [by_compiler_entry[max_ps].get(language, None)
+                 for language in ('cc', 'cxx', 'f77', 'fc')]
+        compilers.append(
+            cmp_cls(spec, operating_system, py_platform.machine(), paths)
+        )
+
+    return compilers
 
 
 class CompilerAccessError(spack.error.SpackError):

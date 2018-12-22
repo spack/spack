@@ -8,25 +8,46 @@ This implements a parallel map operation but it can accept more values
 than multiprocessing.Pool.apply() can.  For example, apply() will fail
 to pickle functions if they're passed indirectly as parameters.
 """
-from multiprocessing import Process, Pipe, Semaphore, Value
+import functools
+from multiprocessing import Semaphore, Value
 
-__all__ = ['spawn', 'parmap', 'Barrier']
-
-
-def spawn(f):
-    def fun(pipe, x):
-        pipe.send(f(x))
-        pipe.close()
-    return fun
+__all__ = ['Barrier']
 
 
-def parmap(f, elements):
-    pipe = [Pipe() for x in elements]
-    proc = [Process(target=spawn(f), args=(c, x))
-            for x, (p, c) in zip(elements, pipe)]
-    [p.start() for p in proc]
-    [p.join() for p in proc]
-    return [p.recv() for (p, c) in pipe]
+def deferred(func):
+    """Package a function call into something that can be invoked
+    at a later moment.
+
+    Args:
+        func (callable): callable that must be deferred
+
+    Returns:
+        Deferred version of the same function
+    """
+    @functools.wraps(func)
+    def _impl(*args, **kwargs):
+        def _deferred_call():
+            return func(*args, **kwargs)
+        return _deferred_call
+    return _impl
+
+
+def invoke(f):
+    return f()
+
+
+def execute(command_list, executor=map):
+    """Execute a list of packaged commands and return their result.
+
+    Args:
+        command_list: list of commands to be executed
+        executor: object that execute each command. Must have the
+            same semantic as ``map``.
+
+    Returns:
+        List of results
+    """
+    return executor(invoke, command_list)
 
 
 class Barrier:
