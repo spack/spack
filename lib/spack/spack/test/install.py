@@ -101,12 +101,13 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
     dependency.concretize()
     dependency.package.do_install()
 
-    dependency.package.patches['dependency-install'] = [
-        spack.patch.create(None, 'file://fake.patch', sha256='unused-hash')]
-
     dependency_hash = dependency.dag_hash()
     dependent = Spec('dependent-install ^/' + dependency_hash)
     dependent.concretize()
+
+    dependency.package.patches['dependency-install'] = [
+        spack.patch.UrlPatch(
+            dependent.package, 'file://fake.patch', sha256='unused-hash')]
 
     assert dependent['dependency-install'] == dependency
 

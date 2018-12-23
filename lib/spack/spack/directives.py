@@ -395,7 +395,7 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
     certain conditions (e.g. a particular version).
 
     Args:
-        url_or_filename (str): url or filename of the patch
+        url_or_filename (str): url or relative filename of the patch
         level (int): patch level (as in the patch shell command)
         when (Spec): optional anonymous spec that specifies when to apply
             the patch
@@ -417,13 +417,18 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
 
-        # if pkg_or_dep is a Dependency, make it a Package
         pkg = pkg_or_dep
         if isinstance(pkg, Dependency):
             pkg = pkg.pkg
 
-        cur_patches.append(spack.patch.create(
-            pkg, url_or_filename, level, working_dir, **kwargs))
+        if '://' in url_or_filename:
+            patch = spack.patch.UrlPatch(
+                pkg, url_or_filename, level, working_dir, **kwargs)
+        else:
+            patch = spack.patch.FilePatch(
+                pkg, url_or_filename, level, working_dir)
+
+        cur_patches.append(patch)
 
     return _execute_patch
 
