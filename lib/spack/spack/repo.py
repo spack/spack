@@ -13,7 +13,6 @@ import sys
 import inspect
 import re
 import traceback
-import json
 from contextlib import contextmanager
 from six import string_types, add_metaclass
 
@@ -33,7 +32,9 @@ from llnl.util.filesystem import mkdirp, install
 import spack.config
 import spack.caches
 import spack.error
+import spack.patch
 import spack.spec
+import spack.util.spack_json as sjson
 import spack.util.imp as simp
 from spack.provider_index import ProviderIndex
 from spack.util.path import canonicalize_path
@@ -190,11 +191,11 @@ class TagIndex(Mapping):
         self._tag_dict = collections.defaultdict(list)
 
     def to_json(self, stream):
-        json.dump({'tags': self._tag_dict}, stream)
+        sjson.dump({'tags': self._tag_dict}, stream)
 
     @staticmethod
     def from_json(stream):
-        d = json.load(stream)
+        d = sjson.load(stream)
 
         r = TagIndex()
 
@@ -242,6 +243,22 @@ class Indexer(object):
     def _create(self):
         """Create an empty index and return it."""
 
+    def needs_update(self, pkg):
+        """Whether an update is needed when the package file hasn't changed.
+
+        Returns:
+            (bool): ``True`` if this package needs its index
+                updated, ``False`` otherwise.
+
+        We already automatically update indexes when package files
+        change, but other files (like patches) may change underneath the
+        package file. This method can be used to check additional
+        package-specific files whenever they're loaded, to tell the
+        RepoIndex to update the index *just* for that package.
+
+        """
+        return False
+
     @abc.abstractmethod
     def read(self, stream):
         """Read this index from a provided file object."""
@@ -284,6 +301,28 @@ class ProviderIndexer(Indexer):
 
     def write(self, stream):
         self.index.to_json(stream)
+
+
+class PatchIndexer(Indexer):
+    """Lifecycle methods for patch cache."""
+    def _create(self):
+        return spack.patch.PatchCache()
+
+    def needs_update():
+        # TODO: patches can change under a package and we should handle
+        # TODO: it, but we currently punt. This should be refactored to
+        # TODO: check whether patches changed each time a package loads,
+        # TODO: tell the RepoIndex to reindex them.
+        return False
+
+    def read(self, stream):
+        self.index = spack.patch.PatchCache.from_json(stream)
+
+    def write(self, stream):
+        self.index.to_json(stream)
+
+    def update(self, pkg_fullname):
+        self.index.update_package(pkg_fullname)
 
 
 class RepoIndex(object):
@@ -403,6 +442,7 @@ class RepoPath(object):
 
         self._all_package_names = None
         self._provider_index = None
+        self._patch_index = None
 
         # Add each repo to this path.
         for repo in repos:
@@ -500,6 +540,16 @@ class RepoPath(object):
                 self._provider_index.merge(repo.provider_index)
 
         return self._provider_index
+
+    @property
+    def patch_index(self):
+        """Merged PatchIndex from all Repos in the RepoPath."""
+        if self._patch_index is None:
+            self._patch_index = spack.patch.PatchCache()
+            for repo in reversed(self.repos):
+                self._patch_index.update(repo.patch_index)
+
+        return self._patch_index
 
     @_autospec
     def providers_for(self, vpkg_spec):
@@ -870,15 +920,14 @@ class Repo(object):
                 "Repository %s does not contain package %s."
                 % (self.namespace, spec.fullname))
 
-        # Install any patch files needed by packages.
+        # Install patch files needed by the package.
         mkdirp(path)
-        for spec, patches in spec.package.patches.items():
-            for patch in patches:
-                if patch.path:
-                    if os.path.exists(patch.path):
-                        install(patch.path, path)
-                    else:
-                        tty.warn("Patch file did not exist: %s" % patch.path)
+        for patch in spec.patches:
+            if patch.path:
+                if os.path.exists(patch.path):
+                    install(patch.path, path)
+                else:
+                    tty.warn("Patch file did not exist: %s" % patch.path)
 
         # Install the package.py file itself.
         install(self.filename_for_package_name(spec), path)
@@ -894,6 +943,7 @@ class Repo(object):
             self._repo_index = RepoIndex(self._pkg_checker, self.namespace)
             self._repo_index.add_indexer('providers', ProviderIndexer())
             self._repo_index.add_indexer('tags', TagIndexer())
+            self._repo_index.add_indexer('patches', PatchIndexer())
         return self._repo_index
 
     @property
@@ -905,6 +955,11 @@ class Repo(object):
     def tag_index(self):
         """Index of tags and which packages they're defined on."""
         return self.index['tags']
+
+    @property
+    def patch_index(self):
+        """Index of patches and packages they're defined on."""
+        return self.index['patches']
 
     @_autospec
     def providers_for(self, vpkg_spec):
@@ -1198,6 +1253,10 @@ class BadRepoError(RepoError):
 
 class UnknownEntityError(RepoError):
     """Raised when we encounter a package spack doesn't have."""
+
+
+class IndexError(RepoError):
+    """Raised when there's an error with an index."""
 
 
 class UnknownPackageError(UnknownEntityError):

@@ -41,8 +41,9 @@ data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
 def test_url_patch(mock_stage, filename, sha256, archive_sha256):
     # Make a patch object
     url = 'file://' + filename
-    patch = spack.patch.create(
-        None, url, sha256=sha256, archive_sha256=archive_sha256)
+    pkg = spack.repo.get('patch')
+    patch = spack.patch.UrlPatch(
+        pkg, url, sha256=sha256, archive_sha256=archive_sha256)
 
     # make a stage
     with Stage(url) as stage:  # TODO: url isn't used; maybe refactor Stage

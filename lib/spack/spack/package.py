@@ -223,6 +223,11 @@ class PackageMeta(
             namespace = namespace[len(prefix):]
         return namespace
 
+    @property
+    def fullname(self):
+        """Name of this package, including the namespace"""
+        return '%s.%s' % (self.namespace, self.name)
+
 
 def run_before(*phases):
     """Registers a method of a package to be run before a given phase"""
@@ -566,6 +571,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def namespace(self):
         """Spack namespace for the package, which identifies its repo."""
         return type(self).namespace
+
+    @property
+    def fullname(self):
+        """Name of this package, including namespace: namespace.name."""
+        return type(self).fullname
 
     @property
     def global_license_dir(self):
@@ -967,40 +977,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not os.listdir(self.stage.path):
             raise FetchError("Archive was empty for %s" % self.name)
-
-    @classmethod
-    def lookup_patch(cls, sha256):
-        """Look up a patch associated with this package by its sha256 sum.
-
-        Args:
-            sha256 (str): sha256 sum of the patch to look up
-
-        Returns:
-            (Patch): ``Patch`` object with the given hash, or ``None`` if
-                not found.
-
-        To do the lookup, we build an index lazily.  This allows us to
-        avoid computing a sha256 for *every* patch and on every package
-        load.  With lazy hashing, we only compute hashes on lookup, which
-        usually happens at build time.
-
-        """
-        if cls._patches_by_hash is None:
-            cls._patches_by_hash = {}
-
-            # Add patches from the class
-            for cond, patch_list in cls.patches.items():
-                for patch in patch_list:
-                    cls._patches_by_hash[patch.sha256] = patch
-
-            # and patches on dependencies
-            for name, conditions in cls.dependencies.items():
-                for cond, dependency in conditions.items():
-                    for pcond, patch_list in dependency.patches.items():
-                        for patch in patch_list:
-                            cls._patches_by_hash[patch.sha256] = patch
-
-        return cls._patches_by_hash.get(sha256, None)
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
