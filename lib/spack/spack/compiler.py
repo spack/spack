@@ -419,8 +419,8 @@ def make_compiler_list(tags, compiler_versions):
         # Add it to the list of compilers
         operating_system, compiler_cls, version = compiler_id
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [by_compiler_id[selected_name_variation].get(language, None)
-                 for language in ('cc', 'cxx', 'f77', 'fc')]
+        paths = [by_compiler_id[selected_name_variation].get(l, None)
+                 for l in ('cc', 'cxx', 'f77', 'fc')]
         compilers.append(
             compiler_cls(spec, operating_system, py_platform.machine(), paths)
         )
