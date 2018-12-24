@@ -8,6 +8,7 @@ import os
 import re
 import itertools
 
+import functools_backport
 import platform as py_platform
 
 import llnl.util.lang
@@ -328,9 +329,30 @@ class Compiler(object):
                 str(self.operating_system)))))
 
 
-CompilerKey = collections.namedtuple('CompilerKey', [
-    'os', 'cmp_cls', 'language', 'version', 'prefix', 'suffix'
-])
+@functools_backport.total_ordering
+class _CompilerID(collections.namedtuple('_CompilerIDBase', [
+    'os', 'cmp_cls', 'version'
+])):
+    """Gathers the attribute values by which a detected compiler is unique."""
+    def _tuple_repr(self):
+        return self.os, str(self.cmp_cls), self.version
+
+    def __eq__(self, other):
+        if not isinstance(other, _CompilerID):
+            return NotImplemented
+        return self._tuple_repr() == other._tuple_repr()
+
+    def __lt__(self, other):
+        if not isinstance(other, _CompilerID):
+            return NotImplemented
+        return self._tuple_repr() < other._tuple_repr()
+
+    def __hash__(self):
+        return hash(self._tuple_repr())
+
+
+#: Variations on a matched compiler name
+_NameVariation = collections.namedtuple('_NameVariation', ['prefix', 'suffix'])
 
 
 @llnl.util.multiproc.deferred
@@ -359,9 +381,8 @@ def detect_version_command(
             tty.debug(
                 "Couldn't get version for compiler %s" % path)
             return None
-        return CompilerKey(
-            operating_system, cmp_cls, lang, version, prefix, suffix
-        ), path
+        return (_CompilerID(operating_system, cmp_cls, version),
+                _NameVariation(prefix, suffix), lang), path
     except spack.util.executable.ProcessError as e:
         tty.debug(
             "Couldn't get version for compiler %s" % path, e)
@@ -383,52 +404,37 @@ def _discard_invalid(compilers):
     # Skip compilers with unknown version
     def has_known_version(compiler_entry):
         """Returns True if the key has not an unknown version."""
-        compiler_key, _ = compiler_entry
-        return compiler_key.version != 'unknown'
+        (compiler_id, _, _), _ = compiler_entry
+        return compiler_id.version != 'unknown'
 
     return filter(has_known_version, compilers)
 
 
 def make_compiler_list(compilers):
-    compilers = _discard_invalid(compilers)
-
-    # Group by (os, compiler type, version), (prefix, suffix), language
-    def sort_key_fn(item):
-        key, _ = item
-        return (key.os, str(key.cmp_cls), key.version), \
-               (key.prefix, key.suffix), key.language
-
-    compilers_s = sorted(compilers, key=sort_key_fn)
-    # This dictionary is needed because a class (NOT an instance of it)
-    # doesn't have __lt__ or other similar functions defined. Therefore
-    # we sort on its string representation and need to maintain the map
-    # to the class here
-    cmp_cls_d = {str(key.cmp_cls): key.cmp_cls for key, _ in compilers_s}
+    compilers_s = sorted(_discard_invalid(compilers))
 
     compilers_d = {}
-    for sort_key, group in itertools.groupby(compilers_s, sort_key_fn):
-        compiler_entry, ps, language = sort_key
-        by_compiler_entry = compilers_d.setdefault(compiler_entry, {})
-        by_ps = by_compiler_entry.setdefault(ps, {})
-        by_ps[language] = list(x[1] for x in group).pop()
+    for sort_key, group in itertools.groupby(compilers_s, key=lambda x: x[0]):
+        compiler_id, name_variation, language = sort_key
+        by_compiler_id = compilers_d.setdefault(compiler_id, {})
+        by_name_variation = by_compiler_id.setdefault(name_variation, {})
+        by_name_variation[language] = list(x[1] for x in group).pop()
 
-    # For each (os, compiler type, version) select the compiler
-    # with most entries and add it to a list
+    # For each unique compiler_id select the name variation with most entries
     compilers = []
-    for compiler_entry, by_compiler_entry in compilers_d.items():
-        # Select the (prefix, suffix) match with most entries
-        max_lang, max_ps = max(
-            (len(by_compiler_entry[ps]), ps) for ps in by_compiler_entry
+    for compiler_id, by_compiler_id in compilers_d.items():
+        _, selected_name_variation = max(
+            (len(by_compiler_id[variation]), variation)
+            for variation in by_compiler_id
         )
 
         # Add it to the list of compilers
-        operating_system, cmp_cls_key, version = compiler_entry
-        cmp_cls = cmp_cls_d[cmp_cls_key]
-        spec = spack.spec.CompilerSpec(cmp_cls.name, version)
-        paths = [by_compiler_entry[max_ps].get(language, None)
+        operating_system, compiler_cls, version = compiler_id
+        spec = spack.spec.CompilerSpec(compiler_cls.name, version)
+        paths = [by_compiler_id[selected_name_variation].get(language, None)
                  for language in ('cc', 'cxx', 'f77', 'fc')]
         compilers.append(
-            cmp_cls(spec, operating_system, py_platform.machine(), paths)
+            compiler_cls(spec, operating_system, py_platform.machine(), paths)
         )
 
     return compilers

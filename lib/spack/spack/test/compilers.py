@@ -23,7 +23,8 @@ import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.compilers.fj
 
-from spack.compiler import detect_version_command, Compiler, CompilerKey
+from spack.compiler import detect_version_command, Compiler
+from spack.compiler import _CompilerID, _NameVariation
 
 
 def test_get_compiler_duplicates(config):
@@ -58,7 +59,8 @@ def test_version_detection_is_successful():
         callback=lambda x: '4.9', path='/usr/bin/gcc', operating_system=None,
         cmp_cls=None, lang='cc', prefix='', suffix=r'\d\d'
     )
-    correct = CompilerKey(None, None, 'cc', '4.9', '', r'\d\d'), '/usr/bin/gcc'
+    correct = (_CompilerID(None, None, '4.9'),
+               _NameVariation('', r'\d\d'), 'cc'), '/usr/bin/gcc'
     assert command() == correct
 
 
