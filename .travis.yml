@@ -94,6 +94,10 @@ jobs:
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
     - python: '3.6'
       stage: 'docker build'
+<<<<<<< HEAD
+=======
+      sudo: required
+>>>>>>> travis: fix pip install for docker stage (#10177)
       os: linux
       language: python
       env: TEST_SUITE=docker
