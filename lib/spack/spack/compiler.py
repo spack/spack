@@ -375,7 +375,8 @@ def detect_version_command(
         return None
 
 
-def discard_invalid(compilers):
+def _discard_invalid(compilers):
+    """Removes invalid compilers from the list"""
     # Remove search with no results
     compilers = filter(None, compilers)
 
@@ -389,6 +390,8 @@ def discard_invalid(compilers):
 
 
 def make_compiler_list(compilers):
+    compilers = _discard_invalid(compilers)
+
     # Group by (os, compiler type, version), (prefix, suffix), language
     def sort_key_fn(item):
         key, _ = item
@@ -396,6 +399,10 @@ def make_compiler_list(compilers):
                (key.prefix, key.suffix), key.language
 
     compilers_s = sorted(compilers, key=sort_key_fn)
+    # This dictionary is needed because a class (NOT an instance of it)
+    # doesn't have __lt__ or other similar functions defined. Therefore
+    # we sort on its string representation and need to maintain the map
+    # to the class here
     cmp_cls_d = {str(key.cmp_cls): key.cmp_cls for key, _ in compilers_s}
 
     compilers_d = {}

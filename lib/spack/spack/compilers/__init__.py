@@ -7,7 +7,9 @@
 system and configuring Spack to use multiple compilers.
 """
 import itertools
+import multiprocessing.pool
 import os
+
 
 import llnl.util.multiproc
 from llnl.util.lang import list_modules
@@ -193,10 +195,10 @@ def find_compilers(*paths):
     search_commands = itertools.chain.from_iterable(
         o.search_compiler_commands(*paths) for o in all_os_classes()
     )
-    # TODO: activate multiprocessing
-    # with multiprocessing.Pool(processes=None) as p:
-    compilers = llnl.util.multiproc.execute(search_commands, executor=map)
-    compilers = spack.compiler.discard_invalid(compilers)
+
+    with multiprocessing.pool.ThreadPool() as tp:
+        compilers = llnl.util.multiproc.execute(search_commands, map_fn=tp.map)
+
     return spack.compiler.make_compiler_list(compilers)
 
 

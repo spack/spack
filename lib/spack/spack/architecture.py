@@ -60,7 +60,6 @@ import os
 import inspect
 import itertools
 
-import llnl.util.multiproc
 import llnl.util.tty as tty
 from llnl.util.lang import memoized, list_modules, key_ordering
 
@@ -254,17 +253,6 @@ class OperatingSystem(object):
                 compiler_cls.search_compiler_commands(self, *paths)
             )
         return commands
-
-    def find_compilers(self, *path_hints):
-        """
-        Return a list of compilers found in the supplied paths.
-        This invokes the find() method for each Compiler class,
-        and appends the compilers detected to a list.
-        """
-        commands = self.search_compiler_commands(*path_hints)
-        compilers = llnl.util.multiproc.execute(commands)
-        compilers = spack.compiler.discard_invalid(compilers)
-        return spack.compiler.make_compiler_list(compilers)
 
     def to_dict(self):
         return {
