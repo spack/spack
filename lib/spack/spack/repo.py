@@ -276,14 +276,14 @@ class ProviderIndexer(Indexer):
         return ProviderIndex()
 
     def read(self, stream):
-        self.index = ProviderIndex.from_yaml(stream)
+        self.index = ProviderIndex.from_json(stream)
 
     def update(self, pkg_fullname):
         self.index.remove_provider(pkg_fullname)
         self.index.update(pkg_fullname)
 
     def write(self, stream):
-        self.index.to_yaml(stream)
+        self.index.to_json(stream)
 
 
 class RepoIndex(object):
