@@ -39,8 +39,8 @@ class Stata(Package):
 #   explicitly for 12. So until 12 is packaged, `yum install libpng`. :-)
 #
 # * This really only installs the command line version of the program. To
-#   install GUI support there are extra packages needed that I can't easily test
-#   right now (should be installable via yum too as a temp workaround):
+#   install GUI support there are extra packages needed that I can't easily
+#   test right now (should be installable via yum too as a temp workaround):
 #   libgtk-x11-2.0.so libgdk-x11-2.0.so libatk-1.0.so libgdk_pixbuf-2.0.so
 #
 # * There are two popular environment variables that can be set, but vary from
