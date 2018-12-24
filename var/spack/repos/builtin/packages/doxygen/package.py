@@ -14,7 +14,7 @@ class Doxygen(CMakePackage):
     extent D.."""
 
     homepage = "http://www.doxygen.nl/"
-    url      = "https://sourceforge.net/projects/doxygen/files/rel-1.8.14/doxygen-1.8.14.src.tar.gz/download"
+    url      = "https://doxygen.nl/files/doxygen-1.8.14.src.tar.gz"
 
     version('1.8.14', '41d8821133e8d8104280030553e2b42b')
     version('1.8.12', '08e0f7850c4d22cb5188da226b209a96')
