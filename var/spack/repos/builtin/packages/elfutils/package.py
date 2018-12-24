@@ -34,9 +34,6 @@ class Elfutils(AutotoolsPackage):
     variant('xz', default=False,
             description='Support xz (lzma) compressed sections.')
 
-    variant('elfh', default=False,
-            description='Install the elf.h header file.')
-
     # Native language support from libintl.
     variant('nls', default=True,
             description='Enable Native Language Support.')
@@ -90,11 +87,10 @@ class Elfutils(AutotoolsPackage):
 
         return args
 
-    # Install elf.h to include dir, when +elfh.
+    # Install elf.h to include directory.
     @run_after('install')
     def install_elfh(self):
-        if '+elfh' in self.spec:
-            install(join_path('libelf', 'elf.h'), self.prefix.include)
+        install(join_path('libelf', 'elf.h'), self.prefix.include)
 
     # Provide location of libelf.so to match libelf.
     @property
