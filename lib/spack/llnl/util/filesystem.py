@@ -21,7 +21,7 @@ from contextlib import contextmanager
 
 import six
 from llnl.util import tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 from spack.util.executable import Executable
 
 __all__ = [
@@ -1351,3 +1351,37 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
     return LibraryList(find(root, libraries, recursive))
+
+
+@memoized
+def is_accessible_dir(path):
+    """Returns True if the argument is an accessible directory.
+
+    Args:
+        path: path to be tested
+
+    Returns:
+        True if ``path`` is an accessible directory, else False
+    """
+    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
+
+
+@memoized
+def files_in(*search_paths):
+    """Returns all the files in paths passed as arguments.
+
+    Caller must ensure that each path in ``search_paths`` is a directory.
+
+    Args:
+        *search_paths: directories to be searched
+
+    Returns:
+        List of (file, full_path) tuples with all the files found.
+    """
+    files = []
+    for d in filter(is_accessible_dir, search_paths):
+        files.extend(filter(
+            lambda x: os.path.isfile(x[1]),
+            [(f, os.path.join(d, f)) for f in os.listdir(d)]
+        ))
+    return files

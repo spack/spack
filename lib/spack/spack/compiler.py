@@ -13,6 +13,7 @@ import platform as py_platform
 
 import llnl.util.lang
 import llnl.util.multiproc
+import llnl.util.filesystem
 import llnl.util.tty as tty
 
 import spack.error
@@ -268,12 +269,7 @@ class Compiler(object):
                 is a list of commands that, when executed, will detect the
                 version of the corresponding compiler.
         """
-        def is_accessible_dir(x):
-            """Returns True if the argument is an accessible directory."""
-            return os.path.isdir(x) and os.access(x, os.R_OK | os.X_OK)
-
-        # Select accessible directories
-        search_directories = list(filter(is_accessible_dir, search_paths))
+        files_to_be_tested = llnl.util.filesystem.files_in(*search_paths)
 
         tags, commands = [], []
         for language in ('cc', 'cxx', 'f77', 'fc'):
@@ -295,23 +291,18 @@ class Compiler(object):
             ]
 
             # Select only the files matching a regexp
-            for d in search_directories:
-                # Only select actual files, use the full path
-                files = filter(
-                    os.path.isfile, [os.path.join(d, f) for f in os.listdir(d)]
-                )
-                for full_path in files:
-                    file = os.path.basename(full_path)
-                    for regexp in search_regexps:
-                        match = regexp.match(file)
-                        if match:
-                            tags.append(
-                                (_CompilerID(operating_system, cls, None),
-                                 _NameVariation(*match.groups()), language)
-                            )
-                            commands.append(
-                                detect_version_command(callback, full_path)
-                            )
+            for (file, full_path), regexp in itertools.product(
+                    files_to_be_tested, search_regexps
+            ):
+                match = regexp.match(file)
+                if match:
+                    tags.append(
+                        (_CompilerID(operating_system, cls, None),
+                         _NameVariation(*match.groups()), language)
+                    )
+                    commands.append(
+                        detect_version_command(callback, full_path)
+                    )
 
         # Reverse it here so that the dict creation (last insert wins)
         # does not spoil the intended precedence.
