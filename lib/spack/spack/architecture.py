@@ -239,7 +239,10 @@ class OperatingSystem(object):
             *path_hints (list of paths): path where to look for compilers
 
         Returns:
-             List of callable functions.
+            (tags, commands): ``tags`` is a list of compiler tags, containing
+                all the information on a compiler, but version. ``commands``
+                is a list of commands that, when executed, will detect the
+                version of the corresponding compiler.
         """
         # Turn the path hints into paths that are to be searched
         paths = executable_search_paths(path_hints or get_path('PATH'))
@@ -247,12 +250,12 @@ class OperatingSystem(object):
         # NOTE: we import spack.compilers here to avoid init order cycles
         import spack.compilers
 
-        commands = []
+        tags, commands = [], []
         for compiler_cls in spack.compilers.all_compiler_types():
-            commands.extend(
-                compiler_cls.search_compiler_commands(self, *paths)
-            )
-        return commands
+            t, c = compiler_cls.search_compiler_commands(self, *paths)
+            tags.extend(t), commands.extend(c)
+
+        return tags, commands
 
     def to_dict(self):
         return {

@@ -6,10 +6,8 @@
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
-import itertools
 import multiprocessing.pool
 import os
-
 
 import llnl.util.multiproc
 from llnl.util.lang import list_modules
@@ -192,14 +190,15 @@ def find_compilers(*paths):
     Returns:
         List of compilers found in the supplied paths
     """
-    search_commands = itertools.chain.from_iterable(
-        o.search_compiler_commands(*paths) for o in all_os_classes()
-    )
+    tags, commands = [], []
+    for o in all_os_classes():
+        t, c = o.search_compiler_commands(*paths)
+        tags.extend(t), commands.extend(c)
 
     with multiprocessing.pool.ThreadPool() as tp:
-        compilers = llnl.util.multiproc.execute(search_commands, map_fn=tp.map)
+        compiler_versions = llnl.util.multiproc.execute(commands, tp.map)
 
-    return spack.compiler.make_compiler_list(compilers)
+    return spack.compiler.make_compiler_list(tags, compiler_versions)
 
 
 def supported_compilers():

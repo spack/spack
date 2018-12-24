@@ -263,8 +263,10 @@ class Compiler(object):
                 compiler
 
         Returns:
-            Dictionary with compilers grouped by (version, prefix, suffix)
-            tuples.
+            (tags, commands): ``tags`` is a list of compiler tags, containing
+                all the information on a compiler, but version. ``commands``
+                is a list of commands that, when executed, will detect the
+                version of the corresponding compiler.
         """
         def is_accessible_dir(x):
             """Returns True if the argument is an accessible directory."""
@@ -273,12 +275,12 @@ class Compiler(object):
         # Select accessible directories
         search_directories = list(filter(is_accessible_dir, search_paths))
 
-        search_args = []
+        tags, commands = [], []
         for language in ('cc', 'cxx', 'f77', 'fc'):
 
             # Get compiler names and the callback to detect their versions
             compiler_names = getattr(cls, '{0}_names'.format(language))
-            detect_version = getattr(cls, '{0}_version'.format(language))
+            callback = getattr(cls, '{0}_version'.format(language))
 
             # Compile all the regular expressions used for files beforehand.
             # This searches for any combination of <prefix><name><suffix>
@@ -303,15 +305,17 @@ class Compiler(object):
                     for regexp in search_regexps:
                         match = regexp.match(file)
                         if match:
-                            key = (detect_version, full_path, operating_system,
-                                   cls, language) + tuple(match.groups())
-                            search_args.append(key)
+                            tags.append(
+                                (_CompilerID(operating_system, cls, None),
+                                 _NameVariation(*match.groups()), language)
+                            )
+                            commands.append(
+                                detect_version_command(callback, full_path)
+                            )
 
-        # The 'successful' list is ordered like the input paths.
         # Reverse it here so that the dict creation (last insert wins)
         # does not spoil the intended precedence.
-        return [detect_version_command(*args)
-                for args in reversed(search_args)]
+        return reversed(tags), reversed(commands)
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
@@ -356,62 +360,55 @@ _NameVariation = collections.namedtuple('_NameVariation', ['prefix', 'suffix'])
 
 
 @llnl.util.multiproc.deferred
-def detect_version_command(
-        callback, path, operating_system, cmp_cls, lang, prefix, suffix
-):
-    """Search for a compiler and eventually detect its version.
+def detect_version_command(callback, path):
+    """Detects the version of a compiler at a given path.
 
     Args:
-        callback (callable): function that given the full path to search
-            returns a tuple of (CompilerKey, full path) or None
+        callback (callable): function that detects the version of
+            the compiler at ``path``
         path (path): absolute path to search
-        operating_system (OperatingSystem): the OS for which we are
-            looking for a compiler
-        cmp_cls (Compiler): compiler class for this specific compiler
-        lang (str): language of the compiler
-        prefix (str): prefix of the compiler name
-        suffix (str): suffix of the compiler name
 
     Returns:
-        A (CompilerKey, path) tuple if anything is found, else None
+        (value, error): if anything is found ``value`` is a ``(version, path)``
+            tuple and ``error`` is None. If ``error`` is not None, ``value``
+            is meaningless and can be discarded.
     """
     try:
         version = callback(path)
-        if (not version) or (not str(version).strip()):
-            tty.debug(
-                "Couldn't get version for compiler %s" % path)
-            return None
-        return (_CompilerID(operating_system, cmp_cls, version),
-                _NameVariation(prefix, suffix), lang), path
+        if version and str(version).strip():
+            return (version, path), None
+        error = "Couldn't get version for compiler {0}".format(path)
     except spack.util.executable.ProcessError as e:
-        tty.debug(
-            "Couldn't get version for compiler %s" % path, e)
-        return None
+        error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
     except Exception as e:
         # Catching "Exception" here is fine because it just
         # means something went wrong running a candidate executable.
-        tty.debug("Error while executing candidate compiler %s"
-                  % path,
-                  "%s: %s" % (e.__class__.__name__, e))
-        return None
+        error = "Error while executing candidate compiler {0}" \
+                "\n{1}: {2}".format(path, e.__class__.__name__, str(e))
+    return None, error
 
 
-def _discard_invalid(compilers):
-    """Removes invalid compilers from the list"""
-    # Remove search with no results
-    compilers = filter(None, compilers)
+def make_compiler_list(tags, compiler_versions):
+    assert len(tags) == len(compiler_versions), \
+        "the two arguments must have the same length"
 
-    # Skip compilers with unknown version
-    def has_known_version(compiler_entry):
-        """Returns True if the key has not an unknown version."""
-        (compiler_id, _, _), _ = compiler_entry
-        return compiler_id.version != 'unknown'
+    compilers_s = []
+    for (compiler_id, name_variation, lang), (return_value, error) \
+            in zip(tags, compiler_versions):
+        # If we had an error, move to the next element
+        if error:
+            tty.debug(error)
+            continue
 
-    return filter(has_known_version, compilers)
+        # Skip unknown versions
+        version, path = return_value
+        if version == 'unknown':
+            continue
 
+        tag = compiler_id._replace(version=version), name_variation, lang
+        compilers_s.append((tag, path))
 
-def make_compiler_list(compilers):
-    compilers_s = sorted(_discard_invalid(compilers))
+    compilers_s.sort()
 
     compilers_d = {}
     for sort_key, group in itertools.groupby(compilers_s, key=lambda x: x[0]):
