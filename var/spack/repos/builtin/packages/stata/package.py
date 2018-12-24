@@ -28,6 +28,7 @@ import os
 import llnl.util.filesystem as fs
 from datetime import datetime
 
+
 class Stata(Package):
     """STATA is a general-purpose statistical software package developed
        by StataCorp."""
@@ -48,7 +49,7 @@ class Stata(Package):
 # * I haven't tested any installer version but 15.
 
     homepage = "https://www.stata.com/"
-    #url      = "stata"
+    # url      = "stata"
 
     version('15', '2486f4c7db1e7b453004c7bd3f8da40ba1e30be150613065c7b82b1915259016')
 
@@ -83,7 +84,7 @@ class Stata(Package):
     # echo $(date) > installed.150
     #
     # 2. Then it extracts the tar.gz files: ado.taz base.taz bins.taz docs.taz
-    # 
+    #
     # 3. It copies installer scripts to root directory
     # cp ./unix/linux64/setrwxp setrwxp
     # cp ./unix/linux64/inst2 inst2
@@ -101,24 +102,24 @@ class Stata(Package):
         tar = which('tar')
 
         # Step 1.
-        x=datetime.now()
-        file = open("installed.150","w")
+        x = datetime.now()
+        file = open("installed.150", "w")
         file.write(x.strftime("%a %b %d %H:%M:%S %Z %Y"))
         file.close()
 
         # Step 2.
-        instlist = [ 'ado.taz', 'base.taz', 'bins.taz', 'docs.taz' ]
+        instlist = ['ado.taz', 'base.taz', 'bins.taz', 'docs.taz']
         for instfile in instlist:
             tar('-x', '-z', '-f', 'unix/linux64/' + instfile)
 
         # Step 3.
-        fs.install('unix/linux64/setrwxp','setrwxp')
-        fs.install('unix/linux64/inst2','inst2')
+        fs.install('unix/linux64/setrwxp', 'setrwxp')
+        fs.install('unix/linux64/inst2', 'inst2')
 
-        # Step 4. Since the install script calls out specific permissions and could change
-        # in the future (or old versions) I thought it best to just use it.
-        bash("./setrwxp","now")
+        # Step 4. Since the install script calls out specific permissions and
+        # could change in the future (or old versions) I thought it best to
+        # just use it.
+        bash("./setrwxp", "now")
 
-        # The install should now be good to copy into the installation directory.
-        #install("installed.150",prefix)
-        install_tree(os.getcwd(),prefix)
+        # Install should now be good to copy into the installation directory.
+        install_tree(os.getcwd(), prefix)
