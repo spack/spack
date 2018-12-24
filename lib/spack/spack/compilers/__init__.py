@@ -195,8 +195,9 @@ def find_compilers(*paths):
         t, c = o.search_compiler_commands(*paths)
         tags.extend(t), commands.extend(c)
 
-    with multiprocessing.pool.ThreadPool() as tp:
-        compiler_versions = llnl.util.multiproc.execute(commands, tp.map)
+    tp = multiprocessing.pool.ThreadPool()
+    compiler_versions = llnl.util.multiproc.execute(commands, tp.map)
+    tp.close()
 
     return spack.compiler.make_compiler_list(tags, compiler_versions)
 
