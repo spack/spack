@@ -10,6 +10,7 @@ import itertools
 
 import functools_backport
 import platform as py_platform
+import six
 
 import llnl.util.lang
 import llnl.util.multiproc
@@ -366,16 +367,18 @@ def detect_version_command(callback, path):
     """
     try:
         version = callback(path)
-        if version and str(version).strip():
+        if version and six.text_type(version).strip():
             return (version, path), None
         error = "Couldn't get version for compiler {0}".format(path)
     except spack.util.executable.ProcessError as e:
-        error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
+        error = "Couldn't get version for compiler {0}\n".format(path) + \
+                six.text_type(e)
     except Exception as e:
         # Catching "Exception" here is fine because it just
         # means something went wrong running a candidate executable.
         error = "Error while executing candidate compiler {0}" \
-                "\n{1}: {2}".format(path, e.__class__.__name__, str(e))
+                "\n{1}: {2}".format(path, e.__class__.__name__,
+                                    six.text_type(e))
     return None, error
 
 

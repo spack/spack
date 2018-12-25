@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from datetime import datetime
+from __future__ import unicode_literals
+
 import fcntl
 import os
 import struct
@@ -11,6 +12,8 @@ import sys
 import termios
 import textwrap
 import traceback
+import six
+from datetime import datetime
 from six import StringIO
 from six.moves import input
 
@@ -155,7 +158,7 @@ def msg(message, *args, **kwargs):
         cwrite("@*b{%s==>} %s%s" % (
             st_text, get_timestamp(), cescape(message)))
     for arg in args:
-        print(indent + str(arg))
+        print(indent + six.text_type(arg))
 
 
 def info(message, *args, **kwargs):
@@ -172,17 +175,17 @@ def info(message, *args, **kwargs):
     if _stacktrace:
         st_text = process_stacktrace(st_countback)
     cprint("@%s{%s==>} %s%s" % (
-        format, st_text, get_timestamp(), cescape(str(message))),
-        stream=stream)
+        format, st_text, get_timestamp(), cescape(six.text_type(message))
+    ), stream=stream)
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
-                str(arg), initial_indent=indent, subsequent_indent=indent,
-                break_long_words=break_long_words)
+                six.text_type(arg), initial_indent=indent,
+                subsequent_indent=indent, break_long_words=break_long_words)
             for line in lines:
                 stream.write(line + '\n')
         else:
-            stream.write(indent + str(arg) + '\n')
+            stream.write(indent + six.text_type(arg) + '\n')
 
 
 def verbose(message, *args, **kwargs):
@@ -204,7 +207,7 @@ def error(message, *args, **kwargs):
 
     kwargs.setdefault('format', '*r')
     kwargs.setdefault('stream', sys.stderr)
-    info("Error: " + str(message), *args, **kwargs)
+    info("Error: " + six.text_type(message), *args, **kwargs)
 
 
 def warn(message, *args, **kwargs):
@@ -213,7 +216,7 @@ def warn(message, *args, **kwargs):
 
     kwargs.setdefault('format', '*Y')
     kwargs.setdefault('stream', sys.stderr)
-    info("Warning: " + str(message), *args, **kwargs)
+    info("Warning: " + six.text_type(message), *args, **kwargs)
 
 
 def die(message, *args, **kwargs):
@@ -237,7 +240,7 @@ def get_number(prompt, **kwargs):
     while number is None:
         msg(prompt, newline=False)
         ans = input()
-        if ans == str(abort):
+        if ans == six.text_type(abort):
             return None
 
         if ans:
@@ -303,7 +306,7 @@ def hline(label=None, **kwargs):
         cols -= 2
     cols = min(max_width, cols)
 
-    label = str(label)
+    label = six.text_type(label)
     prefix = char * 2 + " "
     suffix = " " + (cols - len(prefix) - clen(label)) * char
 
