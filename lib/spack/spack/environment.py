@@ -288,6 +288,11 @@ def all_environment_names():
     candidates = sorted(os.listdir(env_path))
     names = []
     for candidate in candidates:
+        # on macOS skip system file that stores attributes of
+        # its contaning folder
+        if candidate == '.DS_Store':
+            continue
+
         yaml_path = os.path.join(root(candidate), manifest_name)
         if valid_env_name(candidate) and os.path.exists(yaml_path):
             names.append(candidate)
