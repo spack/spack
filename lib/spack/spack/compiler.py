@@ -391,7 +391,12 @@ def make_compiler_list(tags, compiler_versions):
             in zip(tags, compiler_versions):
         # If we had an error, move to the next element
         if error:
-            tty.debug(error)
+            try:
+                # This will fail on Python 2.6 if a non ascii
+                # character is in the error
+                tty.debug(error)
+            except UnicodeEncodeError:
+                pass
             continue
 
         # Skip unknown versions
