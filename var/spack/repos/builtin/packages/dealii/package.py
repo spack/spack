@@ -150,6 +150,12 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
 
+    # Explicitly provide a destructor in BlockVector,
+    # otherwise deal.II may fail to build with Intel compilers.
+    patch('https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch',
+          sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
+          when='@9.0.1')
+
     # check that the combination of variants makes sense
     # 64-bit BLAS:
     for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
