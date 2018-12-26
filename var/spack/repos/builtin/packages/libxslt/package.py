@@ -32,7 +32,8 @@ class Libxslt(AutotoolsPackage):
     depends_on('zlib')
     depends_on('libgcrypt', when='+crypto')
 
-    extends('python+shared', when='+python')
+    depends_on('python+shared', when='+python')
+    extends('python', when='+python')
 
     def configure_args(self):
         args = []
