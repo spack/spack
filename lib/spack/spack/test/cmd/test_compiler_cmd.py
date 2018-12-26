@@ -61,9 +61,8 @@ class TestCompilerCommand(object):
     def test_compiler_add(self, mock_compiler_dir, monkeypatch):
         # This test randomly stall on Travis when spawning processes
         # in Python 2.6 unit tests
-        if sys.version_info < (2, 7):
-            serial_map = lambda f, elements: [f(x) for x in elements]
-            monkeypatch.setattr(llnl.util.multiproc, 'parmap', serial_map)
+        if sys.version_info < (3, 0, 0):
+            monkeypatch.setattr(llnl.util.multiproc, 'parmap', map)
 
         # Compilers available by default.
         old_compilers = set(spack.compilers.all_compiler_specs())
