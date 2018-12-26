@@ -5,7 +5,6 @@
 
 from spack import *
 import os
-import llnl.util.filesystem as fs
 from datetime import datetime
 
 
