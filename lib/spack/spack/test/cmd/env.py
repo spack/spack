@@ -37,7 +37,7 @@ def test_add():
     assert Spec('mpileaks') in e.user_specs
 
 
-def test_env_list():
+def test_env_list(mutable_mock_env_path):
     env('create', 'foo')
     env('create', 'bar')
     env('create', 'baz')
@@ -47,6 +47,15 @@ def test_env_list():
     assert 'foo' in out
     assert 'bar' in out
     assert 'baz' in out
+
+    # make sure `spack env list` skips invalid things in var/spack/env
+    mutable_mock_env_path.join('.DS_Store').ensure(file=True)
+    out = env('list')
+
+    assert 'foo' in out
+    assert 'bar' in out
+    assert 'baz' in out
+    assert '.DS_Store' not in out
 
 
 def test_env_remove(capfd):

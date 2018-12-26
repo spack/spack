@@ -232,10 +232,15 @@ def get_env(args, cmd_name, required=False):
             '    spack -e ENV %s ...' % cmd_name)
 
 
+def _root(name):
+    """Non-validating version of root(), to be used internally."""
+    return os.path.join(env_path, name)
+
+
 def root(name):
     """Get the root directory for an environment by name."""
     validate_env_name(name)
-    return os.path.join(env_path, name)
+    return _root(name)
 
 
 def exists(name):
@@ -288,7 +293,7 @@ def all_environment_names():
     candidates = sorted(os.listdir(env_path))
     names = []
     for candidate in candidates:
-        yaml_path = os.path.join(root(candidate), manifest_name)
+        yaml_path = os.path.join(_root(candidate), manifest_name)
         if valid_env_name(candidate) and os.path.exists(yaml_path):
             names.append(candidate)
     return names
