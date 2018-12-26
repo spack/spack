@@ -17,6 +17,7 @@ class Pgmath(CMakePackage):
     version('develop', branch='master')
     version('20180612', '62284e26214eaaff261a922c67f6878c')
 
+    depends_on("awk")
     conflicts("%gcc@:7.1.9999")
 
     root_cmakelists_dir = 'runtime/libpgmath'
