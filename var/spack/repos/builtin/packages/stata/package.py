@@ -14,14 +14,11 @@ class Stata(Package):
        by StataCorp."""
 
 # Known limitations of this installer:
-# * STATA requires libpng v12 that ships with EL enterprise distros. Spack
-#   provides version 16 with a "depends_on('libpng')" and STATA checks
-#   explicitly for 12. So until 12 is packaged, `yum install libpng`. :-)
-#
 # * This really only installs the command line version of the program. To
 #   install GUI support there are extra packages needed that I can't easily
-#   test right now (should be installable via yum too as a temp workaround):
+#   test right now (should be installable via yum as a temp workaround):
 #   libgtk-x11-2.0.so libgdk-x11-2.0.so libatk-1.0.so libgdk_pixbuf-2.0.so
+#   Those libraries appear to be provided by: pango gdk-pixbuf2 gtk2
 #
 # * There are two popular environment variables that can be set, but vary from
 #   place to place, so future enhancement maybe to support STATATMP and TMPDIR.
@@ -33,6 +30,9 @@ class Stata(Package):
 
     version('15', '2486f4c7db1e7b453004c7bd3f8da40ba1e30be150613065c7b82b1915259016')
 
+    # V15 depends on libpng v12 and fails with other versions of libpng
+    depends_on('libpng@1.2.57')
+
     # STATA is downloaded from user/pass protected ftp as Stata15Linux64.tar.gz
     def url_for_version(self, version):
         return "file://{0}/Stata{1}Linux64.tar.gz".format(os.getcwd(), version)
@@ -40,6 +40,7 @@ class Stata(Package):
     # STATA is simple and needs really just the PATH set.
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', prefix)
+        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['libpng'].prefix.lib)
 
     # Extracting the file provides the following:
     # ./unix/
@@ -83,9 +84,8 @@ class Stata(Package):
 
         # Step 1.
         x = datetime.now()
-        file = open("installed.150", "w")
-        file.write(x.strftime("%a %b %d %H:%M:%S %Z %Y"))
-        file.close()
+        with open("installed.150", "w") as fh:
+            fh.write(x.strftime("%a %b %d %H:%M:%S %Z %Y"))
 
         # Step 2.
         instlist = ['ado.taz', 'base.taz', 'bins.taz', 'docs.taz']
@@ -93,8 +93,8 @@ class Stata(Package):
             tar('-x', '-z', '-f', 'unix/linux64/' + instfile)
 
         # Step 3.
-        fs.install('unix/linux64/setrwxp', 'setrwxp')
-        fs.install('unix/linux64/inst2', 'inst2')
+        install('unix/linux64/setrwxp', 'setrwxp')
+        install('unix/linux64/inst2', 'inst2')
 
         # Step 4. Since the install script calls out specific permissions and
         # could change in the future (or old versions) I thought it best to
@@ -102,4 +102,4 @@ class Stata(Package):
         bash("./setrwxp", "now")
 
         # Install should now be good to copy into the installation directory.
-        install_tree(os.getcwd(), prefix)
+        install_tree('.', prefix)
