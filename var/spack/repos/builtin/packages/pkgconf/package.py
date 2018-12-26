@@ -13,7 +13,7 @@ class Pkgconf(AutotoolsPackage):
     maintaining compatibility."""
 
     homepage = "http://pkgconf.org/"
-    url      = "http://distfiles.alpinelinux.org/distfiles/pkgconf-1.4.2.tar.xz"
+    url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.5.4.tar.xz"
 
     version('1.5.4',  '9c5864a4e08428ef52f05a41c948529555458dec6d283b50f8b7d32463c54664')
     version('1.4.2',  '678d242b4eef1754bba6a58642af10bb')
