@@ -26,8 +26,6 @@ class Nalu(CMakePackage):
     # Third party libraries
     variant('tioga', default=False,
             description='Compile with Tioga support')
-    variant('hypre', default=False,
-            description='Compile with Hypre support')
 
     # Required dependencies
     depends_on('mpi')
@@ -41,8 +39,6 @@ class Nalu(CMakePackage):
     # Optional dependencies
     depends_on('tioga', when='+tioga+shared')
     depends_on('tioga~shared', when='+tioga~shared')
-    depends_on('hypre+mpi+int64', when='+hypre+shared')
-    depends_on('hypre+mpi+int64~shared', when='+hypre~shared')
 
     def cmake_args(self):
         spec = self.spec
@@ -68,14 +64,6 @@ class Nalu(CMakePackage):
             ])
         else:
             options.append('-DENABLE_TIOGA:BOOL=OFF')
-
-        if '+hypre' in spec:
-            options.extend([
-                '-DENABLE_HYPRE:BOOL=ON',
-                '-DHYPRE_DIR:PATH=%s' % spec['hypre'].prefix
-            ])
-        else:
-            options.append('-DENABLE_HYPRE:BOOL=OFF')
 
         if sys.platform == 'darwin':
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
