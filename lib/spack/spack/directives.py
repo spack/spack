@@ -194,7 +194,7 @@ class DirectiveMeta(type):
                 # Nasty, but it's the best way I can think of to avoid
                 # side effects if directive results are passed as args
                 remove_directives(args)
-                remove_directives(kwargs.values())
+                remove_directives(list(kwargs.values()))
 
                 # A directive returns either something that is callable on a
                 # package or a sequence of them

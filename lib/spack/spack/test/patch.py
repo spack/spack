@@ -11,6 +11,7 @@ from llnl.util.filesystem import working_dir, mkdirp
 
 import spack.patch
 import spack.paths
+import spack.repo
 import spack.util.compression
 from spack.util.executable import Executable
 from spack.stage import Stage
@@ -100,6 +101,29 @@ def test_patch_in_spec(mock_packages, config):
              foo_sha256,
              baz_sha256) ==
             spec.variants['patches'].value)
+
+
+def test_nested_directives(mock_packages):
+    """Ensure pkg data structures are set up properly by nested directives."""
+    # this ensures that the patch() directive results were removed
+    # properly from the DirectiveMeta._directives_to_be_executed list
+    patcher = spack.repo.path.get_pkg_class('patch-several-dependencies')
+    assert len(patcher.patches) == 0
+
+    # this ensures that results of dependency patches were properly added
+    # to Dependency objects.
+    libelf_dep = next(iter(patcher.dependencies['libelf'].values()))
+    assert len(libelf_dep.patches) == 1
+    assert len(libelf_dep.patches[Spec('libelf')]) == 1
+
+    libdwarf_dep = next(iter(patcher.dependencies['libdwarf'].values()))
+    assert len(libdwarf_dep.patches) == 2
+    assert len(libdwarf_dep.patches[Spec('libdwarf')]) == 1
+    assert len(libdwarf_dep.patches[Spec('libdwarf@20111030')]) == 1
+
+    fake_dep = next(iter(patcher.dependencies['fake'].values()))
+    assert len(fake_dep.patches) == 1
+    assert len(fake_dep.patches[Spec('fake')]) == 2
 
 
 def test_patched_dependency(
