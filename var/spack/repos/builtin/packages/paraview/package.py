@@ -39,6 +39,7 @@ class Paraview(CMakePackage):
 
     depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
+    # Matplotlib >2.x requires Python 3
     depends_on('py-matplotlib@:2.99', when='+python', type='run')
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
