@@ -15,6 +15,8 @@ class Velvet(MakefilePackage):
 
     version('1.2.10', '6e28c4b9bedc5f7ab2b947e7266a02f6')
 
+    depends_on('zlib')
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('velvetg', prefix.bin)
