@@ -85,6 +85,16 @@ modules:
           I_MPI_ROOT: '${PREFIX}'
           I_MPI_EXTRA_FILESYSTEM: '1'
           I_MPI_EXTRA_FILESYSTEM_LIST: gpfs
+    mvapich2@ime:
+      environment:
+        set:
+          RDMAV_FORK_SAFE: '1'
+          RDMAV_HUGEPAGES_SAFE: '1'
+    openmpi@ime:
+      environment:
+        set:
+          RDMAV_FORK_SAFE: '1'
+          RDMAV_HUGEPAGES_SAFE: '1'
   tcl:
     all:
       filter:
@@ -146,3 +156,13 @@ modules:
           I_MPI_ROOT: '${PREFIX}'
           I_MPI_EXTRA_FILESYSTEM: '1'
           I_MPI_EXTRA_FILESYSTEM_LIST: gpfs
+    mvapich2@ime:
+      environment:
+        set:
+          RDMAV_FORK_SAFE: '1'
+          RDMAV_HUGEPAGES_SAFE: '1'
+    openmpi@ime:
+      environment:
+        set:
+          RDMAV_FORK_SAFE: '1'
+          RDMAV_HUGEPAGES_SAFE: '1'
