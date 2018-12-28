@@ -16,10 +16,10 @@ class TrilinosCatalystIossAdapter(CMakePackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
-    depends_on('bison')
-    depends_on('flex')
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
     depends_on('paraview+mpi+python+osmesa')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=('build', 'run'))
     # Here we avoid paraview trying to use netcdf~parallel-netcdf
     # which is netcdf's default, even though paraview depends on 'netcdf'
     # without any variants. Concretizer bug?
@@ -28,7 +28,7 @@ class TrilinosCatalystIossAdapter(CMakePackage):
     root_cmakelists_dir = 'packages/seacas/libraries/ioss/src/visualization/ParaViewCatalystIossAdapter'
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PYTHONPATH', join_path(self.prefix, 'python'))
+        run_env.prepend_path('PYTHONPATH', self.prefix.python)
 
     def cmake_args(self):
         spec = self.spec
