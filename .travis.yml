@@ -129,6 +129,7 @@ sudo: false
 
 # Docs need graphviz to build
 addons:
+  # for Linux builds, we use APT
   apt:
     packages:
       - ccache
@@ -143,6 +144,13 @@ addons:
       - r-base-dev
       - perl
       - perl-base
+  # for Mac builds, we use Homebrew
+  homebrew:
+    packages:
+      - python@2
+      - gcc
+      - gnupg2
+      - ccache
 
 # ~/.ccache needs to be cached directly as Travis is not taking care of it
 # (possibly because we use 'language: python' and not 'language: c')
@@ -156,13 +164,6 @@ cache:
 # Work around Travis's lack of support for Python on OSX
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-        brew update;
-        export HOMEBREW_NO_AUTO_UPDATE=1;
-        rm /usr/local/include/c++ ;
-        brew ls --versions python@2 > /dev/null || brew install python@2;
-        brew ls --versions gcc      > /dev/null || brew install gcc;
-        brew ls --versions gnupg2   > /dev/null || brew install gnupg2;
-        brew ls --versions ccache   > /dev/null || brew install ccache;
         pip2 install --upgrade pip;
         pip2 install virtualenv;
         virtualenv venv;
