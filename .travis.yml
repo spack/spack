@@ -133,17 +133,19 @@ addons:
   apt:
     packages:
       - ccache
+      - cmake
       - gfortran
-      - mercurial
       - graphviz
       - gnupg2
-      - cmake
+      - kcov
+      - mercurial
       - ninja-build
+      - perl
+      - perl-base
+      - realpath
       - r-base
       - r-base-core
       - r-base-dev
-      - perl
-      - perl-base
   # for Mac builds, we use Homebrew
   homebrew:
     packages:
