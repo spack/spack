@@ -83,7 +83,7 @@ class Qmcpack(CMakePackage):
     compiler_warning = 'QMCPACK 3.6.0 or later requires a \
     compiler with support for C++14'
     conflicts('%gcc@:5', when='@3.6.0:', msg=compiler_warning)
-    conflicts('%intel@:18', when='@3.6.0', msg=compiler_warning)
+    conflicts('%intel@:18', when='@3.6.0:', msg=compiler_warning)
     conflicts('%pgi@:18', when='@3.6.0:', msg=compiler_warning)
     conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
 
