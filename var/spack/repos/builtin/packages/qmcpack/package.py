@@ -90,17 +90,25 @@ class Qmcpack(CMakePackage):
     # Dependencies match those in the QMCPACK manual.
     # FIXME: once concretizer can unite unconditional and conditional
     # dependencies, some of the '~mpi' variants below will not be necessary.
-    depends_on('cmake@3.6.0:', type='build')
-    depends_on('mpi', when='+mpi')
+    # Essential libraries
+    depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
+    depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
+    depends_on('boost', when='@:3.5.0')
+    depends_on('boost@1.61.0:', when='@3.6.0:')
     depends_on('libxml2')
-    depends_on('hdf5')
-    depends_on('hdf5+mpi', when='+mpi')
-    depends_on('hdf5~mpi', when='~mpi')
-    depends_on('boost')
+    depends_on('mpi', when='+mpi')
+    depends_on('cuda', when='+cuda')
+    # HDF5
+    depends_on('hdf5+hl+fortran', when='+qe')
+    depends_on('hdf5+hl+fortran+mpi', when='+qe+mpi')
+    depends_on('hdf5+hl+fortran~mpi', when='+qe~mpi')
+    depends_on('hdf5~hl~fortran', when='~qe')
+    depends_on('hdf5~hl~fortran+mpi', when='~qe+mpi')
+    depends_on('hdf5~hl~fortran~mpi', when='~qe~mpi')
+    # Math libraries
     depends_on('blas')
     depends_on('lapack')
     depends_on('fftw-api@3')
-    depends_on('cuda', when='+cuda')
 
     # qmcpack data analysis tools
     # basic command line tool based on Python and NumPy
