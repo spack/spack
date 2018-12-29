@@ -167,10 +167,11 @@ class Qmcpack(CMakePackage):
         args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(xml2_prefix.include))
         args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(xml2_prefix.lib))
 
-        fftw_prefix = spec['fftw'].prefix
-        args.append('-DFFTW_HOME={0}'.format(fftw_prefix))
-        args.append('-DFFTW_INCLUDE_DIRS={0}'.format(fftw_prefix.include))
-        args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
+        if '^fftw@3:' in spec:
+            fftw_prefix = spec['fftw'].prefix
+            args.append('-DFFTW_HOME={0}'.format(fftw_prefix))
+            args.append('-DFFTW_INCLUDE_DIRS={0}'.format(fftw_prefix.include))
+            args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
 
         args.append('-DBOOST_ROOT={0}'.format(self.spec['boost'].prefix))
         args.append('-DHDF5_ROOT={0}'.format(self.spec['hdf5'].prefix))
