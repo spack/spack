@@ -49,7 +49,7 @@ class Glib(AutotoolsPackage):
     depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
     depends_on('util-linux', when='+libmount')
-    depends_on('libiconv', when='+iconv')
+    depends_on('libiconv')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@2.42.1')
