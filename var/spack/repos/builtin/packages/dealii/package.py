@@ -117,7 +117,9 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('graphviz',         when='+doc')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
-    depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
+    # FIXME: next line fixes concretization with petsc
+    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
+    depends_on('hdf5+mpi+hl', when='+hdf5+mpi~petsc')
     depends_on('cuda@8:',          when='+cuda')
     depends_on('cmake@3.9:',       when='+cuda')
     # older version of deal.II do not build with Cmake 3.10, see
