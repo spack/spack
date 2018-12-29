@@ -32,7 +32,6 @@ class Glib(AutotoolsPackage):
     version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb')
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
-    variant('iconv', default=False, description='Build with iconv support')
     variant('libmount', default=False, description='Build with libmount support')
     variant(
         'tracing',
@@ -74,10 +73,7 @@ class Glib(AutotoolsPackage):
             args.append('--with-python={0}'.format(
                 os.path.basename(self.spec['python'].command.path))
             )
-        if self.spec.satisfies('+iconv'):
-            args.append('--with-libiconv=gnu')
-        else:
-            args.append('--with-libiconv=no')
+        args.append('--with-libiconv=gnu')
         args.extend(self.enable_or_disable('tracing'))
         # SELinux is not available in Spack, so glib should not use it.
         args.append('--disable-selinux')
