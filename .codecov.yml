@@ -29,7 +29,6 @@ coverage:
 
 ignore:
   - lib/spack/spack/test/.*
-  - lib/spack/env/.*
   - lib/spack/docs/.*
   - lib/spack/external/.*
 
