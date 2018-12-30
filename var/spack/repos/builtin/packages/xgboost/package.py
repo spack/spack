@@ -20,3 +20,10 @@ class Xgboost(CMakePackage, CudaPackage):
         return [
             '-DUSE_CUDA={0}'.format('YES' if '+cuda' in self.spec else 'NO')
         ]
+
+    def install(self, spec, prefix):
+        install_tree(str(self.stage.source_path), prefix)
+        # create a bin directory for executable "xgboost" which is possibly
+        # used in functional testing of the compilation target "libxgboost"
+        mkdirp(prefix.bin)
+        install('xgboost', prefix.bin)
