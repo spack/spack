@@ -33,6 +33,7 @@ class Qmcpack(CMakePackage):
     # These defaults match those in the QMCPACK manual
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True, description='Build with MPI support')
+    variant('phdf5', default=True, description='Build with parallel collective I/O')
     variant('cuda', default=False,
             description='Enable CUDA and GPU acceleration')
     variant('complex', default=False,
@@ -189,6 +190,12 @@ class Qmcpack(CMakePackage):
             args.append('-DQMC_MPI=1')
         elif '~mpi' in spec:
             args.append('-DQMC_MPI=0')
+
+        # Default is parallel collective I/O enabled
+        if '+phdf5' in spec:
+            args.append('-DENABLE_PHDF5=1')
+        elif '~phdf5' in spec:
+            args.append('-DENABLE_PHDF5=0')
 
         # Default is real-valued single particle orbitals
         if '+complex' in spec:
