@@ -60,6 +60,18 @@ class Qmcpack(CMakePackage):
 
     # conflicts
     conflicts(
+        '+phdf5',
+        when='~mpi',
+        msg='Parallel collective I/O requires MPI-enabled QMCPACK.\n \
+        Please add \'~phdf5\' to the Spack install line for serial QMCPACK.'
+    )
+    conflicts(
+        '+qe',
+        when='~mpi',
+        msg='QMCPACK QE variant requires MPI due to limitation in QE build system.\n \
+        Please add \'~qe\' to the Spack install line for serial QMCPACK.'
+    )
+    conflicts(
         '+soa',
         when='+cuda',
         msg='QMCPACK SOA variant does not exist for CUDA'
