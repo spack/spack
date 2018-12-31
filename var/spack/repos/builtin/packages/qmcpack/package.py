@@ -282,6 +282,11 @@ class Qmcpack(CMakePackage):
 
         return args
 
+    # QMCPACK 3.6.0 release and later has a functional 'make install',
+    # the Spack 'def install' is retained for backwards compatiblity.
+    # Note that the two install methods differ in their directory
+    # structure.
+    @when('@:3.5.0')
     def install(self, spec, prefix):
         """Make the install targets"""
 
