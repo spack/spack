@@ -19,3 +19,4 @@ class Aspell(AutotoolsPackage):
     version('0.60.6.1', 'e66a9c9af6a60dc46134fdacf6ce97d7')
 
     patch('darwin.patch', when='platform=darwin')
+    patch('issue-519.patch', when='@:0.60.6.1')
