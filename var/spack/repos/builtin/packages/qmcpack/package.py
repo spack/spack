@@ -244,7 +244,7 @@ class Qmcpack(CMakePackage):
         # get properly detected. Intel MKL requires special case due to
         # differences in Darwin vs. Linux $MKLROOT naming schemes. This section
         # of code is intentionally redundant for backwards compatibility.
-        if 'intel-mkl' in self.spec:
+        if 'intel-mkl' in spec:
             lapack_dir = format(join_path(env['MKLROOT'], 'include'))
             # Next two lines were introduced in QMCPACK 3.5.0 and later.
             # Prior to v3.5.0, these lines should be benign.
