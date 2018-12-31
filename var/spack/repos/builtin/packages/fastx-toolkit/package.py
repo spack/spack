@@ -17,4 +17,5 @@ class FastxToolkit(AutotoolsPackage):
 
     depends_on('libgtextutils')
 
-    conflicts('%gcc@7.1.0:')
+    # patch implicit fallthrough
+    patch("pr-22.patch")
