@@ -15,6 +15,7 @@ class Pgmath(CMakePackage):
     git      = "https://github.com/flang-compiler/flang.git"
 
     version('develop', branch='master')
+    version('20180921', '4440ed5fdc390e4b7a085fb77b44ac54')
     version('20180612', '62284e26214eaaff261a922c67f6878c')
 
     depends_on("awk", type="build")
