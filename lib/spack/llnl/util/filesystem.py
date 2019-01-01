@@ -1354,7 +1354,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
 
 
 @memoized
-def is_accessible_dir(path):
+def can_access_dir(path):
     """Returns True if the argument is an accessible directory.
 
     Args:
@@ -1379,7 +1379,7 @@ def files_in(*search_paths):
         List of (file, full_path) tuples with all the files found.
     """
     files = []
-    for d in filter(is_accessible_dir, search_paths):
+    for d in filter(can_access_dir, search_paths):
         files.extend(filter(
             lambda x: os.path.isfile(x[1]),
             [(f, os.path.join(d, f)) for f in os.listdir(d)]
