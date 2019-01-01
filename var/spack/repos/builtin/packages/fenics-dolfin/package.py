@@ -6,13 +6,8 @@
 from spack import *
 
 
-class Fenics(CMakePackage):
-    """FEniCS is organized as a collection of interoperable components
-    that together form the FEniCS Project. These components include
-    the problem-solving environment DOLFIN, the form compiler FFC, the
-    finite element tabulator FIAT, the just-in-time compiler Instant,
-    the code generation interface UFC, the form language UFL and a
-    range of additional components."""
+class FenicsDolfin(CMakePackage):
+    """DOLFIN is the C++/Python interface of FEniCS."""
 
     homepage = "http://fenicsproject.org/"
     url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-1.6.0.tar.gz"
