@@ -67,10 +67,14 @@ lgpl_exceptions = [
 
 def _all_spack_files(root=spack.paths.prefix):
     """Generates root-relative paths of all files in the spack repository."""
+    visited = set()
     for cur_root, folders, files in os.walk(root):
         for filename in files:
-            path = os.path.join(cur_root, filename)
-            yield os.path.relpath(path, root)
+            path = os.path.realpath(os.path.join(cur_root, filename))
+
+            if path not in visited:
+                yield os.path.relpath(path, root)
+                visited.add(path)
 
 
 def _licensed_files(root=spack.paths.prefix):
@@ -81,7 +85,7 @@ def _licensed_files(root=spack.paths.prefix):
 
 def list_files(args):
     """list files in spack that should have license headers"""
-    for relpath in _licensed_files():
+    for relpath in sorted(_licensed_files()):
         print(os.path.join(spack.paths.spack_root, relpath))
 
 
