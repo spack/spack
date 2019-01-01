@@ -37,7 +37,7 @@ class Express(CMakePackage):
                     edit.filter('#include <api', '#include <%s' % self.spec[
                                 'bamtools'].prefix.include.bamtools.api)
             edit = FileFilter('CMakeLists.txt')
-            edit.filter('\${CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
+            edit.filter(r'\${CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
                         'libbamtools.a', '%s' % self.spec['bamtools'].libs)
 
     def setup_environment(self, spack_env, run_env):
