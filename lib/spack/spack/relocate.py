@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -120,7 +120,7 @@ def macho_get_paths(path_name):
         if match:
             lhs = match.group(1).lstrip().rstrip()
             rhs = match.group(2)
-            match2 = re.search('(.*) \(.*\)', rhs)
+            match2 = re.search(r'(.*) \(.*\)', rhs)
             if match2:
                 rhs = match2.group(1)
             if lhs == 'cmd':

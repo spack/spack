@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -2677,24 +2677,16 @@ class Spec(object):
         if 'patches' not in self.variants:
             return []
 
-        patches = []
-
-        # FIXME: The private attribute below is attached after
+        # FIXME: _patches_in_order_of_appearance is attached after
         # FIXME: concretization to store the order of patches somewhere.
         # FIXME: Needs to be refactored in a cleaner way.
+
+        # translate patch sha256sums to patch objects by consulting the index
+        patches = []
         for sha256 in self.variants['patches']._patches_in_order_of_appearance:
-            patch = self.package_class.lookup_patch(sha256)
-            if patch:
-                patches.append(patch)
-                continue
-
-            # if not found in this package, check immediate dependents
-            # for dependency patches
-            for dep_spec in self._dependents.values():
-                patch = dep_spec.parent.package_class.lookup_patch(sha256)
-
-                if patch:
-                    patches.append(patch)
+            index = spack.repo.path.patch_index
+            patch = index.patch_for_package(sha256, self.package)
+            patches.append(patch)
 
         return patches
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -430,6 +430,29 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
             content = report_file.open().read()
             assert '</Build>' in content
             assert '<Text>' not in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            with pytest.raises((HTTPError, URLError)):
+                install(
+                    '--log-file=cdash_reports',
+                    '--cdash-build=my_custom_build',
+                    '--cdash-site=my_custom_site',
+                    '--cdash-track=my_custom_track',
+                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
+                    'a')
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Build.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert 'Site BuildName="my_custom_build"' in content
+            assert 'Name="my_custom_site"' in content
+            assert '-my_custom_track' in content
 
 
 @pytest.mark.disable_clean_stage_check

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -109,12 +109,25 @@ class QuantumEspresso(Package):
         prefix_path = prefix.bin if '@:5.4.0' in spec else prefix
         options = ['-prefix={0}'.format(prefix_path)]
 
+        # QE autoconf compiler variables has some limitations:
+        # 1. There is no explicit MPICC variable so we must re-purpose
+        #    CC for the case of MPI.
+        # 2. F90 variable is set to be consistent with MPIF90 wrapper
+        # 3. If an absolute path for F90 is set, the build system breaks.
+        #
+        # Thus, due to 2. and 3. the F90 variable is not explictly set
+        # because it would be mostly pointless and could lead to erroneous
+        # behaviour.
         if '+mpi' in spec:
             mpi = spec['mpi']
             options.append('--enable-parallel=yes')
             options.append('MPIF90={0}'.format(mpi.mpifc))
+            options.append('CC={0}'.format(mpi.mpicc))
         else:
             options.append('--enable-parallel=no')
+            options.append('CC={0}'.format(env['SPACK_CC']))
+
+        options.append('F77={0}'.format(env['SPACK_F77']))
 
         if '+openmp' in spec:
             options.append('--enable-openmp')
@@ -177,12 +190,6 @@ class QuantumEspresso(Package):
 
         if '+hdf5' in spec:
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
-
-        options.extend([
-            'F77={0}'.format(env['SPACK_F77']),
-            'F90={0}'.format(env['SPACK_FC']),
-            'CC={0}'.format(env['SPACK_CC'])
-        ])
 
         configure(*options)
 

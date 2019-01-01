@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,4 @@ class Clp(AutotoolsPackage):
 
     version('1.16.11', sha256='b525451423a9a09a043e6a13d9436e13e3ee7a7049f558ad41a110742fa65f39')
 
-    def configure_args(self):
-        return [
-            '--with-clp-datadir={0}/Data'.format(self.build_directory),
-        ]
+    build_directory = 'spack-build'

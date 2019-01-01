@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,9 @@ class Ghostscript(AutotoolsPackage):
     """An interpreter for the PostScript language and for PDF."""
 
     homepage = "http://ghostscript.com/"
-    url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs921/ghostscript-9.21.tar.gz"
+    url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs926/ghostscript-9.26.tar.gz"
 
+    version('9.26', sha256='831fc019bd477f7cc2d481dc5395ebfa4a593a95eb2fe1eb231a97e450d7540d')
     version('9.21', '5f213281761d2750fcf27476c404d17f')
     version('9.18', '33a47567d7a591c00a253caddd12a88a')
 
@@ -25,6 +26,7 @@ class Ghostscript(AutotoolsPackage):
     depends_on('libtiff')
     depends_on('zlib')
     depends_on('libxext')
+    depends_on('gtkplus')
 
     def url_for_version(self, version):
         baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"

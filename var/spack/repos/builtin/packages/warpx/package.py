@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,8 @@ class Warpx(MakefilePackage):
     variant('debug', default=False, description='Enable debugging features')
     variant('tprof', default=False, description='Enable tiny profiling features')
     variant('openmp', default=True, description='Enable OpenMP features')
+
+    depends_on('fftw@3:', when='+psatd')
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',

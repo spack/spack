@@ -1,7 +1,9 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+if [ "$CURRENTLY_BUILDING_DOCKER_IMAGE" '!=' '1' ] ; then
 
 uid="`id -u`"
 if [ "$uid" '=' '0' ] ; then
@@ -39,3 +41,5 @@ if [ '!' -f "$HOME/.ssh/id_rsa" ] ; then
     ssh-keyscan -t rsa 127.0.0.1 localhost "$docker_ip" "`hostname`" \
         > "$HOME/.ssh/known_hosts" 2> /dev/null
 fi
+
+fi # [ "$CURRENTLY_BUILDING_DOCKER_IMAGE" '!=' '1' ]

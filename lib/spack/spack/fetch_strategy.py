@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -571,7 +571,8 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     You can use these three optional attributes in addition to ``git``:
 
-        * ``branch``: Particular branch to build from (default is master)
+        * ``branch``: Particular branch to build from (default is the
+                      repository's default branch)
         * ``tag``: Particular tag to check out
         * ``commit``: Particular commit hash in the repo
     """
@@ -620,20 +621,24 @@ class GitFetchStrategy(VCSFetchStrategy):
         if output:
             return output.split()[0]
 
+    def _repo_info(self):
+        args = ''
+
+        if self.commit:
+            args = ' at commit {0}'.format(self.commit)
+        elif self.tag:
+            args = ' at tag {0}'.format(self.tag)
+        elif self.branch:
+            args = ' on branch {0}'.format(self.branch)
+
+        return '{0}{1}'.format(self.url, args)
+
     def fetch(self):
         if self.stage.source_path:
-            tty.msg("Already fetched %s" % self.stage.source_path)
+            tty.msg("Already fetched {0}".format(self.stage.source_path))
             return
 
-        args = ''
-        if self.commit:
-            args = 'at commit %s' % self.commit
-        elif self.tag:
-            args = 'at tag %s' % self.tag
-        elif self.branch:
-            args = 'on branch %s' % self.branch
-
-        tty.msg("Cloning git repository: %s %s" % (self.url, args))
+        tty.msg("Cloning git repository: {0}".format(self._repo_info()))
 
         git = self.git
         if self.commit:
@@ -722,7 +727,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 self.git('clean', '--quiet', '-f')
 
     def __str__(self):
-        return "[git] %s" % self.url
+        return '[git] {0}'.format(self._repo_info())
 
 
 class SvnFetchStrategy(VCSFetchStrategy):
