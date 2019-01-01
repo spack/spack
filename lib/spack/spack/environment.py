@@ -8,7 +8,6 @@ import re
 import sys
 import shutil
 
-import jsonschema
 import ruamel.yaml
 
 import llnl.util.filesystem as fs
@@ -66,9 +65,6 @@ lockfile_format_version = 1
 
 #: legal first keys in the spack.yaml manifest file
 env_schema_keys = ('spack', 'env')
-
-#: jsonschema validator for environments
-_validator = None
 
 
 def valid_env_name(name):
@@ -306,11 +302,9 @@ def all_environments():
 
 
 def validate(data, filename=None):
-    global _validator
-    if _validator is None:
-        _validator = jsonschema.Draft4Validator(spack.schema.env.schema)
+    import jsonschema
     try:
-        _validator.validate(data)
+        spack.schema.Validator(spack.schema.env.schema).validate(data)
     except jsonschema.ValidationError as e:
         raise spack.config.ConfigFormatError(
             e, data, filename, e.instance.lc.line + 1)
