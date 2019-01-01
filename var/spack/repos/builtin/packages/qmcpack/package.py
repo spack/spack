@@ -314,6 +314,23 @@ class Qmcpack(CMakePackage):
             # install binaries
             install_tree('bin', prefix.bin)
 
+    # QMCPACK 3.6.0 install directory structure changed, thus there
+    # thus are two version of the setup_environment method
+    @when('@:3.5.0')
+    def setup_environment(self, spack_env, run_env):
+        """Set-up runtime environment for QMCPACK.
+        Set PYTHONPATH for basic analysis scripts and for Nexus."""
+        run_env.prepend_path('PYTHONPATH', join_path(self.prefix, 'nexus'))
+
+    @when('@3.6.0:')
+    def setup_environment(self, spack_env, run_env):
+        """Set-up runtime environment for QMCPACK.
+        Set PYTHONPATH for basic analysis scripts and for Nexus. Binaries
+        are in the  'prefix' directory instead of 'prefix.bin' which is
+        not set by the default module environment"""
+        run_env.prepend_path('PATH', self.prefix)
+        run_env.prepend_path('PYTHONPATH', self.prefix)
+
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def check(self):
