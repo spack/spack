@@ -302,7 +302,8 @@ class Compiler(object):
                          _NameVariation(*match.groups()), language)
                     )
                     commands.append(
-                        detect_version_command(callback, full_path)
+                        llnl.util.multiproc.defer(detect_version)
+                        (callback, full_path)
                     )
 
         # Reverse it here so that the dict creation (last insert wins)
@@ -351,8 +352,7 @@ class _CompilerID(collections.namedtuple('_CompilerIDBase', [
 _NameVariation = collections.namedtuple('_NameVariation', ['prefix', 'suffix'])
 
 
-@llnl.util.multiproc.deferred
-def detect_version_command(callback, path):
+def detect_version(callback, path):
     """Detects the version of a compiler at a given path.
 
     Args:

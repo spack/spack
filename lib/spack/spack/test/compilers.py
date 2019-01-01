@@ -23,7 +23,7 @@ import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.compilers.fj
 
-from spack.compiler import detect_version_command, Compiler
+from spack.compiler import detect_version, Compiler
 
 
 def test_get_compiler_duplicates(config):
@@ -46,14 +46,14 @@ def test_all_compilers(config):
 
 
 def test_version_detection_is_empty():
-    command = detect_version_command(lambda x: None, path='/usr/bin/gcc')
+    version = detect_version(lambda x: None, path='/usr/bin/gcc')
     expected = (None,  "Couldn't get version for compiler /usr/bin/gcc")
-    assert command() == expected
+    assert version == expected
 
 
 def test_version_detection_is_successful():
-    command = detect_version_command(lambda x: '4.9', path='/usr/bin/gcc')
-    assert command() == (('4.9', '/usr/bin/gcc'), None)
+    version = detect_version(lambda x: '4.9', path='/usr/bin/gcc')
+    assert version == (('4.9', '/usr/bin/gcc'), None)
 
 
 def test_compiler_flags_from_config_are_grouped():

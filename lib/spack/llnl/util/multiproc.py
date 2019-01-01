@@ -14,7 +14,7 @@ from multiprocessing import Semaphore, Value
 __all__ = ['Barrier']
 
 
-def deferred(func):
+def defer(func):
     """Package a function call into something that can be invoked
     at a later moment.
 
