@@ -26,7 +26,7 @@ class Meraculous(CMakePackage):
 
     def patch(self):
         edit = FileFilter('CMakeLists.txt')
-        edit.filter("-static-libstdc\+\+", "")
+        edit.filter(r"-static-libstdc\+\+", "")
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('MERACULOUS_ROOT', self.prefix)

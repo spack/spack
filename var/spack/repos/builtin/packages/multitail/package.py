@@ -33,11 +33,11 @@ class Multitail(MakefilePackage):
 
         nc_include_flags = spec['ncurses'].headers.include_flags
         nc_ld_flags = spec['ncurses'].libs.ld_flags
-        makefile.filter('CFLAGS\+=', 'CFLAGS+={0} '.format(nc_include_flags))
-        makefile.filter('LDFLAGS\+=', 'LDFLAGS+={0} '.format(nc_ld_flags))
+        makefile.filter(r'CFLAGS\+=', 'CFLAGS+={0} '.format(nc_include_flags))
+        makefile.filter(r'LDFLAGS\+=', 'LDFLAGS+={0} '.format(nc_ld_flags))
 
         # Copy the conf file directly into place (don't worry about
         # overwriting an existing file...)
         kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
-        makefile.filter('cp multitail.conf $(CONFIG_FILE).new',
+        makefile.filter(r'cp multitail.conf $(CONFIG_FILE).new',
                         'cp multitail.conf $(CONFIG_FILE)', **kwargs)

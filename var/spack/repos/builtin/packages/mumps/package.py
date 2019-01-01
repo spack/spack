@@ -233,8 +233,8 @@ class Mumps(Package):
                 # When building libpord, read AR from Makefile.inc instead of
                 # going through the make command line - this prevents various
                 # problems with the substring "$$@".
-                filter_file(' AR="\$\(AR\)"', '', 'Makefile')
-                filter_file('^(INCLUDES = -I../include)',
+                filter_file(r' AR="\$\(AR\)"', '', 'Makefile')
+                filter_file(r'^(INCLUDES = -I../include)',
                             '\\1\ninclude ../../Makefile.inc',
                             join_path('PORD', 'lib', 'Makefile'))
 

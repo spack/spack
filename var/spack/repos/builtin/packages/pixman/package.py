@@ -42,7 +42,7 @@ class Pixman(AutotoolsPackage):
         #
         if '%intel' in self.spec:
             filter_file(
-                '#define HAVE_GCC_VECTOR_EXTENSIONS /\*\*/',
+                r'#define HAVE_GCC_VECTOR_EXTENSIONS /\*\*/',
                 '/* #undef HAVE_GCC_VECTOR_EXTENSIONS */',
                 config_h
             )

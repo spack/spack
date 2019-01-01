@@ -54,6 +54,6 @@ class Spark(Package):
 
         # Remove whitespaces, as they can compromise syntax in
         # module files
-        hadoop_classpath = re.sub('[\s+]', '', hadoop_classpath)
+        hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
 
         run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)

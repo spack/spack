@@ -120,7 +120,7 @@ def macho_get_paths(path_name):
         if match:
             lhs = match.group(1).lstrip().rstrip()
             rhs = match.group(2)
-            match2 = re.search('(.*) \(.*\)', rhs)
+            match2 = re.search(r'(.*) \(.*\)', rhs)
             if match2:
                 rhs = match2.group(1)
             if lhs == 'cmd':

@@ -20,7 +20,7 @@ class PacbioDamasker(MakefilePackage):
     def edit(self, spec, prefix):
         mkdirp(prefix.bin)
         makefile = FileFilter('Makefile')
-        makefile.filter('DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
+        makefile.filter(r'DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
         gmf = FileFilter('GNUmakefile')
-        gmf.filter('rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
+        gmf.filter(r'rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
                    'cp ${ALL} ' + prefix.bin)

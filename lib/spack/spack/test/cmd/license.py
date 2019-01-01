@@ -61,8 +61,8 @@ def test_verify(tmpdir):
     assert str(old_lgpl_header) in out
     assert str(correct_header) not in out
     assert '3 improperly licensed files' in out
-    assert re.search('files with no SPDX-License-Identifier:\s*1', out)
-    assert re.search('files with wrong SPDX-License-Identifier:\s*1', out)
-    assert re.search('files with old license header:\s*1', out)
+    assert re.search(r'files with no SPDX-License-Identifier:\s*1', out)
+    assert re.search(r'files with wrong SPDX-License-Identifier:\s*1', out)
+    assert re.search(r'files with old license header:\s*1', out)
 
     assert license.returncode == 1
