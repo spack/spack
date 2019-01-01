@@ -11,13 +11,11 @@
 from llnl.util.lang import union_dicts
 
 import spack.schema.merged
-import spack.schema.modules
 
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'Spack environment file schema',
-    'definitions': spack.schema.modules.definitions,
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {

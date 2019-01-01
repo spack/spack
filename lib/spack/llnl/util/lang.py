@@ -562,6 +562,9 @@ class Singleton(object):
     def __contains__(self, element):
         return element in self.instance
 
+    def __call__(self, *args, **kwargs):
+        return self.instance(*args, **kwargs)
+
     def __iter__(self):
         return iter(self.instance)
 
