@@ -15,10 +15,10 @@ def interface():
         counter = 0
 
         def add(self):
-            raise NotImplemented('add not implemented')
+            raise NotImplementedError('add not implemented')
 
         def subtract(self):
-            raise NotImplemented('subtract not implemented')
+            raise NotImplementedError('subtract not implemented')
 
     return Base
 

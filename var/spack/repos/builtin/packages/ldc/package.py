@@ -59,7 +59,7 @@ class Ldc(CMakePackage):
 
         config_file = join_path(self.prefix.etc, 'ldc2.conf')
 
-        search_for = 'switches = \['
+        search_for = r'switches = \['
         substitute_with = 'switches = [\n' + \
                           '        "-L-rpath={0}",'.format(self.prefix.lib)
 

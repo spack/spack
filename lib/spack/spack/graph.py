@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Functions for graphing DAGs of dependencies.
+r"""Functions for graphing DAGs of dependencies.
 
 This file contains code for graphing DAGs of software packages
 (i.e. Spack specs).  There are two main functions you probably care

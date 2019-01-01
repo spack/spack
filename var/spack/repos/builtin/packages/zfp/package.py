@@ -32,7 +32,7 @@ class Zfp(MakefilePackage):
     def edit(self, spec, prefix):
         config_file = FileFilter('Config')
         config_file.filter(
-            '^\s*#\s*DEFS\s*\+=\s*-DBIT_STREAM_WORD_TYPE\s*=\s*uint8',
+            r'^\s*#\s*DEFS\s*\+=\s*-DBIT_STREAM_WORD_TYPE\s*=\s*uint8',
             'DEFS += -DBIT_STREAM_WORD_TYPE=uint%s' %
             spec.variants['bsws'].value)
 
