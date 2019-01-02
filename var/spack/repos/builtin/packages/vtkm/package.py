@@ -40,8 +40,7 @@ class Vtkm(Package):
     url      = "https://gitlab.kitware.com/api/v4/projects/vtk%2Fvtk-m/repository/archive.tar.gz?sha=v1.1.0"
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
-    #version('master', branch='master')
-    version('master', branch='master', commit="80fffd1d64abd51c0b6f81ff2121cf0d80a8a3ac")
+    version('master', branch='master')
     version('1.2.0', "f77604c5a1c1747f2fb9b9bd96476875")
     version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
 
