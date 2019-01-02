@@ -10,44 +10,58 @@ class FenicsDolfin(CMakePackage):
     """DOLFIN is the C++/Python interface of FEniCS."""
 
     homepage = "http://fenicsproject.org/"
-    url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-1.6.0.tar.gz"
-    base_url = "https://bitbucket.org/fenics-project/{pkg}/downloads/{pkg}-{version}.tar.gz"
+    git      = "https://bitbucket.org/fenics-project/dolfin.git"
 
-    python_components = ['ufl', 'ffc', 'fiat', 'instant']
+    # Use this url for version >= 2017.1.0
+    url      = "https://bitbucket.org/fenics-project/dolfin/get/2018.1.0.post2.tar.gz"
 
+    # version('develop', branch='master')
+    version('2018.1.0.post2', sha256='a71db38740a7ea508f8a725af4b08ccd024168b450033b032b003a5aac1708cf')
+    version('2018.1.0.post1', sha256='ca8f95d03cafd999fe592941c2776474130406a09abf072ea2e6e93e249af38b')
+    version('2018.1.0.post0', sha256='6c5195c9795decc021ffc713614b7885098912fcd89e3da79fd8428cbaf8212b')
+    version('2018.1.0',       sha256='2afb54e2f8a2c7be5a89e4ef224b68ae514c32168c9a94b1921d62339f8decd4')
+    version('2017.2.0.post0', sha256='4169c7e4d22af76bad39c2c20443c4fa75356078d4e7360d4ea924c76a5c9cd3')
+    version('2017.2.0',       sha256='90f77796372eed63f529bafa7c05afa3d5bfeb5f378d3e4e9d53959c0c06bbe7')
+    version('2017.1.0.post0', sha256='25e557491d7fdff0967ef99c678ec77eb0e5f58a3a6b8b31c45e5ca2bdc85912')
+    version('2017.1.0',       sha256='a496574e9a1310806838c7ef32d442ef77379f879ab6a5742bbe521f171d5f88')
+
+    # FIXME: Older versions prepend name to version in url
+    # url      = "https://bitbucket.org/fenics-project/dolfin/get/dolfin-2016.2.0.tar.gz"
+
+    # version('2016.2.0',       sha256='c6760996660a476f77889e11e4a0bc117cc774be0eec777b02a7f01d9ce7f43d')
+    # version('2016.1.0',       sha256='0db95c8f193fd56d741cb90682e0a6a21e366c4f48d33e1eb501d2f98aa1a05b')
+    # version('1.6.0',          sha256='67f66c39983a8c5a1ba3c0787fa9b9082778bc7227b25c7cad80dc1299e0a201')
+    # version('1.5.0',          sha256='9dd915b44fd833f16121dbb14b668795ab276ada40a111d9366261077200bed3')
+    # version('1.4.0',          sha256='64f058466a312198ea2b9de191bd4fbecaa70eb1c88325d03e680edb606b46cd')
+    # version('1.3.0',          sha256='04ea667c25ca57c84436d9dfe0233d610fc7e25c3ade3fb8c6c38b1260d68dae')
+
+    variant('python',       default=False, description='Compile with DOLFIN Python interface')
     variant('hdf5',         default=True,  description='Compile with HDF5')
     variant('parmetis',     default=True,  description='Compile with ParMETIS')
     variant('scotch',       default=True,  description='Compile with Scotch')
-    variant('petsc',        default=True,  description='Compile with PETSc')
-    variant('slepc',        default=True,  description='Compile with SLEPc')
+    variant('petsc',        default=False, description='Compile with PETSc')
+    variant('slepc',        default=False, description='Compile with SLEPc')
     variant('trilinos',     default=True,  description='Compile with Trilinos')
-    variant('suite-sparse', default=True,
-            description='Compile with SuiteSparse solvers')
+    variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
     variant('vtk',          default=False, description='Compile with VTK')
     variant('qt',           default=False, description='Compile with QT')
-    variant('mpi',          default=True,
-            description='Enables the distributed memory support')
-    variant('openmp',       default=True,
-            description='Enables the shared memory support')
-    variant('shared',       default=True,
-            description='Enables the build of shared libraries')
-    variant('doc',          default=False,
-            description='Builds the documentation')
+    variant('mpi',          default=True,  description='Enables the distributed memory support')
+    variant('openmp',       default=True,  description='Enables the shared memory support')
+    variant('shared',       default=True,  description='Enables the build of shared libraries')
+    variant('doc',          default=False, description='Builds the documentation')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo',
                     'MinSizeRel', 'Developer'))
 
-    # not part of spack list for now
-    # variant('petsc4py',     default=True,  description='Uses PETSc4py')
-    # variant('slepc4py',     default=True,  description='Uses SLEPc4py')
-    # variant('pastix',       default=True,  description='Compile with Pastix')
-
     patch('petsc-3.7.patch', when='@1.6.1^petsc@3.7:')
     patch('petsc-version-detection.patch', when='@:1.6.1')
-    patch('hdf5~cxx-detection.patch')
+    patch('hdf5~cxx-detection.patch', when='@2016.2.0')
 
-    extends('python')
+    extends('python', when='+python')
+
+    depends_on('py-fenics-ffc', type=('build'), when='~python')
+    depends_on('py-fenics-ffc', type=('build', 'run'), when='+python')
 
     depends_on('eigen@3.2.0:')
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
@@ -59,56 +73,21 @@ class FenicsDolfin(CMakePackage):
     depends_on('parmetis@4.0.2:^metis+real64', when='+parmetis')
     depends_on('scotch~metis', when='+scotch~mpi')
     depends_on('scotch+mpi~metis', when='+scotch+mpi')
-    depends_on('petsc@3.4:', when='+petsc')
-    depends_on('slepc@3.4:', when='+slepc')
+    depends_on('petsc@3.6:3.9.99', when='+petsc')
+    depends_on('slepc@3.6:3.9.99', when='+slepc')
+    depends_on('py-petsc4py@3.6:3.9.99', when='+petsc+python')
+    depends_on('py-slepc4py@3.6:3.9.99', when='+slepc+python')
     depends_on('trilinos', when='+trilinos')
     depends_on('vtk', when='+vtk')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('qt', when='+qt')
 
-    depends_on('py-ply', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-sympy', type=('build', 'run'))
-    depends_on('swig@3.0.3:', type=('build', 'run'))
+    depends_on('py-pybind11@2.2.3', when='@2018.1:+python')
+    depends_on('swig@3.0.3:', type=('build', 'run'), when='@:2017.2.0.99+python')
     depends_on('cmake@2.8.12:', type='build')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
-
-    releases = [
-        {
-            'version': '2016.1.0',
-            'sha256': '6228b4d641829a4cd32141bfcd217a1596a27d5969aa00ee64ebba2b1c0fb148',
-            'resources': {
-                'ffc': '52430ce4c7d57ce1b81eb5fb304992247c944bc6a6054c8b6f42bac81702578d',
-                'fiat': '851723126a71bc1ae2dc4ad6e9330bd9b54d52db390dcbbc1f3c759fb49c6aeb',
-                'instant': '7bf03c8a7b61fd1e432b8f3a0405410ae68892ebb1a62a9f8118e8846bbeb0c6',
-                'ufl': '8dccfe10d1251ba48a4d43a4c6c89abe076390223b500f4baf06f696294b8dd0',
-            }
-        },
-        {
-            'version': '1.6.0',
-            'sha256': '67eaac5fece6e71da0559b4ca8423156f9e99a952f0620adae449ebebb6695d1',
-            'resources': {
-                'ffc': '382e7713fe759694e5f07506b144eeead681e169e5a34c164ef3da30eddcc1c6',
-                'fiat': '858ea3e936ad3b3558b474ffccae8a7b9dddbaafeac77e307115b23753cb1cac',
-                'instant': '2347e0229531969095911fdb1de30bd77bdd7f81521ba84d81b1b4a564fc906c',
-                'ufl': 'c75c4781e5104504f158cb42cd87aceffa9052e8e9db6e9764e6a5b6115d7f73',
-            }
-        },
-    ]
-
-    for release in releases:
-        version(release['version'], release['sha256'], url=base_url.format(
-            pkg='dolfin', version=release['version']))
-        for rname, sha256 in release['resources'].items():
-            resource(name=rname,
-                     url=base_url.format(pkg=rname, **release),
-                     sha256=sha256,
-                     destination='depends',
-                     when='@{version}'.format(**release),
-                     placement=rname)
+    depends_on('py-setuptools', type='build', when='+python')
+    depends_on('py-sphinx@1.0.1:', type='build', when='+python+doc')
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
@@ -158,14 +137,4 @@ class FenicsDolfin(CMakePackage):
                 self.cmake_is_on('zlib')),
         ]
 
-    @run_after('build')
-    def build_python_components(self):
-        for package in self.python_components:
-            with working_dir(join_path('depends', package)):
-                setup_py('build')
-
-    @run_after('install')
-    def install_python_components(self):
-        for package in self.python_components:
-            with working_dir(join_path('depends', package)):
-                setup_py('install', '--prefix={0}'.format(self.prefix))
+    # FIXME: Install DOLFIN Python interface
