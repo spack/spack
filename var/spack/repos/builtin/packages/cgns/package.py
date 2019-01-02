@@ -64,9 +64,10 @@ class Cgns(CMakePackage):
         else:
             options.extend(['-DCGNS_ENABLE_HDF5=OFF'])
 
-        if sys.platform == 'darwin':
-            options.extend([
-                '-DCMAKE_MACOSX_RPATH:BOOL=ON'
-            ])
+        if self.version <= Version('3.3.1'):
+            if sys.platform == 'darwin':
+                options.extend([
+                    '-DCMAKE_MACOSX_RPATH:BOOL=ON'
+                ])
 
         return options
