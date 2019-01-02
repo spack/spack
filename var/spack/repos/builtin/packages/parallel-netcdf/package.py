@@ -9,18 +9,13 @@ from spack import *
 class ParallelNetcdf(AutotoolsPackage):
     """PnetCDF (Parallel netCDF) is a high-performance parallel I/O
     library for accessing files in format compatibility with Unidata's
-    NetCDF, specifically the formats of CDF-1, 2, and 5. The CDF-5
-    file format, an extension of CDF-2, supports unsigned data types
-    and uses 64-bit integers to allow users to define large
-    dimensions, attributes, and variables (> 2B array elements).
-    In addition to the conventional netCDF read and write APIs,
-    PnetCDF also provides a set of nonblocking APIs which 
-    allow users to post multiple read and write requests first,
-    and later let PnetCDF aggregate the requests into a large
-    MPI-IO request to achieve better performance."""
+    NetCDF, specifically the formats of CDF-1, 2, and 5.
+    """
 
     homepage = "https://parallel-netcdf.github.io/"
     git      = "https://github.com/Parallel-NetCDF/PnetCDF"
+    url      = "https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz"
+    list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
     def url_for_version(self, version):
         if version >= Version('1.11.0'):
