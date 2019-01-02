@@ -78,7 +78,7 @@ module_file_configuration = {
             }
         }
     }
-},
+}
 
 module_type_configuration = {
     'type': 'object',
