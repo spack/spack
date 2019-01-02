@@ -142,7 +142,7 @@ function spack {
                 shift
             done
 
-            if [[ $help_shown -ne 1 ]]; then
+            if [[ "$help_shown" -ne 1 ]]; then
 
                 _sp_spec=("$@")
 
