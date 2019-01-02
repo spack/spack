@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import re
@@ -79,18 +60,30 @@ class LinkParser(HTMLParser):
 
 class NonDaemonProcess(multiprocessing.Process):
     """Process tha allows sub-processes, so pools can have sub-pools."""
-    def _get_daemon(self):
+    @property
+    def daemon(self):
         return False
 
-    def _set_daemon(self, value):
+    @daemon.setter
+    def daemon(self, value):
         pass
 
-    daemon = property(_get_daemon, _set_daemon)
 
+if sys.version_info[0] < 3:
+    class NonDaemonPool(multiprocessing.pool.Pool):
+        """Pool that uses non-daemon processes"""
+        Process = NonDaemonProcess
+else:
 
-class NonDaemonPool(multiprocessing.pool.Pool):
-    """Pool that uses non-daemon processes"""
-    Process = NonDaemonProcess
+    class NonDaemonContext(type(multiprocessing.get_context())):
+        Process = NonDaemonProcess
+
+    class NonDaemonPool(multiprocessing.pool.Pool):
+        """Pool that uses non-daemon processes"""
+
+        def __init__(self, *args, **kwargs):
+            kwargs['context'] = NonDaemonContext()
+            super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
@@ -329,13 +322,13 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += '(\/download)?$'
+        url_regex += r'(\/download)?$'
 
         regexes.append(url_regex)
 
     # Build a dict version -> URL from any links that match the wildcards.
     versions = {}
-    for url in links:
+    for url in sorted(links):
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)

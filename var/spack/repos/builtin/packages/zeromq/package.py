@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -43,8 +24,10 @@ class Zeromq(AutotoolsPackage):
     version('4.0.6', 'd47dd09ed7ae6e7fd6f9a816d7f5fdf6')
     version('4.0.5', '73c39f5eb01b9d7eaf74a5d899f1d03d')
 
-    depends_on("libsodium")
-    depends_on("libsodium@:1.0.3", when='@:4.1.2')
+    variant("libsodium", default=True, description="Build with libsodium support")
+
+    depends_on("libsodium", when='+libsodium')
+    depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
@@ -59,7 +42,9 @@ class Zeromq(AutotoolsPackage):
         bash('./autogen.sh')
 
     def configure_args(self):
-        config_args = ['--with-libsodium']
+        config_args = []
+        if '+libsodium' in self.spec:
+            config_args.append('--with-libsodium')
         if 'clang' in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")

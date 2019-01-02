@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 
@@ -37,19 +18,25 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/2.3.0/gdal-2.3.0.tar.xz"
+    url        = "http://download.osgeo.org/gdal/2.4.0/gdal-2.4.0.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 1
+
+    maintainers = ['adamjstewart']
 
     import_modules = [
         'osgeo', 'osgeo.gdal', 'osgeo.ogr', 'osgeo.osr',
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
-    version('2.3.0',  '2fe9d64fcd9dc37645940df020d3e200')
-    version('2.1.2',  'ae85b78888514c75e813d658cac9478e')
-    version('2.0.2',  '940208e737c87d31a90eaae43d0efd65')
-    version('1.11.5', '5fcee5622430fbeb25556a4d07c06dd7')
+    version('2.4.0',  sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
+    version('2.3.3',  sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe')
+    version('2.3.2',  sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4')
+    version('2.3.1',  sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a')
+    version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
+    version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
+    version('2.0.2',  sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
+    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042')
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -88,7 +75,9 @@ class Gdal(AutotoolsPackage):
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
 
-    extends('perl', when='+perl')
+    # FIXME: Allow packages to extend multiple packages
+    # See https://github.com/spack/spack/issues/987
+    # extends('perl', when='+perl')
     extends('python', when='+python')
 
     # GDAL depends on GNUmake on Unix platforms.
@@ -131,9 +120,10 @@ class Gdal(AutotoolsPackage):
     depends_on('qhull', when='+qhull @2.1:')
     depends_on('opencl', when='+opencl')
     depends_on('poppler', when='+poppler')
+    depends_on('poppler@:0.63', when='@:2.3.0 +poppler')
     depends_on('proj', when='+proj @2.3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
-    depends_on('python', type=('build', 'run'), when='+python')
+    depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
@@ -426,9 +416,12 @@ class Gdal(AutotoolsPackage):
             '--with-freexl=no',
             '--with-pam=no',
             '--with-podofo=no',
-            '--with-php=no',
             '--with-rasdaman=no',
         ])
+
+        # TODO: add packages for these dependencies (only for 2.3 and older)
+        if spec.satisfies('@:2.3'):
+            args.append('--with-php=no')
 
         # TODO: add packages for these dependencies (only for 2.3 and newer)
         if spec.satisfies('@2.3:'):

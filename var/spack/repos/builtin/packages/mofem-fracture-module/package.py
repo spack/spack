@@ -1,24 +1,8 @@
-##############################################################################
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -32,12 +16,22 @@ class MofemFractureModule(CMakePackage):
     maintainers = ['likask']
 
     version('develop', branch='develop')
+    version('0.9.50', tag='v0.9.50')
+    version('0.9.49', tag='v0.9.49')
+    version('0.9.48', tag='v0.9.48')
+    version('0.9.47', tag='v0.9.47')
+    version('0.9.46', tag='v0.9.46')
+    version('0.9.45', tag='v0.9.45')
+    version('0.9.44', tag='v0.9.44')
     version('0.9.42', tag='v0.9.42')
 
     variant('copy_user_modules', default=True,
         description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
+    depends_on('mofem-users-modules@0.8.17', when='@0.9.50')
+    depends_on('mofem-users-modules@0.8.16', when='@0.9.49')
+    depends_on('mofem-users-modules@0.8.15', when='@0.9.48')
     depends_on("mofem-users-modules", type=('build', 'link', 'run'))
 
     # The CMakeLists.txt installed with mofem-cephas package set cmake
@@ -56,7 +50,7 @@ class MofemFractureModule(CMakePackage):
         :return: directory containing CMakeLists.txt
         """
         spec = self.spec
-        return spec['mofem-cephas'].prefix.users_modules
+        return spec['mofem-users-modules'].prefix.users_modules
 
     def cmake_args(self):
         spec = self.spec
@@ -86,15 +80,15 @@ class MofemFractureModule(CMakePackage):
                 '-DFM_VERSION_BUILD=%s' % self.spec.version[2]])
 
         # build tests
-        options.append('-DMOFEM_UM_BUILD_TETS={0}'.format(
+        options.append('-DMOFEM_UM_BUILD_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
         return options
 
     # This function is not needed to run code installed by extension, nor in
-    # the install process. However for users like to have access to source code
-    # to play and make with it. Having source code at hand one can compile in
-    # own build directory it in mofem-cephas view when the extension is
+    # the install process. However, for users like to have access to source
+    # code to play, change and make it. Having source code at hand one can
+    # compile in own build directory it in package view when the extension is
     # activated.
     @run_after('install')
     def copy_source_code(self):

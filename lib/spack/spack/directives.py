@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This package contains directives that can be used within a package.
 
 Directives are functions that can be called inside a package
@@ -55,12 +36,12 @@ from six import string_types
 import llnl.util.lang
 
 import spack.error
+import spack.patch
 import spack.spec
 import spack.url
 import spack.variant
 from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
-from spack.patch import Patch
 from spack.resource import Resource
 from spack.version import Version
 
@@ -213,7 +194,7 @@ class DirectiveMeta(type):
                 # Nasty, but it's the best way I can think of to avoid
                 # side effects if directive results are passed as args
                 remove_directives(args)
-                remove_directives(kwargs.values())
+                remove_directives(list(kwargs.values()))
 
                 # A directive returns either something that is callable on a
                 # package or a sequence of them
@@ -414,7 +395,7 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
     certain conditions (e.g. a particular version).
 
     Args:
-        url_or_filename (str): url or filename of the patch
+        url_or_filename (str): url or relative filename of the patch
         level (int): patch level (as in the patch shell command)
         when (Spec): optional anonymous spec that specifies when to apply
             the patch
@@ -435,9 +416,19 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
         # if this spec is identical to some other, then append this
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
-        cur_patches.append(
-            Patch.create(pkg_or_dep, url_or_filename, level,
-                         working_dir, **kwargs))
+
+        pkg = pkg_or_dep
+        if isinstance(pkg, Dependency):
+            pkg = pkg.pkg
+
+        if '://' in url_or_filename:
+            patch = spack.patch.UrlPatch(
+                pkg, url_or_filename, level, working_dir, **kwargs)
+        else:
+            patch = spack.patch.FilePatch(
+                pkg, url_or_filename, level, working_dir)
+
+        cur_patches.append(patch)
 
     return _execute_patch
 

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -36,8 +17,15 @@ class Moab(AutotoolsPackage):
     versatile enough to support individual entity access."""
 
     homepage = "https://bitbucket.org/fathomteam/moab"
+    git = "https://bitbucket.org/fathomteam/moab.git"
     url = "http://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
 
+    version('develop', branch='develop')
+    version('master', branch='master')
+    # Version 5.0.2 disappeared from FTP server. Instead set temporary version
+    # of MoAB to 5.0.2 set to current head of the master branch.
+    version('5.0.2', commit='01d05b1805236ef44da36f67eb2701095f2e33c7')
+    version('5.0.1', commit='6cc12bd4ae3fa7c9ad81c595e4d38fa84f0884be')
     version('5.0.0', '1840ca02366f4d3237d44af63e239e3b')
     version('4.9.2', '540931a604c180bbd3c1bb3ee8c51dd0')
     version('4.9.1', '19cc2189fa266181ad9109b18d0b2ab8')
@@ -60,6 +48,7 @@ class Moab(AutotoolsPackage):
     variant('irel', default=False, description='Enable irel interface')
     variant('fbigeom', default=False, description='Enable fbigeom interface')
     variant('coupler', default=True, description='Enable mbcoupler tool')
+    variant('dagmc', default=False, description='Enable dagmc tool')
 
     variant("debug", default=False, description='enable debug symbols')
     variant('shared', default=False,
@@ -79,6 +68,10 @@ class Moab(AutotoolsPackage):
     # depends_on('cgns', when='+cgns')
     # depends_on('vtk', when='+vtk')
 
+    depends_on('autoconf', type='build', when='@master,5.0.1:')
+    depends_on('automake', type='build', when='@master,5.0.1:')
+    depends_on('libtool', type='build', when='@master,5.0.1:')
+    depends_on('m4', type='build', when='@master,5.0.1:')
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
@@ -161,6 +154,11 @@ class Moab(AutotoolsPackage):
             options.append('--enable-mbcoupler')
         else:
             options.append('--disable-mbcoupler')
+
+        if '+dagmc' in spec:
+            options.append('--enable-dagmc')
+        else:
+            options.append('--disable-dagmc')
 
         if '+metis' in spec:
             options.append('--with-metis=%s' % spec['metis'].prefix)

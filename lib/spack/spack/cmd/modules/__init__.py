@@ -1,32 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Implementation details of the ``spack module`` command."""
 
 import collections
 import os.path
 import shutil
+import sys
 
 from llnl.util import filesystem, tty
 
@@ -73,22 +55,28 @@ def setup_parser(subparser):
         'loads',
         help='prompt the list of modules associated with a constraint'
     )
-    loads_parser.add_argument(
+    add_loads_arguments(loads_parser)
+    arguments.add_common_arguments(loads_parser, ['constraint'])
+
+    return sp
+
+
+def add_loads_arguments(subparser):
+    subparser.add_argument(
         '--input-only', action='store_false', dest='shell',
         help='generate input for module command (instead of a shell script)'
     )
-    loads_parser.add_argument(
+    subparser.add_argument(
         '-p', '--prefix', dest='prefix', default='',
         help='prepend to module names when issuing module load commands'
     )
-    loads_parser.add_argument(
+    subparser.add_argument(
         '-x', '--exclude', dest='exclude', action='append', default=[],
         help="exclude package from output; may be specified multiple times"
     )
     arguments.add_common_arguments(
-        loads_parser, ['constraint', 'recurse_dependencies']
+        subparser, ['recurse_dependencies']
     )
-    return sp
 
 
 class MultipleSpecsMatch(Exception):
@@ -117,7 +105,7 @@ def one_spec_or_raise(specs):
     return specs[0]
 
 
-def loads(module_type, specs, args):
+def loads(module_type, specs, args, out=sys.stdout):
     """Prompt the list of modules associated with a list of specs"""
 
     # Get a comprehensive list of specs
@@ -160,7 +148,8 @@ def loads(module_type, specs, args):
         d['comment'] = '' if not args.shell else '# {0}\n'.format(
             spec.format())
         d['name'] = mod
-        print(prompt_template.format(**d))
+        out.write(prompt_template.format(**d))
+        out.write('\n')
 
 
 def find(module_type, specs, args):

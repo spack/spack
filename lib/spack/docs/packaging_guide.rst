@@ -1,3 +1,8 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _packaging-guide:
 
 ===============
@@ -1417,6 +1422,73 @@ with all packages in Spack, a patched dependency library can coexist with
 other versions of that library.  See the `section on depends_on
 <dependency_dependency_patching_>`_ for more details.
 
+.. _patch_inspecting_patches:
+
+^^^^^^^^^^^^^^^^^^^
+Inspecting patches
+^^^^^^^^^^^^^^^^^^^
+
+If you want to better understand the patches that Spack applies to your
+packages, you can do that using ``spack spec``, ``spack find``, and other
+query commands.  Let's look at ``m4``.  If you run ``spack spec m4``, you
+can see the patches that would be applied to ``m4``::
+
+  $ spack spec m4
+  Input spec
+  --------------------------------
+  m4
+
+  Concretized
+  --------------------------------
+  m4@1.4.18%clang@9.0.0-apple patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
+      ^libsigsegv@2.11%clang@9.0.0-apple arch=darwin-highsierra-x86_64
+
+You can also see patches that have been applied to installed packages
+with ``spack find -v``::
+
+  $ spack find -v m4
+  ==> 1 installed package
+  -- darwin-highsierra-x86_64 / clang@9.0.0-apple -----------------
+  m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
+
+.. _cmd-spack-resource:
+
+In both cases above, you can see that the patches' sha256 hashes are
+stored on the spec as a variant.  As mentioned above, this means that you
+can have multiple, differently-patched versions of a package installed at
+once.
+
+You can look up a patch by its sha256 hash (or a short version of it)
+using the ``spack resource show`` command::
+
+  $ spack resource show 3877ab54
+  3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00
+      path:       /home/spackuser/src/spack/var/spack/repos/builtin/packages/m4/gnulib-pgi.patch
+      applies to: builtin.m4
+
+``spack resource show`` looks up downloadable resources from package
+files by hash and prints out information about them.  Above, we see that
+the ``3877ab54`` patch applies to the ``m4`` package.  The output also
+tells us where to find the patch.
+
+Things get more interesting if you want to know about dependency
+patches. For example, when ``dealii`` is built with ``boost@1.68.0``, it
+has to patch boost to work correctly.  If you didn't know this, you might
+wonder where the extra boost patches are coming from::
+
+  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep '\^boost'
+      ^boost@1.68.0
+          ^boost@1.68.0%clang@9.0.0-apple+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
+  $ spack resource show b37164268
+  b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
+      path:       /home/spackuser/src/spack/var/spack/repos/builtin/packages/dealii/boost_1.68.0.patch
+      applies to: builtin.boost
+      patched by: builtin.dealii
+
+Here you can see that the patch is applied to ``boost`` by ``dealii``,
+and that it lives in ``dealii``'s directory in Spack's ``builtin``
+package repository.
+
 .. _handling_rpaths:
 
 ---------------
@@ -2689,13 +2761,13 @@ Here are the definitions of the three built-in flag handlers:
 
 .. code-block:: python
 
-   def inject_flags(self, name, flags):
+   def inject_flags(pkg, name, flags):
        return (flags, None, None)
 
-   def env_flags(self, name, flags):
+   def env_flags(pkg, name, flags):
        return (None, flags, None)
 
-   def build_system_flags(self, name, flags):
+   def build_system_flags(pkg, name, flags):
        return (None, None, flags)
 
 .. note::
@@ -2708,10 +2780,7 @@ the built-in flag handlers,
 
 .. code-block:: python
 
-   flag_handler = <PackageClass>.env_flags
-
-where ``<PackageClass>`` can be any of the subclasses of PackageBase
-discussed in :ref:`installation_procedure`,
+   flag_handler = env_flags
 
 or by implementing the flag_handler method. Suppose for a package
 ``Foo`` we need to pass ``cflags``, ``cxxflags``, and ``cppflags``
@@ -2737,7 +2806,7 @@ method of the ``EnvironmentModifications`` class to append values to a
 list of flags whenever the flag handler is ``env_flags``. If the
 package passes flags through the environment or the build system
 manually (in the install method, for example), we recommend using the
-default flag handler, or removind manual references and implementing a
+default flag handler, or removing manual references and implementing a
 custom flag handler method that adds the desired flags to export as
 environment variables or pass to the build system. Manual flag passing
 is likely to interfere with the ``env_flags`` and

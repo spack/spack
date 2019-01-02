@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack.util.prefix import Prefix
 from spack import *
 
@@ -55,8 +36,14 @@ class Jdk(Package):
     # found in a link above. The build number can be deciphered from the URL.
     # Alternatively, run `bin/java -version` after extracting. Replace '+'
     # symbol in version with '_', otherwise it will be interpreted as a variant
+    version('11.0.1', sha256='e7fd856bacad04b6dbf3606094b6a81fa9930d6dbb044bbd787be7ea93abc885', curl_options=curl_options,
+            url='http://download.oracle.com/otn-pub/java/jdk/11.0.1+13/90cf5d8f270a4347a95050320eef3fb7/jdk-11.0.1_linux-x64_bin.tar.gz')
+    version('10.0.2_13', sha256='6633c20d53c50c20835364d0f3e172e0cbbce78fff81867488f22a6298fa372b', curl_options=curl_options,
+            url='http://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jdk-10.0.2_linux-x64_bin.tar.gz')
     version('10.0.1_10', 'ae8ed645e6af38432a56a847597ac61d4283b7536688dbab44ab536199d1e5a4', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/10.0.1+10/fb4372174a714e6b8c52526dc134031e/jdk-10.0.1_linux-x64_bin.tar.gz')
+    version('1.8.0_181-b13', 'ef599e322eee42f6769991dd3e3b1a31', curl_options=curl_options, 
+            url='http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.tar.gz')
     version('1.8.0_172-b11', 'eda2945e8c02b84adbf78f46c37b71c1', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/8u172-b11/a58eab1ec242421181065cdc37240b08/jdk-8u172-linux-x64.tar.gz')
     version('1.8.0_141-b15', '8cf4c4e00744bfafc023d770cb65328c', curl_options=curl_options,
@@ -69,6 +56,7 @@ class Jdk(Package):
     version('1.7.0_80-b0', '6152f8a7561acf795ca4701daa10a965', curl_options=curl_options)
 
     provides('java')
+    provides('java@11', when='@11.0:11.999')
     provides('java@10', when='@10.0:10.999')
     provides('java@9',  when='@9.0:9.999')
     provides('java@8',  when='@1.8.0:1.8.999')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -38,12 +19,13 @@ class Gmsh(CMakePackage):
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'
 
+    version('4.0.0', sha256='fb0c8afa37425c6f4315ab3b3124e9e102fcf270a35198423a4002796f04155f')
     version('3.0.6',  '9700bcc440d7a6b16a49cbfcdcdc31db33efe60e1f5113774316b6fa4186987b')
     version('3.0.1',  '830b5400d9f1aeca79c3745c5c9fdaa2900cdb2fa319b664a5d26f7e615c749f')
     version('2.16.0', 'e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
     version('2.15.0', '992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
     version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
-    version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
+    version('develop', branch='master', git='https://gitlab.onelab.info/gmsh/gmsh.git')
 
     variant('shared',      default=True,  description='Enables the build of shared libraries')
     variant('mpi',         default=True,  description='Builds MPI support for parser and solver')
