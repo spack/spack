@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import filecmp
 import os
 import pytest
@@ -32,6 +13,8 @@ import spack.util.executable
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
+
+pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
@@ -68,7 +51,8 @@ def check_mirror():
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         spack.config.set('mirrors', mirrors)
-        spack.mirror.create(mirror_root, repos, no_checksum=True)
+        with spack.config.override('config:checksum', False):
+            spack.mirror.create(mirror_root, repos)
 
         # Stage directory exists
         assert os.path.isdir(mirror_root)
@@ -110,47 +94,87 @@ def check_mirror():
                         assert all(l in exclude for l in dcmp.left_only)
 
 
-@pytest.mark.usefixtures('config', 'mutable_mock_packages')
-class TestMirror(object):
-    def test_url_mirror(self, mock_archive):
-        set_up_package('trivial-install-test-package', mock_archive, 'url')
-        check_mirror()
-        repos.clear()
+def test_url_mirror(mock_archive):
+    set_up_package('trivial-install-test-package', mock_archive, 'url')
+    check_mirror()
+    repos.clear()
 
-    @pytest.mark.skipif(
-        not which('git'), reason='requires git to be installed')
-    def test_git_mirror(self, mock_git_repository):
-        set_up_package('git-test', mock_git_repository, 'git')
-        check_mirror()
-        repos.clear()
 
-    @pytest.mark.skipif(
-        not which('svn'), reason='requires subversion to be installed')
-    def test_svn_mirror(self, mock_svn_repository):
-        set_up_package('svn-test', mock_svn_repository, 'svn')
-        check_mirror()
-        repos.clear()
+@pytest.mark.skipif(
+    not which('git'), reason='requires git to be installed')
+def test_git_mirror(mock_git_repository):
+    set_up_package('git-test', mock_git_repository, 'git')
+    check_mirror()
+    repos.clear()
 
-    @pytest.mark.skipif(
-        not which('hg'), reason='requires mercurial to be installed')
-    def test_hg_mirror(self, mock_hg_repository):
-        set_up_package('hg-test', mock_hg_repository, 'hg')
-        check_mirror()
-        repos.clear()
 
-    @pytest.mark.skipif(
-        not all([which('svn'), which('hg'), which('git')]),
-        reason='requires subversion, git, and mercurial to be installed')
-    def test_all_mirror(
-            self,
-            mock_git_repository,
-            mock_svn_repository,
-            mock_hg_repository,
-            mock_archive):
+@pytest.mark.skipif(
+    not which('svn'), reason='requires subversion to be installed')
+def test_svn_mirror(mock_svn_repository):
+    set_up_package('svn-test', mock_svn_repository, 'svn')
+    check_mirror()
+    repos.clear()
 
-        set_up_package('git-test', mock_git_repository, 'git')
-        set_up_package('svn-test', mock_svn_repository, 'svn')
-        set_up_package('hg-test', mock_hg_repository, 'hg')
-        set_up_package('trivial-install-test-package', mock_archive, 'url')
-        check_mirror()
-        repos.clear()
+
+@pytest.mark.skipif(
+    not which('hg'), reason='requires mercurial to be installed')
+def test_hg_mirror(mock_hg_repository):
+    set_up_package('hg-test', mock_hg_repository, 'hg')
+    check_mirror()
+    repos.clear()
+
+
+@pytest.mark.skipif(
+    not all([which('svn'), which('hg'), which('git')]),
+    reason='requires subversion, git, and mercurial to be installed')
+def test_all_mirror(
+        mock_git_repository,
+        mock_svn_repository,
+        mock_hg_repository,
+        mock_archive):
+
+    set_up_package('git-test', mock_git_repository, 'git')
+    set_up_package('svn-test', mock_svn_repository, 'svn')
+    set_up_package('hg-test', mock_hg_repository, 'hg')
+    set_up_package('trivial-install-test-package', mock_archive, 'url')
+    check_mirror()
+    repos.clear()
+
+
+def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
+    spec = Spec('patch-several-dependencies')
+    spec.concretize()
+
+    files_cached_in_mirror = set()
+
+    def record_store(_class, fetcher, relative_dst):
+        files_cached_in_mirror.add(os.path.basename(relative_dst))
+
+    def successful_fetch(_class):
+        with open(_class.stage.save_filename, 'w'):
+            pass
+
+    def successful_expand(_class):
+        expanded_path = os.path.join(_class.stage.path, 'expanded-dir')
+        os.mkdir(expanded_path)
+        with open(os.path.join(expanded_path, 'test.patch'), 'w'):
+            pass
+
+    def successful_apply(*args, **kwargs):
+        pass
+
+    with Stage('spack-mirror-test') as stage:
+        mirror_root = os.path.join(stage.path, 'test-mirror')
+
+        monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, 'fetch',
+                            successful_fetch)
+        monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy,
+                            'expand', successful_expand)
+        monkeypatch.setattr(spack.patch, 'apply_patch', successful_apply)
+        monkeypatch.setattr(spack.caches.MirrorCache, 'store', record_store)
+
+        with spack.config.override('config:checksum', False):
+            spack.mirror.create(mirror_root, list(spec.traverse()))
+
+        assert not (set(['urlpatch.patch', 'urlpatch2.patch.gz']) -
+                    files_cached_in_mirror)

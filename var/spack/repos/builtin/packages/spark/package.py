@@ -1,29 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
-import shutil
 
 from spack import *
 
@@ -64,19 +44,16 @@ class Spark(Package):
         install_dir('yarn')
 
         # required for spark to recognize binary distribution
-        shutil.copy('RELEASE', prefix)
+        install('RELEASE', prefix)
 
     @when('+hadoop')
     def setup_environment(self, spack_env, run_env):
-
-        env['JAVA_HOME'] = self.spec['java'].prefix
-        # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
-
         hadoop = self.spec['hadoop'].command
+        hadoop.add_default_env('JAVA_HOME', self.spec['java'].home)
         hadoop_classpath = hadoop('classpath', output=str)
 
         # Remove whitespaces, as they can compromise syntax in
         # module files
-        hadoop_classpath = re.sub('[\s+]', '', hadoop_classpath)
+        hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
 
         run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)

@@ -1,28 +1,8 @@
-##############################################################################
-# Copyright (c) 2017 Mark Olesen, OpenCFD Ltd.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file was authored by Mark Olesen <mark.olesen@esi-group.com>
-# and is released as part of spack under the LGPL license.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
-#
-# License
-# -------
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -55,7 +35,6 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 import llnl.util.tty as tty
@@ -80,14 +59,15 @@ class OpenfoamOrg(Package):
     homepage = "http://www.openfoam.org/"
     baseurl  = "https://github.com/OpenFOAM"
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
+    git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
+    version('develop', branch='master')
     version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
     version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
     version('2.4.0', 'ad7d8b7b0753655b2b6fd9e92eefa92a',
             url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
-    version('develop', git='https://github.com/OpenFOAM/OpenFOAM-dev.git')
 
     variant('int64', default=False,
             description='Compile with 64-bit label')
@@ -344,12 +324,13 @@ class OpenfoamOrg(Package):
             dirs.extend(['doc'])
 
         # Install platforms (and doc) skipping intermediate targets
-        ignored = ['src', 'applications', 'html', 'Guides']
+        relative_ignore_paths = ['src', 'applications', 'html', 'Guides']
+        ignore = lambda p: p in relative_ignore_paths
         for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d),
-                ignore=shutil.ignore_patterns(*ignored),
+                ignore=ignore,
                 symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')

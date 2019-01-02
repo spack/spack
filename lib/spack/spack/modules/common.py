@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Here we consolidate the logic for creating an abstract description
 of the information that module systems need.
 
@@ -59,7 +40,7 @@ import llnl.util.tty as tty
 
 import spack.paths
 import spack.build_environment as build_environment
-import spack.environment
+import spack.util.environment
 import spack.tengine as tengine
 import spack.util.path
 import spack.util.environment
@@ -192,7 +173,7 @@ def merge_config_rules(configuration, spec):
         if constraint.endswith(':'):
             constraint = constraint.strip(':')
             override = True
-        if spec.satisfies(constraint):
+        if spec.satisfies(constraint, strict=True):
             if override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)
@@ -275,7 +256,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        env_mods = spack.environment.EnvironmentModifications()
+        env_mods = spack.util.environment.EnvironmentModifications()
         actions = self.conf.get('environment', {})
 
         def process_arglist(arglist):
@@ -519,14 +500,14 @@ class BaseContext(tengine.Context):
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed inspecting the spec prefix
-        env = spack.environment.inspect_path(
+        env = spack.util.environment.inspect_path(
             self.spec.prefix,
             prefix_inspections,
             exclude=spack.util.environment.is_system_path
         )
 
         # Modifications that are coded at package level
-        _ = spack.environment.EnvironmentModifications()
+        _ = spack.util.environment.EnvironmentModifications()
         # TODO : the code down below is quite similar to
         # TODO : build_environment.setup_package and needs to be factored out
         # TODO : to a single place
@@ -534,22 +515,13 @@ class BaseContext(tengine.Context):
         # before asking for package-specific modifications
         for item in dependencies(self.spec, 'all'):
             package = self.spec[item.name].package
-            modules = build_environment.parent_class_modules(package.__class__)
-            for mod in modules:
-                build_environment.set_module_variables_for_package(
-                    package, mod
-                )
-            build_environment.set_module_variables_for_package(
-                package, package.module
-            )
+            build_environment.set_module_variables_for_package(package)
             package.setup_dependent_package(
                 self.spec.package.module, self.spec
             )
             package.setup_dependent_environment(_, env, self.spec)
         # Package specific modifications
-        build_environment.set_module_variables_for_package(
-            self.spec.package, self.spec.package.module
-        )
+        build_environment.set_module_variables_for_package(self.spec.package)
         self.spec.package.setup_environment(_, env)
 
         # Modifications required from modules.yaml
@@ -565,7 +537,7 @@ class BaseContext(tengine.Context):
         # tokens uppercase.
         transform = {}
         for token in _valid_tokens:
-            transform[token] = str.upper
+            transform[token] = lambda spec, string: str.upper(string)
 
         for x in env:
             # Ensure all the tokens are valid in this context

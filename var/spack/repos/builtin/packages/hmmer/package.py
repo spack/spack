@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,9 @@ class Hmmer(Package):
     probabilistic models called profile hidden Markov models (profile HMMs).
     """
     homepage = 'http://www.hmmer.org'
-    url      = 'http://eddylab.org/software/hmmer3/3.1b2/hmmer-3.1b2.tar.gz'
+    url      = 'http://eddylab.org/software/hmmer/hmmer-3.2.1.tar.gz'
 
+    version('3.2.1', '4e0ad5ed45462d4e36807d21e6d82b69')
     version('3.1b2', 'c8c141018bc0ccd7fc37b33f2b945d5f')
     version('3.0',   '4cf685f3bc524ba5b5cdaaa070a83588')
     version('2.4i',  'dab234c87e026ac1de942450750acd20')
@@ -44,14 +26,6 @@ class Hmmer(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
-
-    def url_for_version(self, version):
-        base_url = 'http://eddylab.org/software'
-
-        if version >= Version('3.0'):
-            return '{0}/hmmer3/{1}/hmmer-{1}.tar.gz'.format(base_url, version)
-        else:
-            return '{0}/hmmer/{1}/hmmer-{1}.tar.gz'.format(base_url, version)
 
     def install(self, spec, prefix):
         configure_args = [

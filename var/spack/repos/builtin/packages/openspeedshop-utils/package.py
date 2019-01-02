@@ -1,44 +1,7 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-##############################################################################
-# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
-#
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the Free
-# Software Foundation; either version 2 of the License, or (at your option)
-# any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-# Place, Suite 330, Boston, MA  02111-1307  USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
@@ -69,17 +32,13 @@ class OpenspeedshopUtils(CMakePackage):
     """
 
     homepage = "http://www.openspeedshop.org"
-    url = "https://github.com/OpenSpeedShop/openspeedshop.git"
+    git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
-    # Use when the git repository is available
-    version('2.3.1.4', branch='2.3.1.4',
-            git='https://github.com/OpenSpeedShop/openspeedshop.git')
-
-    version('2.3.1.3', branch='2.3.1.3',
-            git='https://github.com/OpenSpeedShop/openspeedshop.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/openspeedshop.git')
+    version('develop', branch='master')
+    version('2.4.0', branch='2.4.0')
+    version('2.3.1.5', branch='2.3.1.5')
+    version('2.3.1.4', branch='2.3.1.4')
+    version('2.3.1.3', branch='2.3.1.3')
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
@@ -123,8 +82,7 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("flex@2.6.1", type='build')
 
     # For binutils
-    depends_on("binutils", when='@develop', type='build')
-    depends_on("binutils@2.29.1", when='@2.3.1.3:9999', type='build')
+    depends_on("binutils", type='build')
 
     depends_on("elf", type="link")
     depends_on("libdwarf")
@@ -132,67 +90,66 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("sqlite")
 
     # For boost
-    depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@2.3.1.3:9999')
+    depends_on("boost@1.66.0:")
 
     depends_on("dyninst@develop", when='@develop')
-    depends_on("dyninst@9.3.2", when='@2.3.1.3:9999')
+    depends_on("dyninst@10:", when='@2.3.1.3:9999')
 
-    depends_on("python", when='@develop')
-    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999')
+    depends_on("python", when='@develop', type=('build', 'run'))
+    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999', type=('build', 'run'))
 
     depends_on("libxml2")
 
     # Dependencies for the openspeedshop cbtf packages.
-    depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0:9999", when='@2.3.1.3:9999')
+    depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
-    depends_on("cbtf-krell@develop", when='@develop')
-    depends_on("cbtf-krell@1.9.1.0:9999", when='@2.3.1.3:9999')
+    depends_on("cbtf-krell@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf-krell@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe')
-    depends_on('cbtf-krell@1.9.1.0:9999+crayfe', when='@2.3.1.3:9999+crayfe')
+    depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+crayfe', when='@2.3.1.3:9999+crayfe', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+cti', when='@develop+cti')
-    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@2.3.1.3:9999+cti')
+    depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich')
-    depends_on('cbtf-krell@1.9.1.0:9999+mpich', when='@2.3.1.3:9999+mpich')
+    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpich', when='@2.3.1.3:9999+mpich', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2')
-    depends_on('cbtf-krell@1.9.1.0:9999+mpich2', when='@2.3.1.3:9999+mpich2')
+    depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpich2', when='@2.3.1.3:9999+mpich2', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mpt', when='@develop+mpt')
-    depends_on('cbtf-krell@1.9.1.0:9999+mpt', when='@2.3.1.3:9999+mpt')
+    depends_on('cbtf-krell@develop+mpt', when='@develop+mpt', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpt', when='@2.3.1.3:9999+mpt', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich')
-    depends_on('cbtf-krell@1.9.1.0:9999+mvapich', when='@2.3.1.3:9999+mvapich')
+    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mvapich', when='@2.3.1.3:9999+mvapich', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2')
-    depends_on('cbtf-krell@1.9.1.0:9999+mvapich2', when='@2.3.1.3:9999+mvapich2')
+    depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mvapich2', when='@2.3.1.3:9999+mvapich2', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi')
-    depends_on('cbtf-krell@1.9.1.0:9999+openmpi', when='@2.3.1.3:9999+openmpi')
+    depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+openmpi', when='@2.3.1.3:9999+openmpi', type=('build', 'link', 'run'))
 
-    depends_on("cbtf-argonavis@develop", when='@develop+cuda')
-    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@2.3.1.3:9999+cuda')
+    depends_on("cbtf-argonavis@develop", when='@develop+cuda', type=('build', 'link', 'run'))
+    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@2.3.1.3:9999+cuda', type=('build', 'link', 'run'))
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
 
-    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999')
+    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
     parallel = False
 
     build_directory = 'build_openspeedshop'
 
-    def set_CrayLoginNode_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable the appropriate
+    def set_cray_login_node_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable the appropriate
         # Cray login node libraries
 
-        CrayLoginNodeOptions = []
+        cray_login_node_options = []
         rt_platform = "cray"
 
         # How do we get the compute node (CNL) cbtf package install
@@ -205,12 +162,12 @@ class OpenspeedshopUtils(CMakePackage):
         # Equivalent to install-tool cmake arg:
         # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
         #               % <base dir>/cbtf_v2.3.1.release/compute)
-        CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
-                                    % be_ck.prefix)
-        CrayLoginNodeOptions.append('-DRUNTIME_PLATFORM=%s'
-                                    % rt_platform)
+        cray_login_node_options.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
+                                       % be_ck.prefix)
+        cray_login_node_options.append('-DRUNTIME_PLATFORM=%s'
+                                       % rt_platform)
 
-        cmakeOptions.extend(CrayLoginNodeOptions)
+        cmake_options.extend(cray_login_node_options)
 
     def cmake_args(self):
         # Appends base options to cmake_args
@@ -224,7 +181,7 @@ class OpenspeedshopUtils(CMakePackage):
         instrumentor_setting = "cbtf"
 
         if spec.satisfies('+runtime'):
-            self.set_defaultbase_cmakeOptions(spec, cmake_args)
+            self.set_defaultbase_cmake_options(spec, cmake_args)
 
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
@@ -237,7 +194,7 @@ class OpenspeedshopUtils(CMakePackage):
         else:
 
             # Appends base options to cmake_args
-            self.set_defaultbase_cmakeOptions(spec, cmake_args)
+            self.set_defaultbase_cmake_options(spec, cmake_args)
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s' % compile_flags,
                  '-DCMAKE_C_FLAGS=%s' % compile_flags,
@@ -252,63 +209,63 @@ class OpenspeedshopUtils(CMakePackage):
                 # components/libraries first then pass
                 # those libraries to the openspeedshop
                 # login node build
-                self.set_CrayLoginNode_cmakeOptions(spec, cmake_args)
+                self.set_cray_login_node_cmake_options(spec, cmake_args)
 
         cmake_args.extend(['-DBUILD_QT3_GUI=FALSE'])
 
         return cmake_args
 
-    def set_defaultbase_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable
+    def set_defaultbase_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable
         # the appropriate base level options to the openspeedshop
         # cmake build.
         python_exe = spec['python'].command.path
         python_library = spec['python'].libs[0]
         python_include = spec['python'].headers.directories[0]
 
-        BaseOptions = []
+        base_options = []
 
-        BaseOptions.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
-        BaseOptions.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
-        BaseOptions.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
-        BaseOptions.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
-        BaseOptions.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
-        BaseOptions.append('-DPYTHON_LIBRARY=%s' % python_library)
-        BaseOptions.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
-        BaseOptions.append('-DBoost_NO_BOOST_CMAKE=TRUE')
-        BaseOptions.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
-        BaseOptions.append('-DBoost_DIR=%s' % spec['boost'].prefix)
-        BaseOptions.append('-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib)
-        BaseOptions.append('-DDYNINST_DIR=%s' % spec['dyninst'].prefix)
+        base_options.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
+        base_options.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
+        base_options.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
+        base_options.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
+        base_options.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
+        base_options.append('-DPYTHON_LIBRARY=%s' % python_library)
+        base_options.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
+        base_options.append('-DBoost_NO_BOOST_CMAKE=TRUE')
+        base_options.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
+        base_options.append('-DBoost_DIR=%s' % spec['boost'].prefix)
+        base_options.append('-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib)
+        base_options.append('-DDYNINST_DIR=%s' % spec['dyninst'].prefix)
 
-        cmakeOptions.extend(BaseOptions)
+        cmake_options.extend(base_options)
 
-    def set_mpi_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable
+    def set_mpi_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable
         # the appropriate MPI implementations
 
-        MPIOptions = []
+        mpi_options = []
 
         # openmpi
         if spec.satisfies('+openmpi'):
-            MPIOptions.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
+            mpi_options.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
         # mpich
         if spec.satisfies('+mpich'):
-            MPIOptions.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
+            mpi_options.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
         # mpich2
         if spec.satisfies('+mpich2'):
-            MPIOptions.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
+            mpi_options.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
         # mvapich
         if spec.satisfies('+mvapich'):
-            MPIOptions.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
+            mpi_options.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
         # mvapich2
         if spec.satisfies('+mvapich2'):
-            MPIOptions.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
+            mpi_options.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
         # mpt
         if spec.satisfies('+mpt'):
-            MPIOptions.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
+            mpi_options.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
 
-        cmakeOptions.extend(MPIOptions)
+        cmake_options.extend(mpi_options)
 
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package."""

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import argparse
 import os
 import filecmp
@@ -429,3 +410,73 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
             assert '<Text>configure: error: in /path/to/some/file:</Text>' in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
+                                  capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            with pytest.raises((HTTPError, URLError)):
+                install(
+                    '--log-file=cdash_reports',
+                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
+                    'a')
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Build.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert '</Build>' in content
+            assert '<Text>' not in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            with pytest.raises((HTTPError, URLError)):
+                install(
+                    '--log-file=cdash_reports',
+                    '--cdash-build=my_custom_build',
+                    '--cdash-site=my_custom_site',
+                    '--cdash-track=my_custom_track',
+                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
+                    'a')
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Build.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert 'Site BuildName="my_custom_build"' in content
+            assert 'Name="my_custom_site"' in content
+            assert '-my_custom_track' in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd):
+    with capfd.disabled():
+        msg = ''
+        try:
+            install('build-error')
+            assert False, "no exception was raised!"
+        except spack.build_environment.ChildError as e:
+            msg = e.long_message
+
+        assert 'configure: error: in /path/to/some/file:' in msg
+        assert 'configure: error: cannot run C compiled programs.' in msg
+
+
+@pytest.mark.disable_clean_stage_check
+def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
+    with capfd.disabled():
+        msg = ''
+        try:
+            install('build-warnings')
+        except spack.build_environment.ChildError as e:
+            msg = e.long_message
+
+        assert 'WARNING: ALL CAPITAL WARNING!' in msg
+        assert 'foo.c:89: warning: some weird warning!' in msg

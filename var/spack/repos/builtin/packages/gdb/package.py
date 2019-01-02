@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,8 +13,9 @@ class Gdb(AutotoolsPackage):
     """
 
     homepage = "https://www.gnu.org/software/gdb"
-    url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
+    url      = "https://ftpmirror.gnu.org/gdb/gdb-7.10.tar.gz"
 
+    version('8.2', '0783c6d86775c5aff06cccc8a3d7cad8')
     version('8.1', '0c85ecbb43569ec43b1c9230622e84ab')
     version('8.0.1', 'bb45869f8126a84ea2ba13a8c0e7c90e')
     version('8.0', '9bb49d134916e73b2c01d01bf20363df')
@@ -46,7 +28,7 @@ class Gdb(AutotoolsPackage):
     version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
 
     variant('python', default=True, description='Compile with Python support')
-    variant('xz', default=False, description='Compile with lzma support')
+    variant('xz', default=True, description='Compile with lzma support')
 
     # Required dependency
     depends_on('texinfo', type='build')

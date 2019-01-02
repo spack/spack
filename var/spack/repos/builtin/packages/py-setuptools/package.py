@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,11 +10,19 @@ class PySetuptools(PythonPackage):
     """A Python utility that aids in the process of downloading, building,
        upgrading, installing, and uninstalling Python packages."""
 
-    homepage = "https://pypi.python.org/pypi/setuptools"
-    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-39.0.1.zip"
+    homepage = "https://github.com/pypa/setuptools"
+    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-40.2.0.zip"
 
-    import_modules = ['pkg_resources', 'setuptools', 'setuptools.command']
+    import_modules = [
+        'setuptools', 'pkg_resources', 'setuptools._vendor',
+        'setuptools.command', 'setuptools.extern',
+        'setuptools._vendor.packaging', 'pkg_resources._vendor',
+        'pkg_resources.extern', 'pkg_resources._vendor.packaging',
+        'easy_install'
+    ]
 
+    version('40.4.3', sha256='acbc5740dd63f243f46c2b4b8e2c7fd92259c2ddb55a4115b16418a2ed371b15')
+    version('40.2.0', '592efabea3a65d8e97a025ed52f69b12')
     version('39.2.0', 'dd4e3fa83a21bf7bf9c51026dc8a4e59')
     version('39.0.1', '75310b72ca0ab4e673bf7679f69d7a62')
     version('35.0.2', 'c368b4970d3ad3eab5afe4ef4dbe2437')
@@ -48,7 +37,7 @@ class PySetuptools(PythonPackage):
     version('16.0',   '0ace0b96233516fc5f7c857d086aa3ad')
     version('11.3.1', '01f69212e019a2420c1693fb43593930')
 
-    depends_on('python@2.6:2.8,3.3:')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     # Previously, setuptools vendored all of its dependencies to allow
     # easy bootstrapping. As of version 34.0.0, this is no longer done
@@ -70,3 +59,7 @@ class PySetuptools(PythonPackage):
             url += '.tar.gz'
 
         return url
+
+    def test(self):
+        # Unit tests require pytest, creating a circular dependency
+        pass

@@ -1,32 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 These tests check the database is functioning properly,
 both in memory and in its file
 """
 import datetime
+import functools
 import multiprocessing
 import os
 import pytest
@@ -40,6 +22,23 @@ from spack.util.executable import Executable
 
 
 pytestmark = pytest.mark.db
+
+
+@pytest.fixture()
+def usr_folder_exists(monkeypatch):
+    """The ``/usr`` folder is assumed to be existing in some tests. This
+    fixture makes it such that its existence is mocked, so we have no
+    requirements on the system running tests.
+    """
+    isdir = os.path.isdir
+
+    @functools.wraps(os.path.isdir)
+    def mock_isdir(path):
+        if path == '/usr':
+            return True
+        return isdir(path)
+
+    monkeypatch.setattr(os.path, 'isdir', mock_isdir)
 
 
 def _print_ref_counts():
@@ -436,3 +435,18 @@ def test_external_entries_in_db(database):
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is True
+
+
+@pytest.mark.regression('8036')
+def test_regression_issue_8036(mutable_database, usr_folder_exists):
+    # The test ensures that the external package prefix is treated as
+    # existing. Even when the package prefix exists, the package should
+    # not be considered installed until it is added to the database with
+    # do_install.
+    s = spack.spec.Spec('externaltool@0.9')
+    s.concretize()
+    assert not s.package.installed
+
+    # Now install the external package and check again the `installed` property
+    s.package.do_install(fake=True)
+    assert s.package.installed

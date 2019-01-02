@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 import numbers
@@ -42,16 +23,14 @@ class Nek5000(Package):
        dynamics"""
 
     homepage = "https://nek5000.mcs.anl.gov/"
-    url      = "https://github.com/Nek5000/Nek5000"
+    url      = "https://github.com/Nek5000/Nek5000/releases/download/v17.0/Nek5000-v17.0.tar.gz"
+    git      = "https://github.com/Nek5000/Nek5000.git"
 
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
             'spectral-elements', 'fluid', 'ecp', 'ecp-apps']
 
-    version('17.0', '6a13bfad2ce023897010dd88f54a0a87',
-            url="https://github.com/Nek5000/Nek5000/releases/download/"
-                    "v17.0/Nek5000-v17.0.tar.gz")
-    version('develop', git='https://github.com/Nek5000/Nek5000.git',
-        branch='master')
+    version('develop', branch='master')
+    version('17.0', '6a13bfad2ce023897010dd88f54a0a87')
 
     # MPI, Profiling and Visit variants
     variant('mpi',       default=True, description='Build with MPI.')
@@ -97,25 +76,20 @@ class Nek5000(Package):
 
     @run_after('install')
     def test_install(self):
-        currentDir = os.getcwd()
-        eddyDir = 'short_tests/eddy'
-        os.chdir(eddyDir)
-
-        os.system(join_path(self.prefix.bin, 'makenek') + ' eddy_uv')
-        if not os.path.isfile(join_path(os.getcwd(), 'nek5000')):
-            msg = 'Cannot build example: short_tests/eddy.'
-            raise RuntimeError(msg)
-
-        os.chdir(currentDir)
+        with working_dir('short_tests/eddy'):
+            os.system(join_path(self.prefix.bin, 'makenek') + ' eddy_uv')
+            if not os.path.isfile(join_path(os.getcwd(), 'nek5000')):
+                msg = 'Cannot build example: short_tests/eddy.'
+                raise RuntimeError(msg)
 
     def install(self, spec, prefix):
-        toolsDir   = 'tools'
-        binDir     = 'bin'
+        tools_dir   = 'tools'
+        bin_dir     = 'bin'
 
         # Do not use the Spack compiler wrappers.
         # Use directly the compilers:
-        FC  = self.compiler.f77
-        CC  = self.compiler.cc
+        fc  = self.compiler.f77
+        cc  = self.compiler.cc
 
         fflags = spec.compiler_flags['fflags']
         cflags = spec.compiler_flags['cflags']
@@ -149,10 +123,10 @@ class Nek5000(Package):
 
         # Build the tools, maketools copy them to Nek5000/bin by default.
         # We will then install Nek5000/bin under prefix after that.
-        with working_dir(toolsDir):
+        with working_dir(tools_dir):
             # Update the maketools script to use correct compilers
-            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'maketools')
-            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'maketools')
+            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(fc), 'maketools')
+            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(cc), 'maketools')
             if fflags:
                 filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
                             'maketools')
@@ -184,7 +158,7 @@ class Nek5000(Package):
 
             if self.compiler.name in ['xl', 'xl_r']:
                 # Use '-qextname' when compiling mxm.f
-                filter_file('\$\(OLAGS\)', '-qextname $(OLAGS)',
+                filter_file(r'\$\(OLAGS\)', '-qextname $(OLAGS)',
                             join_path('postnek', 'makefile'))
             # Define 'rename_' function that calls 'rename'
             with open(join_path('postnek', 'xdriver.c'), 'a') as xdriver:
@@ -194,31 +168,31 @@ class Nek5000(Package):
             maxnel = self.spec.variants['MAXNEL'].value
             filter_file(r'^#MAXNEL\s*=.*', 'MAXNEL=' + maxnel, 'maketools')
 
-            makeTools = Executable('./maketools')
+            maketools = Executable('./maketools')
 
             # Build the tools
             if '+genbox' in spec:
-                makeTools('genbox')
+                maketools('genbox')
             # "ERROR: int_tp does not exist!"
             # if '+int_tp' in spec:
-            #     makeTools('int_tp')
+            #     maketools('int_tp')
             if '+n2to3' in spec:
-                makeTools('n2to3')
+                maketools('n2to3')
             if '+postnek' in spec:
-                makeTools('postnek')
+                maketools('postnek')
             if '+reatore2' in spec:
-                makeTools('reatore2')
+                maketools('reatore2')
             if '+genmap' in spec:
-                makeTools('genmap')
+                maketools('genmap')
             if '+nekmerge' in spec:
-                makeTools('nekmerge')
+                maketools('nekmerge')
             if '+prenek' in spec:
-                makeTools('prenek')
+                maketools('prenek')
 
-        with working_dir(binDir):
+        with working_dir(bin_dir):
             if '+mpi' in spec:
-                FC  = spec['mpi'].mpif77
-                CC  = spec['mpi'].mpicc
+                fc  = spec['mpi'].mpif77
+                cc  = spec['mpi'].mpicc
             else:
                 filter_file(r'^#MPI=0', 'MPI=0', 'makenek')
 
@@ -232,8 +206,8 @@ class Nek5000(Package):
 
             # Update the makenek to use correct compilers and
             # Nek5000 source.
-            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'makenek')
-            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'makenek')
+            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(fc), 'makenek')
+            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(cc), 'makenek')
             filter_file(r'^#SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
                         prefix.bin.Nek5000 + '\"',  'makenek')
             if fflags:
@@ -254,7 +228,7 @@ class Nek5000(Package):
                             '$(FC) -c -qextname $(L0)', 'makefile.template')
 
         # Install Nek5000/bin in prefix/bin
-        install_tree(binDir, prefix.bin)
+        install_tree(bin_dir, prefix.bin)
 
         # Copy Nek5000 source to prefix/bin
         install_tree('../Nek5000', prefix.bin.Nek5000)

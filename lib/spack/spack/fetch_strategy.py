@@ -1,27 +1,8 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
-#
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 Fetch strategies are used to download source code into a staging area
 in order to build it.  They need to define the following methods:
@@ -56,7 +37,7 @@ import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 from spack.util.executable import which
-from spack.util.string import comma_or
+from spack.util.string import comma_and, quote
 from spack.version import Version, ver
 from spack.util.compression import decompressor_for, extension
 
@@ -89,7 +70,15 @@ class FSMeta(type):
 class FetchStrategy(with_metaclass(FSMeta, object)):
     """Superclass of all fetch strategies."""
     enabled = False  # Non-abstract subclasses should be enabled.
-    required_attributes = None  # Attributes required in version() args.
+
+    #: The URL attribute must be specified either at the package class
+    #: level, or as a keyword argument to ``version()``.  It is used to
+    #: distinguish fetchers for different versions in the package DSL.
+    url_attr = None
+
+    #: Optional attributes can be used to distinguish fetchers when :
+    #: classes have multiple ``url_attrs`` at the top-level.
+    optional_attrs = []  # optional attributes in version() args.
 
     def __init__(self):
         # The stage is initialized late, so that fetch strategies can be
@@ -156,7 +145,7 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
     # arguments in packages.
     @classmethod
     def matches(cls, args):
-        return any(k in args for k in cls.required_attributes)
+        return cls.url_attr in args
 
 
 @pattern.composite(interface=FetchStrategy)
@@ -179,21 +168,24 @@ class URLFetchStrategy(FetchStrategy):
        checks the archive against a checksum,and decompresses the archive.
     """
     enabled = True
-    required_attributes = ['url']
+    url_attr = 'url'
 
-    def __init__(self, url=None, digest=None, **kwargs):
+    # these are checksum types. The generic 'checksum' is deprecated for
+    # specific hash names, but we need it for backward compatibility
+    optional_attrs = list(crypto.hashes.keys()) + ['checksum']
+
+    def __init__(self, url=None, checksum=None, **kwargs):
         super(URLFetchStrategy, self).__init__()
 
-        # If URL or digest are provided in the kwargs, then prefer
-        # those values.
-        self.url = kwargs.get('url', None)
-        if not self.url:
-            self.url = url
+        # Prefer values in kwargs to the positionals.
+        self.url = kwargs.get('url', url)
 
-        self.digest = next((kwargs[h] for h in crypto.hashes if h in kwargs),
-                           None)
-        if not self.digest:
-            self.digest = digest
+        # digest can be set as the first argument, or from an explicit
+        # kwarg by the hash name.
+        self.digest = kwargs.get('checksum', checksum)
+        for h in self.optional_attrs:
+            if h in kwargs:
+                self.digest = kwargs[h]
 
         self.expand_archive = kwargs.get('expand', True)
         self.extra_curl_options = kwargs.get('curl_options', [])
@@ -295,13 +287,13 @@ class URLFetchStrategy(FetchStrategy):
         content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
                                    flags=re.IGNORECASE)
         if content_types and 'text/html' in content_types[-1]:
-            tty.warn("The contents of ",
-                     (self.archive_file if self.archive_file is not None
-                      else "the archive"),
-                     " look like HTML.",
-                     "The checksum will likely be bad.  If it is, you can use",
-                     "'spack clean <package>' to remove the bad archive, then",
-                     "fix your internet gateway issue and install again.")
+            msg = ("The contents of {0} look like HTML. Either the URL "
+                   "you are trying to use does not exist or you have an "
+                   "internet gateway issue. You can remove the bad archive "
+                   "using 'spack clean <package>', then try again using "
+                   "the correct URL.")
+            tty.warn(msg.format(self.archive_file or "the archive"))
+
         if save_file:
             os.rename(partial_file, save_file)
 
@@ -420,9 +412,6 @@ class URLFetchStrategy(FetchStrategy):
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
 
-    def __init__(self, *args, **kwargs):
-        super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
-
     @_needs_stage
     def fetch(self):
         path = re.sub('^file://', '', self.url)
@@ -453,35 +442,38 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
 
 class VCSFetchStrategy(FetchStrategy):
+    """Superclass for version control system fetch strategies.
 
-    def __init__(self, name, *rev_types, **kwargs):
+    Like all fetchers, VCS fetchers are identified by the attributes
+    passed to the ``version`` directive.  The optional_attrs for a VCS
+    fetch strategy represent types of revisions, e.g. tags, branches,
+    commits, etc.
+
+    The required attributes (git, svn, etc.) are used to specify the URL
+    and to distinguish a VCS fetch strategy from a URL fetch strategy.
+
+    """
+
+    def __init__(self, **kwargs):
         super(VCSFetchStrategy, self).__init__()
-        self.name = name
 
         # Set a URL based on the type of fetch strategy.
-        self.url = kwargs.get(name, None)
+        self.url = kwargs.get(self.url_attr, None)
         if not self.url:
             raise ValueError(
-                "%s requires %s argument." % (self.__class__, name))
+                "%s requires %s argument." % (self.__class__, self.url_attr))
 
-        # Ensure that there's only one of the rev_types
-        if sum(k in kwargs for k in rev_types) > 1:
-            raise ValueError(
-                "Supply only one of %s to fetch with %s" % (
-                    comma_or(rev_types), name
-                ))
-
-        # Set attributes for each rev type.
-        for rt in rev_types:
-            setattr(self, rt, kwargs.get(rt, None))
+        for attr in self.optional_attrs:
+            setattr(self, attr, kwargs.get(attr, None))
 
     @_needs_stage
     def check(self):
-        tty.msg("No checksum needed when fetching with %s" % self.name)
+        tty.msg("No checksum needed when fetching with %s" % self.url_attr)
 
     @_needs_stage
     def expand(self):
-        tty.debug("Source fetched with %s is already expanded." % self.name)
+        tty.debug(
+            "Source fetched with %s is already expanded." % self.url_attr)
 
     @_needs_stage
     def archive(self, destination, **kwargs):
@@ -518,15 +510,15 @@ class GoFetchStrategy(VCSFetchStrategy):
     Go get does not natively support versions, they can be faked with git
     """
     enabled = True
-    required_attributes = ('go', )
+    url_attr = 'go'
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next
         # call to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop('name', None)
+        super(GoFetchStrategy, self).__init__(**forwarded_args)
 
-        super(GoFetchStrategy, self).__init__('go', **forwarded_args)
         self._go = None
 
     @property
@@ -579,21 +571,22 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     You can use these three optional attributes in addition to ``git``:
 
-        * ``branch``: Particular branch to build from (default is master)
+        * ``branch``: Particular branch to build from (default is the
+                      repository's default branch)
         * ``tag``: Particular tag to check out
         * ``commit``: Particular commit hash in the repo
     """
     enabled = True
-    required_attributes = ('git', )
+    url_attr = 'git'
+    optional_attrs = ['tag', 'branch', 'commit', 'submodules']
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call
         # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop('name', None)
+        super(GitFetchStrategy, self).__init__(**forwarded_args)
 
-        super(GitFetchStrategy, self).__init__(
-            'git', 'tag', 'branch', 'commit', **forwarded_args)
         self._git = None
         self.submodules = kwargs.get('submodules', False)
 
@@ -628,20 +621,24 @@ class GitFetchStrategy(VCSFetchStrategy):
         if output:
             return output.split()[0]
 
+    def _repo_info(self):
+        args = ''
+
+        if self.commit:
+            args = ' at commit {0}'.format(self.commit)
+        elif self.tag:
+            args = ' at tag {0}'.format(self.tag)
+        elif self.branch:
+            args = ' on branch {0}'.format(self.branch)
+
+        return '{0}{1}'.format(self.url, args)
+
     def fetch(self):
         if self.stage.source_path:
-            tty.msg("Already fetched %s" % self.stage.source_path)
+            tty.msg("Already fetched {0}".format(self.stage.source_path))
             return
 
-        args = ''
-        if self.commit:
-            args = 'at commit %s' % self.commit
-        elif self.tag:
-            args = 'at tag %s' % self.tag
-        elif self.branch:
-            args = 'on branch %s' % self.branch
-
-        tty.msg("Cloning git repository: %s %s" % (self.url, args))
+        tty.msg("Cloning git repository: {0}".format(self._repo_info()))
 
         git = self.git
         if self.commit:
@@ -730,7 +727,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 self.git('clean', '--quiet', '-f')
 
     def __str__(self):
-        return "[git] %s" % self.url
+        return '[git] {0}'.format(self._repo_info())
 
 
 class SvnFetchStrategy(VCSFetchStrategy):
@@ -746,16 +743,16 @@ class SvnFetchStrategy(VCSFetchStrategy):
                    revision='1641')
     """
     enabled = True
-    required_attributes = ['svn']
+    url_attr = 'svn'
+    optional_attrs = ['revision']
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call
         # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop('name', None)
+        super(SvnFetchStrategy, self).__init__(**forwarded_args)
 
-        super(SvnFetchStrategy, self).__init__(
-            'svn', 'revision', **forwarded_args)
         self._svn = None
         if self.revision is not None:
             self.revision = str(self.revision)
@@ -846,16 +843,16 @@ class HgFetchStrategy(VCSFetchStrategy):
         * ``revision``: Particular revision, branch, or tag.
     """
     enabled = True
-    required_attributes = ['hg']
+    url_attr = 'hg'
+    optional_attrs = ['revision']
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call
         # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop('name', None)
+        super(HgFetchStrategy, self).__init__(**forwarded_args)
 
-        super(HgFetchStrategy, self).__init__(
-            'hg', 'revision', **forwarded_args)
         self._hg = None
 
     @property
@@ -958,47 +955,112 @@ def from_kwargs(**kwargs):
     for fetcher in all_strategies:
         if fetcher.matches(kwargs):
             return fetcher(**kwargs)
-    # Raise an error in case we can't instantiate any known strategy
-    message = "Cannot instantiate any FetchStrategy"
-    long_message = message + " from the given arguments : {arguments}".format(
-        arguments=kwargs)
-    raise FetchError(message, long_message)
+
+    raise InvalidArgsError(**kwargs)
 
 
-def args_are_for(args, fetcher):
-    fetcher.matches(args)
+def check_pkg_attributes(pkg):
+    """Find ambiguous top-level fetch attributes in a package.
+
+    Currently this only ensures that two or more VCS fetch strategies are
+    not specified at once.
+    """
+    # a single package cannot have URL attributes for multiple VCS fetch
+    # strategies *unless* they are the same attribute.
+    conflicts = set([s.url_attr for s in all_strategies
+                     if hasattr(pkg, s.url_attr)])
+
+    # URL isn't a VCS fetch method. We can use it with a VCS method.
+    conflicts -= set(['url'])
+
+    if len(conflicts) > 1:
+        raise FetcherConflict(
+            'Package %s cannot specify %s together. Pick at most one.'
+            % (pkg.name, comma_and(quote(conflicts))))
+
+
+def _check_version_attributes(fetcher, pkg, version):
+    """Ensure that the fetcher for a version is not ambiguous.
+
+    This assumes that we have already determined the fetcher for the
+    specific version using ``for_package_version()``
+    """
+    all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
+
+    args = pkg.versions[version]
+    extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr])
+    extra.intersection_update(all_optionals)
+
+    if extra:
+        legal_attrs = [fetcher.url_attr] + list(fetcher.optional_attrs)
+        raise FetcherConflict(
+            "%s version '%s' has extra arguments: %s"
+            % (pkg.name, version, comma_and(quote(extra))),
+            "Valid arguments for a %s fetcher are: \n    %s"
+            % (fetcher.url_attr, comma_and(quote(legal_attrs))))
+
+
+def _extrapolate(pkg, version):
+    """Create a fetcher from an extrapolated URL for this version."""
+    try:
+        return URLFetchStrategy(pkg.url_for_version(version))
+    except spack.package.NoURLError:
+        msg = ("Can't extrapolate a URL for version %s "
+               "because package %s defines no URLs")
+        raise ExtrapolationError(msg % (version, pkg.name))
+
+
+def _from_merged_attrs(fetcher, pkg, version):
+    """Create a fetcher from merged package and version attributes."""
+    if fetcher.url_attr == 'url':
+        url = pkg.url_for_version(version)
+    else:
+        url = getattr(pkg, fetcher.url_attr)
+
+    attrs = {fetcher.url_attr: url}
+    attrs.update(pkg.versions[version])
+    return fetcher(**attrs)
 
 
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
-    # If it's not a known version, extrapolate one.
+    check_pkg_attributes(pkg)
+
+    if not isinstance(version, Version):
+        version = Version(version)
+
+    # If it's not a known version, try to extrapolate one by URL
     if version not in pkg.versions:
-        url = pkg.url_for_version(version)
-        if not url:
-            raise InvalidArgsError(pkg, version)
-        return URLFetchStrategy(url)
+        return _extrapolate(pkg, version)
 
     # Grab a dict of args out of the package version dict
     args = pkg.versions[version]
 
-    # Test all strategies against per-version arguments.
+    # If the version specifies a `url_attr` directly, use that.
     for fetcher in all_strategies:
-        if fetcher.matches(args):
+        if fetcher.url_attr in args:
+            _check_version_attributes(fetcher, pkg, version)
             return fetcher(**args)
 
-    # If nothing matched for a *specific* version, test all strategies
-    # against
+    # if a version's optional attributes imply a particular fetch
+    # strategy, and we have the `url_attr`, then use that strategy.
     for fetcher in all_strategies:
-        attrs = dict((attr, getattr(pkg, attr, None))
-                     for attr in fetcher.required_attributes)
-        if 'url' in attrs:
-            attrs['url'] = pkg.url_for_version(version)
-        attrs.update(args)
-        if fetcher.matches(attrs):
-            return fetcher(**attrs)
+        if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == 'url':
+            optionals = fetcher.optional_attrs
+            if optionals and any(a in args for a in optionals):
+                _check_version_attributes(fetcher, pkg, version)
+                return _from_merged_attrs(fetcher, pkg, version)
 
-    raise InvalidArgsError(pkg, version)
+    # if the optional attributes tell us nothing, then use any `url_attr`
+    # on the package.  This prefers URL vs. VCS, b/c URLFetchStrategy is
+    # defined first in this file.
+    for fetcher in all_strategies:
+        if hasattr(pkg, fetcher.url_attr):
+            _check_version_attributes(fetcher, pkg, version)
+            return _from_merged_attrs(fetcher, pkg, version)
+
+    raise InvalidArgsError(pkg, version, **args)
 
 
 def from_list_url(pkg):
@@ -1009,15 +1071,25 @@ def from_list_url(pkg):
         try:
             versions = pkg.fetch_remote_versions()
             try:
+                # get a URL, and a checksum if we have it
                 url_from_list = versions[pkg.version]
-                digest = None
-                if pkg.version in pkg.versions:
-                    digest = pkg.versions[pkg.version].get('md5', None)
-                return URLFetchStrategy(url=url_from_list, digest=digest)
+                checksum = None
+
+                # try to find a known checksum for version, from the package
+                version = pkg.version
+                if version in pkg.versions:
+                    args = pkg.versions[version]
+                    checksum = next(
+                        (v for k, v in args.items() if k in crypto.hashes),
+                        args.get('checksum'))
+
+                # construct a fetcher
+                return URLFetchStrategy(url_from_list, checksum)
             except KeyError:
-                tty.msg("Can not find version %s in url_list" %
-                        pkg.version)
+                tty.msg("Cannot find version %s in url_list" % pkg.version)
+
         except BaseException:
+            # TODO: Don't catch BaseException here! Be more specific.
             tty.msg("Could not determine url from list_url.")
 
 
@@ -1026,7 +1098,7 @@ class FsCache(object):
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
-    def store(self, fetcher, relativeDst):
+    def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:
             return
@@ -1035,12 +1107,12 @@ class FsCache(object):
         if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
-        dst = os.path.join(self.root, relativeDst)
+        dst = os.path.join(self.root, relative_dest)
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
 
-    def fetcher(self, targetPath, digest, **kwargs):
-        path = os.path.join(self.root, targetPath)
+    def fetcher(self, target_path, digest, **kwargs):
+        path = os.path.join(self.root, target_path)
         return CacheURLFetchStrategy(path, digest, **kwargs)
 
     def destroy(self):
@@ -1071,12 +1143,24 @@ class NoDigestError(FetchError):
     """Raised after attempt to checksum when URL has no digest."""
 
 
+class ExtrapolationError(FetchError):
+    """Raised when we can't extrapolate a version for a package."""
+
+
+class FetcherConflict(FetchError):
+    """Raised for packages with invalid fetch attributes."""
+
+
 class InvalidArgsError(FetchError):
-    def __init__(self, pkg, version):
-        msg = ("Could not construct a fetch strategy for package %s at "
-               "version %s")
-        msg %= (pkg.name, version)
-        super(InvalidArgsError, self).__init__(msg)
+    """Raised when a version can't be deduced from a set of arguments."""
+    def __init__(self, pkg=None, version=None, **args):
+        msg = "Could not guess a fetch strategy"
+        if pkg:
+            msg += ' for {pkg}'.format(pkg=pkg)
+            if version:
+                msg += '@{version}'.format(version=version)
+        long_msg = 'with arguments: {args}'.format(args=args)
+        super(InvalidArgsError, self).__init__(msg, long_msg)
 
 
 class ChecksumError(FetchError):

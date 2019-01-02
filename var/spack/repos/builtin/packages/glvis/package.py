@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,7 +10,7 @@ class Glvis(MakefilePackage):
     """GLVis: an OpenGL tool for visualization of FEM meshes and functions"""
 
     homepage = "http://glvis.org"
-    url      = "https://github.com/GLVis/glvis"
+    git      = "https://github.com/glvis/glvis.git"
 
     maintainers = ['goxberry', 'v-dobrev', 'tzanio']
 
@@ -52,7 +33,7 @@ class Glvis(MakefilePackage):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('develop', git='https://github.com/glvis/glvis', branch='master')
+    version('develop', branch='master')
 
     version('3.4',
             '289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
@@ -82,7 +63,7 @@ class Glvis(MakefilePackage):
             description='Use antialiased fonts via freetype & fontconfig')
 
     depends_on('mfem@develop', when='@develop')
-    depends_on('mfem@3.4', when='@3.4')
+    depends_on('mfem@3.4.0', when='@3.4')
     depends_on('mfem@3.3', when='@3.3')
     depends_on('mfem@3.2', when='@3.2')
     depends_on('mfem@3.1', when='@3.1')

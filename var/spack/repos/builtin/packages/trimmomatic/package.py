@@ -1,30 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-from distutils.dir_util import copy_tree
-from shutil import copyfile
 import os.path
 
 
@@ -36,6 +15,7 @@ class Trimmomatic(Package):
 
     # Older version aren't explicitly made available, but the URL
     # works as we'd like it to, so...
+    version('0.38', sha256='d428af42b6c400a2e7ee5e6b4cab490eddc621f949b086bd7dddb698dcf1647c')
     version('0.36', '8549130d86b6f0382b1a71a2eb45de39')
     version('0.33', '924fc8eb38fdff71740a0e05d32d6a2b')
 
@@ -47,18 +27,18 @@ class Trimmomatic(Package):
         install(jar_file, prefix.bin)
 
         # Put the adapter files someplace sensible
-        copy_tree('adapters', join_path(self.prefix.share, 'adapters'))
+        install_tree('adapters', prefix.share.adapters)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "trimmomatic.sh")
-        script = join_path(prefix.bin, "trimmomatic")
-        copyfile(script_sh, script)
+        script = prefix.bin.trimmomatic
+        install(script_sh, script)
         set_executable(script)
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = join_path(self.spec['java'].prefix, 'bin', 'java')
+        java = self.spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('trimmomatic.jar', join_path(prefix.bin, jar_file),

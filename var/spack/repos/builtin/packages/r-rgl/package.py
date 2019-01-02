@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,8 +15,10 @@ class RRgl(RPackage):
     including PNG, Postscript, SVG, PGF."""
 
     homepage = "https://r-forge.r-project.org/projects/rgl"
-    url      = "https://cloud.r-project.org/src/contrib/rgl_0.98.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/rgl_0.99.16.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rgl"
 
+    version('0.99.16', sha256='692a545ed2ff0f5e15289338736f0e3c092667574c43ac358d8004901d7a1a61')
     version('0.98.1', 'bd69e1d33f1590feb4b6dc080b133e5b')
 
     depends_on('r@3.2:3.9')
@@ -51,6 +34,8 @@ class RRgl(RPackage):
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-crosstalk', type=('build', 'run'), when='@0.99.16:')
+    depends_on('r-manipulatewidget', type=('build', 'run'), when='@0.99.16:')
 
     def configure_args(self):
         args = ['--x-includes=%s' % self.spec['libx11'].prefix.include,

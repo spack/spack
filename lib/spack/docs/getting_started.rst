@@ -1,3 +1,8 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _getting_started:
 
 ===============
@@ -11,7 +16,7 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-1. Python 2 (2.6 or 2.7) or 3 (3.3 - 3.6)
+1. Python 2 (2.6 or 2.7) or 3 (3.4 - 3.7)
 2. A C/C++ compiler
 3. The ``git`` and ``curl`` commands.
 4. If using the ``gpg`` subcommand, ``gnupg2`` is required.
@@ -202,6 +207,13 @@ installed, but you know that new compilers have been added to your
 This loads the environment module for gcc-4.9.0 to add it to
 ``PATH``, and then it adds the compiler to Spack.
 
+.. note::
+
+   By default, spack does not fill in the ``modules:`` field in the
+   ``compilers.yaml`` file.  If you are using a compiler from a
+   module, then you should add this field manually.
+   See the section on :ref:`compilers-requiring-modules`.
+
 .. _cmd-spack-compiler-info:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -320,6 +332,7 @@ by adding the following to your ``packages.yaml`` file:
      all:
        compiler: [gcc@4.9.3]
 
+.. _compilers-requiring-modules:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Compilers Requiring Modules
@@ -483,6 +496,9 @@ simple package.  For example:
 .. code-block:: console
 
    $ spack install zlib%gcc@5.3.0
+
+
+.. _vendor-specific-compiler-configuration:
 
 --------------------------------------
 Vendor-Specific Compiler Configuration
@@ -816,7 +832,7 @@ This problem is related to OpenSSL, and in some cases might be solved
 by installing a new version of ``git`` and ``openssl``:
 
 #. Run ``spack install git``
-#. Add the output of ``spack module loads git`` to your ``.bashrc``.
+#. Add the output of ``spack module tcl loads git`` to your ``.bashrc``.
 
 If this doesn't work, it is also possible to disable checking of SSL
 certificates by using:
@@ -861,7 +877,7 @@ or alternately:
 
 .. code-block:: console
 
-    $ spack module loads curl >>~/.bashrc
+    $ spack module tcl loads curl >>~/.bashrc
 
 or if environment modules don't work:
 
@@ -1218,13 +1234,13 @@ Here's an example of an external configuration for cray modules:
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
 environment variables, libraries, etc, that are brought into the environment
-via module load.  
+via module load.
 
 .. note::
 
-    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:`` 
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:``
     in ``packages.yaml``, because the Cray Programming Environment heavily relies on
-    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the 
+    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the
     compiler wrapper link line).
 
 You can set the default compiler that Spack can use for each compiler type.
@@ -1263,3 +1279,17 @@ for each compiler type for each cray modules. This ensures that for each
 compiler on our system we can use that external module.
 
 For more on external packages check out the section :ref:`sec-external-packages`.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using Linux containers on Cray machines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack uses environment variables particular to the Cray programming
+environment to determine which systems are Cray platforms. These
+environment variables may be propagated into containers that are not
+using the Cray programming environment.
+
+To ensure that Spack does not autodetect the Cray programming
+environment, unset the environment variable ``CRAYPE_VERSION``. This
+will cause Spack to treat a linux container on a Cray system as a base
+linux distro.

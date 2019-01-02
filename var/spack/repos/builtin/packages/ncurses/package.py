@@ -1,32 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 from glob import glob
 from os.path import exists, join
 from os import makedirs
-from shutil import copy
 
 
 class Ncurses(AutotoolsPackage):
@@ -37,7 +17,7 @@ class Ncurses(AutotoolsPackage):
     SYSV-curses enhancements over BSD curses."""
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
-    url      = "http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz"
+    url      = "https://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
 
     version('6.1', '98c889aaf8d23910d2b92d65be2e737a')
     version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
@@ -109,7 +89,7 @@ class Ncurses(AutotoolsPackage):
             if not exists(path):
                 makedirs(path)
             for header in headers:
-                copy(header, path)
+                install(header, path)
 
     @property
     def libs(self):

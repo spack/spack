@@ -1,44 +1,7 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-##########################################################################
-# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-# Place, Suite 330, Boston, MA  02111-1307  USA
-##########################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
@@ -46,19 +9,15 @@ from spack import *
 class CbtfArgonavis(CMakePackage):
     """CBTF Argo Navis project contains the CUDA collector and supporting
        libraries that was done as a result of a DOE SBIR grant.
-
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
-    url = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
+    git      = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
 
-    version('1.9.1.1', branch='1.9.1.1',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
-
-    version('1.9.1.0', branch='1.9.1.0',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
-
-    version('develop', branch='master',
-            git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
+    version('develop', branch='master')
+    version('1.9.2', branch='1.9.2')
+    version('1.9.1.2', branch='1.9.1.2')
+    version('1.9.1.1', branch='1.9.1.1')
+    version('1.9.1.0', branch='1.9.1.0')
 
     variant('cti', default=False,
             description="Build MRNet with the CTI startup option")
@@ -78,8 +37,7 @@ class CbtfArgonavis(CMakePackage):
     depends_on("elf", type="link")
 
     # For boost
-    depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@1.9.1.0:9999')
+    depends_on("boost@1.66.0:")
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
@@ -100,11 +58,10 @@ class CbtfArgonavis(CMakePackage):
     depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
 
     # For libmonitor
-    depends_on("libmonitor+krellpatch")
+    depends_on("libmonitor@2013.02.18+krellpatch")
 
     # For PAPI
-    depends_on("papi", when='@develop')
-    depends_on("papi@5.5.1", when='@1.9.1.0:9999')
+    depends_on("papi@5.4.1:")
 
     # For CBTF-KRELL
     depends_on("cbtf-krell@develop", when='@develop')

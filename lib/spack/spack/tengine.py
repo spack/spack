@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import textwrap
 
 import jinja2
@@ -43,10 +24,10 @@ class ContextMeta(type):
     #: by the class that is being defined
     _new_context_properties = []
 
-    def __new__(mcs, name, bases, attr_dict):
+    def __new__(cls, name, bases, attr_dict):
         # Merge all the context properties that are coming from base classes
         # into a list without duplicates.
-        context_properties = list(mcs._new_context_properties)
+        context_properties = list(cls._new_context_properties)
         for x in bases:
             try:
                 context_properties.extend(x.context_properties)
@@ -55,20 +36,20 @@ class ContextMeta(type):
         context_properties = list(llnl.util.lang.dedupe(context_properties))
 
         # Flush the list
-        mcs._new_context_properties = []
+        cls._new_context_properties = []
 
         # Attach the list to the class being created
         attr_dict['context_properties'] = context_properties
 
-        return super(ContextMeta, mcs).__new__(mcs, name, bases, attr_dict)
+        return super(ContextMeta, cls).__new__(cls, name, bases, attr_dict)
 
     @classmethod
-    def context_property(mcs, func):
+    def context_property(cls, func):
         """Decorator that adds a function name to the list of new context
         properties, and then returns a property.
         """
         name = func.__name__
-        mcs._new_context_properties.append(name)
+        cls._new_context_properties.append(name)
         return property(func)
 
 

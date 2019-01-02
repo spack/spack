@@ -1,31 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 import os.path
-import shutil
 
 
 class Glib(AutotoolsPackage):
@@ -41,6 +21,8 @@ class Glib(AutotoolsPackage):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.56.3', 'a9a4c5b4c81b6c75bc140bdf5e32120ef3ce841b7413214ecf5f987acec74cb2')
+    version('2.56.2', 'd64abd16813501c956c4e123ae79f47f1b58de573df9fdd3b0795f1e2c1aa789')
     version('2.56.1', '40ef3f44f2c651c7a31aedee44259809b6f03d3d20be44545cd7d177221c0b8d')
     version('2.56.0', 'f2b59392f2fb514bbe7791dda0c36da5')
     version('2.55.1', '9cbb6b3c7e75ba75575588497c7707b6')
@@ -67,12 +49,17 @@ class Glib(AutotoolsPackage):
     depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
     depends_on('util-linux', when='+libmount')
+    depends_on('libiconv')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@2.42.1')
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
     patch('no-Werror=format-security.patch')
+    # Patch to prevent compiler errors in kernels older than 2.6.35
+    patch('old-kernels.patch', when='@2.56.0:2.56.1 os=rhel6')
+    patch('old-kernels.patch', when='@2.56.0:2.56.1 os=centos6')
+    patch('old-kernels.patch', when='@2.56.0:2.56.1 os=scientific6')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
@@ -86,7 +73,22 @@ class Glib(AutotoolsPackage):
             args.append('--with-python={0}'.format(
                 os.path.basename(self.spec['python'].command.path))
             )
+        args.append('--with-libiconv=gnu')
         args.extend(self.enable_or_disable('tracing'))
+        # SELinux is not available in Spack, so glib should not use it.
+        args.append('--disable-selinux')
+        # glib should not use the globally installed gtk-doc. Otherwise,
+        # gtk-doc can fail with Python errors such as "ImportError: No module
+        # named site". This is due to the fact that Spack sets PYTHONHOME,
+        # which can confuse the global Python installation used by gtk-doc.
+        args.append('--disable-gtk-doc-html')
+        # glib uses gtk-doc even though it should be disabled if it can find
+        # its binaries. Override the checks to use the true binary.
+        true = which('true')
+        args.append('GTKDOC_CHECK={0}'.format(true))
+        args.append('GTKDOC_CHECK_PATH={0}'.format(true))
+        args.append('GTKDOC_MKPDF={0}'.format(true))
+        args.append('GTKDOC_REBASE={0}'.format(true))
         return args
 
     @property
@@ -117,7 +119,7 @@ class Glib(AutotoolsPackage):
         dtrace_copy = join_path(self.dtrace_copy_path, 'dtrace')
 
         with working_dir(self.dtrace_copy_path, create=True):
-            shutil.copy(dtrace, dtrace_copy)
+            copy(dtrace, dtrace_copy)
             filter_file(
                 '^#!/usr/bin/python',
                 '#!/usr/bin/env python',

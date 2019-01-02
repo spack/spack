@@ -1,35 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class Dealii(CMakePackage, CudaPackage):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""
+
     homepage = "https://www.dealii.org"
-    url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+    url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+    git      = "https://github.com/dealii/dealii.git"
 
     maintainers = ['davydden', 'jppelteret']
 
@@ -37,16 +20,17 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
-    version('9.0.0', 'a4d45a67b2b028ecf81a6cb621cfaf84')
-    version('8.5.1', '39b9ebd6ab083d63cfc9044319aaa2ee')
-    version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
-    version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
-    version('8.4.1', 'efbaf16f9ad59cfccad62302f36c3c1d')
-    version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
-    version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
-    version('8.2.1', '71c728dbec14f371297cd405776ccf08')
-    version('8.1.0', 'aa8fadc2ce5eb674f44f997461bf668d')
-    version('develop', git='https://github.com/dealii/dealii.git', branch='master')
+    version('develop', branch='master')
+    version('9.0.1', sha256='df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64')
+    version('9.0.0', sha256='c918dc5c1a31d62f6eea7b524dcc81c6d00b3c378d4ed6965a708ab548944f08')
+    version('8.5.1', sha256='d33e812c21a51f7e5e3d3e6af86aec343155650b611d61c1891fbc3cabce09ae')
+    version('8.5.0', sha256='e6913ff6f184d16bc2598c1ba31f879535b72b6dff043e15aef048043ff1d779')
+    version('8.4.2', sha256='ec7c00fadc9d298d1a0d16c08fb26818868410a9622c59ba624096872f3058e4')
+    version('8.4.1', sha256='00a0e92d069cdafd216816f1aff460f7dbd48744b0d9e0da193287ebf7d6b3ad')
+    version('8.4.0', sha256='36a20e097a03f17b557e11aad1400af8c6252d25f7feca40b611d5fc16d71990')
+    version('8.3.0', sha256='4ddf72632eb501e1c814e299f32fc04fd680d6fda9daff58be4209e400e41779')
+    version('8.2.1', sha256='d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0')
+    version('8.1.0', sha256='d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99')
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('assimp',   default=True,
@@ -62,6 +46,7 @@ class Dealii(CMakePackage, CudaPackage):
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
+    variant('muparser', default=True,  description='Compile with muParser')
     variant('nanoflann', default=True, description='Compile with Nanoflann')
     variant('netcdf',   default=True,
             description='Compile with Netcdf (only with MPI)')
@@ -96,20 +81,29 @@ class Dealii(CMakePackage, CudaPackage):
     # https://github.com/dealii/dealii/issues/5262
     # we take the patch from https://github.com/boostorg/serialization/pull/79
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
+    # 1.68.0 has issues with serialization https://github.com/dealii/dealii/issues/7074
+    # adopt https://github.com/boostorg/serialization/pull/105 as a fix
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams',
-               patches=patch('boost_1.65.1_singleton.patch',
-                       level=1,
-                       when='@1.65.1'),
+               patches=[patch('boost_1.65.1_singleton.patch',
+                              level=1,
+                              when='@1.65.1'),
+                        patch('boost_1.68.0.patch',
+                              level=1,
+                              when='@1.68.0'),
+                       ],
                when='~python')
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
-               patches=patch('boost_1.65.1_singleton.patch',
-                       level=1,
-                       when='@1.65.1'),
+               patches=[patch('boost_1.65.1_singleton.patch',
+                              level=1,
+                              when='@1.65.1'),
+                        patch('boost_1.68.0.patch',
+                              level=1,
+                              when='@1.68.0'),
+                       ],
                when='+python')
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
-    depends_on('muparser')
     depends_on('suite-sparse')
     depends_on('tbb')
     depends_on('zlib')
@@ -123,7 +117,9 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('graphviz',         when='+doc')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
-    depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
+    # FIXME: next line fixes concretization with petsc
+    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
+    depends_on('hdf5+mpi+hl', when='+hdf5+mpi~petsc')
     depends_on('cuda@8:',          when='+cuda')
     depends_on('cmake@3.9:',       when='+cuda')
     # older version of deal.II do not build with Cmake 3.10, see
@@ -133,6 +129,7 @@ class Dealii(CMakePackage, CudaPackage):
     # but we should not need it
     depends_on('metis@5:+int64+real64',   when='+metis+int64')
     depends_on('metis@5:~int64+real64',   when='+metis~int64')
+    depends_on('muparser', when='+muparser')
     depends_on('nanoflann',        when='@9.0:+nanoflann')
     depends_on('netcdf+mpi',       when='+netcdf+mpi')
     depends_on('netcdf-cxx',       when='+netcdf+mpi')
@@ -147,12 +144,19 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials~pthread', when='@9.0:+sundials')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
+    # do not require +rol to make concretization of xsdk possible
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
     # FIXME: temporary disable Tpetra when using CUDA due to
     # namespace "Kokkos::Impl" has no member "cuda_abort"
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
+
+    # Explicitly provide a destructor in BlockVector,
+    # otherwise deal.II may fail to build with Intel compilers.
+    patch('https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch',
+          sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
+          when='@9.0.1')
 
     # check that the combination of variants makes sense
     # 64-bit BLAS:
@@ -194,7 +198,8 @@ class Dealii(CMakePackage, CudaPackage):
         # debug and release flags
         cxx_flags = []
 
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas_libs = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
@@ -203,10 +208,9 @@ class Dealii(CMakePackage, CudaPackage):
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                spec['lapack'].prefix.include, spec['blas'].prefix.include),
-            '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';'),
-            '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
+            '-DLAPACK_INCLUDE_DIRS=%s' % ';'.join(
+                lapack_blas_headers.directories),
+            '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
@@ -306,7 +310,7 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp', 'gmsh'):
+                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser'):
             if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),

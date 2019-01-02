@@ -1,3 +1,8 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _contribution-guide:
 
 ==================
@@ -56,7 +61,7 @@ locally to speed up the review process.
 
 
 If you take a look in ``$SPACK_ROOT/.travis.yml``, you'll notice that we test
-against Python 2.6, 2.7, and 3.3-3.6 on both macOS and Linux. We currently
+against Python 2.6, 2.7, and 3.4-3.7 on both macOS and Linux. We currently
 perform 3 types of tests:
 
 ^^^^^^^^^^
@@ -189,11 +194,16 @@ to update them.
 
 .. warning::
 
-   Flake8 requires setuptools in order to run. If you installed ``py-flake8``
-   with Spack, make sure to add ``py-setuptools`` to your ``PYTHONPATH``.
-   The easiest way to do this is to run ``spack activate py-flake8`` so that
-   all of the dependencies are symlinked to a central location. If you see an
-   error message like:
+   Flake8 and ``pep8-naming`` require a number of dependencies in order
+   to run.  If you installed ``py-flake8`` and ``py-pep8-naming``, the
+   easiest way to ensure the right packages are on your ``PYTHONPATH`` is
+   to run::
+
+     spack activate py-flake8
+     spack activate pep8-naming
+
+   so that all of the dependencies are symlinked to a central
+   location. If you see an error message like:
 
    .. code-block:: console
 

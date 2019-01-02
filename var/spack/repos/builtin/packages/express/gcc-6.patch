@@ -1,0 +1,21 @@
+Description: Fix compilation with gcc-6
+Author: Gert Wollny <gw.fossdev@gmail.com>
+Bug-Debian: https://bugs.debian.org/811859
+
+--- a/src/targets.cpp
++++ b/src/targets.cpp
+@@ -113,12 +113,12 @@
+
+   double ll = LOG_1;
+   double tot_mass = mass(with_pseudo);
+-  double tot_eff_len = cached_effective_length(lib.bias_table);
++  double tot_eff_len = cached_effective_length(static_cast<bool>(lib.bias_table));
+   if (neighbors) {
+     foreach (const Target* neighbor, *neighbors) {
+       tot_mass = log_add(tot_mass, neighbor->mass(with_pseudo));
+       tot_eff_len = log_add(tot_eff_len,
+-                            neighbor->cached_effective_length(lib.bias_table));
++                            neighbor->cached_effective_length(static_cast<bool>(lib.bias_table)));
+     }
+   }
+   ll += tot_mass - tot_eff_len;

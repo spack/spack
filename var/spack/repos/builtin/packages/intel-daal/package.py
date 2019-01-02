@@ -1,31 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import os
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.environment import EnvironmentModifications
 
 
 class IntelDaal(IntelPackage):
@@ -33,6 +11,13 @@ class IntelDaal(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/daal"
 
+    version('2019.1.144', '1672afac568c93e185283cf7e044d511381092ebc95d7204c4dccb83cc493197',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14869/l_daal_2019.1.144.tgz")
+    version('2019.0.117', 'd42fb6c3e8b31b1288049e89df37f2e8',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13577/l_daal_2019.0.117.tgz")
+    # Doesn't appear to be a 2018.4 update yet
+    version('2018.3.222', 'e688825c563e357b7b626ece610d6a85',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13007/l_daal_2018.3.222.tgz")
     version('2018.2.199', 'd015ff34a87a18922736b5fba0d0b0e0',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12727/l_daal_2018.2.199.tgz")
     version('2018.1.163', '12a9586734a03a956095440161fd741a',
@@ -55,36 +40,3 @@ class IntelDaal(IntelPackage):
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8687/l_daal_2016.2.181.tgz")
 
     provides('daal')
-
-    @property
-    def license_required(self):
-        # The Intel libraries are provided without requiring a license as of
-        # version 2017.2. Trying to specify the license will fail. See:
-        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        if self.version >= Version('2017.2'):
-            return False
-        else:
-            return True
-
-    def setup_environment(self, spack_env, run_env):
-        """Adds environment variables to the generated module file.
-
-        These environment variables come from running:
-
-        .. code-block:: console
-
-           $ source daal/bin/daalvars.sh intel64
-        """
-        # NOTE: Spack runs setup_environment twice, once pre-build to set up
-        # the build environment, and once post-installation to determine
-        # the environment variables needed at run-time to add to the module
-        # file. The script we need to source is only present post-installation,
-        # so check for its existence before sourcing.
-        # TODO: At some point we should split setup_environment into
-        # setup_build_environment and setup_run_environment to get around
-        # this problem.
-        daalvars = os.path.join(self.prefix.daal.bin, 'daalvars.sh')
-
-        if os.path.isfile(daalvars):
-            run_env.extend(EnvironmentModifications.from_sourcing_file(
-                daalvars, 'intel64'))

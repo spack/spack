@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,11 +10,11 @@ class Gslib(Package):
     """Highly scalable Gather-scatter code with AMG and XXT solvers"""
 
     homepage = "https://github.com/gslib/gslib"
-    url      = "https://github.com/gslib/gslib"
+    git      = "https://github.com/gslib/gslib.git"
 
-    version('1.0.2', git='https://github.com/gslib/gslib.git', tag='v1.0.2')
-    version('1.0.1', git='https://github.com/gslib/gslib.git', tag='v1.0.1')
-    version('1.0.0', git='https://github.com/gslib/gslib.git', tag='v1.0.0')
+    version('1.0.2', tag='v1.0.2')
+    version('1.0.1', tag='v1.0.1')
+    version('1.0.0', tag='v1.0.0')
 
     variant('mpi', default=True, description='Build with MPI')
     variant('mpiio', default=True, description='Build with MPI I/O')
@@ -46,44 +27,44 @@ class Gslib(Package):
     conflicts('~mpi', when='+mpiio')
 
     def install(self, spec, prefix):
-        srcDir = 'src'
-        libDir = 'lib'
+        src_dir = 'src'
+        lib_dir = 'lib'
         libname = 'libgs.a'
 
         if self.version == Version('1.0.1'):
-            makeFile = 'Makefile'
+            makefile = 'Makefile'
         else:
-            makeFile = 'src/Makefile'
+            makefile = 'src/Makefile'
 
-        CC  = self.compiler.cc
+        cc  = self.compiler.cc
 
         if '+mpiio' not in spec:
-            filter_file(r'MPIIO.*?=.*1', 'MPIIO = 0', makeFile)
+            filter_file(r'MPIIO.*?=.*1', 'MPIIO = 0', makefile)
 
         if '+mpi' in spec:
-            CC  = spec['mpi'].mpicc
+            cc  = spec['mpi'].mpicc
         else:
-            filter_file(r'MPI.*?=.*1', 'MPI = 0', makeFile)
-            filter_file(r'MPIIO.*?=.*1', 'MPIIO = 0', makeFile)
+            filter_file(r'MPI.*?=.*1', 'MPI = 0', makefile)
+            filter_file(r'MPIIO.*?=.*1', 'MPIIO = 0', makefile)
 
-        makeCmd = "CC=" + CC
+        make_cmd = "CC=" + cc
 
         if '+blas' in spec:
-            filter_file(r'BLAS.*?=.*0', 'BLAS = 1', makeFile)
+            filter_file(r'BLAS.*?=.*0', 'BLAS = 1', makefile)
             blas = spec['blas'].libs
-            ldFlags = blas.ld_flags
-            filter_file(r'\$\(LDFLAGS\)', ldFlags, makeFile)
+            ld_flags = blas.ld_flags
+            filter_file(r'\$\(LDFLAGS\)', ld_flags, makefile)
 
         if self.version == Version('1.0.1'):
-            make(makeCmd)
+            make(make_cmd)
             make('install')
-            install_tree(libDir, prefix.lib)
+            install_tree(lib_dir, prefix.lib)
         elif self.version == Version('1.0.0'):
-            with working_dir(srcDir):
-                make(makeCmd)
+            with working_dir(src_dir):
+                make(make_cmd)
                 mkdir(prefix.lib)
                 install(libname, prefix.lib)
 
         # Should only install the headers (this will be fixed in gslib on
         # future releases).
-        install_tree(srcDir, prefix.include)
+        install_tree(src_dir, prefix.include)

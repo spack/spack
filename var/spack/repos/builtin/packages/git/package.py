@@ -1,30 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import sys
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Git(AutotoolsPackage):
@@ -40,10 +20,30 @@ class Git(AutotoolsPackage):
     # * version: {version}
     # * sha256: the sha256sum of the git-{version}.tar.gz
     # * sha256_manpages: the sha256sum of the corresponding manpage from
-    #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.xz
+    #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
 
     releases = [
+        {
+            'version': '2.20.1',
+            'sha256': 'edc3bc1495b69179ba4e272e97eff93334a20decb1d8db6ec3c19c16417738fd',
+            'sha256_manpages': 'e9c123463abd05e142defe44a8060ce6e9853dfd8c83b2542e38b7deac4e6d4c'
+        },
+        {
+            'version': '2.19.2',
+            'sha256': 'db893ad69c9ac9498b09677c5839787eba2eb3b7ef2bc30bfba7e62e77cf7850',
+            'sha256_manpages': '60334ecd59ee10319af4a7815174d10991d1afabacd3b3129d589f038bf25542'
+        },
+        {
+            'version': '2.19.1',
+            'sha256': 'ec4dc96456612c65bf6d944cee9ac640145ec7245376832b781cb03e97cbb796',
+            'sha256_manpages': 'bd27f58dc90a661e3080b97365eb7322bfa185de95634fc59d98311925a7d894'
+        },
+        {
+            'version': '2.18.0',
+            'sha256': '94faf2c0b02a7920b0b46f4961d8e9cad08e81418614102898a55f980fa3e7e4',
+            'sha256_manpages': '6cf38ab3ad43ccdcd6a73ffdcf2a016d56ab6b4b240a574b0bb96f520a04ff55'
+        },
         {
             'version': '2.17.1',
             'sha256': 'ec6452f0c8d5c1f3bcceabd7070b8a8a5eea11d4e2a04955c139b5065fd7d09a',
@@ -236,7 +236,7 @@ class Git(AutotoolsPackage):
 
     @run_after('install')
     def install_completions(self):
-        copy_tree('contrib/completion', self.prefix.share)
+        install_tree('contrib/completion', self.prefix.share)
 
     @run_after('install')
     def install_manpages(self):

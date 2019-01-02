@@ -1,31 +1,16 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import argparse
+import sys
 
+import llnl.util.tty as tty
+
+import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
@@ -35,7 +20,8 @@ level = "short"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['long', 'very_long'])
+    arguments.add_common_arguments(
+        subparser, ['long', 'very_long', 'install_status'])
     subparser.add_argument(
         '-y', '--yaml', action='store_true', default=False,
         help='print concrete spec as YAML')
@@ -46,11 +32,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
-    subparser.add_argument(
-        '-I', '--install-status', action='store_true', default=False,
-        help='show install status of packages. packages can be: '
-             'installed [+], missing and needed by an installed package [-], '
-             'or not installed (no annotation)')
+
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
@@ -66,12 +48,17 @@ def spec(parser, args):
               'show_types': args.types,
               'install_status': args.install_status}
 
+    if not args.specs:
+        tty.die("spack spec requires at least one spec")
+
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.
         if args.yaml:
-            if spec.name in spack.repo or spec.virtual:
+            if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
-            print(spec.to_yaml())
+
+            # use write because to_yaml already has a newline.
+            sys.stdout.write(spec.to_yaml())
             continue
 
         kwargs['hashes'] = False  # Always False for input spec

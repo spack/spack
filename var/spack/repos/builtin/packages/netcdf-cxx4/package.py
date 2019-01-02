@@ -1,37 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class NetcdfCxx4(AutotoolsPackage):
     """C++ interface for NetCDF4"""
+
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "https://www.github.com/unidata/netcdf-cxx4/tarball/v4.3.0"
 
     version('4.3.0', '0dde8b9763eecdafbd69d076e687337e')
     version('4.2.1', 'd019853802092cf686254aaba165fc81')
+
+    # Usually the configure automatically inserts the pic flags, but we can
+    # force its usage with this variant.
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
     depends_on('netcdf')
 
@@ -41,8 +28,13 @@ class NetcdfCxx4(AutotoolsPackage):
 
     force_autoreconf = True
 
-    def configure_args(self):
-        return ['CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+    def flag_handler(self, name, flags):
+        if name == 'cflags' and '+pic' in self.spec:
+            flags.append(self.compiler.pic_flag)
+        elif name == 'cppflags':
+            flags.append('-I' + self.spec['netcdf'].prefix.include)
+
+        return (None, None, flags)
 
     @property
     def libs(self):

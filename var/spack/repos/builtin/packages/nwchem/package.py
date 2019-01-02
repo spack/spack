@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 import os
@@ -35,6 +16,8 @@ class Nwchem(Package):
 
     tags = ['ecp', 'ecp-apps']
 
+    version('6.8.1', '6eccddc6db11886aa6f152626efc600c',
+            url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2')
     version('6.8', '50b18116319f4c15d1cb7eaa1b433006',
             url='https://github.com/nwchemgit/nwchem/archive/v6.8-release.tar.gz')
     version('6.6', 'c581001c004ea5e5dfacb783385825e3',
@@ -45,7 +28,7 @@ class Nwchem(Package):
     depends_on('mpi')
     depends_on('scalapack')
 
-    depends_on('python@2.7:2.8', type=('build', 'run'))
+    depends_on('python@2.7:2.8', type=('build', 'link', 'run'))
 
     # first hash is sha256 of the patch (required for URL patches),
     # second is sha256 for the archive.
@@ -107,9 +90,9 @@ class Nwchem(Package):
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
         # algebra (Blas, Lapack, Scalapack)
-        use32bitLinAlg = True
+        use_32_bit_lin_alg = True
 
-        if use32bitLinAlg:
+        if use_32_bit_lin_alg:
             args.extend([
                 'USE_64TO32=y',
                 'BLAS_SIZE=4',
@@ -135,7 +118,7 @@ class Nwchem(Package):
 
         with working_dir('src'):
             make('nwchem_config', *args)
-            if use32bitLinAlg:
+            if use_32_bit_lin_alg:
                 make('64_to_32', *args)
             make(*args)
 

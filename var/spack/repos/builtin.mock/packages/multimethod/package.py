@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from six import string_types
 
 from spack import *
@@ -40,7 +21,7 @@ class Multimethod(MultimethodBase):
     url      = 'http://www.example.com/example-1.0.tar.gz'
 
     #
-    # These functions are only valid for versions 1, 2, and 3.
+    # These functions are only valid for versions 1, 3, and 4.
     #
     @when('@1.0')
     def no_version_2(self):
@@ -143,4 +124,47 @@ class Multimethod(MultimethodBase):
     #
     @when("@2:")
     def base_method(self):
-        return "subclass_method"
+        return 'multimethod'
+
+    #
+    # Make sure methods with non-default implementations in a superclass
+    # will invoke those methods when none in the subclass match but one in
+    # the superclass does.
+    #
+    @when("@1.0")
+    def inherited_and_overridden(self):
+        return "base@1.0"
+
+    @when("@2.0")
+    def inherited_and_overridden(self):
+        return "base@2.0"
+
+    #
+    # Make sure that multimethods follow MRO properly with diamond inheritance
+    #
+    @when('@2.0')
+    def diamond_inheritance(self):
+        return 'first_parent'
+
+    @when('@4.0')
+    def diamond_inheritance(self):
+        return "should_not_be_reached by diamond inheritance test"
+
+    #
+    # Check that multimethods work with boolean values
+    #
+    @when(True)
+    def boolean_true_first(self):
+        return 'True'
+
+    @when(False)
+    def boolean_true_first(self):
+        return 'False'
+
+    @when(False)
+    def boolean_false_first(self):
+        return 'False'
+
+    @when(True)
+    def boolean_false_first(self):
+        return 'True'

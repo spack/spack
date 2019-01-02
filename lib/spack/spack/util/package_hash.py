@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://software.llnl.gov/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import ast
 import hashlib
 
@@ -44,13 +25,13 @@ class RemoveDocstrings(ast.NodeTransformer):
         self.generic_visit(node)
         return node
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node):  # noqa
         return self.remove_docstring(node)
 
-    def visit_ClassDef(self, node):
+    def visit_ClassDef(self, node):  # noqa
         return self.remove_docstring(node)
 
-    def visit_Module(self, node):
+    def visit_Module(self, node):  # noqa
         return self.remove_docstring(node)
 
 
@@ -69,7 +50,7 @@ class RemoveDirectives(ast.NodeTransformer):
                 node.targets and isinstance(node.targets[0], ast.Name) and
                 node.targets[0].id in spack.package.Package.metadata_attrs)
 
-    def visit_ClassDef(self, node):
+    def visit_ClassDef(self, node):  # noqa
         if node.name == spack.util.naming.mod_to_class(self.spec.name):
             node.body = [
                 c for c in node.body
@@ -83,7 +64,7 @@ class TagMultiMethods(ast.NodeVisitor):
         self.spec = spec
         self.methods = {}
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node):  # noqa
         nodes = self.methods.setdefault(node.name, [])
         if node.decorator_list:
             dec = node.decorator_list[0]
@@ -112,7 +93,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
                 result = n
         return result
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node):  # noqa
         if self.resolve(node) is node:
             node.decorator_list = []
             return node

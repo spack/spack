@@ -12,6 +12,13 @@ then
     ./Allwmake-spack $@   # Pass arguments
 else
     ./Allwmake $@         # Pass arguments
+
+    # Generate manpages
+    if [ -x bin/tools/foamCreateManpage ]
+    then
+        bin/tools/foamCreateManpage -gzip || \
+            echo "ignore problems generating manpages"
+    fi
 fi
 
 
