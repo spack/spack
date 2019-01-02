@@ -92,7 +92,7 @@ from six import iteritems
 
 from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
-from llnl.util.lang import check_kwargs
+from llnl.util.lang import check_kwargs, memoized
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
 import spack.architecture
@@ -2665,6 +2665,7 @@ class Spec(object):
         return [spec for spec in self.traverse() if spec.virtual]
 
     @property
+    @memoized
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
 
@@ -2674,6 +2675,9 @@ class Spec(object):
         TODO: this only checks in the package; it doesn't resurrect old
         patches from install directories, but it probably should.
         """
+        if not self.concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+
         if 'patches' not in self.variants:
             return []
 

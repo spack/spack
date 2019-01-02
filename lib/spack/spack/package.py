@@ -967,6 +967,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         self.stage.cache_local()
 
+        for patch in self.spec.patches:
+            patch.fetch(self.stage)
+
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
         if not self.spec.concrete:
@@ -2078,6 +2081,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def do_clean(self):
         """Removes the package's build stage and source tarball."""
+        for patch in self.spec.patches:
+            patch.clean()
+
         self.stage.destroy()
 
     def format_doc(self, **kwargs):

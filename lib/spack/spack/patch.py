@@ -3,11 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import abc
 import hashlib
 import os
 import os.path
-import six
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -41,7 +39,6 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
               '-d', working_dir)
 
 
-@six.add_metaclass(abc.ABCMeta)
 class Patch(object):
     """Base class for patches.
 
@@ -61,16 +58,33 @@ class Patch(object):
         # Attributes shared by all patch subclasses
         self.owner = pkg.fullname
         self.path_or_url = path_or_url  # needed for debug output
+        self.path = None  # must be set before apply()
         self.level = level
         self.working_dir = working_dir
 
-    @abc.abstractmethod
+    def fetch(self, stage):
+        """Fetch the patch in case of a UrlPatch
+
+        Args:
+            stage: stage for the package that needs to be patched
+        """
+
+    def clean(self):
+        """Clean up the patch stage in case of a UrlPatch"""
+
     def apply(self, stage):
         """Apply a patch to source in a stage.
 
         Arguments:
             stage (spack.stage.Stage): stage where source code lives
         """
+        assert self.path, (
+            "Path for patch not set in apply: %s" % self.path_or_url)
+
+        if not os.path.isfile(self.path):
+            raise NoSuchPatchError("No such patch: %s" % self.path)
+
+        apply_patch(stage, self.path, self.level, self.working_dir)
 
     def to_dict(self):
         """Partial dictionary -- subclases should add to this."""
@@ -95,14 +109,10 @@ class FilePatch(Patch):
     """
     def __init__(self, pkg, relative_path, level, working_dir):
         self.relative_path = relative_path
-        self.path = os.path.join(pkg.package_dir, self.relative_path)
-        super(FilePatch, self).__init__(pkg, self.path, level, working_dir)
+        abs_path = os.path.join(pkg.package_dir, self.relative_path)
+        super(FilePatch, self).__init__(pkg, abs_path, level, working_dir)
+        self.path = abs_path
         self._sha256 = None
-
-    def apply(self, stage):
-        if not os.path.isfile(self.path):
-            raise NoSuchPatchError("No such patch: %s" % self.path)
-        apply_patch(stage, self.path, self.level, self.working_dir)
 
     @property
     def sha256(self):
@@ -130,7 +140,6 @@ class UrlPatch(Patch):
         super(UrlPatch, self).__init__(pkg, url, level, working_dir)
 
         self.url = url
-        self.path = None  # this is set in apply
 
         self.archive_sha256 = kwargs.get('archive_sha256')
         if allowed_archive(self.url) and not self.archive_sha256:
@@ -142,9 +151,8 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    def apply(self, stage):
-        """Retrieve the patch in a temporary stage, computes
-        self.path and calls `super().apply(stage)`
+    def fetch(self, stage):
+        """Retrieve the patch in a temporary stage and compute self.path
 
         Args:
             stage: stage for the package that needs to be patched
@@ -159,42 +167,43 @@ class UrlPatch(Patch):
             os.path.dirname(stage.mirror_path),
             os.path.basename(self.url))
 
-        with spack.stage.Stage(fetcher, mirror_path=mirror) as patch_stage:
-            patch_stage.fetch()
-            patch_stage.check()
-            patch_stage.cache_local()
+        self.stage = spack.stage.Stage(fetcher, mirror_path=mirror)
+        self.stage.create()
+        self.stage.fetch()
+        self.stage.check()
+        self.stage.cache_local()
 
-            root = patch_stage.path
+        root = self.stage.path
+        if self.archive_sha256:
+            self.stage.expand_archive()
+            root = self.stage.source_path
+
+        files = os.listdir(root)
+        if not files:
             if self.archive_sha256:
-                patch_stage.expand_archive()
-                root = patch_stage.source_path
-
-            files = os.listdir(root)
-            if not files:
-                if self.archive_sha256:
-                    raise NoSuchPatchError(
-                        "Archive was empty: %s" % self.url)
-                else:
-                    raise NoSuchPatchError(
-                        "Patch failed to download: %s" % self.url)
-
-            # set this here so that path is accessible after
-            self.path = os.path.join(root, files.pop())
-
-            if not os.path.isfile(self.path):
                 raise NoSuchPatchError(
-                    "Archive %s contains no patch file!" % self.url)
+                    "Archive was empty: %s" % self.url)
+            else:
+                raise NoSuchPatchError(
+                    "Patch failed to download: %s" % self.url)
 
-            # for a compressed archive, Need to check the patch sha256 again
-            # and the patch is in a directory, not in the same place
-            if self.archive_sha256 and spack.config.get('config:checksum'):
-                checker = Checker(self.sha256)
-                if not checker.check(self.path):
-                    raise fs.ChecksumError(
-                        "sha256 checksum failed for %s" % self.path,
-                        "Expected %s but got %s" % (self.sha256, checker.sum))
+        self.path = os.path.join(root, files.pop())
 
-            apply_patch(stage, self.path, self.level, self.working_dir)
+        if not os.path.isfile(self.path):
+            raise NoSuchPatchError(
+                "Archive %s contains no patch file!" % self.url)
+
+        # for a compressed archive, Need to check the patch sha256 again
+        # and the patch is in a directory, not in the same place
+        if self.archive_sha256 and spack.config.get('config:checksum'):
+            checker = Checker(self.sha256)
+            if not checker.check(self.path):
+                raise fs.ChecksumError(
+                    "sha256 checksum failed for %s" % self.path,
+                    "Expected %s but got %s" % (self.sha256, checker.sum))
+
+    def clean(self):
+        self.stage.destroy()
 
     def to_dict(self):
         data = super(UrlPatch, self).to_dict()

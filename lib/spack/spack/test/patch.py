@@ -82,7 +82,9 @@ first line
 third line
 """)
         # apply the patch and compare files
+        patch.fetch(stage)
         patch.apply(stage)
+        patch.clean()
 
         with working_dir(stage.source_path):
             assert filecmp.cmp('foo.txt', 'foo-expected.txt')
