@@ -16,14 +16,7 @@ class PyFenicsUfl(PythonPackage):
 
     homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/ufl.git"
-
-    def url_for_version(self, version):
-        url = "https://bitbucket.org/fenics-project/ufl/get"
-        if version >= Version('2017.1.0'):
-            url += "/{0}.tar.gz".format(version)
-        else:
-            url += "/ufl-{0}.tar.gz".format(version)
-        return url
+    url      = "https://bitbucket.org/fenics-project/ufl/get/2018.1.0.tar.gz"
 
     version('2018.1.0',       sha256='1717ac7deacae7ac9cf5a9ff419bbab1550308fe6f05a5c8ea7c3ee62eaacae8')
     version('2017.2.0.post0', sha256='5d75adf2c9d15b92573aedfd0a011268830435f6808ad795136567c274382190')
@@ -41,3 +34,11 @@ class PyFenicsUfl(PythonPackage):
     depends_on('python@3:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
+
+    def url_for_version(self, version):
+        url = "https://bitbucket.org/fenics-project/ufl/get"
+        if version >= Version('2017.1.0'):
+            url += "/{0}.tar.gz".format(version)
+        else:
+            url += "/ufl-{0}.tar.gz".format(version)
+        return url

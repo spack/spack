@@ -14,14 +14,7 @@ class PyFenicsInstant(PythonPackage):
 
     homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/instant.git"
-
-    def url_for_version(self, version):
-        url = "https://bitbucket.org/fenics-project/instant/get"
-        if version >= Version('2017.1.0'):
-            url += "/{0}.tar.gz".format(version)
-        else:
-            url += "/instant-{0}.tar.gz".format(version)
-        return url
+    url      = "https://bitbucket.org/fenics-project/instant/get/2017.2.0.tar.gz"
 
     version('2017.2.0',       sha256='517f4ff355704420c5938e6fe33e97892856e136732de86ffa29bb996b445791')
     version('2017.1.0.post1', sha256='f83797187753a6a3fcede19e9ccb2cbef8635ac7af465ba56ef384e39961f577')
@@ -32,3 +25,11 @@ class PyFenicsInstant(PythonPackage):
     version('1.5.0',          sha256='16b449dea0f69e6dd0edb968b8bc34137475223cbb8556dfea2637edef25f5ab')
     version('1.4.0',          sha256='05016cf26740259c408d19b125f2326206c59d2a7d30614e94903d50bf73c843')
     version('1.3.0',          sha256='348226ef1a43793442a88a095c0078c204ce1f86bd8749e01d16def8c57abb76')
+
+    def url_for_version(self, version):
+        url = "https://bitbucket.org/fenics-project/instant/get"
+        if version >= Version('2017.1.0'):
+            url += "/{0}.tar.gz".format(version)
+        else:
+            url += "/instant-{0}.tar.gz".format(version)
+        return url

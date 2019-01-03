@@ -12,14 +12,7 @@ class PyFenicsDijitso(PythonPackage):
 
     homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/dijitso.git"
-
-    def url_for_version(self, version):
-        url = "https://bitbucket.org/fenics-project/dijitso/get"
-        if version >= Version('2017.1.0'):
-            url += "/{0}.tar.gz".format(version)
-        else:
-            url += "/dijitso-{0}.tar.gz".format(version)
-        return url
+    url      = "https://bitbucket.org/fenics-project/dijitso/get/2018.1.0.tar.gz"
 
     version('2018.1.0',       sha256='2a768a5aac0414c1719a0ea5d66c788d6f8d0838d3b669ecb26e35ff9e452f09')
     version('2017.2.0',       sha256='b759a384cd1c6bf50476803f0277cd6e7a1fdaaee922c7952641bce8c8336678')
@@ -31,3 +24,11 @@ class PyFenicsDijitso(PythonPackage):
     depends_on('python@3:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
+
+    def url_for_version(self, version):
+        url = "https://bitbucket.org/fenics-project/dijitso/get"
+        if version >= Version('2017.1.0'):
+            url += "/{0}.tar.gz".format(version)
+        else:
+            url += "/dijitso-{0}.tar.gz".format(version)
+        return url

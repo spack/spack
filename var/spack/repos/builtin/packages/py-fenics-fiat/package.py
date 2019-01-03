@@ -13,14 +13,7 @@ class PyFenicsFiat(PythonPackage):
 
     homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/fiat.git"
-
-    def url_for_version(self, version):
-        url = "https://bitbucket.org/fenics-project/fiat/get"
-        if version >= Version('2017.1.0'):
-            url += "/{0}.tar.gz".format(version)
-        else:
-            url += "/fiat-{0}.tar.gz".format(version)
-        return url
+    url      = "https://bitbucket.org/fenics-project/fiat/get/2018.1.0.tar.gz"
 
     version('2018.1.0',       sha256='b21ae8c040eb0c129629569110cc1426f458aa237c4f590e7f5a781dce3238ef')
     version('2017.2.0',       sha256='44524aaefe938d448eee07e4398c5f26b3ea15e4b1be3a2bcb248ef239d747ed')
@@ -36,3 +29,11 @@ class PyFenicsFiat(PythonPackage):
     depends_on('python@3:', type=('build', 'run'))
 
     depends_on('py-sympy@1.1:')
+
+    def url_for_version(self, version):
+        url = "https://bitbucket.org/fenics-project/fiat/get"
+        if version >= Version('2017.1.0'):
+            url += "/{0}.tar.gz".format(version)
+        else:
+            url += "/fiat-{0}.tar.gz".format(version)
+        return url

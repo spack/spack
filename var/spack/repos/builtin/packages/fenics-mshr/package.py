@@ -14,14 +14,7 @@ class FenicsMshr(CMakePackage):
 
     homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/mshr.git"
-
-    def url_for_version(self, version):
-        url = "https://bitbucket.org/fenics-project/mshr/get"
-        if version >= Version('2017.1.0'):
-            url += "/{0}.tar.gz".format(version)
-        else:
-            url += "/mshr-{0}.tar.gz".format(version)
-        return url
+    url      = "https://bitbucket.org/fenics-project/mshr/get/2018.1.0.tar.gz"
 
     version('2018.1.0',       sha256='84ee27b70996486efaa8a7920fdd79c1df97666c9376a5682627b2dd40e3f03c')
     version('2017.2.0',       sha256='1d77c7040f406fe63e1560184b7f1f9b13da74f3d79509b070f1b74c0ae094bb')
@@ -38,5 +31,13 @@ class FenicsMshr(CMakePackage):
 
     depends_on('fenics-dolfin+python', when='+python')
     depends_on('fenics-dolfin', when='~python')
+
+    def url_for_version(self, version):
+        url = "https://bitbucket.org/fenics-project/mshr/get"
+        if version >= Version('2017.1.0'):
+            url += "/{0}.tar.gz".format(version)
+        else:
+            url += "/mshr-{0}.tar.gz".format(version)
+        return url
 
     # FIXME: install python interface

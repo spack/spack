@@ -14,14 +14,7 @@ class PyFenicsFfc(PythonPackage):
 
     homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/ffc.git"
-
-    def url_for_version(self, version):
-        url = "https://bitbucket.org/fenics-project/ffc/get"
-        if version >= Version('2017.1.0'):
-            url += "/{0}.tar.gz".format(version)
-        else:
-            url += "/ffc-{0}.tar.gz".format(version)
-        return url
+    url      = "https://bitbucket.org/fenics-project/ffc/get/2018.1.0.post0.tar.gz"
 
     version('2018.1.0.post0', sha256='822011f5d7a46200a9e2a9f29a4667f3a96d7124d3c846dceaf526f29f8d3c08')
     version('2018.1.0',       sha256='51b21e3557d4c1460b2d52ff2d5646dd3d15a8b458b51706d5ff58adc9485971')
@@ -47,3 +40,11 @@ class PyFenicsFfc(PythonPackage):
     # FEniCS dependencies
     depends_on('py-fenics-fiat')
     depends_on('py-fenics-ufl')
+
+    def url_for_version(self, version):
+        url = "https://bitbucket.org/fenics-project/ffc/get"
+        if version >= Version('2017.1.0'):
+            url += "/{0}.tar.gz".format(version)
+        else:
+            url += "/ffc-{0}.tar.gz".format(version)
+        return url

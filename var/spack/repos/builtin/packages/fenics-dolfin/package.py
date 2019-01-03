@@ -11,14 +11,7 @@ class FenicsDolfin(CMakePackage):
 
     homepage = "http://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/dolfin.git"
-
-    def url_for_version(self, version):
-        url = "https://bitbucket.org/fenics-project/dolfin/get"
-        if version >= Version('2017.1.0'):
-            url += "/{0}.tar.gz".format(version)
-        else:
-            url += "/dolfin-{0}.tar.gz".format(version)
-        return url
+    url      = "https://bitbucket.org/fenics-project/dolfin/get/2018.1.0.post2.tar.gz"
 
     # version('develop', branch='master')
     version('2018.1.0.post2', sha256='a71db38740a7ea508f8a725af4b08ccd024168b450033b032b003a5aac1708cf')
@@ -89,6 +82,14 @@ class FenicsDolfin(CMakePackage):
 
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-sphinx@1.0.1:', type='build', when='+python+doc')
+
+    def url_for_version(self, version):
+        url = "https://bitbucket.org/fenics-project/dolfin/get"
+        if version >= Version('2017.1.0'):
+            url += "/{0}.tar.gz".format(version)
+        else:
+            url += "/dolfin-{0}.tar.gz".format(version)
+        return url
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
