@@ -494,6 +494,8 @@ def graph_dot(specs, deptype='all', static=False, out=None):
     Print out a dot formatted graph of all the dependencies between
     package.  Output can be passed to graphviz, e.g.:
 
+    .. code-block:: console
+
         spack graph --dot qt | dot -Tpdf > spack-graph.pdf
 
     """
