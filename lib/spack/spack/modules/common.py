@@ -169,7 +169,6 @@ def merge_config_rules(configuration, spec):
     # evaluated in order of appearance in the module file
     spec_configuration = module_specific_configuration.pop('all', {})
     for constraint, action in module_specific_configuration.items():
-        override = False
         if spec.satisfies(constraint, strict=True):
             if spack.config.override(constraint):
                 spec_configuration = {}
