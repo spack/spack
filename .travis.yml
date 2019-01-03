@@ -172,7 +172,11 @@ before_install:
         pip2 install virtualenv;
         virtualenv venv;
         source venv/bin/activate;
+        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter;
+    else
+        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
     fi
+  - chmod +x ./cc-test-reporter
   - ccache -M 2G && ccache -z
 
 # Install various dependencies
@@ -212,6 +216,12 @@ script:
 after_success:
   - ccache -s
   - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
+        coverage combine;
+        coverage xml;
+        ./cc-test-reporter format-coverage -t coverage.py -o coverage/codeclimate.python.json;
+        ./cc-test-reporter format-coverage -t cobertura -o coverage/codeclimate.sh.json coverage/*/cobertura.xml;
+        ./cc-test-reporter sum-coverage coverage/codeclimate.*.json -p 2;
+        ./cc-test-reporter upload-coverage;
         codecov --env PYTHON_VERSION
                 --required
                 --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
