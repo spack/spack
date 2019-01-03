@@ -170,11 +170,8 @@ def merge_config_rules(configuration, spec):
     spec_configuration = module_specific_configuration.pop('all', {})
     for constraint, action in module_specific_configuration.items():
         override = False
-        if constraint.endswith(':'):
-            constraint = constraint.strip(':')
-            override = True
         if spec.satisfies(constraint, strict=True):
-            if override:
+            if spack.config.override(constraint):
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)
 
