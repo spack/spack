@@ -13,7 +13,14 @@ class Bowtie(MakefilePackage):
     homepage = "https://sourceforge.net/projects/bowtie-bio/"
     url      = "https://github.com/BenLangmead/bowtie/archive/v1.2.0.tar.gz"
 
-    # Note that release 1.2.2 is tagged as v1.2.2_p1, so the URL is "odd".
+    # The bowtie project git tagged and GitHub released a v1.2.2,
+    # discovered/fixed a bug, git tagged a v1.2.2_p1 and moved the
+    # 1.2.2 release to use it rather than making a new `1.2.2_p1`
+    # release.
+    #
+    # We point both of the Spack versions at the same tarball so they
+    # build the binaries that are on the release page as v1.2.2
+    version('1.2.2_p1', sha256='e1b02b2e77a0d44a3dd411209fa1f44f0c4ee304ef5cc83f098275085740d5a1')
     version('1.2.2', sha256='e1b02b2e77a0d44a3dd411209fa1f44f0c4ee304ef5cc83f098275085740d5a1', url="https://github.com/BenLangmead/bowtie/archive/v1.2.2_p1.tar.gz")
     version('1.2.1.1', sha256='1b38408b88f61d18d7ff28b2470a8cfeefccb3fc59fd46e4cc62e23874e52c20')
     version('1.2.1', sha256='b2a7c8c879cb08f00a82665bee43e1d4861de44a87912c54d168e44c90869728')
@@ -22,10 +29,11 @@ class Bowtie(MakefilePackage):
     # clearly identical to 1.2.0.
     version('1.2', md5='6d97f0ea1a65af11d17cc270cfac4af9', url='https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.2.0/bowtie-1.2-source.zip')
 
-    # Feel free to tighten this.  I know that v1.2.2 builds with
-    # %gcc@5.5.5 and fails to build with %gcc@8.2.0.  I'm not sure
-    # whether or not it works with other versions in the interval.
-    conflicts('%gcc@8:', when='@1.2.2')
+    # Feel free to tighten this.  I know that v1.2.2 (aka v1.2.2_p1)
+    # builds with %gcc@5.5.5 and fails to build with %gcc@8.2.0.  I'm
+    # not sure whether or not it works with other versions in the
+    # interval.
+    conflicts('%gcc@8:', when='@1.2.2:')
 
     variant('tbb', default=False, description='Use Intel thread building block')
 
