@@ -128,7 +128,8 @@ class PyNumpy(PythonPackage):
                     if spec.satisfies('+lapack'):
                         f.write('[lapack]\n')
                         f.write('lapack_libs=%s\n' % (names))
-                    write_library_dirs(f, dirs)
+                    if spec.satisfies('+blas') or spec.satisfies('+lapack'):
+                        write_library_dirs(f, dirs)
                 else:
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
