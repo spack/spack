@@ -6,8 +6,10 @@
 
 from spack import *
 
-import socket
+import sys
 import os
+import socket
+
 
 import llnl.util.tty as tty
 from os import environ as env
@@ -42,7 +44,8 @@ class Vtkh(Package):
     variant("mpi", default=True, description="build mpi support")
     variant("tbb", default=False, description="build tbb support")
     variant("cuda", default=False, description="build cuda support")
-    variant("openmp", default=True, description="build openmp support")
+    variant("openmp", default=(sys.platform != 'darwin'),
+            description="build openmp support")
 
     depends_on("cmake@3.8.2:")
 

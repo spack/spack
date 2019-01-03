@@ -5,8 +5,10 @@
 
 from spack import *
 
-import socket
+import sys
 import os
+import socket
+
 
 import llnl.util.tty as tty
 from os import environ as env
@@ -62,7 +64,8 @@ class Ascent(Package):
     variant("vtkh", default=True,
             description="Build VTK-h filter and rendering support")
 
-    variant("openmp", default=True, description="Build openmp support")
+    variant("openmp", default=(sys.platform != 'darwin'),
+            description="build openmp support")
     variant("cuda", default=False, description="Build cuda support")
     variant("mfem", default=False, description="Build MFEM filter support")
     variant("adios", default=False, description="Build Adios filter support")
