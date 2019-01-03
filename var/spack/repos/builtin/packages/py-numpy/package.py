@@ -122,10 +122,13 @@ class PyNumpy(PythonPackage):
                 elif '^netlib-lapack' in spec:
                     # netlib requires blas and lapack listed
                     # separately so that scipy can find them
-                    for library in ['blas', 'lapack']:
-                        f.write('[%s]\n' % library)
-                        f.write('%s_libs=%s\n' % (library, names))
-                        write_library_dirs(f, dirs)
+                    if spec.satisfies('+blas'):
+                        f.write('[blas]\n')
+                        f.write('blas_libs=%s\n' % (names))
+                    if spec.satisfies('+lapack'):
+                        f.write('[lapack]\n')
+                        f.write('lapack_libs=%s\n' % (names))
+                    write_library_dirs(f, dirs)
                 else:
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
