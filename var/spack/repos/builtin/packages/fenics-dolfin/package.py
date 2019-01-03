@@ -12,8 +12,13 @@ class FenicsDolfin(CMakePackage):
     homepage = "http://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/dolfin.git"
 
-    # Use this url for version >= 2017.1.0
-    url      = "https://bitbucket.org/fenics-project/dolfin/get/2018.1.0.post2.tar.gz"
+    def url_for_version(self, version):
+        url = "https://bitbucket.org/fenics-project/dolfin/get"
+        if version >= Version('2017.1.0'):
+            url += "/{0}.tar.gz".format(version)
+        else:
+            url += "/dolfin-{0}.tar.gz".format(version)
+        return url
 
     # version('develop', branch='master')
     version('2018.1.0.post2', sha256='a71db38740a7ea508f8a725af4b08ccd024168b450033b032b003a5aac1708cf')
@@ -24,16 +29,12 @@ class FenicsDolfin(CMakePackage):
     version('2017.2.0',       sha256='90f77796372eed63f529bafa7c05afa3d5bfeb5f378d3e4e9d53959c0c06bbe7')
     version('2017.1.0.post0', sha256='25e557491d7fdff0967ef99c678ec77eb0e5f58a3a6b8b31c45e5ca2bdc85912')
     version('2017.1.0',       sha256='a496574e9a1310806838c7ef32d442ef77379f879ab6a5742bbe521f171d5f88')
-
-    # FIXME: Older versions prepend name to version in url
-    # url      = "https://bitbucket.org/fenics-project/dolfin/get/dolfin-2016.2.0.tar.gz"
-
-    # version('2016.2.0',       sha256='c6760996660a476f77889e11e4a0bc117cc774be0eec777b02a7f01d9ce7f43d')
-    # version('2016.1.0',       sha256='0db95c8f193fd56d741cb90682e0a6a21e366c4f48d33e1eb501d2f98aa1a05b')
-    # version('1.6.0',          sha256='67f66c39983a8c5a1ba3c0787fa9b9082778bc7227b25c7cad80dc1299e0a201')
-    # version('1.5.0',          sha256='9dd915b44fd833f16121dbb14b668795ab276ada40a111d9366261077200bed3')
-    # version('1.4.0',          sha256='64f058466a312198ea2b9de191bd4fbecaa70eb1c88325d03e680edb606b46cd')
-    # version('1.3.0',          sha256='04ea667c25ca57c84436d9dfe0233d610fc7e25c3ade3fb8c6c38b1260d68dae')
+    version('2016.2.0',       sha256='c6760996660a476f77889e11e4a0bc117cc774be0eec777b02a7f01d9ce7f43d')
+    version('2016.1.0',       sha256='0db95c8f193fd56d741cb90682e0a6a21e366c4f48d33e1eb501d2f98aa1a05b')
+    version('1.6.0',          sha256='67f66c39983a8c5a1ba3c0787fa9b9082778bc7227b25c7cad80dc1299e0a201')
+    version('1.5.0',          sha256='9dd915b44fd833f16121dbb14b668795ab276ada40a111d9366261077200bed3')
+    version('1.4.0',          sha256='64f058466a312198ea2b9de191bd4fbecaa70eb1c88325d03e680edb606b46cd')
+    version('1.3.0',          sha256='04ea667c25ca57c84436d9dfe0233d610fc7e25c3ade3fb8c6c38b1260d68dae')
 
     variant('python',       default=False, description='Compile with DOLFIN Python interface')
     variant('hdf5',         default=True,  description='Compile with HDF5')
