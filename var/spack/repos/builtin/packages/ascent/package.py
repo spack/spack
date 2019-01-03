@@ -151,6 +151,9 @@ class Ascent(Package):
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
             cmake(*cmake_args)
             make()
+            # run unit tests if requested
+            if "+test" in spec and self.run_tests:
+                make("test")
             make("install")
             # install copy of host config for provenance
             install(host_cfg_fname, prefix)

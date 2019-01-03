@@ -49,7 +49,7 @@ class Conduit(Package):
     ###########################################################################
 
     variant("shared", default=True, description="Build Conduit as shared libs")
-    variant('test', default=True, description='Enable Ascent unit tests')
+    variant('test', default=True, description='Enable Conduit unit tests')
 
     # variants for python support
     variant("python", default=True, description="Build Conduit Python support")
@@ -160,6 +160,9 @@ class Conduit(Package):
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
             cmake(*cmake_args)
             make()
+            # run unit tests if requested
+            if "+test" in spec and self.run_tests:
+                make("test")
             make("install")
             # install copy of host config for provenance
             install(host_cfg_fname, prefix)
