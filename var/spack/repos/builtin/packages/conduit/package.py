@@ -158,14 +158,42 @@ class Conduit(Package):
                     if arg.count("RPATH") == 0:
                         cmake_args.append(arg)
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
+            print("Configuring Conduit...")
             cmake(*cmake_args)
+            print("Building Conduit...")
             make()
             # run unit tests if requested
             if "+test" in spec and self.run_tests:
+                print("Running Conduit Unit Tests...")
                 make("test")
+            print("Installing Conduit...")
             make("install")
             # install copy of host config for provenance
+            print("Installing Conduit CMake Host Config File...")
             install(host_cfg_fname, prefix)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        """
+        Checks the spack install of conduit using conduit's
+        using-with-cmake exmaple
+        """
+        print("Checking Conduit installation...")
+        spec = self.spec
+        install_prefix = spec.prefix
+        example_src_dir = join_path(install_prefix,
+                                    "examples",
+                                    "conduit",
+                                    "using-with-cmake")
+        with working_dir("check-conduit-using-with-cmake-example",
+                         create=True):
+            cmake_args = ["-DCONDUIT_DIR={0}".format(install_prefix),
+                          example_src_dir]
+            cmake(*cmake_args)
+            make()
+            example = Executable('./example')
+            example()
 
     def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
         """
