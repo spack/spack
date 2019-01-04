@@ -34,9 +34,9 @@ packages:
         bison@3.0 arch=linux-centos7-x86_64: /usr
         bison@2.7 arch=linux-centos7-x86_64: /usr
       buildable: False
-    cmake:
-      paths:
-        cmake@2.8.12.2 arch=linux-centos7-x86_64: /usr
+    # cmake:
+    #   paths:
+    #     cmake@2.8.12.2 arch=linux-centos7-x86_64: /usr
     flex:
       paths:
         flex@2.5.37 arch=linux-centos7-x86_64: /usr
