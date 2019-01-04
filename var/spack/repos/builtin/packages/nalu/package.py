@@ -20,7 +20,7 @@ class Nalu(CMakePackage):
 
     # Options
     variant('shared', default=(sys.platform != 'darwin'),
-             description='Build dependencies as shared libraries')
+            description='Build dependencies as shared libraries')
     variant('pic', default=True,
             description='Position independent code')
     # Third party libraries
