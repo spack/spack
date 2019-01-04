@@ -149,14 +149,44 @@ class Ascent(Package):
                     if arg.count("RPATH") == 0:
                         cmake_args.append(arg)
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
+            print("Configuring Ascent...")
             cmake(*cmake_args)
+            print("Building Ascent...")
             make()
             # run unit tests if requested
             if "+test" in spec and self.run_tests:
+                print("Running Ascent Unit Tests...")
                 make("test")
+            print("Installing Ascent...")
             make("install")
             # install copy of host config for provenance
             install(host_cfg_fname, prefix)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        """
+        Checks the spack install of ascent using ascents's
+        using-with-cmake example
+        """
+        print("Checking Ascent installation...")
+        spec = self.spec
+        install_prefix = spec.prefix
+        example_src_dir = join_path(install_prefix,
+                                    "examples",
+                                    "ascent",
+                                    "using-with-cmake")
+        with working_dir("check-ascent-using-with-cmake-example",
+                         create=True):
+            cmake_args = ["-DASCENT_DIR={0}".format(install_prefix),
+                          "-DCONDUIT_DIR={0}".format(spec['conduit'].prefix),
+                          "-VTKM_DIR={0}".format(spec['vtkm'].prefix),
+                          "-VTKH_DIR={0}".format(spec['vtkh'].prefix),
+                          example_src_dir]
+            cmake(*cmake_args)
+            make()
+            example = Executable('./example')
+            example()
 
     def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
         """

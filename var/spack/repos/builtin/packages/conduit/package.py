@@ -177,7 +177,7 @@ class Conduit(Package):
     def check_install(self):
         """
         Checks the spack install of conduit using conduit's
-        using-with-cmake exmaple
+        using-with-cmake example
         """
         print("Checking Conduit installation...")
         spec = self.spec
