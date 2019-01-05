@@ -100,6 +100,7 @@ class Mvapich2(AutotoolsPackage):
 
     depends_on('findutils', type='build')
     depends_on('bison', type='build')
+    depends_on('zlib')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
