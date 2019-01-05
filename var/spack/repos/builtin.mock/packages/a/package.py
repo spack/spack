@@ -16,11 +16,8 @@ class A(AutotoolsPackage):
     version('2.0', '2.0_a_hash')
 
     variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
+        'foo', description='',
+        values=any_combination_of('bar', 'baz', 'fee').with_default('bar'),
     )
 
     variant(

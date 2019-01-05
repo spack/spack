@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class PyPatsy(PythonPackage):
     """A Python package for describing statistical models and for
@@ -15,7 +13,7 @@ class PyPatsy(PythonPackage):
 
     version('0.4.1', '9445f29e3426d1ed30d683a1e1453f84')
 
-    variant('splines', description="Offers spline related functions")
+    variant('splines', default=False, description="Offers spline related functions")
 
     depends_on('py-setuptools',  type='build')
     depends_on('py-numpy',       type=('build', 'run'))

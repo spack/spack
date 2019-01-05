@@ -47,7 +47,7 @@ class Scr(CMakePackage):
     variant('scr_config', default='scr.conf',
             description='Location for SCR to find its system config file. '
             'May be either absolute or relative to the install prefix')
-    variant('copy_config', default=None,
+    variant('copy_config', default='none',
             description='Location from which to copy SCR system config file. '
             'Must be an absolute path.')
 
@@ -130,7 +130,7 @@ class Scr(CMakePackage):
     @run_after('install')
     def copy_config(self):
         spec = self.spec
-        if spec.variants['copy_config'].value:
+        if spec.variants['copy_config'].value != 'none':
             dest_path = self.get_abs_path_rel_prefix(
                 spec.variants['scr_config'].value)
             install(spec.variants['copy_config'].value, dest_path)

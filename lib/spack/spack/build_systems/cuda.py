@@ -5,7 +5,10 @@
 
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
+
 import platform
+
+import spack.variant
 
 
 class CudaPackage(PackageBase):
@@ -19,11 +22,12 @@ class CudaPackage(PackageBase):
             description='Build with CUDA')
     # see http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
     # https://developer.nvidia.com/cuda-gpus
-    variant('cuda_arch', default=None,
+    variant('cuda_arch',
             description='CUDA architecture',
-            values=('20', '30', '32', '35', '50', '52', '53', '60', '61',
-                    '62', '70'),
-            multi=True)
+            values=spack.variant.any_combination_of(
+                '20', '30', '32', '35', '50', '52', '53', '60', '61',
+                '62', '70'
+            ))
 
     # see http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # and http://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
