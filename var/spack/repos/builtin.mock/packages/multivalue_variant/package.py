@@ -17,10 +17,8 @@ class MultivalueVariant(Package):
 
     variant('debug', default=False, description='Debug variant')
     variant(
-        'foo',
-        description='Multi-valued variant',
-        values=('bar', 'baz', 'barbaz'),
-        multi=True
+        'foo', description='Multi-valued variant',
+        values=any_combination_of('bar', 'baz', 'barbaz'),
     )
 
     variant(
