@@ -283,7 +283,7 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
 
         # extra fun for blueos
-        if 'blueos_3' in sys_type:
+        if 'blueos_3' in sys_type and "+fortran" in spec:
             if 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
                 # Fix missing std linker flag in xlc compiler
                 cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS",
@@ -291,7 +291,6 @@ class Conduit(Package):
                 # Conduit can't link C++ into fortran for this spec, but works
                 # fine in host code
                 cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
-                cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "OFF"))
 
         #######################
         # Unit Tests
