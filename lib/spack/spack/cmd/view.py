@@ -56,7 +56,7 @@ actions_remove = ["remove", "rm"]
 actions_status = ["statlink", "status", "check"]
 
 
-def relaxed_disambiguate(specs, view):
+def disambiguate_in_view(specs, view):
     """
         When dealing with querying actions (remove/status) we only need to
         disambiguate among specs in the view
@@ -171,7 +171,7 @@ def view(parser, args):
                 validate(projections_data, spack.schema.projections.schema)
                 ordered_projections = projections_data['projections']
         else:
-            tty.error('Specified projection file does not exist.')
+            tty.die('Specified projection file does not exist.')
     else:
         ordered_projections = {}
 
@@ -198,11 +198,11 @@ def view(parser, args):
         if len(specs) == 0:
             specs = view.get_all_specs()
         else:
-            specs = relaxed_disambiguate(specs, view)
+            specs = disambiguate_in_view(specs, view)
 
     else:
         # status and remove can map a partial spec to packages in view
-        specs = relaxed_disambiguate(specs, view)
+        specs = disambiguate_in_view(specs, view)
 
     with_dependencies = args.dependencies.lower() in ['true', 'yes']
 
