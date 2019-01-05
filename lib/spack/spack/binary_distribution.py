@@ -306,7 +306,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             tty.die(str(e))
     else:
         try:
-            make_package_placeholder(workdir, allow_root)
+            make_package_placeholder(workdir, spec.prefix, allow_root)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
@@ -404,7 +404,7 @@ def make_package_relative(workdir, prefix, allow_root):
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def make_package_placeholder(workdir, allow_root):
+def make_package_placeholder(workdir, prefix, allow_root):
     """
     Change paths in binaries to placeholder paths
     """
@@ -413,6 +413,11 @@ def make_package_placeholder(workdir, allow_root):
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))
     relocate.make_binary_placeholder(cur_path_names, allow_root)
+
+    cur_path_names = list()
+    for filename in buildinfo['relocate_links']:
+        cur_path_names.append(os.path.join(workdir, filename))
+    relocate.make_link_placeholder(cur_path_names, workdir, prefix)
 
 
 def relocate_package(workdir, allow_root):
