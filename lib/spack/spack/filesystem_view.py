@@ -475,10 +475,14 @@ class YamlFilesystemView(FilesystemView):
         if spec.package.extendee_spec:
             locator_spec = spec.package.extendee_spec
 
+        all_fmt_str = None
         for spec_like, fmt_str in self.projections.items():
-            if spec_like == 'all' or locator_spec.satisfies(spec_like,
-                                                            strict=True):
+            if locator_spec.satisfies(spec_like, strict=True):
                 return os.path.join(self.root, locator_spec.format(fmt_str))
+            elif spec_like == 'all':
+                all_fmt_str = fmt_str
+        if all_fmt_str:
+            return os.path.join(self.root, locator_spec.format(all_fmt_str))
         return self.root
 
     def get_all_specs(self):

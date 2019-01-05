@@ -47,7 +47,7 @@ from spack.config import validate
 from spack.filesystem_view import YamlFilesystemView
 from spack.util import spack_yaml as s_yaml
 
-description = "produce a directory-based view of packages"
+description = "produce a simplified view of spack packages on the filesystem"
 section = "environments"
 level = "short"
 
@@ -123,8 +123,7 @@ def setup_parser(sp):
     for cmd, act in file_system_view_actions.items():
         act.add_argument('path', nargs=1,
                          help="path to file system view directory")
-        act.add_argument('--projection-file', default='',
-                         dest='projection_file',
+        act.add_argument('--projection-file', dest='projection_file',
                          help="Initialize view using projections from file.")
 
         if cmd == "remove":
@@ -175,7 +174,6 @@ def view(parser, args):
             tty.error('Specified projection file does not exist.')
     else:
         ordered_projections = {}
-#        ordered_projections = spack.config.get('projection')
 
     view = YamlFilesystemView(
         path, spack.store.layout,

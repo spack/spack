@@ -438,8 +438,8 @@ way to assemble packages in a useful way and load them into a user's
 environment.
 
 A filesystem view is a projection of the Spack install space into a
-less combinatorial space. This is generally useful to give users a
-view of the Spack installed packages that they can navigate more
+less combinatorial space, often a single directory. Views give users a
+way to access the Spack installed packages that they can navigate more
 easily. The default projection for a filesystem view is into a single
 prefix.
 
@@ -532,9 +532,10 @@ Controlling View Projections
 """"""""""""""""""""""""""""
 
 The default projection into a view is to link every package into the
-root of the view. This can be changed through the ``projections.yaml``
-file in the view. The projection configuration file for a view located
-at ``/my/view`` is stored in ``/my/view/.spack/projections.yaml``.
+root of the view. This can be changed by adding a ``projections.yaml``
+configuration file to the view. The projection configuration file for
+a view located at ``/my/view`` is stored in
+``/my/view/.spack/projections.yaml``.
 
 When creating a view, the projection configuration file can also be
 specified from the command line using the ``--projection-file`` option
@@ -552,11 +553,13 @@ spec format strings, as shown in the example below.
 
 The entries in the projections configuration file must all be either
 specs or the keyword ``all``. For each spec, the projection used will
-be the first entry that the spec satisfies, and the keyword ``all`` is
-satisfied by any spec. Given the example above, any spec satisfying
-``zlib@1.2.8`` will be linked into ``/my/view/zlib-1.2.8/``, any spec
-satisfying ``hdf5@1.8.10+mpi %gcc@4.9.3 ^mvapich2@2.2`` will be linked
-into ``/my/view/hdf5-1.8.10/mvapich2-2.2-gcc-4.9.3``, and any spec
+be the first non-``all`` entry that the spec satisfies, or ``all`` if
+there is an entry for ``all`` and no other entry is satisfied by the
+spec. Where the keyword ``all`` appears in the file does not
+matter. Given the example above, any spec satisfying ``zlib@1.2.8``
+will be linked into ``/my/view/zlib-1.2.8/``, any spec satisfying
+``hdf5@1.8.10+mpi %gcc@4.9.3 ^mvapich2@2.2`` will be linked into
+``/my/view/hdf5-1.8.10/mvapich2-2.2-gcc-4.9.3``, and any spec
 satisfying ``hdf5@1.8.10~mpi %gcc@4.9.3`` will be linked into
 ``/my/view/hdf5-1.8.10/gcc-4.9.3``.
 
@@ -1497,4 +1500,3 @@ Disadvantages:
 
  2. Although patches of a few lines work OK, large patch files can be
     hard to create and maintain.
-

@@ -79,6 +79,28 @@ def test_view_multiple_projections(
     assert os.path.exists(extendee_prefix)
 
 
+def test_view_multiple_projections_all_first(
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('libdwarf@20130207')
+    install('extendee@1.0%gcc')
+
+    viewpath = str(tmpdir.mkdir('view'))
+    view_projection = s_yaml.syaml_dict(
+         [('all', '${PACKAGE}-${VERSION}'),
+          ('extendee', '${PACKAGE}-${COMPILERNAME}')]
+    )
+
+    projection_file = create_projection_file(tmpdir, view_projection)
+    view('add', viewpath, '--projection-file={0}'.format(projection_file),
+         'libdwarf', 'extendee')
+
+    libdwarf_prefix = os.path.join(viewpath, 'libdwarf-20130207/libdwarf')
+    extendee_prefix = os.path.join(viewpath, 'extendee-gcc/bin')
+    assert os.path.exists(libdwarf_prefix)
+    assert os.path.exists(extendee_prefix)
+
+
 def test_view_external(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
