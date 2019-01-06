@@ -3,21 +3,6 @@ compilers:
     environment: {}
     extra_rpaths: []
     flags: {}
-    modules:
-    - Architecture/Haswell
-    - GCC/5.5.0
-    operating_system: centos7
-    paths:
-      cc: /usr/local/software/jureca/Stages/2018a/software/GCCcore/5.5.0/bin/gcc
-      cxx: /usr/local/software/jureca/Stages/2018a/software/GCCcore/5.5.0/bin/g++
-      f77: /usr/local/software/jureca/Stages/2018a/software/GCCcore/5.5.0/bin/gfortran
-      fc: /usr/local/software/jureca/Stages/2018a/software/GCCcore/5.5.0/bin/gfortran
-    spec: gcc@5.5.0
-    target: x86_64
-- compiler:
-    environment: {}
-    extra_rpaths: []
-    flags: {}
     modules: []
     operating_system: centos7
     paths:

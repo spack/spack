@@ -32,6 +32,11 @@ packages:
             intel-mpi-external@5.5.0: /usr/local/software/jureca/Stages/2018a/software/impi/2018.2.199-iccifort-2018.2.199-GCC-5.5.0/intel64
         version: [5.5.0]
         buildable: False
+    intel-mkl:
+        paths:
+            intel-mkl@2018.2.199: /usr/local/software/jurecabooster/Stages/2018a/software/imkl/2018.2.199-ipsmpi-2018a
+        version: [2018.2.199]
+        buildable: False
     m4:
         paths:
             m4@1.4.16: /usr
@@ -43,13 +48,9 @@ packages:
     pkg-config:
         paths:
             pkg-config@0.29.1: /usr
-        buildable: False
         version: [0.29.1]
     python:
-        paths:
-            python@2.7.14: /usr/local/software/jureca/Stages/2018a/software/Python/2.7.14-GCCcore-5.5.0
-        version: [2.7.14]
-        buildable: False
+        version: [2.7.15]
     zlib:
         version: [1.2.8]
     all:
