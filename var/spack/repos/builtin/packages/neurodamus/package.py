@@ -26,6 +26,7 @@ from spack import *
 from spack.pkg.builtin.neurodamus_base import NeurodamusBase
 import os
 import shutil
+import sys
 from contextlib import contextmanager
 
 
@@ -92,7 +93,8 @@ class Neurodamus(NeurodamusBase):
         env['MAKEFLAGS'] = '-j{0}'.format(make_jobs)
         profile_flag = '-DENABLE_TAU_PROFILER' if '+profile' in spec else ''
 
-        link_flag = '-Wl,--as-needed'  # Allow deps to not recurs bring their deps
+        # Allow deps to not recurs bring their deps
+        link_flag = '-Wl,--as-needed' if sys.platform != 'darwin' else ''
         include_flag = ' -I%s -I%s %s' % (spec['reportinglib'].prefix.include,
                                           spec['hdf5'].prefix.include,
                                           profile_flag)
