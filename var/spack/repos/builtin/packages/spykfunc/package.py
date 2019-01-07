@@ -52,6 +52,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('spark+hadoop@2.3.2rc2:', type='run')
+    depends_on('hadoop@:2.999', type='run')
 
     depends_on('py-bb5', type=('build', 'run'))
     depends_on('py-docopt', type=('build', 'run'))
