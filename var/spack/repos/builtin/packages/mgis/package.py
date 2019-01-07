@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Mgis(CMakePackage):
     """
     The MFrontGenericInterfaceSupport project (MGIS) provides helper
@@ -36,7 +37,7 @@ class Mgis(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    
+
     # dependencies
 
     depends_on('tfel@3.2.0', when="@1.0")
@@ -47,7 +48,7 @@ class Mgis(CMakePackage):
     depends_on('boost+python', when='+python_bindings')
 
     extends('python', when='+python')
-    
+
     def cmake_args(self):
 
         args = []
@@ -70,5 +71,5 @@ class Mgis(CMakePackage):
             # adding path to boost
             args.append('-DBOOST_ROOT={0}'.
                         format(self.spec['boost'].prefix))
-                
+
         return args
