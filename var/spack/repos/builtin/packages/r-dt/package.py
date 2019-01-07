@@ -26,4 +26,3 @@ class RDt(RPackage):
     depends_on('r-htmlwidgets@1.3:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-crosstalk', type=('build', 'run'))
-
