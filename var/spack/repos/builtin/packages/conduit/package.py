@@ -118,6 +118,9 @@ class Conduit(Package):
     depends_on("py-sphinx", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc+doxygen")
 
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('CTEST_OUTPUT_ON_FAILURE', '1')
+
     def url_for_version(self, version):
         """
         Provide proper url
