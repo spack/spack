@@ -9,7 +9,7 @@ Spack.
 * [Deployment Description](#deployment-workflow)
 * [Pull Request Building Description](#pull-request-workflow)
 
-###### CREDIT : Based on [spack-packagelist](https://github.com/epfl-scitas/spack-packagelist)
+**Credit:** Based on [spack-packagelist](https://github.com/epfl-scitas/spack-packagelist)
 
 ## Spec Generation
 

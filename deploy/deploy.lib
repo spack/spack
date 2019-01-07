@@ -467,6 +467,19 @@ copy_user_configuration() {
         echo "MODULEPATH=\"\${MODULEPATH}\${MODULEPATH:+:}${modpath}\"" >> ${target}/modules.sh
     done
     echo "export MODULEPATH" >> ${target}/modules.sh
+
+    cat << EOF >> "${target}/config.yaml"
+config:
+  install_tree: \$INSTALL_PATH/install
+  source_cache: \$INSTALL_PATH/.cache
+  module_roots:
+    tcl: \$INSTALL_PATH/modules/tcl
+  build_stage:
+    - \$tempdir
+    - \$INSTALL_PATH/.stage
+  install_path_scheme: '\${ARCHITECTURE}/\${COMPILERNAME}-\${COMPILERVER}/\${PACKAGE}-\${VERSION}-\${HASH:6}'
+  build_jobs: 36
+EOF
 }
 
 copy_modules() {
