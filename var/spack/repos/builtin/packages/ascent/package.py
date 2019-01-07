@@ -126,6 +126,9 @@ class Ascent(Package):
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
 
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('CTEST_OUTPUT_ON_FAILURE', '1')
+
     def install(self, spec, prefix):
         """
         Build and install Ascent.
