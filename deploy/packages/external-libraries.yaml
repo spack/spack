@@ -38,7 +38,7 @@ packages:
       - qhull@2015.2
       # - qt@5.10.0
       - readline@7.0
-      - spark@2.4.0+hadoop
+      - spark@2.4.0+hadoop ^hadoop@:2.99999
       - sqlite@3.23.1
       - symengine@0.3.0
       - zeromq@4.2.5
