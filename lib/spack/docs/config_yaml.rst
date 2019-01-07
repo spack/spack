@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,7 +96,6 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
     - $tempdir
-    - /nfs/tmp2/$user
     - $spack/var/spack/stage
 
 This is an ordered list of paths that Spack should search when trying to
@@ -106,11 +105,10 @@ See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``, and it creates a symbolic link to that directory in
-``$spack/var/spack/stage``. This is used to track the stage.
-
-After a package is successfully installed, Spack deletes the temporary
-directory it used to build.  Unsuccessful builds are not deleted, but you
-can manually purge them with :ref:`spack clean --stage
+``$spack/var/spack/stage``. This is used to track the temporary
+directory.  After the package is successfully installed, Spack deletes
+the temporary directory it used to build.  Unsuccessful builds are not
+deleted, but you can manually purge them with :ref:`spack clean --stage
 <cmd-spack-clean>`.
 
 .. note::

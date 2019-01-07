@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -280,7 +280,7 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    env = ev.get_env(args, 'env status', required=False)
+    env = ev.get_env(args, 'env status')
     if env:
         if env.path == os.getcwd():
             tty.msg('Using %s in current directory: %s'
@@ -305,7 +305,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = ev.get_env(args, 'env loads')
+    env = ev.get_env(args, 'env loads', required=True)
 
     # Set the module types that have been selected
     module_type = args.module_type

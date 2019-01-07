@@ -1,20 +1,33 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 import filecmp
 import pytest
 
 from llnl.util.filesystem import working_dir, mkdirp
 
+import spack.patch
 import spack.paths
+import spack.repo
 import spack.util.compression
 from spack.util.executable import Executable
 from spack.stage import Stage
 from spack.spec import Spec
+
+# various sha256 sums (using variables for legibility)
+
+# files with contents 'foo', 'bar', and 'baz'
+foo_sha256 = 'b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c'
+bar_sha256 = '7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730'
+baz_sha256 = 'bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c'
+
+# url patches
+url1_sha256 = 'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'
+url2_sha256 = '1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd'
+url2_archive_sha256 = 'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd'
 
 
 @pytest.fixture()
@@ -41,9 +54,9 @@ data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
 def test_url_patch(mock_stage, filename, sha256, archive_sha256):
     # Make a patch object
     url = 'file://' + filename
-    m = sys.modules['spack.patch']
-    patch = m.Patch.create(
-        None, url, sha256=sha256, archive_sha256=archive_sha256)
+    pkg = spack.repo.get('patch')
+    patch = spack.patch.UrlPatch(
+        pkg, url, sha256=sha256, archive_sha256=archive_sha256)
 
     # make a stage
     with Stage(url) as stage:  # TODO: url isn't used; maybe refactor Stage
@@ -69,7 +82,9 @@ first line
 third line
 """)
         # apply the patch and compare files
+        patch.fetch(stage)
         patch.apply(stage)
+        patch.clean()
 
         with working_dir(stage.source_path):
             assert filecmp.cmp('foo.txt', 'foo-expected.txt')
@@ -84,10 +99,33 @@ def test_patch_in_spec(mock_packages, config):
     # Here the order is bar, foo, baz. Note that MV variants order
     # lexicographically based on the hash, not on the position of the
     # patch directive.
-    assert (('7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730',
-             'b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',
-             'bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c') ==
+    assert ((bar_sha256,
+             foo_sha256,
+             baz_sha256) ==
             spec.variants['patches'].value)
+
+
+def test_nested_directives(mock_packages):
+    """Ensure pkg data structures are set up properly by nested directives."""
+    # this ensures that the patch() directive results were removed
+    # properly from the DirectiveMeta._directives_to_be_executed list
+    patcher = spack.repo.path.get_pkg_class('patch-several-dependencies')
+    assert len(patcher.patches) == 0
+
+    # this ensures that results of dependency patches were properly added
+    # to Dependency objects.
+    libelf_dep = next(iter(patcher.dependencies['libelf'].values()))
+    assert len(libelf_dep.patches) == 1
+    assert len(libelf_dep.patches[Spec('libelf')]) == 1
+
+    libdwarf_dep = next(iter(patcher.dependencies['libdwarf'].values()))
+    assert len(libdwarf_dep.patches) == 2
+    assert len(libdwarf_dep.patches[Spec('libdwarf')]) == 1
+    assert len(libdwarf_dep.patches[Spec('libdwarf@20111030')]) == 1
+
+    fake_dep = next(iter(patcher.dependencies['fake'].values()))
+    assert len(fake_dep.patches) == 1
+    assert len(fake_dep.patches[Spec('fake')]) == 2
 
 
 def test_patched_dependency(
@@ -125,15 +163,14 @@ def test_multiple_patched_dependencies(mock_packages, config):
     # basic patch on libelf
     assert 'patches' in list(spec['libelf'].variants.keys())
     # foo
-    assert (('b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',) ==
+    assert ((foo_sha256,) ==
             spec['libelf'].variants['patches'].value)
 
     # URL patches
     assert 'patches' in list(spec['fake'].variants.keys())
     # urlpatch.patch, urlpatch.patch.gz
-    assert (('1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd',
-             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234') ==
-            spec['fake'].variants['patches'].value)
+    assert (
+        (url2_sha256, url1_sha256) == spec['fake'].variants['patches'].value)
 
 
 def test_conditional_patched_dependencies(mock_packages, config):
@@ -144,24 +181,77 @@ def test_conditional_patched_dependencies(mock_packages, config):
     # basic patch on libelf
     assert 'patches' in list(spec['libelf'].variants.keys())
     # foo
-    assert (('b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',) ==
+    assert ((foo_sha256,) ==
             spec['libelf'].variants['patches'].value)
 
     # conditional patch on libdwarf
     assert 'patches' in list(spec['libdwarf'].variants.keys())
     # bar
-    assert (('7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730',) ==
+    assert ((bar_sha256,) ==
             spec['libdwarf'].variants['patches'].value)
     # baz is conditional on libdwarf version
-    assert ('bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c'
+    assert (baz_sha256
             not in spec['libdwarf'].variants['patches'].value)
 
     # URL patches
     assert 'patches' in list(spec['fake'].variants.keys())
     # urlpatch.patch, urlpatch.patch.gz
-    assert (('1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd',
-             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234') ==
-            spec['fake'].variants['patches'].value)
+    assert (
+        (url2_sha256, url1_sha256) == spec['fake'].variants['patches'].value)
+
+
+def check_multi_dependency_patch_specs(
+        libelf, libdwarf, fake,  # specs
+        owner, package_dir):     # parent spec properties
+    """Validate patches on dependencies of patch-several-dependencies."""
+    # basic patch on libelf
+    assert 'patches' in list(libelf.variants.keys())
+    # foo
+    assert (foo_sha256 in libelf.variants['patches'].value)
+
+    # conditional patch on libdwarf
+    assert 'patches' in list(libdwarf.variants.keys())
+    # bar
+    assert (bar_sha256 in libdwarf.variants['patches'].value)
+    # baz is conditional on libdwarf version (no guarantee on order w/conds)
+    assert (baz_sha256 in libdwarf.variants['patches'].value)
+
+    def get_patch(spec, ending):
+        return next(p for p in spec.patches if p.path_or_url.endswith(ending))
+
+    # make sure file patches are reconstructed properly
+    foo_patch = get_patch(libelf, 'foo.patch')
+    bar_patch = get_patch(libdwarf, 'bar.patch')
+    baz_patch = get_patch(libdwarf, 'baz.patch')
+
+    assert foo_patch.owner == owner
+    assert foo_patch.path == os.path.join(package_dir, 'foo.patch')
+    assert foo_patch.sha256 == foo_sha256
+
+    assert bar_patch.owner == 'builtin.mock.patch-several-dependencies'
+    assert bar_patch.path == os.path.join(package_dir, 'bar.patch')
+    assert bar_patch.sha256 == bar_sha256
+
+    assert baz_patch.owner == 'builtin.mock.patch-several-dependencies'
+    assert baz_patch.path == os.path.join(package_dir, 'baz.patch')
+    assert baz_patch.sha256 == baz_sha256
+
+    # URL patches
+    assert 'patches' in list(fake.variants.keys())
+    # urlpatch.patch, urlpatch.patch.gz
+    assert (url2_sha256, url1_sha256) == fake.variants['patches'].value
+
+    url1_patch = get_patch(fake, 'urlpatch.patch')
+    url2_patch = get_patch(fake, 'urlpatch2.patch.gz')
+
+    assert url1_patch.owner == 'builtin.mock.patch-several-dependencies'
+    assert url1_patch.url == 'http://example.com/urlpatch.patch'
+    assert url1_patch.sha256 == url1_sha256
+
+    assert url2_patch.owner == 'builtin.mock.patch-several-dependencies'
+    assert url2_patch.url == 'http://example.com/urlpatch2.patch.gz'
+    assert url2_patch.sha256 == url2_sha256
+    assert url2_patch.archive_sha256 == url2_archive_sha256
 
 
 def test_conditional_patched_deps_with_conditions(mock_packages, config):
@@ -169,24 +259,31 @@ def test_conditional_patched_deps_with_conditions(mock_packages, config):
     spec = Spec('patch-several-dependencies @1.0 ^libdwarf@20111030')
     spec.concretize()
 
-    # basic patch on libelf
-    assert 'patches' in list(spec['libelf'].variants.keys())
-    # foo
-    assert ('b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c'
-            in spec['libelf'].variants['patches'].value)
+    libelf = spec['libelf']
+    libdwarf = spec['libdwarf']
+    fake = spec['fake']
 
-    # conditional patch on libdwarf
-    assert 'patches' in list(spec['libdwarf'].variants.keys())
-    # bar
-    assert ('7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730'
-            in spec['libdwarf'].variants['patches'].value)
-    # baz is conditional on libdwarf version (no guarantee on order w/conds)
-    assert ('bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c'
-            in spec['libdwarf'].variants['patches'].value)
+    check_multi_dependency_patch_specs(
+        libelf, libdwarf, fake,
+        'builtin.mock.patch-several-dependencies',
+        spec.package.package_dir)
 
-    # URL patches
-    assert 'patches' in list(spec['fake'].variants.keys())
-    # urlpatch.patch, urlpatch.patch.gz
-    assert (('1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd',
-             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234') ==
-            spec['fake'].variants['patches'].value)
+
+def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
+    """Test whether patched dependencies are still correct after writing and
+       reading a sub-DAG of a concretized Spec.
+    """
+    spec = Spec('patch-several-dependencies @1.0 ^libdwarf@20111030')
+    spec.concretize()
+
+    # write to YAML and read back in -- new specs will *only* contain
+    # their sub-DAGs, and won't contain the dependent that patched them
+    libelf = spack.spec.Spec.from_yaml(spec['libelf'].to_yaml())
+    libdwarf = spack.spec.Spec.from_yaml(spec['libdwarf'].to_yaml())
+    fake = spack.spec.Spec.from_yaml(spec['fake'].to_yaml())
+
+    # make sure we can still read patches correctly for these specs
+    check_multi_dependency_patch_specs(
+        libelf, libdwarf, fake,
+        'builtin.mock.patch-several-dependencies',
+        spec.package.package_dir)

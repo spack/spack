@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Catalyst(CMakePackage):
     homepage = 'http://www.paraview.org'
     url      = "http://www.paraview.org/files/v5.5/ParaView-v5.5.2.tar.gz"
     _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
-    _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz' 
+    _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
 
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
@@ -33,16 +33,29 @@ class Catalyst(CMakePackage):
     variant('python', default=False, description='Enable Python support')
     variant('essentials', default=False, description='Enable Essentials support')
     variant('extras', default=False, description='Enable Extras support')
-    variant('rendering', default=False, description='Enable Vtk Rendering support')
+    variant('rendering', default=False, description='Enable VTK Rendering support')
+    variant('osmesa', default=True, description='Use offscreen rendering')
 
-    depends_on('git')
+    depends_on('git', type='build')
     depends_on('mpi')
     depends_on('python@2:2.8', when='+python', type=("build", "link", "run"))
     depends_on('python', when='~python', type=("build"))
     depends_on('mesa', when='+rendering')
-    depends_on("libx11", when='+rendering')
-    depends_on("libxt", when='+rendering')
+    depends_on('libx11', when='+rendering')
+    depends_on('libxt', when='+rendering')
     depends_on('cmake@3.3:', type='build')
+
+    @when('@5.5.0:5.5.2')
+    def patch(self):
+        """Apply the patch (it should be fixed in Paraview 5.6)
+        at the package dir to the source code in
+        root_cmakelists_dir."""
+        patch_name = 'vtkm-catalyst-pv551.patch'
+        patch = which("patch", required=True)
+        with working_dir(self.root_cmakelists_dir):
+            patch('-s', '-p', '1', '-i',
+                  join_path(self.package_dir, patch_name),
+                  "-d", '.')
 
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
@@ -53,6 +66,30 @@ class Catalyst(CMakePackage):
         else:
             return self._urlfmt_xz.format(version.up_to(2), version, '')
 
+    @property
+    def paraview_subdir(self):
+        """The paraview subdirectory name as paraview-major.minor"""
+        return 'paraview-{0}'.format(self.spec.version.up_to(2))
+
+    @property
+    def editions(self):
+        """Transcribe spack variants into names of Catalyst Editions"""
+        selected = ['Base']  # Always required
+
+        if '+python' in self.spec:
+            selected.append('Enable-Python')
+
+        if '+essentials' in self.spec:
+            selected.append('Essentials')
+
+        if '+extras' in self.spec:
+            selected.append('Extras')
+
+        if '+rendering' in self.spec:
+            selected.append('Rendering-Base')
+
+        return selected
+
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball.
         Then, generate the catalyst source files."""
@@ -62,38 +99,15 @@ class Catalyst(CMakePackage):
         paraview_dir = os.path.join(self.stage.path,
                                     'ParaView-v' + str(self.version))
         catalyst_script = os.path.join(paraview_dir, 'Catalyst', 'catalyze.py')
+        editions_dir = os.path.join(paraview_dir, 'Catalyst', 'Editions')
         catalyst_source_dir = os.path.abspath(self.root_cmakelists_dir)
 
         command = ['python', catalyst_script,
-                   '-r', paraview_dir]
+                   '-r', paraview_dir,
+                   '-o', catalyst_source_dir]
 
-        catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
-                                        'Editions', 'Base')
-        command.append('-i')
-        command.append(catalyst_edition)
-        if '+python' in self.spec:
-            catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
-                                            'Editions', 'Enable-Python')
-            command.append('-i')
-            command.append(catalyst_edition)
-        if '+essentials' in self.spec:
-            catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
-                                            'Editions', 'Essentials')
-            command.append('-i')
-            command.append(catalyst_edition)
-        if '+extras' in self.spec:
-            catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
-                                            'Editions', 'Extras')
-            command.append('-i')
-            command.append(catalyst_edition)
-        if '+rendering' in self.spec:
-            catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
-                                            'Editions', 'Rendering-Base')
-            command.append('-i')
-            command.append(catalyst_edition)
-
-        command.append('-o')
-        command.append(catalyst_source_dir)
+        for edition in self.editions:
+            command.extend(['-i', os.path.join(editions_dir, edition)])
 
         if not os.path.isdir(catalyst_source_dir):
             os.mkdir(catalyst_source_dir)
@@ -104,15 +118,29 @@ class Catalyst(CMakePackage):
                                                     self.stage.path))
 
     def setup_environment(self, spack_env, run_env):
+        # paraview 5.5 and later
+        # - cmake under lib/cmake/paraview-5.5
+        # - libs  under lib
+        # - python bits under lib/python2.8/site-packages
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
-        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
-        run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
+
+        if self.spec.version <= Version('5.4.1'):
+            lib_dir = join_path(lib_dir, paraview_subdir)
+        run_env.set('ParaView_DIR', self.prefix)
+        run_env.prepend_path('LIBRARY_PATH', lib_dir)
+        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+
+        if '+python' in self.spec:
+            python_version = self.spec['python'].version.up_to(2)
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 'python{0}'.format(python_version),
+                                 'site-packages'))
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('ParaView_DIR', self.prefix)
 
     @property
     def root_cmakelists_dir(self):
@@ -136,8 +164,24 @@ class Catalyst(CMakePackage):
 
     def cmake_args(self):
         """Populate cmake arguments for Catalyst."""
+        spec = self.spec
+
+        def variant_bool(feature, on='ON', off='OFF'):
+            """Ternary for spec variant to ON/OFF string"""
+            if feature in spec:
+                return on
+            return off
+
+        def nvariant_bool(feature):
+            """Negated ternary for spec variant to OFF/ON string"""
+            return variant_bool(feature, on='OFF', off='ON')
+
         cmake_args = [
-            '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version)
+            '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version),
+            '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
+            '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
+            '-DVTK_USE_OFFSCREEN:BOOL=%s' % variant_bool('+osmesa'),
+            '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa')
         ]
         return cmake_args
 

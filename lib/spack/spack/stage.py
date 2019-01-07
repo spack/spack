@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,6 @@ import stat
 import sys
 import errno
 import hashlib
-import shutil
 import tempfile
 import getpass
 from six import string_types
@@ -16,7 +15,7 @@ from six import iteritems
 from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, can_access
+from llnl.util.filesystem import mkdirp, can_access, copy, copy_tree
 from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
 import spack.paths
@@ -406,7 +405,7 @@ class Stage(object):
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
-            except spack.fetch_strategy.NoCacheError as e:
+            except spack.fetch_strategy.NoCacheError:
                 # Don't bother reporting when something is not cached.
                 continue
             except spack.error.SpackError as e:
@@ -545,7 +544,13 @@ class ResourceStage(Stage):
                          '{stage}\n\tdestination : {destination}'.format(
                              stage=source_path, destination=destination_path
                          ))
-                shutil.move(os.path.realpath(source_path), destination_path)
+
+                src = os.path.realpath(source_path)
+
+                if os.path.isdir(src):
+                    copy_tree(src, destination_path)
+                else:
+                    copy(src, destination_path)
 
 
 @pattern.composite(method_list=[

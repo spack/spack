@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,18 +21,25 @@ class Libxml2(AutotoolsPackage):
 
     variant('python', default=False, description='Enable Python support')
 
-    extends('python', when='+python',
-            ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
-            '(lib/xml2.*$)|(lib/cmake.*$)')
+    depends_on('pkgconfig@0.9.0:', type='build')
+    depends_on('libiconv')
     depends_on('zlib')
     depends_on('xz')
 
-    depends_on('pkgconfig', type='build')
+    depends_on('python+shared', when='+python')
+    extends('python', when='+python',
+            ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
+            '(lib/xml2.*$)|(lib/cmake.*$)')
+
+    # XML Conformance Test Suites
+    # See http://www.w3.org/XML/Test/ for information
+    resource(name='xmlts', url='http://www.w3.org/XML/Test/xmlts20080827.tar.gz',
+             sha256='96151685cec997e1f9f3387e3626d61e6284d4d6e66e0e440c209286c03e9cc7')
 
     def configure_args(self):
         spec = self.spec
 
-        args = ["--with-lzma=%s" % spec['xz'].prefix]
+        args = ['--with-lzma={0}'.format(spec['xz'].prefix)]
 
         if '+python' in spec:
             args.extend([
@@ -47,3 +54,10 @@ class Libxml2(AutotoolsPackage):
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path('CPATH', self.prefix.include.libxml2)
         run_env.prepend_path('CPATH', self.prefix.include.libxml2)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def import_module_test(self):
+        if '+python' in self.spec:
+            with working_dir('spack-test', create=True):
+                python('-c', 'import libxml2')

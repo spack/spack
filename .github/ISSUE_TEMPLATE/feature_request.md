@@ -1,6 +1,7 @@
 ---
 name: Feature request 
 about: Suggest adding a feature that is not yet in Spack  
+labels: feature
 
 ---
 

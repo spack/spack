@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,10 @@ def interface():
         counter = 0
 
         def add(self):
-            raise NotImplemented('add not implemented')
+            raise NotImplementedError('add not implemented')
 
         def subtract(self):
-            raise NotImplemented('subtract not implemented')
+            raise NotImplementedError('subtract not implemented')
 
     return Base
 
