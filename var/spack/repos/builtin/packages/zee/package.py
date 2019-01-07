@@ -53,18 +53,6 @@ class Zee(CMakePackage):
     depends_on('omega-h+trilinos')
     depends_on('petsc +int64', when='+petsc')
 
-    # todo : temporary fix to be able to use external omega-h
-    depends_on('blas')
-    depends_on('hdf5+mpi')
-    depends_on('hypre+int64~internal-superlu')
-    depends_on('lapack')
-    depends_on('metis+int64')
-    depends_on('parmetis')
-    depends_on('lapack')
-    depends_on('superlu-dist+int64')
-    depends_on('trilinos +kokkos +teuchos')
-    depends_on('zlib')
-
     def _bob_options(self):
         cmake_var_prefix = self.name.capitalize() + '_CXX_'
         for variant in ['optimize', 'symbols', 'warnings']:
