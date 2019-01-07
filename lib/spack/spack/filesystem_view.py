@@ -21,10 +21,11 @@ import spack.util.spack_yaml as s_yaml
 import spack.spec
 import spack.store
 import spack.schema.projections
+import spack.config
 from spack.error import SpackError
 from spack.directory_layout import ExtensionAlreadyInstalledError
 from spack.directory_layout import YamlViewExtensionsLayout
-from spack.config import validate
+
 
 # compatability
 if sys.version_info < (3, 0):
@@ -192,7 +193,8 @@ class YamlFilesystemView(FilesystemView):
                 # Read projections file from view
                 with open(projections_path, 'r') as f:
                     projections_data = s_yaml.load(f)
-                    validate(projections_data, spack.schema.projections.schema)
+                    spack.config.validate(projections_data,
+                                          spack.schema.projections.schema)
                     self.projections = projections_data['projections']
             else:
                 # Write projections file to new view
