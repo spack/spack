@@ -61,7 +61,7 @@ class Mgis(CMakePackage):
             if '+' + i + '_bindings' in self.spec:
                 args.append("-Denable-{0}-bindings=ON".format(i))
             else:
-                args.append("-Denable-{0}-bindings=ON".format(i))
+                args.append("-Denable-{0}-bindings=OFF".format(i))
 
         if '+python_bindings' in self.spec:
             # adding path to python
