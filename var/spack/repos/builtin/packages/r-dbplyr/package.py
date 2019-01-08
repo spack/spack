@@ -22,7 +22,7 @@ class RDbplyr(RPackage):
     version('1.2.0', sha256='02a5fa8dcf8a81c061fdaefa74f17896bee913720418b44dbd226a0d6b30799d')
     version('1.1.0', sha256='7b1e456a2d1056fa6284582cd82d2df66d06b3eea92e9995f5a91a45f246f69d')
 
-    depends_on('r@3.2:')
+    depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-assertthat@0.2.0:', type=('build', 'run'))
     depends_on('r-dbi@0.7:', type=('build', 'run'))
     depends_on('r-dplyr@0.7.4:', type=('build', 'run'))
