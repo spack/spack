@@ -179,6 +179,7 @@ class Ascent(Package):
                                     "examples",
                                     "ascent",
                                     "using-with-cmake")
+        print("Checking using-with-cmake example...")
         with working_dir("check-ascent-using-with-cmake-example",
                          create=True):
             cmake_args = ["-DASCENT_DIR={0}".format(install_prefix),
@@ -188,6 +189,19 @@ class Ascent(Package):
                           example_src_dir]
             cmake(*cmake_args)
             make()
+            example = Executable('./example')
+            example()
+        print("Checking using-with-make example...")
+        example_src_dir = join_path(install_prefix,
+                                    "examples",
+                                    "conduit",
+                                    "using-with-make")
+        example_files = glob.glob(join_path(example_src_dir, "*"))
+        with working_dir("check-ascent-using-with-make-example",
+                         create=True):
+            for example_file in example_files:
+                shutil.copy(example_file, ".")
+            make("ASCENT_DIR={0}".format(install_prefix))
             example = Executable('./example')
             example()
 

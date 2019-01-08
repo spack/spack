@@ -200,11 +200,11 @@ class Conduit(Package):
             make()
             example = Executable('./example')
             example()
+        print("Checking using-with-make example...")
         example_src_dir = join_path(install_prefix,
                                     "examples",
                                     "conduit",
                                     "using-with-make")
-        print("Checking using-with-make example...")
         example_files = glob.glob(join_path(example_src_dir, "*"))
         with working_dir("check-conduit-using-with-make-example",
                          create=True):
