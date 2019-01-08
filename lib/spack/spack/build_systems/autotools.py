@@ -359,9 +359,17 @@ class AutotoolsPackage(PackageBase):
             options = [(name, condition in spec)]
         else:
             condition = '{name}={value}'
+            # "feature_values" is used to track values which correspond to
+            # features which can be enabled or disabled as understood by the
+            # package's build system. It excludes values which have special
+            # meanings and do not correspond to features (e.g. "none")
+            feature_values = getattr(
+                self.variants[name].values, 'feature_values', None
+            ) or self.variants[name].values
+
             options = [
                 (value, condition.format(name=name, value=value) in spec)
-                for value in self.variants[name].values
+                for value in feature_values
             ]
 
         # For each allowed value in the list of values

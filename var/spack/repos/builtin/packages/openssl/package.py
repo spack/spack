@@ -112,7 +112,9 @@ class Openssl(Package):
             # CentOS, Fedora, RHEL
             '/etc/pki/tls',
             # Ubuntu
-            '/usr/lib/ssl'
+            '/usr/lib/ssl',
+            # OpenSUSE
+            '/etc/ssl'
         ]
 
         pkg_dir = join_path(self.prefix, 'etc', 'openssl')
