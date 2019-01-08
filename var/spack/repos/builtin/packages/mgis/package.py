@@ -30,27 +30,21 @@ class Mgis(CMakePackage):
     version('1.0', sha256='279c98da00fa6855edf29c2b8f8bad6e7732298dc62ef67d028d6bbeaac043b3')
 
     # variants
-
-    variant('c_bindings', default=True,
+    variant('c', default=True,
             description='Enables c bindings')
-    variant('fortran_bindings', default=True,
+    variant('fortran', default=True,
             description='Enables fortran bindings')
-    variant('python_bindings', default=True,
+    variant('python', default=True,
             description='Enables python bindings')
-
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
 
     # dependencies
-
     depends_on('tfel@3.2.0', when="@1.0")
     depends_on('tfel@rliv-3.2', when="@rliv-3.2")
     depends_on('tfel@master', when="@master")
-
-    depends_on('python', when='+python_bindings')
-    depends_on('boost+python', when='+python_bindings')
-
+    depends_on('boost+python', when='+python')
     extends('python', when='+python')
 
     def cmake_args(self):
@@ -58,12 +52,12 @@ class Mgis(CMakePackage):
         args = []
 
         for i in ['c', 'fortran', 'python']:
-            if '+' + i + '_bindings' in self.spec:
+            if '+' + i + in self.spec:
                 args.append("-Denable-{0}-bindings=ON".format(i))
             else:
                 args.append("-Denable-{0}-bindings=OFF".format(i))
 
-        if '+python_bindings' in self.spec:
+        if '+python' in self.spec:
             # adding path to python
             python = self.spec['python']
             args.append('-DPYTHON_LIBRARY={0}'.
