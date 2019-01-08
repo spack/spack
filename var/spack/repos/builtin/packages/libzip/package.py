@@ -15,4 +15,4 @@ class Libzip(AutotoolsPackage):
 
     version('1.2.0', '5c3372ab3a7897295bfefb27f745cf69')
 
-    depends_on('zlib')
+    depends_on('zlib@1.1.2:')
