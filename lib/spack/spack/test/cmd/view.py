@@ -87,8 +87,8 @@ def test_view_multiple_projections_all_first(
 
     viewpath = str(tmpdir.mkdir('view'))
     view_projection = s_yaml.syaml_dict(
-         [('all', '${PACKAGE}-${VERSION}'),
-          ('extendee', '${PACKAGE}-${COMPILERNAME}')]
+        [('all', '${PACKAGE}-${VERSION}'),
+         ('extendee', '${PACKAGE}-${COMPILERNAME}')]
     )
 
     projection_file = create_projection_file(tmpdir, view_projection)
