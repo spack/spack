@@ -468,7 +468,7 @@ copy_user_configuration() {
     done
     echo "export MODULEPATH" >> ${target}/modules.sh
 
-    cat << EOF >> "${target}/config.yaml"
+    cat << EOF > "${target}/config.yaml"
 config:
   install_tree: \$INSTALL_PATH/install
   source_cache: \$INSTALL_PATH/.cache
