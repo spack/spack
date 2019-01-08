@@ -34,7 +34,6 @@ modules:
       - neuron
       - 'python-dev'
       - 'python%gcc'
-      - spark
     blacklist:
       - '%gcc'
       - '%intel'
