@@ -13,7 +13,7 @@ class Kallisto(CMakePackage):
     homepage = "http://pachterlab.github.io/kallisto"
     url      = "https://github.com/pachterlab/kallisto/archive/v0.43.1.tar.gz"
 
-    version('0.43.1', '54fc9b70ca44e4633f02c962cbc59737')
+    version('0.43.1', '071e6bfb62be06fd76552298d4cf8144')
 
     depends_on('zlib')
     depends_on('hdf5')

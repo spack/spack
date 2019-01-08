@@ -12,7 +12,7 @@ class Nektar(CMakePackage):
     homepage = "https://www.nektar.info/"
     url      = "https://gitlab.nektar.info/nektar/nektar/-/archive/v4.4.1/nektar-v4.4.1.tar.bz2"
 
-    version('4.4.1', '1be7d061c3cafd9a0f1eb8d281d99b89')
+    version('4.4.1', sha256='9faebae290b28cb1fe083627b9cd078c20a9045ac9ec98ed6c60adc876ed2dcd')
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('fftw', default=True, description='Builds with fftw support')
@@ -21,6 +21,7 @@ class Nektar(CMakePackage):
     variant('scotch', default=False,
             description='Builds with scotch partitioning support')
 
+    depends_on('cmake@:3.9.99', type='build')
     depends_on('cmake@2.8.8:', type='build', when="~hdf5")
     depends_on('cmake@3.2:', type='build', when="+hdf5")
 
@@ -41,6 +42,10 @@ class Nektar(CMakePackage):
     conflicts("+hdf5", when="~mpi",
               msg="Nektar's hdf5 output is for parallel builds only")
 
+    # Add '-pthread' flag for solvers and NekMesh
+    patch('CMakeLists_solvers.patch')
+    patch('CMakeLists_NekMesh.patch')
+
     def cmake_args(self):
         args = []
 
@@ -53,4 +58,6 @@ class Nektar(CMakePackage):
         args.append('-DNEKTAR_USE_HDF5=%s' % hasfeature('+hdf5'))
         args.append('-DNEKTAR_USE_SCOTCH=%s' % hasfeature('+scotch'))
         args.append('-DNEKTAR_USE_PETSC=OFF')
+        args.append('-DNEKTAR_BUILD_TESTS=OFF')
+        args.append('-DNEKTAR_BUILD_UNIT_TESTS=OFF')
         return args

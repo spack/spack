@@ -34,6 +34,8 @@ class Warpx(MakefilePackage):
     variant('tprof', default=False, description='Enable tiny profiling features')
     variant('openmp', default=True, description='Enable OpenMP features')
 
+    depends_on('fftw@3:', when='+psatd')
+
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
              tag='development',

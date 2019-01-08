@@ -25,6 +25,11 @@ class Git(AutotoolsPackage):
 
     releases = [
         {
+            'version': '2.20.1',
+            'sha256': 'edc3bc1495b69179ba4e272e97eff93334a20decb1d8db6ec3c19c16417738fd',
+            'sha256_manpages': 'e9c123463abd05e142defe44a8060ce6e9853dfd8c83b2542e38b7deac4e6d4c'
+        },
+        {
             'version': '2.19.2',
             'sha256': 'db893ad69c9ac9498b09677c5839787eba2eb3b7ef2bc30bfba7e62e77cf7850',
             'sha256_manpages': '60334ecd59ee10319af4a7815174d10991d1afabacd3b3129d589f038bf25542'

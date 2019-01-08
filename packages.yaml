@@ -15,54 +15,47 @@
 # -------------------------------------------------------------------------
 packages:
     all:
-        compiler: [gcc@5, intel@18, pgi@18]
-        providers:
-            mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
-            blas: [openblas, intel-parallel-studio+mkl]
-            lapack: [openblas, intel-parallel-studio+mkl]
-            scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
-
+      compiler: [gcc, intel, pgi]
+      providers:
+        mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
+        blas: [openblas, intel-parallel-studio+mkl]
+        lapack: [openblas, intel-parallel-studio+mkl]
+        scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
+    autoconf:
+      paths:
+        autoconf@2.69 arch=linux-centos7-x86_64: /usr
+      buildable: False
+    automake:
+      paths:
+        automake@1.13.4 arch=linux-centos7-x86_64: /usr
+      buildable: False
+    bison:
+      paths:
+        bison@3.0 arch=linux-centos7-x86_64: /usr
+        bison@2.7 arch=linux-centos7-x86_64: /usr
+      buildable: False
+    # cmake:
+    #   paths:
+    #     cmake@2.8.12.2 arch=linux-centos7-x86_64: /usr
+    flex:
+      paths:
+        flex@2.5.37 arch=linux-centos7-x86_64: /usr
+        buildable: False
+    libtool:
+      paths:
+        libtool@2.4.2 arch=linux-centos7-x86_64: /usr
+      buildable: False
+    m4:
+      paths:
+        m4@1.4.16 arch=linux-centos7-x86_64: /usr
+      buildable: False 
     intel-parallel-studio:
         paths:
             intel-parallel-studio@cluster.2016.4%intel@16.0.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-ybjjq75tqpzgzjc4drolyijzm45g5qul
             intel-parallel-studio@cluster.2017.5%intel@17.0.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.5/intel-parallel-studio-cluster.2017.5-h4hjkh276hoh7gcbkvhfqep3oadt6nck
+            intel-parallel-studio@cluster.2017.7%intel@17.0.7+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.7/intel-parallel-studio-cluster.2017.7-4vcranl6mvpuo5rhk3txwn5dhob2ojo7
             intel-parallel-studio@cluster.2018.1%intel@18.0.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-18.0.1/intel-parallel-studio-cluster.2018.1-krilumgdhss3rpqeb5o57ulnuhmviemo
-        buildable: False
-
-    jdk:
-        paths:
-            jdk@8u172-b11%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u172-b11-jnny6yttnv5y5xgsodme7yrxtbp2kyjd
-        version: [8u172-b11]
-        buildable: False
-
-    maven:
-        paths:
-            maven@3.3.9%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/maven-3.3.9-bnsvietjqet55lo52rzer7r7hjwro2zv
-        version: [3.3.9]
-        buildable: False
-
-    ant:
-        paths:
-            ant@1.9.9%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/ant-1.9.9-7jolpjhprmob5m3wdf6pj45ht7cqziak
-        version: [1.9.9]
-        buildable: False
-
-    gradle:
-        paths:
-            gradle@3.4%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gradle-3.4-copoejihyf44gktvfkzsk5mm3gft5kqa
-        version: [3.4]
-        buildable: False
-
-    sbt:
-        paths:
-            sbt@0.13.12%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/sbt-0.13.12-ewx65eg66cfrf3eefluesev2krvwyaqc
-        version: [0.13.12]
-        buildable: False
-
-    bazel:
-        paths:
-            bazel@0.11.1%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/bazel-0.11.1-dwl7e7sieiz7tkfoppqv42hgtt3wrlq3
-        version: [0.11.1]
+            intel-parallel-studio@cluster.2018.3%intel@18.0.3+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune: /lustre/spack/tools/linux-centos7-x86_64/intel-18.0.3/intel-parallel-studio-cluster.2018.3-3hmyb4zopofdmd5zachrixo3xdauwtvi
         buildable: False
 
     pgi:
@@ -84,13 +77,12 @@ packages:
             gcc@6.4.0%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.4.0-z3457r46gt7ctihyd6ejkz4asud4i47r
         buildable: False
 
+    jdk:
+        paths:
+            jdk@1.8.0_172-b11%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-1.8.0_172-b11-ungbhvkynaxhb326mhl54dlzrb6sadlf
+            jdk@1.8.0_181-b13%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-1.8.0_181-b13-o2xanegcli5b7oufe5hipg2ulpe5x76y
+
     slurm:
         paths:
             slurm@system: /usr
         buildable: False
-
-    opengl:
-        paths:
-            opengl@4.5.0: /usr
-        buildable: False
-

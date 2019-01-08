@@ -1,0 +1,30 @@
+--- /utilities/NekMesh/CMakeLists.txt	2017-10-13 04:17:24.000000000 +0800
++++ /utilities/NekMesh/CMakeLists_NekMesh.txt	2018-09-04 01:03:02.000000000 +0800
+@@ -110,6 +110,27 @@
+     ENDIF ()
+ ENDIF (NEKTAR_USE_VTK)
+ 
++IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
++    # The boost thread library needs pthread on linux.
++    GET_TARGET_PROPERTY(THE_COMPILE_FLAGS NekMesh COMPILE_FLAGS)
++    GET_TARGET_PROPERTY(THE_LINK_FLAGS NekMesh LINK_FLAGS)
++
++    # It is possible these flags have not been set yet.
++    IF(NOT THE_COMPILE_FLAGS)
++        SET(THE_COMPILE_FLAGS "")
++    ENDIF(NOT THE_COMPILE_FLAGS)
++
++    IF(NOT THE_LINK_FLAGS )
++      SET(THE_LINK_FLAGS "")
++    ENDIF(NOT THE_LINK_FLAGS)
++
++    SET_TARGET_PROPERTIES(NekMesh 
++            PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -pthread")
++    SET_TARGET_PROPERTIES(NekMesh 
++            PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} -pthread")
++
++ENDIF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
++
+ # Nektar++
+ ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
+ ADD_NEKTAR_TEST        (Nektar++/InvalidQuads)

@@ -77,7 +77,7 @@ function spack {
                 _sp_arg="$1"
                 shift
             fi
-            if [ "$_sp_arg" = "-h" ]; then
+            if [[ "$_sp_arg" = "-h" || "$_sp_arg" = "--help" ]]; then
                 command spack cd -h
             else
                 LOC="$(spack location $_sp_arg "$@")"
@@ -96,7 +96,7 @@ function spack {
                 shift
             fi
 
-            if [ "$_sp_arg" = "-h" ]; then
+            if [[ "$_sp_arg" = "-h" || "$_sp_arg" = "--help" ]]; then
                 command spack env -h
             else
                 case $_sp_arg in

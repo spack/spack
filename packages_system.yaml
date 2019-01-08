@@ -12,17 +12,63 @@
 #
 # Per-user settings (overrides default and site settings):
 #   ~/.spack/packages.yaml
-# -------------------------------------------------------------------------
 packages:
-  all:
-    compiler: [gcc@5, intel@18, pgi@18]
-
-  vim:
-    variants: +lua +perl +python +ruby +huge
-
-  pgi:
-    variants: +single +mpi +nvidia
-
-  intel-parallel-studio:
-    variants: +ipp +mkl +mpi +openmp
-    version: [cluster]
+    all:
+      compiler: [gcc, intel, pgi]
+      providers:
+        mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
+        blas: [openblas, intel-parallel-studio+mkl]
+        lapack: [openblas, intel-parallel-studio+mkl]
+        scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
+      variants: ~mpi +openmp
+    vim:
+      variants: +lua +perl +python +ruby +huge
+    pgi:
+      variants: +single +mpi +nvidia
+    intel-parallel-studio:
+      variants: +ipp +mkl +mpi +openmp
+      version: [cluster]
+    autoconf:
+      paths:
+        autoconf@2.69 arch=linux-centos7-x86_64: /usr
+      buildable: False
+    automake:
+      paths:
+        automake@1.13.4 arch=linux-centos7-x86_64: /usr
+      buildable: False
+    bison:
+      paths:
+        bison@3.0 arch=linux-centos7-x86_64: /usr
+        bison@2.7 arch=linux-centos7-x86_64: /usr
+      buildable: False
+    # cmake:
+    #   paths:
+    #     cmake@2.8.12.2 arch=linux-centos7-x86_64: /usr
+    flex:
+      paths:
+        flex@2.5.37 arch=linux-centos7-x86_64: /usr
+        buildable: False
+    libtool:
+      paths:
+        libtool@2.4.2 arch=linux-centos7-x86_64: /usr
+      buildable: False
+    m4:
+      paths:
+        m4@1.4.16 arch=linux-centos7-x86_64: /usr
+      buildable: False 
+    pkgconfig:
+      paths:
+        pkgconfig@0.27.1 arch=linux-centos7-x86_64: /usr
+      buildable: False 
+    pkgconfig:
+      paths:
+        pkgconfig@0.27.1 arch=linux-centos7-x86_64: /usr
+      buildable: False 
+    binutils:
+      paths:
+        binutils@2.25.1 arch=linux-centos7-x86_64: /usr
+      buildable: False 
+    slurm:
+        paths:
+            slurm@system: /usr
+        buildable: False

@@ -28,7 +28,7 @@ def setup_parser(subparser):
 
 
 def remove(parser, args):
-    env = ev.get_env(args, 'remove')
+    env = ev.get_env(args, 'remove', required=True)
 
     if args.all:
         env.clear()

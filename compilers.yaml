@@ -84,11 +84,37 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.7-nhjuxqylmru7om2j64c4jcahxt4m72r2/bin/icc                                                                              
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.7-nhjuxqylmru7om2j64c4jcahxt4m72r2/bin/icpc
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.7-nhjuxqylmru7om2j64c4jcahxt4m72r2/bin/ifort
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.7-nhjuxqylmru7om2j64c4jcahxt4m72r2/bin/ifort
+    spec: intel@17.0.7
+    target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: centos7
+    paths:
       cc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.1-i3dng6yvf5oi7m2ccqockkaol23f72z7/bin/icc
       cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.1-i3dng6yvf5oi7m2ccqockkaol23f72z7/bin/icpc
       f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.1-i3dng6yvf5oi7m2ccqockkaol23f72z7/bin/ifort
       fc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.1-i3dng6yvf5oi7m2ccqockkaol23f72z7/bin/ifort
     spec: intel@18.0.1
+    target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: centos7
+    paths:
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.3-6fziox47nenbq7iugdvjlenj5keyp2qc/bin/icc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.3-6fziox47nenbq7iugdvjlenj5keyp2qc/bin/icpc
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.3-6fziox47nenbq7iugdvjlenj5keyp2qc/bin/ifort
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.3-6fziox47nenbq7iugdvjlenj5keyp2qc/bin/ifort
+    spec: intel@18.0.3
     target: x86_64
 - compiler:
     environment: {}

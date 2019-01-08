@@ -22,7 +22,7 @@ def setup_parser(subparser):
 
 
 def add(parser, args):
-    env = ev.get_env(args, 'add')
+    env = ev.get_env(args, 'add', required=True)
 
     for spec in spack.cmd.parse_specs(args.specs):
         if not env.add(spec):

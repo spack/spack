@@ -8,23 +8,20 @@ from spack import *
 
 
 class DocbookXsl(Package):
-    """Docbook XSL vocabulary."""
-    homepage = "http://docbook.sourceforge.net/"
-    url = "https://downloads.sourceforge.net/project/docbook/docbook-xsl/1.79.1/docbook-xsl-1.79.1.tar.bz2"
+    """DocBook XSLT 1.0 Stylesheets."""
 
-    version('1.79.1', 'b48cbf929a2ad85e6672f710777ca7bc')
+    homepage = "https://github.com/docbook/xslt10-stylesheets"
+    url      = "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-1.79.2.tar.bz2"
+
+    version('1.79.2', sha256='316524ea444e53208a2fb90eeb676af755da96e1417835ba5f5eb719c81fa371')
 
     depends_on('docbook-xml')
 
+    patch('docbook-xsl-1.79.2-stack_fix-1.patch', when='@1.79.2')
+
     def install(self, spec, prefix):
-        for item in os.listdir('.'):
-            src = os.path.abspath(item)
-            dst = os.path.join(prefix, item)
-            if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
-            else:
-                install(src, dst)
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
-        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
+        catalog = os.path.join(self.prefix, 'catalog.xml')
         run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
