@@ -52,7 +52,7 @@ class Mgis(CMakePackage):
         args = []
 
         for i in ['c', 'fortran', 'python']:
-            if '+' + i + in self.spec:
+            if '+' + i  in self.spec:
                 args.append("-Denable-{0}-bindings=ON".format(i))
             else:
                 args.append("-Denable-{0}-bindings=OFF".format(i))
