@@ -123,6 +123,13 @@ echo $PATH"""
         # test overwrite install
         args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
         # create build cache with relative path and signing
         args = parser.parse_args(
@@ -140,6 +147,13 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+
     else:
         # create build cache without signing
         args = parser.parse_args(
@@ -152,6 +166,13 @@ echo $PATH"""
         # install build cache without verification
         args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
+
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
         # test overwrite install without verification
         args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
@@ -172,6 +193,13 @@ echo $PATH"""
         # test overwrite install
         args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
+
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
@@ -205,6 +233,7 @@ echo $PATH"""
 
     # Remove cached binary specs since we deleted the mirror
     bindist._cached_specs = None
+    assert False
 
 
 def test_relocate_text(tmpdir):

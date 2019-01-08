@@ -436,9 +436,10 @@ def make_link_placeholder(cur_path_names, cur_dir, old_dir):
     for cur_path in cur_path_names:
         # realpath is safe, previously ensured absolute
         placeholder = set_placeholder(spack.store.layout.root)
-        placeholder_prefix = old_dir.replace(spack.store.layout.root, placeholder)
+        placeholder_prefix = old_dir.replace(spack.store.layout.root,
+                                             placeholder)
         cur_src = os.path.realpath(cur_path)
-        suffix = cur_path[len(cur_dir):]
+        suffix = cur_src[len(cur_dir):]
         new_src = placeholder_prefix + suffix
 
         os.unlink(cur_path)
