@@ -12,7 +12,8 @@ class Mgis(CMakePackage):
     functions for various solvers to interact with behaviour written
     using MFront generic interface.
 
-    MGIS is written in C++. Bindings are provided for C and fortran.
+    MGIS is written in C++.
+    Bindings are provided for C and fortran (2003).
     A FEniCS binding is also available.
     """
 
