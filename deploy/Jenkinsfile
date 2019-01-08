@@ -84,6 +84,10 @@ pipeline {
         TMPDIR = "/dev/shm/jenkins"
     }
 
+    triggers {
+        cron('H H(0-7) * * *')
+    }
+
     stages {
         stage('Setup') {
             when {
