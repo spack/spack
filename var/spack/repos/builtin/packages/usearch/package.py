@@ -29,4 +29,4 @@ class Usearch(Package):
         install('usearch{0}_i86linux32'.format(self.version),
                 prefix.bin.usearch)
         chmod = which('chmod')
-        chmod('+x', join_path(prefix.bin, 'usearch'))
+        chmod('+x', prefix.bin.usearch)
