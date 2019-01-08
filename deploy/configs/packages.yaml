@@ -35,6 +35,8 @@ packages:
         paths:
             gtkplus@2.24.31: /usr
         version: [2.24.31]
+    hadoop:
+        version: [2.9.0]
     hdf5:
         variants: +hl
     hpe-mpi:
