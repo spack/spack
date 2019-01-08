@@ -32,7 +32,7 @@ class RApe(RPackage):
     version('5.0', sha256='c32ed22e350b3d7c7ef3de9334155ab1f3086922b5ec9a1643897cae7abda960')
     version('4.1', sha256='935af5ddadcba832d3f9cc032a80fc1a2e627a7ed54ef5f3773f87e06374a924')
 
-    depends_on('r@3.2:')
+    depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
