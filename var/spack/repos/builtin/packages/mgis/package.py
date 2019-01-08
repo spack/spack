@@ -11,6 +11,9 @@ class Mgis(CMakePackage):
     The MFrontGenericInterfaceSupport project (MGIS) provides helper
     functions for various solvers to interact with behaviour written
     using MFront generic interface.
+
+    MGIS is written in C++. Bindings are provided for C and fortran.
+    A FEniCS binding is also available.
     """
 
     homepage = "https://thelfer.github.io/mgis/web/index.html"
