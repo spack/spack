@@ -233,7 +233,6 @@ echo $PATH"""
 
     # Remove cached binary specs since we deleted the mirror
     bindist._cached_specs = None
-    assert False
 
 
 def test_relocate_text(tmpdir):

@@ -136,9 +136,8 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  of files potentially needing relocation
             if os.path.islink(path_name):
                 link = os.readlink(path_name)
-                spack_prefix = spack.store.layout.root
                 if os.path.isabs(link):
-                    if link.startswith(prefix):
+                    if link.startswith(spack.store.layout.root):
                         rel_path_name = os.path.relpath(path_name, prefix)
                         link_to_relocate.append(rel_path_name)
                     else:
