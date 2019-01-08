@@ -59,7 +59,7 @@ class FilesystemView(object):
 
             Files are linked by method `link` (os.symlink by default).
         """
-        self.root = root
+        self._root = root
         self.layout = layout
 
         self.projections = kwargs.get('projections', {})
@@ -187,7 +187,7 @@ class YamlFilesystemView(FilesystemView):
 
         # Super class gets projections from the kwargs
         # YAML specific to get projections from YAML file
-        projections_path = os.path.join(self.root, _projections_path)
+        projections_path = os.path.join(self._root, _projections_path)
         if not self.projections:
             if os.path.exists(projections_path):
                 # Read projections file from view
@@ -209,14 +209,13 @@ class YamlFilesystemView(FilesystemView):
             with open(projections_path, 'w') as f:
                 f.write(s_yaml.dump({'projections': self.projections}))
         else:
-            msg = 'View at %s has projections file' % self.root
+            msg = 'View at %s has projections file' % self._root
             msg += ' and was passed projections manually.'
             raise ConflictingProjectionsError(msg)
 
-        self.extensions_layout = YamlViewExtensionsLayout(root, layout,
-                                                          self.projections)
+        self.extensions_layout = YamlViewExtensionsLayout(self, layout)
 
-        self._croot = colorize_root(self.root) + " "
+        self._croot = colorize_root(self._root) + " "
 
     def add_specs(self, *specs, **kwargs):
         assert all((s.concrete for s in specs))
@@ -254,20 +253,9 @@ class YamlFilesystemView(FilesystemView):
                      % colorize_spec(spec))
             return True
 
-        # Find the directory we should link into
-        extendee_spec = spec.package.extendee_spec
-        extension_root = extendee_spec.package.view_destination(self)
-
-        # Create a view for the link target if it differs from top level view
-        if extension_root != self.root:
-            extension_view = YamlFilesystemView(extension_root,
-                                                spack.store.layout)
-        else:
-            extension_view = self
-
-        if not spec.package.is_activated(extension_view):
+        if not spec.package.is_activated(self):
             spec.package.do_activate(
-                extension_view, verbose=self.verbose, with_dependencies=False)
+                self, verbose=self.verbose, with_dependencies=False)
 
         # make sure the meta folder is linked as well (this is not done by the
         # extension-activation mechnism)
@@ -430,22 +418,9 @@ class YamlFilesystemView(FilesystemView):
                      'Skipping package not linked in view: %s' % spec.name)
             return
 
-        # Find the directory we should unlink from
-        extendee_spec = spec.package.extendee_spec
-        extension_root = extendee_spec.package.view_destination(self)
-
-        # Create a view for the link target if it differs from top level view
-        if extension_root != self.root:
-            extension_view = YamlFilesystemView(extension_root,
-                                                spack.store.layout)
-        else:
-            extension_view = self
-
-        # The spec might have been deactivated as depdency of another package
-        # already
-        if spec.package.is_activated(extension_view):
+        if spec.package.is_activated(self):
             spec.package.do_deactivate(
-                extension_view,
+                self,
                 verbose=self.verbose,
                 remove_dependents=with_dependents)
         self.unlink_meta_folder(spec)
@@ -480,16 +455,16 @@ class YamlFilesystemView(FilesystemView):
         all_fmt_str = None
         for spec_like, fmt_str in self.projections.items():
             if locator_spec.satisfies(spec_like, strict=True):
-                return os.path.join(self.root, locator_spec.format(fmt_str))
+                return os.path.join(self._root, locator_spec.format(fmt_str))
             elif spec_like == 'all':
                 all_fmt_str = fmt_str
         if all_fmt_str:
-            return os.path.join(self.root, locator_spec.format(all_fmt_str))
-        return self.root
+            return os.path.join(self._root, locator_spec.format(all_fmt_str))
+        return self._root
 
     def get_all_specs(self):
         md_dirs = []
-        for root, dirs, files in os.walk(self.root):
+        for root, dirs, files in os.walk(self._root):
             if spack.store.layout.metadata_dir in dirs:
                 md_dirs.append(os.path.join(root,
                                             spack.store.layout.metadata_dir))
@@ -605,7 +580,7 @@ class YamlFilesystemView(FilesystemView):
             Ascend up from the leaves accessible from `path`
             and remove empty directories.
         """
-        for dirpath, subdirs, files in os.walk(self.root, topdown=False):
+        for dirpath, subdirs, files in os.walk(self._root, topdown=False):
             for sd in subdirs:
                 sdp = os.path.join(dirpath, sd)
                 try:

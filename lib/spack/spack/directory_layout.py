@@ -108,8 +108,8 @@ class ExtensionsLayout(object):
        directly in the installation folder - or extensions activated in
        filesystem views.
     """
-    def __init__(self, root, **kwargs):
-        self.root = root
+    def __init__(self, view, **kwargs):
+        self.view = view
 
     def add_extension(self, spec, ext_spec):
         """Add to the list of currently installed extensions."""
@@ -309,15 +309,13 @@ class YamlDirectoryLayout(DirectoryLayout):
 class YamlViewExtensionsLayout(ExtensionsLayout):
     """Maintain extensions within a view.
     """
-    def __init__(self, root, layout, projections={}):
+    def __init__(self, view, layout):
         """layout is the corresponding YamlDirectoryLayout object for which
            we implement extensions.
         """
-        super(YamlViewExtensionsLayout, self).__init__(root)
+        super(YamlViewExtensionsLayout, self).__init__(view)
         self.layout = layout
         self.extension_file_name = 'extensions.yaml'
-
-        self.projections = projections
 
         # Cache of already written/read extension maps.
         self._extension_maps = {}
@@ -356,20 +354,15 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
         _check_concrete(spec)
         normalize_path = lambda p: (
             os.path.abspath(p).rstrip(os.path.sep))
-        if normalize_path(spec.prefix) == normalize_path(self.root):
-            # For backwards compatibility, when the root is the extended
+
+        view_prefix = self.view.get_projection_for_spec(spec)
+        if normalize_path(spec.prefix) == normalize_path(view_prefix):
+            # For backwards compatibility, when the view is the extended
             # package's installation directory, do not include the spec name
             # as a subdirectory.
-            components = [self.root, self.layout.metadata_dir,
+            components = [view_prefix, self.layout.metadata_dir,
                           self.extension_file_name]
         else:
-            view_prefix = self.root
-            for spec_like, projection in self.projections.items():
-                if spec_like == 'all' or spec.satisfies(spec_like,
-                                                        strict=True):
-                    view_prefix = os.path.join(self.root,
-                                               spec.format(projection))
-                    break
             components = [view_prefix, self.layout.metadata_dir, spec.name,
                           self.extension_file_name]
 
