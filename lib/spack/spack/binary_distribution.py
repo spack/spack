@@ -145,8 +145,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
                         msg = 'Absolute link %s to %s ' % (path_name, link)
                         msg += 'outside of stage %s ' % prefix
                         msg += 'cannot be relocated.'
-                        msg += '\n\n prefix=%s \n workdir=%s \n spack_prefix=%s' % (prefix, workdir, spack_prefix)
-                        raise UnrelocatableLinkException(msg)
+                        tty.warn(msg)
             elif relocate.strings_contains_installroot(
                     path_name, spack.store.layout.root):
                 filetype = get_filetype(path_name)
