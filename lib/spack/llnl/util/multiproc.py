@@ -32,26 +32,6 @@ def defer(func):
     return _impl
 
 
-def invoke(f):
-    return f()
-
-
-def execute(command_list, map_fn=map, transformation=invoke):
-    """Execute a list of packaged commands and return their result.
-
-    Args:
-        command_list: list of commands to be executed
-        map_fn: object that execute each command. Must have the
-            same semantic as ``map``
-        transformation: callable invoked on each item to construct
-            the output list
-
-    Returns:
-        List of results
-    """
-    return map_fn(transformation, command_list)
-
-
 class Barrier:
     """Simple reusable semaphore barrier.
 

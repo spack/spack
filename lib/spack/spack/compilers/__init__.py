@@ -9,7 +9,6 @@ system and configuring Spack to use multiple compilers.
 import multiprocessing.pool
 import os
 
-import llnl.util.multiproc
 from llnl.util.lang import list_modules
 
 import spack.paths
@@ -196,7 +195,7 @@ def find_compilers(*paths):
         tags.extend(t), commands.extend(c)
 
     tp = multiprocessing.pool.ThreadPool()
-    compiler_versions = llnl.util.multiproc.execute(commands, tp.map)
+    compiler_versions = tp.map(lambda x: x(), commands)
     tp.close()
 
     return spack.compiler.make_compiler_list(tags, compiler_versions)
