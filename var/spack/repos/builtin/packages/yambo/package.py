@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,19 +26,13 @@ class Yambo(AutotoolsPackage):
 
     variant('dp', default=False, description='Enable double precision')
     variant(
-        'profile',
-        values=('time', 'memory'),
-        default='',
-        description='Activate profiling of specific sections',
-        multi=True
+        'profile', values=any_combination_of('time', 'memory'),
+        description='Activate profiling of specific sections'
     )
 
     variant(
-        'io',
-        values=('iotk', 'etsf-io'),
-        default='',
+        'io', values=any_combination_of('iotk', 'etsf-io'),
         description='Activate support for different io formats (requires network access)',  # noqa
-        multi=True
     )
 
     # MPI + OpenMP parallelism

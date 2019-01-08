@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,6 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 import copy
 import os
-import re
 import sys
 import multiprocessing
 from contextlib import contextmanager
@@ -49,6 +48,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.paths
 import spack.architecture
+import spack.schema
 import spack.schema.compilers
 import spack.schema.mirrors
 import spack.schema.repos
@@ -113,47 +113,6 @@ def first_existing(dictionary, keys):
         return next(k for k in keys if k in dictionary)
     except StopIteration:
         raise KeyError("None of %s is in dict!" % keys)
-
-
-def _extend_with_default(validator_class):
-    """Add support for the 'default' attr for properties and patternProperties.
-
-       jsonschema does not handle this out of the box -- it only
-       validates.  This allows us to set default values for configs
-       where certain fields are `None` b/c they're deleted or
-       commented out.
-
-    """
-    import jsonschema
-    validate_properties = validator_class.VALIDATORS["properties"]
-    validate_pattern_properties = validator_class.VALIDATORS[
-        "patternProperties"]
-
-    def set_defaults(validator, properties, instance, schema):
-        for property, subschema in iteritems(properties):
-            if "default" in subschema:
-                instance.setdefault(
-                    property, copy.deepcopy(subschema["default"]))
-        for err in validate_properties(
-                validator, properties, instance, schema):
-            yield err
-
-    def set_pp_defaults(validator, properties, instance, schema):
-        for property, subschema in iteritems(properties):
-            if "default" in subschema:
-                if isinstance(instance, dict):
-                    for key, val in iteritems(instance):
-                        if re.match(property, key) and val is None:
-                            instance[key] = copy.deepcopy(subschema["default"])
-
-        for err in validate_pattern_properties(
-                validator, properties, instance, schema):
-            yield err
-
-    return jsonschema.validators.extend(validator_class, {
-        "properties": set_defaults,
-        "patternProperties": set_pp_defaults
-    })
 
 
 class ConfigScope(object):
@@ -697,17 +656,10 @@ def _validate(data, schema, set_defaults=True):
 
     This leverages the line information (start_mark, end_mark) stored
     on Spack YAML structures.
-
     """
     import jsonschema
-
-    if not hasattr(_validate, 'validator'):
-        default_setting_validator = _extend_with_default(
-            jsonschema.Draft4Validator)
-        _validate.validator = default_setting_validator
-
     try:
-        _validate.validator(schema).validate(data)
+        spack.schema.Validator(schema).validate(data)
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 

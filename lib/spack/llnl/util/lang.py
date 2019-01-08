@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -561,6 +561,9 @@ class Singleton(object):
 
     def __contains__(self, element):
         return element in self.instance
+
+    def __call__(self, *args, **kwargs):
+        return self.instance(*args, **kwargs)
 
     def __iter__(self):
         return iter(self.instance)

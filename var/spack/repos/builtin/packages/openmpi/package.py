@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,6 @@
 
 import os
 import sys
-
-from spack import *
 
 
 def _verbs_dir():
@@ -180,20 +178,17 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
     fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
-
     variant(
-        'fabrics',
-        default=None if _verbs_dir() is None else 'verbs',
+        'fabrics', values=auto_or_any_combination_of(*fabrics).with_default(
+            'auto' if _verbs_dir() is None else 'verbs'
+        ),
         description="List of fabrics that are enabled",
-        values=fabrics,
-        multi=True
     )
 
+    schedulers = ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
     variant(
-        'schedulers',
-        description='List of schedulers for which support is enabled',
-        values=('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler'),
-        multi=True
+        'schedulers', values=auto_or_any_combination_of(*schedulers),
+        description='List of schedulers for which support is enabled'
     )
 
     # Additional support options

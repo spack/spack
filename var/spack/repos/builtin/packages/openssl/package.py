@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -112,7 +112,9 @@ class Openssl(Package):
             # CentOS, Fedora, RHEL
             '/etc/pki/tls',
             # Ubuntu
-            '/usr/lib/ssl'
+            '/usr/lib/ssl',
+            # OpenSUSE
+            '/etc/ssl'
         ]
 
         pkg_dir = join_path(self.prefix, 'etc', 'openssl')

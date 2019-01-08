@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,8 @@ class Trilinos(CMakePackage):
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
-    version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
+    version('12.14.0-rc1', commit='dbf41f3b26b0326a1377f219e6e07eab861d181e')  # branch trilinos-release-12-14-branch
+    version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7', preferred=True)
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '9f37f683ee2b427b5540db8a20ed6b15')
     version('12.6.4', 'e11fff717d0e4565779f75a47feecbb2')
@@ -175,7 +176,7 @@ class Trilinos(CMakePackage):
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit.git',
-             tag='master',
+             commit='4fe4d9d56cfd4f8a61f392b81d8efd0e389ee764',  # branch dtk-3.0
              placement='DataTransferKit',
              when='+dtk')
     resource(name='fortrilinos',
@@ -236,6 +237,8 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~kokkos')
     conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
+    # Only allow DTK-3.0 with Trilinos 12.14
+    conflicts('+dtk', when='@0:12.12.99,12.16.0:99,master,develop')
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
     conflicts('+fortrilinos', when='@master')
@@ -443,7 +446,6 @@ class Trilinos(CMakePackage):
         if '+dtk' in spec:
             options.extend([
                 '-DTrilinos_EXTRA_REPOSITORIES:STRING=DataTransferKit',
-                '-DTpetra_INST_INT_UNSIGNED_LONG:BOOL=ON',
                 '-DTrilinos_ENABLE_DataTransferKit:BOOL=ON'
             ])
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -171,7 +171,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             "${COMPILERNAME}-${COMPILERVER}/"
             "${PACKAGE}-${VERSION}-${HASH}")
         if self.hash_len is not None:
-            if re.search('\${HASH:\d+}', self.path_scheme):
+            if re.search(r'\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
                     "Conflicting options for installation layout hash length")
             self.path_scheme = self.path_scheme.replace(

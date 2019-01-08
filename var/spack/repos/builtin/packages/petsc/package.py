@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.3', 'cd106babbae091604fee40c258737c84dec048949be779eaef5a745df3dc8de4')
     version('3.10.2', '63ed950653ae9b8d19daea47e24c0338')
     version('3.10.1', '2d0d5a9bd8112a4147a2a23f7f62a906')
     version('3.10.0', '0240c2ce8c54e47b3531a743ee844d41')
@@ -137,8 +138,10 @@ class Petsc(Package):
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.9.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.2+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.10.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.10.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -256,6 +259,8 @@ class Petsc(Package):
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
         if 'superlu-dist' in spec:
+            if spec.satisfies('@3.10.3:'):
+                options.append('--with-cxx-dialect=C++11')
             options.extend([
                 '--with-superlu_dist-include=%s' %
                 spec['superlu-dist'].prefix.include,
