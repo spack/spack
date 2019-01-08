@@ -272,6 +272,7 @@ def install(parser, args, **kwargs):
             tty.warn(msg.format(file))
             continue
 
+        abstract_specs.append(s)
         specs.append(s.concretized())
 
     if len(specs) == 0:
