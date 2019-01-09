@@ -123,12 +123,12 @@ echo $PATH"""
         # test overwrite install
         args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
+
         files = os.listdir(spec.prefix)
         assert 'link_to_dummy.txt' in files
         assert 'dummy.txt' in files
         assert os.path.realpath(
             os.path.join(spec.prefix, 'link_to_dummy.txt')
-
         ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
         # create build cache with relative path and signing
@@ -152,7 +152,6 @@ echo $PATH"""
         assert 'dummy.txt' in files
         assert os.path.realpath(
             os.path.join(spec.prefix, 'link_to_dummy.txt')
-
         ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
     else:
@@ -173,7 +172,6 @@ echo $PATH"""
         assert 'dummy.txt' in files
         assert os.path.realpath(
             os.path.join(spec.prefix, 'link_to_dummy.txt')
-
         ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
         # test overwrite install without verification
@@ -201,7 +199,6 @@ echo $PATH"""
         assert 'dummy.txt' in files
         assert os.path.realpath(
             os.path.join(spec.prefix, 'link_to_dummy.txt')
-
         ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
     # Validate the relocation information
