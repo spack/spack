@@ -85,13 +85,6 @@ class Qmcpack(CMakePackage):
         msg='QMCPACK does not support MKL 64-bit integer variant'
     )
 
-    # CUDA conflicts taken from here
-    # https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
-    cuda_warning = 'CUDA is not supported by this version of your compiler'
-    conflicts('%gcc@8:', when='+cuda', msg=cuda_warning)
-    conflicts('%llvm@7:', when='+cuda', msg=cuda_warning)
-    conflicts('%intel@19:', when='+cuda', msg=cuda_warning)
-
     # QMCPACK 3.6.0 or later requires support for C++14
     compiler_warning = 'QMCPACK 3.6.0 or later requires a ' \
                        'compiler with support for C++14'
