@@ -99,7 +99,7 @@ class Qmcpack(CMakePackage):
     # Essential libraries
     depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
     depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
-    depends_on('boost', when='@:3.5.0')
+    depends_on('boost')
     depends_on('boost@1.61.0:', when='@3.6.0:')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
