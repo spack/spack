@@ -396,7 +396,7 @@ def make_package_relative(workdir, prefix, allow_root):
                                   old_path, allow_root)
     orig_path_names = list()
     cur_path_names = list()
-    for filename in buildinfo['relocate_links']:
+    for filename in buildinfo.get('relocate_links', []):
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
     relocate.make_link_relative(cur_path_names, orig_path_names)
@@ -413,7 +413,7 @@ def make_package_placeholder(workdir, prefix, allow_root):
     relocate.make_binary_placeholder(cur_path_names, allow_root)
 
     cur_path_names = list()
-    for filename in buildinfo['relocate_links']:
+    for filename in buildinfo.get('relocate_links', []):
         cur_path_names.append(os.path.join(workdir, filename))
     relocate.make_link_placeholder(cur_path_names, workdir, prefix)
 
@@ -448,7 +448,7 @@ def relocate_package(workdir, allow_root):
         relocate.relocate_binary(path_names, old_path, new_path,
                                  allow_root)
         path_names = set()
-        for filename in buildinfo['relocate_links']:
+        for filename in buildinfo.get('relocate_links', []):
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
         relocate.relocate_links(path_names, old_path, new_path)
