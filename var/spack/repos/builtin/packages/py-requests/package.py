@@ -23,12 +23,18 @@ class PyRequests(PythonPackage):
         'requests.packages.urllib3.contrib._securetransport'
     ]
 
+    version('2.21.0', '1bcd0e0977c3f8db1848ba0e2b7ab904')
     version('2.14.2', '4c3c169ed67466088a2a6947784fe444')
     version('2.13.0', '921ec6b48f2ddafc8bb6160957baf444')
     version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')
     version('2.3.0',  '7449ffdc8ec9ac37bbcd286003c80f00')
 
     depends_on('py-setuptools', type='build')
+
+    depends_on('py-certifi@2017.4.17:', type='run')
+    depends_on('py-chardet@3.0.2:3.0.999', type='run')
+    depends_on('py-idna@2.5:2.8', type='run')
+    depends_on('py-urllib3@1.21.1:1.24', type='run')
 
     depends_on('py-pytest@2.8.0:',        type='test')
     depends_on('py-pytest-cov',           type='test')

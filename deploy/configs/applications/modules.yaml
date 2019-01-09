@@ -27,6 +27,7 @@ modules:
     verbose: True
     hash_length: 0
     whitelist:
+      - brainbuilder
       - functionalizer
       - 'neurodamus%intel'
       #- 'neuron+mpi%intel'

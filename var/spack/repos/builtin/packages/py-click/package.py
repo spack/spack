@@ -12,6 +12,7 @@ class PyClick(PythonPackage):
     homepage = "http://github.com/mitsuhiko/click"
     url = "https://pypi.io/packages/source/c/click/click-6.6.tar.gz"
 
+    version('7.0', '7f53d50f7b7373ebc7963f9ff697450a', url='https://pypi.io/packages/source/C/Click/Click-7.0.tar.gz')
     version('6.6', 'd0b09582123605220ad6977175f3e51d')
 
     depends_on('py-setuptools', type='build')

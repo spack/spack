@@ -12,6 +12,7 @@ class PyChardet(PythonPackage):
     homepage = "https://github.com/chardet/chardet"
     url      = "https://pypi.io/packages/source/c/chardet/chardet-2.3.0.tar.gz"
 
+    version('3.0.4', '7dd1ba7f9c77e32351b0a0cfacf4055c')
     version('2.3.0', '25274d664ccb5130adae08047416e1a8')
 
     depends_on('py-setuptools', type='build')

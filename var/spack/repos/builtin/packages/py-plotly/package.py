@@ -12,9 +12,10 @@ class PyPlotly(PythonPackage):
     homepage = "https://plot.ly/python/"
     url      = "https://github.com/plotly/plotly.py/archive/v2.2.0.tar.gz"
 
+    version('3.0.0', 'e55b919f4e1a6e040b5b0d47d8a5de61')
     version('2.2.0', '835802cdc6743439ff993447dfe47a0e')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-requests@2.3.0', type=('build', 'run'))
-    depends_on('py-six@1.8.0', type=('build', 'run'))
-    depends_on('py-pytz@2014.9', type=('build', 'run'))
+    depends_on('py-requests@2.3.0:', type=('build', 'run'))
+    depends_on('py-six@1.8.0:', type=('build', 'run'))
+    depends_on('py-pytz@2014.9:', type=('build', 'run'))
