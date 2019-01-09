@@ -313,7 +313,7 @@ def install(parser, args, **kwargs):
                     tty.die('Reinstallation aborted.')
 
             for abstract, concrete in zip(abstract_specs, specs):
-                if installed:
+                if concrete in installed:
                     with fs.replace_directory_transaction(concrete.prefix):
                         install_spec(args, kwargs, abstract, concrete)
                 else:
