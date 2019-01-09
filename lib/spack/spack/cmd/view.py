@@ -123,8 +123,13 @@ def setup_parser(sp):
     for cmd, act in file_system_view_actions.items():
         act.add_argument('path', nargs=1,
                          help="path to file system view directory")
-        act.add_argument('--projection-file', dest='projection_file',
-                         help="Initialize view using projections from file.")
+
+        if cmd in ("symlink", "hardlink"):
+            # invalid for remove/statlink, for those commands the view needs to
+            # already know its own projections.
+            help_msg = "Initialize view using projections from file."
+            act.add_argument('--projection-file', dest='projection_file',
+                             type=spack.cmd.extant_file, help=help_msg)
 
         if cmd == "remove":
             grp = act.add_mutually_exclusive_group(required=True)
@@ -164,14 +169,12 @@ def view(parser, args):
     specs = spack.cmd.parse_specs(args.specs)
     path = args.path[0]
 
-    if args.projection_file:
-        if os.path.exists(args.projection_file):
-            with open(args.projection_file, 'r') as f:
-                projections_data = s_yaml.load(f)
-                validate(projections_data, spack.schema.projections.schema)
-                ordered_projections = projections_data['projections']
-        else:
-            tty.die('Specified projection file does not exist.')
+    if args.action in actions_link and args.projection_file:
+        # argparse confirms file exists
+        with open(args.projection_file, 'r') as f:
+            projections_data = s_yaml.load(f)
+            validate(projections_data, spack.schema.projections.schema)
+            ordered_projections = projections_data['projections']
     else:
         ordered_projections = {}
 
