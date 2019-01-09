@@ -106,19 +106,19 @@ case "$command" in
     cpp)
         mode=cpp
         ;;
-    cc|c89|c99|gcc|clang|icc|pgcc|xlc|xlc_r)
+    cc|c89|c99|gcc|clang|armclang|icc|pgcc|xlc|xlc_r)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         ;;
-    c++|CC|g++|clang++|icpc|pgc++|xlc++|xlc++_r)
+    c++|CC|g++|clang++|armclang++|icpc|pgc++|xlc++|xlc++_r)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         ;;
-    ftn|f90|fc|f95|gfortran|flang|ifort|pgfortran|xlf90|xlf90_r|nagfor)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|pgfortran|xlf90|xlf90_r|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
