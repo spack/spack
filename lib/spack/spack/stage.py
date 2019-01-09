@@ -548,9 +548,9 @@ class ResourceStage(Stage):
                 src = os.path.realpath(source_path)
 
                 if os.path.isdir(src):
-                    copy_tree(src, destination_path, _permissions=True)
+                    install_tree(src, destination_path)
                 else:
-                    copy(src, destination_path, _permissions=True)
+                    install(src, destination_path)
 
 
 @pattern.composite(method_list=[
