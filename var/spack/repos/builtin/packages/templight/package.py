@@ -39,20 +39,19 @@ class Templight(CMakePackage):
     # the LLVM trunk. As this is a brittle combination, I decided to
     # artificially create a stable release based on what works today. Please
     # feel free to remove this version once templight has stabilized.
-    version('2018.07.20', commit='91589f95427620dd0a2346bd69ba922f374aa42a')
-    resource(name='llvm-r337566',
+    version('2019.01.09', commit='0899a4345607f1bb244cae477214f274ad2c52cc')
+    resource(name='llvm-r350726',
              svn=llvm_svn.format('llvm'),
-             revision=337566,
+             revision=350726,
              destination='.',
              placement='llvm',
-             when='@2018.07.20')
-    resource(name='clang-r337566',
+             when='@2019.01.09')
+    resource(name='clang-r350726',
              svn=llvm_svn.format('cfe'),
-             revision=337566,
+             revision=350726,
              destination='llvm/tools',
              placement='clang',
-             when='@2018.07.20')
-    patch('develop-20180720.patch', when='@2018.07.20')
+             when='@2019.01.09')
 
     # Clang debug builds can be _huge_ (20+ GB), make sure you know what you
     # are doing before switching to them
