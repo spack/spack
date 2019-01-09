@@ -147,6 +147,7 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        files = os.listdir(spec.prefix)
         assert 'link_to_dummy.txt' in files
         assert 'dummy.txt' in files
         assert os.path.realpath(
@@ -167,6 +168,7 @@ echo $PATH"""
         args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
 
+        files = os.listdir(spec.prefix)
         assert 'link_to_dummy.txt' in files
         assert 'dummy.txt' in files
         assert os.path.realpath(
@@ -194,6 +196,7 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        files = os.listdir(spec.prefix)
         assert 'link_to_dummy.txt' in files
         assert 'dummy.txt' in files
         assert os.path.realpath(
