@@ -193,19 +193,19 @@ class Qmcpack(CMakePackage):
         # Default is MPI, serial version is convenient for cases, e.g. laptops
         if '+mpi' in spec:
             args.append('-DQMC_MPI=1')
-        elif '~mpi' in spec:
+        else:
             args.append('-DQMC_MPI=0')
 
         # Default is parallel collective I/O enabled
         if '+phdf5' in spec:
             args.append('-DENABLE_PHDF5=1')
-        elif '~phdf5' in spec:
+        else:
             args.append('-DENABLE_PHDF5=0')
 
         # Default is real-valued single particle orbitals
         if '+complex' in spec:
             args.append('-DQMC_COMPLEX=1')
-        elif '~complex' in spec:
+        else:
             args.append('-DQMC_COMPLEX=0')
 
         # When '-DQMC_CUDA=1', CMake automatically sets:
@@ -216,13 +216,13 @@ class Qmcpack(CMakePackage):
 
         if '+cuda' in spec:
             args.append('-DQMC_CUDA=1')
-        elif '~cuda' in spec:
+        else:
             args.append('-DQMC_CUDA=0')
 
         # Mixed-precision versues double-precision CPU and GPU code
         if '+mixed' in spec:
             args.append('-DQMC_MIXED_PRECISION=1')
-        elif '~mixed' in spec:
+        else:
             args.append('-DQMC_MIXED_PRECISION=0')
 
         # New Structure-of-Array (SOA) code, much faster than default
@@ -230,13 +230,13 @@ class Qmcpack(CMakePackage):
         # No support for local atomic orbital basis.
         if '+soa' in spec:
             args.append('-DENABLE_SOA=1')
-        elif '~soa' in spec:
+        else:
             args.append('-DENABLE_SOA=0')
 
         # Manual Timers
         if '+timers' in spec:
             args.append('-DENABLE_TIMERS=1')
-        elif '~timers' in spec:
+        else:
             args.append('-DENABLE_TIMERS=0')
 
         # Proper detection of optimized BLAS and LAPACK.
