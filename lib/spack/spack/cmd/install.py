@@ -294,14 +294,15 @@ def install(parser, args, **kwargs):
                 }
 
                 if installed:
-                    tty.msg('The following package specs will be reinstalled:\n')
+                    tty.msg('The following package specs will be '
+                            'reinstalled:\n')
                     spack.cmd.display_specs(installed, **display_args)
 
                 not_installed = filter(lambda x: x not in installed, specs)
                 if not_installed:
                     tty.msg('The following package specs are not installed and'
                             ' the --overwrite flag was given. The package spec'
-                            ' will be newly installed.')
+                            ' will be newly installed:\n')
                     spack.cmd.display_specs(not_installed, **display_args)
 
                 # We have some specs, so one of the above must have been true
