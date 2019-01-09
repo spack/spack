@@ -313,7 +313,7 @@ class Qmcpack(CMakePackage):
     def setup_environment(self, spack_env, run_env):
         """Set-up runtime environment for QMCPACK.
         Set PYTHONPATH for basic analysis scripts and for Nexus."""
-        run_env.prepend_path('PYTHONPATH', join_path(self.prefix, 'nexus'))
+        run_env.prepend_path('PYTHONPATH', self.prefix.nexus)
 
     @when('@3.6.0:')
     def setup_environment(self, spack_env, run_env):
