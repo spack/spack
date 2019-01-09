@@ -437,12 +437,6 @@ Filesystem views offer an alternative to environment modules, another
 way to assemble packages in a useful way and load them into a user's
 environment.
 
-A filesystem view is a projection of the Spack install space into a
-less combinatorial space, often a single directory. Views give users a
-way to access the Spack installed packages that they can navigate more
-easily. The default projection for a filesystem view is into a single
-prefix.
-
 A single-prefix filesystem view is a single directory tree that is the
 union of the directory hierarchies of a number of installed packages;
 it is similar to the directory hiearchy that might exist under
@@ -453,7 +447,7 @@ original Spack installation.
 A combinatorial filesystem view can contain more software than a
 single-prefix view. Combinatorial filesystem views are created by
 defining a projection for each spec or set of specs. The syntax for
-this will be discussed in the discussion of the ``spack view`` command
+this will be discussed in the section for the ``spack view`` command
 under `adding_projections_to_views`_.
 
 The projection for a spec or set of specs specifies the naming scheme
