@@ -447,14 +447,16 @@ class PythonPackage(PackageBase):
                 ignore_namespace = True
 
         bin_dir = self.spec.prefix.bin
-        globl_view = self.extendee_spec.prefix == view.get_projection_for_spec(
-            self.spec
+        global_view = (
+            self.extendee_spec.prefix == view.get_projection_for_spec(
+                self.spec
+            )
         )
         for src, dst in merge_map.items():
             if ignore_namespace and namespace_init(dst):
                 continue
 
-            if globl_view or not path_contains_subdirectory(src, bin_dir):
+            if global_view or not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
