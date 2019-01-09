@@ -9,6 +9,7 @@ import hashlib
 import fileinput
 import glob
 import grp
+import itertools
 import numbers
 import os
 import pwd
@@ -1385,3 +1386,30 @@ def files_in(*search_paths):
             [(f, os.path.join(d, f)) for f in os.listdir(d)]
         ))
     return files
+
+
+def search_paths_for_executables(*path_hints):
+    """Given a list of path hints returns a list of paths where
+    to search for an executable.
+
+    Args:
+        *path_hints (list of paths): list of paths taken into
+            consideration for a search
+
+    Returns:
+        A list containing the real path of every existing directory
+        in `path_hints` and its `bin` subdirectory if it exists.
+    """
+    # Select the realpath of existing directories
+    existing_paths = filter(os.path.isdir, map(os.path.realpath, path_hints))
+
+    # Adding their 'bin' subdirectory
+    def maybe_add_bin(path):
+        bin_subdirectory = os.path.realpath(os.path.join(path, 'bin'))
+        if os.path.isdir(bin_subdirectory):
+            return [path, bin_subdirectory]
+        return [path]
+
+    return list(
+        itertools.chain.from_iterable(map(maybe_add_bin, existing_paths))
+    )

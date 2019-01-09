@@ -8,28 +8,9 @@ This implements a parallel map operation but it can accept more values
 than multiprocessing.Pool.apply() can.  For example, apply() will fail
 to pickle functions if they're passed indirectly as parameters.
 """
-import functools
 from multiprocessing import Semaphore, Value
 
 __all__ = ['Barrier']
-
-
-def defer(func):
-    """Package a function call into something that can be invoked
-    at a later moment.
-
-    Args:
-        func (callable): callable that must be deferred
-
-    Returns:
-        Deferred version of the same function
-    """
-    @functools.wraps(func)
-    def _impl(*args, **kwargs):
-        def _deferred_call():
-            return func(*args, **kwargs)
-        return _deferred_call
-    return _impl
 
 
 class Barrier:

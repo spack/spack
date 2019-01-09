@@ -3,19 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import os
 import re
 import itertools
 
-import functools_backport
-import platform as py_platform
-import six
-
-import llnl.util.lang
-import llnl.util.multiproc
 import llnl.util.filesystem
-import llnl.util.tty as tty
 
 import spack.error
 import spack.spec
@@ -255,60 +247,19 @@ class Compiler(object):
         return cls.default_version(fc)
 
     @classmethod
-    def search_compiler_commands(cls, operating_system, *search_paths):
-        """Returns a list of commands that, when invoked, search for compilers
-        in the paths supplied.
-
-        Args:
-            operating_system (OperatingSystem): the OS requesting the search
-            *search_paths (list of paths): paths where to look for a
-                compiler
-
-        Returns:
-            (tags, commands): ``tags`` is a list of compiler tags, containing
-                all the information on a compiler, but version. ``commands``
-                is a list of commands that, when executed, will detect the
-                version of the corresponding compiler.
-        """
-        files_to_be_tested = llnl.util.filesystem.files_in(*search_paths)
-
-        tags, commands = [], []
-        for language in ('cc', 'cxx', 'f77', 'fc'):
-
-            # Get compiler names and the callback to detect their versions
-            compiler_names = getattr(cls, '{0}_names'.format(language))
-            callback = getattr(cls, '{0}_version'.format(language))
-
-            # Compile all the regular expressions used for files beforehand.
-            # This searches for any combination of <prefix><name><suffix>
-            # defined for the compiler
-            prefixes = [''] + cls.prefixes
-            suffixes = [''] + cls.suffixes
-            regexp_fmt = r'^({0}){1}({2})$'
-            search_regexps = [
-                re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
-                for prefix, name, suffix in
-                itertools.product(prefixes, compiler_names, suffixes)
-            ]
-
-            # Select only the files matching a regexp
-            for (file, full_path), regexp in itertools.product(
-                    files_to_be_tested, search_regexps
-            ):
-                match = regexp.match(file)
-                if match:
-                    tags.append(
-                        (_CompilerID(operating_system, cls, None),
-                         _NameVariation(*match.groups()), language)
-                    )
-                    commands.append(
-                        llnl.util.multiproc.defer(detect_version)
-                        (callback, full_path)
-                    )
-
-        # Reverse it here so that the dict creation (last insert wins)
-        # does not spoil the intended precedence.
-        return reversed(tags), reversed(commands)
+    def search_regexps(cls, language):
+        # Compile all the regular expressions used for files beforehand.
+        # This searches for any combination of <prefix><name><suffix>
+        # defined for the compiler
+        compiler_names = getattr(cls, '{0}_names'.format(language))
+        prefixes = [''] + cls.prefixes
+        suffixes = [''] + cls.suffixes
+        regexp_fmt = r'^({0}){1}({2})$'
+        return [
+            re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
+            for prefix, name, suffix in
+            itertools.product(prefixes, compiler_names, suffixes)
+        ]
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
@@ -324,116 +275,6 @@ class Compiler(object):
             self.name, '\n     '.join((str(s) for s in (
                 self.cc, self.cxx, self.f77, self.fc, self.modules,
                 str(self.operating_system)))))
-
-
-@functools_backport.total_ordering
-class _CompilerID(collections.namedtuple('_CompilerIDBase', [
-    'os', 'cmp_cls', 'version'
-])):
-    """Gathers the attribute values by which a detected compiler is unique."""
-    def _tuple_repr(self):
-        return self.os, str(self.cmp_cls), self.version
-
-    def __eq__(self, other):
-        if not isinstance(other, _CompilerID):
-            return NotImplemented
-        return self._tuple_repr() == other._tuple_repr()
-
-    def __lt__(self, other):
-        if not isinstance(other, _CompilerID):
-            return NotImplemented
-        return self._tuple_repr() < other._tuple_repr()
-
-    def __hash__(self):
-        return hash(self._tuple_repr())
-
-
-#: Variations on a matched compiler name
-_NameVariation = collections.namedtuple('_NameVariation', ['prefix', 'suffix'])
-
-
-def detect_version(callback, path):
-    """Detects the version of a compiler at a given path.
-
-    Args:
-        callback (callable): function that detects the version of
-            the compiler at ``path``
-        path (path): absolute path to search
-
-    Returns:
-        (value, error): if anything is found ``value`` is a ``(version, path)``
-            tuple and ``error`` is None. If ``error`` is not None, ``value``
-            is meaningless and can be discarded.
-    """
-    try:
-        version = callback(path)
-        if version and six.text_type(version).strip():
-            return (version, path), None
-        error = "Couldn't get version for compiler {0}".format(path)
-    except spack.util.executable.ProcessError as e:
-        error = "Couldn't get version for compiler {0}\n".format(path) + \
-                six.text_type(e)
-    except Exception as e:
-        # Catching "Exception" here is fine because it just
-        # means something went wrong running a candidate executable.
-        error = "Error while executing candidate compiler {0}" \
-                "\n{1}: {2}".format(path, e.__class__.__name__,
-                                    six.text_type(e))
-    return None, error
-
-
-def make_compiler_list(tags, compiler_versions):
-    assert len(tags) == len(compiler_versions), \
-        "the two arguments must have the same length"
-
-    compilers_s = []
-    for (compiler_id, name_variation, lang), (return_value, error) \
-            in zip(tags, compiler_versions):
-        # If we had an error, move to the next element
-        if error:
-            try:
-                # This will fail on Python 2.6 if a non ascii
-                # character is in the error
-                tty.debug(error)
-            except UnicodeEncodeError:
-                pass
-            continue
-
-        # Skip unknown versions
-        version, path = return_value
-        if version == 'unknown':
-            continue
-
-        tag = compiler_id._replace(version=version), name_variation, lang
-        compilers_s.append((tag, path))
-
-    compilers_s.sort()
-
-    compilers_d = {}
-    for sort_key, group in itertools.groupby(compilers_s, key=lambda x: x[0]):
-        compiler_id, name_variation, language = sort_key
-        by_compiler_id = compilers_d.setdefault(compiler_id, {})
-        by_name_variation = by_compiler_id.setdefault(name_variation, {})
-        by_name_variation[language] = list(x[1] for x in group).pop()
-
-    # For each unique compiler_id select the name variation with most entries
-    compilers = []
-    for compiler_id, by_compiler_id in compilers_d.items():
-        _, selected_name_variation = max(
-            (len(by_compiler_id[variation]), variation)
-            for variation in by_compiler_id
-        )
-
-        # Add it to the list of compilers
-        operating_system, compiler_cls, version = compiler_id
-        spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [by_compiler_id[selected_name_variation].get(l, None)
-                 for l in ('cc', 'cxx', 'f77', 'fc')]
-        compilers.append(
-            compiler_cls(spec, operating_system, py_platform.machine(), paths)
-        )
-
-    return compilers
 
 
 class CompilerAccessError(spack.error.SpackError):

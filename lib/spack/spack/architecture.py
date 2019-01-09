@@ -56,9 +56,7 @@ set. The user can set the front-end and back-end operating setting by the class
 attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
-import os
 import inspect
-import itertools
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized, list_modules, key_ordering
@@ -67,7 +65,6 @@ import spack.compiler
 import spack.paths
 import spack.error as serr
 from spack.util.naming import mod_to_class
-from spack.util.environment import get_path
 from spack.util.spack_yaml import syaml_dict
 
 
@@ -230,32 +227,6 @@ class OperatingSystem(object):
 
     def _cmp_key(self):
         return self.name, self.version
-
-    def search_compiler_commands(self, *path_hints):
-        """Returns a list of commands that, when invoked, search for
-        compilers tied to this OS.
-
-        Args:
-            *path_hints (list of paths): path where to look for compilers
-
-        Returns:
-            (tags, commands): ``tags`` is a list of compiler tags, containing
-                all the information on a compiler, but version. ``commands``
-                is a list of commands that, when executed, will detect the
-                version of the corresponding compiler.
-        """
-        # Turn the path hints into paths that are to be searched
-        paths = executable_search_paths(path_hints or get_path('PATH'))
-
-        # NOTE: we import spack.compilers here to avoid init order cycles
-        import spack.compilers
-
-        tags, commands = [], []
-        for compiler_cls in spack.compilers.all_compiler_types():
-            t, c = compiler_cls.search_compiler_commands(self, *paths)
-            tags.extend(t), commands.extend(c)
-
-        return tags, commands
 
     def to_dict(self):
         return {
@@ -432,30 +403,3 @@ def sys_type():
     """
     arch = Arch(platform(), 'default_os', 'default_target')
     return str(arch)
-
-
-def executable_search_paths(path_hints):
-    """Given a list of path hints returns a list of paths where
-    to search for an executable.
-
-    Args:
-        path_hints (list of paths): list of paths taken into
-            consideration for a search
-
-    Returns:
-        A list containing the real path of every existing directory
-        in `path_hints` and its `bin` subdirectory if it exists.
-    """
-    # Select the realpath of existing directories
-    existing_paths = filter(os.path.isdir, map(os.path.realpath, path_hints))
-
-    # Adding their 'bin' subdirectory
-    def maybe_add_bin(path):
-        bin_subdirectory = os.path.realpath(os.path.join(path, 'bin'))
-        if os.path.isdir(bin_subdirectory):
-            return [path, bin_subdirectory]
-        return [path]
-
-    return list(itertools.chain.from_iterable(
-        map(maybe_add_bin, existing_paths))
-    )
