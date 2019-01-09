@@ -22,8 +22,10 @@ class Gromacs(CMakePackage):
     homepage = 'http://www.gromacs.org'
     url      = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
     git      = 'https://github.com/gromacs/gromacs.git'
+    maintainers = ['junghans', 'marvinbernhardt']
 
     version('develop', branch='master')
+    version('2019', sha256='c5b281a5f0b5b4eeb1f4c7d4dc72f96985b566561ca28acc9c7c16f6ee110d0b')
     version('2018.4', sha256='6f2ee458c730994a8549d6b4f601ecfc9432731462f8bd4ffa35d330d9aaa891')
     version('2018.3', sha256='4423a49224972969c52af7b1f151579cea6ab52148d8d7cbae28c183520aa291')
     version('2018.2', '7087462bb08393aec4ce3192fa4cd8df')
@@ -48,13 +50,20 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
+    variant('simd', default='auto',
+            description='The SIMD instruction set to use',
+            values=('auto', 'none', 'SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256',
+                    'AVX2_128', 'AVX2_256', 'AVX_512', 'AVX_512_KNL',
+                    'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
+                    'ARM_NEON', 'ARM_NEON_ASIMD'))
+    variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
     depends_on('fftw')
-    depends_on('cmake@2.8.8:3.9.99', type='build')
-    depends_on('cmake@3.4.3:3.9.99', type='build', when='@2018:')
+    depends_on('cmake@2.8.8:3.99.99', type='build')
+    depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
 
     def patch(self):
@@ -78,5 +87,18 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_GPU:BOOL=ON')
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
                            self.spec['cuda'].prefix)
+
+        simd_value = self.spec.variants['simd'].value
+        if simd_value == 'auto':
+            pass
+        elif simd_value == 'none':
+            options.append('-DGMX_SIMD:STRING=None')
+        else:
+            options.append('-DGMX_SIMD:STRING=' + simd_value)
+
+        if '-rdtscp' in self.spec:
+            options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
+        else:
+            options.append('-DGMX_USE_RDTSCP:BOOL=ON')
 
         return options
