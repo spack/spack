@@ -253,3 +253,10 @@ def test_view_extendee_with_global_activations(
     activate('extension1@2.0')
     output = view('symlink', viewpath, 'extension1@1.0')
     assert 'Error: Globally activated extensions cannot be used' in output
+
+
+def test_view_fails_with_missing_projections_file(tmpdir):
+    viewpath = str(tmpdir.mkdir('view'))
+    projection_file = os.path.join(str(tmpdir), 'nonexistent')
+    with pytest.raises(SystemExit):
+        view('symlink', '--projection-file', projection_file, viewpath, 'foo')
