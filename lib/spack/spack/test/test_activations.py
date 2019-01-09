@@ -46,16 +46,11 @@ def create_dir_structure(tmpdir, dir_structure):
 def builtin_and_mock_packages():
     # These tests use mock_repo packages to test functionality of builtin
     # packages. They therefore put the mock repo UNDER the builtin repo.
-    old_path = spack.repo.path
     repo_dirs = [spack.paths.packages_path, spack.paths.mock_packages_path]
     path = RepoPath(*repo_dirs)
-    sys.meta_path.append(path)
-    spack.repo.path = path
 
-    yield
-
-    spack.repo.path = old_path
-    sys.meta_path = sys.meta_path[:-1]
+    with spack.repo.swap(path):
+        yield
 
 
 @pytest.fixture()
@@ -153,8 +148,6 @@ def namespace_extensions(tmpdir, builtin_and_mock_packages):
 
 def test_python_activation_with_files(tmpdir, python_and_extension_dirs,
                                       builtin_and_mock_packages):
-    # Set mock repo to lower precedence than builtin. We can test builtin
-    # python against mock python extensions.
     python_prefix, ext_prefix = python_and_extension_dirs
 
     python_spec = spack.spec.Spec('python@2.7.12')
