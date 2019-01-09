@@ -60,6 +60,9 @@ class Openmpi(AutotoolsPackage):
     homepage = "http://www.open-mpi.org"
     url = "https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-4.0.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
+    git = "https://github.com/open-mpi/ompi.git"
+
+    version('develop', branch='master')
 
     # Current
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
@@ -226,6 +229,12 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')
+    depends_on('perl',     type='build', when='@develop')
+
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
@@ -335,6 +344,11 @@ class Openmpi(AutotoolsPackage):
             raise InstallError(
                 'OpenMPI requires both C and Fortran compilers!'
             )
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        perl = which('perl')
+        perl('autogen.pl')
 
     def configure_args(self):
         spec = self.spec
