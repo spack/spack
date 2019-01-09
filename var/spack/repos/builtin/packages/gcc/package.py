@@ -18,11 +18,12 @@ class Gcc(AutotoolsPackage):
 
     homepage = 'https://gcc.gnu.org'
     url      = 'https://ftpmirror.gnu.org/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
+    svn      = 'svn://gcc.gnu.org/svn/gcc/trunk'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    version('develop', svn='svn://gcc.gnu.org/svn/gcc/trunk')
-    version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed', default=True)
+    version('develop')
+    version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
     version('8.1.0', '65f7c65818dc540b3437605026d329fc')
 
     version('7.4.0', 'eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51')
@@ -172,7 +173,7 @@ class Gcc(AutotoolsPackage):
     conflicts('languages=jit', when='@:4')
 
     # NVPTX offloading supported in 7 and later by limited languages
-    conflicts('+nvptx', when='@:6')
+    conflicts('+nvptx', when='@:6', msg='NVPTX only supported in gcc 7 and above')
     conflicts('languages=ada', when='+nvptx')
     conflicts('languages=brig', when='+nvptx')
     conflicts('languages=go', when='+nvptx')
@@ -301,13 +302,13 @@ class Gcc(AutotoolsPackage):
 
         # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):
-            options.append('--enable-offload-targets=nvptx-none')
-            options.append('--with-cuda-driver-include={0}'.format(
-                           spec['cuda'].prefix.include))
-            options.append('--with-cuda-driver-lib={0}'.format(
-                           spec['cuda'].prefix.lib64))
-            options.append('--disable-bootstrap')
-            options.append('--disable-multilib')
+            options.extend(['--enable-offload-targets=nvptx-none'],
+                           ['--with-cuda-driver-include={0}'.format(
+                               spec['cuda'].prefix.include)],
+                           ['--with-cuda-driver-lib={0}'.format(
+                               spec['cuda'].libs.directories[0])],
+                           ['--disable-bootstrap'],
+                           ['--disable-multilib'])
 
         return options
 
@@ -345,29 +346,27 @@ class Gcc(AutotoolsPackage):
                 symlink(join_path(files[0], 'newlib'), 'newlib')
 
             # self.build_directory = 'spack-build-nvptx'
-            mkdir('spack-build-nvptx')
-            cd('spack-build-nvptx')
+            with working_dir('spack-build-nvptx', create=True):
 
-            options = ['--prefix={0}'.format(prefix),
-                       '--enable-languages={0}'.format(
-                       ','.join(spec.variants['languages'].value)),
-                       '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-                       '--with-gmp={0}'.format(spec['gmp'].prefix),
-                       ]
+                options = ['--prefix={0}'.format(prefix),
+                           '--enable-languages={0}'.format(
+                           ','.join(spec.variants['languages'].value)),
+                           '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+                           '--with-gmp={0}'.format(spec['gmp'].prefix),
+                           '--target=nvptx-none',
+                           '--with-build-time-tools={0}'.format(
+                               join_path(prefix,
+                                         'nvptx-none', 'bin')),
+                           '--enable-as-accelerator-for={0}'.format(
+                               targetguess),
+                           '--disable-sjlj-exceptions',
+                           '--enable-newlib-io-long-long',
+                           ]
 
-            options.append('--target=nvptx-none')
-            options.append('--with-build-time-tools={0}'.format(
-                           join_path(prefix,
-                                     'nvptx-none', 'bin')))
-            options.append('--enable-as-accelerator-for={0}'.format(
-                           targetguess))
-            options.append('--disable-sjlj-exceptions')
-            options.append('--enable-newlib-io-long-long')
-
-            configure = Executable("../configure")
-            configure(*options)
-            make()
-            make('install')
+                configure = Executable("../configure")
+                configure(*options)
+                make()
+                make('install')
 
     @property
     def build_targets(self):
