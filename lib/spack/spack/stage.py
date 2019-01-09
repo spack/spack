@@ -15,7 +15,7 @@ from six import iteritems
 from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, can_access, copy, copy_tree
+from llnl.util.filesystem import mkdirp, can_access, install, install_tree
 from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
 import spack.paths
@@ -548,9 +548,9 @@ class ResourceStage(Stage):
                 src = os.path.realpath(source_path)
 
                 if os.path.isdir(src):
-                    copy_tree(src, destination_path)
+                    install_tree(src, destination_path)
                 else:
-                    copy(src, destination_path)
+                    install(src, destination_path)
 
 
 @pattern.composite(method_list=[
