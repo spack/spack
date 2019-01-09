@@ -82,6 +82,8 @@ class Glib(AutotoolsPackage):
         args.append('--disable-gtk-doc-html')
         # glib uses gtk-doc even though it should be disabled if it can find
         # its binaries. Override the checks to use the true binary.
+        # Reference http://www.voidcn.com/article/p-nvqcakwu-bgz.html
+        args.append('--with-libiconv=gnu')
         true = which('true')
         args.append('GTKDOC_CHECK={0}'.format(true))
         args.append('GTKDOC_CHECK_PATH={0}'.format(true))
