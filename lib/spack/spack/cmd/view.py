@@ -47,7 +47,7 @@ from spack.config import validate
 from spack.filesystem_view import YamlFilesystemView
 from spack.util import spack_yaml as s_yaml
 
-description = "produce a simplified view of spack packages on the filesystem"
+description = "project packages to a compact naming scheme on the filesystem."
 section = "environments"
 level = "short"
 
