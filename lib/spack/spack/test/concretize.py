@@ -224,6 +224,15 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
 
+    def concretize_difficult_packages(self):
+        """Test a couple of large package that are often broken due
+        to current limitations in the concretizer"""
+        s = Spec('dealii')
+        s.concretize()
+        assert s['dealii'].version == ver('9.0.1')
+        s = Spec('xsdk@0.4.0')
+        assert s['xsdk'].version == ver('0.4.0')
+
     def test_concretize_two_virtuals(self):
 
         """Test a package with multiple virtual dependencies."""
