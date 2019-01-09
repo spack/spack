@@ -18,11 +18,11 @@ class Gcc(AutotoolsPackage):
 
     homepage = 'https://gcc.gnu.org'
     url      = 'https://ftpmirror.gnu.org/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
-    svn      = 'svn://gcc.gnu.org/svn/gcc/trunk'
+    svn      = 'svn://gcc.gnu.org/svn/gcc/'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    version('develop')
+    version('develop', svn=svn + 'trunk')
     version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
     version('8.1.0', '65f7c65818dc540b3437605026d329fc')
 
