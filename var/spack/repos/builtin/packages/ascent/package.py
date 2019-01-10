@@ -9,6 +9,7 @@ import sys
 import os
 import socket
 import glob
+import shutil
 
 import llnl.util.tty as tty
 from os import environ as env
