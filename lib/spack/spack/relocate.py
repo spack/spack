@@ -430,17 +430,17 @@ def make_binary_placeholder(cur_path_names, allow_root):
 
 def make_link_placeholder(cur_path_names, cur_dir, old_dir):
     """
-    Replace old install path with placeholder in absolute links
+    Replace old install path with placeholder in absolute links.
+
+    Links in ``cur_path_names`` must link to absolute paths.
     """
-    cur_dir = os.path.realpath(cur_dir)
     for cur_path in cur_path_names:
-        # realpath is safe, previously ensured absolute
         placeholder = set_placeholder(spack.store.layout.root)
         placeholder_prefix = old_dir.replace(spack.store.layout.root,
                                              placeholder)
-        cur_src = os.path.realpath(cur_path)
-        suffix = cur_src[len(cur_dir):]
-        new_src = placeholder_prefix + suffix
+        cur_src = os.readlink(cur_path)
+        rel_src = os.path.relpath(cur_src, cur_dir)
+        new_src = os.path.join(placeholder_prefix, rel_src)
 
         os.unlink(cur_path)
         os.symlink(new_src, cur_path)
@@ -448,11 +448,12 @@ def make_link_placeholder(cur_path_names, cur_dir, old_dir):
 
 def relocate_links(path_names, old_dir, new_dir):
     """
-    Replace old path with new path in link sources
+    Replace old path with new path in link sources.
+
+    Links in ``path_names`` must link to absolute paths or placeholders.
     """
     placeholder = set_placeholder(old_dir)
     for path_name in path_names:
-        # readlink is safe, previously ensured absolute
         old_src = os.readlink(path_name)
         # replace either placeholder or old_dir
         new_src = old_src.replace(placeholder, new_dir, 1)

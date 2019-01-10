@@ -82,12 +82,6 @@ class NewLayoutException(spack.error.SpackError):
     pass
 
 
-class UnrelocatableLinkException(spack.error.SpackError):
-    """
-    Raised if the package has absolute symlinks outside of the prefix
-    """
-
-
 def has_gnupg2():
     try:
         gpg_util.Gpg.gpg()('--version', output=os.devnull)
@@ -383,7 +377,8 @@ def download_tarball(spec):
 
 def make_package_relative(workdir, prefix, allow_root):
     """
-    Change paths in binaries to relative paths
+    Change paths in binaries to relative paths. Change absolute symlinks
+    to relative symlinks.
     """
     buildinfo = read_buildinfo_file(workdir)
     old_path = buildinfo['buildpath']
