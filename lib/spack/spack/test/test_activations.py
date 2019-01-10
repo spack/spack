@@ -44,7 +44,9 @@ def create_dir_structure(tmpdir, dir_structure):
 @pytest.fixture()
 def builtin_and_mock_packages():
     # These tests use mock_repo packages to test functionality of builtin
-    # packages. They therefore put the mock repo UNDER the builtin repo.
+    # packages for python and perl. To test this we put the mock repo at lower
+    # precedence than the builtin repo, so we test builtin.perl against
+    # builtin.mock.perl-extension.
     repo_dirs = [spack.paths.packages_path, spack.paths.mock_packages_path]
     path = RepoPath(*repo_dirs)
 
