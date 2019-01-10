@@ -10,6 +10,12 @@ from spack.main import SpackCommand
 versions = SpackCommand('versions')
 
 
+def test_safe_versions():
+    """Only test the safe versions of a package."""
+
+    versions('--safe-only', 'zlib')
+
+
 @pytest.mark.network
 def test_remote_versions():
     """Test a package for which remote versions should be available."""
