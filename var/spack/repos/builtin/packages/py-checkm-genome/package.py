@@ -23,6 +23,6 @@ class PyCheckmGenome(PythonPackage):
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'))
     depends_on('py-numpy@1.8.0:', type=('build', 'run'))
     depends_on('py-scipy@0.9.0:', type=('build', 'run'))
-    depends_on('py-matplotlib@1.3.1:2.2.3',type=('build', 'run'))
+    depends_on('py-matplotlib@1.3.1:2.2.3', type=('build', 'run'))
     depends_on('py-pysam@0.8.3:', type=('build', 'run'))
     depends_on('py-dendropy@4.0.0:', type=('build', 'run'))
