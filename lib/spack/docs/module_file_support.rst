@@ -618,7 +618,7 @@ activated using ``spack activate``:
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.
+``direct`` or ``all``.  The default is ``none``.
 
 .. note::
   TCL prerequisites
