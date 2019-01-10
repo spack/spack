@@ -20,6 +20,7 @@ class PyCheckmGenome(PythonPackage):
     depends_on('pplacer', type=('build', 'run'))
     depends_on('prodigal@2.6.1:', type=('build', 'run'))
     depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
+    depends_on('py-backports-functools-lru-cache', type=('build', 'run'))
     depends_on('py-numpy@1.8.0:', type=('build', 'run'))
     depends_on('py-scipy@0.9.0:', type=('build', 'run'))
     depends_on('py-matplotlib@1.3.1:2.2.3',type=('build', 'run'))
