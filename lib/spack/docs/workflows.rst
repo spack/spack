@@ -437,11 +437,23 @@ Filesystem views offer an alternative to environment modules, another
 way to assemble packages in a useful way and load them into a user's
 environment.
 
-A filesystem view is a single directory tree that is the union of the
-directory hierarchies of a number of installed packages; it is similar
-to the directory hiearchy that might exist under ``/usr/local``.  The
-files of the view's installed packages are brought into the view by
-symbolic or hard links, referencing the original Spack installation.
+A single-prefix filesystem view is a single directory tree that is the
+union of the directory hierarchies of a number of installed packages;
+it is similar to the directory hiearchy that might exist under
+``/usr/local``.  The files of the view's installed packages are
+brought into the view by symbolic or hard links, referencing the
+original Spack installation.
+
+A combinatorial filesystem view can contain more software than a
+single-prefix view. Combinatorial filesystem views are created by
+defining a projection for each spec or set of specs. The syntax for
+this will be discussed in the section for the ``spack view`` command
+under `adding_projections_to_views`_.
+
+The projection for a spec or set of specs specifies the naming scheme
+for the directory structure under the root of the view into which the
+package will be linked. For example, the spec ``zlib@1.2.8%gcc@4.4.7``
+could be projected to ``MYVIEW/zlib-1.2.8-gcc``.
 
 When software is built and installed, absolute paths are frequently
 "baked into" the software, making it non-relocatable.  This happens
@@ -506,6 +518,51 @@ files in the ``cmake`` package while retaining its dependencies.
 
     When packages are removed from a view, empty directories are
     purged.
+
+.. _adding_projections_to_views:
+
+""""""""""""""""""""""""""""
+Controlling View Projections
+""""""""""""""""""""""""""""
+
+The default projection into a view is to link every package into the
+root of the view. This can be changed by adding a ``projections.yaml``
+configuration file to the view. The projection configuration file for
+a view located at ``/my/view`` is stored in
+``/my/view/.spack/projections.yaml``.
+
+When creating a view, the projection configuration file can also be
+specified from the command line using the ``--projection-file`` option
+to the ``spack view`` command.
+
+The projections configuration file is a mapping of partial specs to
+spec format strings, as shown in the example below.
+
+.. code-block:: yaml
+
+   projections:
+     zlib: ${PACKAGE}-${VERSION}
+     ^mpi: ${PACKAGE}-${VERSION}/${DEP:mpi:PACKAGE}-${DEP:mpi:VERSION}-${COMPILERNAME}-${COMPILERVER}
+     all: ${PACKAGE}-${VERSION}/${COMPILERNAME}-${COMPILERVER}
+
+The entries in the projections configuration file must all be either
+specs or the keyword ``all``. For each spec, the projection used will
+be the first non-``all`` entry that the spec satisfies, or ``all`` if
+there is an entry for ``all`` and no other entry is satisfied by the
+spec. Where the keyword ``all`` appears in the file does not
+matter. Given the example above, any spec satisfying ``zlib@1.2.8``
+will be linked into ``/my/view/zlib-1.2.8/``, any spec satisfying
+``hdf5@1.8.10+mpi %gcc@4.9.3 ^mvapich2@2.2`` will be linked into
+``/my/view/hdf5-1.8.10/mvapich2-2.2-gcc-4.9.3``, and any spec
+satisfying ``hdf5@1.8.10~mpi %gcc@4.9.3`` will be linked into
+``/my/view/hdf5-1.8.10/gcc-4.9.3``.
+
+If the keyword ``all`` does not appear in the projections
+configuration file, any spec that does not satisfy any entry in the
+file will be linked into the root of the view as in a single-prefix
+view. Any entries that appear below the keyword ``all`` in the
+projections configuration file will not be used, as all specs will use
+the projection under ``all`` before reaching those entries.
 
 """"""""""""""""""
 Fine-Grain Control
@@ -1437,4 +1494,3 @@ Disadvantages:
 
  2. Although patches of a few lines work OK, large patch files can be
     hard to create and maintain.
-

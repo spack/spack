@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import re
 import sys
+import argparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault, index_by
@@ -342,3 +343,15 @@ def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
     with working_dir(spack.paths.prefix):
         return os.path.isdir('.git')
+
+
+########################################
+# argparse types for argument validation
+########################################
+def extant_file(f):
+    """
+    Argparse type for files that exist.
+    """
+    if not os.path.isfile(f):
+        raise argparse.ArgumentTypeError('%s does not exist' % f)
+    return f
