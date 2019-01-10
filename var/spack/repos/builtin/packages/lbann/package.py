@@ -90,8 +90,8 @@ class Lbann(CMakePackage):
 
     depends_on('conduit@master +hdf5', when='+conduit')
 
-    depends_on('py-breathe', when='+docs')
-    depends_on('py-m2r', when='+docs')
+    depends_on('py-breathe', type='build', when='+docs')
+    depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
 
