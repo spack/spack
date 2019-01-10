@@ -189,7 +189,7 @@ class Ascent(Package):
                           example_src_dir]
             cmake(*cmake_args)
             make()
-            example = Executable('./example')
+            example = Executable('./ascent_render_example')
             example()
         print("Checking using-with-make example...")
         example_src_dir = join_path(install_prefix,
@@ -202,7 +202,7 @@ class Ascent(Package):
             for example_file in example_files:
                 shutil.copy(example_file, ".")
             make("ASCENT_DIR={0}".format(install_prefix))
-            example = Executable('./example')
+            example = Executable('./ascent_render_example')
             example()
 
     def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
