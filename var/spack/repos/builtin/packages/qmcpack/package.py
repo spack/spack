@@ -62,14 +62,15 @@ class Qmcpack(CMakePackage):
     conflicts(
         '+phdf5',
         when='~mpi',
-        msg='Parallel collective I/O requires MPI-enabled QMCPACK.\n \
-        Please add "~phdf5" to the Spack install line for serial QMCPACK.'
+        msg='Parallel collective I/O requires MPI-enabled QMCPACK. ' \
+        'Please add "~phdf5" to the Spack install line for serial QMCPACK.'
     )
     conflicts(
         '+qe',
         when='~mpi',
-        msg='QMCPACK QE variant requires MPI due to limitation in QE build system.\n \
-        Please add "~qe" to the Spack install line for serial QMCPACK.'
+        msg='QMCPACK QE variant requires MPI due to limitation in QE build ' \
+        'system. Please add "~qe" to the Spack install line for serial ' \
+        'QMCPACK.'
     )
     conflicts(
         '+soa',
