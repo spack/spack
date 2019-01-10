@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -703,8 +703,9 @@ def mock_svn_repository(tmpdir_factory):
 def mutable_mock_env_path(tmpdir_factory):
     """Fixture for mocking the internal spack environments directory."""
     saved_path = spack.environment.env_path
-    spack.environment.env_path = str(tmpdir_factory.mktemp('mock-env-path'))
-    yield spack.environment.env_path
+    mock_path = tmpdir_factory.mktemp('mock-env-path')
+    spack.environment.env_path = str(mock_path)
+    yield mock_path
     spack.environment.env_path = saved_path
 
 

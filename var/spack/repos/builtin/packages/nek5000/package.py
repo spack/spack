@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -158,7 +158,7 @@ class Nek5000(Package):
 
             if self.compiler.name in ['xl', 'xl_r']:
                 # Use '-qextname' when compiling mxm.f
-                filter_file('\$\(OLAGS\)', '-qextname $(OLAGS)',
+                filter_file(r'\$\(OLAGS\)', '-qextname $(OLAGS)',
                             join_path('postnek', 'makefile'))
             # Define 'rename_' function that calls 'rename'
             with open(join_path('postnek', 'xdriver.c'), 'a') as xdriver:

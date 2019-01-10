@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -233,8 +233,8 @@ class Mumps(Package):
                 # When building libpord, read AR from Makefile.inc instead of
                 # going through the make command line - this prevents various
                 # problems with the substring "$$@".
-                filter_file(' AR="\$\(AR\)"', '', 'Makefile')
-                filter_file('^(INCLUDES = -I../include)',
+                filter_file(r' AR="\$\(AR\)"', '', 'Makefile')
+                filter_file(r'^(INCLUDES = -I../include)',
                             '\\1\ninclude ../../Makefile.inc',
                             join_path('PORD', 'lib', 'Makefile'))
 

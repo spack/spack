@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,6 @@
 
 import os
 import sys
-
-from spack import *
 
 
 def _verbs_dir():
@@ -62,6 +60,9 @@ class Openmpi(AutotoolsPackage):
     homepage = "http://www.open-mpi.org"
     url = "https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-4.0.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
+    git = "https://github.com/open-mpi/ompi.git"
+
+    version('develop', branch='master')
 
     # Current
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
@@ -180,20 +181,17 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
     fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
-
     variant(
-        'fabrics',
-        default=None if _verbs_dir() is None else 'verbs',
+        'fabrics', values=auto_or_any_combination_of(*fabrics).with_default(
+            'auto' if _verbs_dir() is None else 'verbs'
+        ),
         description="List of fabrics that are enabled",
-        values=fabrics,
-        multi=True
     )
 
+    schedulers = ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
     variant(
-        'schedulers',
-        description='List of schedulers for which support is enabled',
-        values=('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler'),
-        multi=True
+        'schedulers', values=auto_or_any_combination_of(*schedulers),
+        description='List of schedulers for which support is enabled'
     )
 
     # Additional support options
@@ -230,6 +228,12 @@ class Openmpi(AutotoolsPackage):
 
     if sys.platform != 'darwin':
         depends_on('numactl')
+
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')
+    depends_on('perl',     type='build', when='@develop')
 
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
@@ -340,6 +344,11 @@ class Openmpi(AutotoolsPackage):
             raise InstallError(
                 'OpenMPI requires both C and Fortran compilers!'
             )
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        perl = which('perl')
+        perl('autogen.pl')
 
     def configure_args(self):
         spec = self.spec

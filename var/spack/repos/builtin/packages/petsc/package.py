@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -138,8 +138,10 @@ class Petsc(Package):
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.9.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.2+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.10.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.10.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -193,10 +195,7 @@ class Petsc(Package):
                    '--download-hwloc=0',
                    'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
                    'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
-                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags']),
-                   'COPTFLAGS=',
-                   'FOPTFLAGS=',
-                   'CXXOPTFLAGS=']
+                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -207,6 +206,11 @@ class Petsc(Package):
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
+        if '+debug' not in spec:
+            options.extend(['COPTFLAGS=',
+                            'FOPTFLAGS=',
+                            'CXXOPTFLAGS='])
+
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
@@ -257,6 +261,8 @@ class Petsc(Package):
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
         if 'superlu-dist' in spec:
+            if spec.satisfies('@3.10.3:'):
+                options.append('--with-cxx-dialect=C++11')
             options.extend([
                 '--with-superlu_dist-include=%s' %
                 spec['superlu-dist'].prefix.include,

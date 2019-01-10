@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,15 +17,19 @@ class Flang(CMakePackage):
     git      = "https://github.com/flang-compiler/flang.git"
 
     version('develop', branch='master')
+    version('20180921', '4440ed5fdc390e4b7a085fb77b44ac54')
     version('20180612', '62284e26214eaaff261a922c67f6878c')
 
     depends_on('llvm@flang-develop', when='@develop')
+    depends_on('llvm@flang-20180921', when='@20180921 target=x86_64')
     depends_on('llvm@flang-20180612', when='@20180612 target=x86_64')
 
     # LLVM version specific to OpenPOWER.
+    depends_on('llvm@flang-ppc64le-20180921', when='@20180921 target=ppc64le')
     depends_on('llvm@flang-ppc64le-20180612', when='@20180612 target=ppc64le')
 
     depends_on('pgmath@develop', when='@develop')
+    depends_on('pgmath@20180921', when='@20180921')
     depends_on('pgmath@20180612', when='@20180612')
 
     def cmake_args(self):

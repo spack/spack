@@ -122,6 +122,6 @@ See [LICENSE-MIT](https://github.com/spack/spack/blob/develop/LICENSE-MIT),
 [COPYRIGHT](https://github.com/spack/spack/blob/develop/COPYRIGHT), and
 [NOTICE](https://github.com/spack/spack/blob/develop/NOTICE) for details.
 
-`SPDX-License-Identifier: (Apache-2.0 OR MIT)`
+SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-``LLNL-CODE-647188``
+LLNL-CODE-647188

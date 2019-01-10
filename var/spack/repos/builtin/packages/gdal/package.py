@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/2.3.1/gdal-2.3.1.tar.xz"
+    url        = "http://download.osgeo.org/gdal/2.4.0/gdal-2.4.0.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 1
 
@@ -29,6 +29,9 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('2.4.0',  sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
+    version('2.3.3',  sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe')
+    version('2.3.2',  sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4')
     version('2.3.1',  sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a')
     version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
     version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
@@ -413,9 +416,12 @@ class Gdal(AutotoolsPackage):
             '--with-freexl=no',
             '--with-pam=no',
             '--with-podofo=no',
-            '--with-php=no',
             '--with-rasdaman=no',
         ])
+
+        # TODO: add packages for these dependencies (only for 2.3 and older)
+        if spec.satisfies('@:2.3'):
+            args.append('--with-php=no')
 
         # TODO: add packages for these dependencies (only for 2.3 and newer)
         if spec.satisfies('@2.3:'):

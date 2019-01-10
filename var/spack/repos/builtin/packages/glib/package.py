@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,13 +32,9 @@ class Glib(AutotoolsPackage):
     version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb')
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
-    variant('iconv', default=False, description='Build with iconv support')
     variant('libmount', default=False, description='Build with libmount support')
     variant(
-        'tracing',
-        default='',
-        values=('dtrace', 'systemtap'),
-        multi=True,
+        'tracing', values=any_combination_of('dtrace', 'systemtap'),
         description='Enable tracing support'
     )
 
@@ -50,7 +46,7 @@ class Glib(AutotoolsPackage):
     depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
     depends_on('util-linux', when='+libmount')
-    depends_on('libiconv', when='+iconv')
+    depends_on('libiconv')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@2.42.1')
@@ -74,10 +70,7 @@ class Glib(AutotoolsPackage):
             args.append('--with-python={0}'.format(
                 os.path.basename(self.spec['python'].command.path))
             )
-        if self.spec.satisfies('+iconv'):
-            args.append('--with-libiconv=gnu')
-        else:
-            args.append('--with-libiconv=no')
+        args.append('--with-libiconv=gnu')
         args.extend(self.enable_or_disable('tracing'))
         # SELinux is not available in Spack, so glib should not use it.
         args.append('--disable-selinux')
