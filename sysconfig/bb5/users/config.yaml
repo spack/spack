@@ -1,10 +1,10 @@
 config:
-  install_tree: $INSTALL_PATH/install
-  source_cache: $INSTALL_PATH/.cache
+  install_tree: $SPACK_INSTALL_PREFIX/install
+  source_cache: $SPACK_INSTALL_PREFIX/.cache
   module_roots:
-    tcl: $INSTALL_PATH/modules/tcl
+    tcl: $SPACK_INSTALL_PREFIX/modules/tcl
   build_stage:
     - $tempdir
-    - $INSTALL_PATH/.stage
+    - $SPACK_INSTALL_PREFIX/.stage
   install_path_scheme: '${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH:6}'
   build_jobs: 36

@@ -37,10 +37,10 @@ configure Spack to use centrally build packages on BB5:
 
     $ mkdir -p ~/.spack
     $ ln -s /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/*.yaml ~/.spack
-    $ export INSTALL_PATH=$HOME/software
+    $ export SPACK_INSTALL_PREFIX=$HOME/software
 
-The configuration thus set up uses the environment variable `INSTALL_PATH`
-as the installation directory for packages.
+The configuration thus set up uses the environment variable
+`SPACK_INSTALL_PREFIX` as the installation directory for packages.
 With the above setup, any packages installed can be found in `~/software`.
 Every call to Spack reads this environment variable, temporarily changing
 it is a good way to test changes.
