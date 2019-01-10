@@ -13,11 +13,12 @@ class Brainbuilder(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/brainbuilder"
 
     version('develop', branch='master')
-    version('0.8.1', tag='brainbuilder-v0.8.1', preferred=True)
+    version('0.9.0', tag='brainbuilder-v0.9.0', preferred=True)
+    version('0.8.1', tag='brainbuilder-v0.8.1')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-click@6.0:', type='run')
+    depends_on('py-click@7.0:7.999', type='run')
     depends_on('py-future@0.16:', type='run')
     depends_on('py-h5py~mpi@2.6:', type='run')
     depends_on('py-lxml@3.3:', type='run')
