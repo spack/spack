@@ -184,8 +184,8 @@ class Ascent(Package):
                          create=True):
             cmake_args = ["-DASCENT_DIR={0}".format(install_prefix),
                           "-DCONDUIT_DIR={0}".format(spec['conduit'].prefix),
-                          "-VTKM_DIR={0}".format(spec['vtkm'].prefix),
-                          "-VTKH_DIR={0}".format(spec['vtkh'].prefix),
+                          "-DVTKM_DIR={0}".format(spec['vtkm'].prefix),
+                          "-DVTKH_DIR={0}".format(spec['vtkh'].prefix),
                           example_src_dir]
             cmake(*cmake_args)
             make()
