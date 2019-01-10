@@ -18,7 +18,28 @@ class Hpctoolkit(AutotoolsPackage):
     git      = "https://github.com/HPCToolkit/hpctoolkit.git"
 
     version('develop', branch='master')
+    version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc')
     version('2018.11.05', commit='d0c43e39020e67095b1f1d8bb89b75f22b12aee9')
+
+    # Options for MPI and hpcprof-mpi.  We always support profiling
+    # MPI applications.  These options add hpcprof-mpi, the MPI
+    # version of hpcprof.  Cray and Blue Gene need separate options
+    # because an MPI module in packages.yaml doesn't work on these
+    # systems.
+    variant('cray', default=False,
+            description='Build for Cray compute nodes, including '
+            'hpcprof-mpi.')
+
+    variant('bgq', default=False,
+            description='Build for Blue Gene compute nodes, including '
+            'hpcprof-mpi.')
+
+    variant('mpi', default=False,
+            description='Build hpcprof-mpi, the MPI version of hpcprof.')
+
+    variant('all-static', default=False,
+            description='Needed when MPICXX builds static binaries '
+            'for the compute nodes.')
 
     # We can't build with both PAPI and perfmon for risk of segfault
     # from mismatched header files (unless PAPI installs the perfmon
@@ -26,15 +47,6 @@ class Hpctoolkit(AutotoolsPackage):
     variant('papi', default=False,
             description='Use PAPI instead of perfmon for access to '
             'the hardware performance counters.')
-
-    # We always support profiling MPI applications.  +mpi builds
-    # hpcprof-mpi, the MPI version of hpcprof.
-    variant('mpi', default=False,
-            description='Build hpcprof-mpi, the MPI version of hpcprof.')
-
-    variant('all-static', default=False,
-            description='Needed when MPICXX builds static binaries '
-            'for the compute nodes.')
 
     boost_libs = '+atomic +graph +regex +serialization'  \
         '+shared +multithreaded'
@@ -46,7 +58,8 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('elfutils~nls')
     depends_on('intel-tbb')
     depends_on('libdwarf')
-    depends_on('libmonitor+hpctoolkit')
+    depends_on('libmonitor+hpctoolkit', when='~bgq')
+    depends_on('libmonitor+hpctoolkit+bgq', when='+bgq')
     depends_on('libunwind@2018.10.0:')
     depends_on('xerces-c transcoder=iconv')
     depends_on('xz')
@@ -86,7 +99,19 @@ class Hpctoolkit(AutotoolsPackage):
         else:
             args.append('--with-perfmon=%s' % spec['libpfm4'].prefix)
 
-        if '+mpi' in spec:
+        # MPI options for hpcprof-mpi.
+        if '+cray' in spec:
+            args.extend([
+                '--enable-mpi-search=cray',
+                '--enable-all-static',
+            ])
+        elif '+bgq' in spec:
+            args.extend([
+                '--enable-mpi-search=bgq',
+                '--enable-all-static',
+                '--enable-bgq',
+            ])
+        elif '+mpi' in spec:
             args.append('MPICXX=%s' % spec['mpi'].mpicxx)
 
         if '+all-static' in spec:
