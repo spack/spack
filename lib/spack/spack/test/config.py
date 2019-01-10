@@ -677,7 +677,7 @@ def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
     f = StringIO(file_contents)
     data = syaml.load(f)
-    spack.config._validate(data, name)
+    spack.config.validate(data, name)
 
 
 def test_good_env_yaml(tmpdir):
