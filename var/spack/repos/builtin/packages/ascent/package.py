@@ -8,7 +8,7 @@ from spack import *
 import sys
 import os
 import socket
-
+import glob
 
 import llnl.util.tty as tty
 from os import environ as env
@@ -194,7 +194,7 @@ class Ascent(Package):
         print("Checking using-with-make example...")
         example_src_dir = join_path(install_prefix,
                                     "examples",
-                                    "conduit",
+                                    "ascent",
                                     "using-with-make")
         example_files = glob.glob(join_path(example_src_dir, "*"))
         with working_dir("check-ascent-using-with-make-example",
