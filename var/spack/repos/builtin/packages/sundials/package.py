@@ -19,10 +19,8 @@ class Sundials(CMakePackage):
     # ==========================================================================
     # Versions
     # ==========================================================================
-    version('4.0.0-dev.2', sha256='124fc12f2a68d32210c20f5005510607e0833764afaef2a70b741bc922519984')
-    version('4.0.0-dev.1', sha256='6354e1d266b60c23766137b4ffa9bbde8bca97a562ccd94cab756b597ed753c1')
-    version('4.0.0-dev', sha256='50e526327461aebe463accf6ef56f9c6773df65025f3020b9ce68b83bbf5dd27')
-    version('3.2.1', sha256='47d94d977ab2382cdcdd02f72a25ebd4ba8ca2634bbb2f191fe1636e71c86808', preferred=True)
+    version('4.0.1', sha256='29e409c8620e803990edbda1ebf49e03a38c08b9187b90658d86bddae913aed4')
+    version('3.2.1', sha256='47d94d977ab2382cdcdd02f72a25ebd4ba8ca2634bbb2f191fe1636e71c86808')
     version('3.2.0', sha256='d2b690afecadf8b5a048bb27ab341de591d714605b98d3518985dfc2250e93f9')
     version('3.1.2', sha256='a8985bb1e851d90e24260450667b134bc13d71f5c6effc9e1d7183bd874fe116')
     version('3.1.1', sha256='a24d643d31ed1f31a25b102a1e1759508ce84b1e4739425ad0e18106ab471a24')
