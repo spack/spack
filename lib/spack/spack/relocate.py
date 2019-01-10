@@ -353,11 +353,10 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
 
 def make_link_relative(cur_path_names, orig_path_names):
     """
-    Change absolute links to be relative to old_dir
+    Change absolute links to be relative.
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        # We can safely call realpath, all links absolute
-        old_src = os.path.realpath(orig_path)
+        old_src = os.readlink(orig_path)
         new_src = os.path.relpath(old_src, orig_path)
 
         os.unlink(cur_path)
