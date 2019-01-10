@@ -620,6 +620,20 @@ load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
 ``direct`` or ``all``.  The default is ``none``.
 
+.. tip::
+  Building external software
+     Setting ``autoload`` to ``direct`` for all packages can be useful
+     when building software outside of a Spack installation that depends on
+     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
+     as appropriate):
+
+  .. code-block:: yaml
+
+     modules:
+       lmod:
+         all:
+           autoload: 'direct'
+
 .. note::
   TCL prerequisites
      In the ``tcl`` section of the configuration file it is possible to use
