@@ -29,8 +29,7 @@ class Aluminum(CMakePackage):
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
-    depends_on('mpi', when='~mpi_cuda')
-    depends_on('mpi +cuda', when='+mpi_cuda')
+    depends_on('mpi')
     depends_on('nccl', when='+nccl')
     depends_on('hwloc')
 
