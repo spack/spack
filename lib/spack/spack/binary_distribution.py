@@ -125,12 +125,10 @@ def write_buildinfo_file(prefix, workdir, rel=False):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
-            #  Check if the file contains a string with the installroot.
-            #  This cuts down on the number of files added to the list
-            #  of files potentially needing relocation
             if os.path.islink(path_name):
                 link = os.readlink(path_name)
                 if os.path.isabs(link):
+                    # Relocate absolute links into the spack tree
                     if link.startswith(spack.store.layout.root):
                         rel_path_name = os.path.relpath(path_name, prefix)
                         link_to_relocate.append(rel_path_name)
@@ -139,6 +137,10 @@ def write_buildinfo_file(prefix, workdir, rel=False):
                         msg += 'outside of stage %s ' % prefix
                         msg += 'cannot be relocated.'
                         tty.warn(msg)
+
+            #  Check if the file contains a string with the installroot.
+            #  This cuts down on the number of files added to the list
+            #  of files potentially needing relocation
             elif relocate.strings_contains_installroot(
                     path_name, spack.store.layout.root):
                 filetype = get_filetype(path_name)
