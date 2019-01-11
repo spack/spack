@@ -127,8 +127,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('cmake@:3.9.99',    when='@:8.99')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
-    depends_on('metis@5:+int64+real64',   when='+metis+int64')
-    depends_on('metis@5:~int64+real64',   when='+metis~int64')
+    depends_on('metis@5:+int64',   when='+metis+int64')
+    depends_on('metis@5:~int64',   when='+metis~int64')
     depends_on('muparser', when='+muparser')
     depends_on('nanoflann',        when='@9.0:+nanoflann')
     depends_on('netcdf+mpi',       when='+netcdf+mpi')
