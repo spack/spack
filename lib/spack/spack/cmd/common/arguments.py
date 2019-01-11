@@ -142,6 +142,17 @@ _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='show full dependency hashes as well as versions')
 
+_arguments['show_flags'] = Args(
+    '--show-flags', action='store_true',
+    help='show spec compiler flags')
+_arguments['show_full_compiler'] = Args(
+    '--show-full-compiler', action='store_true',
+    help='show full compiler specs')
+
+_arguments['variants'] = Args(
+    '-v', '--variants', action='store_true',
+    help='show variants in output (can be long)')
+
 _arguments['tags'] = Args(
     '-t', '--tags', action='append',
     help='filter a package query by tags')

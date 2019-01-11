@@ -54,16 +54,11 @@ def setup_parser(subparser):
         const='deps',
         help='show full dependency DAG of installed packages')
 
-    arguments.add_common_arguments(subparser, ['long', 'very_long', 'tags'])
+    arguments.add_common_arguments(subparser, ['long', 'very_long',
+                                               'show_flags',
+                                               'show_full_compiler',
+                                               'tags', 'variants'])
 
-    subparser.add_argument('-f', '--show-flags',
-                           action='store_true',
-                           dest='show_flags',
-                           help='show spec compiler flags')
-    subparser.add_argument('--show-full-compiler',
-                           action='store_true',
-                           dest='show_full_compiler',
-                           help='show full compiler specs')
     implicit_explicit = subparser.add_mutually_exclusive_group()
     implicit_explicit.add_argument(
         '-e', '--explicit',
@@ -83,11 +78,6 @@ def setup_parser(subparser):
         action='store_true',
         dest='missing',
         help='show missing dependencies as well as installed specs')
-    subparser.add_argument(
-        '-v', '--variants',
-        action='store_true',
-        dest='variants',
-        help='show variants in output (can be long)')
     subparser.add_argument('-M', '--only-missing',
                            action='store_true',
                            dest='only_missing',
