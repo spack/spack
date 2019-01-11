@@ -53,6 +53,7 @@ class FenicsDolfin(CMakePackage):
     patch('hdf5~cxx-detection.patch', when='@2016.2.0')
 
     extends('python', when='+python')
+    depends_on('python@3.5:', type=('build', 'run'), when='+python')
 
     depends_on('py-fenics-ffc', type=('build'), when='~python')
     depends_on('py-fenics-ffc', type=('build', 'run'), when='+python')
@@ -139,4 +140,9 @@ class FenicsDolfin(CMakePackage):
                 self.cmake_is_on('zlib')),
         ]
 
-    # FIXME: Install DOLFIN Python interface
+    @run_after('install')
+    def install_python_interface(self):
+        if '+python' in self.spec:
+            if self.version >= Version('2018.1.0'):
+                cd('python')
+                python('setup.py', 'install', '--prefix={0}'.format(self.prefix))

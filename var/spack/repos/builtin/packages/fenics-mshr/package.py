@@ -28,11 +28,16 @@ class FenicsMshr(CMakePackage):
     variant('python', default=False, description='Compile with mshr Python interface')
 
     extends('python', when='+python')
+    depends_on('python@3.5:', type=('build', 'run'), when='+python')
 
     depends_on('fenics-dolfin+python', when='+python')
     depends_on('fenics-dolfin', when='~python')
 
+    depends_on('py-pybind11@2.2.3', when='@2018.1:+python')
+    depends_on('swig@3.0.3:', type=('build', 'run'), when='@:2017.2.0.99+python')
     depends_on('cmake@3.5:', type='build')
+
+    depends_on('py-setuptools', type='build', when='+python')
 
     def url_for_version(self, version):
         url = "https://bitbucket.org/fenics-project/mshr/get"
@@ -42,4 +47,9 @@ class FenicsMshr(CMakePackage):
             url += "/mshr-{0}.tar.gz".format(version)
         return url
 
-    # FIXME: install python interface
+    @run_after('install')
+    def install_python_interface(self):
+        if '+python' in self.spec:
+            if self.version >= Version('2018.1.0'):
+                cd('python')
+                python('setup.py', 'install', '--prefix={0}'.format(self.prefix))
