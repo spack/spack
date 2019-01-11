@@ -31,6 +31,7 @@ class NoOverwriteException(Exception):
     """
     Raised when a file exists and must be overwritten.
     """
+
     def __init__(self, file_path):
         err_msg = "\n%s\nexists\n" % file_path
         err_msg += "Use -f option to overwrite."
@@ -55,6 +56,7 @@ class PickKeyException(spack.error.SpackError):
     """
     Raised when multiple keys can be used to sign.
     """
+
     def __init__(self, keys):
         err_msg = "Multi keys available for signing\n%s\n" % keys
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
@@ -407,7 +409,7 @@ def make_package_placeholder(workdir, prefix, allow_root):
     cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))
-    relocate.make_binary_placeholder(cur_path_names, allow_root)
+    relocate.make_binary_placeholder(cur_path_names, prefix, allow_root)
 
     cur_path_names = list()
     for filename in buildinfo.get('relocate_links', []):
@@ -423,6 +425,8 @@ def relocate_package(workdir, allow_root):
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     rel = buildinfo.get('relative_rpaths', False)
+    old_relative_prefix = buildinfo.get('relative_prefix', '')
+    old_prefix = os.path.join(old_path, old_relative_prefix)
     if rel:
         return
 
@@ -443,7 +447,7 @@ def relocate_package(workdir, allow_root):
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
         relocate.relocate_binary(path_names, old_path, new_path,
-                                 allow_root)
+                                 allow_root, old_prefix)
         path_names = set()
         for filename in buildinfo.get('relocate_links', []):
             path_name = os.path.join(workdir, filename)
