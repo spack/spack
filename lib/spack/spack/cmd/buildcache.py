@@ -29,6 +29,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.binary_distribution as bindist
 from spack.binary_distribution import NoOverwriteException, NoGpgException
 from spack.binary_distribution import NoKeyException, PickKeyException
@@ -75,28 +76,18 @@ def setup_parser(subparser):
     install.set_defaults(func=installtarball)
 
     listcache = subparsers.add_parser('list')
+    arguments.add_common_arguments(listcache,
+                                   ['long',
+                                    'very_long',
+                                    'show_flags',
+                                    'show_full_compiler',
+                                    'tags',
+                                    'variants'])
     listcache.add_argument('-f', '--force', action='store_true',
                            help="force new download of specs")
-    listcache.add_argument(
-        'packages', nargs=argparse.REMAINDER,
-        help="specs of packages to search for")
+    listcache.add_argument('packages', nargs=argparse.REMAINDER,
+                           help="specs of packages to search for")
 
-    listcache.add_argument('--show-flags',
-                           action='store_true',
-                           default=False,
-                           dest='show_flags',
-                           help='show spec compiler flags')
-    listcache.add_argument('--show-full-compiler',
-                           action='store_true',
-                           default=False,
-                           dest='show_full_compiler',
-                           help='show full compiler specs')
-    listcache.add_argument(
-        '-v', '--variants',
-        action='store_true',
-        default=False,
-        dest='variants',
-        help='show variants in output (can be long)')
 
     listcache.set_defaults(func=listspecs)
 
@@ -316,23 +307,16 @@ def install_tarball(spec, args):
 def listspecs(args):
     specs = bindist.get_specs(args.force)
 
-    display_args = {
-        'show_flags': args.show_flags,
-        'variants': args.variants,
-        'show_full_compiler': args.show_full_compiler,
-        'long': True
-    }
-
     # The user may give one or more specs
     if args.packages:
         pkgs = set(args.packages)
         tty.msg("buildcache spec(s) matching '%s'" % "', '".join(pkgs))
         filtered_specs = set([s for pkg in pkgs
                              for s in specs if s.satisfies(pkg)])
-        spack.cmd.display_specs(filtered_specs, **display_args)
+        spack.cmd.display_specs(filtered_specs, args)
     else:
         tty.msg("buildcache specs")
-        spack.cmd.display_specs(specs, **display_args)
+        spack.cmd.display_specs(specs, args)
 
 
 def getkeys(args):
