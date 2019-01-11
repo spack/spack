@@ -37,6 +37,8 @@ class GdkPixbuf(Package):
     depends_on('libtiff')
     depends_on('gobject-introspection')
 
+    patch('docbook-cdn.patch')
+
     def url_for_version(self, version):
         url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/{0}/gdk-pixbuf-{1}.tar.xz"
         return url.format(version.up_to(2), version)
