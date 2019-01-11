@@ -43,11 +43,6 @@ class Ascent(Package):
             submodules=True,
             preferred=True)
 
-    version('0.3.0',
-            git='https://github.com/Alpine-DAV/ascent.git',
-            tag='v0.3.0',
-            submodules=True)
-
     ###########################################################################
     # package variants
     ###########################################################################
