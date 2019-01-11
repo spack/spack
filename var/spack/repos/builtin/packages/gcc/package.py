@@ -302,13 +302,13 @@ class Gcc(AutotoolsPackage):
 
         # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):
-            options.extend(['--enable-offload-targets=nvptx-none'],
-                           ['--with-cuda-driver-include={0}'.format(
-                               spec['cuda'].prefix.include)],
-                           ['--with-cuda-driver-lib={0}'.format(
-                               spec['cuda'].libs.directories[0])],
-                           ['--disable-bootstrap'],
-                           ['--disable-multilib'])
+            options.extend(['--enable-offload-targets=nvptx-none',
+                            '--with-cuda-driver-include={0}'.format(
+                                spec['cuda'].prefix.include),
+                            '--with-cuda-driver-lib={0}'.format(
+                                spec['cuda'].libs.directories[0]),
+                            '--disable-bootstrap',
+                            '--disable-multilib'])
 
         return options
 
