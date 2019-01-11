@@ -180,15 +180,16 @@ class Clang(Compiler):
             output = compiler('--version', output=str, error=str)
 
             ver = 'unknown'
-            match = re.search(r'^Apple LLVM version ([^ )]+)', output)
-            if match:
+            match = re.search(
                 # Apple's LLVM compiler has its own versions, so suffix them.
-                ver = match.group(1) + '-apple'
-            else:
+                r'^Apple LLVM version ([^ )]+)|'
                 # Normal clang compiler versions are left as-is
-                match = re.search(r'clang version ([^ )]+)', output)
-                if match:
-                    ver = match.group(1)
+                r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+                r'clang version ([^ )]+)',
+                output
+            )
+            if match:
+                ver = match.group(match.lastindex)
 
             _version_cache[comp] = ver
 
