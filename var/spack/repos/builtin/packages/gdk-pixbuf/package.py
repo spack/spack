@@ -37,6 +37,8 @@ class GdkPixbuf(Package):
     depends_on('libtiff')
     depends_on('gobject-introspection')
 
+    # Replace the docbook stylesheet URL with the one that our
+    # docbook-xsl package uses/recognizes.
     patch('docbook-cdn.patch')
 
     def url_for_version(self, version):
