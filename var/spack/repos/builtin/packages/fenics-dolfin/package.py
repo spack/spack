@@ -78,7 +78,7 @@ class FenicsDolfin(CMakePackage):
 
     depends_on('py-pybind11@2.2.3', when='@2018.1:+python')
     depends_on('swig@3.0.3:', type=('build', 'run'), when='@:2017.2.0.99+python')
-    depends_on('cmake@2.8.12:', type='build')
+    depends_on('cmake@3.5:', type='build')
 
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-sphinx@1.0.1:', type='build', when='+python+doc')

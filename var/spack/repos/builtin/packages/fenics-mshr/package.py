@@ -32,6 +32,8 @@ class FenicsMshr(CMakePackage):
     depends_on('fenics-dolfin+python', when='+python')
     depends_on('fenics-dolfin', when='~python')
 
+    depends_on('cmake@3.5:', type='build')
+
     def url_for_version(self, version):
         url = "https://bitbucket.org/fenics-project/mshr/get"
         if version >= Version('2017.1.0'):
