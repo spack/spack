@@ -351,6 +351,18 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
+def make_link_relative(cur_path_names, orig_path_names):
+    """
+    Change absolute links to be relative.
+    """
+    for cur_path, orig_path in zip(cur_path_names, orig_path_names):
+        old_src = os.readlink(orig_path)
+        new_src = os.path.relpath(old_src, orig_path)
+
+        os.unlink(cur_path)
+        os.symlink(new_src, cur_path)
+
+
 def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
     """
     Replace old RPATHs with paths relative to old_dir in binary files
@@ -413,6 +425,41 @@ def make_binary_placeholder(cur_path_names, allow_root):
                         cur_path, spack.store.layout.root)
     else:
         tty.die("Placeholder not implemented for %s" % platform.system())
+
+
+def make_link_placeholder(cur_path_names, cur_dir, old_dir):
+    """
+    Replace old install path with placeholder in absolute links.
+
+    Links in ``cur_path_names`` must link to absolute paths.
+    """
+    for cur_path in cur_path_names:
+        placeholder = set_placeholder(spack.store.layout.root)
+        placeholder_prefix = old_dir.replace(spack.store.layout.root,
+                                             placeholder)
+        cur_src = os.readlink(cur_path)
+        rel_src = os.path.relpath(cur_src, cur_dir)
+        new_src = os.path.join(placeholder_prefix, rel_src)
+
+        os.unlink(cur_path)
+        os.symlink(new_src, cur_path)
+
+
+def relocate_links(path_names, old_dir, new_dir):
+    """
+    Replace old path with new path in link sources.
+
+    Links in ``path_names`` must link to absolute paths or placeholders.
+    """
+    placeholder = set_placeholder(old_dir)
+    for path_name in path_names:
+        old_src = os.readlink(path_name)
+        # replace either placeholder or old_dir
+        new_src = old_src.replace(placeholder, new_dir, 1)
+        new_src = new_src.replace(old_dir, new_dir, 1)
+
+        os.unlink(path_name)
+        os.symlink(new_src, path_name)
 
 
 def relocate_text(path_names, old_dir, new_dir):
