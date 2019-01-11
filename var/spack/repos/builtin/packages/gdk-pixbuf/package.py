@@ -73,3 +73,8 @@ class GdkPixbuf(Package):
         make('install')
         if self.run_tests:
             make('installcheck')
+
+    def setup_environment(self, spack_env, run_env):
+        # The "post-install.sh" script uses gdk-pixbuf-query-loaders,
+        # which was installed earlier.
+        spack_env.prepend_path('PATH', self.prefix.bin)
