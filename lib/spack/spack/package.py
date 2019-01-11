@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -200,6 +200,34 @@ class PackageMeta(
             return func
         return _decorator
 
+    @property
+    def package_dir(self):
+        """Directory where the package.py file lives."""
+        return os.path.abspath(os.path.dirname(self.module.__file__))
+
+    @property
+    def module(self):
+        """Module object (not just the name) that this package is defined in.
+
+        We use this to add variables to package modules.  This makes
+        install() methods easier to write (e.g., can call configure())
+        """
+        return __import__(self.__module__, fromlist=[self.__name__])
+
+    @property
+    def namespace(self):
+        """Spack namespace for the package, which identifies its repo."""
+        namespace, dot, module = self.__module__.rpartition('.')
+        prefix = '%s.' % spack.repo.repo_namespace
+        if namespace.startswith(prefix):
+            namespace = namespace[len(prefix):]
+        return namespace
+
+    @property
+    def fullname(self):
+        """Name of this package, including the namespace"""
+        return '%s.%s' % (self.namespace, self.name)
+
 
 def run_before(*phases):
     """Registers a method of a package to be run before a given phase"""
@@ -256,7 +284,7 @@ class PackageViewMixin(object):
         """The target root directory: each file is added relative to this
         directory.
         """
-        return view.root
+        return view.get_projection_for_spec(self.spec)
 
     def view_file_conflicts(self, view, merge_map):
         """Report any files which prevent adding this package to the view. The
@@ -527,10 +555,27 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return visited
 
+    # package_dir and module are *class* properties (see PackageMeta),
+    # but to make them work on instances we need these defs as well.
     @property
     def package_dir(self):
-        """Return the directory where the package.py file lives."""
-        return os.path.abspath(os.path.dirname(self.module.__file__))
+        """Directory where the package.py file lives."""
+        return type(self).package_dir
+
+    @property
+    def module(self):
+        """Module object that this package is defined in."""
+        return type(self).module
+
+    @property
+    def namespace(self):
+        """Spack namespace for the package, which identifies its repo."""
+        return type(self).namespace
+
+    @property
+    def fullname(self):
+        """Name of this package, including namespace: namespace.name."""
+        return type(self).fullname
 
     @property
     def global_license_dir(self):
@@ -922,6 +967,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         self.stage.cache_local()
 
+        for patch in self.spec.patches:
+            patch.fetch(self.stage)
+
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
         if not self.spec.concrete:
@@ -932,40 +980,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not os.listdir(self.stage.path):
             raise FetchError("Archive was empty for %s" % self.name)
-
-    @classmethod
-    def lookup_patch(cls, sha256):
-        """Look up a patch associated with this package by its sha256 sum.
-
-        Args:
-            sha256 (str): sha256 sum of the patch to look up
-
-        Returns:
-            (Patch): ``Patch`` object with the given hash, or ``None`` if
-                not found.
-
-        To do the lookup, we build an index lazily.  This allows us to
-        avoid computing a sha256 for *every* patch and on every package
-        load.  With lazy hashing, we only compute hashes on lookup, which
-        usually happens at build time.
-
-        """
-        if cls._patches_by_hash is None:
-            cls._patches_by_hash = {}
-
-            # Add patches from the class
-            for cond, patch_list in cls.patches.items():
-                for patch in patch_list:
-                    cls._patches_by_hash[patch.sha256] = patch
-
-            # and patches on dependencies
-            for name, conditions in cls.dependencies.items():
-                for cond, dependency in conditions.items():
-                    for pcond, patch_list in dependency.patches.items():
-                        for patch in patch_list:
-                            cls._patches_by_hash[patch.sha256] = patch
-
-        return cls._patches_by_hash.get(sha256, None)
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
@@ -1080,11 +1094,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return base64.b32encode(
             hashlib.sha256(bytes().join(
                 sorted(hash_content))).digest()).lower()
-
-    @property
-    def namespace(self):
-        namespace, dot, module = self.__module__.rpartition('.')
-        return namespace
 
     def do_fake_install(self):
         """Make a fake install directory containing fake executables,
@@ -1724,14 +1733,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         else:
             return os.path.join(self.stage.source_path, 'spack-build.out')
 
-    @property
-    def module(self):
-        """Use this to add variables to the class's module's scope.
-           This lets us use custom syntax in the install method.
-        """
-        return __import__(self.__class__.__module__,
-                          fromlist=[self.__class__.__name__])
-
     @classmethod
     def inject_flags(cls, name, flags):
         """
@@ -2080,6 +2081,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def do_clean(self):
         """Removes the package's build stage and source tarball."""
+        for patch in self.spec.patches:
+            patch.clean()
+
         self.stage.destroy()
 
     def format_doc(self, **kwargs):

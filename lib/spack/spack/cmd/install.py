@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -272,6 +272,7 @@ def install(parser, args, **kwargs):
             tty.warn(msg.format(file))
             continue
 
+        abstract_specs.append(s)
         specs.append(s.concretized())
 
     if len(specs) == 0:

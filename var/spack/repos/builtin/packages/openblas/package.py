@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,8 +38,8 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='64 bit integers')
     variant('pic', default=True, description='Build position independent code')
 
-    variant('cpu_target', default='',
-                    description='Set CPU target architecture (leave empty for '
+    variant('cpu_target', default='auto',
+            description='Set CPU target architecture (leave empty for '
                         'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
 
     variant(
@@ -150,7 +150,7 @@ class Openblas(MakefilePackage):
                 'NUM_THREADS=64',  # OpenBLAS stores present no of CPUs as max
             ]
 
-        if self.spec.variants['cpu_target'].value:
+        if self.spec.variants['cpu_target'].value != 'auto':
             make_defs += [
                 'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
             ]

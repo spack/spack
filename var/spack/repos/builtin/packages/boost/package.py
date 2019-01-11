@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -155,6 +155,9 @@ class Boost(Package):
     patch('boost_1.67.0_pgi.patch', when='@1.67.0:1.68.9999%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
+
+    # Fix the bootstrap/bjam build for Cray
+    patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):

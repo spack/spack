@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,10 +51,11 @@ class Libceed(Package):
         install('ceed.h', prefix.include)
         mkdirp(prefix.lib)
         install('libceed.%s' % dso_suffix, prefix.lib)
-        filter_file('^prefix=.*$', 'prefix=%s' % prefix, 'ceed.pc')
-        filter_file('^includedir=\$\{prefix\}$',
+        filter_file(r'^prefix=.*$', 'prefix=%s' % prefix, 'ceed.pc')
+        filter_file(r'^includedir=\$\{prefix\}$',
                     'includedir=${prefix}/include', 'ceed.pc')
-        filter_file('^libdir=\$\{prefix\}$', 'libdir=${prefix}/lib', 'ceed.pc')
-        filter_file('Version:.*$', 'Version: 0.1', 'ceed.pc')
+        filter_file(r'^libdir=\$\{prefix\}$',
+                    'libdir=${prefix}/lib', 'ceed.pc')
+        filter_file(r'Version:.*$', 'Version: 0.1', 'ceed.pc')
         mkdirp(prefix.lib.pkgconfig)
         install('ceed.pc', prefix.lib.pkgconfig)

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,8 +29,7 @@ class Aluminum(CMakePackage):
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
-    depends_on('mpi', when='~mpi_cuda')
-    depends_on('mpi +cuda', when='+mpi_cuda')
+    depends_on('mpi')
     depends_on('nccl', when='+nccl')
     depends_on('hwloc')
 

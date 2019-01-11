@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,10 @@ class Regcm(AutotoolsPackage):
     # producing a so-called fat binary. Unfortunately, gcc builds only the last
     # architecture provided (in the configure), so we allow a single arch.
     extensions = ('knl', 'skl', 'bdw', 'nhl')
-    variant('extension', default=None, values=extensions, multi=True,
-            description='Build extensions for a specific Intel architecture.')
+    variant(
+        'extension', values=any_combination_of(extensions),
+        description='Build extensions for a specific Intel architecture.'
+    )
 
     depends_on('netcdf')
     depends_on('netcdf-fortran')

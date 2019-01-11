@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,7 +117,9 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('graphviz',         when='+doc')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
-    depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
+    # FIXME: next line fixes concretization with petsc
+    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
+    depends_on('hdf5+mpi+hl', when='+hdf5+mpi~petsc')
     depends_on('cuda@8:',          when='+cuda')
     depends_on('cmake@3.9:',       when='+cuda')
     # older version of deal.II do not build with Cmake 3.10, see
@@ -149,6 +151,12 @@ class Dealii(CMakePackage, CudaPackage):
     # namespace "Kokkos::Impl" has no member "cuda_abort"
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
+
+    # Explicitly provide a destructor in BlockVector,
+    # otherwise deal.II may fail to build with Intel compilers.
+    patch('https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch',
+          sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
+          when='@9.0.1')
 
     # check that the combination of variants makes sense
     # 64-bit BLAS:

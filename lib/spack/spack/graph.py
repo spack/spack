@@ -1,9 +1,9 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Functions for graphing DAGs of dependencies.
+r"""Functions for graphing DAGs of dependencies.
 
 This file contains code for graphing DAGs of software packages
 (i.e. Spack specs).  There are two main functions you probably care
@@ -493,6 +493,8 @@ def graph_dot(specs, deptype='all', static=False, out=None):
 
     Print out a dot formatted graph of all the dependencies between
     package.  Output can be passed to graphviz, e.g.:
+
+    .. code-block:: console
 
         spack graph --dot qt | dot -Tpdf > spack-graph.pdf
 

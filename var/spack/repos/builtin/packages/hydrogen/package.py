@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,14 +73,12 @@ class Hydrogen(CMakePackage):
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
     depends_on('aluminum@master', when='+al ~cuda')
-    depends_on('aluminum@master +gpu +mpi-cuda', when='+al +cuda ~nccl')
-    depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='+al +cuda +nccl')
+    depends_on('aluminum@master +gpu +mpi_cuda', when='+al +cuda')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
 
-    depends_on('mpi', when='~cuda')
-    depends_on('mpi +cuda', when='+cuda')
+    depends_on('mpi')
 
     depends_on('scalapack', when='+scalapack')
     depends_on('gmp', when='+mpfr')
@@ -154,7 +152,7 @@ class Hydrogen(CMakePackage):
         if '+al' in spec:
             args.extend([
                 '-DHydrogen_ENABLE_ALUMINUM:BOOL=%s' % ('+al' in spec),
-                '-DHYDROGEN_Aluminum_DIR={0}'.format(
+                '-DALUMINUM_DIR={0}'.format(
                     spec['aluminum'].prefix)])
 
         return args

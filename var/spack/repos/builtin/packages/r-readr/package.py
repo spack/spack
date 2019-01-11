@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class RReadr(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/readr/index.html"
     url      = "https://cran.rstudio.com/src/contrib/readr_1.1.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/readr/"
 
     version('1.1.1', 'cffb6669664f6a0f6fe172542e64cb47')
 
