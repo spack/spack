@@ -27,6 +27,9 @@ class GdkPixbuf(Package):
     depends_on('shared-mime-info', type='build', when='@2.36.8: platform=linux')
     depends_on('shared-mime-info', type='build', when='@2.36.8: platform=cray')
     depends_on('pkgconfig', type='build')
+    # Building the man pages requires libxslt.
+    depends_on('libxslt', type='build')
+    depends_on('docbook-xsl', type='build')
     depends_on('gettext')
     depends_on('glib')
     depends_on('jpeg')
