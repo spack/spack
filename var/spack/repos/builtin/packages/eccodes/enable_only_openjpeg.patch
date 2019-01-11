@@ -1,5 +1,3 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index bf4d78b..3ae50ba 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -151,27 +151,8 @@ set( HAVE_LIBOPENJPEG 0 )

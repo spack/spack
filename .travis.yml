@@ -11,87 +11,117 @@ branches:
 #=============================================================================
 # Build matrix
 #=============================================================================
+
+dist: xenial
+
 jobs:
   fast_finish: true
   include:
-    - stage: 'flake8'
+    - stage: 'style checks'
       python: '2.7'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=flake8
     - stage: 'unit tests + documentation'
       python: '2.6'
+      dist: trusty
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '3.3'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.4'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.5'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
+      sudo: required
       os: linux
       language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - os: osx
-      language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
-    - python: '2.7'
+      env: TEST_SUITE=unit
+    - python: '3.7'
+      sudo: required
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.6'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=doc
+    - os: osx
+      language: generic
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7 ]
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
 # astyle (MakefilePackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=astyle' ]
+      env: [ TEST_SUITE=build, 'SPEC=astyle' ]
 # tut (WafPackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=tut' ]
+      env: [ TEST_SUITE=build, 'SPEC=tut' ]
 # py-setuptools (PythonPackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=py-setuptools' ]
+      env: [ TEST_SUITE=build, 'SPEC=py-setuptools' ]
 # perl-dbi (PerlPackage)
 #    - python: '2.7'
 #      os: linux
 #      language: python
-#      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=perl-dbi' ]
+#      env: [ TEST_SUITE=build, 'SPEC=perl-dbi' ]
 # openjpeg (CMakePackage + external cmake)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=openjpeg' ]
+      env: [ TEST_SUITE=build, 'SPEC=openjpeg' ]
 # r-rcpp (RPackage + external R)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=r-rcpp' ]
+      env: [ TEST_SUITE=build, 'SPEC=r-rcpp' ]
 # mpich (AutotoolsPackage)
     - python: '3.6'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
+    - python: '3.6'
+      stage: 'docker build'
+      sudo: required
+      os: linux
+      language: python
+      env: TEST_SUITE=docker
+  allow_failures:
+    - env: TEST_SUITE=docker
+    # temporary Python 2.6 exception while we figure out why Travis is hanging
+    - python: '2.6'
+
+stages:
+  - 'style checks'
+  - 'unit tests + documentation'
+  - 'build tests'
+  - name: 'docker build'
+    if: type = push AND branch IN (develop, master)
+
 
 #=============================================================================
 # Environment
@@ -101,29 +131,49 @@ sudo: false
 
 # Docs need graphviz to build
 addons:
+  # for Linux builds, we use APT
   apt:
     packages:
+      - ccache
+      - cmake
       - gfortran
-      - mercurial
       - graphviz
       - gnupg2
-      - cmake
+      - kcov
+      - mercurial
+      - ninja-build
+      - perl
+      - perl-base
+      - realpath
       - r-base
       - r-base-core
       - r-base-dev
-      - perl
-      - perl-base
+  # for Mac builds, we use Homebrew
+  homebrew:
+    packages:
+      - python@2
+      - gcc
+      - gnupg2
+      - ccache
 
-cache: pip
+# ~/.ccache needs to be cached directly as Travis is not taking care of it
+# (possibly because we use 'language: python' and not 'language: c')
+cache:
+  pip: true
+  ccache: true
+  directories:
+    - ~/.mirror
+    - ~/.ccache
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions python > /dev/null || brew install python; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gcc    > /dev/null || brew install gcc;    fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gnupg2 > /dev/null || brew install gnupg2; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        pip2 install --upgrade pip;
+        pip2 install virtualenv;
+        virtualenv venv;
+        source venv/bin/activate;
+    fi
+  - ccache -M 2G && ccache -z
 
 # Install various dependencies
 install:
@@ -132,7 +182,10 @@ install:
   - pip install --upgrade setuptools
   - pip install --upgrade codecov
   - pip install --upgrade flake8
-  - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade -r lib/spack/docs/requirements.txt; fi
+  - pip install --upgrade pep8-naming
+  - if [[ "$TEST_SUITE" == "doc" ]]; then
+        pip install --upgrade -r lib/spack/docs/requirements.txt;
+    fi
 
 before_script:
   # Need this for the git tests to succeed.
@@ -142,16 +195,27 @@ before_script:
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
 
-  # Set up external dependencies for build tests, because the take too long to compile
-  - if [[ "$TEST_SUITE" == "build" ]]; then cp share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml; fi
+  # Set up external deps for build tests, b/c they take too long to compile
+  - if [[ "$TEST_SUITE" == "build" ]]; then
+        cp share/spack/qa/configuration/*.yaml etc/spack/;
+    fi
 
 #=============================================================================
 # Building
 #=============================================================================
-script: share/spack/qa/run-$TEST_SUITE-tests
+services:
+  - docker
+
+script:
+  - share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - codecov --env PY_VERSION
+  - ccache -s
+  - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
+        codecov --env PYTHON_VERSION
+                --required
+                --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
+    fi
 
 #=============================================================================
 # Notifications

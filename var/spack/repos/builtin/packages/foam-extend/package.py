@@ -1,29 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# License
-# -------
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -54,14 +33,15 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 from spack import *
+from spack.util.environment import EnvironmentModifications
 from spack.pkg.builtin.openfoam_com import OpenfoamArch
 from spack.pkg.builtin.openfoam_com import add_extra_files
 from spack.pkg.builtin.openfoam_com import write_environ
 from spack.pkg.builtin.openfoam_com import rewrite_environ_files
+import llnl.util.tty as tty
 
 
 class FoamExtend(Package):
@@ -74,10 +54,10 @@ class FoamExtend(Package):
 
     homepage = "http://www.extend-project.de/"
 
-    version('4.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-4.0')
-    version('3.2', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.2')
-    version('3.1', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.1')
-    version('3.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.0')
+    version('4.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git')
+    version('3.2', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git')
+    version('3.1', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git')
+    version('3.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git')
 
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
@@ -140,14 +120,77 @@ class FoamExtend(Package):
     #
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
-        run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-        run_env.set('WM_PROJECT_DIR', self.projectdir)
-        for d in ['wmake', self.archbin]:  # bin already added automatically
-            run_env.prepend_path('PATH', join_path(self.projectdir, d))
+        """Add environment variables to the generated module file.
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ . $WM_PROJECT_DIR/etc/bashrc
+        """
+
+        # NOTE: Spack runs setup_environment twice.
+        # 1) pre-build to set up the build environment
+        # 2) post-install to determine runtime environment variables
+        # The etc/bashrc is only available (with corrrect content)
+        # post-installation.
+
+        bashrc = join_path(self.projectdir, 'etc', 'bashrc')
+        minimal = True
+        if os.path.isfile(bashrc):
+            # post-install: source the installed bashrc
+            try:
+                mods = EnvironmentModifications.from_sourcing_file(
+                    bashrc,
+                    clean=True,  # Remove duplicate entries
+                    blacklist=[  # Blacklist these
+                        # Inadvertent changes
+                        # -------------------
+                        'PS1',            # Leave unaffected
+                        'MANPATH',        # Leave unaffected
+
+                        # Unneeded bits
+                        # -------------
+                        'FOAM_INST_DIR',  # Possibly incorrect
+                        'FOAM_(APP|ETC|SRC|SOLVERS|UTILITIES)',
+                        'FOAM_TEST_.*_DIR',
+                        'WM_NCOMPPROCS',
+                        # 'FOAM_TUTORIALS',  # can be useful
+
+                        # Lots of third-party cruft
+                        # -------------------------
+                        '[A-Z].*_(BIN|LIB|INCLUDE)_DIR',
+                        '[A-Z].*_SYSTEM',
+                        'WM_THIRD_PARTY_.*',
+                        '(BISON|FLEX|CMAKE|ZLIB)_DIR',
+                        '(METIS|PARMETIS|PARMGRIDGEN|SCOTCH)_DIR',
+
+                        # User-specific
+                        # -------------
+                        'FOAM_RUN',
+                        '(FOAM|WM)_.*USER_.*',
+                    ],
+                    whitelist=[  # Whitelist these
+                        'MPI_ARCH_PATH',  # Can be needed for compilation
+                        'PYTHON_BIN_DIR',
+                    ])
+
+                run_env.extend(mods)
+                minimal = False
+                tty.info('foam-extend env: {0}'.format(bashrc))
+            except Exception:
+                minimal = True
+
+        if minimal:
+            # pre-build or minimal environment
+            tty.info('foam-extend minimal env {0}'.format(self.prefix))
+            run_env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
+            run_env.set('FOAM_PROJECT_DIR', self.projectdir)
+            run_env.set('WM_PROJECT_DIR', self.projectdir)
+            for d in ['wmake', self.archbin]:  # bin added automatically
+                run_env.prepend_path('PATH', join_path(self.projectdir, d))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Provide location of the OpenFOAM project.
+        """Location of the OpenFOAM project.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.
@@ -317,7 +360,6 @@ class FoamExtend(Package):
 
     def install(self, spec, prefix):
         """Install under the projectdir"""
-        opts = str(self.foam_arch)
 
         # Fairly ugly since intermediate targets are scattered inside sources
         appdir = 'applications'
@@ -354,19 +396,22 @@ class FoamExtend(Package):
             subitem = join_path(appdir, 'Allwmake')
             install(subitem, join_path(self.projectdir, subitem))
 
-            ignored = [opts]  # Ignore intermediate targets
+            foam_arch_str = str(self.foam_arch)
+            # Ignore intermediate targets
+            ignore = lambda p: os.path.basename(p) == foam_arch_str
+
             for d in ['src', 'tutorials']:
                 install_tree(
                     d,
                     join_path(self.projectdir, d),
-                    ignore=shutil.ignore_patterns(*ignored),
+                    ignore=ignore,
                     symlinks=True)
 
             for d in ['solvers', 'utilities']:
                 install_tree(
                     join_path(appdir, d),
                     join_path(self.projectdir, appdir, d),
-                    ignore=shutil.ignore_patterns(*ignored),
+                    ignore=ignore,
                     symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')

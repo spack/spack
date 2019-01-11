@@ -1,28 +1,8 @@
-##############################################################################
-# Copyright (c) 2017 Mark Olesen, OpenCFD Ltd.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file was authored by Mark Olesen <mark.olesen@esi-group.com>
-# and is released as part of spack under the LGPL license.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
-#
-# License
-# -------
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -55,7 +35,6 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 import llnl.util.tty as tty
@@ -80,10 +59,15 @@ class OpenfoamOrg(Package):
     homepage = "http://www.openfoam.org/"
     baseurl  = "https://github.com/OpenFOAM"
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
+    git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
-    version('4.1', '318a446c4ae6366c7296b61184acd37c',
+    version('develop', branch='master')
+    version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
+            url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
+    version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
-    version('develop', git='https://github.com/OpenFOAM/OpenFOAM-dev.git')
+    version('2.4.0', 'ad7d8b7b0753655b2b6fd9e92eefa92a',
+            url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
 
     variant('int64', default=False,
             description='Compile with 64-bit label')
@@ -107,15 +91,10 @@ class OpenfoamOrg(Package):
     assets = ['bin/foamEtcFile']
 
     # Version-specific patches
+    patch('50-etc.patch', when='@5.0:')
     patch('41-etc.patch', when='@4.1')
-    patch('41-site.patch', when='@4.1')
-
-    # Some user config settings
-    config = {
-        'mplib': 'SYSTEMMPI',   # Use system mpi for spack
-        # Add links into bin/, lib/ (eg, for other applications)
-        'link': False
-    }
+    patch('41-site.patch', when='@4.1:')
+    patch('240-etc.patch', when='@2.4.0')
 
     # The openfoam architecture, compiler information etc
     _foam_arch = None
@@ -133,14 +112,34 @@ class OpenfoamOrg(Package):
     # - End of definitions / setup -
     #
 
+    # Some user config settings
+    @property
+    def config(self):
+        settings = {
+            # Use system mpi for spack
+            'mplib': 'SYSTEMMPI',
+
+            # Add links into bin/, lib/ (eg, for other applications)
+            'link': False,
+        }
+        # OpenFOAM v2.4 and earlier lacks WM_LABEL_OPTION
+        if self.spec.satisfies('@:2.4'):
+            settings['label-size'] = False
+        return settings
+
     def setup_environment(self, spack_env, run_env):
+        # This should be similar to the openfoam-com package,
+        # but sourcing the etc/bashrc here seems to exit with an error.
+        # ... this needs to be examined in more detail.
+        #
+        # Minimal environment only.
         run_env.set('FOAM_PROJECT_DIR', self.projectdir)
         run_env.set('WM_PROJECT_DIR', self.projectdir)
         for d in ['wmake', self.archbin]:  # bin already added automatically
             run_env.prepend_path('PATH', join_path(self.projectdir, d))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Provide location of the OpenFOAM project.
+        """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.
@@ -199,8 +198,8 @@ class OpenfoamOrg(Package):
         edits = {
             'WM_THIRD_PARTY_DIR':
             r'$WM_PROJECT_DIR/ThirdParty #SPACK: No separate third-party',
-            'WM_VERSION': self.version,    # consistency
-            'FOAMY_HEX_MESH': '',          # This is horrible (unset variable?)
+            'WM_VERSION': str(self.version),  # consistency
+            'FOAMY_HEX_MESH': '',  # This is horrible (unset variable?)
         }
         rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
             edits,
@@ -258,10 +257,18 @@ class OpenfoamOrg(Package):
 
         # Adjust components to use SPACK variants
         for component, subdict in self.etc_config.items():
-            write_environ(
-                subdict,
-                posix=join_path('etc', 'config.sh',  component),
-                cshell=join_path('etc', 'config.csh', component))
+            # Versions up to 3.0 used an etc/config/component.sh naming
+            # convention instead of etc/config.sh/component
+            if spec.satisfies('@:3.0'):
+                write_environ(
+                    subdict,
+                    posix=join_path('etc', 'config',  component) + '.sh',
+                    cshell=join_path('etc', 'config', component) + '.csh')
+            else:
+                write_environ(
+                    subdict,
+                    posix=join_path('etc', 'config.sh',  component),
+                    cshell=join_path('etc', 'config.csh', component))
 
     def build(self, spec, prefix):
         """Build using the OpenFOAM Allwmake script, with a wrapper to source
@@ -317,12 +324,13 @@ class OpenfoamOrg(Package):
             dirs.extend(['doc'])
 
         # Install platforms (and doc) skipping intermediate targets
-        ignored = ['src', 'applications', 'html', 'Guides']
+        relative_ignore_paths = ['src', 'applications', 'html', 'Guides']
+        ignore = lambda p: p in relative_ignore_paths
         for d in dirs:
             install_tree(
                 d,
                 join_path(self.projectdir, d),
-                ignore=shutil.ignore_patterns(*ignored),
+                ignore=ignore,
                 symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')

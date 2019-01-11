@@ -1,3 +1,8 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _contribution-guide:
 
 ==================
@@ -34,13 +39,30 @@ Continuous Integration
 
 Spack uses `Travis CI <https://travis-ci.org/spack/spack>`_ for Continuous Integration
 testing. This means that every time you submit a pull request, a series of tests will
-be run to make sure you didn't accidentally introduce any bugs into Spack. Your PR
-will not be accepted until it passes all of these tests. While you can certainly wait
+be run to make sure you didn't accidentally introduce any bugs into Spack. **Your PR
+will not be accepted until it passes all of these tests.** While you can certainly wait
 for the results of these tests after submitting a PR, we recommend that you run them
 locally to speed up the review process.
 
+.. note::
+
+   Oftentimes, Travis will fail for reasons other than a problem with your PR.
+   For example, apt-get, pip, or homebrew will fail to download one of the
+   dependencies for the test suite, or a transient bug will cause the unit tests
+   to timeout. If Travis fails, click the "Details" link and click on the test(s)
+   that is failing. If it doesn't look like it is failing for reasons related to
+   your PR, you have two options. If you have write permissions for the Spack
+   repository, you should see a "Restart job" button on the right-hand side. If
+   not, you can close and reopen your PR to rerun all of the tests. If the same
+   test keeps failing, there may be a problem with your PR. If you notice that
+   every recent PR is failing with the same error message, it may be that Travis
+   is down or one of Spack's dependencies put out a new release that is causing
+   problems. If this is the case, please file an issue.
+
+
 If you take a look in ``$SPACK_ROOT/.travis.yml``, you'll notice that we test
-against Python 2.6, 2.7, and 3.3-3.6. We currently perform 3 types of tests:
+against Python 2.6, 2.7, and 3.4-3.7 on both macOS and Linux. We currently
+perform 3 types of tests:
 
 ^^^^^^^^^^
 Unit Tests
@@ -80,6 +102,13 @@ tests, run:
 A more detailed list of available unit tests can be found by running
 ``spack test --long-list``.
 
+By default, ``pytest`` captures the output of all unit tests. If you add print
+statements to a unit test and want to see the output, simply run:
+
+.. code-block:: console
+
+   $ spack test -s -k architecture
+
 Unit tests are crucial to making sure bugs aren't introduced into Spack. If you
 are modifying core Spack libraries or adding new functionality, please consider
 adding new unit tests or strengthening existing tests.
@@ -87,7 +116,7 @@ adding new unit tests or strengthening existing tests.
 .. note::
 
    There is also a ``run-unit-tests`` script in ``share/spack/qa`` that
-   runs the unit tests. Afterwards, it reports back to Coverage with the
+   runs the unit tests. Afterwards, it reports back to Codecov with the
    percentage of Spack that is covered by unit tests. This script is
    designed for Travis CI. If you want to run the unit tests yourself, we
    suggest you use ``spack test``.
@@ -154,20 +183,27 @@ However, if you aren't compliant with PEP 8, flake8 will complain:
 
 Most of the error messages are straightforward, but if you don't understand what
 they mean, just ask questions about them when you submit your PR. The line numbers
-will change if you add or delete lines, so simply run ``run-flake8-tests`` again
+will change if you add or delete lines, so simply run ``spack flake8`` again
 to update them.
 
 .. tip::
 
    Try fixing flake8 errors in reverse order. This eliminates the need for
-   multiple runs of ``flake8`` just to re-compute line numbers and makes it
-   much easier to fix errors directly off of the Travis output.
+   multiple runs of ``spack flake8`` just to re-compute line numbers and
+   makes it much easier to fix errors directly off of the Travis output.
 
 .. warning::
 
-   Flake8 requires setuptools in order to run. If you installed ``py-flake8``
-   with Spack, make sure to add ``py-setuptools`` to your ``PYTHONPATH``.
-   Otherwise, you will get an error message like:
+   Flake8 and ``pep8-naming`` require a number of dependencies in order
+   to run.  If you installed ``py-flake8`` and ``py-pep8-naming``, the
+   easiest way to ensure the right packages are on your ``PYTHONPATH`` is
+   to run::
+
+     spack activate py-flake8
+     spack activate pep8-naming
+
+   so that all of the dependencies are symlinked to a central
+   location. If you see an error message like:
 
    .. code-block:: console
 
@@ -175,6 +211,8 @@ to update them.
         File: "/usr/bin/flake8", line 5, in <module>
           from pkg_resources import load_entry_point
       ImportError: No module named pkg_resources
+
+   that means Flake8 couldn't find setuptools in your ``PYTHONPATH``.
 
 ^^^^^^^^^^^^^^^^^^^
 Documentation Tests
@@ -190,6 +228,7 @@ installed with Spack:
 
 * sphinx
 * sphinxcontrib-programoutput
+* sphinx-rtd-theme
 * graphviz
 * git
 * mercurial
@@ -199,18 +238,25 @@ installed with Spack:
 
    Sphinx has `several required dependencies <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-sphinx/package.py>`_.
    If you installed ``py-sphinx`` with Spack, make sure to add all of these
-   dependencies to your ``PYTHONPATH``. The easiest way to do this is to run
-   ``spack activate py-sphinx`` so that all of the dependencies are symlinked
-   to a central location. If you see an error message like:
+   dependencies to your ``PYTHONPATH``. The easiest way to do this is to run:
 
    .. code-block:: console
 
-      Traceback (most recent call last):
-        File: "/usr/bin/flake8", line 5, in <module>
-          from pkg_resources import load_entry_point
-      ImportError: No module named pkg_resources
+      $ spack activate py-sphinx
+      $ spack activate py-sphinx-rtd-theme
+      $ spack activate py-sphinxcontrib-programoutput
 
-   that means Sphinx couldn't find setuptools in your ``PYTHONPATH``.
+   so that all of the dependencies are symlinked to a central location.
+   If you see an error message like:
+
+   .. code-block:: console
+
+      Extension error:
+      Could not import extension sphinxcontrib.programoutput (exception: No module named sphinxcontrib.programoutput)
+      make: *** [html] Error 1
+
+   that means Sphinx couldn't find ``py-sphinxcontrib-programoutput`` in your
+   ``PYTHONPATH``.
 
 Once all of the dependencies are installed, you can try building the documentation:
 
@@ -225,11 +271,11 @@ your PR is accepted.
 
 .. note::
 
-   There is also a ``run-doc-tests`` script in the Quality Assurance directory.
-   The only difference between running this script and running ``make`` by hand
-   is that the script will exit immediately if it encounters an error or warning.
-   This is necessary for Travis CI. If you made a lot of documentation changes, it
-   is much quicker to run ``make`` by hand so that you can see all of the warnings
+   There is also a ``run-doc-tests`` script in ``share/spack/qa``. The only
+   difference between running this script and running ``make`` by hand is that
+   the script will exit immediately if it encounters an error or warning. This
+   is necessary for Travis CI. If you made a lot of documentation changes, it is
+   much quicker to run ``make`` by hand so that you can see all of the warnings
    at once.
 
 If you are editing the documentation, you should obviously be running the
@@ -276,6 +322,37 @@ Instead, they should look like:
 Documentation changes can result in much more obfuscated warning messages.
 If you don't understand what they mean, feel free to ask when you submit
 your PR.
+
+--------
+Coverage
+--------
+
+Spack uses `Codecov <https://codecov.io/>`_ to generate and report unit test
+coverage. This helps us tell what percentage of lines of code in Spack are
+covered by unit tests. Although code covered by unit tests can still contain
+bugs, it is much less error prone than code that is not covered by unit tests.
+
+Codecov provides `browser extensions <https://github.com/codecov/browser-extension>`_
+for Google Chrome, Firefox, and Opera. These extensions integrate with GitHub
+and allow you to see coverage line-by-line when viewing the Spack repository.
+If you are new to Spack, a great way to get started is to write unit tests to
+increase coverage!
+
+Unlike with Travis, Codecov tests are not required to pass in order for your
+PR to be merged. If you modify core Spack libraries, we would greatly
+appreciate unit tests that cover these changed lines. Otherwise, we have no
+way of knowing whether or not your changes introduce a bug. If you make
+substantial changes to the core, we may request unit tests to increase coverage.
+
+.. note::
+
+   If the only files you modified are package files, we do not care about
+   coverage on your PR. You may notice that the Codecov tests fail even though
+   you didn't modify any core files. This means that Spack's overall coverage
+   has increased since you branched off of develop. This is a good thing!
+   If you really want to get the Codecov tests to pass, you can rebase off of
+   the latest develop, but again, this is not required.
+
 
 -------------
 Git Workflows

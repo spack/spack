@@ -1,28 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import shutil
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+
 from spack import *
 
 
@@ -34,16 +16,23 @@ class R(AutotoolsPackage):
     Please consult the R project homepage for further information."""
 
     homepage = "https://www.r-project.org"
-    url = "https://cloud.r-project.org/src/base/R-3/R-3.4.0.tar.gz"
+    url = "https://cloud.r-project.org/src/base/R-3/R-3.4.3.tar.gz"
 
     extendable = True
 
+    version('3.5.2', sha256='e53d8c3cf20f2b8d7a9c1631b6f6a22874506fb392034758b3bb341c586c5b62')
+    version('3.5.1', sha256='0463bff5eea0f3d93fa071f79c18d0993878fd4f2e18ae6cf22c1639d11457ed')
+    version('3.5.0', 'c0455dbfa76ca807e4dfa93d49dcc817')
+    version('3.4.4', '9d6f73be072531e95884c7965ff80cd8')
+    version('3.4.3', 'bc55db54f992fda9049201ca62d2a584')
+    version('3.4.2', '1cd6d37850188e7f190f1eb94a24ca1f')
     version('3.4.1', '3a79c01dc0527c62e80ffb1c489297ea')
     version('3.4.0', '75083c23d507b9c16d5c6afbd7a827e7')
     version('3.3.3', '0ac211ec15e813a24f8f4a5a634029a4')
     version('3.3.2', '2437014ef40641cdc9673e89c040b7a8')
     version('3.3.1', 'f50a659738b73036e2f5635adbd229c5')
     version('3.3.0', '5a7506c8813432d1621c9725e86baf7a')
+    version('3.2.5', '7b23ee70cfb383be3bd4360e3c71d8c3')
     version('3.2.3', '1ba3dac113efab69e706902810cc2970')
     version('3.2.2', '57cef5c2e210a5454da1979562a10e5b')
     version('3.2.1', 'c2aac8b40f84e08e7f8c9068de9239a3')
@@ -55,12 +44,14 @@ class R(AutotoolsPackage):
             description='Links to externally installed BLAS/LAPACK')
     variant('X', default=False,
             description='Enable X11 support (call configure --with-x)')
+    variant('memory_profiling', default=False,
+            description='Enable memory profiling')
 
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
     depends_on('lapack', when='+external-lapack')
 
-    # Concrete dependencies
+    # Concrete dependencies.
     depends_on('readline')
     depends_on('ncurses')
     depends_on('icu4c')
@@ -86,6 +77,10 @@ class R(AutotoolsPackage):
 
     patch('zlib.patch', when='@:3.3.2')
 
+    filter_compiler_wrappers(
+        'Makeconf', relative_root=os.path.join('rlib', 'R', 'etc')
+    )
+
     @property
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
@@ -94,16 +89,21 @@ class R(AutotoolsPackage):
         spec   = self.spec
         prefix = self.prefix
 
+        tcl_config_path = join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')
+        tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
+
         config_args = [
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
             '--enable-R-shlib',
             '--enable-BLAS-shlib',
-            '--enable-R-framework=no'
+            '--enable-R-framework=no',
+            '--with-tcl-config={0}'.format(tcl_config_path),
+            '--with-tk-config={0}'.format(tk_config_path),
         ]
 
         if '+external-lapack' in spec:
             config_args.extend([
-                '--with-blas',
+                '--with-blas={0}'.format(spec['blas'].libs),
                 '--with-lapack'
             ])
 
@@ -111,6 +111,9 @@ class R(AutotoolsPackage):
             config_args.append('--with-x')
         else:
             config_args.append('--without-x')
+
+        if '+memory_profiling' in spec:
+            config_args.append('--enable-memory-profiling')
 
         return config_args
 
@@ -120,27 +123,7 @@ class R(AutotoolsPackage):
         # dependencies in Spack.
         src_makeconf = join_path(self.etcdir, 'Makeconf')
         dst_makeconf = join_path(self.etcdir, 'Makeconf.spack')
-        shutil.copy(src_makeconf, dst_makeconf)
-
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to tell the configuration files and Makefiles
-        to use the compilers that Spack built the package with.
-
-        If this isn't done, they'll have CC and CXX set to Spack's generic
-        cc and c++. We want them to be bound to whatever compiler
-        they were built with."""
-
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
-
-        filter_file(env['CC'], self.compiler.cc,
-                    join_path(self.etcdir, 'Makeconf'), **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx,
-                    join_path(self.etcdir, 'Makeconf'), **kwargs)
-        filter_file(env['F77'], self.compiler.f77,
-                    join_path(self.etcdir, 'Makeconf'), **kwargs)
-        filter_file(env['FC'], self.compiler.fc,
-                    join_path(self.etcdir, 'Makeconf'), **kwargs)
+        install(src_makeconf, dst_makeconf)
 
     # ========================================================================
     # Set up environment to make install easy for R extensions.

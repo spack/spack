@@ -1,27 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
 from spack import *
 import spack.util.web
 
@@ -30,9 +12,16 @@ class Protobuf(CMakePackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/google/protobuf/archive/v3.2.0.tar.gz"
+    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.2.0.tar.gz"
     root_cmakelists_dir = "cmake"
 
+    version('3.6.1', sha256='3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b')
+    version('3.5.2', 'ff6742018c172c66ecc627029ad54280')
+    version('3.5.1.1', '5005003ae6b94773c4bbca87a644b131')
+    version('3.5.1',   '710f1a75983092c9b45ecef207236104')
+    version('3.5.0.1', 'b3ed2401acf167207277b254fd7f9638')
+    version('3.5.0',   'd95db321e1a9901fffc51ed8994afd36')
+    version('3.4.1',   '31b19dcfd6567095fdb66a8c07347222')
     version('3.4.0', '1d077a7d4db3d75681f5c333f2de9b1a')
     version('3.3.0', 'f0f712e98de3db0c65c0c417f5e7aca8')
     version('3.2.0', 'efaa08ae635664fb5e7f31421a41a995')
@@ -41,12 +30,18 @@ class Protobuf(CMakePackage):
     # does not build with CMake:
     # version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
 
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
+
     depends_on('zlib')
 
-    conflicts('%gcc@:4.6')  # Requires c++11
+    conflicts('%gcc@:4.6', when='@3.6.0:')  # Requires c++11
+    conflicts('%gcc@:4.6', when='@3.2.0:3.3.0')  # Breaks
 
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
+
+    patch('intel_inline.patch', when='@3.2.0: %intel')
 
     def fetch_remote_versions(self):
         """Ignore additional source artifacts uploaded with releases,
@@ -60,7 +55,10 @@ class Protobuf(CMakePackage):
 
     def cmake_args(self):
         args = [
+            '-DBUILD_SHARED_LIBS=%s' % int('+shared' in self.spec),
             '-Dprotobuf_BUILD_TESTS:BOOL=OFF',
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON'
         ]
+        if sys.platform == 'darwin':
+            args.extend(['-DCMAKE_MACOSX_RPATH=ON'])
         return args

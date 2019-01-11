@@ -1,52 +1,35 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-"""This test does sanity checks on Spack's builtin package database."""
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+"""This test does sanity checks on Spack's builtin package database."""
 import re
 
-import spack
-from spack.repository import RepoPath
+import pytest
+
+import spack.paths
+import spack.repo
+import spack.fetch_strategy
 
 
-def check_db():
-    """Get all packages in a DB to make sure they work."""
+def check_repo():
+    """Get all packages in the builtin repo to make sure they work."""
     for name in spack.repo.all_package_names():
         spack.repo.get(name)
 
 
+@pytest.mark.maybeslow
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
-    check_db()
+    check_repo()
 
 
 def test_get_all_mock_packages():
     """Get the mock packages once each too."""
-    db = RepoPath(spack.mock_packages_path)
-    spack.repo.swap(db)
-    check_db()
-    spack.repo.swap(db)
+    db = spack.repo.RepoPath(spack.paths.mock_packages_path)
+    with spack.repo.swap(db):
+        check_repo()
 
 
 def test_all_versions_are_lowercase():
@@ -57,3 +40,50 @@ def test_all_versions_are_lowercase():
             errors.append(name)
 
     assert len(errors) == 0
+
+
+def test_all_virtual_packages_have_default_providers():
+    """All virtual packages must have a default provider explicitly set."""
+    defaults = spack.config.get('packages', scope='defaults')
+    default_providers = defaults['all']['providers']
+    providers = spack.repo.path.provider_index.providers
+    default_providers_filename = \
+        spack.config.config.scopes['defaults'].get_section_filename('packages')
+    for provider in providers:
+        assert provider in default_providers, \
+            "all providers must have a default in %s" \
+            % default_providers_filename
+
+
+def test_package_version_consistency():
+    """Make sure all versions on builtin packages can produce a fetcher."""
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.get(name)
+        spack.fetch_strategy.check_pkg_attributes(pkg)
+        for version in pkg.versions:
+            assert spack.fetch_strategy.for_package_version(pkg, version)
+
+
+def test_no_fixme():
+    """Packages should not contain any boilerplate such as
+       FIXME or example.com."""
+    errors = []
+    fixme_regexes = [
+        r'remove this boilerplate',
+        r'FIXME: Put',
+        r'FIXME: Add',
+        r'example.com',
+    ]
+    for name in spack.repo.all_package_names():
+        repo = spack.repo.Repo(spack.paths.packages_path)
+        filename = repo.filename_for_package_name(name)
+        with open(filename, 'r') as package_file:
+            for i, line in enumerate(package_file):
+                pattern = next((r for r in fixme_regexes
+                                if re.search(r, line)), None)
+                if pattern:
+                    errors.append(
+                        "%s:%d: boilerplate needs to be removed: %s" %
+                        (filename, i, line.strip())
+                    )
+            assert [] == errors

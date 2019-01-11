@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 from spack import *
@@ -37,6 +18,12 @@ class Atlas(Package):
     """
     homepage = "http://math-atlas.sourceforge.net/"
 
+    version('3.11.39', '5f3252fa980f5f060f93edd4669321e2',
+            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.39/atlas3.11.39.tar.bz2')
+
+    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
+            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
+
     version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef',
             url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.3/atlas3.10.3.tar.bz2')
 
@@ -50,9 +37,6 @@ class Atlas(Package):
              destination='spack-resource-lapack',
              when='@3:')
 
-    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
-
     variant('shared', default=True, description='Builds shared library')
 
     variant(
@@ -60,6 +44,12 @@ class Atlas(Package):
         description='Multithreading support',
         values=('pthreads', 'none'),
         multi=False
+    )
+
+    variant('tune_cpu', default=-1,
+        multi=False,
+        description="Number of threads to tune to,\
+                -1 for autodetect, 0 for no threading"
     )
 
     provides('blas')
@@ -91,6 +81,11 @@ class Atlas(Package):
         # configure for 64-bit build
         options.extend([
             '-b', '64'
+        ])
+
+        # set number of cpu's to tune to
+        options.extend([
+            '-t', spec.variants['tune_cpu'].value
         ])
 
         # set compilers:
@@ -139,7 +134,7 @@ class Atlas(Package):
             to_find = ['liblapack'] + interfaces + ['libatlas']
             shared = False
         return find_libraries(
-            to_find, root=self.prefix, shared=shared, recurse=True
+            to_find, root=self.prefix, shared=shared, recursive=True
         )
 
     def install_test(self):

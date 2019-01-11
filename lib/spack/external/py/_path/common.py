@@ -1,6 +1,7 @@
 """
 """
 import os, sys, posixpath
+import fnmatch
 import py
 
 # Moved from local.py.
@@ -169,11 +170,16 @@ class PathBase(object):
     def readlines(self, cr=1):
         """ read and return a list of lines from the path. if cr is False, the
 newline will be removed from the end of each line. """
+        if sys.version_info < (3, ):
+            mode = 'rU'
+        else:  # python 3 deprecates mode "U" in favor of "newline" option
+            mode = 'r'
+
         if not cr:
-            content = self.read('rU')
+            content = self.read(mode)
             return content.split('\n')
         else:
-            f = self.open('rU')
+            f = self.open(mode)
             try:
                 return f.readlines()
             finally:
@@ -378,7 +384,7 @@ newline will be removed from the end of each line. """
         return self.strpath == str(other)
 
     def __fspath__(self):
-        return str(self)
+        return self.strpath
 
 class Visitor:
     def __init__(self, fil, rec, ignore, bf, sort):
@@ -436,4 +442,4 @@ class FNMatcher:
             name = str(path) # path.strpath # XXX svn?
             if not os.path.isabs(pattern):
                 pattern = '*' + path.sep + pattern
-        return py.std.fnmatch.fnmatch(name, pattern)
+        return fnmatch.fnmatch(name, pattern)

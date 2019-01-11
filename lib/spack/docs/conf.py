@@ -1,28 +1,9 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # flake8: noqa
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
-#
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
 # -*- coding: utf-8 -*-
 #
 # Spack documentation build configuration file, created by
@@ -42,7 +23,13 @@ import re
 import shutil
 import subprocess
 from glob import glob
-from sphinx.apidoc import main as sphinx_apidoc
+
+# Since Sphinx 1.7, sphinx.apidoc has been moved to sphinx.ext.apidoc
+# sphinx.apidoc is deprecated and will be removed in Sphinx 2.0
+try:
+    from sphinx.ext.apidoc import main as sphinx_apidoc
+except ImportError:
+    from sphinx.apidoc import main as sphinx_apidoc
 
 # -- Spack customizations -----------------------------------------------------
 
@@ -68,26 +55,32 @@ os.environ['COLIFY_SIZE'] = '25x120'
 #
 # Generate package list using spack command
 #
-with open('package_list.rst', 'w') as plist_file:
+with open('package_list.html', 'w') as plist_file:
     subprocess.Popen(
-        [spack_root + '/bin/spack', 'list', '--format=rst'], stdout=plist_file)
+        [spack_root + '/bin/spack', 'list', '--format=html'],
+        stdout=plist_file)
 
 #
 # Find all the `cmd-spack-*` references and add them to a command index
 #
-command_names = []
+import spack
+import spack.cmd
+command_names = spack.cmd.all_commands()
+documented_commands = set()
 for filename in glob('*rst'):
     with open(filename) as f:
         for line in f:
-            match = re.match('.. _(cmd-spack-.*):', line)
+            match = re.match('.. _cmd-(spack-.*):', line)
             if match:
-                command_names.append(match.group(1).strip())
+                documented_commands.add(match.group(1).strip())
 
+os.environ['COLUMNS'] = '120'
 shutil.copy('command_index.in', 'command_index.rst')
 with open('command_index.rst', 'a') as index:
-    index.write('\n')
-    for cmd in sorted(command_names):
-        index.write('   * :ref:`%s`\n' % cmd)
+    subprocess.Popen(
+        [spack_root + '/bin/spack', 'commands', '--format=rst'] + list(
+            documented_commands),
+        stdout=index)
 
 #
 # Run sphinx-apidoc
@@ -104,28 +97,6 @@ apidoc_args = [
 ]
 sphinx_apidoc(apidoc_args + ['../spack'])
 sphinx_apidoc(apidoc_args + ['../llnl'])
-
-#
-# Exclude everything in spack.__all__ from indexing.  All of these
-# symbols are imported from elsewhere in spack; their inclusion in
-# __all__ simply allows package authors to use `from spack import *`.
-# Excluding them ensures they're only documented in their "real" module.
-#
-# This also avoids issues where some of these symbols shadow core spack
-# modules.  Sphinx will complain about duplicate docs when this happens.
-#
-import fileinput, spack
-handling_spack = False
-for line in fileinput.input('spack.rst', inplace=1):
-    if handling_spack:
-        if not line.startswith('    :noindex:'):
-            print('    :noindex: %s' % ' '.join(spack.__all__))
-        handling_spack = False
-
-    if line.startswith('.. automodule::'):
-        handling_spack = (line == '.. automodule:: spack\n')
-
-    sys.stdout.write(line)
 
 # Enable todo items
 todo_include_todos = True
@@ -180,16 +151,16 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Spack'
-copyright = u'2013-2017, Lawrence Livermore National Laboratory.'
+copyright = u'2013-2019, Lawrence Livermore National Laboratory.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = str(spack.spack_version.up_to(2))
+version = '.'.join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
-release = str(spack.spack_version.up_to(2))
+release = spack.spack_version
 
 # The language for content autogenerated by Sphinx. Refer to documentation
 # for a list of supported languages.
@@ -238,7 +209,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = { 'logo_only' : True }
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ["_themes"]
+# html_theme_path = ["_themes"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".

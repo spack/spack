@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -31,10 +12,14 @@ class Mpich(AutotoolsPackage):
     the Message Passing Interface (MPI) standard."""
 
     homepage = "http://www.mpich.org"
-    url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    git      = "https://github.com/pmodels/mpich.git"
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
 
+    version('develop', submodules=True)
+    version('3.3',   '574af413dc0dc7fbb929a761822beb06')
+    version('3.2.1', 'e175452f4d61646a52c73031683fc375')
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')
     version('3.1.3', '93cb17f91ac758cbf9174ecb03563778')
@@ -42,7 +27,6 @@ class Mpich(AutotoolsPackage):
     version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
-    version('develop', git='git://github.com/pmodels/mpich')
 
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('pmi',   default=True,  description='Build with PMI support')
@@ -71,10 +55,16 @@ spack package at this time.''',
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
+    filter_compiler_wrappers(
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
+    )
+
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
-    patch('mpich32_clang.patch', when='@3.2%clang')
+    patch('mpich32_clang.patch', when='@3.2:3.2.0%clang')
+
+    depends_on('findutils', type='build')
 
     depends_on('libfabric', when='netmod=ofi')
 
@@ -169,34 +159,3 @@ spack package at this time.''',
         config_args.append(device_config)
 
         return config_args
-
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to make the MPI compilers use the
-        compilers that Spack built the package with.
-
-        If this isn't done, they'll have CC, CXX, F77, and FC set
-        to Spack's generic cc, c++, f77, and f90.  We want them to
-        be bound to whatever compiler they were built with."""
-
-        mpicc = join_path(self.prefix.bin, 'mpicc')
-        mpicxx = join_path(self.prefix.bin, 'mpicxx')
-        mpif77 = join_path(self.prefix.bin, 'mpif77')
-        mpif90 = join_path(self.prefix.bin, 'mpif90')
-
-        # Substitute Spack compile wrappers for the real
-        # underlying compiler
-        kwargs = {
-            'ignore_absent': True,
-            'backup': False,
-            'string': True
-        }
-        filter_file(env['CC'],  self.compiler.cc,  mpicc,  **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
-        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
-        filter_file(env['FC'],  self.compiler.fc,  mpif90, **kwargs)
-
-        # Remove this linking flag if present
-        # (it turns RPATH into RUNPATH)
-        for wrapper in (mpicc, mpicxx, mpif77, mpif90):
-            filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)

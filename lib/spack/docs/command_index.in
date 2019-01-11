@@ -1,9 +1,9 @@
-=============
-Command Index
-=============
+=================
+Command Reference
+=================
 
-This is an alphabetical list of commands with links to the places they
-appear in the documentation.
+This is a reference for all commands in the Spack command line interface.
+The same information is available through :ref:`spack-help`.
 
-.. hlist::
-   :columns: 3
+Commands that also have sections in the main documentation have a link to
+"More documentation".

@@ -1,41 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
+from __future__ import division
 
 import argparse
 import cgi
 import fnmatch
 import re
 import sys
+import math
 
 from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
+import spack.dependency
+import spack.repo
 import spack.cmd.common.arguments as arguments
 
 description = "list and search available packages"
@@ -113,23 +97,35 @@ def name_only(pkgs):
     colify(pkgs, indent=indent)
 
 
+def github_url(pkg):
+    """Link to a package file on github."""
+    url = 'https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/{0}/package.py'
+    return url.format(pkg.name)
+
+
+def rst_table(elts):
+    """Print out a RST-style table."""
+    cols = StringIO()
+    ncol, widths = colify(elts, output=cols, tty=True)
+    header = ' '.join('=' * (w - 1) for w in widths)
+    return '%s\n%s%s' % (header, cols.getvalue(), header)
+
+
+def rows_for_ncols(elts, ncols):
+    """Print out rows in a table with ncols of elts laid out vertically."""
+    clen = int(math.ceil(len(elts) / ncols))
+    for r in range(clen):
+        row = []
+        for c in range(ncols):
+            i = c * clen + r
+            row.append(elts[i] if i < len(elts) else None)
+        yield row
+
+
 @formatter
-def rst(pkgs):
+def rst(pkg_names):
     """Print out information on all packages in restructured text."""
 
-    def github_url(pkg):
-        """Link to a package file on github."""
-        url = 'https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/{0}/package.py'
-        return url.format(pkg.name)
-
-    def rst_table(elts):
-        """Print out a RST-style table."""
-        cols = StringIO()
-        ncol, widths = colify(elts, output=cols, tty=True)
-        header = ' '.join('=' * (w - 1) for w in widths)
-        return '%s\n%s%s' % (header, cols.getvalue(), header)
-
-    pkg_names = pkgs
     pkgs = [spack.repo.get(name) for name in pkg_names]
 
     print('.. _package-list:')
@@ -170,7 +166,7 @@ def rst(pkgs):
                                    reversed(sorted(pkg.versions))))
             print()
 
-        for deptype in spack.all_deptypes:
+        for deptype in spack.dependency.all_deptypes:
             deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print('%s Dependencies' % deptype.capitalize())
@@ -183,6 +179,102 @@ def rst(pkgs):
         print()
 
 
+@formatter
+def html(pkg_names):
+    """Print out information on all packages in Sphinx HTML.
+
+    This is intended to be inlined directly into Sphinx documentation.
+    We write HTML instead of RST for speed; generating RST from *all*
+    packages causes the Sphinx build to take forever. Including this as
+    raw HTML is much faster.
+    """
+
+    # Read in all packages
+    pkgs = [spack.repo.get(name) for name in pkg_names]
+
+    # Start at 2 because the title of the page from Sphinx is id1.
+    span_id = 2
+
+    # HTML header with an increasing id span
+    def head(n, span_id, title, anchor=None):
+        if anchor is None:
+            anchor = title
+        print(('<span id="id%d"></span>'
+               '<h1>%s<a class="headerlink" href="#%s" '
+               'title="Permalink to this headline">&para;</a>'
+               '</h1>') % (span_id, title, anchor))
+
+    # Start with the number of packages, skipping the title and intro
+    # blurb, which we maintain in the RST file.
+    print('<p>')
+    print('Spack currently has %d mainline packages:' % len(pkgs))
+    print('</p>')
+
+    # Table of links to all packages
+    print('<table border="1" class="docutils">')
+    print('<tbody valign="top">')
+    for i, row in enumerate(rows_for_ncols(pkg_names, 3)):
+        print('<tr class="row-odd">' if i % 2 == 0 else
+              '<tr class="row-even">')
+        for name in row:
+            print('<td>')
+            print('<a class="reference internal" href="#%s">%s</a></td>'
+                  % (name, name))
+            print('</td>')
+        print('</tr>')
+    print('</tbody>')
+    print('</table>')
+    print('<hr class="docutils"/>')
+
+    # Output some text for each package.
+    for pkg in pkgs:
+        print('<div class="section" id="%s">' % pkg.name)
+        head(2, span_id, pkg.name)
+        span_id += 1
+
+        print('<dl class="docutils">')
+
+        print('<dt>Homepage:</dt>')
+        print('<dd><ul class="first last simple">')
+        print(('<li>'
+               '<a class="reference external" href="%s">%s</a>'
+               '</li>') % (pkg.homepage, cgi.escape(pkg.homepage)))
+        print('</ul></dd>')
+
+        print('<dt>Spack package:</dt>')
+        print('<dd><ul class="first last simple">')
+        print(('<li>'
+               '<a class="reference external" href="%s">%s/package.py</a>'
+               '</li>') % (github_url(pkg), pkg.name))
+        print('</ul></dd>')
+
+        if pkg.versions:
+            print('<dt>Versions:</dt>')
+            print('<dd>')
+            print(', '.join(str(v) for v in reversed(sorted(pkg.versions))))
+            print('</dd>')
+
+        for deptype in spack.dependency.all_deptypes:
+            deps = pkg.dependencies_of_type(deptype)
+            if deps:
+                print('<dt>%s Dependencies:</dt>' % deptype.capitalize())
+                print('<dd>')
+                print(', '.join(
+                    d if d not in pkg_names else
+                    '<a class="reference internal" href="#%s">%s</a>' % (d, d)
+                    for d in deps))
+                print('</dd>')
+
+        print('<dt>Description:</dt>')
+        print('<dd>')
+        print(cgi.escape(pkg.format_doc(indent=2)))
+        print('</dd>')
+        print('</dl>')
+
+        print('<hr class="docutils"/>')
+        print('</div>')
+
+
 def list(parser, args):
     # Retrieve the names of all the packages
     pkgs = set(spack.repo.all_package_names())
@@ -191,7 +283,8 @@ def list(parser, args):
 
     # Filter by tags
     if args.tags:
-        packages_with_tags = set(spack.repo.packages_with_tags(*args.tags))
+        packages_with_tags = set(
+            spack.repo.path.packages_with_tags(*args.tags))
         sorted_packages = set(sorted_packages) & packages_with_tags
         sorted_packages = sorted(sorted_packages)
 

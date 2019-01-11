@@ -1,52 +1,37 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-
-import spack
-from llnl.util.filesystem import join_path
-from spack.directory_layout import YamlDirectoryLayout
-from spack.filesystem_view import YamlFilesystemView
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import pytest
 
+import spack.spec
+import spack.package
+from llnl.util.link_tree import MergeConflictError
+from spack.directory_layout import YamlDirectoryLayout
+from spack.filesystem_view import YamlFilesystemView
+from spack.repo import RepoPath
 
-class FakeExtensionPackage(object):
-    def __init__(self, name, prefix):
-        self.name = name
-        self.prefix = prefix
-        self.spec = FakeSpec(self)
+"""This includes tests for customized activation logic for specific packages
+   (e.g. python and perl).
+"""
 
 
-class FakeSpec(object):
-    def __init__(self, package):
-        self.name = package.name
-        self.prefix = package.prefix
-        self.hash = self.name
+def create_ext_pkg(name, prefix, extendee_spec):
+    ext_spec = spack.spec.Spec(name)
+    ext_spec._concrete = True
 
-    def dag_hash(self):
-        return self.hash
+    ext_spec.package.spec.prefix = prefix
+    ext_pkg = ext_spec.package
+    ext_pkg.extends_spec = extendee_spec
+    return ext_pkg
+
+
+def create_python_ext_pkg(name, prefix, python_spec, namespace=None):
+    ext_pkg = create_ext_pkg(name, prefix, python_spec)
+    ext_pkg.py_namespace = namespace
+    return ext_pkg
 
 
 def create_dir_structure(tmpdir, dir_structure):
@@ -57,7 +42,20 @@ def create_dir_structure(tmpdir, dir_structure):
 
 
 @pytest.fixture()
-def python_and_extension_dirs(tmpdir):
+def builtin_and_mock_packages():
+    # These tests use mock_repo packages to test functionality of builtin
+    # packages for python and perl. To test this we put the mock repo at lower
+    # precedence than the builtin repo, so we test builtin.perl against
+    # builtin.mock.perl-extension.
+    repo_dirs = [spack.paths.packages_path, spack.paths.mock_packages_path]
+    path = RepoPath(*repo_dirs)
+
+    with spack.repo.swap(path):
+        yield
+
+
+@pytest.fixture()
+def python_and_extension_dirs(tmpdir, builtin_and_mock_packages):
     python_dirs = {
         'bin/': {
             'python': None
@@ -75,7 +73,7 @@ def python_and_extension_dirs(tmpdir):
 
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
-    python_spec.package.spec._set_test_prefix(str(python_prefix))
+    python_spec.package.spec.prefix = str(python_prefix)
 
     ext_dirs = {
         'bin/': {
@@ -84,7 +82,7 @@ def python_and_extension_dirs(tmpdir):
         'lib/': {
             'python2.7/': {
                 'site-packages/': {
-                    'py-extension/': {
+                    'py-extension1/': {
                         'sample.py': None
                     }
                 }
@@ -92,84 +90,214 @@ def python_and_extension_dirs(tmpdir):
         }
     }
 
-    ext_name = 'py-extension'
+    ext_name = 'py-extension1'
     ext_prefix = tmpdir.join(ext_name)
     create_dir_structure(ext_prefix, ext_dirs)
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
-    with open(join_path(ext_prefix, easy_install_location), 'w') as F:
-        F.write("""path/to/ext1.egg
+    with open(str(ext_prefix.join(easy_install_location)), 'w') as f:
+        f.write("""path/to/ext1.egg
 path/to/setuptools.egg""")
 
     return str(python_prefix), str(ext_prefix)
 
 
-def test_python_activation(tmpdir):
-    # Note the lib directory is based partly on the python version
-    python_spec = spack.spec.Spec('python@2.7.12')
-    python_spec._concrete = True
+@pytest.fixture()
+def namespace_extensions(tmpdir, builtin_and_mock_packages):
+    ext1_dirs = {
+        'bin/': {
+            'py-ext-tool1': None
+        },
+        'lib/': {
+            'python2.7/': {
+                'site-packages/': {
+                    'examplenamespace/': {
+                        '__init__.py': None,
+                        'ext1_sample.py': None
+                    }
+                }
+            }
+        }
+    }
 
-    python_name = 'python'
-    tmpdir.ensure(python_name, dir=True)
+    ext2_dirs = {
+        'bin/': {
+            'py-ext-tool2': None
+        },
+        'lib/': {
+            'python2.7/': {
+                'site-packages/': {
+                    'examplenamespace/': {
+                        '__init__.py': None,
+                        'ext2_sample.py': None
+                    }
+                }
+            }
+        }
+    }
 
-    python_prefix = str(tmpdir.join(python_name))
-    # Set the prefix on the package's spec reference because that is a copy of
-    # the original spec
-    python_spec.package.spec._set_test_prefix(python_prefix)
+    ext1_name = 'py-extension1'
+    ext1_prefix = tmpdir.join(ext1_name)
+    create_dir_structure(ext1_prefix, ext1_dirs)
 
-    ext_name = 'py-extension'
-    tmpdir.ensure(ext_name, dir=True)
-    ext_pkg = FakeExtensionPackage(ext_name, str(tmpdir.join(ext_name)))
+    ext2_name = 'py-extension2'
+    ext2_prefix = tmpdir.join(ext2_name)
+    create_dir_structure(ext2_prefix, ext2_dirs)
 
-    python_pkg = python_spec.package
-    python_pkg.activate(ext_pkg)
+    return str(ext1_prefix), str(ext2_prefix), 'examplenamespace'
 
 
-def test_python_activation_with_files(tmpdir, python_and_extension_dirs):
+def test_python_activation_with_files(tmpdir, python_and_extension_dirs,
+                                      builtin_and_mock_packages):
     python_prefix, ext_prefix = python_and_extension_dirs
 
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
-    python_spec.package.spec._set_test_prefix(python_prefix)
+    python_spec.package.spec.prefix = python_prefix
 
-    ext_pkg = FakeExtensionPackage('py-extension', ext_prefix)
+    ext_pkg = create_python_ext_pkg('py-extension1', ext_prefix, python_spec)
 
     python_pkg = python_spec.package
-    python_pkg.activate(ext_pkg)
+    python_pkg.activate(ext_pkg, python_pkg.view())
 
-    assert os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
+    assert os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
-    with open(join_path(python_prefix, easy_install_location), 'r') as F:
-        easy_install_contents = F.read()
+    with open(os.path.join(python_prefix, easy_install_location), 'r') as f:
+        easy_install_contents = f.read()
 
     assert 'ext1.egg' in easy_install_contents
     assert 'setuptools.egg' not in easy_install_contents
 
 
-def test_python_activation_view(tmpdir, python_and_extension_dirs):
+def test_python_activation_view(tmpdir, python_and_extension_dirs,
+                                builtin_and_mock_packages):
     python_prefix, ext_prefix = python_and_extension_dirs
 
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
-    python_spec.package.spec._set_test_prefix(python_prefix)
+    python_spec.package.spec.prefix = python_prefix
 
-    ext_pkg = FakeExtensionPackage('py-extension', ext_prefix)
+    ext_pkg = create_python_ext_pkg('py-extension1', ext_prefix, python_spec)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
 
     python_pkg = python_spec.package
-    python_pkg.activate(ext_pkg, extensions_layout=view.extensions_layout)
+    python_pkg.activate(ext_pkg, view)
 
-    assert not os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
+    assert not os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
 
-    assert os.path.exists(join_path(view_dir, 'bin/py-ext-tool'))
+    assert os.path.exists(os.path.join(view_dir, 'bin/py-ext-tool'))
+
+
+def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions,
+                                               builtin_and_mock_packages):
+    """Test the view update logic in PythonPackage ignores conflicting
+       instances of __init__ for packages which are in the same namespace.
+    """
+    ext1_prefix, ext2_prefix, py_namespace = namespace_extensions
+
+    python_spec = spack.spec.Spec('python@2.7.12')
+    python_spec._concrete = True
+
+    ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
+                                     py_namespace)
+    ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
+                                     py_namespace)
+
+    view_dir = str(tmpdir.join('view'))
+    layout = YamlDirectoryLayout(view_dir)
+    view = YamlFilesystemView(view_dir, layout)
+
+    python_pkg = python_spec.package
+    python_pkg.activate(ext1_pkg, view)
+    # Normally handled by Package.do_activate, but here we activate directly
+    view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
+    python_pkg.activate(ext2_pkg, view)
+
+    f1 = 'lib/python2.7/site-packages/examplenamespace/ext1_sample.py'
+    f2 = 'lib/python2.7/site-packages/examplenamespace/ext2_sample.py'
+    init_file = 'lib/python2.7/site-packages/examplenamespace/__init__.py'
+
+    assert os.path.exists(os.path.join(view_dir, f1))
+    assert os.path.exists(os.path.join(view_dir, f2))
+    assert os.path.exists(os.path.join(view_dir, init_file))
+
+
+def test_python_keep_namespace_init(tmpdir, namespace_extensions,
+                                    builtin_and_mock_packages):
+    """Test the view update logic in PythonPackage keeps the namespace
+       __init__ file as long as one package in the namespace still
+       exists.
+    """
+    ext1_prefix, ext2_prefix, py_namespace = namespace_extensions
+
+    python_spec = spack.spec.Spec('python@2.7.12')
+    python_spec._concrete = True
+
+    ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
+                                     py_namespace)
+    ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
+                                     py_namespace)
+
+    view_dir = str(tmpdir.join('view'))
+    layout = YamlDirectoryLayout(view_dir)
+    view = YamlFilesystemView(view_dir, layout)
+
+    python_pkg = python_spec.package
+    python_pkg.activate(ext1_pkg, view)
+    # Normally handled by Package.do_activate, but here we activate directly
+    view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
+    python_pkg.activate(ext2_pkg, view)
+    view.extensions_layout.add_extension(python_spec, ext2_pkg.spec)
+
+    f1 = 'lib/python2.7/site-packages/examplenamespace/ext1_sample.py'
+    init_file = 'lib/python2.7/site-packages/examplenamespace/__init__.py'
+
+    python_pkg.deactivate(ext1_pkg, view)
+    view.extensions_layout.remove_extension(python_spec, ext1_pkg.spec)
+
+    assert not os.path.exists(os.path.join(view_dir, f1))
+    assert os.path.exists(os.path.join(view_dir, init_file))
+
+    python_pkg.deactivate(ext2_pkg, view)
+    view.extensions_layout.remove_extension(python_spec, ext2_pkg.spec)
+
+    assert not os.path.exists(os.path.join(view_dir, init_file))
+
+
+def test_python_namespace_conflict(tmpdir, namespace_extensions,
+                                   builtin_and_mock_packages):
+    """Test the view update logic in PythonPackage reports an error when two
+       python extensions with different namespaces have a conflicting __init__
+       file.
+    """
+    ext1_prefix, ext2_prefix, py_namespace = namespace_extensions
+    other_namespace = py_namespace + 'other'
+
+    python_spec = spack.spec.Spec('python@2.7.12')
+    python_spec._concrete = True
+
+    ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
+                                     py_namespace)
+    ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
+                                     other_namespace)
+
+    view_dir = str(tmpdir.join('view'))
+    layout = YamlDirectoryLayout(view_dir)
+    view = YamlFilesystemView(view_dir, layout)
+
+    python_pkg = python_spec.package
+    python_pkg.activate(ext1_pkg, view)
+    view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
+    with pytest.raises(MergeConflictError):
+        python_pkg.activate(ext2_pkg, view)
 
 
 @pytest.fixture()
-def perl_and_extension_dirs(tmpdir):
+def perl_and_extension_dirs(tmpdir, builtin_and_mock_packages):
     perl_dirs = {
         'bin/': {
             'perl': None
@@ -189,7 +317,7 @@ def perl_and_extension_dirs(tmpdir):
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
-    perl_spec.package.spec._set_test_prefix(str(perl_prefix))
+    perl_spec.package.spec.prefix = str(perl_prefix)
 
     ext_dirs = {
         'bin/': {
@@ -214,7 +342,7 @@ def perl_and_extension_dirs(tmpdir):
     return str(perl_prefix), str(ext_prefix)
 
 
-def test_perl_activation(tmpdir):
+def test_perl_activation(tmpdir, builtin_and_mock_packages):
     # Note the lib directory is based partly on the perl version
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
@@ -225,47 +353,49 @@ def test_perl_activation(tmpdir):
     perl_prefix = str(tmpdir.join(perl_name))
     # Set the prefix on the package's spec reference because that is a copy of
     # the original spec
-    perl_spec.package.spec._set_test_prefix(perl_prefix)
+    perl_spec.package.spec.prefix = perl_prefix
 
     ext_name = 'perl-extension'
     tmpdir.ensure(ext_name, dir=True)
-    ext_pkg = FakeExtensionPackage(ext_name, str(tmpdir.join(ext_name)))
+    ext_pkg = create_ext_pkg(ext_name, str(tmpdir.join(ext_name)), perl_spec)
 
     perl_pkg = perl_spec.package
-    perl_pkg.activate(ext_pkg)
+    perl_pkg.activate(ext_pkg, perl_pkg.view())
 
 
-def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs):
+def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs,
+                                    builtin_and_mock_packages):
     perl_prefix, ext_prefix = perl_and_extension_dirs
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
-    perl_spec.package.spec._set_test_prefix(perl_prefix)
+    perl_spec.package.spec.prefix = perl_prefix
 
-    ext_pkg = FakeExtensionPackage('perl-extension', ext_prefix)
+    ext_pkg = create_ext_pkg('perl-extension', ext_prefix, perl_spec)
 
     perl_pkg = perl_spec.package
-    perl_pkg.activate(ext_pkg)
+    perl_pkg.activate(ext_pkg, perl_pkg.view())
 
-    assert os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
+    assert os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
 
-def test_perl_activation_view(tmpdir, perl_and_extension_dirs):
+def test_perl_activation_view(tmpdir, perl_and_extension_dirs,
+                              builtin_and_mock_packages):
     perl_prefix, ext_prefix = perl_and_extension_dirs
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
-    perl_spec.package.spec._set_test_prefix(perl_prefix)
+    perl_spec.package.spec.prefix = perl_prefix
 
-    ext_pkg = FakeExtensionPackage('perl-extension', ext_prefix)
+    ext_pkg = create_ext_pkg('perl-extension', ext_prefix, perl_spec)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
 
     perl_pkg = perl_spec.package
-    perl_pkg.activate(ext_pkg, extensions_layout=view.extensions_layout)
+    perl_pkg.activate(ext_pkg, view)
 
-    assert not os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
+    assert not os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
-    assert os.path.exists(join_path(view_dir, 'bin/perl-ext-tool'))
+    assert os.path.exists(os.path.join(view_dir, 'bin/perl-ext-tool'))

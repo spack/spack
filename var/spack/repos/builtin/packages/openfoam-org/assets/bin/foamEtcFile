@@ -4,37 +4,31 @@
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
 #   \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
-#    \\/     M anipulation  | Copyright (C) 2017 OpenCFD Ltd.
+#    \\/     M anipulation  | Copyright (C) 2017-2018 OpenCFD Ltd.
 #-------------------------------------------------------------------------------
 # License
-#     This file is part of OpenFOAM.
-#
-#     OpenFOAM is free software: you can redistribute it and/or modify it
-#     under the terms of the GNU General Public License as published by
-#     the Free Software Foundation, either version 3 of the License, or
-#     (at your option) any later version.
-#
-#     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
-#     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-#     for more details.
-#
-#     You should have received a copy of the GNU General Public License
-#     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+#     This file is part of OpenFOAM, licensed under GNU General Public License
+#     <http://www.gnu.org/licenses/>.
 #
 # Script
 #     foamEtcFile
 #
 # Description
-#     Locate user/group/other files with semantics similar to the
-#     ~OpenFOAM/fileName expansion.
+#     Locate user/group/other file as per '#includeEtc'.
 #
-#     The -mode option can be used to allow chaining from
-#     personal settings to site-wide settings.
+#     The -mode option can be used to allow chaining from personal settings
+#     to site-wide settings.
 #
-#     For example, within the user ~/.OpenFOAM/<VER>/prefs.sh:
+#     For example, within the user ~/.OpenFOAM/<VER>/config.sh/compiler:
 #     \code
-#        eval $(foamEtcFile -sh -mode=go prefs.sh)
+#        eval $(foamEtcFile -sh -mode=go config.sh/compiler)
+#     \endcode
+#
+#     The -mode option is similarly used within etc/{bashrc,cshrc} to ensure
+#     that system prefs are respected:
+#     \code
+#        eval $(foamEtcFile -sh -mode=o  prefs.sh)
+#        eval $(foamEtcFile -sh -mode=ug prefs.sh)
 #     \endcode
 #
 # Environment
@@ -46,42 +40,40 @@
 #     This script must exist in one of these locations:
 #     - $WM_PROJECT_INST_DIR/OpenFOAM-<VERSION>/bin
 #     - $WM_PROJECT_INST_DIR/openfoam-<VERSION>/bin
-#     - $WM_PROJECT_INST_DIR/OpenFOAM+<VERSION>/bin
-#     - $WM_PROJECT_INST_DIR/openfoam+<VERSION>/bin
 #     - $WM_PROJECT_INST_DIR/openfoam<VERSION>/bin  (debian version)
 #
 #-------------------------------------------------------------------------------
-unset optQuiet optSilent
-usage() {
-    [ "${optQuiet:-$optSilent}" = true ] && exit 1
-    exec 1>&2
-    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+printHelp() {
     cat<<USAGE
 
-Usage: foamEtcFile [OPTION] fileName
+Usage: foamEtcFile [OPTION] fileName [-- args]
        foamEtcFile [OPTION] [-list|-list-test] [fileName]
 
 options:
-  -a, -all          Return all files (otherwise stop after the first match)
-  -l, -list         List directories or files to be checked
+  -all (-a)         Return all files (otherwise stop after the first match)
+  -list (-l)        List directories or files to be checked
   -list-test        List (existing) directories or files to be checked
   -mode=MODE        Any combination of u(user), g(group), o(other)
   -prefix=DIR       Specify an alternative installation prefix
   -version=VER      Specify alternative OpenFOAM version (eg, 3.0, 1612, ...)
-  -csh | -sh        Produce output suitable for a csh or sh 'eval'
-  -csh-verbose | -sh-verbose
-                    As per -csh | -sh, with additional verbosity
-  -q, -quiet        Suppress all normal output
-  -s, -silent       Suppress stderr, except -csh-verbose, -sh-verbose output
+  -csh              Produce 'source FILE' output for a csh eval
+  -sh               Produce '. FILE' output for a sh eval
+  -csh-verbose      As per -csh, with additional verbosity
+  -sh-verbose       As per -sh,  with additional verbosity
+  -config           Add config directory prefix for shell type:
+                        with -csh* for a config.csh/ prefix
+                        with -sh*  for a config.sh/ prefix
+  -quiet (-q)       Suppress all normal output
+  -silent (-s)      Suppress stderr, except -csh-verbose, -sh-verbose output
   -help             Print the usage
 
-Locate user/group/other file with semantics similar to the
-~OpenFOAM/fileName expansion.
+Locate user/group/other file as per '#includeEtc'
 
-Single character options must not be grouped. Equivalent options:
-    -mode=MODE,   -mode MODE,   -m MODE
-    -prefix=DIR,  -prefix DIR,  -p DIR
-    -version=VER, -version VER, -v VER
+Do not group single character options.
+Equivalent options:
+  |  -mode=MODE     |  -mode MODE     | -m MODE
+  |  -prefix=DIR    |  -prefix DIR    | -p DIR
+  |  -version=VER   |  -version VER   | -v VER
 
 Exit status
     0  when the file is found. Print resolved path to stdout.
@@ -89,9 +81,10 @@ Exit status
     2  when the file is not found.
 
 USAGE
-    exit 1
+    exit 0  # A clean exit
 }
 
+unset optQuiet optSilent
 # Report error and exit
 die()
 {
@@ -146,13 +139,6 @@ guessVersion()
         version="${version%%*-}" # Extra safety, eg openfoam-version-packager
         ;;
 
-    (OpenFOAM+* | openfoam+*)
-        # Alternative naming: OpenFOAM+<VERSION> or openfoam+<VERSION>
-        dirBase="${projectDirName%%+*}+"
-        version="${projectDirName#*+}"
-        version="${version%%*-}" # Extra safety, eg openfoam-version-packager
-        ;;
-
     (openfoam[0-9]*)
         # Debian naming: openfoam<VERSION>
         dirBase="openfoam"
@@ -199,30 +185,36 @@ setVersion()
 
 
 optMode=ugo         # Default mode is always 'ugo'
-unset optAll optList optShell optVersion
+unset shellOutput verboseOutput
+unset optAll optConfig optList optVersion
 
 # Parse options
 while [ "$#" -gt 0 ]
 do
     case "$1" in
-    -h | -help)
-        usage
+    -h | -help*)
+        printHelp
         ;;
     -a | -all)
         optAll=true
-        unset optShell
+        unset shellOutput verboseOutput
         ;;
     -l | -list)
         optList=true
-        unset optShell
         ;;
     -list-test)
         optList='test'
-        unset optShell
         ;;
-    -csh | -sh | -csh-verbose | -sh-verbose)
-        optShell="${1#-}"
-        unset optAll
+    -csh | -sh)
+        shellOutput="${1#-}"
+        unset verboseOutput
+        ;;
+    -csh-verbose | -sh-verbose)
+        shellOutput="${1#-}"
+        verboseOutput="source "         # Report: "source FILE"
+        ;;
+    -config)
+        optConfig=true
         ;;
     -mode=[ugo]*)
         optMode="${1#*=}"
@@ -276,9 +268,33 @@ do
     shift
 done
 
-
 #-------------------------------------------------------------------------------
 
+# Split arguments into filename (for searching) and trailing bits for shell eval
+# Silently remove leading ~OpenFOAM/ (as per Foam::findEtcFile)
+nArgs=$#
+fileName="${1#~OpenFOAM/}"
+unset evalArgs
+
+if [ "$nArgs" -eq 1 ]
+then
+    if [ "$1" = "--" ]
+    then
+        nArgs=0
+        unset fileName
+    fi
+elif [ "$nArgs" -ge 2 ]
+then
+    if [ "$2" = "--" ]
+    then
+        nArgs=1
+        shift 2
+        evalArgs="$@"
+    fi
+fi
+
+
+# Get version information
 if [ -n "$optVersion" ]
 then
     setVersion $optVersion
@@ -301,12 +317,6 @@ groupDir="${WM_PROJECT_SITE:-$prefixDir/site}"
 #     eval echo "$i=\$$i" 1>&2
 # done
 
-
-# Save the essential bits of information
-# silently remove leading ~OpenFOAM/ (used in Foam::findEtcFile)
-nArgs=$#
-fileName="${1#~OpenFOAM/}"
-
 # Define the various places to be searched:
 unset dirList
 case "$optMode" in (*u*) # (U)ser
@@ -325,27 +335,61 @@ case "$optMode" in (*o*) # (O)ther == shipped
 esac
 set -- $dirList
 
+[ "$#" -ge 1 ] || die "No directories to scan. Programming error?"
+exitCode=2  # Fallback is a FileNotFound error
+
+
+#
+# Preliminaries
+#
+
+# Special handling of config.sh/ , config.csh/ directories
+if [ -n "$optConfig" -a -n "$shellOutput" -a -n "$fileName" ]
+then
+    case "$shellOutput" in
+    csh*)
+        optConfig="config.csh/"
+        ;;
+    sh*)
+        optConfig="config.sh/"
+        ;;
+    *)
+        unset optConfig
+        ;;
+    esac
+
+    if [ -n "$optConfig" ]
+    then
+        case "$fileName" in
+        /* | config.csh* | config.sh*)
+            # Does not need or cannot add a prefix
+            unset optConfig
+            ;;
+        *)
+            fileName="$optConfig$fileName"
+            ;;
+        esac
+    fi
+fi
+
 
 #
 # The main routine
 #
 
-exitCode=0
 if [ -n "$optList" ]
 then
 
     # List directories, or potential file locations
     [ "$nArgs" -le 1 ] || \
-    die "-list expects 0 or 1 filename, but $nArgs provided"
+        die "-list options expect 0 or 1 filename, but $nArgs provided"
 
-    # A silly combination, but -quiet does have precedence
+    # A silly combination, but -quiet has absolute precedence
     [ -n "$optQuiet" ] && exit 0
 
     # Test for directory or file too?
     if [ "$optList" = "test" ]
     then
-        exitCode=2  # Fallback to a general error (file not found)
-
         if [ "$nArgs" -eq 1 ]
         then
             for dir
@@ -368,6 +412,7 @@ then
             done
         fi
     else
+        exitCode=0  # OK, already verified that $# != 0
         for dir
         do
             echo "$dir${fileName:+/}$fileName"
@@ -378,35 +423,44 @@ else
 
     [ "$nArgs" -eq 1 ] || die "One filename expected - $nArgs provided"
 
-    exitCode=2  # Fallback to a general error (file not found)
+    # Output for sourcing files ("source" for csh, "." for POSIX shell)
+    # Only allow sourcing a single file (disallow combination with -all)
+    case "$shellOutput" in
+    csh*)
+        shellOutput="source "   # eg, "source FILE"
+        ;;
+    sh*)
+        shellOutput=". "        # eg, ". FILE"
+        ;;
+    esac
+
+    # Anti-pattern: -all disables shell commands
+    if [ -n "$optAll" ]
+    then
+        unset shellOutput verboseOutput
+    fi
 
     for dir
     do
-        if [ -f "$dir/$fileName" ]
+        resolved="$dir/$fileName"
+        if [ -f "$resolved" ]
         then
-            exitCode=0
-            [ -n "$optQuiet" ] && break
-
-            case "$optShell" in
-            (*verbose)
-                echo "Using: $dir/$fileName" 1>&2
-                ;;
-            esac
-
-            case "$optShell" in
-            csh*)
-                echo "source $dir/$fileName"
+            exitCode=0  # OK
+            if [ -n "$optQuiet" ]
+            then
                 break
-                ;;
-            sh*)
-                echo ". $dir/$fileName"
-                break
-                ;;
-            *)
-                echo "$dir/$fileName"
-                [ -n "$optAll" ] || break
-                ;;
-            esac
+            elif [ -n "$verboseOutput" ]
+            then
+                echo "$verboseOutput$resolved" 1>&2
+            fi
+
+            if [ -n "$shellOutput" ]
+            then
+                echo "$shellOutput$resolved $evalArgs"
+            else
+                echo "$resolved"
+            fi
+            [ -n "$optAll" ] || break
         fi
     done
 

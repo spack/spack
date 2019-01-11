@@ -29,7 +29,7 @@ import sys
 import types
 
 __author__ = "Benjamin Peterson <benjamin@python.org>"
-__version__ = "1.10.0"
+__version__ = "1.11.0"
 
 
 # Useful for very coarse version differentiation.
@@ -241,7 +241,6 @@ _moved_attributes = [
     MovedAttribute("map", "itertools", "builtins", "imap", "map"),
     MovedAttribute("getcwd", "os", "os", "getcwdu", "getcwd"),
     MovedAttribute("getcwdb", "os", "os", "getcwd", "getcwdb"),
-    MovedAttribute("getstatusoutput", "commands", "subprocess"),
     MovedAttribute("getoutput", "commands", "subprocess"),
     MovedAttribute("range", "__builtin__", "builtins", "xrange", "range"),
     MovedAttribute("reload_module", "__builtin__", "importlib" if PY34 else "imp", "reload"),
@@ -421,6 +420,8 @@ _urllib_request_moved_attributes = [
     MovedAttribute("URLopener", "urllib", "urllib.request"),
     MovedAttribute("FancyURLopener", "urllib", "urllib.request"),
     MovedAttribute("proxy_bypass", "urllib", "urllib.request"),
+    MovedAttribute("parse_http_list", "urllib2", "urllib.request"),
+    MovedAttribute("parse_keqv_list", "urllib2", "urllib.request"),
 ]
 for attr in _urllib_request_moved_attributes:
     setattr(Module_six_moves_urllib_request, attr.name, attr)
@@ -820,10 +821,14 @@ def with_metaclass(meta, *bases):
     # This requires a bit of explanation: the basic idea is to make a dummy
     # metaclass for one level of class instantiation that replaces itself with
     # the actual metaclass.
-    class metaclass(meta):
+    class metaclass(type):
 
         def __new__(cls, name, this_bases, d):
             return meta(name, bases, d)
+
+        @classmethod
+        def __prepare__(cls, name, this_bases):
+            return meta.__prepare__(name, bases)
     return type.__new__(metaclass, 'temporary_class', (), {})
 
 

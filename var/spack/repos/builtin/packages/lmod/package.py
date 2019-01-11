@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 from glob import glob
 
@@ -38,6 +19,8 @@ class Lmod(AutotoolsPackage):
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
     url      = 'https://github.com/TACC/Lmod/archive/7.4.11.tar.gz'
 
+    version('7.8', sha256='40388380a36a00c3ce929a9f88c8fffc93deeabf87a7c3f8864a82acad38c3ba')
+    version('7.7.29', 'bd3f171995e6863505e8a958d158ced1')
     version('7.7.13', 'e1d222fa04148707dceb08c82d7e9fa5')
     version('7.7',    '8ac594401716c6d1b40cac22bc1030ca')
     version('7.6.14', '60726c991038b6337fbb27b6a333a2d4')
@@ -53,7 +36,7 @@ class Lmod(AutotoolsPackage):
     version('6.3.7',  '0fa4d5a24c41cae03776f781aa2dedc1')
     version('6.0.1',  '91abf52fe5033bd419ffe2842ebe7af9')
 
-    depends_on('lua@5.2:')
+    depends_on('lua@5.1:')
     depends_on('lua-luaposix', type=('build', 'run'))
     depends_on('lua-luafilesystem', type=('build', 'run'))
     depends_on('tcl', type=('build', 'run'))

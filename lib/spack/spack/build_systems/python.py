@@ -1,35 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import inspect
 import os
+import shutil
 
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
-from llnl.util.filesystem import working_dir
+from llnl.util.filesystem import (working_dir, get_filetype, filter_file,
+                                  path_contains_subdirectory, same_path)
+from llnl.util.lang import match_predicate
 
 
 class PythonPackage(PackageBase):
@@ -75,7 +59,7 @@ class PythonPackage(PackageBase):
 
     .. code-block:: console
 
-       $ python setup.py --no-user-cfg <phase>
+       $ python -s setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
     this call. All of these functions are empty except for the ``install_args``
@@ -116,6 +100,8 @@ class PythonPackage(PackageBase):
 
     depends_on('python', type=('build', 'run'))
 
+    py_namespace = None
+
     def setup_file(self):
         """Returns the name of the setup file to use."""
         return 'setup.py'
@@ -132,7 +118,7 @@ class PythonPackage(PackageBase):
         setup = self.setup_file()
 
         with working_dir(self.build_directory):
-            self.python(setup, '--no-user-cfg', *args, **kwargs)
+            self.python('-s', setup, '--no-user-cfg', *args, **kwargs)
 
     def _setup_command_available(self, command):
         """Determines whether or not a setup.py command exists.
@@ -152,7 +138,7 @@ class PythonPackage(PackageBase):
         python = inspect.getmodule(self).python
         setup = self.setup_file()
 
-        python(setup, '--no-user-cfg', command, '--help', **kwargs)
+        python('-s', setup, '--no-user-cfg', command, '--help', **kwargs)
         return python.returncode == 0
 
     # The following phases and their descriptions come from:
@@ -237,9 +223,15 @@ class PythonPackage(PackageBase):
         # Spack manages the package directory on its own by symlinking
         # extensions into the site-packages directory, so we don't really
         # need the .pth files or egg directories, anyway.
+        #
+        # We need to make sure this is only for build dependencies. A package
+        # such as py-basemap will not build properly with this flag since
+        # it does not use setuptools to build and those does not recognize
+        # the --single-version-externally-managed flag
         if ('py-setuptools' == spec.name or          # this is setuptools, or
-            'py-setuptools' in spec._dependencies):  # it's an immediate dep
-            args += ['--single-version-externally-managed', '--root=/']
+            'py-setuptools' in spec._dependencies and  # it's an immediate dep
+            'build' in spec._dependencies['py-setuptools'].deptypes):
+                args += ['--single-version-externally-managed', '--root=/']
 
         return args
 
@@ -389,7 +381,7 @@ class PythonPackage(PackageBase):
 
         # Make sure we are importing the installed modules,
         # not the ones in the current directory
-        with working_dir('..'):
+        with working_dir('spack-test', create=True):
             for module in self.import_modules:
                 self.python('-c', 'import {0}'.format(module))
 
@@ -397,3 +389,74 @@ class PythonPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
+
+    def view_file_conflicts(self, view, merge_map):
+        """Report all file conflicts, excepting special cases for python.
+           Specifically, this does not report errors for duplicate
+           __init__.py files for packages in the same namespace.
+        """
+        conflicts = list(dst for src, dst in merge_map.items()
+                         if os.path.exists(dst))
+
+        if conflicts and self.py_namespace:
+            ext_map = view.extensions_layout.extension_map(self.extendee_spec)
+            namespaces = set(
+                x.package.py_namespace for x in ext_map.values())
+            namespace_re = (
+                r'site-packages/{0}/__init__.py'.format(self.py_namespace))
+            find_namespace = match_predicate(namespace_re)
+            if self.py_namespace in namespaces:
+                conflicts = list(
+                    x for x in conflicts if not find_namespace(x))
+
+        return conflicts
+
+    def add_files_to_view(self, view, merge_map):
+        bin_dir = self.spec.prefix.bin
+        python_prefix = self.extendee_spec.prefix
+        global_view = same_path(python_prefix, view.get_projection_for_spec(
+            self.spec
+        ))
+        for src, dst in merge_map.items():
+            if os.path.exists(dst):
+                continue
+            elif global_view or not path_contains_subdirectory(src, bin_dir):
+                view.link(src, dst)
+            elif not os.path.islink(src):
+                shutil.copy2(src, dst)
+                if 'script' in get_filetype(src):
+                    filter_file(
+                        python_prefix, os.path.abspath(
+                            view.get_projection_for_spec(self.spec)), dst
+                    )
+            else:
+                orig_link_target = os.path.realpath(src)
+                new_link_target = os.path.abspath(merge_map[orig_link_target])
+                view.link(new_link_target, dst)
+
+    def remove_files_from_view(self, view, merge_map):
+        ignore_namespace = False
+        if self.py_namespace:
+            ext_map = view.extensions_layout.extension_map(self.extendee_spec)
+            remaining_namespaces = set(
+                spec.package.py_namespace for name, spec in ext_map.items()
+                if name != self.name)
+            if self.py_namespace in remaining_namespaces:
+                namespace_init = match_predicate(
+                    r'site-packages/{0}/__init__.py'.format(self.py_namespace))
+                ignore_namespace = True
+
+        bin_dir = self.spec.prefix.bin
+        global_view = (
+            self.extendee_spec.prefix == view.get_projection_for_spec(
+                self.spec
+            )
+        )
+        for src, dst in merge_map.items():
+            if ignore_namespace and namespace_init(dst):
+                continue
+
+            if global_view or not path_contains_subdirectory(src, bin_dir):
+                view.remove_file(src, dst)
+            else:
+                os.remove(dst)

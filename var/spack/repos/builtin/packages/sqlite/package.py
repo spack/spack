@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 from spack import architecture
 
@@ -31,24 +12,31 @@ class Sqlite(AutotoolsPackage):
        link the SQLite3 library can have SQL database access without
        running a separate RDBMS process.
     """
-    homepage = "www.sqlite.org"
+    homepage = "https://www.sqlite.org"
 
-    version('3.20.0', 'e262a28b73cc330e7e83520c8ce14e4d',
-            url='https://www.sqlite.org/2017/sqlite-autoconf-3200000.tar.gz')
-    version('3.18.0', 'a6687a8ae1f66abc8df739aeadecfd0c',
-            url='https://www.sqlite.org/2017/sqlite-autoconf-3180000.tar.gz')
-    version('3.8.10.2', 'a18bfc015cd49a1e7a961b7b77bc3b37',
-            url='https://www.sqlite.org/2015/sqlite-autoconf-3081002.tar.gz')
-    version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
-            url='https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
+    version('3.26.0', '9af2df1a6da5db6e2ecf3f463625f16740e036e9',
+            url='https://sqlite.org/2018/sqlite-autoconf-3260000.tar.gz')
+    # All versions prior to 3.26.0 are vulnerable to Magellan, see
+    # https://blade.tencent.com/magellan/index_en.html
 
     depends_on('readline')
 
-    # On some platforms (e.g., PPC) the include chain includes termios.h which
-    # defines a macro B0. Sqlite has a shell.c source file that declares a
-    # variable named B0 and will fail to compile when the macro is found. The
-    # following patch undefines the macro in shell.c
-    patch('sqlite_b0.patch', when='@3.18.0')
+    variant('functions', default=False,
+            description='Provide mathematical and string extension functions '
+                        'for SQL queries using the loadable extensions '
+                        'mechanism.')
+
+    resource(name='extension-functions',
+             url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
+             md5='3a32bfeace0d718505af571861724a43',
+             expand=False,
+             placement={'extension-functions.c?get=25':
+                        'extension-functions.c'},
+             when='+functions')
+
+    @property
+    def libs(self):
+        return find_libraries('libsqlite3', root=self.prefix.lib)
 
     def get_arch(self):
         arch = architecture.Arch()
@@ -62,3 +50,12 @@ class Sqlite(AutotoolsPackage):
             args.append('--build=powerpc64le-redhat-linux-gnu')
 
         return args
+
+    @run_after('install')
+    def build_libsqlitefunctions(self):
+        if '+functions' in self.spec:
+            libraryname = 'libsqlitefunctions.' + dso_suffix
+            cc = Executable(spack_cc)
+            cc(self.compiler.pic_flag, '-lm', '-shared',
+                'extension-functions.c', '-o', libraryname)
+            install(libraryname, self.prefix.lib)

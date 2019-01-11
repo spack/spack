@@ -1,38 +1,21 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import os
 import sys
-import shutil
 
 
 class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
-    homepage = 'http://www.graphviz.org'
-    url      = 'http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz'
 
-    version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
+    homepage = 'http://www.graphviz.org'
+    git      = 'https://gitlab.com/graphviz/graphviz.git'
+
+    # This commit hash is tag='stable_release_2.40.1'
+    version('2.40.1', commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
 
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
@@ -78,9 +61,16 @@ class Graphviz(AutotoolsPackage):
             description='Build with pango+cairo support (more output formats)')
     variant('libgd', default=False,
             description='Build with libgd support (more output formats)')
-
     variant('gts', default=False,
             description='Build with GNU Triangulated Surface Library')
+    variant('expat', default=False,
+            description='Build with Expat support (enables HTML-like labels)')
+    variant('ghostscript', default=False,
+            description='Build with Ghostscript support')
+    variant('qt', default=False,
+            description='Build with Qt support')
+    variant('gtkplus', default=False,
+            description='Build with GTK+ support')
 
     parallel = False
 
@@ -96,28 +86,51 @@ class Graphviz(AutotoolsPackage):
         '+python', '+r', '+ruby', '+tcl')
 
     for b in tested_bindings + untested_bindings:
-        depends_on('swig', when=b)
-
-    depends_on('cairo', when='+pangocairo')
-    depends_on('pango', when='+pangocairo')
-    depends_on('libgd', when='+libgd')
-    depends_on('gts', when='+gts')
-    depends_on('ghostscript')
-    depends_on('freetype')
-    depends_on('expat')
-    depends_on('libtool')
-    depends_on('pkg-config', type='build')
+        depends_on('swig', type='build', when=b)
 
     depends_on('java', when='+java')
     depends_on('python@2:2.8', when='+python')
 
-    def patch(self):
-        # Fix a few variable names, gs after 9.18 renamed them
-        # See http://lists.linuxfromscratch.org/pipermail/blfs-book/2015-October/056960.html
-        if self.spec.satisfies('^ghostscript@9.18:'):
-            kwargs = {'ignore_absent': False, 'backup': True, 'string': True}
-            filter_file(' e_', ' gs_error_', 'plugin/gs/gvloadimage_gs.c',
-                        **kwargs)
+    # +pangocairo
+    depends_on('cairo', when='+pangocairo')
+    depends_on('pango', when='+pangocairo')
+    depends_on('freetype', when='+pangocairo')
+    depends_on('glib', when='+pangocairo')
+    depends_on('fontconfig', when='+pangocairo')
+    depends_on('libpng', when='+pangocairo')
+    depends_on('zlib', when='+pangocairo')
+    # +libgd
+    depends_on('libgd', when='+libgd')
+    depends_on('fontconfig', when='+libgd')
+    depends_on('freetype', when='+libgd')
+    # +gts
+    depends_on('gts', when='+gts')
+    # +expat
+    depends_on('expat', when='+expat')
+    # +ghostscript
+    depends_on('ghostscript', when='+ghostscript')
+    # +qt
+    depends_on('qt', when='+qt')
+    # +gtkplus
+    depends_on('gtkplus', when='+gtkplus')
+
+    # Build dependencies
+    depends_on('pkgconfig', type='build')
+    # The following are needed when building from git
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('libtool', type='build')
+
+    def autoreconf(self, spec, prefix):
+        # We need to generate 'configure' when checking out sources from git
+        # If configure exists nothing needs to be done
+        if os.path.exists(self.configure_abs_path):
+            return
+        # Else bootstrap (disabling auto-configure with NOCONFIG)
+        bash = which('bash')
+        bash('./autogen.sh', 'NOCONFIG')
 
     def configure_args(self):
         spec = self.spec
@@ -150,11 +163,17 @@ class Graphviz(AutotoolsPackage):
         else:
             options.append('--enable-swig=no')
 
-        for var in ('+pangocairo', '+libgd', '+gts'):
+        for var in ('+pangocairo', '+libgd', '+gts', '+expat', '+ghostscript',
+                    '+qt', '+gtkplus'):
+            feature = var[1:]
+            if feature == 'gtkplus':
+                # In spack terms, 'gtk+' is 'gtkplus' while
+                # the relative configure option is 'gtk'
+                feature = 'gtk'
             if var in spec:
-                options.append('--with-{0}'.format(var[1:]))
+                options.append('--with-{0}'.format(feature))
             else:
-                options.append('--without-{0}'.format(var[1:]))
+                options.append('--without-{0}'.format(feature))
 
         # On OSX fix the compiler error:
         # In file included from tkStubLib.c:15:
@@ -162,8 +181,5 @@ class Graphviz(AutotoolsPackage):
         #       include <X11/Xlib.h>
         if sys.platform == 'darwin':
             options.append('CFLAGS=-I/opt/X11/include')
-
-        # A hack to patch config.guess in the libltdl sub directory
-        shutil.copyfile('./config/config.guess', 'libltdl/config/config.guess')
 
         return options

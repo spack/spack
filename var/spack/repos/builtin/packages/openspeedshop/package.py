@@ -1,48 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-##############################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
-#
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the Free
-# Software Foundation; either version 2 of the License, or (at your option)
-# any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-# Place, Suite 330, Boston, MA  02111-1307  USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+
+import spack.store
 import os
-import os.path
 
 
 class Openspeedshop(CMakePackage):
@@ -60,19 +24,19 @@ class Openspeedshop(CMakePackage):
     """
 
     homepage = "http://www.openspeedshop.org"
-    url = "https://github.com/OpenSpeedShop"
+    git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
-    # Use when the git repository is available
-    version('2.3', branch='master',
-            git='https://github.com/OpenSpeedShop/openspeedshop.git')
+    version('develop', branch='master')
+    version('2.4.0', branch='2.4.0')
+    version('2.3.1.5', branch='2.3.1.5')
+    version('2.3.1.4', branch='2.3.1.4')
+    version('2.3.1.3', branch='2.3.1.3')
 
-    variant('offline', default=False,
-            description="build with offline instrumentor enabled.")
-    variant('cbtf', default=True,
-            description="build with cbtf instrumentor enabled.")
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
-    variant('frontend', default=False,
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
+    variant('crayfe', default=False,
             description="build only the FE tool using the runtime_dir \
                          to point to target build.")
     variant('cuda', default=False,
@@ -106,189 +70,214 @@ class Openspeedshop(CMakePackage):
                          MPI when variant is enabled.")
 
     depends_on("cmake@3.0.2:", type='build')
+
     # Dependencies for openspeedshop that are common to all
     # the variants of the OpenSpeedShop build
     depends_on("libtool", type='build')
     depends_on("bison", type='build')
-    depends_on("flex", type='build')
-    depends_on("binutils", type='build')
+    depends_on("flex@2.6.1", type='build')
+
+    # For binutils
+    depends_on("binutils")
+
     depends_on("elf", type="link")
     depends_on("libdwarf")
+
     depends_on("sqlite")
-    depends_on("boost@1.50.0:1.59.0")
-    depends_on("dyninst@9.3.2")
-    depends_on("libxml2+python")
+
+    # For boost
+    depends_on("boost@1.66.0:")
+
+    depends_on("dyninst@develop", when='@develop')
+    depends_on("dyninst@10:", when='@2.3.1.3:9999')
+
+    depends_on("python", when='@develop', type=('build', 'run'))
+    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999', type=('build', 'run'))
+
+    depends_on("libxml2")
+
     depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
-    # Actively working on adding this gui package
-    # depends_on("cbtf-argonavis-gui", when='gui=qt4')
 
-    # Dependencies only for the openspeedshop offline package.
-    depends_on("libunwind", when='+offline')
-    depends_on("papi", when='+offline')
-    depends_on("libmonitor+krellpatch", when='+offline')
-    depends_on("openmpi", when='+offline+openmpi')
-    depends_on("mpich", when='+offline+mpich')
-    depends_on("mpich2", when='+offline+mpich2')
-    depends_on("mvapich2", when='+offline+mvapich2')
-    depends_on("mvapich", when='+offline+mvapich')
-    depends_on("mpt", when='+offline+mpt')
+    # Dependencies for the openspeedshop cbtf packages.
+    depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
-    # Dependencies only for the openspeedshop cbtf package.
-    depends_on("cbtf", when='+cbtf')
-    depends_on('cbtf-krell', when='+cbtf')
-    depends_on('cbtf-krell+mpich', when='+cbtf+mpich')
-    depends_on('cbtf-krell+mpich2', when='+cbtf+mpich2')
-    depends_on('cbtf-krell+mpt', when='+cbtf+mpt')
-    depends_on('cbtf-krell+mvapich', when='+cbtf+mvapich')
-    depends_on('cbtf-krell+mvapich2', when='+cbtf+mvapich2')
-    depends_on('cbtf-krell+openmpi', when='+cbtf+openmpi')
-    depends_on("cbtf-argonavis", when='+cbtf+cuda')
-    depends_on("mrnet@5.0.1:+lwthreads", when='+cbtf')
+    depends_on("cbtf-krell@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf-krell@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
+
+    depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+crayfe', when='@2.3.1.3:9999+crayfe', type=('build', 'link', 'run'))
+
+    depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
+
+    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpich', when='@2.3.1.3:9999+mpich', type=('build', 'link', 'run'))
+
+    depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpich2', when='@2.3.1.3:9999+mpich2', type=('build', 'link', 'run'))
+
+    depends_on('cbtf-krell@develop+mpt', when='@develop+mpt', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mpt', when='@2.3.1.3:9999+mpt', type=('build', 'link', 'run'))
+
+    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mvapich', when='@2.3.1.3:9999+mvapich', type=('build', 'link', 'run'))
+
+    depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+mvapich2', when='@2.3.1.3:9999+mvapich2', type=('build', 'link', 'run'))
+
+    depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+openmpi', when='@2.3.1.3:9999+openmpi', type=('build', 'link', 'run'))
+
+    depends_on("cbtf-argonavis@develop", when='@develop+cuda', type=('build', 'link', 'run'))
+    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@2.3.1.3:9999+cuda', type=('build', 'link', 'run'))
+
+    # For MRNet
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
+
+    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
     parallel = False
 
     build_directory = 'build_openspeedshop'
 
+    def set_cray_login_node_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable the appropriate
+        # Cray login node libraries
+
+        cray_login_node_options = []
+        rt_platform = "cray"
+
+        # How do we get the compute node (CNL) cbtf package install
+        # directory path?
+        # spec['cbtf'].prefix is the login node value for this build, as
+        # we only get here when building the login node components and
+        # that is all that is known to spack.
+        store = spack.store
+        be_ck = store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
+
+        # Equivalent to install-tool cmake arg:
+        # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
+        #               % <base dir>/cbtf_v2.3.1.release/compute)
+        cray_login_node_options.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
+                                       % be_ck.prefix)
+        cray_login_node_options.append('-DRUNTIME_PLATFORM=%s'
+                                       % rt_platform)
+
+        cmake_options.extend(cray_login_node_options)
+
     def cmake_args(self):
+
         spec = self.spec
+
         compile_flags = "-O2 -g"
 
-        if '+offline' in spec:
-            # Indicate building offline vers (writes rawdata files)
-            instrumentor_setting = "offline"
-            if '+runtime' in spec:
-                cmake_args = [
-                    '-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
-                    '-DCMAKE_C_FLAGS=%s'    % compile_flags,
-                    '-DINSTRUMENTOR=%s'     % instrumentor_setting,
-                    '-DLIBMONITOR_DIR=%s'   % spec['libmonitor'].prefix,
-                    '-DLIBUNWIND_DIR=%s'    % spec['libunwind'].prefix,
-                    '-DPAPI_DIR=%s'         % spec['papi'].prefix]
+        cmake_args = []
 
-                # Add any MPI implementations coming from variant settings
-                self.set_mpi_cmakeOptions(spec, cmake_args)
+        # Indicate building cbtf vers (transfer rawdata files)
+        instrumentor_setting = "cbtf"
 
-            else:
-                cmake_args = []
+        if spec.satisfies('+runtime'):
+            # Appends base options to cmake_args
+            self.set_defaultbase_cmake_options(spec, cmake_args)
+            cmake_args.extend(
+                ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
+                 '-DCMAKE_C_FLAGS=%s'    % compile_flags,
+                 '-DINSTRUMENTOR=%s' % instrumentor_setting,
+                 '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
+                 '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
+                 '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
 
-                # Appends base options to cmake_args
-                self.set_defaultbase_cmakeOptions(spec, cmake_args)
+        else:
 
+            # Appends base options to cmake_args
+            self.set_defaultbase_cmake_options(spec, cmake_args)
+            guitype = self.spec.variants['gui'].value
+            cmake_args.extend(
+                ['-DCMAKE_CXX_FLAGS=%s' % compile_flags,
+                 '-DCMAKE_C_FLAGS=%s' % compile_flags,
+                 '-DINSTRUMENTOR=%s' % instrumentor_setting,
+                 '-DSQLITE3_DIR=%s' % spec['sqlite'].prefix,
+                 '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
+                 '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
+                 '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
+
+            if guitype == 'none':
                 cmake_args.extend(
-                    ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
-                     '-DCMAKE_C_FLAGS=%s'    % compile_flags,
-                     '-DINSTRUMENTOR=%s' % instrumentor_setting,
-                     '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
-                     '-DLIBUNWIND_DIR=%s' % spec['libunwind'].prefix,
-                     '-DPAPI_DIR=%s' % spec['papi'].prefix,
-                     '-DSQLITE3_DIR=%s' % spec['sqlite'].prefix,
-                     '-DQTLIB_DIR=%s' % spec['qt'].prefix])
-
-                # Add any MPI implementations coming from variant settings
-                self.set_mpi_cmakeOptions(spec, cmake_args)
-
-        elif '+cbtf' in spec:
-            # Indicate building cbtf vers (transfer rawdata files)
-            instrumentor_setting = "cbtf"
-
-            if '+runtime' in spec:
-                # Appends base options to cmake_args
-                self.set_defaultbase_cmakeOptions(spec, cmake_args)
-
+                    ['-DBUILD_QT3_GUI=FALSE'])
+            elif guitype == 'qt4':
                 cmake_args.extend(
-                    ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
-                     '-DCMAKE_C_FLAGS=%s'    % compile_flags,
-                     '-DINSTRUMENTOR=%s' % instrumentor_setting,
-                     '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
-                     '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
-                     '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
-
-            else:
-                cmake_args = []
-
-                # Appends base options to cmake_args
-                self.set_defaultbase_cmakeOptions(spec, cmake_args)
-                guitype = self.spec.variants['gui'].value
+                    ['-DBUILD_QT3_GUI=FALSE'])
+            elif guitype == 'qt3':
                 cmake_args.extend(
-                    ['-DCMAKE_CXX_FLAGS=%s' % compile_flags,
-                     '-DCMAKE_C_FLAGS=%s' % compile_flags,
-                     '-DINSTRUMENTOR=%s' % instrumentor_setting,
-                     '-DSQLITE3_DIR=%s' % spec['sqlite'].prefix,
-                     '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
-                     '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
-                     '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
+                    ['-DQTLIB_DIR=%s'
+                        % spec['qt'].prefix])
 
-                if guitype == 'none':
-                    cmake_args.extend(
-                        ['-DBUILD_QT3_GUI=FALSE'])
-                elif guitype == 'qt4':
-                    cmake_args.extend(
-                        ['-DBUILD_QT3_GUI=FALSE'])
-                elif guitype == 'qt3':
-                    cmake_args.extend(
-                        ['-DQTLIB_DIR=%s'
-                            % spec['qt'].prefix])
+            if spec.satisfies('+crayfe'):
+                # We need to build target/compute node
+                # components/libraries first then pass
+                # those libraries to the openspeedshop
+                # login node build
+                self.set_cray_login_node_cmake_options(spec, cmake_args)
 
         return cmake_args
 
-    def set_defaultbase_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable
+    def set_defaultbase_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable
         # the appropriate base level options to the openspeedshop
         # cmake build.
         python_exe = spec['python'].command.path
         python_library = spec['python'].libs[0]
         python_include = spec['python'].headers.directories[0]
 
-        BaseOptions = []
+        base_options = []
 
-        BaseOptions.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
-        BaseOptions.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
-        BaseOptions.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
-        BaseOptions.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
-        BaseOptions.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
-        BaseOptions.append('-DPYTHON_LIBRARY=%s' % python_library)
-        BaseOptions.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
-        BaseOptions.append('-DBoost_NO_BOOST_CMAKE=TRUE')
-        BaseOptions.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
-        BaseOptions.append('-DBoost_DIR=%s' % spec['boost'].prefix)
-        BaseOptions.append('-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib)
-        BaseOptions.append('-DDYNINST_DIR=%s' % spec['dyninst'].prefix)
+        base_options.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
+        base_options.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
+        base_options.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
+        base_options.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
+        base_options.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
+        base_options.append('-DPYTHON_LIBRARY=%s' % python_library)
+        base_options.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
+        base_options.append('-DBoost_NO_BOOST_CMAKE=TRUE')
+        base_options.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
+        base_options.append('-DBoost_DIR=%s' % spec['boost'].prefix)
+        base_options.append('-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib)
+        base_options.append('-DDYNINST_DIR=%s' % spec['dyninst'].prefix)
 
-        cmakeOptions.extend(BaseOptions)
+        cmake_options.extend(base_options)
 
-    def set_mpi_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable
+    def set_mpi_cmake_options(self, spec, cmake_options):
+        # Appends to cmake_options the options that will enable
         # the appropriate MPI implementations
 
-        MPIOptions = []
+        mpi_options = []
 
         # openmpi
-        if '+openmpi' in spec:
-            MPIOptions.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
+        if spec.satisfies('+openmpi'):
+            mpi_options.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
         # mpich
-        if '+mpich' in spec:
-            MPIOptions.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
+        if spec.satisfies('+mpich'):
+            mpi_options.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
         # mpich2
-        if '+mpich2' in spec:
-            MPIOptions.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
+        if spec.satisfies('+mpich2'):
+            mpi_options.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
         # mvapich
-        if '+mvapich' in spec:
-            MPIOptions.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
+        if spec.satisfies('+mvapich'):
+            mpi_options.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
         # mvapich2
-        if '+mvapich2' in spec:
-            MPIOptions.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
+        if spec.satisfies('+mvapich2'):
+            mpi_options.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
         # mpt
-        if '+mpt' in spec:
-            MPIOptions.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
+        if spec.satisfies('+mpt'):
+            mpi_options.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
 
-        cmakeOptions.extend(MPIOptions)
+        cmake_options.extend(mpi_options)
 
     def setup_environment(self, spack_env, run_env):
         """Set up the compile and runtime environments for a package."""
-
-        # Common settings to both offline and cbtf versions
-        # of OpenSpeedShop
-        run_env.prepend_path('PATH', self.prefix.bin)
 
         # Find Dyninst library path, this is needed to
         # set the DYNINSTAPI_RT_LIB library which is
@@ -296,48 +285,51 @@ class Openspeedshop(CMakePackage):
         # performance information
         dyninst_libdir = find_libraries('libdyninstAPI_RT',
                                         root=self.spec['dyninst'].prefix,
-                                        shared=True, recurse=True)
+                                        shared=True, recursive=True)
 
         # Set Dyninst RT library path to support OSS loop resolution code
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
-        # Find openspeedshop library path
-        oss_libdir = find_libraries('libopenss-framework',
-                                    root=self.spec['openspeedshop'].prefix,
-                                    shared=True, recurse=True)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             os.path.dirname(oss_libdir.joined()))
+        run_env.set('OPENSS_RAWDATA_DIR', '.')
 
-        # Settings specific to the version, checking here
-        # for the cbtf instrumentor
-        if '+cbtf' in self.spec:
-            cbtf_mc = '/sbin/cbtf_mrnet_commnode'
-            cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
-            run_env.set('XPLAT_RSH', 'ssh')
-            run_env.set('MRNET_COMM_PATH',
-                        join_path(self.spec['cbtf-krell'].prefix + cbtf_mc))
+        # Set the openspeedshop plugin path
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
+        plugin_path = '/openspeedshop'
+        oss_plugin_path = lib_dir + plugin_path
+        run_env.set('OPENSS_PLUGIN_PATH', oss_plugin_path)
 
-            run_env.set('CBTF_MRNET_BACKEND_PATH',
-                        join_path(self.spec['cbtf-krell'].prefix + cbtf_lmb))
+        cbtf_mc = '/sbin/cbtf_mrnet_commnode'
+        cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
+        run_env.set('XPLAT_RSH', 'ssh')
+        run_env.set('MRNET_COMM_PATH',
+                    join_path(self.spec['cbtf-krell'].prefix + cbtf_mc))
 
-            run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
-            run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
-            run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
+        # Set CBTF_MPI_IMPLEMENTATON to the appropriate mpi implementation
+        # This is needed by O|SS and CBTF tools to deploy the correct
+        # mpi runtimes for ossmpi, ossmpit, ossmpip, and cbtfsummary
+        # Users may have to set the CBTF_MPI_IMPLEMENTATION variable
+        # manually if multiple mpi's are specified in the build
+        if self.spec.satisfies('+mpich'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
 
-        elif '+offline' in self.spec:
-            # Had to use this form of syntax self.prefix.lib and
-            # self.prefix.lib64 returned None all the time
-            run_env.set('OPENSS_RAWDATA_DIR', '.')
-            run_env.set('OPENSS_PLUGIN_PATH',
-                        join_path(oss_libdir + '/openspeedshop'))
-            run_env.prepend_path('PATH', self.spec['papi'].prefix.bin)
-            run_env.prepend_path('PATH', self.spec['libdwarf'].prefix.bin)
+        if self.spec.satisfies('+mvapich'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
 
-            if '+mpich' in self.spec:
-                run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mpich')
-            if '+mpich2' in self.spec:
-                run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mpich2')
-            if '+mvapich2' in self.spec:
-                run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mvapich2')
-            if '+openmpi' in self.spec:
-                run_env.set('OPENSS_MPI_IMPLEMENTATION', 'openmpi')
+        if self.spec.satisfies('+mvapich2'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")
+
+        if self.spec.satisfies('+mpt'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpt")
+
+        if self.spec.satisfies('+openmpi'):
+            run_env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
+
+        run_env.set('CBTF_MRNET_BACKEND_PATH',
+                    join_path(self.spec['cbtf-krell'].prefix + cbtf_lmb))
+        run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
+        run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
+        run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
+        run_env.prepend_path('PATH', self.spec['python'].prefix.bin)

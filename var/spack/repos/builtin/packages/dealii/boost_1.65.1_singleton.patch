@@ -1,0 +1,43 @@
+diff --git a/boost/serialization/singleton.hpp b/boost/serialization/singleton.hpp
+index b50afed..e891d55 100644
+--- a/boost/serialization/singleton.hpp
++++ b/boost/serialization/singleton.hpp
+@@ -91,7 +91,7 @@ class BOOST_SYMBOL_VISIBLE singleton_module :
+     public boost::noncopyable
+ {
+ private:
+-    BOOST_SERIALIZATION_DECL BOOST_DLLEXPORT static bool & get_lock() BOOST_USED;
++    BOOST_DLLEXPORT static bool & get_lock() BOOST_USED;
+ public:
+     BOOST_DLLEXPORT static void lock(){
+         get_lock() = true;
+@@ -115,7 +115,7 @@ private:
+         // use a wrapper so that types T with protected constructors
+         // can be used
+         class singleton_wrapper : public T {};
+-        static singleton_wrapper t;
++        static singleton_wrapper* t = new singleton_wrapper;
+         // refer to instance, causing it to be instantiated (and
+         // initialized at startup on working compilers)
+         BOOST_ASSERT(! is_destroyed());
+@@ -125,7 +125,9 @@ private:
+         // our usage/implementation of "locking" and introduce uncertainty into
+         // the sequence of object initializaition.
+         use(& m_instance);
+-        return static_cast<T &>(t);
++        if (!t)
++            t = new singleton_wrapper;
++        return static_cast<T &>(*t);
+     }
+     static bool & get_is_destroyed(){
+         static bool is_destroyed;
+@@ -147,6 +149,9 @@ public:
+         get_is_destroyed() = false;
+     }
+     BOOST_DLLEXPORT ~singleton() {
++        if (!get_is_destroyed()) {
++            delete &(get_instance());
++        }
+         get_is_destroyed() = true;
+     }
+ };

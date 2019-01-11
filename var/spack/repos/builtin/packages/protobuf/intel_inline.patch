@@ -1,0 +1,25 @@
+diff -Naur src_a/google/protobuf/stubs/port.h src_b/google/protobuf/stubs/port.h
+--- a/src/google/protobuf/stubs/port.h	2017-08-24 18:17:47.149533997 -0700
++++ b/src/google/protobuf/stubs/port.h	2017-08-24 22:13:12.907241538 -0700
+@@ -167,7 +167,9 @@
+ //   is not right for you.
+ 
+ #ifndef GOOGLE_ATTRIBUTE_ALWAYS_INLINE
+-#if defined(__GNUC__) && (__GNUC__ > 3 ||(__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
++#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER > 1700)
++#define GOOGLE_ATTRIBUTE_ALWAYS_INLINE __attribute__ ((always_inline))
++#elif defined(__GNUC__) && (__GNUC__ > 3 ||(__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+ // For functions we want to force inline.
+ // Introduced in gcc 3.1.
+ #define GOOGLE_ATTRIBUTE_ALWAYS_INLINE __attribute__ ((always_inline))
+@@ -178,7 +180,9 @@
+ #endif
+ 
+ #ifndef GOOGLE_ATTRIBUTE_NOINLINE
+-#if defined(__GNUC__) && (__GNUC__ > 3 ||(__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
++#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER > 1700)
++#define GOOGLE_ATTRIBUTE_NOINLINE
++#elif defined(__GNUC__) && (__GNUC__ > 3 ||(__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+ // For functions we want to force not inline.
+ // Introduced in gcc 3.1.
+ #define GOOGLE_ATTRIBUTE_NOINLINE __attribute__ ((noinline))

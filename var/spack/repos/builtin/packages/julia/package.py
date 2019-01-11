@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 import os
@@ -30,18 +11,18 @@ import sys
 
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
+
     homepage = "http://julialang.org"
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
+    git      = "https://github.com/JuliaLang/julia.git"
 
-    version('master',
-            git='https://github.com/JuliaLang/julia.git', branch='master')
-    version('release-0.5',
-            git='https://github.com/JuliaLang/julia.git', branch='release-0.5')
-    version('0.5.2', '8c3fff150a6f96cf0536fb3b4eaa5cbb', preferred=True)
+    version('master', branch='master')
+    version('0.6.2', '255d80bc8d56d5f059fe18f0798e32f6')
+    version('release-0.5', branch='release-0.5')
+    version('0.5.2', '8c3fff150a6f96cf0536fb3b4eaa5cbb')
     version('0.5.1', 'bce119b98f274e0f07ce01498c463ad5')
     version('0.5.0', 'b61385671ba74767ab452363c43131fb')
-    version('release-0.4',
-            git='https://github.com/JuliaLang/julia.git', branch='release-0.4')
+    version('release-0.4', branch='release-0.4')
     version('0.4.7', '75a7a7dd882b7840829d8f165e9b9078')
     version('0.4.6', 'd88db18c579049c23ab8ef427ccedf5d')
     version('0.4.5', '69141ff5aa6cee7c0ec8c85a34aa49a6')
@@ -66,7 +47,7 @@ class Julia(Package):
     # Build-time dependencies:
     # depends_on("awk")
     depends_on("m4", type="build")
-    # depends_on("pkg-config")
+    # depends_on("pkgconfig")
 
     # Combined build-time and run-time dependencies:
     # (Yes, these are run-time dependencies used by Julia's package manager.)

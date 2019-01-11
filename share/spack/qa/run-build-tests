@@ -1,5 +1,11 @@
 #!/bin/bash -e
 #
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
 # Description:
 #     Runs Spack build smoke tests.  This installs a few packages that
 #     cover different parts of the build system.  It is not an exhaustive
@@ -11,6 +17,12 @@
 . "$(dirname $0)/setup.sh"
 check_dependencies ${coverage} git hg svn
 
+# Fetch the sources in a mirror, and add it to Spack
+mkdir -p ~/.mirror
+bin/spack mirror add travis ~/.mirror
+bin/spack mirror create -D -d ~/.mirror ${SPEC}
+
+
 # Move to root directory of Spack
 # Allows script to be run from anywhere
 cd "$SPACK_ROOT"
@@ -21,9 +33,12 @@ if [ -z "$SPEC" ]; then
     exit 1
 fi
 
+if [ "${SPEC}" = "mpich" ] ; then
+    OPTIONS="-v"
+fi
+
 # Print compiler information
 spack config get compilers
 
 # Run some build smoke tests, potentially with code coverage
-${coverage_run} bin/spack install -v ${SPEC}
-${coverage_combine}
+${coverage_run} bin/spack install ${OPTIONS} ${SPEC}

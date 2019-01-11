@@ -10,7 +10,7 @@ from py._path import common
 from py._path.common import iswin32, fspath
 from stat import S_ISLNK, S_ISDIR, S_ISREG
 
-from os.path import abspath, normpath, isabs, exists, isdir, isfile, islink, dirname
+from os.path import abspath, normcase, normpath, isabs, exists, isdir, isfile, islink, dirname
 
 if sys.version_info > (3,0):
     def map_as_list(func, iter):
@@ -205,14 +205,14 @@ class LocalPath(FSBase):
             if rec:
                 # force remove of readonly files on windows
                 if iswin32:
-                    self.chmod(448, rec=1) # octcal 0700
+                    self.chmod(0o700, rec=1)
                 py.error.checked_call(py.std.shutil.rmtree, self.strpath,
                     ignore_errors=ignore_errors)
             else:
                 py.error.checked_call(os.rmdir, self.strpath)
         else:
             if iswin32:
-                self.chmod(448) # octcal 0700
+                self.chmod(0o700)
             py.error.checked_call(os.remove, self.strpath)
 
     def computehash(self, hashtype="md5", chunksize=524288):
@@ -801,12 +801,13 @@ class LocalPath(FSBase):
         if rootdir is None:
             rootdir = cls.get_temproot()
 
+        nprefix = normcase(prefix)
         def parse_num(path):
             """ parse the number out of a path (if it matches the prefix) """
-            bn = path.basename
-            if bn.startswith(prefix):
+            nbasename = normcase(path.basename)
+            if nbasename.startswith(nprefix):
                 try:
-                    return int(bn[len(prefix):])
+                    return int(nbasename[len(nprefix):])
                 except ValueError:
                     pass
 
@@ -897,6 +898,7 @@ class LocalPath(FSBase):
 
         return udir
     make_numbered_dir = classmethod(make_numbered_dir)
+
 
 def copymode(src, dest):
     """ copy permission from src to dst. """

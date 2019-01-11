@@ -1,36 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import fnmatch
 import os
+import fnmatch
 
-import pytest
 import six
-import spack
+import pytest
+
 from llnl.util.filesystem import LibraryList, HeaderList
-from llnl.util.filesystem import find_libraries, find_headers
+from llnl.util.filesystem import find_libraries, find_headers, find
+
+import spack.paths
 
 
 @pytest.fixture()
@@ -211,40 +193,44 @@ class TestHeaderList(object):
 
 
 #: Directory where the data for the test below is stored
-search_dir = os.path.join(spack.test_path, 'data', 'directory_search')
+search_dir = os.path.join(spack.paths.test_path, 'data', 'directory_search')
 
 
 @pytest.mark.parametrize('search_fn,search_list,root,kwargs', [
-    (find_libraries, 'liba', search_dir, {'recurse': True}),
-    (find_libraries, ['liba'], search_dir, {'recurse': True}),
-    (find_libraries, 'libb', search_dir, {'recurse': True}),
-    (find_libraries, ['libc'], search_dir, {'recurse': True}),
-    (find_libraries, ['libc', 'liba'], search_dir, {'recurse': True}),
-    (find_libraries, ['liba', 'libc'], search_dir, {'recurse': True}),
-    (find_libraries, ['libc', 'libb', 'liba'], search_dir, {'recurse': True}),
-    (find_libraries, ['liba', 'libc'], search_dir, {'recurse': True}),
+    (find_libraries, 'liba', search_dir, {'recursive': True}),
+    (find_libraries, ['liba'], search_dir, {'recursive': True}),
+    (find_libraries, 'libb', search_dir, {'recursive': True}),
+    (find_libraries, ['libc'], search_dir, {'recursive': True}),
+    (find_libraries, ['libc', 'liba'], search_dir, {'recursive': True}),
+    (find_libraries, ['liba', 'libc'], search_dir, {'recursive': True}),
     (find_libraries,
      ['libc', 'libb', 'liba'],
      search_dir,
-     {'recurse': True, 'shared': False}
+     {'recursive': True}
      ),
-    (find_headers, 'a', search_dir, {'recurse': True}),
-    (find_headers, ['a'], search_dir, {'recurse': True}),
-    (find_headers, 'b', search_dir, {'recurse': True}),
-    (find_headers, ['c'], search_dir, {'recurse': True}),
-    (find_headers, ['c', 'a'], search_dir, {'recurse': True}),
-    (find_headers, ['a', 'c'], search_dir, {'recurse': True}),
-    (find_headers, ['c', 'b', 'a'], search_dir, {'recurse': True}),
-    (find_headers, ['a', 'c'], search_dir, {'recurse': True}),
+    (find_libraries, ['liba', 'libc'], search_dir, {'recursive': True}),
+    (find_libraries,
+     ['libc', 'libb', 'liba'],
+     search_dir,
+     {'recursive': True, 'shared': False}
+     ),
+    (find_headers, 'a', search_dir, {'recursive': True}),
+    (find_headers, ['a'], search_dir, {'recursive': True}),
+    (find_headers, 'b', search_dir, {'recursive': True}),
+    (find_headers, ['c'], search_dir, {'recursive': True}),
+    (find_headers, ['c', 'a'], search_dir, {'recursive': True}),
+    (find_headers, ['a', 'c'], search_dir, {'recursive': True}),
+    (find_headers, ['c', 'b', 'a'], search_dir, {'recursive': True}),
+    (find_headers, ['a', 'c'], search_dir, {'recursive': True}),
     (find_libraries,
      ['liba', 'libd'],
      os.path.join(search_dir, 'b'),
-     {'recurse': False}
+     {'recursive': False}
      ),
     (find_headers,
      ['b', 'd'],
      os.path.join(search_dir, 'b'),
-     {'recurse': False}
+     {'recursive': False}
      ),
 ])
 def test_searching_order(search_fn, search_list, root, kwargs):
@@ -258,7 +244,7 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     # Now reverse the result and start discarding things
     # as soon as you have matches. In the end the list should
     # be emptied.
-    L = list(reversed(result))
+    rlist = list(reversed(result))
 
     # At this point make sure the search list is a sequence
     if isinstance(search_list, six.string_types):
@@ -267,11 +253,28 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     # Discard entries in the order they appear in search list
     for x in search_list:
         try:
-            while fnmatch.fnmatch(L[-1], x) or x in L[-1]:
-                L.pop()
+            while fnmatch.fnmatch(rlist[-1], x) or x in rlist[-1]:
+                rlist.pop()
         except IndexError:
             # List is empty
             pass
 
     # List should be empty here
-    assert len(L) == 0
+    assert len(rlist) == 0
+
+
+@pytest.mark.parametrize('root,search_list,kwargs,expected', [
+    (search_dir, '*/*bar.tx?', {'recursive': False}, [
+        os.path.join(search_dir, 'a/foobar.txt'),
+        os.path.join(search_dir, 'b/bar.txp'),
+        os.path.join(search_dir, 'c/bar.txt'),
+    ]),
+    (search_dir, '*/*bar.tx?', {'recursive': True}, [
+        os.path.join(search_dir, 'a/foobar.txt'),
+        os.path.join(search_dir, 'b/bar.txp'),
+        os.path.join(search_dir, 'c/bar.txt'),
+    ])
+])
+def test_find_with_globbing(root, search_list, kwargs, expected):
+    matches = find(root, search_list, **kwargs)
+    assert sorted(matches) == sorted(expected)

@@ -1,28 +1,7 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
@@ -47,14 +26,11 @@ class Ascent(Package):
     simulations."""
 
     homepage = "https://github.com/Alpine-DAV/ascent"
-    url      = "https://github.com/Alpine-DAV/ascent"
+    git      = "https://github.com/Alpine-DAV/ascent.git"
 
     maintainers = ['cyrush']
 
-    version('develop',
-            git='https://github.com/Alpine-DAV/ascent.git',
-            branch='develop',
-            submodules=True)
+    version('develop', branch='develop', submodules=True)
 
     ###########################################################################
     # package variants
@@ -78,7 +54,7 @@ class Ascent(Package):
     variant("tbb", default=True, description="Build tbb support")
     variant("cuda", default=False, description="Build cuda support")
 
-    variant("adios", default=True, description="Build Adios filter support")
+    variant("adios", default=False, description="Build Adios filter support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
@@ -88,7 +64,7 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake", when="+cmake")
-    depends_on("conduit")
+    depends_on("conduit@master")
 
     #######################
     # Python
@@ -97,9 +73,7 @@ class Ascent(Package):
     # causes duplicate state issues when running compiled python modules.
     depends_on("python+shared")
     extends("python", when="+python")
-    # TODO: blas and lapack are disabled due to build
-    # issues Cyrus experienced on OSX 10.11.6
-    depends_on("py-numpy~blas~lapack", when="+python", type=('build', 'run'))
+    depends_on("py-numpy", when="+python", type=('build', 'run'))
 
     #######################
     # MPI
@@ -125,7 +99,13 @@ class Ascent(Package):
         Build and install Conduit.
         """
         with working_dir('spack-build', create=True):
-            host_cfg_fname = self.create_host_config(spec, prefix)
+            py_site_pkgs_dir = None
+            if "+python" in spec:
+                py_site_pkgs_dir = site_packages_dir
+
+            host_cfg_fname = self.create_host_config(spec,
+                                                     prefix,
+                                                     py_site_pkgs_dir)
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
@@ -140,12 +120,26 @@ class Ascent(Package):
             cmake(*cmake_args)
             make()
             make("install")
-            # TODO also copy host_cfg_fname into install
+            # install copy of host config for provenance
+            install(host_cfg_fname, prefix)
 
-    def create_host_config(self, spec, prefix):
+    def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build ascent.
+
+        For more details about 'host-config' files see:
+            http://ascent.readthedocs.io/en/latest/BuildingAscent.html
+
+        Note:
+          The `py_site_pkgs_dir` arg exists to allow a package that
+          subclasses this package provide a specific site packages
+          dir when calling this function. `py_site_pkgs_dir` should
+          be an absolute path or `None`.
+
+          This is necessary because the spack `site_packages_dir`
+          var will not exist in the base class. For more details
+          on this issue see: https://github.com/spack/spack/issues/6261
         """
 
         #######################
@@ -184,9 +178,9 @@ class Ascent(Package):
                 raise RuntimeError(msg)
             cmake_exe = cmake_exe.path
 
-        host_cfg_fname = "%s-%s-%s.cmake" % (socket.gethostname(),
-                                             sys_type,
-                                             spec.compiler)
+        host_cfg_fname = "%s-%s-%s-ascent.cmake" % (socket.gethostname(),
+                                                    sys_type,
+                                                    spec.compiler)
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -246,10 +240,10 @@ class Ascent(Package):
             cfg.write("# python from spack \n")
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
                       spec['python'].command.path))
-            # install module to standard style site packages dir
-            # so we can support spack activate
-            cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                        site_packages_dir))
+            # only set dest python site packages dir if passed
+            if py_site_pkgs_dir:
+                cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
+                                            py_site_pkgs_dir))
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
@@ -260,10 +254,6 @@ class Ascent(Package):
             sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
                                          "sphinx-build")
             cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
-
-            cfg.write("# doxygen from uberenv\n")
-            doxygen_exe = spec['doxygen'].command.path
-            cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
         else:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
 
@@ -280,6 +270,16 @@ class Ascent(Package):
                                         spec['mpi'].mpicxx))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                         spec['mpi'].mpifc))
+            mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+            if os.path.isfile(mpiexe_bin):
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.spec["cmake"].satisfies('@3.10:'):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
+                                                mpiexe_bin))
+                else:
+                    cfg.write(cmake_cache_entry("MPIEXEC",
+                                                mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 

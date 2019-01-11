@@ -1,30 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import shutil
 import sys
+
+from spack import *
 
 
 class Hdf5(AutotoolsPackage):
@@ -38,9 +20,14 @@ class Hdf5(AutotoolsPackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
+    version('1.10.4', '8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
+    version('1.10.3', 'b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
+    version('1.10.2', '8d4eae84e533efa57496638fd0dca8c3')
     version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
+
+    version('1.8.21', '87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37')
     version('1.8.19', '7f568e2464d4ab0a74d16b23956d900b')
     version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c')
     version('1.8.17', '7d572f8f3b798a628b8245af0391a0ca')
@@ -49,6 +36,7 @@ class Hdf5(AutotoolsPackage):
     version('1.8.14', 'a482686e733514a51cde12d6fe5c5d95')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
     version('1.8.12', 'd804802feb99b87fc668a90e6fa34411')
+    version('1.8.10', '710aa9fb61a51d61a7e2c09bf0052157')
 
     variant('debug', default=False,
             description='Builds a debug version of the library')
@@ -89,6 +77,30 @@ class Hdf5(AutotoolsPackage):
     # 3. Parallel features are not supported via CXX API, but for the reasons
     #    described in #2 we allow for such combination.
     # conflicts('+mpi+cxx')
+
+    # There are known build failures with intel@18.0.1. This issue is
+    # discussed and patch is provided at
+    # https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/747951.
+    patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
+          when='@1.10.1%intel@18')
+
+    # Turn line comments into block comments to conform with pre-C99 language
+    # standards. Versions of hdf5 after 1.8.10 don't require this patch,
+    # either because they conform to pre-C99 or neglect to ask for pre-C99
+    # language standards from their compiler. The hdf5 build system adds
+    # the -ansi cflag (run 'man gcc' for info on -ansi) for some versions
+    # of some compilers (see hdf5-1.8.10/config/gnu-flags). The hdf5 build
+    # system does not provide an option to disable -ansi, but since the
+    # pre-C99 code is restricted to just five lines of line comments in
+    # three src files, this patch accomplishes the simple task of patching the
+    # three src files and leaves the hdf5 build system alone.
+    patch('pre-c99-comments.patch', when='@1.8.10')
+
+    # There are build errors with GCC 8, see
+    # https://forum.hdfgroup.org/t/1-10-2-h5detect-compile-error-gcc-8-1-0-on-centos-7-2-solved/4441
+    patch('https://salsa.debian.org/debian-gis-team/hdf5/raw/bf94804af5f80f662cad80a5527535b3c6537df6/debian/patches/gcc-8.patch', sha256='57cee5ff1992b4098eda079815c36fc2da9b10e00a9056df054f2384c4fc7523', when='@1.10.2%gcc@8:')
+
+    filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
@@ -154,7 +166,7 @@ class Hdf5(AutotoolsPackage):
         libraries = query2libraries[key]
 
         return find_libraries(
-            libraries, root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recursive=True
         )
 
     @run_before('configure')
@@ -268,8 +280,8 @@ HDF5 version {version} {version}
             else:
                 cc = Executable(self.compiler.cc)
             cc(*(['-c', "check.c"] + spec['hdf5'].headers.cpp_flags.split()))
-            cc(*(['-o', "check", "check.o"] +
-                 spec['hdf5'].libs.ld_flags.split()))
+            cc(*(['-o', "check",
+                  "check.o"] + spec['hdf5'].libs.ld_flags.split()))
             try:
                 check = Executable('./check')
                 output = check(output=str)

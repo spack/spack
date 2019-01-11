@@ -1,34 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import inspect
 import os
 import platform
 
 import spack.build_environment
-from llnl.util.filesystem import working_dir, join_path
+from llnl.util.filesystem import working_dir
 from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
@@ -91,6 +72,11 @@ class CMakePackage(PackageBase):
     depends_on('cmake', type='build')
 
     @property
+    def archive_files(self):
+        """Files to archive for packages based on CMake"""
+        return [os.path.join(self.build_directory, 'CMakeCache.txt')]
+
+    @property
     def root_cmakelists_dir(self):
         """The relative path to the directory containing CMakeLists.txt
 
@@ -109,7 +95,9 @@ class CMakePackage(PackageBase):
         :return: standard cmake arguments
         """
         # standard CMake arguments
-        return CMakePackage._std_args(self)
+        std_cmake_args = CMakePackage._std_args(self)
+        std_cmake_args += getattr(self, 'cmake_flag_args', [])
+        return std_cmake_args
 
     @staticmethod
     def _std_args(pkg):
@@ -140,11 +128,14 @@ class CMakePackage(PackageBase):
         ]
 
         if platform.mac_ver()[0]:
-            args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
+            args.extend([
+                '-DCMAKE_FIND_FRAMEWORK:STRING=LAST',
+                '-DCMAKE_FIND_APPBUNDLE:STRING=LAST'
+            ])
 
         # Set up CMake rpath
         args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
-        rpaths = ':'.join(spack.build_environment.get_rpaths(pkg))
+        rpaths = ';'.join(spack.build_environment.get_rpaths(pkg))
         args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
         # CMake's find_package() looks in CMAKE_PREFIX_PATH first, help CMake
         # to find immediate link dependencies in right places:
@@ -154,22 +145,51 @@ class CMakePackage(PackageBase):
         args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
         return args
 
+    def flags_to_build_system_args(self, flags):
+        """Produces a list of all command line arguments to pass the specified
+        compiler flags to cmake. Note CMAKE does not have a cppflags option,
+        so cppflags will be added to cflags, cxxflags, and fflags to mimic the
+        behavior in other tools."""
+        # Has to be dynamic attribute due to caching
+        setattr(self, 'cmake_flag_args', [])
+
+        flag_string = '-DCMAKE_{0}_FLAGS={1}'
+        langs = {'C': 'c', 'CXX': 'cxx', 'Fortran': 'f'}
+
+        # Handle language compiler flags
+        for lang, pre in langs.items():
+            flag = pre + 'flags'
+            # cmake has no explicit cppflags support -> add it to all langs
+            lang_flags = ' '.join(flags.get(flag, []) + flags.get('cppflags',
+                                                                  []))
+            if lang_flags:
+                self.cmake_flag_args.append(flag_string.format(lang,
+                                                               lang_flags))
+
+        # Cmake has different linker arguments for different build types.
+        # We specify for each of them.
+        if flags['ldflags']:
+            ldflags = ' '.join(flags['ldflags'])
+            ld_string = '-DCMAKE_{0}_LINKER_FLAGS={1}'
+            # cmake has separate linker arguments for types of builds.
+            for type in ['EXE', 'MODULE', 'SHARED', 'STATIC']:
+                self.cmake_flag_args.append(ld_string.format(type, ldflags))
+
+        # CMake has libs options separated by language. Apply ours to each.
+        if flags['ldlibs']:
+            libs_flags = ' '.join(flags['ldlibs'])
+            libs_string = '-DCMAKE_{0}_STANDARD_LIBRARIES={1}'
+            for lang in langs:
+                self.cmake_flag_args.append(libs_string.format(lang,
+                                                               libs_flags))
+
     @property
     def build_directory(self):
         """Returns the directory to use when building the package
 
         :return: directory where to build the package
         """
-        return join_path(self.stage.source_path, 'spack-build')
-
-    def default_flag_handler(self, spack_env, flag_val):
-        # Relies on being the first thing that can affect the spack_env
-        # EnvironmentModification after it is instantiated or no other
-        # method trying to affect these variables. Currently both are true
-        # flag_val is a tuple (flag, value_list)
-        spack_env.set(flag_val[0].upper(),
-                      ' '.join(flag_val[1]))
-        return []
+        return os.path.join(self.stage.source_path, 'spack-build')
 
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to
@@ -216,9 +236,13 @@ class CMakePackage(PackageBase):
         """
         with working_dir(self.build_directory):
             if self.generator == 'Unix Makefiles':
-                self._if_make_target_execute('test')
+                self._if_make_target_execute('test',
+                                             jobs_env='CTEST_PARALLEL_LEVEL')
+                self._if_make_target_execute('check')
             elif self.generator == 'Ninja':
-                self._if_ninja_target_execute('test')
+                self._if_ninja_target_execute('test',
+                                              jobs_env='CTEST_PARALLEL_LEVEL')
+                self._if_ninja_target_execute('check')
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import platform
 import os
@@ -36,6 +17,8 @@ class Qt(Package):
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
+    version('5.11.2', 'c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81')
+    version('5.10.0', 'c5e275ab0ed7ee61d0f4b82cd471770d')
     version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
     version('5.9.0',  '9c8bc8b828c2b56721980368266df9d9')
     version('5.8.0',  'a9f2494f75f966e2f22358ec367d8f41')
@@ -66,7 +49,13 @@ class Qt(Package):
     variant('opengl',     default=False,
             description="Build with OpenGL support.")
 
+    # fix installation of pkgconfig files
+    # see https://github.com/Homebrew/homebrew-core/pull/5951
+    patch('restore-pc-files.patch', when='@5.9: platform=darwin')
+
+    patch('qt3accept.patch', when='@3.3.8b')
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
+    patch('qt3ptrdiff.patch', when='@3.3.8b')
 
     # see https://bugreports.qt.io/browse/QTBUG-57656
     patch('QTBUG-57656.patch', when='@5.8.0')
@@ -83,7 +72,14 @@ class Qt(Package):
     patch('qt4-pcre-include-conflict.patch', when='@4')
     patch('qt4-el-capitan.patch', when='@4')
 
+    # Allow Qt's configure script to build the webkit option with more
+    # recent versions of gcc.
+    # https://github.com/spack/spack/issues/9205
+    # https://github.com/spack/spack/issues/9209
+    patch('qt4-gcc-and-webkit.patch', when='@4')
+
     # Use system openssl for security.
+    depends_on("openssl@:1.0", when='@:5.9')
     depends_on("openssl")
     depends_on("glib", when='@4:')
     depends_on("gtkplus", when='+gtk')
@@ -96,20 +92,35 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
     depends_on("icu4c")
-    depends_on("fontconfig")
+    depends_on("fontconfig", when=(sys.platform != 'darwin'))  # (Unix only)
     depends_on("freetype")
-    # FIXME:
-    # depends_on("freetype", when='@5.8:') and '-system-freetype'
-    # -system-harfbuzz
-    # -system-pcre
+
+    # Core options:
+    # -doubleconversion  [system/qt/no]
+    # -iconv             [posix/sun/gnu/no] (Unix only)
+    # -pcre              [system/qt]
+
+    # Gui, printing, widget options:
+    # -harfbuzz          [system/qt/no]
+    # -xkbcommon-x11     [system/qt/no]
+    # -system-xkbcommon
+
+    # Database options:
+    # -sqlite            [system/qt]
+
+    # Qt3D options:
+    # -assimp            [system/qt/no]
 
     # QtQml
     depends_on("python", when='@5.7.0:', type='build')
 
     # OpenGL hardware acceleration
-    depends_on("mesa", when='@4:+opengl')
+    depends_on("gl@3.2:", when='@4:+opengl')
     depends_on("libxcb", when=sys.platform != 'darwin')
     depends_on("libx11", when=sys.platform != 'darwin')
+
+    if sys.platform != 'darwin':
+        depends_on("libxext", when='@3:4.99')
 
     # Webkit
     depends_on("flex", when='+webkit', type='build')
@@ -121,6 +132,17 @@ class Qt(Package):
     # depends_on("pulse", when='+multimedia')
     # depends_on("flac", when='+multimedia')
     # depends_on("ogg", when='+multimedia')
+    # -pulseaudio                [auto] (Unix only)
+    # -alsa                      [auto] (Unix only)
+
+    # Webengine options:
+    # -webengine-alsa            [auto] (Linux only)
+    # -webengine-pulseaudio      [auto] (Linux only)
+    # -webengine-embedded-build  [auto] (Linux only)
+    # -webengine-icu             [system/qt] (Linux only)
+    # -webengine-ffmpeg          [system/qt] (Linux only)
+    # -webengine-opus            [system/qt] (Linux only)
+    # -webengine-webp            [system/qt] (Linux only)
 
     use_xcode = True
 
@@ -146,7 +168,9 @@ class Qt(Package):
         elif version >= Version('2.1'):
             url += 'x11-'
 
-        if version >= Version('4.0'):
+        if version >= Version('5.10.0'):
+            url += 'src-'
+        elif version >= Version('4.0'):
             url += 'opensource-src-'
         elif version >= Version('3'):
             url += 'free-'
@@ -198,6 +222,7 @@ class Qt(Package):
 
     @property
     def common_config_args(self):
+        # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
         config_args = [
             '-prefix', self.prefix,
             '-v',
@@ -208,11 +233,13 @@ class Qt(Package):
             '-confirm-license',
             '-openssl-linked',
             '-optimized-qmake',
-            '-fontconfig',
             '-system-freetype',
             '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include),
             '-no-pch'
         ]
+
+        if sys.platform != 'darwin':
+            config_args.append('-fontconfig')
 
         if '@:5.7.1' in self.spec:
             config_args.append('-no-openvg')
@@ -243,7 +270,6 @@ class Qt(Package):
             config_args.append('-I%s/dbus-1.0/include' % dbus.lib)
             config_args.append('-I%s/dbus-1.0' % dbus.include)
             config_args.append('-L%s' % dbus.lib)
-            config_args.append('-ldbus-1')
         else:
             config_args.append('-no-dbus')
 
@@ -254,6 +280,8 @@ class Qt(Package):
                 '-no-pulseaudio',
                 '-no-alsa',
             ])
+
+        # FIXME: else: -system-xcb ?
 
         if '@4' in self.spec and sys.platform == 'darwin':
             config_args.append('-cocoa')
@@ -332,6 +360,17 @@ class Qt(Package):
             config_args.extend([
                 '-skip', 'webengine',
             ])
+
+        if '~opengl' in self.spec and self.spec.satisfies('@5.10:'):
+            config_args.extend([
+                '-skip', 'webglplugin',
+            ])
+
+        if self.version > Version('5.8'):
+            # relies on a system installed wayland, i.e. no spack package yet
+            # https://wayland.freedesktop.org/ubuntu16.04.html
+            # https://wiki.qt.io/QtWayland
+            config_args.extend(['-skip', 'wayland'])
 
         configure('-no-eglfs',
                   '-no-directfb',

@@ -1,38 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import re
 import itertools
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
+import llnl.util.multiproc as mp
 
 import spack.error
 import spack.spec
 import spack.architecture
-from spack.util.multiproc import parmap
 from spack.util.executable import Executable, ProcessError
 from spack.util.environment import get_path
 
@@ -179,40 +159,40 @@ class Compiler(object):
     @property
     def openmp_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die(
-            "The compiler you have chosen does not currently support OpenMP.",
-            "If you think it should, please edit the compiler subclass and",
-            "submit a pull request or issue.")
+        raise UnsupportedCompilerFlag(self, "OpenMP", "openmp_flag")
+
+    # This property should be overridden in the compiler subclass if
+    # C++98 is not the default standard for that compiler
+    @property
+    def cxx98_flag(self):
+        return ""
 
     # This property should be overridden in the compiler subclass if
     # C++11 is supported by that compiler
     @property
     def cxx11_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die(
-            "The compiler you have chosen does not currently support C++11.",
-            "If you think it should, please edit the compiler subclass and",
-            "submit a pull request or issue.")
+        raise UnsupportedCompilerFlag(self,
+                                      "the C++11 standard",
+                                      "cxx11_flag")
 
     # This property should be overridden in the compiler subclass if
     # C++14 is supported by that compiler
     @property
     def cxx14_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die(
-            "The compiler you have chosen does not currently support C++14.",
-            "If you think it should, please edit the compiler subclass and",
-            "submit a pull request or issue.")
+        raise UnsupportedCompilerFlag(self,
+                                      "the C++14 standard",
+                                      "cxx14_flag")
 
     # This property should be overridden in the compiler subclass if
     # C++17 is supported by that compiler
     @property
     def cxx17_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die(
-            "The compiler you have chosen does not currently support C++17.",
-            "If you think it should, please edit the compiler subclass and",
-            "submit a pull request or issue.")
+        raise UnsupportedCompilerFlag(self,
+                                      "the C++17 standard",
+                                      "cxx17_flag")
 
     #
     # Compiler classes have methods for querying the version of
@@ -270,7 +250,7 @@ class Compiler(object):
 
             files = os.listdir(directory)
             for exe in files:
-                full_path = join_path(directory, exe)
+                full_path = os.path.join(directory, exe)
 
                 prod = itertools.product(prefixes, compiler_names, suffixes)
                 for pre, name, suf in prod:
@@ -278,27 +258,11 @@ class Compiler(object):
 
                     match = re.match(regex, exe)
                     if match:
-                        key = (full_path,) + match.groups()
+                        key = (full_path,) + match.groups() + (detect_version,)
                         checks.append(key)
 
-        def check(key):
-            try:
-                full_path, prefix, suffix = key
-                version = detect_version(full_path)
-                return (version, prefix, suffix, full_path)
-            except ProcessError as e:
-                tty.debug(
-                    "Couldn't get version for compiler %s" % full_path, e)
-                return None
-            except Exception as e:
-                # Catching "Exception" here is fine because it just
-                # means something went wrong running a candidate executable.
-                tty.debug("Error while executing candidate compiler %s"
-                          % full_path,
-                          "%s: %s" % (e.__class__.__name__, e))
-                return None
-
-        successful = [k for k in parmap(check, checks) if k is not None]
+        successful = [k for k in mp.parmap(_get_versioned_tuple, checks)
+                      if k is not None]
 
         # The 'successful' list is ordered like the input paths.
         # Reverse it here so that the dict creation (last insert wins)
@@ -322,6 +286,28 @@ class Compiler(object):
                 str(self.operating_system)))))
 
 
+def _get_versioned_tuple(compiler_check_tuple):
+    full_path, prefix, suffix, detect_version = compiler_check_tuple
+    try:
+        version = detect_version(full_path)
+        if (not version) or (not str(version).strip()):
+            tty.debug(
+                "Couldn't get version for compiler %s" % full_path)
+            return None
+        return (version, prefix, suffix, full_path)
+    except ProcessError as e:
+        tty.debug(
+            "Couldn't get version for compiler %s" % full_path, e)
+        return None
+    except Exception as e:
+        # Catching "Exception" here is fine because it just
+        # means something went wrong running a candidate executable.
+        tty.debug("Error while executing candidate compiler %s"
+                  % full_path,
+                  "%s: %s" % (e.__class__.__name__, e))
+        return None
+
+
 class CompilerAccessError(spack.error.SpackError):
 
     def __init__(self, path):
@@ -334,3 +320,19 @@ class InvalidCompilerError(spack.error.SpackError):
     def __init__(self):
         super(InvalidCompilerError, self).__init__(
             "Compiler has no executables.")
+
+
+class UnsupportedCompilerFlag(spack.error.SpackError):
+
+    def __init__(self, compiler, feature, flag_name, ver_string=None):
+        super(UnsupportedCompilerFlag, self).__init__(
+            "{0} ({1}) does not support {2} (as compiler.{3})."
+            .format(compiler.name,
+                    ver_string if ver_string else compiler.version,
+                    feature,
+                    flag_name),
+            "If you think it should, please edit the compiler.{0} subclass to"
+            .format(compiler.name) +
+            " implement the {0} property and submit a pull request or issue."
+            .format(flag_name)
+        )

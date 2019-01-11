@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 from glob import glob
 
@@ -33,11 +14,16 @@ class Cuda(Package):
 
     Note: This package does not currently install the drivers necessary
     to run CUDA. These will need to be installed manually. See:
-    http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux for
-    details."""
+    https://docs.nvidia.com/cuda/ for details."""
 
-    homepage = "http://www.nvidia.com/object/cuda_home_new.html"
+    homepage = "https://developer.nvidia.com/cuda-zone"
 
+    version('10.0.130', sha256='92351f0e4346694d0fcb4ea1539856c9eb82060c25654463bfd8574ec35ee39a', expand=False,
+            url="https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux")
+    version('9.2.88', 'dd6e33e10d32a29914b7700c7b3d1ca0', expand=False,
+            url="https://developer.nvidia.com/compute/cuda/9.2/Prod/local_installers/cuda_9.2.88_396.26_linux")
+    version('9.1.85', '67a5c3933109507df6b68f80650b4b4a', expand=False,
+            url="https://developer.nvidia.com/compute/cuda/9.1/Prod/local_installers/cuda_9.1.85_387.26_linux")
     version('9.0.176', '7a00187b2ce5c5e350e68882f42dd507', expand=False,
             url="https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda_9.0.176_384.81_linux-run")
     version('8.0.61', '33e1bd980e91af4e55f3ef835c103f9b', expand=False,
@@ -49,8 +35,11 @@ class Cuda(Package):
     version('6.5.14', '90b1b8f77313600cc294d9271741f4da', expand=False,
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('CUDA_HOME', self.prefix)
+
     def install(self, spec, prefix):
-        runfile = glob(join_path(self.stage.path, 'cuda*run'))[0]
+        runfile = glob(join_path(self.stage.path, 'cuda*_linux*'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
         runfile = which(runfile)
@@ -59,6 +48,7 @@ class Cuda(Package):
         # compilers.  For example, on CentOS 6, you must use GCC 4.4.7 or
         # older. See:
         # http://docs.nvidia.com/cuda/cuda-installation-guide-linux/#system-requirements
+        # https://gist.github.com/ax3l/9489132
         # for details.
 
         runfile(

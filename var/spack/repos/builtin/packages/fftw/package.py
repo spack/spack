@@ -1,28 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+
+import llnl.util.lang
 
 
 class Fftw(AutotoolsPackage):
@@ -37,6 +20,8 @@ class Fftw(AutotoolsPackage):
     url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 
+    version('3.3.8', '8aac833c943d8e90d51b697b27d4384d')
+    version('3.3.7', '0d5915d7d39b3253c1cc05030d79ac47')
     version('3.3.6-pl2', '927e481edbb32575397eb3d62535a856')
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
@@ -65,15 +50,62 @@ class Fftw(AutotoolsPackage):
         'pfft_patches', default=False,
         description='Add extra transpose functions for PFFT compatibility')
 
+    variant(
+        'simd',
+        default='sse2,avx,avx2',
+        values=(
+            'sse', 'sse2', 'avx', 'avx2', 'avx512',  # Intel
+            'avx-128-fma', 'kcvi',  # Intel
+            'altivec', 'vsx',  # IBM
+            'neon',  # ARM
+            'generic-simd128', 'generic-simd256'  # Generic
+        ),
+        description='Optimizations that are enabled in this build',
+        multi=True
+    )
+    variant('fma', default=False, description='Activate support for fma')
+
     depends_on('mpi', when='+mpi')
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
+    # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
+    conflicts('%gcc@8:8.9999', when="@3.3.7")
+
+    provides('fftw-api@2', when='@2.1.5')
+    provides('fftw-api@3', when='@3:')
 
     @property
     def libs(self):
-        result = find_libraries(['libfftw3'], root=self.prefix, recurse=True)
-        return result
+
+        # Reduce repetitions of entries
+        query_parameters = list(llnl.util.lang.dedupe(
+            self.spec.last_query.extra_parameters
+        ))
+
+        # List of all the suffixes associated with float precisions
+        precisions = [
+            ('float', 'f'),
+            ('double', ''),
+            ('long_double', 'l'),
+            ('quad', 'q')
+        ]
+
+        # Retrieve the correct suffixes, or use double as a default
+        suffixes = [v for k, v in precisions if k in query_parameters] or ['']
+
+        # Construct the list of libraries that needs to be found
+        libraries = []
+        for sfx in suffixes:
+            if 'mpi' in query_parameters and '+mpi' in self.spec:
+                libraries.append('libfftw3' + sfx + '_mpi')
+
+            if 'openmp' in query_parameters and '+openmp' in self.spec:
+                libraries.append('libfftw3' + sfx + '_omp')
+
+            libraries.append('libfftw3' + sfx)
+
+        return find_libraries(libraries, root=self.prefix, recursive=True)
 
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:
@@ -108,12 +140,11 @@ class Fftw(AutotoolsPackage):
             options.append('--enable-mpi')
 
         # SIMD support
-        # TODO: add support for more architectures
-        float_options = []
-        double_options = []
-        if 'x86_64' in spec.architecture and spec.satisfies('@3:'):
-            float_options.append('--enable-sse2')
-            double_options.append('--enable-sse2')
+        float_options, double_options = [], []
+        if spec.satisfies('@3:', strict=True):
+            for opts in (float_options, double_options):
+                opts += self.enable_or_disable('simd')
+                opts += self.enable_or_disable('fma')
 
         configure = Executable('../configure')
 

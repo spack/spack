@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,8 +11,11 @@ class SuiteSparse(Package):
     SuiteSparse is a suite of sparse matrix algorithms
     """
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
-    url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.1.tar.gz'
+    url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.2.0.tar.gz'
 
+    version('5.3.0', sha256='90e69713d8c454da5a95a839aea5d97d8d03d00cc1f667c4bdfca03f640f963d')
+    version('5.2.0', '8e625539dbeed061cc62fbdfed9be7cf')
+    version('5.1.0', '9c34d7c07ad5ce1624b8187faa132046')
     version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
     version('4.5.4', 'f6ab689442e64a1624a47aa220072d1b')
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
@@ -44,6 +28,7 @@ class SuiteSparse(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('cmake', when='@5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
@@ -56,6 +41,12 @@ class SuiteSparse(Package):
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
+
+    # This patch adds '-lm' when linking libgraphblas and when using clang.
+    # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
+    patch('graphblas_libm_dep.patch', when='@5.2.0:5.2.99%clang')
+
+    conflicts('%gcc@:4.8', when='@5.2.0:', msg='gcc version must be at least 4.9 for suite-sparse@5.2.0:')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -94,9 +85,15 @@ class SuiteSparse(Package):
             # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk,
             # even though this fix is ugly
             'BLAS=%s' % (spec['blas'].libs.ld_flags + (
-                '-lstdc++' if '@4.5.1' in spec else '')),
+                ' -lstdc++' if '@4.5.1' in spec else '')),
             'LAPACK=%s' % spec['lapack'].libs.ld_flags,
         ]
+
+        # 64bit blas in UMFPACK:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
 
         # SuiteSparse defaults to using '-fno-common -fexceptions' in
         # CFLAGS, but not all compilers use the same flags for these
@@ -107,7 +104,7 @@ class SuiteSparse(Package):
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']
 
-        if '%xl' in spec or '%xl_r' in spec:
+        if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR
@@ -118,3 +115,22 @@ class SuiteSparse(Package):
             ]
 
         make('install', *make_args)
+
+    @property
+    def libs(self):
+        """Export the libraries of SuiteSparse.
+        Sample usage: spec['suite-sparse'].libs.ld_flags
+                      spec['suite-sparse:klu,btf'].libs.ld_flags
+        """
+        # Component libraries, ordered by dependency. Any missing components?
+        all_comps = ['klu', 'btf', 'umfpack', 'cholmod', 'colamd', 'amd',
+                     'camd', 'ccolamd', 'cxsparse', 'ldl', 'rbio', 'spqr',
+                     'suitesparseconfig']
+        query_parameters = self.spec.last_query.extra_parameters
+        comps = all_comps if not query_parameters else query_parameters
+        libs = find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
+                              shared=True, recursive=False)
+        if not libs:
+            return None
+        libs += find_system_libraries('librt')
+        return libs

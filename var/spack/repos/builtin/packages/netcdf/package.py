@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 import numbers
@@ -41,23 +22,32 @@ class Netcdf(AutotoolsPackage):
     and sharing of array-oriented scientific data."""
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
-    url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.3.3.tar.gz"
+    git      = "https://github.com/Unidata/netcdf-c"
+    url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.6.1.tar.gz"
 
+    version('master', branch='master')
+    version('4.6.2',   sha256='c37525981167b3cd82d32e1afa3022afb94e59287db5f116c57f5ed4d9c6a638',
+            url="https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.6.2.tar.gz")
+    version('4.6.1',   sha256='89c7957458740b763ae828c345240b8a1d29c2c1fed0f065f99b73181b0b2642')
+    version('4.6.0',   sha256='4bf05818c1d858224942ae39bfd9c4f1330abec57f04f58b9c3c152065ab3825')
+    version('4.5.0',   sha256='cbe70049cf1643c4ad7453f86510811436c9580cb7a1684ada2f32b95b00ca79')
     # Version 4.4.1.1 is having problems in tests
     #    https://github.com/Unidata/netcdf-c/issues/343
-    version('4.4.1.1', '503a2d6b6035d116ed53b1d80c811bda')
+    version('4.4.1.1', sha256='4d44c6f4d02a8faf10ea619bfe1ba8224cd993024f4da12988c7465f663c8cae')
     # netcdf@4.4.1 can crash on you (in real life and in tests).  See:
     #    https://github.com/Unidata/netcdf-c/issues/282
-    version('4.4.1',   '7843e35b661c99e1d49e60791d5072d8')
-    version('4.4.0',   'cffda0cbd97fdb3a06e9274f7aef438e')
-    version('4.3.3.1', '5c9dad3705a3408d27f696e5b31fb88c')
-    version('4.3.3',   '5fbd0e108a54bd82cb5702a73f56d2ae')
+    version('4.4.1',   sha256='8915cc69817f7af6165fbe69a8d1dfe21d5929d7cca9d10b10f568669ec6b342')
+    version('4.4.0',   sha256='0d40cb7845abd03c363abcd5f57f16e3c0685a0faf8badb2c59867452f6bcf78')
+    version('4.3.3.1', sha256='bdde3d8b0e48eed2948ead65f82c5cfb7590313bc32c4cf6c6546e4cea47ba19')
+    version('4.3.3',   sha256='83223ed74423c685a10f6c3cfa15c2d6bf7dc84b46af1e95b9fa862016aaa27e')
 
     variant('mpi', default=True,
             description='Enable parallel I/O for netcdf-4')
     variant('parallel-netcdf', default=False,
             description='Enable parallel I/O for classic files')
     variant('hdf4', default=False, description='Enable HDF4 support')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
 
@@ -152,10 +142,10 @@ class Netcdf(AutotoolsPackage):
                   r'\1{0}\2'.format(max_vars))
 
     def configure_args(self):
-        CFLAGS = []
-        CPPFLAGS = []
-        LDFLAGS = []
-        LIBS = []
+        cflags = []
+        cppflags = []
+        ldflags = []
+        libs = []
 
         config_args = ['--enable-v2',
                        '--enable-utilities',
@@ -173,10 +163,10 @@ class Netcdf(AutotoolsPackage):
 
         config_args += self.enable_or_disable('shared')
 
-        if '~shared' in self.spec:
+        if '~shared' in self.spec or '+pic' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
-            CFLAGS.append(self.compiler.pic_flag)
+            cflags.append(self.compiler.pic_flag)
 
         config_args += self.enable_or_disable('dap')
         # config_args += self.enable_or_disable('cdmremote')
@@ -188,10 +178,10 @@ class Netcdf(AutotoolsPackage):
             # undefined reference to `SSL_CTX_use_certificate_chain_file
             curl = self.spec['curl']
             curl_libs = curl.libs
-            LIBS.append(curl_libs.link_flags)
-            LDFLAGS.append(curl_libs.search_flags)
+            libs.append(curl_libs.link_flags)
+            ldflags.append(curl_libs.search_flags)
             # TODO: figure out how to get correct flags via headers.cpp_flags
-            CPPFLAGS.append('-I' + curl.prefix.include)
+            cppflags.append('-I' + curl.prefix.include)
 
         if self.spec.satisfies('@4.4:'):
             if '+mpi' in self.spec:
@@ -203,16 +193,16 @@ class Netcdf(AutotoolsPackage):
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
         # used instead.
         hdf5_hl = self.spec['hdf5:hl']
-        CPPFLAGS.append(hdf5_hl.headers.cpp_flags)
-        LDFLAGS.append(hdf5_hl.libs.search_flags)
+        cppflags.append(hdf5_hl.headers.cpp_flags)
+        ldflags.append(hdf5_hl.libs.search_flags)
 
         if '+parallel-netcdf' in self.spec:
             config_args.append('--enable-pnetcdf')
             pnetcdf = self.spec['parallel-netcdf']
-            CPPFLAGS.append(pnetcdf.headers.cpp_flags)
+            cppflags.append(pnetcdf.headers.cpp_flags)
             # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
             # package gets custom implementation of 'libs'
-            LDFLAGS.append('-L' + pnetcdf.prefix.lib)
+            ldflags.append('-L' + pnetcdf.prefix.lib)
         else:
             config_args.append('--disable-pnetcdf')
 
@@ -222,26 +212,26 @@ class Netcdf(AutotoolsPackage):
         config_args += self.enable_or_disable('hdf4')
         if '+hdf4' in self.spec:
             hdf4 = self.spec['hdf']
-            CPPFLAGS.append(hdf4.headers.cpp_flags)
+            cppflags.append(hdf4.headers.cpp_flags)
             # TODO: change to hdf4.libs.search_flags once 'hdf'
             # package gets custom implementation of 'libs' property.
-            LDFLAGS.append('-L' + hdf4.prefix.lib)
+            ldflags.append('-L' + hdf4.prefix.lib)
             # TODO: change to self.spec['jpeg'].libs.link_flags once the
             # implementations of 'jpeg' virtual package get 'jpeg_libs'
             # property.
-            LIBS.append('-ljpeg')
+            libs.append('-ljpeg')
             if '+szip' in hdf4:
                 # This should also come from hdf4.libs
-                LIBS.append('-lsz')
+                libs.append('-lsz')
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
         # Use the netcdf-fortran package to install Fortran support.
 
-        config_args.append('CFLAGS=' + ' '.join(CFLAGS))
-        config_args.append('CPPFLAGS=' + ' '.join(CPPFLAGS))
-        config_args.append('LDFLAGS=' + ' '.join(LDFLAGS))
-        config_args.append('LIBS=' + ' '.join(LIBS))
+        config_args.append('CFLAGS=' + ' '.join(cflags))
+        config_args.append('CPPFLAGS=' + ' '.join(cppflags))
+        config_args.append('LDFLAGS=' + ' '.join(ldflags))
+        config_args.append('LIBS=' + ' '.join(libs))
 
         return config_args
 
