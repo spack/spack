@@ -78,6 +78,8 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_THROW:BOOL=ON')
         else:
             args.append('-DOmega_h_THROW:BOOL=OFF')
+        # omega-h requires empty CMAKE_BUILD_TYPE
+        args.append('-DCMAKE_BUILD_TYPE:STRING=')
         args += list(self._bob_options())
         return args
 
