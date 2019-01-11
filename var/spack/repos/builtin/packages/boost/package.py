@@ -156,6 +156,9 @@ class Boost(Package):
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
+    # Fix the bootstrap/bjam build for Cray
+    patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
+
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
             url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
