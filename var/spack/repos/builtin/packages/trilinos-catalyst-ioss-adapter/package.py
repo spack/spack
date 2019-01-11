@@ -25,7 +25,10 @@ class TrilinosCatalystIossAdapter(CMakePackage):
     # without any variants. Concretizer bug?
     depends_on('netcdf+parallel-netcdf')
 
-    root_cmakelists_dir = 'packages/seacas/libraries/ioss/src/visualization/ParaViewCatalystIossAdapter'
+    root_cmakelists_dir = join_path('packages', 'seacas', 'libraries',
+                                    'ioss', 'src', 'visualization',
+                                    'ParaViewCatalystIossAdapter')
+    print(root_cmakelists_dir)
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PYTHONPATH', self.prefix.python)
