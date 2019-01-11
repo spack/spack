@@ -35,9 +35,10 @@ class Lbann(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('al', default=False, description='Builds with support for Aluminum Library')
+    variant('al', default=True, description='Builds with support for Aluminum Library')
     variant('conduit', default=False, description='Builds with support for Conduit Library')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
+    variant('docs', default=False, description='Builds with support for building documentation')
 
     # It seems that there is a need for one statement per version bounds
     depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90,0.95: ~al')
@@ -64,14 +65,13 @@ class Lbann(CMakePackage):
                when='build_type=Debug @0.91:0.94')
 
     depends_on('aluminum@master', when='@:0.90,0.95: +al ~gpu')
-    depends_on('aluminum@master +gpu +mpi-cuda', when='@:0.90,0.95: +al +gpu ~nccl')
+    depends_on('aluminum@master +gpu +mpi_cuda', when='@:0.90,0.95: +al +gpu ~nccl')
     depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
-    depends_on('mpi', when='~gpu')
-    depends_on('mpi +cuda', when='+gpu')
+    depends_on('mpi')
     depends_on('hwloc')
 
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
@@ -89,6 +89,11 @@ class Lbann(CMakePackage):
     depends_on('nccl', when='+gpu +nccl')
 
     depends_on('conduit@master +hdf5', when='+conduit')
+
+    depends_on('py-breathe', type='build', when='+docs')
+    depends_on('py-m2r', type='build', when='+docs')
+
+    depends_on('cereal')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
