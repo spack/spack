@@ -9,7 +9,7 @@ from spack import *
 class FenicsDolfin(CMakePackage):
     """DOLFIN is the C++/Python interface of FEniCS."""
 
-    homepage = "http://fenicsproject.org/"
+    homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/dolfin.git"
     url      = "https://bitbucket.org/fenics-project/dolfin/get/2018.1.0.post2.tar.gz"
 
