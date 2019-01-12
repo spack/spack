@@ -144,6 +144,15 @@ configuration:
 
     $ vim spack/deploy/packages/bbp-packages.yaml
 
+If there are dependencies used in a broader scope/by several software
+packages, consider adding them to one of the following steps in the
+deployment chain (all found in `spack/deploy/packages`):
+
+* `parallel-libraries` for everything using MPI or highly performant
+* `serial-libraries`, `python-packages` for general purpose libraries
+* `external-libraries` for packages that are seldomly changed and for which
+  the dependency graph may be truncated by Spack (e.g., Spark, Python) - mainly dependencies for building
+
 Commit the changes and file a pull request on Github.
 Jenkins will build the additional software required, with all output
 available in a separate directory:
