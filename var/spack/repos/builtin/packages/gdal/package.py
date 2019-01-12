@@ -74,6 +74,7 @@ class Gdal(AutotoolsPackage):
     variant('armadillo', default=False, description='Include Armadillo support for faster TPS transform computation')
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
+    variant('grib',      default=False, description='Include GRIB support')
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
@@ -373,6 +374,11 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-armadillo=no')
 
+        if '+grib' in spec:
+            args.append('--with-grib=yes')
+        else:
+            args.append('--with-grib=no')
+
         # TODO: add packages for these dependencies
         args.extend([
             # https://trac.osgeo.org/gdal/wiki/GRASS
@@ -399,7 +405,6 @@ class Gdal(AutotoolsPackage):
             '--with-bsb=no',
             # https://trac.osgeo.org/gdal/wiki/Oracle
             '--with-oci=no',
-            '--with-grib=no',
             '--with-mysql=no',
             # https://trac.osgeo.org/gdal/wiki/Ingres
             '--with-ingres=no',
