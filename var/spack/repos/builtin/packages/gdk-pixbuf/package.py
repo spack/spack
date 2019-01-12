@@ -55,6 +55,8 @@ class GdkPixbuf(Package):
         with working_dir('spack-build', create=True):
             meson('..', *std_meson_args)
             ninja('-v')
+            if self.run_tests:
+                ninja('test')
             ninja('install')
 
     def configure_args(self):
