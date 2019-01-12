@@ -9,6 +9,7 @@ from copy import copy
 from six import iteritems
 
 import spack.spec
+import spack.compiler
 import spack.compilers as compilers
 import spack.compilers.clang
 from spack.compiler import _get_versioned_tuple, Compiler
@@ -23,7 +24,12 @@ def echo_executable_string(monkeypatch):
         def _impl(*args, **kwargs):
             return string_to_echo
         return _impl
-    monkeypatch.setattr(spack.compilers.clang, 'Executable', echo)
+
+    monkeypatch.setattr(spack.compiler, 'Executable', echo)
+    for compiler_name in spack.compilers.supported_compilers():
+        module_name = '.'.join(['spack.compilers', compiler_name])
+        module = __import__(module_name, fromlist=[None])
+        monkeypatch.setattr(module, 'Executable', echo, raising=False)
 
 
 def test_get_compiler_duplicates(config):
@@ -245,11 +251,22 @@ def test_xl_r_flags():
 
 
 @pytest.mark.regression('10191')
-def test_clang_version_detection(echo_executable_string):
-    version = spack.compilers.clang.Clang.default_version(
-        'clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'  # noqa
-        'Target: x86_64-pc-linux-gnu\n'
-        'Thread model: posix\n'
-        'InstalledDir: /usr/bin\n'
-    )
-    assert version == '6.0.1'
+@pytest.mark.parametrize('version_str,expected_version', [
+    # macOS clang
+    ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
+     'Target: x86_64-apple-darwin15.2.0\n'
+     'Thread model: posix\n', '7.0.2'),
+    # Other platforms
+    ('clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'  # noqa
+     'Target: x86_64-pc-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '6.0.1'),
+    ('clang version 3.1 (trunk 149096)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '3.1'),
+])
+def test_clang_version_detection(
+        echo_executable_string, version_str, expected_version
+):
+    version = spack.compilers.clang.Clang.default_version(version_str)
+    assert version == expected_version
