@@ -26,10 +26,10 @@ class Cce(Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'cce'
 
-    link_paths = {'cc': 'cc',
-                  'cxx': 'CC',
-                  'f77': 'ftn',
-                  'fc': 'ftn'}
+    link_paths = {'cc': 'cce/cc',
+                  'cxx': 'cce/case-insensitive/CC',
+                  'f77': 'cce/ftn',
+                  'fc': 'cce/ftn'}
 
     @classmethod
     def default_version(cls, comp):
