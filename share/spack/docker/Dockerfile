@@ -25,11 +25,12 @@ RUN mkdir -p $SPACK_ROOT/opt/spack
 
 MASK PUSH
 MASK [[ $DISTRO == arch ]]
-RUN pacman -Sy --noconfirm                                     \
-        base-devel   ca-certificates curl   gcc                \
-        gcc-fortran  git             gnupg2 iproute2           \
-        make         openssh         python python-pip         \
-        sudo         tcl                                       \
+RUN pacman -Syu --noconfirm                                    \
+ && pacman -Sy --noconfirm                                     \
+        base-devel   ca-certificates curl    gcc               \
+        gcc-fortran  git             gnupg2  inetutils         \
+        iproute2     make            openssh procps-ng         \
+        python       python-pip      sudo    tcl               \
  && echo 'nobody ALL=(ALL) NOPASSWD: ALL' >                    \
         /etc/sudoers.d/nobody-sudo                             \
  && sudo -u nobody git clone                                   \
