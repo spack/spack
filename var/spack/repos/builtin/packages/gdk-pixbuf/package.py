@@ -31,9 +31,10 @@ class GdkPixbuf(Package):
     depends_on('libxslt', type='build')
     depends_on('docbook-xsl', type='build')
     depends_on('gettext')
-    depends_on('glib')
+    depends_on('glib@2.38.0:')
     depends_on('jpeg')
     depends_on('libpng')
+    depends_on('zlib')
     depends_on('libtiff')
     depends_on('gobject-introspection')
 
