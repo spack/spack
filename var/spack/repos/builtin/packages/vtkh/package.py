@@ -47,7 +47,7 @@ class Vtkh(Package):
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
 
-    depends_on("cmake@3.8.2:")
+    depends_on("cmake@3.8.2:", type='build')
 
     depends_on("mpi", when="+mpi")
     depends_on("intel-tbb", when="@0.1.0+tbb")
