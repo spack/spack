@@ -143,7 +143,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc',            when='+slepc+petsc+mpi')
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
-    depends_on('sundials~pthread', when='@9.0:+sundials')
+    depends_on('sundials@:3~pthread', when='@9.0:+sundials')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
