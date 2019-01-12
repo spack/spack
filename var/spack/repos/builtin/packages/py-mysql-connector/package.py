@@ -10,9 +10,7 @@ class PyMysqlConnector(PythonPackage):
     """MySQL Connector/Python is implementing the MySQL Client/Server
     protocol completely in Python. No MySQL libraries are needed, and
     no compilation is necessary to run this Python DB API v2.0
-    compliant driver.
-
-    """
+    compliant driver."""
 
     homepage = "https://github.com/mysql/mysql-connector-python"
     url      = "https://github.com/mysql/mysql-connector-python/archive/8.0.13.tar.gz"
