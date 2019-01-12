@@ -27,9 +27,9 @@ class Cce(Compiler):
     PrgEnv_compiler = 'cce'
 
     link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
+                  'cxx': 'CC',
+                  'f77': 'ftn',
+                  'fc': 'ftn'}
 
     @classmethod
     def default_version(cls, comp):
