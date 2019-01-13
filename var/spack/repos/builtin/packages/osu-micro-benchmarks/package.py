@@ -17,6 +17,7 @@ class OsuMicroBenchmarks(AutotoolsPackage):
     homepage = "http://mvapich.cse.ohio-state.edu/benchmarks/"
     url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.3.tar.gz"
 
+    version('5.5', 'bcb970d5a1f3424e2c7302ff60611008')
     version('5.4', '7e7551879b944d71b7cc60d476d5403b')
     version('5.3', '42e22b931d451e8bec31a7424e4adfc2')
 
