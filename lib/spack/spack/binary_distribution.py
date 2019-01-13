@@ -585,14 +585,14 @@ def get_keys(install=False, trust=False, force=False):
             tty.msg("Finding public keys in %s" % mirror)
             files = os.listdir(mirror)
             for file in files:
-                if re.search('\.key', file):
+                if re.search(r'\.key', file):
                     link = 'file://' + mirror + '/' + file
                     keys.add(link)
         else:
             tty.msg("Finding public keys on %s" % url)
             p, links = spider(url + "/build_cache", depth=1)
             for link in links:
-                if re.search("\.key", link):
+                if re.search(r'\.key', link):
                     keys.add(link)
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:
