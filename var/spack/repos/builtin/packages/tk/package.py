@@ -38,6 +38,10 @@ class Tk(AutotoolsPackage):
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+            self.spec.version.up_to(2))))
+
     def configure_args(self):
         spec = self.spec
         return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib)]

@@ -255,26 +255,31 @@ class Python(AutotoolsPackage):
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
                        os.path.join(prefix.bin, 'python-config'))
 
-    # TODO: Once better testing support is integrated, add the following tests
-    # https://wiki.python.org/moin/TkInter
-    #
-    # Note: Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
-    #
-    #    if '+tk' in spec:
-    #        env['TK_LIBRARY']  = join_path(spec['tk'].prefix.lib,
-    #            'tk{0}'.format(spec['tk'].version.up_to(2)))
-    #        env['TCL_LIBRARY'] = join_path(spec['tcl'].prefix.lib,
-    #            'tcl{0}'.format(spec['tcl'].version.up_to(2)))
-    #
-    #        $ python
-    #        >>> import _tkinter
-    #
-    #        if spec.satisfies('@3:')
-    #            >>> import tkinter
-    #            >>> tkinter._test()
-    #        else:
-    #            >>> import Tkinter
-    #            >>> Tkinter._test()
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def import_tests(self):
+        """Test that basic Python functionality works."""
+
+        with working_dir('spack-test', create=True):
+            # Ensure that SSL support works
+            self.command('-c', 'import ssl')
+
+            # Ensure that TkInter support works
+            # https://wiki.python.org/moin/TkInter
+            if '+tk' in spec:
+                self.command('-c', 'import _tkinter')
+
+                # Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
+                if 'DISPLAY' in env:
+                    if spec.satisfies('@3:'):
+                        self.command('-c', 'import tkinter; tkinter._test()')
+                    else:
+                        self.command('-c', 'import Tkinter; Tkinter._test()')
+                else:
+                    if spec.satisfies('@3:'):
+                        self.command('-c', 'import tkinter')
+                    else:
+                        self.command('-c', 'import Tkinter')
 
     def _save_distutil_vars(self, prefix):
         """
