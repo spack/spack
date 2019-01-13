@@ -27,12 +27,20 @@ class GdkPixbuf(Package):
     depends_on('shared-mime-info', type='build', when='@2.36.8: platform=linux')
     depends_on('shared-mime-info', type='build', when='@2.36.8: platform=cray')
     depends_on('pkgconfig', type='build')
+    # Building the man pages requires libxslt and the Docbook stylesheets
+    depends_on('libxslt', type='build')
+    depends_on('docbook-xsl', type='build')
     depends_on('gettext')
-    depends_on('glib')
+    depends_on('glib@2.38.0:')
     depends_on('jpeg')
     depends_on('libpng')
+    depends_on('zlib')
     depends_on('libtiff')
     depends_on('gobject-introspection')
+
+    # Replace the docbook stylesheet URL with the one that our
+    # docbook-xsl package uses/recognizes.
+    patch('docbook-cdn.patch')
 
     def url_for_version(self, version):
         url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/{0}/gdk-pixbuf-{1}.tar.xz"
@@ -48,6 +56,8 @@ class GdkPixbuf(Package):
         with working_dir('spack-build', create=True):
             meson('..', *std_meson_args)
             ninja('-v')
+            if self.run_tests:
+                ninja('test')
             ninja('install')
 
     def configure_args(self):
@@ -70,3 +80,8 @@ class GdkPixbuf(Package):
         make('install')
         if self.run_tests:
             make('installcheck')
+
+    def setup_environment(self, spack_env, run_env):
+        # The "post-install.sh" script uses gdk-pixbuf-query-loaders,
+        # which was installed earlier.
+        spack_env.prepend_path('PATH', self.prefix.bin)
