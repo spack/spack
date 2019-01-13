@@ -29,6 +29,7 @@ class Vtkm(CMakePackage, CudaPackage):
     # can overwhelm compilers with too many symbols
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant("shared", default=True, description="build shared libs")
     variant("cuda", default=False, description="build cuda support")
     variant("doubleprecision", default=True,
             description='enable double precision')
@@ -51,7 +52,11 @@ class Vtkm(CMakePackage, CudaPackage):
         with working_dir('spack-build', create=True):
             options = ["../",
                        "-DVTKm_ENABLE_TESTING:BOOL=OFF"]
-
+            # shared vs static libs
+            if "+shared" in spec:
+                options.append('-DBUILD_SHARED_LIBS=ON')
+            else:
+                options.append('-DBUILD_SHARED_LIBS=OFF')
             # cuda support
             if "+cuda" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
