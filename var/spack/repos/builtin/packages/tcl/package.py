@@ -72,7 +72,8 @@ class Tcl(AutotoolsPackage):
 
     @property
     def libs(self):
-        return LibraryList([])
+        return find_libraries(['libtcl{0}'.format(self.version.up_to(2))],
+                              root=self.prefix, recursive=True)
 
     @property
     def command(self):
@@ -97,7 +98,7 @@ class Tcl(AutotoolsPackage):
                          'tcl{0}'.format(self.version.up_to(2)))
 
     def setup_environment(self, spack_env, run_env):
-        # When using Tkinter from within spack provided python+tk, python
+        # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
         run_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
 
