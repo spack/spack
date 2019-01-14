@@ -92,7 +92,7 @@ class Namd(MakefilePackage):
 
         self._copy_arch_file('base')
 
-        opts = ['--charm-base', spec['charm'].prefix]
+        opts = ['--charm-base', spec['charmpp'].prefix]
         fftw_version = spec.variants['fftw'].value
         if fftw_version == 'none':
             opts.append('--without-fftw')
