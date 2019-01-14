@@ -14,7 +14,7 @@ class Rust(Package):
 
     version('develop', branch='master')
     version('1.31.1', tag='1.31.1')
-    version('1.31.0', tag='1.31.0') # "Rust 2018" edition
+    version('1.31.0', tag='1.31.0')  # "Rust 2018" edition
     version('1.30.1', tag='1.30.1')
 
     extendable = True
