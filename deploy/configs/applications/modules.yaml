@@ -36,6 +36,7 @@ modules:
       - py-bluepymm
       - py-bluepyopt
       - py-efel
+      - py-pytouchreader
       - spykfunc
       - 'synapsetool%gcc'
       - steps
