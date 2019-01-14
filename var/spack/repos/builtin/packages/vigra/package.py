@@ -31,14 +31,14 @@ class Vigra(CMakePackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('fftw', when='+fftw')
     depends_on('openexr', when='+exr')
-    depends_on('py-numpy', when='+python')
+    depends_on('py-numpy', type=('build', 'run'), when='+python')
     depends_on('boost+python+numpy', when='+python')
-    depends_on('py-sphinx', when='+python')
-    depends_on('doxygen', when='+cxxdoc')
-    depends_on('python', when='+cxxdoc')
+    depends_on('py-sphinx', type='build', when='+python')
+    depends_on('doxygen', type='build', when='+cxxdoc')
+    depends_on('python', type='build', when='+cxxdoc')
     depends_on('py-nose', type=('build', 'test'), when='+python')
 
-    extends('python')
+    extends('python', when='+python')
 
     def cmake_args(self):
         args = []
@@ -55,18 +55,18 @@ class Vigra(CMakePackage):
                 '-DHDF5_INCLUDE_DIR={0}'.format(spec['hdf5'].prefix.include),
                 '-DHDF5_Z_LIBRARY={0}'.format(spec['zlib'].libs.libraries[0])
             ])
+        else:
+            args.append('-DWITH_HDF5=OFF')
         if '+python' in spec:
-            pyVersStr = spec['python'].version.up_to(2)
-            pyVersStrNoDot = pyVersStr.joined
-            pyVersDir = 'python{0}'.format(pyVersStr)
-            boostPythonLib = '{0}/libboost_python{1}.so'.format(
-                    spec['boost'].prefix.lib, pyVersStrNoDot)
+            py_vers_str = spec['python'].version.up_to(2)
+            py_vers_str_nodot = py_vers_str.joined
+            boost_python_lib = '{0}/libboost_python{1}.so'.format(
+                spec['boost'].prefix.lib, py_vers_str_nodot)
             args.extend([
                 '-DBoost_DIR={0}'.format(spec['boost'].prefix),
                 '-DBoost_INCLUDE_DIR={0}'.format(spec['boost'].prefix.include),
-                '-DBoost_PYTHON_LIBRARY={0}'.format(boostPythonLib),
-                '-DVIGRANUMPY_INSTALL_DIR={0}'.format(join_path(spec.prefix.lib,
-                        pyVersDir, 'site-packages'))
+                '-DBoost_PYTHON_LIBRARY={0}'.format(boost_python_lib),
+                '-DVIGRANUMPY_INSTALL_DIR={0}'.format(site_packages_dir)
             ])
         if '+fftw' in spec:
             args.extend([
@@ -80,6 +80,8 @@ class Vigra(CMakePackage):
             ])
         if '+exr' in spec:
             args.append('-DWITH_OPENEXR=ON')
+        else:
+            args.append('-DWITH_OPENEXR=OFF')
         if '+cxxdoc' in spec:
             args.append('-DDOXYGEN_EXECUTABLE={0}'.format(spec['doxygen'].command))
         return args
