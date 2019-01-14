@@ -38,10 +38,10 @@ class OpaPsm2(MakefilePackage):
         # Change the makefile so libraries and includes are not
         # placed under $PREFIX/usr
         env['LIBDIR'] = '/lib'
-        filter_file('\${DESTDIR}/usr','${DESTDIR}', 'Makefile')
+        filter_file('\${DESTDIR}/usr', '${DESTDIR}', 'Makefile')
 
         if '~avx2' in spec:
-           env['PSM_DISABLE_AVX2']='True'
+            env['PSM_DISABLE_AVX2'] = 'True'
 
     def install(self, spec, prefix):
         make('--environment-overrides', 'install')
