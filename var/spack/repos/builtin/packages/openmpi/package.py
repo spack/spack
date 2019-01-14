@@ -466,18 +466,3 @@ class Openmpi(AutotoolsPackage):
         else:
             config_args.append('--disable-cxx-exceptions')
         return config_args
-
-    @run_after('install')
-    def delete_mpirun_mpiexec(self):
-        # The preferred way to run an application when Slurm is the
-        # scheduler is to let Slurm manage process spawning via PMI.
-        #
-        # Deleting the links to orterun avoids users running their
-        # applications via mpirun or mpiexec, and leaves srun as the
-        # only sensible choice (orterun is still present, but normal
-        # users don't know about that).
-        if '@1.6: ~legacylaunchers schedulers=slurm' in self.spec:
-            os.remove(self.prefix.bin.mpirun)
-            os.remove(self.prefix.bin.mpiexec)
-            os.remove(self.prefix.bin.shmemrun)
-            os.remove(self.prefix.bin.oshrun)
