@@ -9,31 +9,29 @@
 Tutorial: Spack 101
 =============================
 
-This is a full-day introduction to Spack with lectures and live demos.  It
-was presented as a tutorial at `Supercomputing 2018
-<http://sc18.supercomputing.org>`_.  You can use these materials to teach
-a course on Spack at your own site, or you can just skip ahead and read
-the live demo scripts to see how Spack is used in practice.
+This is a full-day introduction to Spack with lectures and live demos.
+It was presented as a tutorial at the `Exascale Computing Project Annual
+Meeting <https://ecpannualmeeting.com/agenda.php>`_ in 2019.  You can use
+these materials to teach a course on Spack at your own site, or you can
+just skip ahead and read the live demo scripts to see how Spack is used
+in practice.
 
 .. _sc16-slides:
 
 .. rubric:: Slides
 
 .. figure:: tutorial/sc16-tutorial-slide-preview.png
-   :target: http://spack.io/slides/Spack-SC18-Tutorial.pdf
+   :target: http://spack.io/slides/Spack-ECP19-Tutorial.pdf
    :height: 72px
    :align: left
    :alt: Slide Preview
 
-`Download Slides <http://spack.io/slides/Spack-SC18-Tutorial.pdf>`_.
+`Download Slides <http://spack.io/slides/Spack-ECP19-Tutorial.pdf>`_.
 
-**Full citation:** Todd Gamblin, Gregory Becker, Massimiliano Culpo, Matt
-Legendre, Mario Melara, Peter Scheibel, and Adam Stewart.
-`Managing HPC Software Complexity with Spack
-<https://sc18.supercomputing.org/presentation/?id=tut165&sess=sess252>`_.
-Tutorial presented at Supercomputing 2018. November 12, 2018, Dallas, TX, USA.
-
-.. _sc16-live-demos:
+**Full citation:** Todd Gamblin, Gregory Becker, Matt Legendre, Mario
+Melara, and Peter Scheibel.  `Spack Tutorial
+<https://whova.com/embedded/subsession/aecm_201901/503158/503161/>`_.
+Presented at ECP Annual Meeting 2019. January 14, 2019. Houston, TX, USA.
 
 .. rubric:: Live Demos
 
