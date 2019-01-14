@@ -47,11 +47,13 @@ class Vigra(CMakePackage):
         if '+tiff' in spec:
             args.extend([
                 '-DTIFF_LIBRARY={0}'.format(spec['libtiff'].libs),
-                '-DTIFF_INCLUDE_DIR={0}'.format(spec['libtiff'].prefix.include),
+                '-DTIFF_INCLUDE_DIR={0}'.format(
+                    spec['libtiff'].prefix.include),
             ])
         if '+hdf5' in spec:
             args.extend([
-                '-DHDF5_CORE_LIBRARY={0}'.format(spec['hdf5'].libs.libraries[0]),
+                '-DHDF5_CORE_LIBRARY={0}'.format(
+                    spec['hdf5'].libs.libraries[0]),
                 '-DHDF5_INCLUDE_DIR={0}'.format(spec['hdf5'].prefix.include),
                 '-DHDF5_Z_LIBRARY={0}'.format(spec['zlib'].libs.libraries[0])
             ])
@@ -83,5 +85,6 @@ class Vigra(CMakePackage):
         else:
             args.append('-DWITH_OPENEXR=OFF')
         if '+cxxdoc' in spec:
-            args.append('-DDOXYGEN_EXECUTABLE={0}'.format(spec['doxygen'].command))
+            args.append('-DDOXYGEN_EXECUTABLE={0}'.format(
+                spec['doxygen'].command))
         return args
