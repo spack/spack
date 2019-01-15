@@ -3951,17 +3951,15 @@ class SpecParser(spack.parse.Parser):
     def spec_by_hash(self):
         self.expect(ID)
 
-        specs = spack.store.db.query()
-        matches = [spec for spec in specs if
-                   spec.dag_hash()[:len(self.token.value)] == self.token.value]
-
+        dag_hash = self.token.value
+        matches = spack.store.db.get_by_hash(dag_hash)
         if not matches:
-            raise NoSuchHashError(self.token.value)
+            raise NoSuchHashError(dag_hash)
 
         if len(matches) != 1:
             raise AmbiguousHashError(
                 "Multiple packages specify hash beginning '%s'."
-                % self.token.value, *matches)
+                % dag_hash, *matches)
 
         return matches[0]
 
