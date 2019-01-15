@@ -17,10 +17,7 @@ def post_process() {
             sh "./deploy.sh -l ${stages}"
         }
 
-        if (pull == null) {
-            sh "./deploy.sh -m ${stages}"
-        }
-
+        sh "./deploy.sh -m ${stages}"
         sh "./deploy.sh -c ${last}"
     }
 }

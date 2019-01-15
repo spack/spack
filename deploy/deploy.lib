@@ -173,6 +173,27 @@ list_module_paths() {
     done
 }
 
+list_module_archive_paths() {
+    # Print all module paths up to and including the stage passed as first
+    # argument. Module paths are taken from the archive location.
+    local what="$1"
+    for stage in ${stages}; do
+        local moddir="${DEPLOYMENT_ROOT}/modules/${what}"
+        if [[ -d "${moddir}" ]]; then
+            local base="$(find ${moddir} -maxdepth 1 -type d -regex '.*/[0-9]+-[0-9]+'|sort|tail -n 1)"
+            for modpath in ${base}/modules/tcl/*; do
+                if [[ -d "${modpath}" ]]; then
+                    echo "${modpath}"
+                fi
+            done
+        fi
+
+        if [[ "${stage}" = "${what}" ]]; then
+            return
+        fi
+    done
+}
+
 update_module_path() {
     # Export MODULEPATH including all stages up to and excluding the one
     # passed as first argument
@@ -453,7 +474,7 @@ copy_user_configuration() {
 
     local source="$(install_dir ${what})/data"
     local target="${DEPLOYMENT_ROOT}/config"
-    local modpaths=$(list_module_paths ${what})
+    local modpaths=$(list_module_archive_paths ${what})
 
     log "copying configuration"
     log "...from ${source}"
