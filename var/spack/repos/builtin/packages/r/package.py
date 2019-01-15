@@ -60,7 +60,7 @@ class R(AutotoolsPackage):
     depends_on('bzip2')
     depends_on('libtiff')
     depends_on('jpeg')
-    depends_on('cairo')
+    depends_on('cairo+pdf')
     depends_on('cairo+X', when='+X')
     depends_on('cairo~X', when='~X')
     depends_on('pango')
