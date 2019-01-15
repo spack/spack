@@ -58,18 +58,20 @@ jobs:
       addons:
         apt:
           packages:
+          - cmake
           - gfortran
-          - mercurial
           - graphviz
           - gnupg2
-          - cmake
+          - kcov
+          - mercurial
           - ninja-build
+          - perl
+          - perl-base
+          - realpath
+          - patchelf
           - r-base
           - r-base-core
           - r-base-dev
-          - perl
-          - perl-base
-          - patchelf
 
     - python: '3.6'
       sudo: required
