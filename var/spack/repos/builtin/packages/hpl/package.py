@@ -17,7 +17,7 @@ class Hpl(AutotoolsPackage):
     homepage = "http://www.netlib.org/benchmark/hpl/"
     url      = "http://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
 
-    # Note: HPL uses autotools starting starting with 2.3
+    # Note: HPL uses autotools starting with 2.3
 
     version('2.3', sha256='32c5c17d22330e6f2337b681aded51637fb6008d3f0eb7c277b163fadd612830')
     version('2.2', '0eb19e787c3dc8f4058db22c9e0c5320')
@@ -101,10 +101,8 @@ class Hpl(AutotoolsPackage):
 
     @when('@2.3:')
     def configure_args(self):
-        spec = self.spec
         config = [
-            'CFLAGS=-O3',
-            '--prefix=%s' % spec.prefix
+            'CFLAGS=-O3'
         ]
 
         return config
@@ -116,3 +114,11 @@ class Hpl(AutotoolsPackage):
         install_tree(join_path('lib', self.arch), prefix.lib)
         install_tree(join_path('include', self.arch), prefix.include)
         install_tree('man', prefix.man)
+
+    @run_after('install')
+    def copy_dat(self):
+        if self.spec.satisfies('@2.3:'):
+            # The pre-2.3 makefile would include a default HPL.dat config
+            # file in the bin directory
+            install('./testing/ptest/HPL.dat',
+                    join_path(self.prefix.bin, 'HPL.dat'))
