@@ -20,11 +20,6 @@ class PyModred(PythonPackage):
     version('2.0.0', tag='v2.0.0')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type='run')
 
     patch('v2x-setuptools-8.0.patch', when='@2: ^py-setuptools@8.0:')
-
-#    def build_args(self, spec, prefix):
-#        # FIXME: Add arguments other than --prefix
-#        # FIXME: If not needed delete this function
-#        args = []
-#        return args
