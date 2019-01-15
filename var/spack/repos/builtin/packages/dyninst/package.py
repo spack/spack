@@ -34,7 +34,7 @@ class Dyninst(CMakePackage):
 
     boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
 
-    depends_on('boost@1.61.0:' + boost_libs)
+    depends_on('boost@1.61.0:1.68.0' + boost_libs)
     depends_on('libiberty+pic')
 
     # Dyninst uses elf@1 (elfutils) starting with 9.3.0, and used
