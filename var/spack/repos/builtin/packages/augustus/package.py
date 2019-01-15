@@ -22,6 +22,10 @@ class Augustus(MakefilePackage):
     depends_on('gsl')
     depends_on('boost')
     depends_on('zlib')
+    depends_on('htslib')
+    depends_on('bcftools')
+    depends_on('samtools')
+    depends_on('tabix')
 
     def edit(self, spec, prefix):
         with working_dir(join_path('auxprogs', 'filterBam', 'src')):
@@ -52,6 +56,27 @@ class Augustus(MakefilePackage):
                 makefile.filter('LIBS = -lbamtools -lz',
                                 'LIBS = $(BAMTOOLS)/lib/bamtools'
                                 '/libbamtools.a -lz')
+        with working_dir(join_path('auxprogs', 'bam2wig')):
+            makefile = FileFilter('Makefile')
+            # point tools to spack installations
+            bcftools = self.spec['bcftools'].prefix.include
+            samtools = self.spec['samtools'].prefix.include
+            htslib = self.spec['htslib'].prefix.include
+            tabix = self.spec['tabix'].prefix.include
+
+            makefile.filter('SAMTOOLS=.*$',
+                            'SAMTOOLS=%s' % samtools)
+            makefile.filter('HTSLIB=.*$',
+                            'HTSLIB=%s' % htslib)
+            makefile.filter('BCFTOOLS=.*$',
+                            'BCFTOOLS=%s' % bcftools)
+            makefile.filter('TABIX=.*$',
+                            'TABIX=%s' % tabix)
+            # fix bad linking dirs
+            makefile.filter('$(SAMTOOLS)/libbam.a',
+                            '$(SAMTOOLS)/../lib/libbam.a', string=True)
+            makefile.filter('$(HTSLIB)/libhts.a',
+                            '$(HTSLIB)/../lib/libhts.a', string=True)
 
     def install(self, spec, prefix):
         install_tree('bin', join_path(self.spec.prefix, 'bin'))
