@@ -8,7 +8,7 @@ from spack.util.executable import which
 
 
 class Hugo(Package):
-    """The world’s fastest framework for building websites."""
+    """The world's fastest framework for building websites."""
 
     homepage = "https://gohugo.io"
     url      = "https://github.com/gohugoio/hugo/archive/v0.53.tar.gz"
