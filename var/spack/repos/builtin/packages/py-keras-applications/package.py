@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyKerasApplications(PythonPackage):
-    """Sample Deep Learning application in Keras. Keras depends on this package to run properly."""
+    """Sample Deep Learning application in Keras.
+    Keras depends on this package to run properly."""
 
     homepage = "http://keras.io"
     url      = "https://github.com/keras-team/keras-applications/archive/1.0.4.tar.gz"
