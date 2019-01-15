@@ -72,6 +72,9 @@ pipeline {
         booleanParam(name: 'SOURCECACHE',
                      defaultValue: true,
                      description: 'Use cache to install already downloaded sources')
+        string(name: 'sha1',
+               defaultValue: 'develop',
+               description: 'Used for fetching the right Jenkinsfile')
     }
 
     environment {
