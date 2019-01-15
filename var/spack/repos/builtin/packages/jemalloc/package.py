@@ -41,6 +41,7 @@ class Jemalloc(Package):
 
     variant('stats', default=False, description='Enable heap statistics')
     variant('prof', default=False, description='Enable heap profiling')
+    variant('je', default=False, description='Prepend the public API functions with "je_"')
 
     def install(self, spec, prefix):
         configure_args = ['--prefix=%s' % prefix, ]
@@ -49,6 +50,8 @@ class Jemalloc(Package):
             configure_args.append('--enable-stats')
         if '+prof' in spec:
             configure_args.append('--enable-prof')
+        if '+je' in spec:
+            configure_args.append('--with-jemalloc-prefix=je_')
 
         configure(*configure_args)
 
