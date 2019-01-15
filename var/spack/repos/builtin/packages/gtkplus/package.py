@@ -25,6 +25,7 @@ class Gtkplus(AutotoolsPackage):
     # Hardcode X11 support (former +X variant),
     # see #6940 for rationale:
     depends_on('pango+X')
+    depends_on('cairo+X+pdf')
     depends_on('gobject-introspection')
     depends_on('libepoxy', when='@3:')
     depends_on('libxi', when='@3:')
