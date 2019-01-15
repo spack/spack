@@ -1,0 +1,91 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class Vigra(CMakePackage):
+    """VIGRA stands for "Vision with Generic Algorithms". It's an image
+       processing and analysis library that puts its main emphasis on
+       customizable algorithms and data structures"""
+
+    homepage = "https://ukoethe.github.io/vigra/"
+    url = "https://github.com/ukoethe/vigra/releases/download/Version-1-11-1/vigra-1.11.1-src.tar.gz"
+
+    version('1.11.1', sha256='a5564e1083f6af6a885431c1ee718bad77d11f117198b277557f8558fa461aaf')
+
+    variant('png', default=False, description='Include support for PNG images')
+    variant('jpeg', default=False, description='Include support for JPEG images')
+    variant('tiff', default=False, description='Include support for TIFF images')
+    variant('exr', default=False, description='Include support for EXR images')
+    variant('hdf5', default=False, description='Include support for HDF5 files')
+    variant('fftw', default=False, description='Include support for Fourier Transforms')
+    variant('python', default=False, description='Generate Python bindings and doc')
+    variant('cxxdoc', default=False, description='Generate C++ documentation')
+
+    depends_on('libtiff', when='+tiff')
+    depends_on('libpng', when='+png')
+    depends_on('libjpeg', when='+jpeg')
+    depends_on('hdf5', when='+hdf5')
+    depends_on('fftw', when='+fftw')
+    depends_on('openexr', when='+exr')
+    depends_on('py-numpy', type=('build', 'run'), when='+python')
+    depends_on('boost+python+numpy', when='+python')
+    depends_on('py-sphinx', type='build', when='+python')
+    depends_on('doxygen', type='build', when='+cxxdoc')
+    depends_on('python', type='build', when='+cxxdoc')
+    depends_on('py-nose', type=('build', 'test'), when='+python')
+
+    extends('python', when='+python')
+
+    def cmake_args(self):
+        args = []
+        spec = self.spec
+
+        if '+tiff' in spec:
+            args.extend([
+                '-DTIFF_LIBRARY={0}'.format(spec['libtiff'].libs),
+                '-DTIFF_INCLUDE_DIR={0}'.format(
+                    spec['libtiff'].prefix.include),
+            ])
+        if '+hdf5' in spec:
+            args.extend([
+                '-DWITH_HDF5=ON',
+                '-DHDF5_CORE_LIBRARY={0}'.format(
+                    spec['hdf5'].libs.libraries[0]),
+                '-DHDF5_INCLUDE_DIR={0}'.format(spec['hdf5'].prefix.include),
+                '-DHDF5_Z_LIBRARY={0}'.format(spec['zlib'].libs.libraries[0])
+            ])
+        else:
+            args.append('-DWITH_HDF5=OFF')
+        if '+python' in spec:
+            py_vers_str = spec['python'].version.up_to(2)
+            py_vers_str_nodot = py_vers_str.joined
+            boost_python_lib = '{0}/libboost_python{1}.so'.format(
+                spec['boost'].prefix.lib, py_vers_str_nodot)
+            args.extend([
+                '-DBoost_DIR={0}'.format(spec['boost'].prefix),
+                '-DBoost_INCLUDE_DIR={0}'.format(spec['boost'].prefix.include),
+                '-DBoost_PYTHON_LIBRARY={0}'.format(boost_python_lib),
+                '-DVIGRANUMPY_INSTALL_DIR={0}'.format(site_packages_dir)
+            ])
+        if '+fftw' in spec:
+            args.extend([
+                '-DFFTW3_LIBRARY={0}'.format(spec['fftw'].libs),
+                '-DFFTW3_INCLUDE_DIR={0}'.format(spec['fftw'].prefix.include)
+            ])
+        if '+png' in spec:
+            args.extend([
+                '-DPNG_LIBRARY_RELEASE={0}'.format(spec['libpng'].libs),
+                '-DPNG_INCLUDE_DIR={0}'.format(spec['libpng'].prefix.include)
+            ])
+        if '+exr' in spec:
+            args.append('-DWITH_OPENEXR=ON')
+        else:
+            args.append('-DWITH_OPENEXR=OFF')
+        if '+cxxdoc' in spec:
+            args.append('-DDOXYGEN_EXECUTABLE={0}'.format(
+                spec['doxygen'].command))
+        return args
