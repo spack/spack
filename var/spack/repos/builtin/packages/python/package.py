@@ -98,6 +98,7 @@ class Python(AutotoolsPackage):
 
     # Optional dependencies
     # See detect_modules() in setup.py for details
+    depends_on('readline', when='+readline')
     depends_on('ncurses', when='+readline')
     depends_on('openssl', when='+ssl')
     depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
@@ -113,7 +114,6 @@ class Python(AutotoolsPackage):
     depends_on('tcl', when='+tkinter')
     depends_on('libuuid', when='+uuid')
 
-    patch('ncurses.patch', when='@:2.8,3.2:')
     patch('tkinter.patch', when='@:2.8,3.3: platform=darwin')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:

@@ -23,3 +23,7 @@ class Libnsl(AutotoolsPackage):
     depends_on('gettext')
     depends_on('rpcsvc-proto')
     depends_on('libtirpc')
+
+    def autoreconf(self, spec, prefix):
+        autoreconf = which('autoreconf')
+        autoreconf('-fi')
