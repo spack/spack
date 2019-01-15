@@ -52,6 +52,7 @@ class Vigra(CMakePackage):
             ])
         if '+hdf5' in spec:
             args.extend([
+                '-DWITH_HDF5=ON',
                 '-DHDF5_CORE_LIBRARY={0}'.format(
                     spec['hdf5'].libs.libraries[0]),
                 '-DHDF5_INCLUDE_DIR={0}'.format(spec['hdf5'].prefix.include),
