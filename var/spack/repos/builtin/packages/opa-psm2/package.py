@@ -9,8 +9,8 @@ from spack import *
 class OpaPsm2(MakefilePackage):
     """ Intel Omni-Path Performance Scaled Messaging 2 (PSM2) library"""
 
-    homepage = "http://github.com/01org/opa-psm2"
-    url      = "https://github.com/01org/opa-psm2/archive/PSM2_10.3-8.tar.gz"
+    homepage = "http://github.com/intel/opa-psm2"
+    url      = "https://github.com/intel/opa-psm2/archive/PSM2_10.3-8.tar.gz"
 
     version('11.2.68', sha256='42e16a14fc8c90b50855dcea46af3315bee32fb1ae89d83060f9b2ebdce1ec26')
     version('10.3-37',  '9bfca04f29b937b3856f893e1f8b1b60')
@@ -27,12 +27,6 @@ class OpaPsm2(MakefilePackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('DESTDIR', self.prefix)
-        run_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'include'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'lib'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib'))
 
     def edit(self, spec, prefix):
         # Change the makefile so libraries and includes are not
