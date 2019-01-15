@@ -39,6 +39,8 @@ class PyKeras(PythonPackage):
     version('1.1.1', sha256='be1b67f62e5119f6f24a239a865dc47e6d9aa93b97b506ba34cab7353dbc23b6')
     version('1.1.0', sha256='36d83b027ba9d2c9da8e1eefc28f600ca93dc03423e033b633cbac9061af8a5d')
 
+    depends_on('py-keras-applications', type='run', when='@2.2:')
+    depends_on('py-keras-preprocessing', type='run', when='@2.2:')
     depends_on('py-setuptools', type='build')
     depends_on('py-theano', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
