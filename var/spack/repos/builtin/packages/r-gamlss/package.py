@@ -18,3 +18,6 @@ class RGamlss(RPackage):
     depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-gamlss-data@5.0-0:', type=('build', 'run'))
     depends_on('r-gamlss-dist@4.3.1:', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-nlme', type=('build', 'run'))
