@@ -20,6 +20,8 @@ class Caliper(CMakePackage):
     git      = "https://github.com/LLNL/Caliper.git"
 
     version('master')
+    version('1.9.0', tag='v1.9.0')
+    version('1.8.0', tag='v1.8.0')
     version('1.7.0', tag='v1.7.0')
     # version 1.6.0 is broken b/c it downloads the wrong gotcha version
     version('1.6.0', tag='v1.6.0')
@@ -38,13 +40,14 @@ class Caliper(CMakePackage):
             description='Enable PAPI service')
     variant('libpfm', default=is_linux,
             description='Enable libpfm (perf_events) service')
-    # gotcha doesn't work on Mac
-    variant('gotcha', default=sys.platform != 'darwin',
+    variant('gotcha', default=is_linux,
             description='Enable GOTCHA support')
     variant('sampler', default=is_linux,
             description='Enable sampling support on Linux')
     variant('sosflow', default=False,
             description='Enable SOSflow support')
+    variant('mpit', default=False,
+            description='Enable MPI-T (tool information interface) support')
 
     depends_on('gotcha@1.0:', when='+gotcha')
     depends_on('dyninst', when='+dyninst')
@@ -71,7 +74,7 @@ class Caliper(CMakePackage):
             '-DWITH_SOSFLOW=%s'  % ('On' if '+sosflow'  in spec else 'Off'),
             '-DWITH_SAMPLER=%s'  % ('On' if '+sampler'  in spec else 'Off'),
             '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off'),
-            '-DWITH_MPIT=%s' % ('On' if spec.satisfies('^mpi@3:') else 'Off')
+            '-DWITH_MPIT=%s'     % ('On' if '+mpit'     in spec else 'Off')
         ]
 
         if '+gotcha' in spec:
