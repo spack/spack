@@ -16,8 +16,11 @@ class Tau(Package):
     """
 
     homepage = "http://www.cs.uoregon.edu/research/tau"
-    url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.25.tar.gz"
+    url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.tar.gz"
+    git      = "https://github.com/UO-OACISS/tau2"
 
+    version('develop', branch='master')
+    version('2.28', '68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
     version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
     version('2.27',   '76602d35fc96f546b5b9dcaf09158651')
     version('2.26.3', '4ec14e85b8f3560b58628512c7b49e17')
@@ -27,28 +30,30 @@ class Tau(Package):
     version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
 
     # TODO : shmem variant missing
-    variant('download', default=False,
-            description='Downloads and builds various dependencies')
     variant('scorep', default=False, description='Activates SCOREP support')
     variant('openmp', default=True, description='Use OpenMP threads')
     variant('mpi', default=True,
             description='Specify use of TAU MPI wrapper library')
     variant('phase', default=True, description='Generate phase based profiles')
+    variant('papi', default=True, description='Use PAPI for hardware counters')
+    variant('binutils', default=True, description='Use Binutils for address resolution')
+    variant('libunwind', default=True, description='Use Libunwind for call stack unwinding')
+    variant('otf2', default=True, description='Use OTF2 for trace format output')
+    variant('pdt', default=True, description='Use PDT for source code instrumentation')
     variant('comm', default=True,
             description=' Generate profiles with MPI communicator info')
 
-    # TODO : Try to build direct OTF2 support? Some parts of the OTF support
-    # TODO : library in TAU are non-conformant,
-    # TODO : and fail at compile-time. Further, SCOREP is compiled with OTF2
-    # support.
-    depends_on('pdt')  # Required for TAU instrumentation
+    depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
-    depends_on('binutils', when='~download')
+    depends_on('papi', when='+papi')
+    depends_on('binutils+libiberty~nls', when='+binutils')
+    depends_on('libunwind', when='+libunwind')
+    depends_on('otf2', when='+otf2')
     depends_on('mpi', when='+mpi')
 
     def set_compiler_options(self):
 
-        useropt = ["-O2", self.rpath_args]
+        useropt = ["-O2 -g", self.rpath_args]
 
         ##########
         # Selecting a compiler with TAU configure is quite tricky:
@@ -88,16 +93,10 @@ class Tau(Package):
         # written script (nothing related to autotools).  As such it has
         # a few #peculiarities# that make this build quite hackish.
         options = ["-prefix=%s" % prefix,
-                   "-iowrapper",
-                   "-pdt=%s" % spec['pdt'].prefix]
-        # If download is active, download and build suggested dependencies
-        if '+download' in spec:
-            options.extend(['-bfd=download',
-                            '-unwind=download',
-                            '-asmdex=download'])
-        else:
-            options.extend(["-bfd=%s" % spec['binutils'].prefix])
-            # TODO : unwind and asmdex are still missing
+                   "-iowrapper"]
+
+        if '+pdt' in spec:
+            options.append("-pdt=%s" % spec['pdt'].prefix)
 
         if '+scorep' in spec:
             options.append("-scorep=%s" % spec['scorep'].prefix)
@@ -105,14 +104,25 @@ class Tau(Package):
         if '+openmp' in spec:
             options.append('-openmp')
 
+        if '+papi' in spec:
+            options.append("-papi=%s" % spec['papi'].prefix)
+
+        if '+binutils' in spec:
+            options.append("-bfd=%s" % spec['binutils'].prefix)
+
+        if '+libunwind' in spec:
+            options.append("-unwind=%s" % spec['libunwind'].prefix)
+
+        if '+otf2' in spec:
+            options.append("-otf=%s" % spec['otf2'].prefix)
+
         if '+mpi' in spec:
             options.append('-mpi')
+            if '+comm' in spec:
+                options.append('-PROFILECOMMUNICATORS')
 
         if '+phase' in spec:
             options.append('-PROFILEPHASE')
-
-        if '+comm' in spec:
-            options.append('-PROFILECOMMUNICATORS')
 
         compiler_specific_options = self.set_compiler_options()
         options.extend(compiler_specific_options)
