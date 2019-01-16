@@ -432,6 +432,12 @@ def arch_for_spec(arch_spec):
     arch_plat = get_platform(arch_spec.platform)
     if not (arch_plat.operating_system(arch_spec.platform_os) and
             arch_plat.target(arch_spec.target)):
+        os_opts = set(arch_plat.operating_sys)
+        target_opts = set(arch_plat.targets)
+        tty.debug("Unable to construct arch:\n"
+                  "OS choices: {0}\n"
+                  "Target choices: {1}"
+                  .format(' '.join(os_opts), ' '.join(target_opts)))
         raise ValueError(
             "Can't recreate arch for spec %s on current arch %s; "
             "spec architecture is too different" % (arch_spec, sys_type()))
