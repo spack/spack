@@ -13,8 +13,7 @@ class Tioga(CMakePackage):
     homepage = "https://github.com/jsitaraman/tioga"
     git      = "https://github.com/jsitaraman/tioga.git"
 
-    # The master branch doesn't support CMake
-    version('develop', branch='nalu-api')
+    version('master', branch='master')
 
     variant('shared', default=True,
             description="Enable building shared libraries")
