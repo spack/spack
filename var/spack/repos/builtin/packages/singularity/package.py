@@ -17,6 +17,7 @@ class Singularity(AutotoolsPackage):
     # Versions before 2.5.2 suffer from a serious security problem.
     # https://nvd.nist.gov/vuln/detail/CVE-2018-12021
     version('develop', branch='master')
+    version('2.6.1', sha256='f38d46a225e8368eb4693137806d2dc96e925a50bdf7f6983662848831041df2')
     version('2.6.0', sha256='7c425211a099f6fa6f74037e6e17be58fb5923b0bd11aea745e48ef83c488b49')
     version('2.5.2', '2edc1a8ac9a4d7d26fba6244f1c5fd95')
 
