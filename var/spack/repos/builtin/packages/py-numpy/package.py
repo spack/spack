@@ -86,6 +86,11 @@ class PyNumpy(PythonPackage):
 
         lapackblas_info = lapack_info + blas_info
 
+        def write_empty_libs(f, provider):
+            f.write('[{0}]\n'.format(provider))
+            f.write('libraries=\n')
+            write_library_dirs(f, '')
+
         if '+blas' in spec or '+lapack' in spec:
             # note that one should not use [blas_opt] and [lapack_opt], see
             # https://github.com/numpy/numpy/commit/ffd4332262ee0295cb942c94ed124f043d801eb6
@@ -105,7 +110,10 @@ class PyNumpy(PythonPackage):
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n' % lapackblas_names)
                     write_library_dirs(f, lapackblas_dirs)
-                elif '^mkl' in spec:
+                else:
+                    write_empty_libs(f, 'openblas')
+
+                if '^mkl' in spec:
                     # numpy does not expect system libraries needed for MKL
                     # here.
                     # names = [x for x in names if x.startswith('mkl')]
@@ -124,11 +132,17 @@ class PyNumpy(PythonPackage):
                     f.write('[mkl]\n')
                     f.write('mkl_libs=%s\n' % 'mkl_rt')
                     write_library_dirs(f, lapackblas_dirs)
-                elif '^atlas' in spec:
+                else:
+                    write_empty_libs(f, 'mkl')
+
+                if '^atlas' in spec:
                     f.write('[atlas]\n')
                     f.write('atlas_libs=%s\n' % lapackblas_names)
                     write_library_dirs(f, lapackblas_dirs)
-                elif '^netlib-lapack' in spec:
+                else:
+                    write_empty_libs(f, 'atlas')
+
+                if '^netlib-lapack' in spec:
                     # netlib requires blas and lapack listed
                     # separately so that scipy can find them
                     if spec.satisfies('+blas'):
@@ -139,7 +153,8 @@ class PyNumpy(PythonPackage):
                         f.write('[lapack]\n')
                         f.write('lapack_libs=%s\n' % lapack_names)
                         write_library_dirs(f, lapack_dirs)
-                else:
+
+                if False: # TODO: if none of the above
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
                     if spec.satisfies('@:1.9.2'):
