@@ -4,7 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import glob
+import os
 
 class Binutils(AutotoolsPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
@@ -28,6 +29,7 @@ class Binutils(AutotoolsPackage):
     variant('gold', default=True, description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
+    variant('extras', default=False, description='Install extra headers (e.g. ELF)')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -75,3 +77,14 @@ class Binutils(AutotoolsPackage):
             configure_args.append('--program-prefix=g')
 
         return configure_args
+
+    def install(self, spec, prefix):
+        super(Binutils, self).install(spec, prefix)
+
+        if '+extras' in spec:
+            extradir = os.path.join(prefix.include, 'extra')
+            mkdirp(extradir)
+            install_tree('include', extradir)
+            for current_file in glob.glob(os.path.join(self.build_directory,
+                                                       'bfd', '*.h')):
+                install(current_file, extradir)

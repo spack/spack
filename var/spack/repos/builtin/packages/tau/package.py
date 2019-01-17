@@ -29,24 +29,41 @@ class Tau(Package):
     version('2.24', '57ce33539c187f2e5ec68f0367c76db4')
     version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
 
-    # TODO : shmem variant missing
     variant('scorep', default=False, description='Activates SCOREP support')
-    variant('openmp', default=True, description='Use OpenMP threads')
-    variant('mpi', default=True,
-            description='Specify use of TAU MPI wrapper library')
+    variant('openmp', default=False, description='Use OpenMP threads')
+    variant('pthreads', default=True, description='Use POSIX threads')
+    variant('mpi', default=True, description='Specify use of TAU MPI wrapper library')
     variant('phase', default=True, description='Generate phase based profiles')
     variant('papi', default=True, description='Use PAPI for hardware counters')
     variant('binutils', default=True, description='Use Binutils for address resolution')
     variant('libunwind', default=True, description='Use Libunwind for call stack unwinding')
     variant('otf2', default=True, description='Use OTF2 for trace format output')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
-    variant('comm', default=True,
-            description=' Generate profiles with MPI communicator info')
+    variant('comm', default=True, description='Generate profiles with MPI communicator info')
+    # TODO: need to find python libraries
+    # variant('python', default=False, description='Include Python profiling support')
+
+    # Support cross compiling.
+    # A _reasonable_ subset of the full set of TAU architectures supported: 
+    # xt3|craycnl|bgp|bgq|bgl|ibm64|ibm64linux|sunx86_64
+    # nec-sx-aurora|crayxmt|solaris2-64|mips32|sgin32
+    # sgi64|sgio32|arm_linux|arm_android
+    variant('craycnl', default=False, description='Build for Cray compute nodes')
+    variant('bgq', default=False, description='Build for IBM BlueGene/Q compute nodes')
+    variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
+
+    # TODO: need to add optional CUDA.
+    # TODO: need to add optional adios/adios2.
+    # TODO: need to add optional sos.
+    # Less important (for now):
+    # TODO: need to support SHMEM.
+    # TODO: need to add optional ROCm.
 
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
     depends_on('papi', when='+papi')
-    depends_on('binutils+libiberty~nls', when='+binutils')
+    # TAU requires the ELF header support, libiberty and demangle.
+    depends_on('binutils+libiberty+extras~nls', when='+binutils')
     depends_on('libunwind', when='+libunwind')
     depends_on('otf2', when='+otf2')
     depends_on('mpi', when='+mpi')
@@ -101,6 +118,9 @@ class Tau(Package):
         if '+scorep' in spec:
             options.append("-scorep=%s" % spec['scorep'].prefix)
 
+        if '+pthreads' in spec:
+            options.append('-pthread')
+
         if '+openmp' in spec:
             options.append('-openmp')
 
@@ -123,6 +143,18 @@ class Tau(Package):
 
         if '+phase' in spec:
             options.append('-PROFILEPHASE')
+
+        if '+craycnl' in spec:
+            options.append('-arch=craycnl')
+
+        if '+bgq' in spec:
+            options.append('-arch=bgq')
+
+        if '+ppc64le' in spec:
+            options.append('-arch=ibm64linux')
+
+        #if '+python' in spec:
+        #    options.append('-python')
 
         compiler_specific_options = self.set_compiler_options()
         options.extend(compiler_specific_options)
