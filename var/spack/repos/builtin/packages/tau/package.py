@@ -5,7 +5,9 @@
 
 from spack import *
 import os
+import fnmatch
 import glob
+import platform
 from llnl.util.filesystem import join_path
 
 
@@ -40,8 +42,7 @@ class Tau(Package):
     variant('otf2', default=True, description='Use OTF2 for trace format output')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
     variant('comm', default=True, description='Generate profiles with MPI communicator info')
-    # TODO: need to find python libraries
-    # variant('python', default=False, description='Include Python profiling support')
+    variant('python', default=False, description='Include Python profiling support')
 
     # Support cross compiling.
     # A _reasonable_ subset of the full set of TAU architectures supported: 
@@ -67,6 +68,7 @@ class Tau(Package):
     depends_on('libunwind', when='+libunwind')
     depends_on('otf2', when='+otf2')
     depends_on('mpi', when='+mpi')
+    depends_on('python@2.7:', when='+python')
 
     def set_compiler_options(self):
 
@@ -153,8 +155,33 @@ class Tau(Package):
         if '+ppc64le' in spec:
             options.append('-arch=ibm64linux')
 
-        #if '+python' in spec:
-        #    options.append('-python')
+        if '+python' in spec:
+            options.append('-python')
+            # find Python.h (i.e. include/python2.7/Python.h)
+            include_path=spec['python'].prefix.include
+            found=False
+            for root, dirnames, filenames in os.walk(spec['python'].prefix.include):
+                for filename in fnmatch.filter(filenames, 'Python.h'):
+                    include_path=root
+                    break
+                    found=True
+                if found:
+                    break
+            options.append("-pythoninc=%s" % include_path)
+            # find libpython*.* (i.e. lib/python2.7/libpython2.7.so)
+            lib_path=spec['python'].prefix.lib
+            found=False
+            file_to_find='libpython*.so'
+            if (platform.system() == "Darwin"):
+                file_to_find='libpython*.dylib'
+            for root, dirnames, filenames in os.walk(spec['python'].prefix.lib):
+                for filename in fnmatch.filter(filenames, file_to_find):
+                    lib_path=root
+                    break
+                    found=True
+                if found:
+                    break
+            options.append("-pythonlib=%s" % lib_path)
 
         compiler_specific_options = self.set_compiler_options()
         options.extend(compiler_specific_options)
