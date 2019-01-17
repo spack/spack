@@ -29,7 +29,3 @@ class PyWhatshap(PythonPackage):
         # there is a stray \xe2 somewhere in setup.py,
         # explicitly using utf-8 will let the install proceed
         filter_file('^"""$', '#coding: utf-8\n"""', 'setup.py')
-
-    def build_args(self, spec, prefix):
-        args = []
-        return args
