@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mpifileutils(AutotoolsPackage):
+class Mpifileutils(CMakePackage):
     """mpiFileUtils is a suite of MPI-based tools to manage large datasets,
        which may vary from large directory trees to large files.
        High-performance computing users often generate large datasets with
@@ -39,19 +39,53 @@ class Mpifileutils(AutotoolsPackage):
 
     depends_on('libarchive')
 
+    depends_on('cmake@3.1', when='@0.9:', type='build')
+
     variant('xattr', default=True,
         description="Enable code for extended attributes")
 
     variant('lustre', default=False,
         description="Enable optimizations and features for Lustre")
 
+    variant('gpfs', default=False,
+        description="Enable optimizations and features for GPFS")
+    # gpfs support added after v0.8.1
+    conflicts('+gpfs', when='@:0.8.1')
+
     variant('experimental', default=False,
         description="Install experimental tools")
-
     # --enable-experimental fails with v0.6 and earlier
     conflicts('+experimental', when='@:0.6')
 
     def configure_args(self):
+        args = []
+        args.append("-DWITH_DTCMP_PREFIX=%s" % self.spec['dtcmp'].prefix)
+        args.append("-DWITH_LibCircle_PREFIX=%s" % self.spec['libcircle'].prefix)
+
+        if '+xattr' in self.spec:
+            args.append("-DENABLE_XATTRS=ON")
+        else:
+            args.append("-DENABLE_XATTRS=OFF")
+
+        if '+lustre' in self.spec:
+            args.append("-DENABLE_LUSTRE=ON")
+        else:
+            args.append("-DENABLE_LUSTRE=OFF")
+
+        if '+gpfs' in self.spec:
+            args.append("-DENABLE_GPFS=ON")
+        else:
+            args.append("-DENABLE_GPFS=OFF")
+
+        if '+experimental' in self.spec:
+            args.append("-DENABLE_EXPERIMENTAL=ON")
+        else:
+            args.append("-DENABLE_EXPERIMENTAL=OFF")
+
+        return args
+
+    # 0.8.1 and earlier are autotools build
+    def configure_args_autotools(self):
         args = []
         args.append("CPPFLAGS=-I%s/src/common" % pwd())
         args.append("libarchive_CFLAGS=-I%s"
@@ -74,9 +108,25 @@ class Mpifileutils(AutotoolsPackage):
         else:
             args.append('--disable-lustre')
 
+        # does this propagate forward, for <=0.7?
         if self.spec.satisfies('@0.7:'):
             if '+experimental' in self.spec:
                 args.append('--enable-experimental')
             else:
                 args.append('--disable-experimental')
         return args
+
+    @when('@:0.8.1')
+    def cmake(self, spec, prefix):
+        pass
+
+    @when('@:0.8.1')
+    def build(self, spec, prefix):
+        pass
+
+    @when('@:0.8.1')
+    def install(self, spec, prefix):
+        configure_args = self.configure_args_autotools()
+        configure(configure_args)
+        make()
+        make('install')
