@@ -79,12 +79,17 @@ class Binutils(AutotoolsPackage):
         return configure_args
 
     def install(self, spec, prefix):
+        # perform the usual configure/build/install steps
         super(Binutils, self).install(spec, prefix)
 
+        # some packages (like TAU) need the ELF headers, so install them
+        # as a subdirectory in include/extras
         if '+extras' in spec:
             extradir = os.path.join(prefix.include, 'extra')
             mkdirp(extradir)
+            # grab the full binutils set of headers
             install_tree('include', extradir)
+            # also grab the headers from the bfd directory
             for current_file in glob.glob(os.path.join(self.build_directory,
                                                        'bfd', '*.h')):
                 install(current_file, extradir)
