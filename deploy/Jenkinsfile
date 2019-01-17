@@ -90,48 +90,52 @@ pipeline {
 
     stages {
         stage('Setup') {
-            when {
-                not {
-                    expression {
-                        return env.ghprbPullId
+            parallel {
+                stage('Production') {
+                    when {
+                        not {
+                            expression {
+                                return env.ghprbPullId
+                            }
+                        }
+                    }
+
+                    // General setup: make sure that Spack is installed and that
+                    // license files are available to Spack
+                    steps {
+                        dir("${DEPLOYMENT_ROOT}/spack") {
+                            git(url: "https://github.com/BlueBrain/spack.git", branch: "develop")
+                        }
+                        dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
+                            git(url: "ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses")
+                        }
                     }
                 }
-            }
 
-            // General setup: make sure that Spack is installed and that
-            // license files are available to Spack
-            steps {
-                dir("${DEPLOYMENT_ROOT}/spack") {
-                    git(url: "https://github.com/BlueBrain/spack.git", branch: "develop")
-                }
-                dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
-                    git(url: "ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses")
-                }
-            }
-        }
+                stage('PR') {
+                    when {
+                        expression {
+                            return env.ghprbPullId
+                        }
+                    }
 
-        stage('PR Setup') {
-            when {
-                expression {
-                    return env.ghprbPullId
-                }
-            }
+                    // General setup: make sure that Spack is installed and that
+                    // license files are available to Spack
+                    steps {
+                        dir("${DEPLOYMENT_ROOT}/spack") {
+                            checkout([$class: 'GitSCM',
+                                      branches: [[name: "FETCH_HEAD"]],
+                                      extensions: [[$class: 'LocalBranch']],
+                                      userRemoteConfigs: [[
+                                            refspec: "+refs/pull/${env.ghprbPullId}/head:refs/remotes/origin/pull/${env.ghprbPullId}", 
+                                            url: "https://github.com/BlueBrain/spack.git"
+                                      ]]])
 
-            // General setup: make sure that Spack is installed and that
-            // license files are available to Spack
-            steps {
-                dir("${DEPLOYMENT_ROOT}/spack") {
-                    checkout([$class: 'GitSCM',
-                              branches: [[name: "FETCH_HEAD"]],
-                              extensions: [[$class: 'LocalBranch']],
-                              userRemoteConfigs: [[
-                                    refspec: "+refs/pull/${env.ghprbPullId}/head:refs/remotes/origin/pull/${env.ghprbPullId}", 
-                                    url: "https://github.com/BlueBrain/spack.git"
-                              ]]])
-
-                }
-                dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
-                    git(url: "ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses")
+                        }
+                        dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
+                            git(url: "ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses")
+                        }
+                    }
                 }
             }
         }
@@ -279,6 +283,36 @@ pipeline {
 
                 success {
                     post_process()
+                }
+            }
+        }
+
+        stage('Post-Mortem') {
+            parallel {
+                stage('Documentation') {
+                    steps {
+                        sh "ls"
+                    }
+                }
+
+                stage('Delete Old PRs') {
+                    when {
+                        not {
+                            expression {
+                                return env.ghprbPullId
+                            }
+                        }
+                    }
+
+                    steps {
+                        sh """
+                            shopt -s extglob
+                            pulls=\$(curl -sG https://api.github.com/repos/BlueBrain/spack/pulls|python -c 'import json,sys;print("|".join(str(p["number"]) for p in json.load(sys.stdin)))')
+                            for p in ${DEPLOYMENT_UPSTREAM}/pulls/!(\${pulls}); do
+                                rm -rf "\${p}"
+                            done
+                        """
+                    }
                 }
             }
         }
