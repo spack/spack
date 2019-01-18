@@ -41,13 +41,6 @@ def update_kwargs_from_args(args, kwargs):
         'dirty': args.dirty,
         'use_cache': args.use_cache
     })
-    if hasattr(args, 'setup'):
-        setups = set()
-        for arglist_s in args.setup:
-            for arg in [x.strip() for x in arglist_s.split(',')]:
-                setups.add(arg)
-        kwargs['setup'] = setups
-        tty.msg('Setup={0}'.format(kwargs['setup']))
 
 
 def setup_parser(subparser):
@@ -159,6 +152,10 @@ Defaults to current system hostname."""
         help="""Results will be reported to this group on CDash.
 Defaults to Experimental."""
     )
+    subparser.add_argument(
+        '--setup',
+        help="""Names of specs in this DAG for which the install should be
+managed by the user.""")
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
@@ -237,6 +234,9 @@ def install(parser, args, **kwargs):
         'install_dependencies': ('dependencies' in args.things_to_install),
         'install_package': ('package' in args.things_to_install)
     })
+
+    if args.setup:
+        kwargs['setup'] = list(args.setup.split(','))
 
     if args.run_tests:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")

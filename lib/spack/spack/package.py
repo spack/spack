@@ -1373,6 +1373,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
 
+        if 'setup' in kwargs:
+            tty.debug('setup: ' + ', '.join(kwargs['setup']))
+
         # Ensure package is not already installed
         layout = spack.store.layout
         with spack.store.db.prefix_read_lock(self.spec):
