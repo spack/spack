@@ -205,7 +205,7 @@ def find_compilers(*path_hints):
     # of arguments for each call.
     arguments = []
     for o in all_os_classes():
-        arguments.extend(arguments_to_detect_version_fn(o, *paths))
+        arguments.extend(arguments_to_detect_version_fn(o, paths))
 
     # Here we map the function arguments to the corresponding calls
     tp = multiprocessing.pool.ThreadPool()
@@ -462,7 +462,7 @@ DetectVersionArgs = collections.namedtuple(
 )
 
 
-def arguments_to_detect_version_fn(operating_system, *paths):
+def arguments_to_detect_version_fn(operating_system, paths, override=True):
     """Returns a list of DetectVersionArgs tuples to be used in a
     corresponding function to detect compiler versions.
 
@@ -472,14 +472,16 @@ def arguments_to_detect_version_fn(operating_system, *paths):
     Args:
         operating_system (OperatingSystem): the operating system on which
             we are looking for compilers
-        *paths: paths to search for compilers
+        paths: paths to search for compilers
+        override (bool): whether we should search for an override to this
+            function in the operating system class
 
     Returns:
         List of DetectVersionArgs tuples. Each item in the list will be later
         mapped to the corresponding function call to detect the version of the
         compilers in this OS.
     """
-    def _default(*search_paths):
+    def _default(search_paths):
         command_arguments = []
         files_to_be_tested = fs.files_in(*search_paths)
         for compiler_name in spack.compilers.supported_compilers():
@@ -509,8 +511,12 @@ def arguments_to_detect_version_fn(operating_system, *paths):
         # does not spoil the intended precedence.
         return reversed(command_arguments)
 
-    fn = getattr(operating_system, 'arguments_to_detect_version_fn', _default)
-    return fn(*paths)
+    fn = _default
+    if override:
+        fn = getattr(
+            operating_system, 'arguments_to_detect_version_fn', _default
+        )
+    return fn(paths)
 
 
 def detect_version(detect_version_args):
