@@ -9,8 +9,8 @@ from spack import *
 class PyPyfaidx(PythonPackage):
     """pyfaidx: efficient pythonic random access to fasta subsequences"""
 
-    homepage = "http://mattshirley.com/about"
-    url      = "https://files.pythonhosted.org/packages/75/a5/7e2569527b3849ea28d79b4f70d7cf46a47d36459bc59e0efa4e10e8c8b2/pyfaidx-0.5.5.2.tar.gz"
+    homepage = "https://pypi.org/project/pyfaidx/"
+    url      = "https://pypi.io/packages/source/p/pyfaidx/pyfaidx-0.5.5.2.tar.gz"
 
     version('0.5.5.2', sha256='9ac22bdc7b9c5d995d32eb9dc278af9ba970481636ec75c0d687d38c26446caa')
 
