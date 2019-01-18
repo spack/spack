@@ -127,8 +127,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('cmake@:3.9.99',    when='@:8.99')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
-    depends_on('metis@5:+int64+real64',   when='+metis+int64')
-    depends_on('metis@5:~int64+real64',   when='+metis~int64')
+    depends_on('metis@5:+int64',   when='+metis+int64')
+    depends_on('metis@5:~int64',   when='+metis~int64')
     depends_on('muparser', when='+muparser')
     depends_on('nanoflann',        when='@9.0:+nanoflann')
     depends_on('netcdf+mpi',       when='+netcdf+mpi')
@@ -143,7 +143,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc',            when='+slepc+petsc+mpi')
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
-    depends_on('sundials~pthread', when='@9.0:+sundials')
+    depends_on('sundials@:3~pthread', when='@9.0:+sundials')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
