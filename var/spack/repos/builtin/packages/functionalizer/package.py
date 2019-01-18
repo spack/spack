@@ -34,10 +34,14 @@ class Functionalizer(CMakePackage):
     version('develop',
             git=url,
             submodules=True)
+    version('3.12.0',
+            tag='v3.12.0',
+            git=url,
+            preferred=True,
+            submodules=True)
     version('3.11.0',
             commit='50c83265c100cec66a27eea9311b58a9b652cb5f',
             git=url,
-            preferred=True,
             submodules=True)
     version('gap-junctions',
             commit='6095a851119d8125a81f2858c7a0de2ff6f012d6',
