@@ -399,8 +399,8 @@ class Environment(object):
 
     def _set_user_specs_from_lockfile(self):
         """Copy user_specs from a read-in lockfile."""
-        self.user_specs = [UserSpecEntry(s) for s
-                           in self.concretized_user_specs]
+        self.user_spec_entriess = [
+            UserSpecEntry(s) for s in self.concretized_user_specs]
 
     def clear(self):
         self.user_spec_entries = []       # current user specs
@@ -413,7 +413,8 @@ class Environment(object):
 
     @property
     def user_specs(self):
-        return list(x.spec for x in self.user_spec_entries)
+        # Return a tuple rather than a list because this is read-only
+        return tuple(x.spec for x in self.user_spec_entries)
 
     @property
     def internal(self):
@@ -567,7 +568,8 @@ class Environment(object):
 
         for spec in matches:
             if spec in self.user_specs:
-                self.user_specs.remove(spec)
+                i = self.user_specs.index(spec)
+                del self.user_spec_entries[i]
 
             if force and spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
