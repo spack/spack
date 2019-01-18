@@ -104,12 +104,15 @@ class PyNumpy(PythonPackage):
                 lapackblas_names  = ','.join(lapackblas_info.names)
                 lapackblas_dirs   = ':'.join(lapackblas_info.directories)
 
+                handled_blas_and_lapack = False
+
                 # Special treatment for some (!) BLAS/LAPACK. Note that
                 # in this case library_dirs can not be specified within [ALL].
                 if '^openblas' in spec:
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n' % lapackblas_names)
                     write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
                 else:
                     write_empty_libs(f, 'openblas')
 
@@ -132,13 +135,18 @@ class PyNumpy(PythonPackage):
                     f.write('[mkl]\n')
                     f.write('mkl_libs=%s\n' % 'mkl_rt')
                     write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
                 else:
+                    # Without explicitly setting the search directories to be
+                    # an empty list, numpy may retrieve and use mkl libs from
+                    # the system.
                     write_empty_libs(f, 'mkl')
 
                 if '^atlas' in spec:
                     f.write('[atlas]\n')
                     f.write('atlas_libs=%s\n' % lapackblas_names)
                     write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
                 else:
                     write_empty_libs(f, 'atlas')
 
@@ -153,8 +161,9 @@ class PyNumpy(PythonPackage):
                         f.write('[lapack]\n')
                         f.write('lapack_libs=%s\n' % lapack_names)
                         write_library_dirs(f, lapack_dirs)
+                    handled_blas_and_lapack = True
 
-                if False: # TODO: if none of the above
+                if not handled_blas_and_lapack:
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
                     if spec.satisfies('@:1.9.2'):
