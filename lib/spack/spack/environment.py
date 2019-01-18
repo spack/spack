@@ -326,6 +326,12 @@ def _write_yaml(data, str_or_file):
                      default_flow_style=False)
 
 
+class UserSpecEntry(object):
+    def __init__(self, spec, setup=None):
+        self.spec = Spec(spec)
+        self.setup = setup or []
+
+
 class Environment(object):
     def __init__(self, path, init_file=None):
         """Create a new environment.
@@ -374,22 +380,40 @@ class Environment(object):
     def _read_manifest(self, f):
         """Read manifest file and set up user specs."""
         self.yaml = _read_yaml(f)
-        spec_list = config_dict(self.yaml).get('specs')
-        if spec_list:
-            self.user_specs = [Spec(s) for s in spec_list if s]
+        user_spec_entries = config_dict(self.yaml).get('specs', [])
+        for entry in user_spec_entries:
+            # Each entry is either a spec string or a dictionary with two
+            # properties: the spec to concretize/install and the members of
+            # that spec DAG which are being developed by the user
+            setup = None
+            spec = None
+            try:
+                spec = Spec(entry.get('spec'))
+                setup = list(entry.get('setup', []))
+            except AttributeError:
+                if entry:
+                    spec = Spec(entry)
+
+            if spec:
+                self.user_spec_entries.append(UserSpecEntry(spec, setup))
 
     def _set_user_specs_from_lockfile(self):
         """Copy user_specs from a read-in lockfile."""
-        self.user_specs = [Spec(s) for s in self.concretized_user_specs]
+        self.user_specs = [UserSpecEntry(s) for s
+                           in self.concretized_user_specs]
 
     def clear(self):
-        self.user_specs = []              # current user specs
+        self.user_spec_entries = []       # current user specs
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []       # roots of last concretize, in order
         self.specs_by_hash = {}           # concretized specs by hash
         self.new_specs = []               # write packages for these on write()
         self._repo = None                 # RepoPath for this env (memoized)
         self._previous_active = None      # previously active environment
+
+    @property
+    def user_specs(self):
+        return list(x.spec for x in self.user_spec_entries)
 
     @property
     def internal(self):
@@ -502,7 +526,7 @@ class Environment(object):
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
 
-    def add(self, user_spec):
+    def add(self, user_spec, setup=None):
         """Add a single user_spec (non-concretized) to the Environment
 
         Returns:
@@ -519,7 +543,7 @@ class Environment(object):
 
         existing = set(s for s in self.user_specs if s.name == spec.name)
         if not existing:
-            self.user_specs.append(spec)
+            self.user_spec_entries.append(UserSpecEntry(spec, setup))
         return bool(not existing)
 
     def remove(self, query_spec, force=False):
@@ -606,7 +630,7 @@ class Environment(object):
         """
         spec = Spec(user_spec)
 
-        if self.add(spec):
+        if self.add(spec, setup=install_args.get('setup', None)):
             concrete = concrete_spec if concrete_spec else spec.concretized()
             self._add_concrete_spec(spec, concrete)
         else:
@@ -651,14 +675,17 @@ class Environment(object):
         log_path = self.log_path
         fs.mkdirp(log_path)
 
-        for concretized_hash in self.concretized_order:
+        for i, concretized_hash in enumerate(self.concretized_order):
             spec = self.specs_by_hash[concretized_hash]
+            user_spec_entry = self.user_spec_entries[i]
 
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
+
+            kwargs['setup'] = user_spec_entry.setup
 
             with fs.working_dir(self.path):
                 spec.package.do_install(**kwargs)
@@ -855,7 +882,10 @@ class Environment(object):
 
         # put the new user specs in the YAML
         yaml_spec_list = config_dict(self.yaml).setdefault('specs', [])
-        yaml_spec_list[:] = [str(s) for s in self.user_specs]
+        yaml_spec_list[:] = [
+            {'spec': str(e.spec), 'setup': list(e.setup)}
+            for e in self.user_spec_entries
+        ]
 
         # if all that worked, write out the manifest file at the top level
         with fs.write_tmp_and_move(self.manifest_path) as f:
