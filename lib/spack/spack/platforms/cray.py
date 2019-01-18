@@ -52,6 +52,7 @@ class Cray(Platform):
 
         self.add_target("x86_64", Target("x86_64"))
         self.add_target("front_end", Target("x86_64"))
+        self.front_end = "x86_64"
 
         # Get aliased targets from config or best guess from environment:
         for name in ('front_end', 'back_end'):
@@ -64,6 +65,7 @@ class Cray(Platform):
                 safe_name = _target.replace('-', '_')
                 setattr(self, name, safe_name)
                 self.add_target(name, self.targets[safe_name])
+
 
         if self.back_end is not None:
             self.default = self.back_end
