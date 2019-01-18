@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Tioga(CMakePackage):
@@ -41,7 +40,7 @@ class Tioga(CMakePackage):
             '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc
         ]
 
-        if sys.platform == 'darwin':
+        if 'darwin' in spec.architecture:
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
         return options

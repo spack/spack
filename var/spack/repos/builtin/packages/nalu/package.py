@@ -65,7 +65,7 @@ class Nalu(CMakePackage):
         else:
             options.append('-DENABLE_TIOGA:BOOL=OFF')
 
-        if sys.platform == 'darwin':
+        if 'darwin' in spec.architecture:
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
         return options

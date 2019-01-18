@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Openfast(CMakePackage):
@@ -84,7 +83,7 @@ class Openfast(CMakePackage):
                     '-DHDF5_USE_STATIC_LIBRARIES=ON',
                 ])
 
-        if sys.platform == 'darwin':
+        if 'darwin' in spec.architecture:
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
         return options
