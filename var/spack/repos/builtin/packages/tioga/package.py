@@ -12,8 +12,7 @@ class Tioga(CMakePackage):
     homepage = "https://github.com/jsitaraman/tioga"
     git      = "https://github.com/jsitaraman/tioga.git"
 
-    # The master branch doesn't support CMake
-    version('develop', branch='nalu-api')
+    version('master', branch='master')
 
     variant('shared', default=True,
             description="Enable building shared libraries")
@@ -33,9 +32,15 @@ class Tioga(CMakePackage):
                 'ON' if '+shared' in spec else 'OFF'),
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
                 'ON' if '+pic' in spec else 'OFF'),
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DMPI_CXX_COMPILER:PATH=%s' % spec['mpi'].mpicxx,
             '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
             '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc
         ]
+
+        if 'darwin' in spec.architecture:
+            options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
         return options
