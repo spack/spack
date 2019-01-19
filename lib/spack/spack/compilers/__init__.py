@@ -537,33 +537,39 @@ def detect_version(detect_version_args):
         of the tuple will contain it. Otherwise ``error`` is a string
         containing an explanation on why the version couldn't be computed.
     """
-    compiler_id = detect_version_args.id
-    language = detect_version_args.language
-    compiler_cls = class_for_compiler_name(compiler_id.compiler_name)
-    path = detect_version_args.path
+    def _default(fn_args):
+        compiler_id = fn_args.id
+        language = fn_args.language
+        compiler_cls = class_for_compiler_name(compiler_id.compiler_name)
+        path = fn_args.path
 
-    # Get compiler names and the callback to detect their versions
-    callback = getattr(compiler_cls, '{0}_version'.format(language))
+        # Get compiler names and the callback to detect their versions
+        callback = getattr(compiler_cls, '{0}_version'.format(language))
 
-    try:
-        version = callback(path)
-        if version and six.text_type(version).strip() and version != 'unknown':
-            value = detect_version_args._replace(
-                id=compiler_id._replace(version=version)
-            )
-            return value, None
+        try:
+            version = callback(path)
+            if version and six.text_type(version).strip() \
+                    and version != 'unknown':
+                value = fn_args._replace(
+                    id=compiler_id._replace(version=version)
+                )
+                return value, None
 
-        error = "Couldn't get version for compiler {0}".format(path)
-    except spack.util.executable.ProcessError as e:
-        error = "Couldn't get version for compiler {0}\n".format(path) + \
-                six.text_type(e)
-    except Exception as e:
-        # Catching "Exception" here is fine because it just
-        # means something went wrong running a candidate executable.
-        error = "Error while executing candidate compiler {0}" \
-                "\n{1}: {2}".format(path, e.__class__.__name__,
-                                    six.text_type(e))
-    return None, error
+            error = "Couldn't get version for compiler {0}".format(path)
+        except spack.util.executable.ProcessError as e:
+            error = "Couldn't get version for compiler {0}\n".format(path) + \
+                    six.text_type(e)
+        except Exception as e:
+            # Catching "Exception" here is fine because it just
+            # means something went wrong running a candidate executable.
+            error = "Error while executing candidate compiler {0}" \
+                    "\n{1}: {2}".format(path, e.__class__.__name__,
+                                        six.text_type(e))
+        return None, error
+
+    operating_system = detect_version_args.id.os
+    fn = getattr(operating_system, 'detect_version', _default)
+    return fn(detect_version_args)
 
 
 def make_compiler_list(detected_versions):
@@ -592,6 +598,17 @@ def make_compiler_list(detected_versions):
     # For each unique compiler id select the name variation with most entries
     # i.e. the one that supports most languages
     compilers = []
+
+    def _default(cmp_id, paths):
+        operating_system, compiler_name, version = cmp_id
+        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
+        spec = spack.spec.CompilerSpec(compiler_cls.name, version)
+        paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        compiler = compiler_cls(
+            spec, operating_system, py_platform.machine(), paths
+        )
+        return compiler
+
     for compiler_id, by_compiler_id in compilers_d.items():
         _, selected_name_variation = max(
             (len(by_compiler_id[variation]), variation)
@@ -599,14 +616,11 @@ def make_compiler_list(detected_versions):
         )
 
         # Add it to the list of compilers
-        operating_system, compiler_name, version = compiler_id
-        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-        spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [by_compiler_id[selected_name_variation].get(l, None)
-                 for l in ('cc', 'cxx', 'f77', 'fc')]
-        compilers.append(
-            compiler_cls(spec, operating_system, py_platform.machine(), paths)
-        )
+        selected = by_compiler_id[selected_name_variation]
+        operating_system, _, _ = compiler_id
+        make_compiler = getattr(operating_system, 'make_compiler', _default)
+        compiler_instance = make_compiler(compiler_id, selected)
+        compilers.append(compiler_instance)
 
     return compilers
 
