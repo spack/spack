@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import shutil
 import glob
@@ -30,7 +11,7 @@ import re
 
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, chgrp
 
 import spack.config
 import spack.spec
@@ -127,8 +108,8 @@ class ExtensionsLayout(object):
        directly in the installation folder - or extensions activated in
        filesystem views.
     """
-    def __init__(self, root, **kwargs):
-        self.root = root
+    def __init__(self, view, **kwargs):
+        self.view = view
 
     def add_extension(self, spec, ext_spec):
         """Add to the list of currently installed extensions."""
@@ -190,7 +171,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             "${COMPILERNAME}-${COMPILERVER}/"
             "${PACKAGE}-${VERSION}-${HASH}")
         if self.hash_len is not None:
-            if re.search('\${HASH:\d+}', self.path_scheme):
+            if re.search(r'\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
                     "Conflicting options for installation layout hash length")
             self.path_scheme = self.path_scheme.replace(
@@ -263,7 +244,19 @@ class YamlDirectoryLayout(DirectoryLayout):
         if prefix:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
-        mkdirp(self.metadata_path(spec))
+        # Create install directory with properly configured permissions
+        # Cannot import at top of file
+        from spack.package_prefs import get_package_dir_permissions
+        from spack.package_prefs import get_package_group
+        group = get_package_group(spec)
+        perms = get_package_dir_permissions(spec)
+        mkdirp(spec.prefix, mode=perms)
+        if group:
+            chgrp(spec.prefix, group)
+            # Need to reset the sticky group bit after chgrp
+            os.chmod(spec.prefix, perms)
+
+        mkdirp(self.metadata_path(spec), mode=perms)
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):
@@ -316,11 +309,11 @@ class YamlDirectoryLayout(DirectoryLayout):
 class YamlViewExtensionsLayout(ExtensionsLayout):
     """Maintain extensions within a view.
     """
-    def __init__(self, root, layout):
+    def __init__(self, view, layout):
         """layout is the corresponding YamlDirectoryLayout object for which
            we implement extensions.
         """
-        super(YamlViewExtensionsLayout, self).__init__(root)
+        super(YamlViewExtensionsLayout, self).__init__(view)
         self.layout = layout
         self.extension_file_name = 'extensions.yaml'
 
@@ -361,15 +354,18 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
         _check_concrete(spec)
         normalize_path = lambda p: (
             os.path.abspath(p).rstrip(os.path.sep))
-        if normalize_path(spec.prefix) == normalize_path(self.root):
-            # For backwards compatibility, when the root is the extended
+
+        view_prefix = self.view.get_projection_for_spec(spec)
+        if normalize_path(spec.prefix) == normalize_path(view_prefix):
+            # For backwards compatibility, when the view is the extended
             # package's installation directory, do not include the spec name
             # as a subdirectory.
-            components = [self.root, self.layout.metadata_dir,
+            components = [view_prefix, self.layout.metadata_dir,
                           self.extension_file_name]
         else:
-            components = [self.root, self.layout.metadata_dir, spec.name,
+            components = [view_prefix, self.layout.metadata_dir, spec.name,
                           self.extension_file_name]
+
         return os.path.join(*components)
 
     def extension_map(self, spec):

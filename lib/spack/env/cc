@@ -1,28 +1,10 @@
 #!/bin/bash
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
 # Spack compiler wrapper script.
 #
@@ -124,19 +106,19 @@ case "$command" in
     cpp)
         mode=cpp
         ;;
-    cc|c89|c99|gcc|clang|icc|pgcc|xlc|xlc_r)
+    cc|c89|c99|gcc|clang|armclang|icc|pgcc|xlc|xlc_r)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         ;;
-    c++|CC|g++|clang++|icpc|pgc++|xlc++|xlc++_r)
+    c++|CC|g++|clang++|armclang++|icpc|pgc++|xlc++|xlc++_r)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         ;;
-    ftn|f90|fc|f95|gfortran|flang|ifort|pgfortran|xlf90|xlf90_r|nagfor)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|pgfortran|xlf90|xlf90_r|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
@@ -201,18 +183,6 @@ fi
 if [[ -z $command ]]; then
     die "ERROR: Compiler '$SPACK_COMPILER_SPEC' does not support compiling $language programs."
 fi
-
-#
-# Set paths as defined in the 'environment' section of the compiler config
-#   names are stored in SPACK_ENV_TO_SET
-#   values are stored in SPACK_ENV_SET_<varname>
-#
-IFS=':' read -ra env_set_varnames <<< "$SPACK_ENV_TO_SET"
-for varname in "${env_set_varnames[@]}"; do
-    spack_varname="SPACK_ENV_SET_$varname"
-    export "$varname"="${!spack_varname}"
-    unset "$spack_varname"
-done
 
 #
 # Filter '.' and Spack environment directories out of PATH so that

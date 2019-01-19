@@ -1,3 +1,8 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _modules:
 
 =======
@@ -478,6 +483,9 @@ your system. If you write a configuration file like:
 you will prevent the generation of module files for any package that
 is compiled with ``gcc@4.4.7``, with the only exception of any ``gcc``
 or any ``llvm`` installation.
+
+
+.. _modules-naming-scheme:
 
 """""""""""""""""""""""""""
 Customize the naming scheme

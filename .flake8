@@ -20,5 +20,5 @@
 # - N801: CapWords for class names.
 #
 [flake8]
-ignore = E129,E221,E241,E272,E731,F999,N801
+ignore = E129,E221,E241,E272,E731,F999,N801,W503,W504
 max-line-length = 79

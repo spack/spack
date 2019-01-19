@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This module has methods for parsing names and versions of packages from URLs.
 The idea is to allow package creators to supply nothing more than the
@@ -63,7 +44,7 @@ from spack.version import Version
 # "path" seemed like the most generic term.
 #
 def find_list_url(url):
-    """Finds a good list URL for the supplied URL.
+    r"""Finds a good list URL for the supplied URL.
 
     By default, returns the dirname of the archive path.
 
@@ -167,80 +148,81 @@ def strip_version_suffixes(path):
 
     suffix_regexes = [
         # Download type
-        '[Ii]nstall',
-        'all',
-        'src(_0)?',
-        '[Ss]ources?',
-        'file',
-        'full',
-        'single',
-        'public',
-        'with[a-zA-Z_-]+',
-        'bin',
-        'binary',
-        'run',
-        '[Uu]niversal',
-        'jar',
-        'complete',
-        'dynamic',
-        'oss',
-        'gem',
-        'tar',
-        'sh',
+        r'[Ii]nstall',
+        r'all',
+        r'code',
+        r'src(_0)?',
+        r'[Ss]ources?',
+        r'file',
+        r'full',
+        r'single',
+        r'public',
+        r'with[a-zA-Z_-]+',
+        r'bin',
+        r'binary',
+        r'run',
+        r'[Uu]niversal',
+        r'jar',
+        r'complete',
+        r'dynamic',
+        r'oss',
+        r'gem',
+        r'tar',
+        r'sh',
 
         # Download version
-        'release',
-        'stable',
-        '[Ff]inal',
-        'rel',
-        'orig',
-        'dist',
-        '\+',
+        r'release',
+        r'stable',
+        r'[Ff]inal',
+        r'rel',
+        r'orig',
+        r'dist',
+        r'\+',
 
         # License
-        'gpl',
+        r'gpl',
 
         # Arch
         # Needs to come before and after OS, appears in both orders
-        'ia32',
-        'intel',
-        'amd64',
-        'x64',
-        'x86[_-]64',
-        'x86',
-        'i[36]86',
-        'ppc64(le)?',
-        'armv?(7l|6l|64)',
+        r'ia32',
+        r'intel',
+        r'amd64',
+        r'x64',
+        r'x86[_-]64',
+        r'x86',
+        r'i[36]86',
+        r'ppc64(le)?',
+        r'armv?(7l|6l|64)',
 
         # OS
-        '[Ll]inux(_64)?',
-        '[Uu]ni?x',
-        '[Ss]un[Oo][Ss]',
-        '[Mm]ac[Oo][Ss][Xx]?',
-        '[Oo][Ss][Xx]',
-        '[Dd]arwin(64)?',
-        '[Aa]pple',
-        '[Ww]indows',
-        '[Ww]in(64|32)?',
-        '[Cc]ygwin(64|32)?',
-        '[Mm]ingw',
+        r'[Ll]inux(_64)?',
+        r'[Uu]ni?x',
+        r'[Ss]un[Oo][Ss]',
+        r'[Mm]ac[Oo][Ss][Xx]?',
+        r'[Oo][Ss][Xx]',
+        r'[Dd]arwin(64)?',
+        r'[Aa]pple',
+        r'[Ww]indows',
+        r'[Ww]in(64|32)?',
+        r'[Cc]ygwin(64|32)?',
+        r'[Mm]ingw',
 
         # Arch
         # Needs to come before and after OS, appears in both orders
-        'ia32',
-        'intel',
-        'amd64',
-        'x64',
-        'x86[_-]64',
-        'x86',
-        'i[36]86',
-        'ppc64(le)?',
-        'armv?(7l|6l|64)?',
+        r'ia32',
+        r'intel',
+        r'amd64',
+        r'x64',
+        r'x86[_-]64',
+        r'x86',
+        r'i[36]86',
+        r'ppc64(le)?',
+        r'armv?(7l|6l|64)?',
 
         # PyPI
-        '[._-]py[23].*\.whl',
-        '[._-]cp[23].*\.whl',
-        '[._-]win.*\.exe',
+        r'[._-]py[23].*\.whl',
+        r'[._-]cp[23].*\.whl',
+        r'[._-]win.*\.exe',
     ]
 
     for regex in suffix_regexes:
@@ -292,22 +274,22 @@ def strip_name_suffixes(path, version):
         str(version) + '.*',
 
         # Download type
-        'install',
-        'src',
-        '(open)?[Ss]ources?',
-        '[._-]archive',
-        '[._-]std',
+        r'install',
+        r'src',
+        r'(open)?[Ss]ources?',
+        r'[._-]archive',
+        r'[._-]std',
 
         # Download version
-        'release',
-        'snapshot',
-        'distrib',
+        r'release',
+        r'snapshot',
+        r'distrib',
 
         # VCS
-        '0\+bzr',
+        r'0\+bzr',
 
         # License
-        'gpl',
+        r'gpl',
     ]
 
     for regex in suffix_regexes:
@@ -817,7 +799,7 @@ def wildcard_version(path):
 
     # Replace each version with a generic capture group to find versions
     # and escape everything else so it's not interpreted as a regex
-    result = '(\d.*)'.join(re.escape(vp) for vp in vparts)
+    result = r'(\d.*)'.join(re.escape(vp) for vp in vparts)
 
     return result
 

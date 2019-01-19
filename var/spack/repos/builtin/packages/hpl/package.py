@@ -1,33 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 import platform
 
 
-class Hpl(MakefilePackage):
+class Hpl(AutotoolsPackage):
     """HPL is a software package that solves a (random) dense linear system
     in double precision (64 bits) arithmetic on distributed-memory computers.
     It can thus be regarded as a portable as well as freely available
@@ -36,6 +17,9 @@ class Hpl(MakefilePackage):
     homepage = "http://www.netlib.org/benchmark/hpl/"
     url      = "http://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
 
+    # Note: HPL uses autotools starting with 2.3
+
+    version('2.3', sha256='32c5c17d22330e6f2337b681aded51637fb6008d3f0eb7c277b163fadd612830')
     version('2.2', '0eb19e787c3dc8f4058db22c9e0c5320')
 
     variant('openmp', default=False, description='Enable OpenMP support')
@@ -43,13 +27,21 @@ class Hpl(MakefilePackage):
     depends_on('mpi@1.1:')
     depends_on('blas')
 
+    # 2.3 adds support for openmpi 4
+    conflicts('openmpi@4.0.0:', when='@:2.2')
+
     parallel = False
 
     arch = '{0}-{1}'.format(platform.system(), platform.processor())
-
     build_targets = ['arch={0}'.format(arch)]
 
-    def edit(self, spec, prefix):
+    @when('@:2.2')
+    def autoreconf(self, spec, prefix):
+        # Prevent sanity check from killing the build
+        touch('configure')
+
+    @when('@:2.2')
+    def configure(self, spec, prefix):
         # List of configuration options
         # Order is important
         config = []
@@ -107,9 +99,26 @@ class Hpl(MakefilePackage):
             for var in config:
                 makefile.write('{0}\n'.format(var))
 
+    @when('@2.3:')
+    def configure_args(self):
+        config = [
+            'CFLAGS=-O3'
+        ]
+
+        return config
+
+    @when('@:2.2')
     def install(self, spec, prefix):
         # Manual installation
         install_tree(join_path('bin', self.arch), prefix.bin)
         install_tree(join_path('lib', self.arch), prefix.lib)
         install_tree(join_path('include', self.arch), prefix.include)
         install_tree('man', prefix.man)
+
+    @run_after('install')
+    def copy_dat(self):
+        if self.spec.satisfies('@2.3:'):
+            # The pre-2.3 makefile would include a default HPL.dat config
+            # file in the bin directory
+            install('./testing/ptest/HPL.dat',
+                    join_path(self.prefix.bin, 'HPL.dat'))

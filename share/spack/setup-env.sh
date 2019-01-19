@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 ########################################################################
 #
@@ -96,7 +77,7 @@ function spack {
                 _sp_arg="$1"
                 shift
             fi
-            if [ "$_sp_arg" = "-h" ]; then
+            if [[ "$_sp_arg" = "-h" || "$_sp_arg" = "--help" ]]; then
                 command spack cd -h
             else
                 LOC="$(spack location $_sp_arg "$@")"
@@ -105,6 +86,43 @@ function spack {
                 else
                     return 1
                 fi
+            fi
+            return
+            ;;
+        "env")
+            _sp_arg=""
+            if [ -n "$1" ]; then
+                _sp_arg="$1"
+                shift
+            fi
+
+            if [[ "$_sp_arg" = "-h" || "$_sp_arg" = "--help" ]]; then
+                command spack env -h
+            else
+                case $_sp_arg in
+                    activate)
+                        _a="$@"
+                        if [ -z "$1" -o "${_a#*--sh}" != "$_a" -o "${_a#*--csh}" != "$_a" -o "${_a#*-h}" != "$_a" ]; then
+                            # no args or args contain -h/--help, --sh, or --csh: just execute
+                            command spack "${args[@]}"
+                        else
+                            # actual call to activate: source the output
+                            eval $(command spack $_sp_flags env activate --sh "$@")
+                        fi
+                        ;;
+                    deactivate)
+                        if [ -n "$1" ]; then
+                            # with args: execute the command
+                            command spack "${args[@]}"
+                        else
+                            # no args: source the output.
+                            eval $(command spack $_sp_flags env deactivate --sh)
+                        fi
+                        ;;
+                    *)
+                        command spack "${args[@]}"
+                        ;;
+                esac
             fi
             return
             ;;
@@ -218,7 +236,7 @@ export SPACK_ROOT=${_sp_prefix}
 # Determine which shell is being used
 #
 function _spack_determine_shell() {
-	ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+	PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
 }
 export SPACK_SHELL=$(_spack_determine_shell)
 

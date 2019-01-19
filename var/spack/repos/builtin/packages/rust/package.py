@@ -1,34 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import os
-
-
-def get_submodules():
-    git = which('git')
-    git('submodule', 'update', '--init', '--recursive')
 
 
 class Rust(Package):
@@ -37,12 +12,10 @@ class Rust(Package):
     homepage = "http://www.rust-lang.org"
     git      = "https://github.com/rust-lang/rust.git"
 
-    version('1.8.0', tag='1.8.0')
-
-    resource(name='cargo',
-             git="https://github.com/rust-lang/cargo.git",
-             tag='0.10.0',
-             destination='cargo')
+    version('develop', branch='master')
+    version('1.31.1', tag='1.31.1')
+    version('1.31.0', tag='1.31.0')  # "Rust 2018" edition
+    version('1.30.1', tag='1.30.1')
 
     extendable = True
 
@@ -51,39 +24,36 @@ class Rust(Package):
     depends_on("curl")
     depends_on("git")
     depends_on("cmake")
+    depends_on("binutils")
     depends_on("python@:2.8")
 
     # Cargo
     depends_on("openssl")
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--llvm-root=' + spec['llvm'].prefix)
+    phases = ['configure', 'install']
 
+    def configure(self, spec, prefix):
+        configure_args = [
+          '--prefix=%s' % prefix,
+          '--llvm-root=' + spec['llvm'].prefix,
+          # Workaround for "FileCheck does not exist" error
+          '--disable-codegen-tests',
+          # Includes Cargo in the build
+          # https://github.com/rust-lang/cargo/issues/3772#issuecomment-283109482
+          '--enable-extended',
+          # Prevent build from writing bash completion into system path
+          '--sysconfdir=%s' % join_path(prefix, 'etc/')
+          ]
+
+        configure(*configure_args)
+
+        # Build system defaults to searching in the same path as Spack's
+        # compiler wrappers which causes the build to fail
+        filter_file(
+            '#ar = "ar"',
+            'ar = "%s"' % join_path(spec['binutils'].prefix.bin, 'ar'),
+            'config.toml')
+
+    def install(self, spec, prefix):
         make()
         make("install")
-
-        # Install cargo, rust package manager
-        with working_dir(os.path.join('cargo', 'cargo')):
-            get_submodules()
-            configure('--prefix=' + prefix,
-                      '--local-rust-root=' + prefix)
-
-            make()
-            make("install")
-
-    def setup_dependent_package(self, module, dependent_spec):
-        """
-        Called before python modules' install() methods.
-
-        In most cases, extensions will only need to have one or two lines::
-
-            cargo('build')
-            cargo('install', '--root', prefix)
-
-        or
-
-            cargo('install', '--root', prefix)
-        """
-        # Rust extension builds can have a global cargo executable function
-        module.cargo = Executable(join_path(self.spec.prefix.bin, 'cargo'))

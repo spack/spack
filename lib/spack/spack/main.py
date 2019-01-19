@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This is the implementation of the Spack command line executable.
 
 In a normal Spack installation, this is invoked from the bin/spack script
@@ -38,12 +19,14 @@ import argparse
 from six import StringIO
 
 import llnl.util.tty as tty
+import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
 import spack
 import spack.architecture
 import spack.config
 import spack.cmd
+import spack.environment as ev
 import spack.hooks
 import spack.paths
 import spack.repo
@@ -55,6 +38,11 @@ from spack.error import SpackError
 
 #: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
+
+#: top-level aliases for Spack commands
+aliases = {
+    'rm': 'remove'
+}
 
 #: help levels in order of detail (i.e., number of commands shown)
 levels = ['short', 'long']
@@ -192,8 +180,8 @@ class SpackArgumentParser(argparse.ArgumentParser):
             cmd_set = set(c for c in commands)
 
             # make a dict of commands of interest
-            cmds = dict((a.metavar, a) for a in self.actions
-                        if a.metavar in cmd_set)
+            cmds = dict((a.dest, a) for a in self.actions
+                        if a.dest in cmd_set)
 
             # add commands to a group in order, and add the group
             group = argparse._ArgumentGroup(self, title=title)
@@ -289,8 +277,13 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # each command module implements a parser() function, to which we
         # pass its subparser for setup.
         module = spack.cmd.get_module(cmd_name)
+
+        # build a list of aliases
+        alias_list = [k for k, v in aliases.items() if v == cmd_name]
+
         subparser = self.subparsers.add_parser(
-            cmd_name, help=module.description, description=module.description)
+            cmd_name, aliases=alias_list,
+            help=module.description, description=module.description)
         module.setup_parser(subparser)
 
         # return the callable function for the command
@@ -332,13 +325,28 @@ def make_argument_parser(**kwargs):
         help="when to colorize output (default: auto)")
     parser.add_argument(
         '-C', '--config-scope', dest='config_scopes', action='append',
-        metavar='DIRECTORY', help="use an additional configuration scope")
+        metavar='DIR', help="add a custom configuration scope")
     parser.add_argument(
         '-d', '--debug', action='store_true',
         help="write out debug logs during compile")
     parser.add_argument(
-        '-D', '--pdb', action='store_true',
+        '--pdb', action='store_true',
         help="run spack under the pdb debugger")
+
+    env_group = parser.add_mutually_exclusive_group()
+    env_group.add_argument(
+        '-e', '--env', dest='env', metavar='ENV', action='store',
+        help="run with a specific environment (see spack env)")
+    env_group.add_argument(
+        '-D', '--env-dir', dest='env_dir', metavar='DIR', action='store',
+        help="run with an environment directory (ignore named environments)")
+    env_group.add_argument(
+        '-E', '--no-env', dest='no_env', action='store_true',
+        help="run without any environments activated (see spack env)")
+    parser.add_argument(
+        '--use-env-repo', action='store_true',
+        help="when running in an environment, use its package repository")
+
     parser.add_argument(
         '-k', '--insecure', action='store_true',
         help="do not check ssl certificates when downloading")
@@ -355,7 +363,7 @@ def make_argument_parser(**kwargs):
         '-p', '--profile', action='store_true', dest='spack_profile',
         help="profile execution using cProfile")
     parser.add_argument(
-        '-P', '--sorted-profile', default=None, metavar="STAT",
+        '--sorted-profile', default=None, metavar="STAT",
         help="profile and sort by one or more of:\n[%s]" %
         ',\n '.join([', '.join(line) for line in stat_lines]))
     parser.add_argument(
@@ -365,7 +373,7 @@ def make_argument_parser(**kwargs):
         '-v', '--verbose', action='store_true',
         help="print additional output during builds")
     parser.add_argument(
-        '-s', '--stacktrace', action='store_true',
+        '--stacktrace', action='store_true',
         help="add stacktraces to all printed statements")
     parser.add_argument(
         '-V', '--version', action='store_true',
@@ -406,7 +414,7 @@ def setup_main_options(args):
         spack.config.set('config:verify_ssl', False, scope='command_line')
 
     # when to use color (takes always, auto, or never)
-    tty.color.set_color_when(args.color)
+    color.set_color_when(args.color)
 
 
 def allows_unknown_args(command):
@@ -592,6 +600,12 @@ def main(argv=None):
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
 
+    # activate an environment if one was specified on the command line
+    if not args.no_env:
+        env = ev.find_environment(args)
+        if env:
+            ev.activate(env, args.use_env_repo)
+
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
         spack.config.command_line_scopes = args.config_scopes
@@ -625,6 +639,8 @@ def main(argv=None):
         # Try to load the particular command the caller asked for.  If there
         # is no module for it, just die.
         cmd_name = args.command[0]
+        cmd_name = aliases.get(cmd_name, cmd_name)
+
         try:
             command = parser.add_command(cmd_name)
         except ImportError:

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 import sys
@@ -43,6 +24,11 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.3', 'cd106babbae091604fee40c258737c84dec048949be779eaef5a745df3dc8de4')
+    version('3.10.2', '63ed950653ae9b8d19daea47e24c0338')
+    version('3.10.1', '2d0d5a9bd8112a4147a2a23f7f62a906')
+    version('3.10.0', '0240c2ce8c54e47b3531a743ee844d41')
+    version('3.9.4', 'c98eb67573efb2f91c6f239368259e44')
     version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
     version('3.9.2', '8bedc0cd8c8603d54bfd99a6e8f77b3d')
     version('3.9.1', 'd3a229a188dbeef9b3f29b9a63622fad')
@@ -95,6 +81,9 @@ class Petsc(Package):
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
 
+    variant('X', default=False,
+            description='Activate X support')
+
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
 
@@ -128,7 +117,7 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
+    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     # Hypre does not support complex numbers.
@@ -149,6 +138,10 @@ class Petsc(Package):
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.9.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.2+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.10.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.10.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -159,6 +152,7 @@ class Petsc(Package):
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
+    depends_on('libx11', when='+X')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -186,19 +180,22 @@ class Petsc(Package):
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc
+                '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
+            if self.spec.satisfies('%intel'):
+                # mpiifort needs some help to automatically link
+                # all necessary run-time libraries
+                compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
     def install(self, spec, prefix):
         options = ['--with-ssl=0',
-                   '--with-x=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
                    '--download-hwloc=0',
-                   'COPTFLAGS=',
-                   'FOPTFLAGS=',
-                   'CXXOPTFLAGS=']
+                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
+                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
+                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -209,12 +206,22 @@ class Petsc(Package):
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
+        if '+debug' not in spec:
+            options.extend(['COPTFLAGS=',
+                            'FOPTFLAGS=',
+                            'CXXOPTFLAGS='])
+
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
         options.extend([
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
+
+        if '+X' in spec:
+            options.append('--with-x=1')
+        else:
+            options.append('--with-x=0')
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
@@ -226,8 +233,9 @@ class Petsc(Package):
         else:
             options.append('--with-clanguage=C')
 
-        # Help PETSc pick up Scalapack from MKL:
-        if 'scalapack' in spec:
+        # PETSc depends on scalapack when '+mumps+mpi~int64' (see depends())
+        # help PETSc pick up Scalapack from MKL
+        if spec.satisfies('+mumps+mpi~int64'):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),
@@ -253,6 +261,8 @@ class Petsc(Package):
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
         if 'superlu-dist' in spec:
+            if spec.satisfies('@3.10.3:'):
+                options.append('--with-cxx-dialect=C++11')
             options.extend([
                 '--with-superlu_dist-include=%s' %
                 spec['superlu-dist'].prefix.include,

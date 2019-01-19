@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 import sys
@@ -33,18 +14,20 @@ class Sundials(CMakePackage):
 
     homepage = "https://computation.llnl.gov/projects/sundials"
     url = "https://computation.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
-    maintainers = ['cswoodward', 'gardner48']
+    maintainers = ['cswoodward', 'gardner48', 'balos1']
 
     # ==========================================================================
     # Versions
     # ==========================================================================
-
-    version('4.0.0-dev', '1d4b538721b84ebc91ce7ad92d94beae')
-    version('3.1.1', 'e63f4de0be5be97f750b30b0fa11ef34', preferred=True)
-    version('3.1.0', '1a84ca41c7f71067e03d519ddbcd9dae')
-    version('3.0.0', '5163a44cedd7398bddda442ba00313b8')
-    version('2.7.0', 'c304631b9bc82877d7b0e9f4d4fd94d3')
-    version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
+    version('4.0.1', sha256='29e409c8620e803990edbda1ebf49e03a38c08b9187b90658d86bddae913aed4')
+    version('3.2.1', sha256='47d94d977ab2382cdcdd02f72a25ebd4ba8ca2634bbb2f191fe1636e71c86808')
+    version('3.2.0', sha256='d2b690afecadf8b5a048bb27ab341de591d714605b98d3518985dfc2250e93f9')
+    version('3.1.2', sha256='a8985bb1e851d90e24260450667b134bc13d71f5c6effc9e1d7183bd874fe116')
+    version('3.1.1', sha256='a24d643d31ed1f31a25b102a1e1759508ce84b1e4739425ad0e18106ab471a24')
+    version('3.1.0', sha256='18d52f8f329626f77b99b8bf91e05b7d16b49fde2483d3a0ea55496ce4cdd43a')
+    version('3.0.0', sha256='28b8e07eecfdef66e2c0d0ea0cb1b91af6e4e94d71008abfe80c27bf39f63fde')
+    version('2.7.0', sha256='d39fcac7175d701398e4eb209f7e92a5b30a78358d4a0c0fcc23db23c11ba104')
+    version('2.6.2', sha256='d8ed0151509dd2b0f317b318a4175f8b95a174340fc3080b8c20617da8aa4d2f')
 
     # ==========================================================================
     # Variants
@@ -166,7 +149,9 @@ class Sundials(CMakePackage):
 
     # Build dependencies
     depends_on('cmake@2.8.1:', type='build')
-    depends_on('cmake@3.0.2:', type='build', when='@4.0.0:')
+    depends_on('cmake@2.8.12:', type='build', when='@3.1.2')
+    depends_on('cmake@3.0.2:', type='build', when='@4.0.0-dev.1')
+    depends_on('cmake@3.1.3:', type='build', when='@3.2.0,4.0.0-dev.2')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
@@ -218,7 +203,7 @@ class Sundials(CMakePackage):
             return 'ON' if varstr in self.spec else 'OFF'
 
         fortran_flag = self.compiler.pic_flag
-        if spec.satisfies('%clang platform=darwin'):
+        if (spec.satisfies('%clang platform=darwin')) and ('+fcmix' in spec):
             f77 = Executable(self.compiler.f77)
             libgfortran = LibraryList(f77('--print-file-name',
                                           'libgfortran.a', output=str))
@@ -328,6 +313,12 @@ class Sundials(CMakePackage):
                 '-DPETSC_LIBRARY_DIR=%s' % spec['petsc'].prefix.lib
             ])
 
+        # Building with RAJA
+        if '+raja' in spec:
+            args.extend([
+                '-DRAJA_DIR=%s' % spec['raja'].prefix.share.raja.cmake
+            ])
+
         # Examples
         if spec.satisfies('@3.0.0:'):
             args.extend([
@@ -376,6 +367,8 @@ class Sundials(CMakePackage):
         If this isn't done, they'll have CC, CPP, and F77 set to
         Spack's generic cc and f77. We want them to be bound to
         whatever compiler they were built with."""
+
+        spec = self.spec
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
         dirname = os.path.join(self.prefix, 'examples')
@@ -472,13 +465,15 @@ class Sundials(CMakePackage):
             filter_file(r'^CPP\s*=.*', self.compiler.cc,
                         os.path.join(dirname, filename), **kwargs)
 
-        for filename in f77_files:
-            filter_file(os.environ['F77'], self.compiler.f77,
-                        os.path.join(dirname, filename), **kwargs)
+        if ('+fcmix' in spec) and ('+examples-f77' in spec):
+            for filename in f77_files:
+                filter_file(os.environ['F77'], self.compiler.f77,
+                            os.path.join(dirname, filename), **kwargs)
 
-        for filename in f90_files:
-            filter_file(os.environ['FC'], self.compiler.fc,
-                        os.path.join(dirname, filename), **kwargs)
+        if ('+fcmix' in spec) and ('+examples-f90' in spec):
+            for filename in f90_files:
+                filter_file(os.environ['FC'], self.compiler.fc,
+                            os.path.join(dirname, filename), **kwargs)
 
     @property
     def headers(self):

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 Functions here are used to take abstract specs and make them concrete.
 For example, if a spec asks for a version between 1.8 and 1.9, these
@@ -399,13 +380,12 @@ class Concretizer(object):
                                if (compiler_match(p) and
                                    (p is not spec) and
                                    flag in p.compiler_flags))
-                nearest_flags = set(nearest.compiler_flags.get(flag, []))
-                flags = set(spec.compiler_flags.get(flag, []))
-                if (nearest_flags - flags):
-                    # TODO: these set operations may reorder the flags, which
-                    # for some orders of flags can be invalid. See:
-                    # https://github.com/spack/spack/issues/6154#issuecomment-342365573
-                    spec.compiler_flags[flag] = list(nearest_flags | flags)
+                nearest_flags = nearest.compiler_flags.get(flag, [])
+                flags = spec.compiler_flags.get(flag, [])
+                if set(nearest_flags) - set(flags):
+                    spec.compiler_flags[flag] = list(
+                        llnl.util.lang.dedupe(nearest_flags + flags)
+                    )
                     ret = True
             except StopIteration:
                 pass
@@ -421,10 +401,12 @@ class Concretizer(object):
                 raise
             return ret
         for flag in compiler.flags:
-            config_flags = set(compiler.flags.get(flag, []))
-            flags = set(spec.compiler_flags.get(flag, []))
-            spec.compiler_flags[flag] = list(config_flags | flags)
-            if (config_flags - flags):
+            config_flags = compiler.flags.get(flag, [])
+            flags = spec.compiler_flags.get(flag, [])
+            spec.compiler_flags[flag] = list(
+                llnl.util.lang.dedupe(config_flags + flags)
+            )
+            if set(config_flags) - set(flags):
                 ret = True
 
         return ret

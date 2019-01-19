@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import llnl.util.tty as tty
 
 from spack import *
@@ -42,13 +23,18 @@ class Openssl(Package):
     list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
 
+    # Note: Version 1.1.1 is the current long-term support version that will
+    # remain supported until September 2023.
+    version('1.1.1',  '2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d')
+    version('1.1.0i', 'ebbfc844a8c8cc0ea5dc10b86c9ce97f401837f3fa08c17b2cdadc118253cf99')
     version('1.1.0g', 'ba5f1b8b835b88cadbce9b35ed9531a6')
     version('1.1.0e', '51c42d152122e474754aea96f66928c6')
     version('1.1.0d', '711ce3cd5f53a99c0e12a7d5804f0f63')
     version('1.1.0c', '601e8191f72b18192a937ecf1a800f3f')
-    # Note: Version 1.0.2 is the "long-term support" version that will
-    # remain supported until 2019.
-    version('1.0.2o', '44279b8557c3247cbe324e2322ecd114', preferred=True)
+    # Note: Version 1.0.2 is the previous long-term support version that will
+    # remain supported until December 2019.
+    version('1.0.2p', '50a98e07b1a89eb8f6a99477f262df71c6fa7bef77df4dc83025a2845c827d00')
+    version('1.0.2o', '44279b8557c3247cbe324e2322ecd114')
     version('1.0.2n', '13bdc1b1d1ff39b6fd42a255e74676a4')
     version('1.0.2m', '10e9e37f492094b9ef296f68f24a7666')
     version('1.0.2k', 'f965fc0bf01bf882b31314b61391ae65')
@@ -68,9 +54,13 @@ class Openssl(Package):
 
     depends_on('zlib')
 
-    depends_on('perl@5.14.0:', type='test')
+    depends_on('perl@5.14.0:', type=('build', 'test'))
 
     parallel = False
+
+    @property
+    def libs(self):
+        return find_libraries(['libssl', 'libcrypto'], root=self.prefix.lib)
 
     def handle_fetch_error(self, error):
         tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
@@ -122,7 +112,9 @@ class Openssl(Package):
             # CentOS, Fedora, RHEL
             '/etc/pki/tls',
             # Ubuntu
-            '/usr/lib/ssl'
+            '/usr/lib/ssl',
+            # OpenSUSE
+            '/etc/ssl'
         ]
 
         pkg_dir = join_path(self.prefix, 'etc', 'openssl')

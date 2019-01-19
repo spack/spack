@@ -1,32 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import re
 import subprocess
-from six import string_types
-import sys
+from six import string_types, text_type
 
 import llnl.util.tty as tty
 
@@ -93,7 +73,11 @@ class Executable(object):
             *args (str): Command-line arguments to the executable to run
 
         Keyword Arguments:
+            _dump_env (dict): Dict to be set to the environment actually
+                used (envisaged for testing purposes only)
             env (dict): The environment to run the executable with
+            extra_env (dict): Extra items to add to the environment
+                (neither requires nor precludes env)
             fail_on_error (bool): Raise an exception if the subprocess returns
                 an error. Default is True. The return code is available as
                 ``exe.returncode``
@@ -115,6 +99,7 @@ class Executable(object):
           for ``input``
 
         By default, the subprocess inherits the parent's file descriptors.
+
         """
         # Environment
         env_arg = kwargs.get('env', None)
@@ -124,6 +109,10 @@ class Executable(object):
         else:
             env = self.default_env.copy()
             env.update(env_arg)
+        env.update(kwargs.get('extra_env', {}))
+        if '_dump_env' in kwargs:
+            kwargs['_dump_env'].clear()
+            kwargs['_dump_env'].update(env)
 
         fail_on_error = kwargs.pop('fail_on_error', True)
         ignore_errors = kwargs.pop('ignore_errors', ())
@@ -177,18 +166,28 @@ class Executable(object):
                 env=env)
             out, err = proc.communicate()
 
-            rc = self.returncode = proc.returncode
-            if fail_on_error and rc != 0 and (rc not in ignore_errors):
-                raise ProcessError('Command exited with status %d:' %
-                                   proc.returncode, cmd_line)
-
+            result = None
             if output is str or error is str:
                 result = ''
                 if output is str:
-                    result += to_str(out)
+                    result += text_type(out.decode('utf-8'))
                 if error is str:
-                    result += to_str(err)
-                return result
+                    result += text_type(err.decode('utf-8'))
+
+            rc = self.returncode = proc.returncode
+            if fail_on_error and rc != 0 and (rc not in ignore_errors):
+                long_msg = cmd_line
+                if result:
+                    # If the output is not captured in the result, it will have
+                    # been stored either in the specified files (e.g. if
+                    # 'output' specifies a file) or written to the parent's
+                    # stdout/stderr (e.g. if 'output' is not specified)
+                    long_msg += '\n' + result
+
+                raise ProcessError('Command exited with status %d:' %
+                                   proc.returncode, long_msg)
+
+            return result
 
         except OSError as e:
             raise ProcessError(
@@ -222,20 +221,6 @@ class Executable(object):
 
     def __str__(self):
         return ' '.join(self.exe)
-
-
-def to_str(content):
-    """Produce a str type from the content of a process stream obtained with
-       Popen.communicate.
-    """
-    # Prior to python3, Popen.communicate returns a str type. For python3 it
-    # returns a bytes type. In the case of python3 we decode the
-    # byte string to produce a str type. This will generate junk if the
-    # encoding is not UTF-8 (which includes ASCII).
-    if sys.version_info < (3, 0, 0):
-        return content
-    else:
-        return content.decode('utf-8')
 
 
 def which(*args, **kwargs):
