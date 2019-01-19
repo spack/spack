@@ -607,7 +607,7 @@ def make_compiler_list(detected_versions):
         compiler = compiler_cls(
             spec, operating_system, py_platform.machine(), paths
         )
-        return compiler
+        return [compiler]
 
     for compiler_id, by_compiler_id in compilers_d.items():
         _, selected_name_variation = max(
@@ -618,9 +618,8 @@ def make_compiler_list(detected_versions):
         # Add it to the list of compilers
         selected = by_compiler_id[selected_name_variation]
         operating_system, _, _ = compiler_id
-        make_compiler = getattr(operating_system, 'make_compiler', _default)
-        compiler_instance = make_compiler(compiler_id, selected)
-        compilers.append(compiler_instance)
+        make_compilers = getattr(operating_system, 'make_compilers', _default)
+        compilers.extend(make_compilers(compiler_id, selected))
 
     return compilers
 

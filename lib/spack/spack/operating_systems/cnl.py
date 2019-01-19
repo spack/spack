@@ -23,6 +23,7 @@ class Cnl(OperatingSystem):
         name = 'cnl'
         version = self._detect_crayos_version()
         super(Cnl, self).__init__(name, version)
+        self.modulecmd = module
 
     def __str__(self):
         return self.name + str(self.version)
@@ -34,39 +35,54 @@ class Cnl(OperatingSystem):
         latest_version = max(major_versions)
         return latest_version
 
-    def find_compilers(self, *paths):
-        # function-local so that cnl doesn't depend on spack.config
+    def arguments_to_detect_version_fn(self, paths):
         import spack.compilers
 
-        types = spack.compilers.all_compiler_types()
-        # TODO: was parmap before
-        compiler_lists = map(
-            lambda cmp_cls: self.find_compiler(cmp_cls, *paths), types)
+        command_arguments = []
+        for compiler_name in spack.compilers.supported_compilers():
+            cmp_cls = spack.compilers.class_for_compiler_name(compiler_name)
 
-        # ensure all the version calls we made are cached in the parent
-        # process, as well.  This speeds up Spack a lot.
-        clist = [comp for cl in compiler_lists for comp in cl]
-        return clist
+            # If the compiler doesn't have a corresponding
+            # Programming Environment, skip to the next
+            if cmp_cls.PrgEnv is None:
+                continue
 
-    def find_compiler(self, cmp_cls, *paths):
-        # function-local so that cnl doesn't depend on spack.config
-        import spack.spec
-
-        compilers = []
-        if cmp_cls.PrgEnv:
-            if not cmp_cls.PrgEnv_compiler:
+            if cmp_cls.PrgEnv_compiler is None:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            output = module('avail', cmp_cls.PrgEnv_compiler)
-            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_cls.PrgEnv_compiler
-            matches = re.findall(version_regex, output)
-            for name, version in matches:
-                v = version
-                comp = cmp_cls(
-                    spack.spec.CompilerSpec(name + '@' + v),
-                    self, "any",
-                    ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
+            compiler_id = spack.compilers.CompilerID(self, compiler_name, None)
+            detect_version_args = spack.compilers.DetectVersionArgs(
+                id=compiler_id, variation=(None, None),
+                language='cc', path='cc'
+            )
+            command_arguments.append(detect_version_args)
+        return command_arguments
 
-                compilers.append(comp)
+    def detect_version(self, detect_version_args):
+        import spack.compilers
+        modulecmd = self.modulecmd
+        compiler_name = detect_version_args.id.compiler_name
+        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
+        output = modulecmd('avail', compiler_cls.PrgEnv_compiler)
+        version_regex = r'(%s)/([\d\.]+[\d])' % compiler_cls.PrgEnv_compiler
+        matches = re.findall(version_regex, output)
+        version = tuple(version for _, version in matches)
+        compiler_id = detect_version_args.id
+        value = detect_version_args._replace(
+            id=compiler_id._replace(version=version)
+        )
+        return value, None
 
+    def make_compilers(self, compiler_id, paths):
+        import spack.spec
+        name = compiler_id.compiler_name
+        cmp_cls = spack.compilers.class_for_compiler_name(name)
+        compilers = []
+        for v in compiler_id.version:
+            comp = cmp_cls(
+                spack.spec.CompilerSpec(name + '@' + v),
+                self, "any",
+                ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
+
+            compilers.append(comp)
         return compilers
