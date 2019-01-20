@@ -5,7 +5,9 @@
 
 from spack import *
 import os
+import fnmatch
 import glob
+import platform
 from llnl.util.filesystem import join_path
 
 
@@ -16,9 +18,11 @@ class Tau(Package):
     """
 
     homepage = "http://www.cs.uoregon.edu/research/tau"
-    url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.tar.gz"
+    url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.tar.gz"
+    git      = "https://github.com/UO-OACISS/tau2"
 
-    version('2.28', '58ee68463d583e79c9f128e6a92c9b20')
+    version('develop', branch='master')
+    version('2.28', '68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
     version('2.27.2p1', 'b9cc42ee8afdcfefe5104ab0a8f23a23')
     version('2.27.2', 'b264ab0df78112f9a529e59a5f4dc191')
     version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
@@ -32,71 +36,41 @@ class Tau(Package):
     version('2.24', '57ce33539c187f2e5ec68f0367c76db4')
     version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
 
-    # TODO : shmem variant missing
-    variant('download', default=False,
-            description='Downloads and builds various dependencies')
     variant('scorep', default=False, description='Activates SCOREP support')
-    variant(
-        'otf',
-        default=False,
-        description='Activates support of Open Trace Format (OTF)')
-    variant(
-        'binutils',
-        default=False,
-        description='Activates support of BFD GNU Binutils')
-    variant(
-        'libunwind',
-        default=False,
-        description='Activates support of libunwind')
-    variant('likwid', default=False, description='Activates LIKWID support')
-    variant('papi', default=False, description='Activates Performance API')
-    variant('python', default=False, description='Activates Python support')
     variant('openmp', default=False, description='Use OpenMP threads')
-    variant(
-        'ompt',
-        default=False,
-        description='Activates OMPT instrumentation')
-    variant(
-        'opari',
-        default=False,
-        description='Activates Opari2 instrumentation')
-    variant('mpi', default=False,
-            description='Specify use of TAU MPI wrapper library')
-    variant(
-        'phase',
-        default=False,
-        description='Generate phase based profiles')
-    variant('comm', default=False,
-            description=' Generate profiles with MPI communicator info')
-    variant('shmem', default=False,
-            description='Activates SHMEM support')
-    variant('gasnet', default=False,
-            description='Activates GASNET support')
-    variant('cuda', default=False,
-            description='Activates CUDA support')
-    variant('beacon', default=False, description='Activates BEACON support')
+    variant('pthreads', default=True, description='Use POSIX threads')
+    variant('mpi', default=False, description='Specify use of TAU MPI wrapper library')
+    variant('phase', default=False, description='Generate phase based profiles')
+    variant('papi', default=True, description='Activates Performance API')
+    variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
+    variant('libunwind', default=True, description='Activates support of libunwind')
+    variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
+    variant('pdt', default=True, description='Use PDT for source code instrumentation')
+    variant('comm', default=False, description=' Generate profiles with MPI communicator info')
+    variant('python', default=False, description='Activates Python support')
+    variant('likwid', default=False, description='Activates LIKWID support')
+    variant('ompt', default=False, description='Activates OMPT instrumentation')
+    variant('opari', default=False, description='Activates Opari2 instrumentation')
+    variant('shmem', default=False, description='Activates SHMEM support')
+    variant('gasnet', default=False, description='Activates GASNET support')
+    variant('cuda', default=False, description='Activates CUDA support')
 
-    # Check MPI implementation
-    # try:
-    #  mpirunOut = os.popen('which mpirun')
-    # except OSError as e:
-    #  print "OSError > ", e.errno
-    #  print "OSError > ", e.strerror
+    # Support cross compiling.
+    # This is a _reasonable_ subset of the full set of TAU architectures supported: 
+    variant('craycnl', default=False, description='Build for Cray compute nodes')
+    variant('bgq', default=False, description='Build for IBM BlueGene/Q compute nodes')
+    variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
 
-    # TODO : Try to build direct OTF2 support? Some parts of the OTF support
-    # TODO : library in TAU are non-conformant,
-    # TODO : and fail at compile-time. Further, SCOREP is compiled with OTF2
-    # support.
-    depends_on('pdt')  # Required for TAU instrumentation
+    depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
-    depends_on('otf2@2.1', when='+otf')
+    depends_on('otf2@2.1:', when='+otf2')
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
-    depends_on('python', when='+python')
-    depends_on('gettext')
-    depends_on('binutils@2.27+libiberty')
-    depends_on('libunwind', when='~download')
-    depends_on("mpi", when='+mpi')
+    # TAU requires the ELF header support, libiberty and demangle.
+    depends_on('binutils+libiberty+headers~nls', when='+binutils')
+    depends_on('python@2.7:', when='+python')
+    depends_on('libunwind', when='+libunwind')
+    depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
     depends_on('gasnet', when='+gasnet')
 
@@ -104,7 +78,7 @@ class Tau(Package):
 
     def set_compiler_options(self):
 
-        useropt = ["-O2", self.rpath_args]
+        useropt = ["-O2 -g", self.rpath_args]
 
         ##########
         # Selecting a compiler with TAU configure is quite tricky:
@@ -147,15 +121,16 @@ class Tau(Package):
         # written script (nothing related to autotools).  As such it has
         # a few #peculiarities# that make this build quite hackish.
         options = ["-prefix=%s" % prefix,
-                   "-iowrapper",
-                   "-pdt=%s" % spec['pdt'].prefix]
-#       If download is active, download and build suggested dependencies
+                   "-iowrapper"]
 
-        options.extend(["-bfd=%s" % spec['binutils'].prefix])
-        options.extend(["-unwind=%s" % spec['libunwind'].prefix])
+        if '+pdt' in spec:
+            options.append("-pdt=%s" % spec['pdt'].prefix)
 
         if '+scorep' in spec:
             options.append("-scorep=%s" % spec['scorep'].prefix)
+
+        if '+pthreads' in spec:
+            options.append('-pthread')
 
         if '+likwid' in spec:
             options.append("-likwid=%s" % spec['likwid'].prefix)
@@ -163,57 +138,25 @@ class Tau(Package):
         if '+papi' in spec:
             options.append("-papi=%s" % spec['papi'].prefix)
 
-        if '+python' in spec:
-            options.append("-python")
-
         if '+openmp' in spec:
             options.append('-openmp')
 
         if '+opari' in spec:
             options.append('-opari')
 
+        if '+binutils' in spec:
+            options.append("-bfd=%s" % spec['binutils'].prefix)
+
+        if '+libunwind' in spec:
+            options.append("-unwind=%s" % spec['libunwind'].prefix)
+
+        if '+otf2' in spec:
+            options.append("-otf=%s" % spec['otf2'].prefix)
+
         if '+mpi' in spec:
-            str_mpi_inc_tmp = ""
-            str_mpi_inc = ""
-            str_mpi_libs_tmp = ""
-            str_mpi_libs = ""
-            str_mpi_library_tmp = ""
-            str_mpi_library = ""
-            str_mpi_prefix = spec['mpi'].prefix
-            str_mpi = os.popen(str_mpi_prefix + '/bin/mpicc -show').read()
-            list_mpi_opts = str_mpi.split()
-
-            for mpi_item in list_mpi_opts:
-
-                if "-I" in mpi_item:
-                    if str_mpi_inc_tmp == "":
-                        str_mpi_inc_tmp = mpi_item[2:]
-                    else:
-                        str_mpi_inc_tmp += " "
-                        str_mpi_inc_tmp += mpi_item[2:]
-
-                    str_mpi_inc = str_mpi_inc_tmp
-
-                if "-L" in mpi_item:
-                    str_mpi_libs_tmp = mpi_item[2:]
-                    str_mpi_libs = str_mpi_libs_tmp
-
-                if "-l" in mpi_item:
-                    str_mpi_library_tmp = mpi_item
-
-                    str_mpi_library = str_mpi_library_tmp
-
             options.append('-mpi')
-            options.append('-mpiinc=' + str_mpi_inc)
-            options.append('-mpilib=' + str_mpi_libs)
-            libintl = spec['gettext'].prefix + '/lib'
-            options.append(
-                '-mpilibrary=' +
-                str_mpi_library +
-                ' -L' +
-                libintl +
-                ' -Wl,-rpath,' +
-                libintl + ' -lintl')
+            if '+comm' in spec:
+                options.append('-PROFILECOMMUNICATORS')
 
         if '+shmem' in spec:
             options.append('-shmem')
@@ -227,8 +170,6 @@ class Tau(Package):
         if '+phase' in spec:
             options.append('-PROFILEPHASE')
 
-        if '+comm' in spec:
-            options.append('-PROFILECOMMUNICATORS')
 
         compiler_specific_options = self.set_compiler_options()
         options.extend(compiler_specific_options)

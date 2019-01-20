@@ -7,7 +7,6 @@ from spack import *
 import glob
 import os
 
-
 class Binutils(AutotoolsPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
@@ -30,6 +29,7 @@ class Binutils(AutotoolsPackage):
     variant('gold', default=True, description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
+    variant('headers', default=False, description='Install extra headers (e.g. ELF)')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -79,21 +79,17 @@ class Binutils(AutotoolsPackage):
         return configure_args
 
     def install(self, spec, prefix):
+        # perform the usual configure/build/install steps
         super(Binutils, self).install(spec, prefix)
 
-        extradir = os.path.join(prefix.include, 'extra')
-        mkdirp(extradir)
-        for current_file in glob.glob(os.path.join(self.build_directory,
-                                                   'bfd', '*.h')):
-            install(current_file, extradir)
-        for current_file in glob.glob(os.path.join(self.build_directory,
-                                                   'include', '*.h')):
-            install(current_file, extradir)
-        for subdir in ['aout', 'cgen', 'coff', 'elf', 'gdb', 'mach-o', 'nlm',
-                       'opcode', 'som', 'vms']:
-            outputdir = os.path.join(extradir, subdir)
-            mkdirp(outputdir)
+        # some packages (like TAU) need the ELF headers, so install them
+        # as a subdirectory in include/extras
+        if '+headers' in spec:
+            extradir = os.path.join(prefix.include, 'extra')
+            mkdirp(extradir)
+            # grab the full binutils set of headers
+            install_tree('include', extradir)
+            # also grab the headers from the bfd directory
             for current_file in glob.glob(os.path.join(self.build_directory,
-                                                       'include', subdir,
-                                                       '*')):
-                install(current_file, outputdir)
+                                                       'bfd', '*.h')):
+                install(current_file, extradir)
