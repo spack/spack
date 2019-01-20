@@ -2,11 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.build_systems import make_package_build_system
 
-from spack import *
-
-
-class Mpifileutils(CMakePackage):
+class Mpifileutils(Package):
     """mpiFileUtils is a suite of MPI-based tools to manage large datasets,
        which may vary from large directory trees to large files.
        High-performance computing users often generate large datasets with
@@ -39,7 +37,11 @@ class Mpifileutils(CMakePackage):
 
     depends_on('libarchive')
 
-    depends_on('cmake@3.1', when='@0.9:', type='build')
+    depends_on('cmake@3.1:~openssl', when='@0.9:', type='build')
+
+    variant('build_type', default='RelWithDebInfo',
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     variant('xattr', default=True,
         description="Enable code for extended attributes")
@@ -56,8 +58,23 @@ class Mpifileutils(CMakePackage):
         description="Install experimental tools")
     # --enable-experimental fails with v0.6 and earlier
     conflicts('+experimental', when='@:0.6')
+    conflicts('build_type=MinSizeRel', when='@:0.8.1')
 
-    def configure_args(self):
+    phases = ['choose_build_system', 'autoreconf_or_pass',
+              'configure_or_cmake', 'build', 'install']
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags' and self.spec.satisfies('@:0.8.1'):
+            #handle cmake-style variant for pre-cmake versions
+            build_type = self.spec.variants['build_type'].value
+            if build_type in ('Debug', 'RelWithDebInfo'):
+                flags.append('-g')
+            elif build_type in ('Release', 'RelWithDebInfo'):
+                flags.append('-O2')
+        return (flags, None, None)
+
+    # 0.9 and later are cmake packages. Use these cmake args
+    def cmake_args(self):
         args = []
         args.append("-DWITH_DTCMP_PREFIX=%s" % self.spec['dtcmp'].prefix)
         args.append("-DWITH_LibCircle_PREFIX=%s" % self.spec['libcircle'].prefix)
@@ -84,8 +101,8 @@ class Mpifileutils(CMakePackage):
 
         return args
 
-    # 0.8.1 and earlier are autotools build
-    def configure_args_autotools(self):
+    # 0.8.1 and earlier are autotools build. use these configure args
+    def configure_args(self):
         args = []
         args.append("CPPFLAGS=-I%s/src/common" % pwd())
         args.append("libarchive_CFLAGS=-I%s"
@@ -114,19 +131,23 @@ class Mpifileutils(CMakePackage):
                 args.append('--enable-experimental')
             else:
                 args.append('--disable-experimental')
+
         return args
 
-    @when('@:0.8.1')
-    def cmake(self, spec, prefix):
-        pass
+    def choose_build_system(self, spec, prefix):
+        if spec.satisfies('@:0.8.1'):
+            phase_name_changes = {
+                'configure': 'configure_or_cmake',
+                'autoreconf': 'autoreconf_or_pass'
+            }
+            make_package_build_system(self, AutotoolsPackage,
+                                      phase_name_changes)
+        else:
+            phase_name_changes = {
+                'cmake': 'configure_or_cmake',
+            }
+            make_package_build_system(self, CMakePackage, phase_name_changes)
 
-    @when('@:0.8.1')
-    def build(self, spec, prefix):
+    @when('@0.9:')
+    def autoreconf(self, spec, prefix):
         pass
-
-    @when('@:0.8.1')
-    def install(self, spec, prefix):
-        configure_args = self.configure_args_autotools()
-        configure(configure_args)
-        make()
-        make('install')
