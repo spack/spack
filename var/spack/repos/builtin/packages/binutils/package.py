@@ -7,6 +7,7 @@ from spack import *
 import glob
 import os
 
+
 class Binutils(AutotoolsPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
