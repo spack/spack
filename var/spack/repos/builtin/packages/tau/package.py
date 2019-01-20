@@ -189,7 +189,7 @@ class Tau(Package):
             found = False
             file_to_find = 'libpython*.so'
             if (platform.system() == "Darwin"):
-                file_to_find='libpython*.dylib'
+                file_to_find = 'libpython*.dylib'
             for root, dirs, files in os.walk(spec['python'].prefix.lib):
                 for filename in fnmatch.filter(files, file_to_find):
                     lib_path = root
