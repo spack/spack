@@ -56,7 +56,7 @@ class Tau(Package):
     variant('cuda', default=False, description='Activates CUDA support')
 
     # Support cross compiling.
-    # This is a _reasonable_ subset of the full set of TAU architectures supported: 
+    # This is a _reasonable_ subset of the full set of TAU architectures supported:
     variant('craycnl', default=False, description='Build for Cray compute nodes')
     variant('bgq', default=False, description='Build for IBM BlueGene/Q compute nodes')
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
@@ -170,6 +170,33 @@ class Tau(Package):
         if '+phase' in spec:
             options.append('-PROFILEPHASE')
 
+        if '+python' in spec:
+            options.append('-python')
+            # find Python.h (i.e. include/python2.7/Python.h)
+            include_path=spec['python'].prefix.include
+            found=False
+            for root, dirnames, filenames in os.walk(spec['python'].prefix.include):
+                for filename in fnmatch.filter(filenames, 'Python.h'):
+                    include_path=root
+                    break
+                    found=True
+                if found:
+                    break
+            options.append("-pythoninc=%s" % include_path)
+            # find libpython*.* (i.e. lib/python2.7/libpython2.7.so)
+            lib_path=spec['python'].prefix.lib
+            found=False
+            file_to_find='libpython*.so'
+            if (platform.system() == "Darwin"):
+                file_to_find='libpython*.dylib'
+            for root, dirnames, filenames in os.walk(spec['python'].prefix.lib):
+                for filename in fnmatch.filter(filenames, file_to_find):
+                    lib_path=root
+                    break
+                    found=True
+                if found:
+                    break
+            options.append("-pythonlib=%s" % lib_path)
 
         compiler_specific_options = self.set_compiler_options()
         options.extend(compiler_specific_options)
