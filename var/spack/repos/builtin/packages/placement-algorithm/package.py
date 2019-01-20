@@ -13,7 +13,7 @@ class PlacementAlgorithm(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/placementAlgorithm"
 
     version('develop', branch='master')
-    version('2.0.0', tag='placement-algorithm-v2.0.0', preferred=True)
+    version('2.0.1', tag='placement-algorithm-v2.0.1', preferred=True)
 
     build_directory = 'python'
 
