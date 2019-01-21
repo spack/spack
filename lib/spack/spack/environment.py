@@ -551,7 +551,10 @@ class Environment(object):
 
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
-                del self.specs_by_hash[dag_hash]
+                try:
+                    del self.specs_by_hash[dag_hash]
+                except KeyError:
+                    pass
 
     def concretize(self, force=False):
         """Concretize user_specs in this environment.
