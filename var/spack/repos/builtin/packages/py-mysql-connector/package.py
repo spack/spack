@@ -22,5 +22,5 @@ class PyMysqlConnector(PythonPackage):
     # https://github.com/mysql/mysql-connector-python/pull/9
     patch('single-version.patch')
 
-    depends_on('py-setuptools', type=('build','run'))
-    depends_on('py-protobuf@3.0.0:', type=('build','run'))
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-protobuf@3.0.0:', type=('build', 'run'))
