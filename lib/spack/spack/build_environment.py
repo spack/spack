@@ -633,7 +633,10 @@ def load_external_modules(pkg):
 
 
 def setup_package(pkg, dirty):
-    """Execute all environment setup routines."""
+    """Execute all environment setup routines.
+    dirty (bool): If True, do NOT clean the environment before
+        building.
+    """
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
 
