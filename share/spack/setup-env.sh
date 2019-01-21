@@ -279,7 +279,7 @@ _sp_multi_pathadd() {
         setopt sh_word_split
     fi
     for pth in "$2"; do
-        _spack_pathadd "$1" "$pth"
+        _spack_pathadd "$1" "$pth/$_sp_sys_type"
     done
 }
 _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
