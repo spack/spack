@@ -370,8 +370,10 @@ class Root(CMakePackage):
                 'ON' if '+postgres' in spec else 'OFF'),
             '-Dpythia6:BOOL=%s' % (
                 'ON' if '+pythia6' in spec else 'OFF'),
-            # '-Dpythia8:BOOL=%s' % ( - not suported by spack
-            #     'ON' if '+pythia8' in spec else 'OFF'),
+            # Force not to build pythia8 (not supported yet by spack), to avoid
+            # wrong defaults from ROOT at build time
+            '-Dpythia8:BOOL=%s' % (
+                'ON' if '+pythia8' in spec else 'OFF'),
             '-Dpython:BOOL=%s' % (
                 'ON' if '+python' in spec else 'OFF'),
             '-Dqt:BOOL=%s' % (
