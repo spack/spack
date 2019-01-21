@@ -50,6 +50,7 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
+    variant('xdmf', default=False, description="Enable XDMF files support")
 
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
@@ -110,6 +111,8 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    depends_on('hdf5+hl+mpi', when='+xdmf')
+    depends_on('boost+mpi', when='+xdmf')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libogg')
