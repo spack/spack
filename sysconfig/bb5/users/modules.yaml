@@ -36,6 +36,7 @@ modules:
       - git
       - neuron
       - neurodamus
+      - neurodamus-neocortex
       - parquet-converters
       - python
       - reportinglib
