@@ -330,7 +330,8 @@ class Gcc(AutotoolsPackage):
             options += [
                 '--with-cuda-driver-include={0}'.format(
                     spec['cuda'].prefix.include),
-                '--with-cuda-driver-lib={0}'.format(spec['cuda'].libs.directories[0]),
+                '--with-cuda-driver-lib={0}'.format(
+                    spec['cuda'].libs.directories[0]),
             ]
 
             with working_dir('nvptx-tools'):
