@@ -2,9 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.build_systems import make_package_build_system
-
-class Mpifileutils(Package):
+class Mpifileutils(DynamicInheritancePackage):
     """mpiFileUtils is a suite of MPI-based tools to manage large datasets,
        which may vary from large directory trees to large files.
        High-performance computing users often generate large datasets with
@@ -37,7 +35,7 @@ class Mpifileutils(Package):
 
     depends_on('libarchive')
 
-    depends_on('cmake@3.1:~openssl', when='@0.9:', type='build')
+    depends_on('cmake@3.1', when='@0.9:', type='build')
 
     variant('build_type', default='RelWithDebInfo',
             description='CMake build type',
@@ -60,8 +58,10 @@ class Mpifileutils(Package):
     conflicts('+experimental', when='@:0.6')
     conflicts('build_type=MinSizeRel', when='@:0.8.1')
 
-    phases = ['choose_build_system', 'autoreconf_or_pass',
-              'configure_or_cmake', 'build', 'install']
+    classes = {
+        AutotoolsPackage: '@:0.8.1',
+        CMakePackage: '@0.9:'
+    }
 
     def flag_handler(self, name, flags):
         if name == 'cflags' and self.spec.satisfies('@:0.8.1'):
@@ -133,21 +133,3 @@ class Mpifileutils(Package):
                 args.append('--disable-experimental')
 
         return args
-
-    def choose_build_system(self, spec, prefix):
-        if spec.satisfies('@:0.8.1'):
-            phase_name_changes = {
-                'configure': 'configure_or_cmake',
-                'autoreconf': 'autoreconf_or_pass'
-            }
-            make_package_build_system(self, AutotoolsPackage,
-                                      phase_name_changes)
-        else:
-            phase_name_changes = {
-                'cmake': 'configure_or_cmake',
-            }
-            make_package_build_system(self, CMakePackage, phase_name_changes)
-
-    @when('@0.9:')
-    def autoreconf(self, spec, prefix):
-        pass
