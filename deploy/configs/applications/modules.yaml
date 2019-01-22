@@ -44,7 +44,7 @@ modules:
     blacklist:
       - '%gcc'
       - '%intel'
-      - '%llvm'
+      - '%clang'
       - '%pgi'
     naming_scheme: '${PACKAGE}/${VERSION}'
     all:
