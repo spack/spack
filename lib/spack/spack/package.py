@@ -1322,10 +1322,17 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             self.spec, spack.store.layout, explicit=explicit)
         return True
 
-    def write_spconfig(self, spconfig_fname, dirty):
+    def write_spconfig(self, spack_env, spconfig_fname, dirty):
         """Execute all environment setup routines (dummy virtual function).
+        spack_env: Environment
+            If installing into an environment, this is it
+        spconfig_fname:
+            Leaf of filename for the resulting spconfig file.
         dirty (bool): If True, do NOT clean the environment before
             building.
+
+        Returns:
+            name of file written
         """
         tty.die('`spack install --setup` is not supported '
                 'for packages of type {0}'.format(self.build_system_class))
@@ -1342,6 +1349,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                    explicit=False,
                    tests=False,
                    dirty=None,
+                   spack_env=None,
                    setup=set(),
                    **kwargs):
         """Called by commands to install a package and its dependencies.
@@ -1371,6 +1379,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 all packages, or a list of package names to run tests for some
             dirty (bool): Don't clean the build environment before installing.
             force (bool): Install again, even if already installed.
+            spack_env (Enviroment):
+                If installing in an environment, this is it.
+            setups (set):
+                Names of packages to be setup, instead of installed.
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
@@ -1424,6 +1436,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     make_jobs=make_jobs,
                     tests=tests,
                     dirty=dirty,
+                    spack_env=spack_env,
                     setup=setup,
                     **kwargs)
 
@@ -1441,7 +1454,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             # Calls virtual function of subclass
             # (eg: CMakePackage, MakefilePackage, etc.)
-            self.write_spconfig(spconfig_fname, dirty)
+            spconfig_fname = self.write_spconfig(spack_env, spconfig_fname, dirty)
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
@@ -1562,7 +1575,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         try:
             spack.store.layout.create_install_directory(self.spec)
-        except directory_layout.InstallDirectoryAlreadyExistsError:
+        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
             # Abort install if install directory exists.
             # But do NOT remove it (you'd be overwriting someone else's stuff)
             tty.warn("Keeping existing install prefix in place.")

@@ -643,7 +643,7 @@ class Environment(object):
                 concrete = spec.concretized()
                 self._add_concrete_spec(spec, concrete)
 
-        concrete.package.do_install(**install_args)
+        concrete.package.do_install(spack_env=self, **install_args)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.

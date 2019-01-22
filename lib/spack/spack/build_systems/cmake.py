@@ -16,7 +16,7 @@ from spack.util.environment import filter_system_paths
 from llnl.util.filesystem import set_executable
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
-
+from spack.util.executable import which
 
 def spack_transitive_include_path():
     return ';'.join(
@@ -257,28 +257,38 @@ class CMakePackage(PackageBase):
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
 
-    def write_spconfig(self, spconfig_fname, dirty):
+    def write_spconfig(self, spack_env, spconfig_fname, dirty):
         """Writes the spconfig.py (CMake setup file) to a file.
+        spack_env: Environment
+            If installing into an environment, this is it
+        spconfig_fname:
+            Leaf of filename for the resulting spconfig file.
         dirty (bool): If True, do NOT clean the environment before
             building.
+
+        Returns:
+            name of file written
         """
 
         # Execute all environment setup routines.
         spack.build_environment.setup_package(self, dirty)
 
-        with open(spconfig_fname, 'w') as fout:
+        fname = os.path.join(spack_env.path, spconfig_fname) \
+            if spack_env is not None else spconfig_fname
+
+        with open(fname, 'w') as fout:
             self._write_spconfig(fout, dirty)
             fout.write('\nproc = subprocess.Popen(cmd, env=env)\n'
                        'proc.wait()\n')
 
-        set_executable(spconfig_fname)
-        return spconfig_fname
+        set_executable(fname)
+        return fname
 
     def _write_spconfig(self, fout, dirty):
         """Writes the spconfig.py file to a stream."""
 
         # Set-up the environment
-        _cmd = [str(spack.which('cmake'))] + \
+        _cmd = [str(which('cmake'))] + \
             self.std_cmake_args + self.cmake_args()
 
         # No verbose makefile for interactive builds
