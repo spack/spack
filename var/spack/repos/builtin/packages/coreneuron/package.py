@@ -38,13 +38,14 @@ class Coreneuron(CMakePackage):
 
     version('develop', git=url, submodules=True)
     version('hippocampus', git=url, submodules=True)
+    version('master', git=url, submodules=True)
     version('plasticity', git=url, preferred=True, submodules=True)
 
     variant('debug', default=False, description='Build debug with O0')
     variant('gpu', default=False, description="Enable GPU build")
     variant('knl', default=False, description="Enable KNL specific flags")
     variant('mpi', default=True, description="Enable MPI support")
-    variant('openmp', default=True, description="Enable OpenMP support")
+    variant('openmp', default=False, description="Enable OpenMP support")
     variant('profile', default=False, description="Enable profiling using Tau")
     variant('report', default=True, description="Enable reports using ReportingLib")
     variant('shared', default=True, description="Build shared library")
@@ -56,6 +57,7 @@ class Coreneuron(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('neurodamus-base@plasticity', when='@plasticity')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
+    depends_on('neurodamus-base@master', when='@master')
     depends_on('reportinglib', when='+report')
     depends_on('reportinglib+profile', when='+report+profile')
     depends_on('tau', when='+profile')
@@ -79,7 +81,7 @@ class Coreneuron(CMakePackage):
         if 'bgq' in spec.architecture and '%xl' in spec:
             flags = '-O3 -qtune=qp -qarch=qp -q64 -qhot=simd -qsmp -qthreaded -g'
         if '%intel' in spec:
-            flags = '-g -O2 -qopt-report=5'
+            flags = '-g -xHost -O2 -qopt-report=5'
             if '+knl' in spec:
                 flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
         if '+gpu' in spec:

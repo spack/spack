@@ -54,6 +54,7 @@ class Neurodamus(NeurodamusBase):
     depends_on('coreneuron', when='+coreneuron')
     depends_on('coreneuron+profile', when='+profile')
     depends_on('coreneuron@plasticity', when='@plasicity')
+    depends_on('coreneuron@master', when='@master')
 
     depends_on('neurodamus-base@master', when='@master')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
@@ -73,7 +74,6 @@ class Neurodamus(NeurodamusBase):
     # coreneuron support is available for plasticity model
     # and requires python support in neuron
     conflicts('@hippocampus', when='+coreneuron')
-    conflicts('@master', when='+coreneuron')
     conflicts('^neuron~python', when='+coreneuron')
     conflicts('+sonata', when='~syntool')
 
