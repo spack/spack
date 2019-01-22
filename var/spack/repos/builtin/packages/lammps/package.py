@@ -58,6 +58,12 @@ class Lammps(CMakePackage):
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
             description='Build with mpi')
+    variant('jpeg', default=True,
+            description='Build with jpeg support')
+    variant('png', default=True,
+            description='Build with png support')
+    variant('ffmpeg', default=True,
+            description='Build with ffmpeg support')
 
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
@@ -75,6 +81,9 @@ class Lammps(CMakePackage):
     depends_on('mpi', when='+user-lb')
     depends_on('mpi', when='+user-h5md')
     depends_on('hdf5', when='+user-h5md')
+    depends_on('libjpeg', when='+jpeg')
+    depends_on('libpng', when='+png')
+    depends_on('ffmpeg', when='+ffmpeg')
 
     conflicts('+body', when='+poems@:20180628')
     conflicts('+latte', when='@:20170921')
@@ -109,6 +118,13 @@ class Lammps(CMakePackage):
 
         if spec.satisfies('@20180629:+lib'):
             args.append('-DBUILD_LIB=ON')
+
+        args.append('-DWITH_JPEG={0}'.format(
+            'ON' if '+jpeg' in spec else 'OFF'))
+        args.append('-DWITH_PNG={0}'.format(
+            'ON' if '+png' in spec else 'OFF'))
+        args.append('-DWITH_FFMPEG={0}'.format(
+            'ON' if '+ffmpeg' in spec else 'OFF'))
 
         for pkg in self.supported_packages:
             opt = '-D{0}_{1}'.format(pkg_prefix, pkg.upper())
