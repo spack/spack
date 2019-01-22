@@ -89,5 +89,5 @@ class Binutils(AutotoolsPackage):
             install_tree('include', extradir)
             # also grab the headers from the bfd directory
             for current_file in glob.glob(join_path(self.build_directory,
-                                                       'bfd', '*.h')):
+                                                    'bfd', '*.h')):
                 install(current_file, extradir)
