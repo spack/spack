@@ -32,6 +32,7 @@ class PyDeeptools(PythonPackage):
     homepage = "https://pypi.io/packages/source/d/deepTools"
     url      = "https://pypi.io/packages/source/d/deepTools/deepTools-2.5.2.tar.gz"
 
+    version('3.1.3', 'f863c1d06cc6ab35e8bfd133ea0f9fbf')
     version('2.5.2', 'ba8a44c128c6bb1ed4ebdb20bf9ae9c2')
 
     depends_on('python@2.7:', type=('build', 'run'))
