@@ -66,6 +66,9 @@ class Llvm(CMakePackage):
     depends_on('python')
     depends_on('py-lit', type=('build', 'run'))
 
+    # openmp dependencies
+    depends_on('perl-data-dumper', type=('build'))
+
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
     depends_on('swig', when='+lldb')
