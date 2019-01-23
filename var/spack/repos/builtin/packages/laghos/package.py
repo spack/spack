@@ -19,6 +19,7 @@ class Laghos(MakefilePackage):
     git      = "https://github.com/CEED/Laghos.git"
 
     version('develop', branch='master')
+    version('2.0', sha256='dd3632d5558889beec2cd3c49eb60f633f99e6d886ac868731610dd006c44c14')
     version('1.1', sha256='53b9bfe2af263c63eb4544ca1731dd26f40b73a0d2775a9883db51821bf23b7f')
     version('1.0', '4c091e115883c79bed81c557ef16baff')
 
