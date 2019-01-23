@@ -28,6 +28,9 @@ class DynamicInheritancePackage(PackageBase):
               'build', 'install', 'bdist',
               'unset_build_system']
 
+    # Users can request non-standard phases available from a build system
+    include_phases = []
+
     def set_build_system(self, spec, prefix):
         # Save old class information to restore later
         self.old_cls_dict = self.__class__.__dict__
@@ -40,12 +43,12 @@ class DynamicInheritancePackage(PackageBase):
 
         # Remove phases not used by this build system
         # keep phases we have methods for and build system phases
-        for phase in self.phases:
-            if phase not in self.__dict__ and phase not in self.cls.phases:
-                setattr(self, '_InstallPhase_%s' % phase, None)
+        for ph in self.phases:
+            if ph not in self.include_phases and ph not in self.cls.phases:
+                setattr(self, '_InstallPhase_%s' % ph, None)
 
     def unset_build_system(self, spec, prefix):
-        # This probably doesn't overwrite InstallPhse objects properly.
+        # This probably doesn't overwrite InstallPhase objects properly.
         # However, they are only used at build time, so we will call
         # set_build_system before attempting to use any of them. The
         # InstallPhase objects set to None are on the package, not the class,

@@ -42,7 +42,7 @@ class Mpifileutils(DynamicInheritancePackage):
 
     depends_on('libarchive')
 
-    depends_on('cmake@3.1', when='@0.9:', type='build')
+    depends_on('cmake@3.1:', when='@0.9:', type='build')
 
     variant('build_type', default='RelWithDebInfo',
             description='CMake build type',
