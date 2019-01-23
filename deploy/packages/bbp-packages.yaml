@@ -22,7 +22,7 @@ packages:
       - python
     specs:
       - brainbuilder@0.9.1
-      - spykfunc@0.12.0
+      - spykfunc@0.12.1
       - py-pytouchreader@1.2.0
 
   gnu-stable-parallel:
