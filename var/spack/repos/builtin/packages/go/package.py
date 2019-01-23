@@ -115,7 +115,8 @@ class Go(Package):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if os.environ.get('GOROOT', False):
-            tty.warn('GOROOT is set, this is not recommended')
+            with self.logger.force_echo():
+                tty.warn('GOROOT is set, this is not recommended')
 
         path_components = []
         # Set GOPATH to include paths of dependencies

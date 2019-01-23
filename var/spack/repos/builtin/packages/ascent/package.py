@@ -431,5 +431,7 @@ class Ascent(Package):
         cfg.close()
 
         host_cfg_fname = os.path.abspath(host_cfg_fname)
-        tty.info("spack generated conduit host-config file: " + host_cfg_fname)
+        with self.logger.force_echo():
+            msg = "spack generated conduit host-config file: " + host_cfg_fname
+            tty.info(msg)
         return host_cfg_fname

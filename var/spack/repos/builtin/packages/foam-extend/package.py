@@ -176,13 +176,15 @@ class FoamExtend(Package):
 
                 run_env.extend(mods)
                 minimal = False
-                tty.info('foam-extend env: {0}'.format(bashrc))
+                with self.logger.force_echo():
+                    tty.info('foam-extend env: {0}'.format(bashrc))
             except Exception:
                 minimal = True
 
         if minimal:
             # pre-build or minimal environment
-            tty.info('foam-extend minimal env {0}'.format(self.prefix))
+            with self.logger.force_echo():
+                tty.info('foam-extend minimal env {0}'.format(self.prefix))
             run_env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
             run_env.set('FOAM_PROJECT_DIR', self.projectdir)
             run_env.set('WM_PROJECT_DIR', self.projectdir)

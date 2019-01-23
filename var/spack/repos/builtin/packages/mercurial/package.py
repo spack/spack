@@ -71,10 +71,11 @@ class Mercurial(PythonPackage):
         certificate = python('-c', 'import certifi; ' + print_str)
 
         if not certificate:
-            tty.warn('CA certificate not found. You may not be able to '
-                     'connect to an HTTPS server. If your CA certificate '
-                     'is in a non-standard location, you should add it to '
-                     '{0}.'.format(hgrc_filename))
+            with self.logger.force_echo():
+                tty.warn('CA certificate not found. You may not be able to '
+                         'connect to an HTTPS server. If your CA certificate '
+                         'is in a non-standard location, you should add it to '
+                         '{0}.'.format(hgrc_filename))
 
         # Write the global mercurial configuration file
         with open(hgrc_filename, 'w') as hgrc:

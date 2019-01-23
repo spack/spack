@@ -112,10 +112,12 @@ class Catalyst(CMakePackage):
         if not os.path.isdir(catalyst_source_dir):
             os.mkdir(catalyst_source_dir)
             subprocess.check_call(command)
-            tty.msg("Generated catalyst source in %s" % self.stage.path)
+            with self.logger.force_echo():
+                tty.msg("Generated catalyst source in %s" % self.stage.path)
         else:
-            tty.msg("Already generated %s in %s" % (self.name,
-                                                    self.stage.path))
+            with self.logger.force_echo():
+                tty.msg("Already generated %s in %s" % (self.name,
+                                                        self.stage.path))
 
     def setup_environment(self, spack_env, run_env):
         # paraview 5.5 and later

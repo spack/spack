@@ -42,7 +42,8 @@ class OfPrecice(Package):
         add_extra_files(self, self.common, self.assets)
         # Emit openfoam version immediately, if we resolved the wrong version
         # it takes a very long time to rebuild!
-        tty.info('Build for ' + self.spec['openfoam'].format('$_$@$%@+$+'))
+        with self.logger.force_echo():
+            tty.info('Build for ' + self.spec['openfoam'].format('$_$@$%@+$+'))
 
     def configure(self, spec, prefix):
         """Generate spack-config.sh file."""

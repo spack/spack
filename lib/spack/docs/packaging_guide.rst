@@ -2823,9 +2823,9 @@ if you want to run commands in that environment to test them out, you
 can use the :ref:`cmd-spack-env` command, documented
 below.
 
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 Failing the build
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 Sometimes you don't want a package to successfully install unless some
 condition is true.  You can explicitly cause the build to fail from
@@ -2833,8 +2833,30 @@ condition is true.  You can explicitly cause the build to fail from
 
 .. code-block:: python
 
-   if spec.architecture.startswith('darwin'):
-       raise InstallError('This package does not build on Mac OS X!')
+   if spec.satisfies('platform=darwin'):
+       raise InstallError('This package does not build on macOS')
+
+
+^^^^^^^^^^^^^^^^^
+Printing warnings
+^^^^^^^^^^^^^^^^^
+
+Sometimes you want to issue a warning to the user if some condition is
+met, but don't necessarily want to crash the build. By default, Spack
+catches all stdout and stderr and sends it to the build log. This can
+be avoided like so:
+
+.. code-block:: python
+
+   if spec.satisfies('platform=darwin'):
+      with self.logger.force_echo():
+         tty.warn('This package may not work properly on macOS')
+
+
+This will send a warning message directly to the terminal and continue
+the installation process. See :py:mod:`llnl.util.tty` for details on
+other ``tty`` functions that can be used.
+
 
 .. _shell-wrappers:
 
@@ -3157,7 +3179,8 @@ Or for combinations of spec constraints:
 .. code-block:: python
 
    if spec.satisfies('@1.2%intel'):
-       tty.error("Version 1.2 breaks when using Intel compiler!")
+       with self.logger.force_echo():
+          tty.error("Version 1.2 breaks when using Intel compiler!")
 
 You can also do similar satisfaction tests for dependencies:
 

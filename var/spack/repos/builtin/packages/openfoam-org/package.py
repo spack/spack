@@ -183,7 +183,8 @@ class OpenfoamOrg(Package):
             if original != target and not os.path.lexists(target):
                 os.rename(original, target)
                 os.symlink(target, original)
-                tty.info('renamed {0} -> {1}'.format(original, target))
+                with self.logger.force_echo():
+                    tty.info('renamed {0} -> {1}'.format(original, target))
 
     def patch(self):
         """Adjust OpenFOAM build for spack.

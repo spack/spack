@@ -348,4 +348,5 @@ class Qmcpack(CMakePackage, CudaPackage):
                 warn  = 'Unit tests passed, but short tests have failed.\n'
                 warn += 'Please review failed tests before proceeding\n'
                 warn += 'with production calculations.\n'
-                tty.msg(warn)
+                with self.logger.force_echo():
+                    tty.msg(warn)

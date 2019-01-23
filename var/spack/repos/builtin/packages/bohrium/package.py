@@ -260,7 +260,8 @@ class Bohrium(CMakePackage, CudaPackage):
 
         # Run tests for each available stack
         for bh_stack in stacks:
-            tty.info("Testing with bohrium stack '" + bh_stack + "'")
+            with self.logger.force_echo():
+                tty.info("Testing with bohrium stack '" + bh_stack + "'")
             test_env["BH_STACK"] = bh_stack
 
             cpp_output = test_cxxadd(output=str, env=test_env)

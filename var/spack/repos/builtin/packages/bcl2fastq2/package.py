@@ -72,9 +72,11 @@ class Bcl2fastq2(Package):
             f()                 # call the original expand_archive()
             with working_dir(self.stage.path):
                 if os.path.isdir('bcl2fastq'):
-                    tty.msg("The tarball has already been unpacked")
+                    with self.logger.force_echo():
+                        tty.msg("The tarball has already been unpacked")
                 else:
-                    tty.msg("Unpacking bcl2fastq2 tarball")
+                    with self.logger.force_echo():
+                        tty.msg("Unpacking bcl2fastq2 tarball")
                     tarball = glob.glob(join_path('spack-expanded-archive',
                                         'bcl2fastq2*.tar.gz'))[0]
                     copy(tarball, '.')
@@ -82,7 +84,8 @@ class Bcl2fastq2(Package):
                     tar = which('tar')
                     tarball = os.path.basename(tarball)
                     tar('-xf', tarball)
-                    tty.msg("Finished unpacking bcl2fastq2 tarball")
+                    with self.logger.force_echo():
+                        tty.msg("Finished unpacking bcl2fastq2 tarball")
         return wrap
 
     def install(self, spec, prefix):

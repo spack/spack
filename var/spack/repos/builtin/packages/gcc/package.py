@@ -395,8 +395,9 @@ class Gcc(AutotoolsPackage):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""
         if not self.spec_dir:
-            tty.warn('Could not install specs for {0}.'.format(
-                     self.spec.format('$_$@')))
+            with self.logger.force_echo():
+                tty.warn('Could not install specs for {0}.'.format(
+                         self.spec.format('$_$@')))
             return
 
         gcc = self.spec['gcc'].command

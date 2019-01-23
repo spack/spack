@@ -1482,6 +1482,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         # Spawn a daemon that reads from a pipe and redirects
                         # everything to log_path
                         with log_output(self.log_path, echo, True) as logger:
+                            self.logger = logger
                             for phase_name, phase_attr in zip(
                                     self.phases, self._InstallPhase_phases):
 
