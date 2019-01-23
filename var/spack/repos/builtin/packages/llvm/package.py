@@ -582,6 +582,8 @@ class Llvm(CMakePackage):
 
         cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
+            '-DLLVM_ENABLE_RTTI:BOOL=ON',
+            '-DLLVM_ENABLE_EH:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
             '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
         ]
