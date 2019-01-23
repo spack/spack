@@ -1487,7 +1487,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                 if phase:
                                     with logger.force_echo():
                                         tty.msg(
-                                            "Executing phase: '%s'" % phase_name)
+                                            "Executing phase: '%s'" %
+                                            phase_name)
 
                                     # Redirect stdout and stderr to daemon pipe
                                     phase(self.spec, self.prefix)

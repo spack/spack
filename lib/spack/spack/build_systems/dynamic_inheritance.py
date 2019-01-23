@@ -8,6 +8,7 @@ from types import MethodType
 
 from spack.package import PackageBase, InstallPhase, run_after
 
+
 class DynamicInheritancePackage(PackageBase):
     build_system_class = 'DynamicInheritancePackage'
 
@@ -25,8 +26,7 @@ class DynamicInheritancePackage(PackageBase):
               'autoreconf',
               'configure', 'cmake', 'meson', 'edit', 'build_ext', 'qmake',
               'build', 'install', 'bdist',
-              'unset_build_system'
-    ]
+              'unset_build_system']
 
     def set_build_system(self, spec, prefix):
         # Save old class information to restore later
@@ -121,7 +121,7 @@ def make_package_build_system(pkg, build_system):
             if isinstance(cur_attr, functools.partial):
                 try:
                     multimethod = pkg.__class__.__dict__[name]
-                except:
+                except Exception:
                     continue
                 new_attr = get_func_from_method(
                     steal_attribute(pkg,

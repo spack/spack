@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
 class Mpifileutils(DynamicInheritancePackage):
     """mpiFileUtils is a suite of MPI-based tools to manage large datasets,
        which may vary from large directory trees to large files.
@@ -21,6 +23,11 @@ class Mpifileutils(DynamicInheritancePackage):
     version('0.8', '1082600e7ac4e6b2c13d91bbec40cffb')
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
+
+    classes = {
+        AutotoolsPackage: '@:0.8.1',
+        CMakePackage: '@0.9:'
+    }
 
     conflicts('platform=darwin')
 
@@ -56,16 +63,16 @@ class Mpifileutils(DynamicInheritancePackage):
         description="Install experimental tools")
     # --enable-experimental fails with v0.6 and earlier
     conflicts('+experimental', when='@:0.6')
-    conflicts('build_type=MinSizeRel', when='@:0.8.1')
 
-    classes = {
-        AutotoolsPackage: '@:0.8.1',
-        CMakePackage: '@0.9:'
-    }
+    # return code bug in older versions prevents building with clang
+    conflicts('%clang', when='@:0.8.1')
+
+    # autotools versions do not implement MinSizeRel build type
+    conflicts('build_type=MinSizeRel', when='@:0.8.1')
 
     def flag_handler(self, name, flags):
         if name == 'cflags' and self.spec.satisfies('@:0.8.1'):
-            #handle cmake-style variant for pre-cmake versions
+            # handle cmake-style variant for pre-cmake versions
             build_type = self.spec.variants['build_type'].value
             if build_type in ('Debug', 'RelWithDebInfo'):
                 flags.append('-g')
@@ -77,7 +84,8 @@ class Mpifileutils(DynamicInheritancePackage):
     def cmake_args(self):
         args = []
         args.append("-DWITH_DTCMP_PREFIX=%s" % self.spec['dtcmp'].prefix)
-        args.append("-DWITH_LibCircle_PREFIX=%s" % self.spec['libcircle'].prefix)
+        args.append("-DWITH_LibCircle_PREFIX=%s" %
+                    self.spec['libcircle'].prefix)
 
         if '+xattr' in self.spec:
             args.append("-DENABLE_XATTRS=ON")
