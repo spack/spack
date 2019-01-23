@@ -2854,7 +2854,20 @@ be avoided like so:
 
 
 This will send a warning message directly to the terminal and continue
-the installation process. See :py:mod:`llnl.util.tty` for details on
+the installation process. You can also add post-installation info
+messages similar to Homebrew's caveats like so:
+
+.. code-block:: python
+
+   @run_after('install')
+   def caveats(self):
+      with self.logger.force_echo():
+         msg = ('To use this package, make sure to source the '
+                'foo_bar.sh script')
+         tty.info(msg)
+
+
+See :py:mod:`llnl.util.tty` for details on
 other ``tty`` functions that can be used.
 
 
