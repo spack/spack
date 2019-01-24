@@ -66,13 +66,30 @@ class PyNumpy(PythonPackage):
 
     def patch(self):
         spec = self.spec
+
+        def write_library_dirs(f, dirs):
+            f.write('library_dirs=%s\n' % dirs)
+            if not ((platform.system() == "Darwin") and
+                    (platform.mac_ver()[0] == '10.12')):
+                f.write('rpath=%s\n' % dirs)
+
         # for build notes see http://www.scipy.org/scipylib/building/linux.html
-        lapackblas = LibraryList('')
+        blas_info = []
+        lapack_info = []
+        lapackblas_info = []
+
         if '+lapack' in spec:
-            lapackblas += spec['lapack'].libs
+            lapack_info += spec['lapack'].libs
 
         if '+blas' in spec:
-            lapackblas += spec['blas'].libs
+            blas_info += spec['blas'].libs
+
+        lapackblas_info = lapack_info + blas_info
+
+        def write_empty_libs(f, provider):
+            f.write('[{0}]\n'.format(provider))
+            f.write('libraries=\n')
+            write_library_dirs(f, '')
 
         if '+blas' in spec or '+lapack' in spec:
             # note that one should not use [blas_opt] and [lapack_opt], see
@@ -80,15 +97,26 @@ class PyNumpy(PythonPackage):
             with open('site.cfg', 'w') as f:
                 # Unfortunately, numpy prefers to provide each BLAS/LAPACK
                 # differently.
-                names  = ','.join(lapackblas.names)
-                dirs   = ':'.join(lapackblas.directories)
+                blas_names  = ','.join(blas_info.names)
+                blas_dirs   = ':'.join(blas_info.directories)
+                lapack_names  = ','.join(lapack_info.names)
+                lapack_dirs   = ':'.join(lapack_info.directories)
+                lapackblas_names  = ','.join(lapackblas_info.names)
+                lapackblas_dirs   = ':'.join(lapackblas_info.directories)
+
+                handled_blas_and_lapack = False
 
                 # Special treatment for some (!) BLAS/LAPACK. Note that
                 # in this case library_dirs can not be specified within [ALL].
                 if '^openblas' in spec:
                     f.write('[openblas]\n')
-                    f.write('libraries=%s\n'    % names)
-                elif '^mkl' in spec:
+                    f.write('libraries=%s\n' % lapackblas_names)
+                    write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
+                else:
+                    write_empty_libs(f, 'openblas')
+
+                if '^mkl' in spec:
                     # numpy does not expect system libraries needed for MKL
                     # here.
                     # names = [x for x in names if x.startswith('mkl')]
@@ -105,23 +133,45 @@ class PyNumpy(PythonPackage):
                     # perspective it is no different from throwing away RPATH's
                     # and using LD_LIBRARY_PATH throughout Spack.
                     f.write('[mkl]\n')
-                    f.write('mkl_libs=%s\n'     % 'mkl_rt')
-                elif '^atlas' in spec:
-                    f.write('[atlas]\n')
-                    f.write('atlas_libs=%s\n'   % names)
+                    f.write('mkl_libs=%s\n' % 'mkl_rt')
+                    write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
                 else:
+                    # Without explicitly setting the search directories to be
+                    # an empty list, numpy may retrieve and use mkl libs from
+                    # the system.
+                    write_empty_libs(f, 'mkl')
+
+                if '^atlas' in spec:
+                    f.write('[atlas]\n')
+                    f.write('atlas_libs=%s\n' % lapackblas_names)
+                    write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
+                else:
+                    write_empty_libs(f, 'atlas')
+
+                if '^netlib-lapack' in spec:
+                    # netlib requires blas and lapack listed
+                    # separately so that scipy can find them
+                    if spec.satisfies('+blas'):
+                        f.write('[blas]\n')
+                        f.write('blas_libs=%s\n' % blas_names)
+                        write_library_dirs(f, blas_dirs)
+                    if spec.satisfies('+lapack'):
+                        f.write('[lapack]\n')
+                        f.write('lapack_libs=%s\n' % lapack_names)
+                        write_library_dirs(f, lapack_dirs)
+                    handled_blas_and_lapack = True
+
+                if not handled_blas_and_lapack:
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
                     if spec.satisfies('@:1.9.2'):
                         f.write('[DEFAULT]\n')
                     else:
                         f.write('[ALL]\n')
-                    f.write('libraries=%s\n'    % names)
-
-                f.write('library_dirs=%s\n' % dirs)
-                if not ((platform.system() == "Darwin") and
-                        (platform.mac_ver()[0] == '10.12')):
-                    f.write('rpath=%s\n' % dirs)
+                    f.write('libraries=%s\n' % lapackblas_names)
+                    write_library_dirs(f, lapackblas_dirs)
 
     def build_args(self, spec, prefix):
         args = []

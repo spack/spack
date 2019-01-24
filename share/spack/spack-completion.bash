@@ -1181,7 +1181,7 @@ function _spack_use {
 function _spack_versions {
     if $list_options
     then
-        compgen -W "-h --help" -- "$cur"
+        compgen -W "-h --help -s --safe-only" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi

@@ -13,6 +13,8 @@ import spack.repo
 import spack.store
 import spack.spec
 import spack.binary_distribution as bindist
+import spack.cmd.common.arguments as arguments
+from spack.cmd import display_specs
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -63,6 +65,11 @@ def setup_parser(subparser):
     install.set_defaults(func=installtarball)
 
     listcache = subparsers.add_parser('list', help=listspecs.__doc__)
+    arguments.add_common_arguments(listcache, ['long', 'very_long'])
+    listcache.add_argument('-v', '--variants',
+                           action='store_true',
+                           dest='variants',
+                           help='show variants in output (can be long)')
     listcache.add_argument('-f', '--force', action='store_true',
                            help="force new download of specs")
     listcache.add_argument(
@@ -254,22 +261,10 @@ def listspecs(args):
     specs = bindist.get_specs(args.force)
     if args.packages:
         pkgs = set(args.packages)
-        for pkg in pkgs:
-            tty.msg("buildcache spec(s) matching " +
-                    "%s and commands to install them" % pkgs)
-            for spec in sorted(specs):
-                if spec.satisfies(pkg):
-                    tty.msg('Enter\nspack buildcache install /%s\n' %
-                            spec.dag_hash(7) +
-                            ' to install "%s"' %
-                            spec.format())
+        specs = [s for s in specs for p in pkgs if s.satisfies(p)]
+        display_specs(specs, args, all_headers=True)
     else:
-        tty.msg("buildcache specs and commands to install them")
-        for spec in sorted(specs):
-            tty.msg('Enter\nspack buildcache install /%s\n' %
-                    spec.dag_hash(7) +
-                    ' to install "%s"' %
-                    spec.format())
+        display_specs(specs, args, all_headers=True)
 
 
 def getkeys(args):

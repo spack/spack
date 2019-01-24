@@ -11,9 +11,9 @@ class OmegaH(CMakePackage):
     hardware including GPUs.
     """
 
-    homepage = "https://github.com/ibaned/omega_h"
-    url      = "https://github.com/ibaned/omega_h/archive/v9.13.4.tar.gz"
-    git      = "https://github.com/ibaned/omega_h.git"
+    homepage = "https://github.com/SNLComputation/omega_h"
+    url      = "https://github.com/SNLComputation/omega_h/archive/v9.13.4.tar.gz"
+    git      = "https://github.com/SNLComputation/omega_h.git"
 
     version('develop', branch='master')
     version('9.19.1', sha256='60ef65c2957ce03ef9d1b995d842fb65c32c5659d064de002c071effe66b1b1f')
@@ -78,6 +78,8 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_THROW:BOOL=ON')
         else:
             args.append('-DOmega_h_THROW:BOOL=OFF')
+        # omega-h requires empty CMAKE_BUILD_TYPE
+        args.append('-DCMAKE_BUILD_TYPE:STRING=')
         args += list(self._bob_options())
         return args
 
