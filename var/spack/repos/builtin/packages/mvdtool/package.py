@@ -29,9 +29,10 @@ class Mvdtool(CMakePackage):
     """MVD3 neuroscience file format parser and tool"""
 
     homepage = "https://github.com/BlueBrain/MVDTool"
-    url      = "git@github.com:BlueBrain/MVDTool.git"
+    url      = "https://github.com/BlueBrain/MVDTool.git"
 
-    version('1.4', git=url, tag='v1.4', preferred=True)
+    version('1.5', git=url, tag='v1.5', preferred=True)
+    version('1.4', git=url, tag='v1.4')
 
     variant('mpi', default=True, description="Enable MPI backend")
     variant('python', default=False, description="Enable Python bindings")
