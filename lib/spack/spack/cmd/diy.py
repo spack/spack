@@ -33,6 +33,10 @@ def setup_parser(subparser):
         '--keep-prefix', action='store_true',
         help="do not remove the install prefix if installation fails")
     subparser.add_argument(
+        '--run-tests', action='store_true',
+        help='run package tests during installation'
+    )
+    subparser.add_argument(
         '--skip-patch', action='store_true',
         help="skip patching for the DIY build")
     subparser.add_argument(
@@ -94,4 +98,5 @@ def diy(self, args):
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
         keep_stage=True,   # don't remove source dir for DIY.
+        tests=args.run_tests,
         dirty=args.dirty)
