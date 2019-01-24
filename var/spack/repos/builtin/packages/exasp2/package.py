@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import glob
 
@@ -44,10 +25,10 @@ class Exasp2(MakefilePackage):
 
     homepage = "https://github.com/ECP-copa/ExaSP2"
     url      = "https://github.com/ECP-copa/ExaSP2/tarball/v1.0"
+    git      = "https://github.com/ECP-copa/ExaSP2.git"
 
+    version('develop', branch='master')
     version('1.0', 'dba545995acc73f2bd1101bcb377bff5')
-    version('develop', git='https://github.com/ECP-copa/ExaSP2',
-            branch='master')
 
     variant('mpi', default=True, description='Build With MPI Support')
 
@@ -81,8 +62,8 @@ class Exasp2(MakefilePackage):
         math_includes += " -I" + spec['blas'].prefix.include
         targets.append('SPACKBLASINCLUDES=' + math_includes)
         # And BML
-        bmlLibDirs = spec['bml'].libs.directories[0]
-        targets.append('BML_PATH=' + bmlLibDirs)
+        bml_lib_dirs = spec['bml'].libs.directories[0]
+        targets.append('BML_PATH=' + bml_lib_dirs)
         targets.append('--file=Makefile.vanilla')
         return targets
 

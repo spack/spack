@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 Functions here are used to take abstract specs and make them concrete.
 For example, if a spec asks for a version between 1.8 and 1.9, these
@@ -36,9 +17,13 @@ TODO: make this customizable and allow users to configure
 from __future__ import print_function
 from itertools import chain
 from functools_backport import reverse_order
+from contextlib import contextmanager
 from six import iteritems
 
-import spack
+import llnl.util.lang
+
+import spack.repo
+import spack.abi
 import spack.spec
 import spack.compilers
 import spack.architecture
@@ -47,18 +32,29 @@ from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 
-class DefaultConcretizer(object):
+#: Concretizer singleton
+concretizer = llnl.util.lang.Singleton(lambda: Concretizer())
+
+
+#: impements rudimentary logic for ABI compatibility
+_abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+
+
+class Concretizer(object):
     """You can subclass this class to override some of the default
        concretization strategies, or you can override all of them.
     """
     def __init__(self):
+        # controls whether we check that compiler versions actually exist
+        # during concretization. Used for testing and for mirror creation
         self.check_for_compiler_existence = True
 
+    @contextmanager
     def disable_compiler_existence_check(self):
+        saved = self.check_for_compiler_existence
         self.check_for_compiler_existence = False
-
-    def enable_compiler_existence_check(self):
-        self.check_for_compiler_existence = True
+        yield
+        self.check_for_compiler_existence = saved
 
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
@@ -71,7 +67,7 @@ class DefaultConcretizer(object):
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.providers_for(spec)
+            candidates = spack.repo.path.providers_for(spec)
             if not candidates:
                 raise spack.spec.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
@@ -132,8 +128,8 @@ class DefaultConcretizer(object):
         return sorted(candidates,
                       reverse=True,
                       key=lambda spec: (
-                          spack.abi.compatible(spec, abi_exemplar, loose=True),
-                          spack.abi.compatible(spec, abi_exemplar)))
+                          _abi.compatible(spec, abi_exemplar, loose=True),
+                          _abi.compatible(spec, abi_exemplar)))
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
@@ -384,13 +380,12 @@ class DefaultConcretizer(object):
                                if (compiler_match(p) and
                                    (p is not spec) and
                                    flag in p.compiler_flags))
-                nearest_flags = set(nearest.compiler_flags.get(flag, []))
-                flags = set(spec.compiler_flags.get(flag, []))
-                if (nearest_flags - flags):
-                    # TODO: these set operations may reorder the flags, which
-                    # for some orders of flags can be invalid. See:
-                    # https://github.com/spack/spack/issues/6154#issuecomment-342365573
-                    spec.compiler_flags[flag] = list(nearest_flags | flags)
+                nearest_flags = nearest.compiler_flags.get(flag, [])
+                flags = spec.compiler_flags.get(flag, [])
+                if set(nearest_flags) - set(flags):
+                    spec.compiler_flags[flag] = list(
+                        llnl.util.lang.dedupe(nearest_flags + flags)
+                    )
                     ret = True
             except StopIteration:
                 pass
@@ -406,10 +401,12 @@ class DefaultConcretizer(object):
                 raise
             return ret
         for flag in compiler.flags:
-            config_flags = set(compiler.flags.get(flag, []))
-            flags = set(spec.compiler_flags.get(flag, []))
-            spec.compiler_flags[flag] = list(config_flags | flags)
-            if (config_flags - flags):
+            config_flags = compiler.flags.get(flag, [])
+            flags = spec.compiler_flags.get(flag, [])
+            spec.compiler_flags[flag] = list(
+                llnl.util.lang.dedupe(config_flags + flags)
+            )
+            if set(config_flags) - set(flags):
                 ret = True
 
         return ret

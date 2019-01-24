@@ -1,0 +1,6 @@
+enable:
+  - tcl
+tcl:
+  blacklist_implicits: true
+  all:
+    autoload: 'direct'

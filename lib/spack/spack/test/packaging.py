@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This test checks the binary packaging infrastructure
 """
@@ -34,16 +15,17 @@ import argparse
 
 from llnl.util.filesystem import mkdirp
 
-import spack
+import spack.repo
 import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
+from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import strings_contains_installroot
-from spack.relocate import get_patchelf, relocate_text
+from spack.relocate import get_patchelf, relocate_text, relocate_links
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -103,9 +85,12 @@ echo $PATH"""
     with open(filename, "w") as script:
         script.write(spec.prefix)
 
+    # Create an absolute symlink
+    linkname = os.path.join(spec.prefix, "link_to_dummy.txt")
+    os.symlink(filename, linkname)
+
     # Create the build cache  and
     # put it directly into the mirror
-
     mirror_path = os.path.join(str(tmpdir), 'test-mirror')
     spack.mirror.create(
         mirror_path, specs=[], no_checksum=True
@@ -113,11 +98,12 @@ echo $PATH"""
 
     # register mirror with spack config
     mirrors = {'spack-mirror-test': 'file://' + mirror_path}
-    spack.config.update_config('mirrors', mirrors)
+    spack.config.set('mirrors', mirrors)
 
     stage = spack.stage.Stage(
         mirrors['spack-mirror-test'], name="build_cache", keep=True)
     stage.create()
+
     # setup argument parser
     parser = argparse.ArgumentParser()
     buildcache.setup_parser(parser)
@@ -138,6 +124,13 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+
         # create build cache with relative path and signing
         args = parser.parse_args(
             ['create', '-d', mirror_path, '-f', '-r', str(spec)])
@@ -154,6 +147,13 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+
     else:
         # create build cache without signing
         args = parser.parse_args(
@@ -166,6 +166,13 @@ echo $PATH"""
         # install build cache without verification
         args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
+
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
         # test overwrite install without verification
         args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
@@ -187,9 +194,17 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
     assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
+    assert(buildinfo['relocate_links'] == ['link_to_dummy.txt'])
 
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
@@ -201,7 +216,7 @@ echo $PATH"""
     buildcache.buildcache(parser, args)
 
     # Copy a key to the mirror to have something to download
-    shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
+    shutil.copyfile(mock_gpg_keys_path + '/external.key',
                     mirror_path + '/external.key')
 
     args = parser.parse_args(['keys'])
@@ -212,9 +227,12 @@ echo $PATH"""
 
     # unregister mirror with spack config
     mirrors = {}
-    spack.config.update_config('mirrors', mirrors)
+    spack.config.set('mirrors', mirrors)
     shutil.rmtree(mirror_path)
     stage.destroy()
+
+    # Remove cached binary specs since we deleted the mirror
+    bindist._cached_specs = None
 
 
 def test_relocate_text(tmpdir):
@@ -232,6 +250,18 @@ def test_relocate_text(tmpdir):
             for line in script:
                 assert(new_dir in line)
         assert(strings_contains_installroot(filename, old_dir) is False)
+
+
+def test_relocate_links(tmpdir):
+    with tmpdir.as_cwd():
+        old_dir = '/home/spack/opt/spack'
+        filename = 'link.ln'
+        old_src = os.path.join(old_dir, filename)
+        os.symlink(old_src, filename)
+        filenames = [filename]
+        new_dir = '/opt/rh/devtoolset/'
+        relocate_links(filenames, old_dir, new_dir)
+        assert os.path.realpath(filename) == os.path.join(new_dir, filename)
 
 
 def test_needs_relocation():

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import re
 
@@ -30,7 +11,8 @@ from llnl.util.lang import pretty_date
 from llnl.util.filesystem import working_dir
 from llnl.util.tty.colify import colify_table
 
-import spack
+import spack.paths
+import spack.repo
 from spack.util.executable import which
 from spack.cmd import spack_is_git_repo
 
@@ -67,7 +49,7 @@ def blame(parser, args):
     blame_file = None
     if os.path.isfile(args.package_name):
         path = os.path.realpath(args.package_name)
-        if path.startswith(spack.prefix):
+        if path.startswith(spack.paths.prefix):
             blame_file = path
 
     if not blame_file:
@@ -75,7 +57,7 @@ def blame(parser, args):
         blame_file = pkg.module.__file__.rstrip('c')  # .pyc -> .py
 
     # get git blame for the package
-    with working_dir(spack.prefix):
+    with working_dir(spack.paths.prefix):
         if args.view == 'git':
             git('blame', blame_file)
             return

@@ -1,0 +1,6 @@
+# Tests that Spack detects target when it is the second of two targets
+
+rule cc
+  command = true
+
+build test check: cc

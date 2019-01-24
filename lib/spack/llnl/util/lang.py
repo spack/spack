@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import division
 
 import os
@@ -29,7 +10,7 @@ import re
 import functools
 import collections
 import inspect
-from datetime import datetime
+from datetime import datetime, timedelta
 from six import string_types
 
 # Ignore emacs backups when listing modules
@@ -165,6 +146,26 @@ def has_method(cls, name):
     return False
 
 
+def union_dicts(*dicts):
+    """Use update() to combine all dicts into one.
+
+    This builds a new dictionary, into which we ``update()`` each element
+    of ``dicts`` in order.  Items from later dictionaries will override
+    items from earlier dictionaries.
+
+    Args:
+        dicts (list): list of dictionaries
+
+    Return: (dict): a merged dictionary containing combined keys and
+        values from ``dicts``.
+
+    """
+    result = {}
+    for d in dicts:
+        result.update(d)
+    return result
+
+
 class memoized(object):
     """Decorator that caches the results of a function, storing them
        in an attribute of that function."""
@@ -282,8 +283,8 @@ class HashableMap(collections.MutableMapping):
     def copy(self):
         """Type-agnostic clone method.  Preserves subclass type."""
         # Construct a new dict of my type
-        T = type(self)
-        clone = T()
+        self_type = type(self)
+        clone = self_type()
 
         # Copy everything from this dict into it.
         for key in self:
@@ -442,6 +443,65 @@ def pretty_date(time, now=None):
         return str(diff) + " years ago"
 
 
+def pretty_string_to_date(date_str, now=None):
+    """Parses a string representing a date and returns a datetime object.
+
+    Args:
+        date_str (str): string representing a date. This string might be
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``)
+            or be a *pretty date* (like ``yesterday`` or ``two months ago``)
+
+    Returns:
+        (datetime): datetime object corresponding to ``date_str``
+    """
+
+    pattern = {}
+
+    now = now or datetime.now()
+
+    # datetime formats
+    pattern[re.compile(r'^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
+    pattern[re.compile(r'^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m'
+    )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m-%d'
+    )
+
+    pretty_regex = re.compile(
+        r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')
+
+    def _n_xxx_ago(x):
+        how_many, time_period = pretty_regex.search(x).groups()
+
+        how_many = 1 if how_many == 'a' else int(how_many)
+
+        # timedelta natively supports time periods up to 'weeks'.
+        # To apply month or year we convert to 30 and 365 days
+        if time_period == 'month':
+            how_many *= 30
+            time_period = 'day'
+        elif time_period == 'year':
+            how_many *= 365
+            time_period = 'day'
+
+        kwargs = {(time_period + 's'): how_many}
+        return now - timedelta(**kwargs)
+
+    pattern[pretty_regex] = _n_xxx_ago
+
+    # yesterday
+    callback = lambda x: now - timedelta(days=1)
+    pattern[re.compile('^yesterday$')] = callback
+
+    for regexp, parser in pattern.items():
+        if bool(regexp.match(date_str)):
+            return parser(date_str)
+
+    msg = 'date "{0}" does not match any valid format'.format(date_str)
+    raise ValueError(msg)
+
+
 class RequiredAttributeError(ValueError):
 
     def __init__(self, message):
@@ -472,3 +532,63 @@ class ObjectWrapper(object):
             self.__class__ = type(wrapped_name, (wrapped_cls,), {})
 
         self.__dict__ = wrapped_object.__dict__
+
+
+class Singleton(object):
+    """Simple wrapper for lazily initialized singleton objects."""
+
+    def __init__(self, factory):
+        """Create a new singleton to be inited with the factory function.
+
+        Args:
+            factory (function): function taking no arguments that
+                creates the singleton instance.
+        """
+        self.factory = factory
+        self._instance = None
+
+    @property
+    def instance(self):
+        if self._instance is None:
+            self._instance = self.factory()
+        return self._instance
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
+
+    def __getitem__(self, name):
+        return self.instance[name]
+
+    def __contains__(self, element):
+        return element in self.instance
+
+    def __call__(self, *args, **kwargs):
+        return self.instance(*args, **kwargs)
+
+    def __iter__(self):
+        return iter(self.instance)
+
+    def __str__(self):
+        return str(self.instance)
+
+    def __repr__(self):
+        return repr(self.instance)
+
+
+class LazyReference(object):
+    """Lazily evaluated reference to part of a singleton."""
+
+    def __init__(self, ref_function):
+        self.ref_function = ref_function
+
+    def __getattr__(self, name):
+        return getattr(self.ref_function(), name)
+
+    def __getitem__(self, name):
+        return self.ref_function()[name]
+
+    def __str__(self):
+        return str(self.ref_function())
+
+    def __repr__(self):
+        return repr(self.ref_function())

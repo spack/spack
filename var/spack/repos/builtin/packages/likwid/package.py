@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import glob
 import os
@@ -30,17 +11,19 @@ import os
 class Likwid(Package):
     """Likwid is a simple to install and use toolsuite of command line
     applications for performance oriented programmers. It works for Intel and
-    AMD processors on the Linux operating system."""
+    AMD processors on the Linux operating system. This version uses the
+    perf_event backend which reduces the feature set but allows user installs.
+    See https://github.com/RRZE-HPC/likwid/wiki/TutorialLikwidPerf#feature-limitations
+    for information."""
 
     homepage = "https://github.com/RRZE-HPC/likwid"
     url      = "https://github.com/RRZE-HPC/likwid/archive/4.1.2.tar.gz"
 
     maintainers = ['davydden']
 
+    version('4.3.2', '2cf00e220dfe22c8d9b6e44f7534e11d')
+    version('4.3.1', 'ff28250f622185688bf5e2e0975368ea')
     version('4.3.0', '7f8f6981d7d341fce2621554323f8c8b')
-    version('4.2.1', 'c408ddcf0317cdd894af4c580cd74294')
-    version('4.2.0', 'e41ff334b8f032a323d941ce32907a75')
-    version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
@@ -85,8 +68,16 @@ class Likwid(Package):
                     prefix,
                     'config.mk')
 
-        filter_file('^INSTALL_CHOWN.*',
-                    'INSTALL_CHOWN = -o $(USER)',
+        # FIXME: once https://github.com/spack/spack/issues/4432 is
+        # resolved, install as root by default and remove this
+        filter_file('^ACCESSMODE .*',
+                    'ACCESSMODE = perf_event',
+                    'config.mk')
+        filter_file('^BUILDFREQ .*',
+                    'BUILDFREQ = false',
+                    'config.mk')
+        filter_file('^BUILDDAEMON .*',
+                    'BUILDDAEMON = false',
                     'config.mk')
 
         if spec.satisfies('^lua'):

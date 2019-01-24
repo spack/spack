@@ -1,37 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os.path
 import collections
 import contextlib
 import inspect
-import os.path
-import yaml
 
-from six import StringIO
+import ruamel.yaml as yaml
 import pytest
-import spack
+from six import StringIO
+
+import spack.paths
+import spack.spec
 import spack.modules.common
 import spack.util.path
 
@@ -90,14 +72,6 @@ def modulefile_content(filename_dict, request):
 
 
 @pytest.fixture()
-def update_template_dirs(config, monkeypatch):
-    """Mocks the template directories for tests"""
-    dirs = spack.config.get_config('config')['template_dirs']
-    dirs = [spack.util.path.canonicalize_path(x) for x in dirs]
-    monkeypatch.setattr(spack, 'template_dirs', dirs)
-
-
-@pytest.fixture()
 def patch_configuration(monkeypatch, request):
     """Reads a configuration file from the mock ones prepared for tests
     and monkeypatches the right classes to hook it in.
@@ -110,7 +84,7 @@ def patch_configuration(monkeypatch, request):
     writer_key = str(writer_mod.__name__).split('.')[-1]
     # Root folder for configuration
     root_for_conf = os.path.join(
-        spack.test_path, 'data', 'modules', writer_key
+        spack.paths.test_path, 'data', 'modules', writer_key
     )
 
     def _impl(filename):
@@ -135,6 +109,14 @@ def patch_configuration(monkeypatch, request):
             {}
         )
     return _impl
+
+
+@pytest.fixture()
+def update_template_dirs(config, monkeypatch):
+    """Mocks the template directories for tests"""
+    dirs = spack.config.get_config('config')['template_dirs']
+    dirs = [spack.util.path.canonicalize_path(x) for x in dirs]
+    monkeypatch.setattr(spack, 'template_dirs', dirs)
 
 
 @pytest.fixture()

@@ -67,6 +67,12 @@ Spack has a Slack channel where you can chat about all things Spack:
 [Sign up here](https://spackpm.herokuapp.com) to get an invitation mailed
 to you.
 
+### Twitter
+
+You can follow [@spackpm](https://twitter.com/spackpm) on Twitter for
+updates. Also, feel free to `@mention` us in in questions or comments
+about your own experience with Spack.
+
 ### Contributions
 
 Contributing to Spack is relatively easy.  Just send us a
@@ -101,11 +107,21 @@ If you are referencing Spack in a publication, please cite the following paper:
    [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
    In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
 
-Release
+License
 ----------------
-Spack is released under an LGPL license.  For more details see the
-NOTICE and LICENSE files.
 
-``LLNL-CODE-647188``
+Spack is distributed under the terms of both the MIT license and the
+Apache License (Version 2.0). Users may choose either license, at their
+option.
 
-![Analytics](https://ga-beacon.appspot.com/UA-101208306-3/welcome-page?pixel)
+All new contributions must be made under both the MIT and Apache-2.0
+licenses.
+
+See [LICENSE-MIT](https://github.com/spack/spack/blob/develop/LICENSE-MIT),
+[LICENSE-APACHE](https://github.com/spack/spack/blob/develop/LICENSE-APACHE),
+[COPYRIGHT](https://github.com/spack/spack/blob/develop/COPYRIGHT), and
+[NOTICE](https://github.com/spack/spack/blob/develop/NOTICE) for details.
+
+SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+LLNL-CODE-647188

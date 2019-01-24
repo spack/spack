@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,11 +14,10 @@ class RYarn(RPackage):
        and statistical techniques to account for the large heterogeneity and
        sparsity found in very large RNA-seq experiments."""
 
-    homepage = "http://www.example.co://www.bioconductor.org/packages/yarn/"
-    url      = "https://git.bioconductor.org/packages/yarn"
-    list_url = homepage
+    homepage = "https://bioconductor.org/packages/yarn/"
+    git      = "https://git.bioconductor.org/packages/yarn.git"
 
-    version('1.2.0', git='https://git.bioconductor.org/packages/yarn', commit='28af616ef8c27dcadf6568e276dea8465486a697')
+    version('1.2.0', commit='28af616ef8c27dcadf6568e276dea8465486a697')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biomart', type=('build', 'run'))

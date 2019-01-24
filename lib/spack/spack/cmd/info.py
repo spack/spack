@@ -1,39 +1,20 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import textwrap
-
 from six.moves import zip_longest
 
+import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import llnl.util.tty.color as color
-import spack
-import spack.fetch_strategy as fs
+import spack.repo
 import spack.spec
+import spack.fetch_strategy as fs
+
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -156,7 +137,7 @@ def print_text_info(pkg):
     color.cprint('')
     color.cprint(section_title('Description:'))
     if pkg.__doc__:
-        color.cprint(pkg.format_doc(indent=4))
+        color.cprint(color.cescape(pkg.format_doc(indent=4)))
     else:
         color.cprint("    None")
 
@@ -195,14 +176,14 @@ def print_text_info(pkg):
         preferred = sorted(pkg.versions, key=key_fn).pop()
 
         f = fs.for_package_version(pkg, preferred)
-        line = version('    {0}'.format(pad(preferred))) + str(f)
+        line = version('    {0}'.format(pad(preferred))) + color.cescape(f)
         color.cprint(line)
         color.cprint('')
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
             f = fs.for_package_version(pkg, v)
-            line = version('    {0}'.format(pad(v))) + str(f)
+            line = version('    {0}'.format(pad(v))) + color.cescape(f)
             color.cprint(line)
 
     color.cprint('')

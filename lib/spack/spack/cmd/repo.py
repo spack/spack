@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import os
@@ -30,7 +11,7 @@ import llnl.util.tty as tty
 
 import spack.spec
 import spack.config
-from spack.repository import Repo, create_repo, canonicalize_path, RepoError
+from spack.repo import Repo, create_repo, canonicalize_path, RepoError
 
 description = "manage package source repositories"
 section = "config"
@@ -39,7 +20,8 @@ level = "long"
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='repo_command')
-    scopes = spack.config.config_scopes
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
 
     # Create
     create_parser = sp.add_parser('create', help=repo_create.__doc__)
@@ -52,8 +34,8 @@ def setup_parser(subparser):
     # List
     list_parser = sp.add_parser('list', help=repo_list.__doc__)
     list_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_list_scope,
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_list_scope(),
         help="configuration scope to read from")
 
     # Add
@@ -61,8 +43,8 @@ def setup_parser(subparser):
     add_parser.add_argument(
         'path', help="path to a Spack package repository directory")
     add_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
     # Remove
@@ -72,8 +54,8 @@ def setup_parser(subparser):
         'path_or_namespace',
         help="path or namespace of a Spack package repository")
     remove_parser.add_argument(
-        '--scope', choices=scopes, metavar=spack.config.scopes_metavar,
-        default=spack.cmd.default_modify_scope,
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
 
 
@@ -104,7 +86,7 @@ def repo_add(args):
     repo = Repo(canon_path)
 
     # If that succeeds, finally add it to the configuration.
-    repos = spack.config.get_config('repos', args.scope)
+    repos = spack.config.get('repos', scope=args.scope)
     if not repos:
         repos = []
 
@@ -112,13 +94,13 @@ def repo_add(args):
         tty.die("Repository is already registered with Spack: %s" % path)
 
     repos.insert(0, canon_path)
-    spack.config.update_config('repos', repos, args.scope)
+    spack.config.set('repos', repos, args.scope)
     tty.msg("Added repo with namespace '%s'." % repo.namespace)
 
 
 def repo_remove(args):
     """Remove a repository from Spack's configuration."""
-    repos = spack.config.get_config('repos', args.scope)
+    repos = spack.config.get('repos', scope=args.scope)
     path_or_namespace = args.path_or_namespace
 
     # If the argument is a path, remove that repository from config.
@@ -127,7 +109,7 @@ def repo_remove(args):
         repo_canon_path = canonicalize_path(repo_path)
         if canon_path == repo_canon_path:
             repos.remove(repo_path)
-            spack.config.update_config('repos', repos, args.scope)
+            spack.config.set('repos', repos, args.scope)
             tty.msg("Removed repository %s" % repo_path)
             return
 
@@ -137,7 +119,7 @@ def repo_remove(args):
             repo = Repo(path)
             if repo.namespace == path_or_namespace:
                 repos.remove(path)
-                spack.config.update_config('repos', repos, args.scope)
+                spack.config.set('repos', repos, args.scope)
                 tty.msg("Removed repository %s with namespace '%s'."
                         % (repo.root, repo.namespace))
                 return
@@ -150,7 +132,7 @@ def repo_remove(args):
 
 def repo_list(args):
     """Show registered repositories and their namespaces."""
-    roots = spack.config.get_config('repos', args.scope)
+    roots = spack.config.get('repos', scope=args.scope)
     repos = []
     for r in roots:
         try:

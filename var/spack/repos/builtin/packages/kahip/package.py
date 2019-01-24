@@ -1,28 +1,8 @@
-##############################################################################
-# Copyright (c) 2017 Christian Schulz
-# Karlsruhe Institute of Technology (KIT), Karlsruhe, Germany
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is released as part of Spack under the LGPL license
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE file for the LLNL notice and LGPL.
-#
-# License
-# -------
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 import os
@@ -44,8 +24,9 @@ class Kahip(SConsPackage):
 
     homepage  = 'http://algo2.iti.kit.edu/documents/kahip/index.html'
     url       = 'http://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz'
+    git       = 'https://github.com/schulzchristian/KaHIP.git'
 
-    version('develop', git='https://github.com/schulzchristian/KaHIP.git')
+    version('develop', branch='master')
     version('2.00', '0a66b0a604ad72cfb7e3dce00e2c9fdfac82b855')
 
     depends_on('argtable')

@@ -1,33 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
 
-import spack
+import spack.paths
 from spack.util.executable import ProcessError, which
 
 _SPACK_UPSTREAM = 'https://github.com/spack/spack'
@@ -43,11 +24,11 @@ def setup_parser(subparser):
         help="name of the remote to clone from", default='origin')
     subparser.add_argument(
         'prefix',
-        help="names of prefix where we should install spack")
+        help="name of prefix where we should install spack")
 
 
 def get_origin_info(remote):
-    git_dir = os.path.join(spack.prefix, '.git')
+    git_dir = os.path.join(spack.paths.prefix, '.git')
     git = which('git', required=True)
     try:
         branch = git('symbolic-ref', '--short', 'HEAD', output=str)

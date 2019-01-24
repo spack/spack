@@ -1,0 +1,44 @@
+--- opencv-3.4.1/modules/dnn/src/layers/mvn_layer.cpp.orig	2018-06-14 10:46:28.025703093 +0200
++++ opencv-3.4.1/modules/dnn/src/layers/mvn_layer.cpp	2018-06-14 10:40:56.266069123 +0200
+@@ -43,7 +43,7 @@
+ #include "../precomp.hpp"
+ #include "layers_common.hpp"
+ #include <opencv2/dnn/shape_utils.hpp>
+-#include "math_functions.hpp"
++#include "../ocl4dnn/include/math_functions.hpp"
+ #include "opencl_kernels_dnn.hpp"
+ 
+ namespace cv
+--- opencv-3.4.1/modules/dnn/src/ocl4dnn/src/math_functions.cpp.orig	2018-06-14 10:45:23.565162940 +0200
++++ opencv-3.4.1/modules/dnn/src/ocl4dnn/src/math_functions.cpp	2018-06-14 10:44:48.513412965 +0200
+@@ -42,7 +42,7 @@
+ 
+ #include "../../precomp.hpp"
+ #include "common.hpp"
+-#include "math_functions.hpp"
++#include "../include/math_functions.hpp"
+ #include <vector>
+ #include "opencl_kernels_dnn.hpp"
+ 
+--- opencv-3.4.1/modules/dnn/src/ocl4dnn/src/ocl4dnn_conv_spatial.cpp.orig	2018-06-14 10:42:11.319534007 +0200
++++ opencv-3.4.1/modules/dnn/src/ocl4dnn/src/ocl4dnn_conv_spatial.cpp	2018-06-14 10:42:52.988236879 +0200
+@@ -52,7 +52,7 @@
+ #include "common.hpp"
+ #include "ocl4dnn.hpp"
+ #include "opencl_kernels_dnn.hpp"
+-#include "math_functions.hpp"
++#include "../include/math_functions.hpp"
+ #include "default_kernel_config.hpp"
+ 
+ #if defined WIN32 || defined _WIN32
+--- opencv-3.4.1/modules/dnn/src/ocl4dnn/src/ocl4dnn_inner_product.cpp.orig	2018-06-14 10:45:41.245036822 +0200
++++ opencv-3.4.1/modules/dnn/src/ocl4dnn/src/ocl4dnn_inner_product.cpp	2018-06-14 10:45:55.543934818 +0200
+@@ -43,7 +43,7 @@
+ #include "../../precomp.hpp"
+ #include "common.hpp"
+ #include "ocl4dnn.hpp"
+-#include "math_functions.hpp"
++#include "../include/math_functions.hpp"
+ 
+ #ifdef HAVE_OPENCL
+ namespace cv { namespace dnn { namespace ocl4dnn {

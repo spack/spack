@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,6 +13,7 @@ class SuiteSparse(Package):
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
     url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.2.0.tar.gz'
 
+    version('5.3.0', sha256='90e69713d8c454da5a95a839aea5d97d8d03d00cc1f667c4bdfca03f640f963d')
     version('5.2.0', '8e625539dbeed061cc62fbdfed9be7cf')
     version('5.1.0', '9c34d7c07ad5ce1624b8187faa132046')
     version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
@@ -59,6 +41,12 @@ class SuiteSparse(Package):
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
+
+    # This patch adds '-lm' when linking libgraphblas and when using clang.
+    # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
+    patch('graphblas_libm_dep.patch', when='@5.2.0:5.2.99%clang')
+
+    conflicts('%gcc@:4.8', when='@5.2.0:', msg='gcc version must be at least 4.9 for suite-sparse@5.2.0:')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -116,7 +104,7 @@ class SuiteSparse(Package):
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']
 
-        if '%xl' in spec or '%xl_r' in spec:
+        if spack_f77.endswith('xlf') or spack_f77.endswith('xlf_r'):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR

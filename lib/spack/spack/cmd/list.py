@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 from __future__ import division
 
@@ -37,7 +18,8 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
+import spack.dependency
+import spack.repo
 import spack.cmd.common.arguments as arguments
 
 description = "list and search available packages"
@@ -184,7 +166,7 @@ def rst(pkg_names):
                                    reversed(sorted(pkg.versions))))
             print()
 
-        for deptype in spack.all_deptypes:
+        for deptype in spack.dependency.all_deptypes:
             deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print('%s Dependencies' % deptype.capitalize())
@@ -272,7 +254,7 @@ def html(pkg_names):
             print(', '.join(str(v) for v in reversed(sorted(pkg.versions))))
             print('</dd>')
 
-        for deptype in spack.all_deptypes:
+        for deptype in spack.dependency.all_deptypes:
             deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print('<dt>%s Dependencies:</dt>' % deptype.capitalize())
@@ -301,7 +283,8 @@ def list(parser, args):
 
     # Filter by tags
     if args.tags:
-        packages_with_tags = set(spack.repo.packages_with_tags(*args.tags))
+        packages_with_tags = set(
+            spack.repo.path.packages_with_tags(*args.tags))
         sorted_packages = set(sorted_packages) & packages_with_tags
         sorted_packages = sorted(sorted_packages)
 

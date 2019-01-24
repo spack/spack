@@ -1,95 +1,115 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import os.path
 
 
-class Dyninst(Package):
+class Dyninst(CMakePackage):
     """API for dynamic binary instrumentation.  Modify programs while they
     are executing without recompiling, re-linking, or re-executing."""
 
     homepage = "https://paradyn.org"
-    url = "https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz"
-    list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
+    git      = "https://github.com/dyninst/dyninst.git"
 
-    version('9.3.2', 'a2bf03b6d1d424853e80d39b13e9c229')
-    version('9.3.0', 'edde7847dc673ca69bd59412af572450')
-    version('9.2.0', 'ad023f85e8e57837ed9de073b59d6bab',
-            url="https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz")
-    version('9.1.0', '5c64b77521457199db44bec82e4988ac',
-            url="http://www.paradyn.org/release9.1.0/DyninstAPI-9.1.0.tgz")
-    version('8.2.1', 'abf60b7faabe7a2e4b54395757be39c7',
-            url="http://www.paradyn.org/release8.2/DyninstAPI-8.2.1.tgz")
-    version('8.1.2', 'bf03b33375afa66fe0efa46ce3f4b17a',
-            url="http://www.paradyn.org/release8.1.2/DyninstAPI-8.1.2.tgz")
-    version('8.1.1', 'd1a04e995b7aa70960cd1d1fac8bd6ac',
-            url="http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz")
+    version('develop', branch='master')
+    version('10.0.0', tag='v10.0.0')
+    version('9.3.2', tag='v9.3.2')
+    version('9.3.0', tag='v9.3.0')
+    version('9.2.0', tag='v9.2.0')
+    version('9.1.0', tag='v9.1.0')
+    version('8.2.1', tag='v8.2.1')
+
+    variant('openmp', default=True,
+            description='Enable OpenMP support for ParseAPI '
+            '(version 10.0.0 or later)')
+
+    variant('static', default=False,
+            description='Build static libraries')
 
     variant('stat_dysect', default=False,
-            description="patch for STAT's DySectAPI")
+            description="Patch for STAT's DySectAPI")
 
-    depends_on("elf@0", type='link', when='@:9.2.99')
-    depends_on("elf@1", type='link', when='@9.3.0:')
-    depends_on("libdwarf")
-    depends_on("boost@1.42:")
-    depends_on('cmake', type='build')
+    boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
+
+    depends_on('boost@1.61.0:' + boost_libs)
+    depends_on('libiberty+pic')
+
+    # Dyninst uses elf@1 (elfutils) starting with 9.3.0, and used
+    # elf@0 (libelf) before that.
+    depends_on('elf@1', type='link', when='@9.3.0:')
+    depends_on('elf@0', type='link', when='@:9.2.99')
+
+    # Dyninst uses libdw from elfutils (same elf@1) starting with
+    # 10.x, and used libdwarf before that.
+    depends_on('libdwarf', when='@:9.99')
+
+    depends_on('tbb@2018.6:', when='@10.0:')
+
+    depends_on('cmake@3.0:', type='build', when='@10.0:')
+    depends_on('cmake@2.8:', type='build', when='@:9.99')
 
     patch('stat_dysect.patch', when='+stat_dysect')
     patch('stackanalysis_h.patch', when='@9.2.0')
+    patch('v9.3.2-auto.patch', when='@9.3.2 %gcc@:4.7.99')
 
-    # new version uses cmake
-    def install(self, spec, prefix):
-        if spec.satisfies('@:8.1'):
-            configure("--prefix=" + prefix)
-            make()
-            make("install")
-            return
+    # Versions 9.3.x used cotire, but have no knob to turn it off.
+    # Cotire has no real use for one-time builds and can break
+    # parallel builds with both static and shared libs.
+    @when('@9.3.0:9.3.99')
+    def patch(self):
+        filter_file('USE_COTIRE true', 'USE_COTIRE false',
+                    'cmake/shared.cmake')
 
-        libelf = spec['elf'].prefix
-        libdwarf = spec['libdwarf'].prefix
+    def cmake_args(self):
+        spec = self.spec
 
-        with working_dir('spack-build', create=True):
-            args = ['..',
-                    '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
-                    '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
-                    '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                    '-DLIBELF_INCLUDE_DIR=%s'   % join_path(
-                        libelf.include, 'libelf'),
-                    '-DLIBELF_LIBRARIES=%s'     % join_path(
-                        libelf.lib, 'libelf.so'),
-                    '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
-                    '-DLIBDWARF_LIBRARIES=%s'   % join_path(
-                        libdwarf.lib, 'libdwarf.so')]
-            if spec.satisfies('arch=linux-redhat7-ppc64le'):
-                args.append('-Darch_ppc64_little_endian=1')
-            args += std_cmake_args
-            cmake(*args)
-            make()
-            make("install")
+        # Elf -- the directory containing libelf.h.
+        elf = spec['elf'].prefix
+        elf_include = os.path.dirname(
+            find_headers('libelf', elf.include, recursive=True)[0])
 
-    @when('@:8.1')
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-        make()
-        make("install")
+        # Dwarf -- the directory containing elfutils/libdw.h or
+        # libdwarf.h, and the path to libdw.so or libdwarf.so.
+        if spec.satisfies('@10.0.0:'):
+            dwarf_include = elf.include
+            dwarf_lib = find_libraries('libdw', elf, recursive=True)
+        else:
+            dwarf_include = spec['libdwarf'].prefix.include
+            dwarf_lib = spec['libdwarf'].libs
+
+        args = [
+            '-DPATH_BOOST=%s' % spec['boost'].prefix,
+            '-DIBERTY_LIBRARIES=%s' % spec['libiberty'].libs,
+
+            '-DLIBELF_INCLUDE_DIR=%s' % elf_include,
+            '-DLIBELF_LIBRARIES=%s' % spec['elf'].libs,
+
+            '-DLIBDWARF_INCLUDE_DIR=%s' % dwarf_include,
+            '-DLIBDWARF_LIBRARIES=%s' % dwarf_lib,
+        ]
+
+        # TBB include and lib directories, version 10.x or later.
+        if spec.satisfies('@10.0.0:'):
+            args.extend([
+                '-DTBB_INCLUDE_DIRS=%s' % spec['tbb'].prefix.include,
+                '-DTBB_LIBRARY=%s' % spec['tbb'].prefix.lib,
+            ])
+
+        # Openmp applies to version 10.x or later.
+        if spec.satisfies('@10.0.0:'):
+            if '+openmp' in spec:
+                args.append('-DUSE_OpenMP=ON')
+            else:
+                args.append('-DUSE_OpenMP=OFF')
+
+        # Static libs started with version 9.1.0.
+        if spec.satisfies('@9.1.0:'):
+            if '+static' in spec:
+                args.append('-DENABLE_STATIC_LIBS=1')
+            else:
+                args.append('-DENABLE_STATIC_LIBS=NO')
+
+        return args

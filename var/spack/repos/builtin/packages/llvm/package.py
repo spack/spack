@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -89,6 +70,7 @@ class Llvm(CMakePackage):
     depends_on('ncurses', when='+lldb')
     depends_on('swig', when='+lldb')
     depends_on('libedit', when='+lldb')
+    depends_on('py-six', when='@5.0.0: +lldb +python')
 
     # gold support
     depends_on('binutils+gold', when='+gold')
@@ -99,6 +81,8 @@ class Llvm(CMakePackage):
 
     base_url = 'http://llvm.org/releases/%%(version)s/%(pkg)s-%%(version)s.src.tar.xz'
     llvm_url = base_url % {'pkg': 'llvm'}
+    # Flang uses its own fork of llvm.
+    flang_llvm_url = 'https://github.com/flang-compiler/llvm.git'
 
     resources = {
         'compiler-rt': {
@@ -164,7 +148,7 @@ class Llvm(CMakePackage):
     }
     releases = [
         {
-            'version': 'trunk',
+            'version': 'develop',
             'repo': 'http://llvm.org/svn/llvm-project/llvm/trunk',
             'resources': {
                 'compiler-rt': 'http://llvm.org/svn/llvm-project/compiler-rt/trunk',
@@ -177,6 +161,38 @@ class Llvm(CMakePackage):
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
                 'lld': 'http://llvm.org/svn/llvm-project/lld/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            }
+        },
+        {
+            'version': '7.0.0',
+            'md5': 'e0140354db83cdeb8668531b431398f0',
+            'resources': {
+                'compiler-rt': '3b759c47076298363f4443395e0e51c1',
+                'openmp': '8800aac08f2f9dad0ebf66e0e152bd63',
+                'polly': 'ff689bbfdca3ea812d195f60e63d8346',
+                'libcxx': '5ef835bf8c9f49611af4d5f3362d9658',
+                'libcxxabi': 'f04adafa019f4f5cce9550007da251c1',
+                'cfe': '2ac5d8d78be681e31611c5e546e11174',
+                'clang-tools-extra': 'e98b37a5911cd556775cba0868a56981',
+                'lldb': '76338963b3ccc4f9dccc923716207310',
+                'lld': '5eb148c3064acff71d8e5856163c8323',
+                'libunwind': 'e585a3e4ae6045f2561bc8a8fcd0bfbb'
+            }
+        },
+        {
+            'version': '6.0.1',
+            'md5': 'c88c98709300ce2c285391f387fecce0',
+            'resources': {
+                'compiler-rt': '99bf8bcb68ba96dda74f6aee6c55f639',
+                'openmp': '4826402ae3633c36c51ba4d0e5527d30',
+                'polly': '4e5937753d1f77e2c0feca485fc7f9da',
+                'libcxx': '2c13cd0136ab6f8060a4cde85b5f86e2',
+                'libcxxabi': '41764959176d5fcc7baee8cd22ed1705',
+                'cfe': '4e419bd4e3b55aa06d872320f754bd85',
+                'clang-tools-extra': '431cba2b652e9c227a59a6d681388160',
+                'lldb': '482eba39e78c75a83216cf2d5b7a54b4',
+                'lld': '31cc580b32be124972c40c19c0839fed',
+                'libunwind': '569eed6f508af4c4c053b1112e6f3d0b'
             }
         },
         {
@@ -193,6 +209,22 @@ class Llvm(CMakePackage):
                 'lldb': '1ec6498066e273b7261270f344b68121',
                 'lld': '7ab2612417477b03538f11cd8b5e12f8',
                 'libunwind': '022a4ee2c3bf7b6d151e0444f66aca64'
+            }
+        },
+        {
+            'version': '5.0.2',
+            'md5': 'c5e980edf7f22d66f0f7561b35c1e195',
+            'resources': {
+                'compiler-rt': '22728d702a64ffc6d073d1dda25a1eb9',
+                'openmp': 'ad214f7f46d671f9b73d75e9d54e4594',
+                'polly': '5777f1248633ebc2b81ffe6ecb8cf4b1',
+                'libcxx': '93e7942c01cdd5bce5378bc3926f97ea',
+                'libcxxabi': '855ada029899c95cd6a852f13ed0ea71',
+                'cfe': '1cd6ee1b74331fb37c27b4a2a1802c97',
+                'clang-tools-extra': 'd4d0d9637fa1e47daf3f51e743d8f138',
+                'lldb': '9d0addd1a28a4c155b8f69919e7bbff7',
+                'lld': '7b7e2371cd250aec54879ae13b441382',
+                'libunwind': '5b2a11e475fe8e7f3725792ba66da086',
             }
         },
         {
@@ -385,8 +417,65 @@ class Llvm(CMakePackage):
         },
     ]
 
+    # Flang uses its own fork of clang (renamed flang-driver).
+    flang_resources = {
+        'flang-driver': {
+            'git': 'https://github.com/flang-compiler/flang-driver.git',
+            'destination': 'tools',
+            'placement': 'clang'
+        },
+        'openmp': {
+            'git': 'https://github.com/llvm-mirror/openmp.git',
+            'destination': 'projects',
+            'placement': 'openmp'
+        }
+    }
+
+    flang_releases = [
+        {
+            'version': 'develop',
+            'branch': 'release_60',
+            'resources': {
+                'flang-driver': 'release_60',
+                'openmp': 'release_60',
+            }
+        },
+        {
+            'version': '20180921',
+            'commit': 'd8b30082648dc869eba68f9e539605f437d7760c',
+            'resources': {
+                'flang-driver': 'dd7587310ae498c22514a33e1a2546b86af9cf25',
+                'openmp': 'd5aa29cb3bcf51289d326b4e565613db8aff65ef'
+            }
+        },
+        {
+            'version': 'ppc64le-20180921',
+            'commit': 'd8b30082648dc869eba68f9e539605f437d7760c',
+            'resources': {
+                'flang-driver': 'dd7587310ae498c22514a33e1a2546b86af9cf25',
+                'openmp': '29b515e1e6d26b5b0d32d47d28dcdb4b8a11470d'
+            }
+        },
+        {
+            'version': '20180612',
+            'commit': 'f26a3ece4ccd68a52f5aa970ec42837ee0743296',
+            'resources': {
+                'flang-driver': 'e079fa68cb35a53c88c41a1939f90b94d539e984',
+                'openmp': 'd5aa29cb3bcf51289d326b4e565613db8aff65ef'
+            }
+        },
+        {
+            'version': 'ppc64le-20180612',
+            'commit': '4158932a46eb2f06a166f22a4a52ae48c7d2949e',
+            'resources': {
+                'flang-driver': '50c1828a134d5a0f1553b355bf0946db48b0aa6d',
+                'openmp': '29b515e1e6d26b5b0d32d47d28dcdb4b8a11470d'
+            }
+        }
+    ]
+
     for release in releases:
-        if release['version'] == 'trunk':
+        if release['version'] == 'develop':
             version(release['version'], svn=release['repo'])
 
             for name, repo in release['resources'].items():
@@ -408,11 +497,59 @@ class Llvm(CMakePackage):
                                          resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
 
+    for release in flang_releases:
+        if release['version'] == 'develop':
+            version('flang-' + release['version'], git=flang_llvm_url, branch=release['branch'])
+
+            for name, branch in release['resources'].items():
+                flang_resource = flang_resources[name]
+                resource(name=name,
+                         git=flang_resource['git'],
+                         branch=branch,
+                         destination=flang_resource['destination'],
+                         placement=flang_resource['placement'],
+                         when='@flang-' + release['version'])
+
+        else:
+            version('flang-' + release['version'], git=flang_llvm_url, commit=release['commit'])
+
+            for name, commit in release['resources'].items():
+                flang_resource = flang_resources[name]
+                resource(name=name,
+                         git=flang_resource['git'],
+                         commit=commit,
+                         destination=flang_resource['destination'],
+                         placement=flang_resource['placement'],
+                         when='@flang-' + release['version'])
+
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
 
+    # LLVM 4 and 5 does not build with GCC 8
+    conflicts('%gcc@8:',      when='@:5')
+
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
+
+    @run_before('cmake')
+    def check_darwin_lldb_codesign_requirement(self):
+        if not self.spec.satisfies('+lldb platform=darwin'):
+            return
+        codesign = which('codesign')
+        mkdir('tmp')
+        llvm_check_file = join_path('tmp', 'llvm_check')
+        copy('/usr/bin/false', llvm_check_file)
+
+        try:
+            codesign('-f', '-s', 'lldb_codesign', '--dryrun',
+                     llvm_check_file)
+
+        except ProcessError:
+            explanation = ('The "lldb_codesign" identity must be available'
+                           ' to build LLVM with LLDB. See https://llvm.org/'
+                           'svn/llvm-project/lldb/trunk/docs/code-signing'
+                           '.txt for details on how to create this identity.')
+            raise RuntimeError(explanation)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
@@ -441,6 +578,8 @@ class Llvm(CMakePackage):
                                '-DLLVM_POLLY_BUILD:Bool=OFF',
                                '-DLLVM_POLLY_LINK_INTO_TOOLS:Bool=OFF'])
 
+        if '+python' in spec and '+lldb' in spec and spec.satisfies('@5.0.0:'):
+            cmake_args.append('-DLLDB_USE_SYSTEM_SIX:Bool=TRUE')
         if '+clang' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
         if '+lldb' not in spec:

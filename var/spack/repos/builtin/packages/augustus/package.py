@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,12 +11,12 @@ class Augustus(MakefilePackage):
        genomic sequences"""
 
     homepage = "http://bioinf.uni-greifswald.de/augustus/"
-    url      = "http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.3.tar.gz"
+    url      = "http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.3.1.tar.gz"
+    list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
 
-    version('3.3', '93691d9aafc7d3d0e1adf31ec308507f',
-            url='http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.3.tar.gz')
-    version('3.2.3', 'b8c47ea8d0c45aa7bb9a82626c8ff830',
-            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.3.tar.gz')
+    version('3.3.1', '8363ece221c799eb169f47e545efb951')
+    version('3.3',   '93691d9aafc7d3d0e1adf31ec308507f')
+    version('3.2.3', 'b8c47ea8d0c45aa7bb9a82626c8ff830')
 
     depends_on('bamtools')
     depends_on('gsl')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,14 +12,10 @@ class Bwa(Package):
     homepage = "http://github.com/lh3/bwa"
     url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
 
-    version('0.7.17', '82cba7ef695538e6a38b9d4156837381',
-            url="https://github.com/lh3/bwa/releases/download/v0.7.17/bwa-0.7.17.tar.bz2")
-    version('0.7.16a', 'c5115c9a5ea0406848500e4b23a7708c',
-            url="https://github.com/lh3/bwa/releases/download/v0.7.16/bwa-0.7.16a.tar.bz2")
-    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554',
-            url="https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2")
-    version('0.7.13', 'f094f609438511766c434178a3635ab4',
-            url="https://github.com/lh3/bwa/releases/download/v0.7.13/bwa-0.7.13.tar.bz2")
+    version('0.7.17', '82cba7ef695538e6a38b9d4156837381')
+    version('0.7.16a', 'c5115c9a5ea0406848500e4b23a7708c')
+    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
+    version('0.7.13', 'f094f609438511766c434178a3635ab4')
     version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
             url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
 

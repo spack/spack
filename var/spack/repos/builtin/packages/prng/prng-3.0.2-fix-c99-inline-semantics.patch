@@ -1,0 +1,146 @@
+Use portable 'static inline' semantics that work in GNU89 and C99
+See also: http://www.greenend.org.uk/rjk/tech/inline.html
+
+--- a/src/dicg.c
++++ b/src/dicg.c
+@@ -441,7 +441,7 @@
+  * Algorithm by Karin Schaber and Otmar Lendl.
+  *
+  */                                                  
+-inline prng_num prng_dicg_multiply(int k,prng_num c, prng_num d)
++prng_num prng_dicg_multiply(int k,prng_num c, prng_num d)
+ {
+   int i;
+   struct mtable *t;
+--- a/src/external.c
++++ b/src/external.c
+@@ -139,7 +139,7 @@
+  *      gen:  Pointer to a struct prng.
+  *
+  */
+-inline prng_num prng_tt800_get_next_int(struct prng *gen)
++prng_num prng_tt800_get_next_int(struct prng *gen)
+ {
+ unsigned int y;
+ struct tt800_state *g;
+--- a/src/icg.c
++++ b/src/icg.c
+@@ -110,7 +110,7 @@
+  *      gen:  Pointer to a struct prng.
+  *
+  */
+-inline prng_num prng_icg_get_next_int(struct prng *gen)
++prng_num prng_icg_get_next_int(struct prng *gen)
+ {
+   s_prng_num inv, current, prod;
+   
+--- a/src/lcg.c
++++ b/src/lcg.c
+@@ -111,7 +111,7 @@
+  *      gen:  Pointer to a struct prng.
+  *
+  */
+-inline prng_num prng_lcg_get_next_int(struct prng *gen)
++prng_num prng_lcg_get_next_int(struct prng *gen)
+ {
+   s_prng_num ax, current;
+ 
+--- a/src/meicg.c
++++ b/src/meicg.c
+@@ -106,7 +106,7 @@
+  *      gen:  Pointer to a struct prng.
+  *
+  */
+-inline prng_num prng_meicg_get_next_int(struct prng *gen)
++prng_num prng_meicg_get_next_int(struct prng *gen)
+ {
+   s_prng_num an, sum, inv, n;
+ 
+--- a/src/mt19937.c
++++ b/src/mt19937.c
+@@ -172,7 +172,7 @@
+  *      gen:  Pointer to a struct prng.
+  *
+  */
+-inline prng_num prng_mt19937_get_next_int(struct prng *gen)
++prng_num prng_mt19937_get_next_int(struct prng *gen)
+ {
+ #define MT  gen->data.mt19937_data.mt
+ #define MTI gen->data.mt19937_data.mti
+--- a/src/prng.h
++++ b/src/prng.h
+@@ -406,7 +406,7 @@
+ /* INLINE fnk def. for mult_mod, I don't know if this works for non-GCC */
+ 
+ #ifdef __GNUC__
+-extern __inline__ prng_num mult_mod(prng_num s,struct mult_mod_struct *mm)
++static inline prng_num mult_mod(prng_num s,struct mult_mod_struct *mm)
+ {
+ s_prng_num s_tmp;
+ 
+--- a/src/qcg.c
++++ b/src/qcg.c
+@@ -107,7 +107,7 @@
+  *      gen:  Pointer to a struct prng.
+  *
+  */
+-inline prng_num prng_qcg_get_next_int(struct prng *gen)
++prng_num prng_qcg_get_next_int(struct prng *gen)
+ {
+   s_prng_num current, sum, square, q_term, l_term;
+ 
+--- a/src/support.c
++++ b/src/support.c
+@@ -449,52 +449,6 @@
+ 		}
+ }
+ 
+-#ifndef __cplusplus
+-/* 
+- * Modular Multiplication. Uses the precalculated values from mult_mod_setup.
+- *
+- *
+- * Input: 
+- *	s	An prng_num. 
+- *	mm	pointer to a struct mult_mod_struct initialized 
+- *		by mult_mod_setup.
+- *
+- * Output:
+- *      (mm->a*s) mod mm->p
+- *
+- */
+-prng_num mult_mod(prng_num s,struct mult_mod_struct *mm)
+-{
+-s_prng_num s_tmp;
+-
+-switch(mm->algorithm)
+-	{
+-	case PRNG_MM_ZERO:	return(0);
+-			break;
+-	case PRNG_MM_ONE:	return(s);
+-			break;
+-	case PRNG_MM_SIMPLE: return((s * mm->a) % mm->p );
+-			break;
+-	case PRNG_MM_SCHRAGE:
+-			s_tmp = mm->a * ( s % mm->q ) - 
+-				mm->r * ( s / mm->q );
+-			if (s_tmp < 0) s_tmp += mm->p;
+-			return(s_tmp);
+-			break;
+-	case PRNG_MM_DECOMP: return(mult_mod_generic(s,mm->a,mm->p)); 
+-			break;
+-#ifdef HAVE_LONGLONG
+-	case PRNG_MM_LL:	return(mult_mod_ll(s,mm->a,mm->p));
+-			break;
+-#endif
+-	case PRNG_MM_POW2:	return((s*mm->a) & mm->mask);
+-			break;
+-	}
+-/* not reached */
+-return(0);
+-}
+-#endif
+-
+ 
+ /* 
+  * Modular Multiplication: Decomposition method (from L'Ecuyer & Cote)
