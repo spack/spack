@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import glob
 
 
 class Binutils(AutotoolsPackage):
@@ -28,6 +29,7 @@ class Binutils(AutotoolsPackage):
     variant('gold', default=True, description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
+    variant('headers', default=False, description='Install extra headers (e.g. ELF)')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -75,3 +77,17 @@ class Binutils(AutotoolsPackage):
             configure_args.append('--program-prefix=g')
 
         return configure_args
+
+    @run_after('install')
+    def install_headers(self):
+        # some packages (like TAU) need the ELF headers, so install them
+        # as a subdirectory in include/extras
+        if '+headers' in self.spec:
+            extradir = join_path(self.prefix.include, 'extra')
+            mkdirp(extradir)
+            # grab the full binutils set of headers
+            install_tree('include', extradir)
+            # also grab the headers from the bfd directory
+            for current_file in glob.glob(join_path(self.build_directory,
+                                                    'bfd', '*.h')):
+                install(current_file, extradir)
