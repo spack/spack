@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Copyright (c) 2017, University of Tennessee
 # All rights reserved.
-# 
+#
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 # Redistribution and use in source and binary forms, with or without
