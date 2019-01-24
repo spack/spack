@@ -1,6 +1,8 @@
 # ------------------------------------------------------------------------------
 # Copyright (c) 2017, University of Tennessee
 # All rights reserved.
+# 
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -24,7 +26,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
