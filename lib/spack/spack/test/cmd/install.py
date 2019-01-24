@@ -185,14 +185,6 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
 def test_install_overwrite(
         mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
-    # It's not possible to overwrite something that is not yet installed
-    with pytest.raises(AssertionError):
-        install('--overwrite', 'libdwarf')
-
-    # --overwrite requires a single spec
-    with pytest.raises(AssertionError):
-        install('--overwrite', 'libdwarf', 'libelf')
-
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')
     spec.concretize()
@@ -215,6 +207,61 @@ def test_install_overwrite(
     assert os.path.exists(spec.prefix)
     assert fs.hash_directory(spec.prefix) == expected_md5
     assert fs.hash_directory(spec.prefix) != bad_md5
+
+
+def test_install_overwrite_not_installed(
+        mock_packages, mock_archive, mock_fetch, config, install_mockery
+):
+    # Try to install a spec and then to reinstall it.
+    spec = Spec('libdwarf')
+    spec.concretize()
+
+    assert not os.path.exists(spec.prefix)
+
+    install('--overwrite', '-y', 'libdwarf')
+    assert os.path.exists(spec.prefix)
+
+
+def test_install_overwrite_multiple(
+        mock_packages, mock_archive, mock_fetch, config, install_mockery
+):
+    # Try to install a spec and then to reinstall it.
+    libdwarf = Spec('libdwarf')
+    libdwarf.concretize()
+
+    install('libdwarf')
+
+    cmake = Spec('cmake')
+    cmake.concretize()
+
+    install('cmake')
+
+    assert os.path.exists(libdwarf.prefix)
+    expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix)
+
+    assert os.path.exists(cmake.prefix)
+    expected_cmake_md5 = fs.hash_directory(cmake.prefix)
+
+    # Modify the first installation to be sure the content is not the same
+    # as the one after we reinstalled
+    with open(os.path.join(libdwarf.prefix, 'only_in_old'), 'w') as f:
+        f.write('This content is here to differentiate installations.')
+    with open(os.path.join(cmake.prefix, 'only_in_old'), 'w') as f:
+        f.write('This content is here to differentiate installations.')
+
+    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix)
+    bad_cmake_md5 = fs.hash_directory(cmake.prefix)
+
+    assert bad_libdwarf_md5 != expected_libdwarf_md5
+    assert bad_cmake_md5 != expected_cmake_md5
+
+    install('--overwrite', '-y', 'libdwarf', 'cmake')
+    assert os.path.exists(libdwarf.prefix)
+    assert os.path.exists(cmake.prefix)
+    assert fs.hash_directory(libdwarf.prefix) == expected_libdwarf_md5
+    assert fs.hash_directory(cmake.prefix) == expected_cmake_md5
+    assert fs.hash_directory(libdwarf.prefix) != bad_libdwarf_md5
+    assert fs.hash_directory(cmake.prefix) != bad_cmake_md5
 
 
 @pytest.mark.usefixtures(
