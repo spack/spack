@@ -32,7 +32,8 @@ class Hpctools(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/hpc/HPCTools"
 
     version('develop', git=url)
-    version('3.5.1', tag='3.5.1', git=url, preferred=True)
+    version('3.5.2', tag='v3.5.2', git=url, preferred=True)
+    version('3.5.1', tag='3.5.1', git=url)
     version('3.1.0', tag='3.1.0', git=url)
 
     variant('openmp', default=True, description='Enables OpenMP support')
