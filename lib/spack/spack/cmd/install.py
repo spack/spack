@@ -284,8 +284,8 @@ def install(parser, args, **kwargs):
     with reporter:
         if args.overwrite:
 
-            installed = filter(lambda x: x,
-                               map(spack.store.db.query_one, specs))
+            installed = list(filter(lambda x: x,
+                                    map(spack.store.db.query_one, specs)))
             if not args.yes_to_all:
                 display_args = {
                     'long': True,
@@ -298,7 +298,8 @@ def install(parser, args, **kwargs):
                             'reinstalled:\n')
                     spack.cmd.display_specs(installed, **display_args)
 
-                not_installed = filter(lambda x: x not in installed, specs)
+                not_installed = list(filter(lambda x: x not in installed,
+                                            specs))
                 if not_installed:
                     tty.msg('The following package specs are not installed and'
                             ' the --overwrite flag was given. The package spec'
