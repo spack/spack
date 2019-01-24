@@ -668,7 +668,7 @@ class Environment(object):
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
                 if os.path.exists(build_log_link):
                     os.remove(build_log_link)
-                os.symlink(spec.package.build_log_path, build_log_link)
+                fs.force_symlink(spec.package.build_log_path, build_log_link)
 
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""
