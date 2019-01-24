@@ -663,11 +663,17 @@ class Environment(object):
             with fs.working_dir(self.path):
                 spec.package.do_install(**kwargs)
 
+            if not spec.external:
                 # Link the resulting log file into logs dir
                 build_log_link = os.path.join(
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
                 if os.path.exists(build_log_link):
+                    tty.debug("Removing old log symlink for {0}"
+                              .format(spec.name))
                     os.remove(build_log_link)
+                if not os.path.exists(spec.package.build_log_path):
+                    tty.debug("Original build log path does not exist for {0}"
+                              .format(spec.name))
                 os.symlink(spec.package.build_log_path, build_log_link)
 
     def all_specs_by_hash(self):
