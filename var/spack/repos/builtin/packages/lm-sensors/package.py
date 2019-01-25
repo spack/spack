@@ -8,7 +8,7 @@ from spack import *
 
 class LmSensors(MakefilePackage):
     """The lm-sensors package provides user-space support for the
-    hardware monitoring drivers in Linux."""
+    hardware monitoring drivers in Linux. """
 
     homepage = "https://github.com/groeck/lm-sensors/"
     url = "https://github.com/groeck/lm-sensors/archive/V3-4-0.tar.gz"
