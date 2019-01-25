@@ -663,6 +663,7 @@ class Environment(object):
             with fs.working_dir(self.path):
                 spec.package.do_install(**kwargs)
 
+            if not spec.external:
                 # Link the resulting log file into logs dir
                 build_log_link = os.path.join(
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
