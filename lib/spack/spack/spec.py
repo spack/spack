@@ -94,6 +94,7 @@ from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs, memoized
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
+import llnl.util.tty as tty
 
 import spack.architecture
 import spack.compiler
@@ -1834,6 +1835,8 @@ class Spec(object):
                         changed = True
                         spec._dependencies = DependencyMap()
                     replacement._dependencies = DependencyMap()
+                    if replacement.architecture:
+                        tty.debug("External arch: " + str(replacement.architecture))
                     replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
