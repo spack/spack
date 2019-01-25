@@ -11,7 +11,7 @@ class LmSensors(MakefilePackage):
     hardware monitoring drivers in Linux."""
 
     homepage = "https://github.com/groeck/lm-sensors/"
-    url      = "https://github.com/groeck/lm-sensors/archive/V3-4-0.tar.gz"
+    url = "https://github.com/groeck/lm-sensors/archive/V3-4-0.tar.gz"
 
     version('3-4-0', '1e9f117cbfa11be1955adc96df71eadb')
     version('3-3-5', '42dcbc32c61133f5dbcdfd7ef8d0ee3c')
