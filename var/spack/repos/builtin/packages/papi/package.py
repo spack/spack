@@ -21,7 +21,7 @@ class Papi(Package):
        across the hardware and software stack."""
     homepage = "http://icl.cs.utk.edu/papi/index.html"
 
-    url      = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
+    url = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
     version('develop', git="http://bitbucket.org/icl/papi")
     version('5.6.0', 'fdd075860b2bc4b8de8b8b5c3abf594a')
     version('5.5.1', '86a8a6f3d0f34cd83251da3514aae15d')
@@ -53,7 +53,9 @@ class Papi(Package):
     def setup_environment(self, spack_env, run_env):
         if '+cuda' in self.spec or 'nvml' in self.spec:
             spack_env.set('CUDA_DIR', self.spec['cuda'].prefix)
-            run_env.prepend_path('LD_LIBRARY_PATH', join_path(self.spec['cuda'].prefix, "extras/CUPTI/lib64"))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.spec['cuda'].prefix,
+                                           "extras/CUPTI/lib64"))
 
     def install(self, spec, prefix):
         with working_dir("src/components/nvml"):
@@ -69,8 +71,10 @@ class Papi(Package):
         with working_dir("src/components/lmsensors"):
             if '+lmsensors' in spec:
                 configure_args = [
-                    "--with-sensors_incdir=%s/include/sensors" % spec['lm-sensors'].prefix,
-                    "--with-sensors_libdir=%s/lib64" % spec['lm-sensors'].prefix]
+                    "--with-sensors_incdir=%s/include/sensors" %
+                    spec['lm-sensors'].prefix,
+                    "--with-sensors_libdir=%s/lib64" %
+                    spec['lm-sensors'].prefix]
                 configure(*configure_args)
         with working_dir("src"):
 
@@ -81,7 +85,9 @@ class Papi(Package):
             # fail, so that PAPI does not get confused
             configure_args.append('MPICC=:')
 
-            configure_args.append('--with-components={0}'.format(' '.join(filter(lambda x: spec.variants[x].value, spec.variants))))
+            configure_args.append(
+                '--with-components={0}'.format(' '.join(
+                    filter(lambda x: spec.variants[x].value, spec.variants))))
 
             configure(*configure_args)
 
@@ -98,4 +104,3 @@ class Papi(Package):
                 os.rename(join_path(prefix.lib, 'libpapi.so'),
                           join_path(prefix.lib, 'libpapi.dylib'))
                 fix_darwin_install_name(prefix.lib)
-
