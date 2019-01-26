@@ -39,6 +39,8 @@ class NetlibScalapack(CMakePackage):
     depends_on('blas')
     depends_on('cmake', when='@2.0.0:', type='build')
 
+    patch("cmake_fortran_mangle.patch", when='@2.0.2:')
+
     @property
     def libs(self):
         # Note that the default will be to search
