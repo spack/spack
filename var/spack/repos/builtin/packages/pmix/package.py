@@ -45,7 +45,7 @@ class Pmix(AutotoolsPackage):
     version('1.2.5',    'c3d20cd9d365a813dc367afdf0f41c37')
 
     depends_on('libevent@2.0.20:2.0.22,2.1.8')
-    depends_on('hwloc@1.11.0:1.11.99,2.0.1:')
+    depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
 
     def configure_args(self):
 
