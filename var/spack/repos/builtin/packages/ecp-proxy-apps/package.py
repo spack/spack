@@ -37,7 +37,7 @@ class EcpProxyApps(Package):
 
     depends_on('amg@1.1', when='@2.0:')
     depends_on('candle-benchmarks@0.1', when='+candle @2.0:')
-    depends_on('laghos@1.1', when='@2.0:')
+    depends_on('laghos@2.0', when='@2.0:')
     depends_on('macsio@1.1', when='@2.0:')
     depends_on('miniamr@1.4.1', when='@2.0:')
     depends_on('sw4lite@1.1', when='@2.0:')
