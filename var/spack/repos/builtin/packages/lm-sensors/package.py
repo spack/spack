@@ -12,6 +12,7 @@ class LmSensors(MakefilePackage):
 
     homepage = "https://github.com/groeck/lm-sensors/"
     url = "https://github.com/groeck/lm-sensors/archive/V3-4-0.tar.gz"
+    maintainers = ['G-Ragghianti']
 
     version('3-4-0', '1e9f117cbfa11be1955adc96df71eadb')
     version('3-3-5', '42dcbc32c61133f5dbcdfd7ef8d0ee3c')
@@ -23,6 +24,10 @@ class LmSensors(MakefilePackage):
     version('3-2-0', '07cd13fecb0e0ea19ddf97ec797ee222')
     version('3-1-2', '4031e02c566992e6a6fd87af018c457e')
     version('3-1-1', '2a62fb3789972756ff2ad2d3ad3f016c')
+
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('perl', type='run')
 
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix),
