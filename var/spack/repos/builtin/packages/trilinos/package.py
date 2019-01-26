@@ -71,6 +71,8 @@ class Trilinos(CMakePackage):
             description='Enable OpenMP')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
+    variant('debug',       default=False,
+            description='Enable runtime safety and debug checks')
     variant('xsdkflags',    default=False,
             description='Compile using the default xSDK configuration')
 
@@ -336,6 +338,8 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_DEBUG:BOOL=%s' % (
+                'ON' if '+debug' in spec else 'OFF'),
 
             # The following can cause problems on systems that don't have
             # static libraries available for things like dl and pthreads
