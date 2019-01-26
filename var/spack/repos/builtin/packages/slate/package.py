@@ -18,6 +18,7 @@ class Slate(Package):
 
     homepage = "https://icl.utk.edu/slate/"
     hg      = "https://bitbucket.org/icl/slate"
+    maintainers = ['G-Ragghianti']
 
     version('develop', hg=hg)
 
