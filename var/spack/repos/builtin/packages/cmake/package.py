@@ -50,7 +50,7 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
+    variant('ownlibs', default=False,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
@@ -63,7 +63,8 @@ class Cmake(Package):
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
     depends_on('libarchive',     when='~ownlibs')
-    depends_on('libuv@1.0.0:',   when='~ownlibs')
+    depends_on('libuv@1.0.0:',   when='@3.7.0:3.10.3~ownlibs')
+    depends_on('libuv@1.10.0:',  when='@3.11.0:~ownlibs')
     depends_on('rhash',          when='@3.8.0:~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
