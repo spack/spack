@@ -20,8 +20,9 @@ class Papi(Package):
        components that expose performance measurement opportunites
        across the hardware and software stack."""
     homepage = "http://icl.cs.utk.edu/papi/index.html"
-
     url = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
+    maintainers = ['G-Ragghianti']
+
     version('develop', git="http://bitbucket.org/icl/papi")
     version('5.6.0', 'fdd075860b2bc4b8de8b8b5c3abf594a')
     version('5.5.1', '86a8a6f3d0f34cd83251da3514aae15d')
