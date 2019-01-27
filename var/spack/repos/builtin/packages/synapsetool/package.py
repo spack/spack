@@ -33,13 +33,9 @@ class Synapsetool(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
     version('develop', git=url, submodules=True)
-    version('0.3.2', git=url, tag='v0.3.2', submodules=True, preferred=True)
-    version('0.3.1', git=url, tag='v0.3.1', submodules=True)
+    version('0.4.1', git=url, tag='v0.4.1', submodules=True, preferred=True)
+    version('0.3.3', git=url, tag='v0.3.3', submodules=True)
     version('0.2.5', git=url, tag='v0.2.5', submodules=True)
-    version('0.2.4', git=url, tag='v0.2.4', submodules=True)
-    version('0.2.3', git=url, tag='v0.2.3', submodules=True)
-    version('0.2.1', git=url, tag='v0.2.1', submodules=True)
-    version('0.2.0', git=url, tag='v0.2.0', submodules=True)
 
     variant('mpi', default=True, description="Enable MPI backend")
     variant('shared', default=True, description="Build shared library")
