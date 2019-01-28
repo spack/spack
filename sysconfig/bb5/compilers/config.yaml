@@ -1,9 +1,0 @@
-config:
-  install_tree: $APPS_DIR_PATH/compilers/install
-  source_cache: $APPS_DIR_PATH/compilers/.cache
-  module_roots:
-    tcl: $APPS_DIR_PATH/compilers/modules/tcl
-    lmod: $APPS_DIR_PATH/compilers/modules/lmod
-  install_path_scheme: '${PACKAGE}-${VERSION}'
-  # The default number of jobs to use when running `make` in parallel.
-  # build_jobs: 8
