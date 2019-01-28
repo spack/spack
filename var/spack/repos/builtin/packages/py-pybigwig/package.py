@@ -18,7 +18,7 @@ class PyPybigwig(PythonPackage):
     variant('numpy', default=True,
             description='Enable support for numpy integers and vectors')
 
-    patch('python3_curl.patch', when='@:0.3.12')
+    patch('python3_curl.patch', when='@:0.3.12 ^python@3:')
 
     depends_on('curl', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
