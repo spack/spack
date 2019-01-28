@@ -54,6 +54,6 @@ class Slate(Package):
         mkdirp(prefix.include)
         install('slate.hh', prefix.include)
         install('lapack_api/lapack_slate.hh',
-             prefix.include + "/slate_lapack_api.hh")
+                prefix.include + "/slate_lapack_api.hh")
         install('scalapack_api/scalapack_slate.hh',
-             prefix.include + "/slate_scalapack_api.hh")
+                prefix.include + "/slate_scalapack_api.hh")
