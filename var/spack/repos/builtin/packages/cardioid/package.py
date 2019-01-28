@@ -11,6 +11,7 @@ import os
 class Cardioid(CMakePackage):
     """Cardiac simulation suite."""
 
+    homepage = 'https://baasic.llnl.gov/comp-bio/cardioid-code.php'
     git = "https://github.com/LLNL/cardioid.git"
     maintainers = ['rblake-llnl']
     
