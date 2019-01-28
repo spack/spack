@@ -13,7 +13,7 @@ class PlacementAlgorithm(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/placementAlgorithm"
 
     version('develop', branch='master')
-    version('2.0.1', tag='placement-algorithm-v2.0.1', preferred=True)
+    version('2.0.2', tag='placement-algorithm-v2.0.2', preferred=True)
 
     build_directory = 'python'
 
@@ -26,7 +26,7 @@ class PlacementAlgorithm(PythonPackage):
 
     depends_on('py-morphio', type='run')
     depends_on('py-morph-tool', type='run')
-    depends_on('py-mpi4py', type='run')
+    depends_on('py-mpi4py@2.0:2.99', type='run')
     depends_on('py-tqdm', type='run')
     depends_on('py-ujson', type='run')
     depends_on('py-voxcell', type='run')
