@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from shutil import copytree, copy
 
 
 class Slate(Package):
@@ -50,11 +49,11 @@ class Slate(Package):
 
         make('mpi=' + f_mpi, 'mkl=1', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
              'CXX=' + compiler)
-        copytree('lib', prefix.lib)
-        copytree('test', prefix.test)
+        install_tree('lib', prefix.lib)
+        install_tree('test', prefix.test)
         mkdirp(prefix.include)
-        copy('slate.hh', prefix.include)
-        copy('lapack_api/lapack_slate.hh',
+        install('slate.hh', prefix.include)
+        install('lapack_api/lapack_slate.hh',
              prefix.include + "/slate_lapack_api.hh")
-        copy('scalapack_api/scalapack_slate.hh',
+        install('scalapack_api/scalapack_slate.hh',
              prefix.include + "/slate_scalapack_api.hh")
