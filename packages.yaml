@@ -86,3 +86,8 @@ packages:
         paths:
             slurm@system: /usr
         buildable: False
+
+    rdma-core:
+        paths:
+            rdma-core@system: /usr
+        buildable: False
