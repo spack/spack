@@ -10,8 +10,8 @@ class PyAlembic(PythonPackage):
     """Alembic is a database migrations tool."""
 
     homepage = "https://pypi.org/project/alembic/"
-    url      = "https://files.pythonhosted.org/packages/50/7a/17bc17b3f5b01ebd3af38d71a15baa33beb241ab280b6ad0977ae24ec208/alembic-1.0.6.tar.gz"
+    url      = "https://pypi.io/packages/source/a/alembic/alembic-1.0.7.tar.gz"
 
-    version('1.0.6', sha256='35660f7e6159288e2be111126be148ef04cbf7306da73c8b8bd4400837bb08e3')
+    version('1.0.7', sha256='16505782b229007ae905ef9e0ae6e880fddafa406f086ac7d442c1aaf712f8c2')
 
     depends_on('py-setuptools', type='build')
