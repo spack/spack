@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install cardioid
-#
-# You can edit this file again by typing:
-#
-#     spack edit cardioid
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 import spack.environment as ev
 import os
@@ -29,9 +12,8 @@ class Cardioid(CMakePackage):
     """Cardiac simulation suite."""
 
     git = "https://github.com/LLNL/cardioid.git"
-
-    # FIXME: Add proper versions and checksums here.
-    # version('1.2.3', '0123456789abcdef0123456789abcdef')
+    maintainers = ['rblake-llnl']
+    
     version('master', branch='master')
     version('elecfem', branch='elec-fem')
 
