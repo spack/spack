@@ -31,7 +31,11 @@ class PyPybigwig(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pyBigWig"
     url      = "https://pypi.io/packages/source/p/pyBigWig/pyBigWig-0.3.4.tar.gz"
 
+    version('0.3.12', '0f7675cfb102545f8c3b4b218b767169')
     version('0.3.4', '8e0a91e26e87eeaa071408a3a749bfa9')
 
-    depends_on('py-setuptools', type='build')
+    patch('python3_curl.patch', when='@:0.3.12 ^python@3:')
+
     depends_on('curl', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type=('build', 'run'))

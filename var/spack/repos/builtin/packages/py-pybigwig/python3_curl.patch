@@ -1,0 +1,16 @@
+diff --git a/setup.py b/setup.py
+index ec31f9b..554a928 100755
+--- a/setup.py
++++ b/setup.py
+@@ -40,9 +40,9 @@ except:
+     defines.append(('NOCURL', None))
+     sys.stderr.write("Either libcurl isn't installed, it didn't come with curl-config, or curl-config isn't in your $PATH. pyBigWig will be installed without support for remote files.\n")
+ 
+-foo = foo.strip().split()
++foo = foo.decode().strip().split()
+ for v in foo:
+-    if(v[0:2] == "-L") :
++    if(v[0:2] == '-L') :
+         additional_libs.append(v[2:])
+ 
+ include_dirs = ['libBigWig', sysconfig.get_config_var("INCLUDEPY")]
