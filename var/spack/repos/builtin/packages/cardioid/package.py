@@ -15,7 +15,7 @@ class Cardioid(CMakePackage):
     git = "https://github.com/LLNL/cardioid.git"
     maintainers = ['rblake-llnl']
 
-    version('master', branch='master')
+    version('develop', branch='master')
     version('elecfem', branch='elec-fem')
 
     variant('cuda', default=False, 
