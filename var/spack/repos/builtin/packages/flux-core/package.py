@@ -15,6 +15,7 @@ class FluxCore(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-core.git"
 
     version('master',  branch='master')
+    version('0.11.0', sha256='a4d8ff92e79b4ca19d556395bb8c5f8dc02fd9d5a8cc38c4a2c66867a96de5ea')
     version('0.10.0', 'a84a1ed53a69c805c253bc940540cbf667a059b2008fd2a6a9bb890a985ead08e88dcbba68c01567f887357306fbfded41b93cc33edfa7809955ba5ba5870284')
     version('0.9.0',  '70eaec1005aa49e8d8cf397570789cebedfb5d917efe963390d456ee4c473eefb15b0c81ea83f60a1fd057fe7be356bbafdebcae64b499844d194c48f6aefa05')
     version('0.8.0',  'b0fec05acedc530bcdf75b2477ac22f39d2adddc7af8ff76496208a5e1e8185b1b4a18677871d95c3cfbf34b05f391953651200917fe029931f4e2beb79d70df')
@@ -39,14 +40,15 @@ class FluxCore(AutotoolsPackage):
     depends_on("lua@5.1:5.2.99", when="@0.10.0:,master")
     depends_on("lua-luaposix")
     depends_on("munge", when="@0.1.0:0.10.0")
-    depends_on("libuuid")
     depends_on("python", type=('build', 'run'))
-    depends_on("python@2.7:2.99", when="@0.1.0:0.10.0")
-    depends_on("python@2.7:", when="@0.11.0:,master")
+    depends_on("python@2.7:2.99", when="@0.1.0:0.11.0")
+    depends_on("python@2.7:", when="@0.11.1:,master")
     depends_on("py-cffi", type=('build', 'run'))
     depends_on("py-six", type=('build', 'run'), when="@0.11.0:,master")
+    depends_on("py-pyyaml", type=('build', 'run'), when="@0.11.0:,master")
+    depends_on("py-jsonschema", type=('build', 'run'), when="@master")
     depends_on("jansson")
-    depends_on("yaml-cpp")
+    depends_on("yaml-cpp", when="@:0.11.0")
     depends_on("lz4", when="@0.11.0:,master")
 
     # versions up to 0.8.0 uses pylint to check Flux's python binding
