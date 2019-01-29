@@ -15,6 +15,7 @@ class FluxSched(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-sched.git"
 
     version('master', branch='master')
+    version('0.7.0', sha256='69267a3aaacaedd9896fd90cfe17aef266cba4fb28c77f8123d95a31ce739a7b')
     version('0.6.0', '8aad185949038c7fb6b277e6a8282947917084ebbec5c5bf0ee3a81a0dcdbe41ba18b1df837c669ae7b48ca5f1e492a5172bffa6b9feb4dda1c6a7a85abed4e8')
     version('0.5.0', 'a9835c9c478aa41123a4e12672500052228aaf1ea770f74cb0901dbf4a049bd7d329e99d8d3484e39cfed1f911705030b2775dcfede39bc8bea59c6afe2549b1')
     version('0.4.0', '82732641ac4594ffe9b94ca442a99e92bf5f91bc14745af92203a887a40610dd44edda3ae07f9b6c8d63799b2968d87c8da28f1488edef1310d0d12be9bd6319')
@@ -25,15 +26,18 @@ class FluxSched(AutotoolsPackage):
 
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
-    depends_on("boost+graph", when='@0.5.0:,master')
+    depends_on("boost+graph@1.53.0,1.59.0:", when='@0.5.0:,master')
     depends_on("py-pyyaml", when="@0.7.0:,master")
     depends_on("libxml2@2.9.1:", when="@0.6.0,master")
+    depends_on("yaml-cpp", when="@0.7.0:")
+    depends_on("libuuid")
 
     depends_on("flux-core", type=('build', 'link', 'run'))
     depends_on("flux-core+cuda", when='+cuda')
     depends_on("flux-core@0.8.0", when='@0.4.0')
     depends_on("flux-core@0.9.0", when='@0.5.0')
     depends_on("flux-core@0.10.0", when='@0.6.0')
+    depends_on("flux-core@0.11.0", when='@0.7.0')
     depends_on("flux-core@master", when='@master')
 
     # Need autotools when building on master:
