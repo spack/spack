@@ -277,6 +277,8 @@ class Trilinos(CMakePackage):
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('zlib', when="+zlib")
+    depends_on('ninja@kitware', type='build')
+    generator = 'Ninja'
 
     # MPI related dependencies
     depends_on('mpi')
