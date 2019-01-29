@@ -13,6 +13,7 @@ class PyConfigparser(PythonPackage):
     homepage = "https://docs.python.org/3/library/configparser.html"
     url      = "https://pypi.io/packages/source/c/configparser/configparser-3.5.0.tar.gz"
 
+    version('3.5.1', sha256='f41e19cb29bebfccb1a78627b3f328ec198cc8f39510c7c55e7dfc0ab58c8c62')
     version('3.5.0', 'cfdd915a5b7a6c09917a64a573140538')
 
     depends_on('py-setuptools', type='build')
