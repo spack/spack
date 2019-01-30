@@ -20,7 +20,6 @@ class XorgServer(AutotoolsPackage):
     depends_on('libxshmfence@1.1:')
     depends_on('libdrm@2.3.0:')
     depends_on('libx11')
-    depends_on('mesa+hwrender', type='build')
 
     depends_on('dri2proto@2.8:', type='build')
     depends_on('dri3proto@1.0:', type='build')
