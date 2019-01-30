@@ -76,3 +76,5 @@ class CudaPackage(PackageBase):
     conflicts('~cuda', when='cuda_arch=61')
     conflicts('~cuda', when='cuda_arch=62')
     conflicts('~cuda', when='cuda_arch=70')
+    conflicts('~cuda', when='cuda_arch=72')
+    conflicts('~cuda', when='cuda_arch=75')
