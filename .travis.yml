@@ -11,96 +11,120 @@ branches:
 #=============================================================================
 # Build matrix
 #=============================================================================
+
+# Adding the keyword dist to permit an `allow_failures` section
+# under `matrix.include`. More information here:
+#
+# https://docs.travis-ci.com/user/customizing-the-build/#Rows-that-are-Allowed-to-Fail
+dist: trusty
+
 jobs:
   fast_finish: true
   include:
-    - stage: 'flake8 + documentation'
+    - stage: 'style checks'
       python: '2.7'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=flake8
-    - stage: 'flake8 + documentation'
-      python: '3.6'
-      os: linux
-      language: python
-      env: TEST_SUITE=doc
-    - stage: 'unit tests'
+    - stage: 'unit tests + documentation'
       python: '2.6'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '3.3'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.4'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.5'
+      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
+      sudo: required
       os: linux
       language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - stage: 'unit tests - osx'
-      os: osx
+      env: TEST_SUITE=unit
+    - python: '3.7'
+      sudo: required
+      os: linux
+      dist: xenial
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.6'
+      sudo: required
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+    - os: osx
       language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7 ]
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
 # astyle (MakefilePackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=astyle' ]
+      env: [ TEST_SUITE=build, 'SPEC=astyle' ]
 # tut (WafPackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=tut' ]
+      env: [ TEST_SUITE=build, 'SPEC=tut' ]
 # py-setuptools (PythonPackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=py-setuptools' ]
+      env: [ TEST_SUITE=build, 'SPEC=py-setuptools' ]
 # perl-dbi (PerlPackage)
 #    - python: '2.7'
 #      os: linux
 #      language: python
-#      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=perl-dbi' ]
+#      env: [ TEST_SUITE=build, 'SPEC=perl-dbi' ]
 # openjpeg (CMakePackage + external cmake)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=openjpeg' ]
+      env: [ TEST_SUITE=build, 'SPEC=openjpeg' ]
 # r-rcpp (RPackage + external R)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=r-rcpp' ]
+      env: [ TEST_SUITE=build, 'SPEC=r-rcpp' ]
 # mpich (AutotoolsPackage)
     - python: '3.6'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
+    - stage: 'docker build'
+      sudo: required
+      os: linux
+      language: generic
+      env: TEST_SUITE=docker
+  allow_failures:
+    - dist: xenial
+    - env: TEST_SUITE=docker
+    # temporary Python 2.6 exception while we figure out why Travis is hanging
+    - python: '2.6'
 
 stages:
-  - 'flake8 + documentation'
-  - 'unit tests'
+  - 'style checks'
+  - 'unit tests + documentation'
   - 'build tests'
-  - name: 'unit tests - osx'
-    if: type IN (cron)
+  - name: 'docker build'
+    if: type = push AND branch IN (develop, master)
 
 
 #=============================================================================
@@ -118,6 +142,7 @@ addons:
       - graphviz
       - gnupg2
       - cmake
+      - ninja-build
       - r-base
       - r-base-core
       - r-base-dev
@@ -131,13 +156,18 @@ cache:
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions python > /dev/null || brew install python; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then rm /usr/local/include/c++ ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gcc    > /dev/null || brew install gcc;    fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gnupg2 > /dev/null || brew install gnupg2; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        brew update;
+        export HOMEBREW_NO_AUTO_UPDATE=1;
+        rm /usr/local/include/c++ ;
+        brew ls --versions python@2 > /dev/null || brew install python@2;
+        brew ls --versions gcc      > /dev/null || brew install gcc;
+        brew ls --versions gnupg2   > /dev/null || brew install gnupg2;
+        pip2 install --upgrade pip;
+        pip2 install virtualenv;
+        virtualenv venv;
+        source venv/bin/activate;
+    fi
 
 # Install various dependencies
 install:
@@ -146,7 +176,10 @@ install:
   - pip install --upgrade setuptools
   - pip install --upgrade codecov
   - pip install --upgrade flake8
-  - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade -r lib/spack/docs/requirements.txt; fi
+  - pip install --upgrade pep8-naming
+  - if [[ "$TEST_SUITE" == "doc" ]]; then
+        pip install --upgrade -r lib/spack/docs/requirements.txt;
+    fi
 
 before_script:
   # Need this for the git tests to succeed.
@@ -156,15 +189,41 @@ before_script:
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
 
-  # Set up external dependencies for build tests, because the take too long to compile
-  - if [[ "$TEST_SUITE" == "build" ]]; then cp share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml; fi
+  # Set up external deps for build tests, b/c they take too long to compile
+  - if [[ "$TEST_SUITE" == "build" ]]; then cp
+        share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml;
+    fi
 
 #=============================================================================
 # Building
 #=============================================================================
+services:
+  - docker
+
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
-  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PYTHON_VERSION --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}"; fi
+  - if [[ "$TEST_SUITE" == "docker build" ]]; then
+        login_attempted=0; login_success=0;
+        for config in share/spack/docker/config/* ; do
+            source "$config" ;
+            ./share/spack/docker/build-image.sh;
+            if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then
+                if [ "$login_attempted" '=' '0' ]; then
+                    if echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin; then
+                        login_success=1;
+                    fi;
+                    login_attempted=1;
+                fi;
+                if [ "$login_success" '=' '1' ]; then
+                    ./share/spack/docker/push-image.sh;
+                fi
+            fi
+        done;
+    fi
+  - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
+        codecov --env PYTHON_VERSION
+                --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
+    fi
 
 #=============================================================================
 # Notifications

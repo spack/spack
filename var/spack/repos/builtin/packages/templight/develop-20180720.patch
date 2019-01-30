@@ -1,0 +1,44 @@
+--- a/templight_driver.cpp	2018-07-20 17:32:51.064430826 +0200
++++ b/templight_driver.cpp	2018-07-20 17:33:58.476431081 +0200
+@@ -57,6 +57,9 @@
+ #include "llvm/Support/TargetSelect.h"
+ #include "llvm/Support/Timer.h"
+ #include "llvm/Support/raw_ostream.h"
++#ifdef _WIN32
++#include "Windows/WindowsSupport.h"
++#endif
+ 
+ #include "TemplightAction.h"
+ 
+@@ -475,7 +478,21 @@
+ 
+ }
+ 
+-
++// llvm::sys::Process::GetArgumentVector was renamed as of rL330216
++// https://reviews.llvm.org/rL330216
++// This aims to preserves compatibility, but the better way to do it would
++// be to let InitLLVM do the job
++std::error_code GetArgumentVector(
++    SmallVectorImpl<const char *> &ArgsOut, ArrayRef<const char *> ArgsIn,
++    SpecificBumpPtrAllocator<char> &ArgAllocator) {
++#ifdef _WIN32
++  return windows::GetCommandLineArguments(ArgsOut, ArgAllocator);
++#else
++  ArgsOut.append(ArgsIn.begin(), ArgsIn.end());
++  (void)ArgAllocator;
++  return std::error_code();
++#endif
++}
+ 
+ int main(int argc_, const char **argv_) {
+   llvm::sys::PrintStackTraceOnErrorSignal(argv_[0]);
+@@ -486,7 +503,7 @@
+ 
+   SmallVector<const char *, 256> argv;
+   llvm::SpecificBumpPtrAllocator<char> ArgAllocator;
+-  std::error_code EC = llvm::sys::Process::GetArgumentVector(
++  std::error_code EC = GetArgumentVector(
+       argv, llvm::makeArrayRef(argv_, argc_), ArgAllocator);
+   if (EC) {
+     llvm::errs() << "error: couldn't get arguments: " << EC.message() << '\n';

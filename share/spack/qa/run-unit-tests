@@ -1,5 +1,11 @@
 #!/bin/bash -e
 #
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
 # Description:
 #     Runs Spack unit tests.
 #
@@ -25,7 +31,11 @@ ${coverage_run} bin/spack -h
 ${coverage_run} bin/spack help -a
 
 # Profile and print top 20 lines for a simple call to spack spec
-${coverage_run} bin/spack -p --lines 20 spec mpileaks
+${coverage_run} bin/spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
 
 # Run unit tests with code coverage
-${coverage_run} bin/spack test "$@"
+extra_args=""
+if [[ -n "$@" ]]; then
+    extra_args="-k $@"
+fi
+${coverage_run} bin/spack test --verbose "$extra_args"

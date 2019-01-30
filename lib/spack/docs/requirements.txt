@@ -3,3 +3,4 @@
 
 sphinx==1.7.0
 sphinxcontrib-programoutput
+sphinx-rtd-theme

@@ -1,29 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
+import spack.architecture
 
 
 class Pmix(AutotoolsPackage):
@@ -48,10 +30,15 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.github.io/pmix"
     url      = "https://github.com/pmix/pmix/releases/download/v2.0.1/pmix-2.0.1.tar.bz2"
 
-    version('2.1.0',    'fc97513b601d78fe7c6bb20c6a21df3c')
-    version('2.0.2',    'e3ed1deed87c84f9b43da2621c6ad689')
+    version('3.0.2',    sha256='df68f35a3ed9517eeade80b13855cebad8fde2772b36a3f6be87559b6d430670')
+    version('3.0.1',    sha256='b81055d2c0d61ef5a451b63debc39c820bcd530490e2e4dcb4cdbacb618c157c')
+    version('3.0.0',    sha256='ee8f68107c24b706237a53333d832445315ae37de6773c5413d7fda415a6e2ee')
+    version('2.1.4',    sha256='eb72d292e76e200f02cf162a477eecea2559ef3ac2edf50ee95b3fe3983d033e')
+    version('2.1.3',    sha256='281283133498e7e5999ed5c6557542c22408bc9eb51ecbcf7696160616782a41')
+    version('2.1.2',    sha256='94bb9c801c51a6caa1b8cef2b85ecf67703a5dfa4d79262e6668c37c744bb643')
     version('2.0.1',    'ba3193b485843516e6b4e8641e443b1e')
     version('2.0.0',    '3e047c2ea0ba8ee9925ed92b205fd92e')
+    version('1.2.5',    'c3d20cd9d365a813dc367afdf0f41c37')
     version('1.2.4',    '242a812e206e7c5948f1f5c9688eb2a7')
     version('1.2.3',    '102b1cc650018b62348b45d572b158e9')
     version('1.2.2',    'd85c8fd437bd88f984549425ad369e9f')
@@ -61,6 +48,7 @@ class Pmix(AutotoolsPackage):
     depends_on('libevent')
 
     def configure_args(self):
+
         spec = self.spec
         config_args = [
             '--enable-shared',
@@ -70,5 +58,12 @@ class Pmix(AutotoolsPackage):
         # external libevent support (needed to keep Open MPI happy)
         config_args.append(
             '--with-libevent={0}'.format(spec['libevent'].prefix))
+
+        # Versions < 2.1.1 have a bug in the test code that *sometimes*
+        # causes problems on strict alignment architectures such as
+        # aarch64.  Work-around is to just not build the test code.
+        if 'aarch64' in spack.architecture.sys_type() and \
+           self.spec.version < Version('2.1.1'):
+            config_args.append('--without-tests-examples')
 
         return config_args

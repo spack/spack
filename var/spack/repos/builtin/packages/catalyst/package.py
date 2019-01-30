@@ -1,30 +1,8 @@
-##############################################################################
-# Copyright (c) 2018 Simone Bna, CINECA.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file was authored by Simone Bna <simone.bna@cineca.it>
-# and is released as part of spack under the LGPL license.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
-#
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 import subprocess
@@ -37,9 +15,13 @@ class Catalyst(CMakePackage):
     simulation and analysis and/or visualization tasks."""
 
     homepage = 'http://www.paraview.org'
-    url      = "http://www.paraview.org/files/v5.4/ParaView-v5.4.1.tar.gz"
-    _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
+    url      = "http://www.paraview.org/files/v5.5/ParaView-v5.5.2.tar.gz"
+    _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
+    _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz' 
 
+    version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
+    version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
+    version('5.5.0', 'a8f2f41edadffdcc89b37fdc9aa7f005')
     version('5.4.1', '4030c70477ec5a85aa72d6fc86a30753')
     version('5.4.0', 'b92847605bac9036414b644f33cb7163')
     version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
@@ -55,7 +37,8 @@ class Catalyst(CMakePackage):
 
     depends_on('git')
     depends_on('mpi')
-    depends_on('python@2:2.8', when='+python')
+    depends_on('python@2:2.8', when='+python', type=("build", "link", "run"))
+    depends_on('python', when='~python', type=("build"))
     depends_on('mesa', when='+rendering')
     depends_on("libx11", when='+rendering')
     depends_on("libxt", when='+rendering')
@@ -64,9 +47,11 @@ class Catalyst(CMakePackage):
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
         if version < Version('5.1.0'):
-            return self._urlfmt.format(version.up_to(2), version, '-source')
+            return self._urlfmt_gz.format(version.up_to(2), version, '-source')
+        elif version < Version('5.6.0'):
+            return self._urlfmt_gz.format(version.up_to(2), version, '')
         else:
-            return self._urlfmt.format(version.up_to(2), version, '')
+            return self._urlfmt_xz.format(version.up_to(2), version, '')
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball.

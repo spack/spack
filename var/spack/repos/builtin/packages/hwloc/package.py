@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 import sys
@@ -44,11 +25,13 @@ class Hwloc(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org/projects/hwloc/"
-    url      = "http://www.open-mpi.org/software/hwloc/v1.9/downloads/hwloc-1.9.tar.gz"
+    url      = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 2
 
-    version('2.0.0', '027e6928ae0b5b64c821d0a71a61cd82')
+    version('2.0.2',  '71d1211eaa4b25ac7ad80cf326784e87')
+    version('2.0.1',  '442b2482bb5b81983ed256522aadbf94')
+    version('2.0.0',  '027e6928ae0b5b64c821d0a71a61cd82')
     version('1.11.9', '4d5f5da8b1d09731d82e865ecf3fa399')
     version('1.11.8', 'a0fa1c9109a4d8b4b6568e62cc9b6e30')
     version('1.11.7', '867a5266675e5bf1ef4ab66c459653f8')

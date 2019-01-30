@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -37,14 +18,23 @@ class Mpifileutils(AutotoolsPackage):
 
     homepage = "https://github.com/hpc/mpifileutils"
     url      = "https://github.com/hpc/mpifileutils/releases/download/v0.6/mpifileutils-0.6.tar.gz"
+    git      = "https://github.com/hpc/mpifileutils.git"
 
+    version('develop', branch='master')
+    version('0.8.1', 'acbd5b5c15919a67392509614bb7871e')
+    version('0.8', '1082600e7ac4e6b2c13d91bbec40cffb')
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
 
     depends_on('mpi')
     depends_on('libcircle')
     depends_on('lwgrp')
-    depends_on('dtcmp')
+
+    # need precise version of dtcmp, since DTCMP_Segmented_exscan added
+    # in v1.0.3 but renamed in v1.1.0 and later
+    depends_on('dtcmp@1.0.3',  when='@:0.7')
+    depends_on('dtcmp@1.1.0:', when='@0.8:')
+
     depends_on('libarchive')
 
     variant('xattr', default=True,

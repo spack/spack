@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 Functions here are used to take abstract specs and make them concrete.
 For example, if a spec asks for a version between 1.8 and 1.9, these
@@ -36,9 +17,13 @@ TODO: make this customizable and allow users to configure
 from __future__ import print_function
 from itertools import chain
 from functools_backport import reverse_order
+from contextlib import contextmanager
 from six import iteritems
 
-import spack
+import llnl.util.lang
+
+import spack.repo
+import spack.abi
 import spack.spec
 import spack.compilers
 import spack.architecture
@@ -47,18 +32,29 @@ from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 
-class DefaultConcretizer(object):
+#: Concretizer singleton
+concretizer = llnl.util.lang.Singleton(lambda: Concretizer())
+
+
+#: impements rudimentary logic for ABI compatibility
+_abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+
+
+class Concretizer(object):
     """You can subclass this class to override some of the default
        concretization strategies, or you can override all of them.
     """
     def __init__(self):
+        # controls whether we check that compiler versions actually exist
+        # during concretization. Used for testing and for mirror creation
         self.check_for_compiler_existence = True
 
+    @contextmanager
     def disable_compiler_existence_check(self):
+        saved = self.check_for_compiler_existence
         self.check_for_compiler_existence = False
-
-    def enable_compiler_existence_check(self):
-        self.check_for_compiler_existence = True
+        yield
+        self.check_for_compiler_existence = saved
 
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
@@ -71,7 +67,7 @@ class DefaultConcretizer(object):
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.providers_for(spec)
+            candidates = spack.repo.path.providers_for(spec)
             if not candidates:
                 raise spack.spec.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
@@ -132,8 +128,8 @@ class DefaultConcretizer(object):
         return sorted(candidates,
                       reverse=True,
                       key=lambda spec: (
-                          spack.abi.compatible(spec, abi_exemplar, loose=True),
-                          spack.abi.compatible(spec, abi_exemplar)))
+                          _abi.compatible(spec, abi_exemplar, loose=True),
+                          _abi.compatible(spec, abi_exemplar)))
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
@@ -222,27 +218,29 @@ class DefaultConcretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
-        root_arch = spec.root.architecture
-        sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        try:
+            # Get the nearest architecture with any fields set
+            nearest = next(p for p in spec.traverse(direction='parents')
+                           if (p.architecture and p is not spec))
+            nearest_arch = nearest.architecture
+        except StopIteration:
+            # Default to the system architecture if nothing set
+            nearest_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+
         spec_changed = False
 
+        # ensure type safety for the architecture
         if spec.architecture is None:
-            spec.architecture = spack.spec.ArchSpec(sys_arch)
+            spec.architecture = spack.spec.ArchSpec()
             spec_changed = True
 
-        default_archs = list(x for x in [root_arch, sys_arch] if x)
-        for arch in default_archs:
-            if spec.architecture.concrete:
-                break
-
-            replacement_fields = [k for k, v in iteritems(arch.to_cmp_dict())
-                                  if v and not getattr(spec.architecture, k)]
-            for field in replacement_fields:
-                setattr(spec.architecture, field, getattr(arch, field))
-                spec_changed = True
-
-        if not spec.architecture.concrete:
-            raise InsufficientArchitectureInfoError(spec, default_archs)
+        # replace each of the fields (platform, os, target) separately
+        nearest_dict = nearest_arch.to_cmp_dict()
+        replacement_fields = [k for k, v in iteritems(nearest_dict)
+                              if v and not getattr(spec.architecture, k)]
+        for field in replacement_fields:
+            setattr(spec.architecture, field, getattr(nearest_arch, field))
+            spec_changed = True
 
         return spec_changed
 

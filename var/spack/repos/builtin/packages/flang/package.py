@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 import os
@@ -29,22 +10,23 @@ import os
 
 class Flang(CMakePackage):
     """Flang is a Fortran compiler targeting LLVM."""
+
     homepage = "https://github.com/flang-compiler/flang"
-    url      = "https://github.com/flang-compiler/flang/flecsi/tarball/v1.0"
 
-    version('develop', git='https://github.com/flang-compiler/flang', branch='master')
+    url      = "https://github.com/flang-compiler/flang/archive/flang_20180612.tar.gz"
+    git      = "https://github.com/flang-compiler/flang.git"
 
-    depends_on(
-            "llvm+clang@4.0.1,5.0.0",
-        patches=[
-            patch('https://github.com/llvm-mirror/clang/pull/33.diff',
-                      sha256='e46d7ab305e5e95c51f4656d9b52058143cd85d859b312b3c80e93a02d54b4a5',
-                      when='@4.0.1', level=1, working_dir='tools/clang'),
-            patch('https://github.com/llvm-mirror/clang/pull/35.diff',
-                      sha256='7f39555783993f78b75c380ca5ef167c1d8b88cc75c6542f6c94e0b6acfb7c5d',
-                      when='@5.0.0', level=1, working_dir='tools/clang')
-        ]
-    )
+    version('develop', branch='master')
+    version('20180612', '62284e26214eaaff261a922c67f6878c')
+
+    depends_on('llvm@flang-develop', when='@develop')
+    depends_on('llvm@flang-20180612', when='@20180612 target=x86_64')
+
+    # LLVM version specific to OpenPOWER.
+    depends_on('llvm@flang-ppc64le-20180612', when='@20180612 target=ppc64le')
+
+    depends_on('pgmath@develop', when='@develop')
+    depends_on('pgmath@20180612', when='@20180612')
 
     def cmake_args(self):
         options = [
@@ -72,16 +54,20 @@ class Flang(CMakePackage):
         with open(flang, 'w') as out:
             out.write('#!/bin/bash\n')
             out.write(
-                '{0} -I{1} -L{2} {3}{4} -B{5} "$@"\n'.format(
-                    os.path.join(self.spec['llvm'].prefix.bin, 'flang'),
+                '{0} -I{1} -L{2} -L{3} {4}{5} {6}{7} -B{8} "$@"\n'.format(
+                    self.spec['llvm'].prefix.bin.flang,
                     self.prefix.include, self.prefix.lib,
+                    self.spec['pgmath'].prefix.lib,
                     self.compiler.fc_rpath_arg, self.prefix.lib,
-                    self.spec.prefix.bin))
+                    self.compiler.fc_rpath_arg,
+                    self.spec['pgmath'].prefix.lib, self.spec.prefix.bin))
             out.close()
         chmod = which('chmod')
         chmod('+x', flang)
 
     def setup_environment(self, spack_env, run_env):
+        # to find llvm's libc++.so
+        spack_env.set('LD_LIBRARY_PATH', self.spec['llvm'].prefix.lib)
         run_env.set('FC', join_path(self.spec.prefix.bin, 'flang'))
         run_env.set('F77', join_path(self.spec.prefix.bin, 'flang'))
         run_env.set('F90', join_path(self.spec.prefix.bin, 'flang'))

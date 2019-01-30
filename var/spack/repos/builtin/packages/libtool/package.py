@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,14 +10,29 @@ class Libtool(AutotoolsPackage):
     """libtool -- library building part of autotools."""
 
     homepage = 'https://www.gnu.org/software/libtool/'
-    url = 'http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz'
+    url      = 'https://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz'
 
+    version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
+            branch='master', submodules=True)
     version('2.4.6', 'addf44b646ddb4e3919805aa88fa7c5e')
     version('2.4.2', 'd2f3b7d4627e69e13514a40e72a24d50')
 
     depends_on('m4@1.4.6:', type='build')
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('help2man', type='build', when='@develop')
+    depends_on('xz', type='build', when='@develop')
+    depends_on('texinfo', type='build', when='@develop')
+
+    # Fix parsing of compiler output when collecting predeps and postdeps
+    # http://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
+    patch('flag_space.patch', when='@develop')
 
     build_directory = 'spack-build'
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        Executable('./bootstrap')()
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))

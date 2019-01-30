@@ -1,0 +1,6 @@
+.git
+opt/spack
+share/spack/docker/Dockerfile
+share/spack/docker/build-image.sh
+share/spack/docker/run-image.sh
+share/spack/docker/push-image.sh

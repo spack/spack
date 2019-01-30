@@ -1,37 +1,17 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import re
 import llnl.util.tty as tty
-from spack import build_env_path
+from spack.paths import build_env_path
 from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.operating_systems.cnl import Cnl
-from llnl.util.filesystem import join_path
-from spack.util.module_cmd import get_module_cmd
+from spack.util.module_cmd import get_module_cmd, unload_module
 
 
 def _get_modules_in_modulecmd_output(output):
@@ -103,11 +83,19 @@ class Cray(Platform):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
+        # Unload these modules to prevent any silent linking or unnecessary
+        # I/O profiling in the case of darshan.
+        modules_to_unload = ["cray-mpich", "darshan", "cray-libsci"]
+        for module in modules_to_unload:
+            unload_module(module)
+
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
-        cray_wrapper_names = join_path(build_env_path, 'cray')
+        cray_wrapper_names = os.path.join(build_env_path, 'cray')
+
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
             env.prepend_path('SPACK_ENV_PATH', cray_wrapper_names)
+
         # Makes spack installed pkg-config work on Crays
         env.append_path("PKG_CONFIG_PATH", "/usr/lib64/pkgconfig")
         env.append_path("PKG_CONFIG_PATH", "/usr/local/lib64/pkgconfig")

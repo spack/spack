@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,10 +12,10 @@ class Typhonio(CMakePackage):
 
     homepage = "http://uk-mac.github.io/typhonio/"
     url      = "https://github.com/UK-MAC/typhonio/archive/v1.6_CMake.tar.gz"
+    git      = "https://github.com/UK-MAC/typhonio.git"
 
+    version('develop', branch='cmake_build')
     version('1.6_CMake', '8e8b2940a57874205e6d451856db5c2755884bf9')
-    version('develop', git='https://github.com/UK-MAC/typhonio.git',
-            branch='cmake_build')
 
     variant('build_type', default='Release', description='The build type to build',
         values=('Debug', 'Release'))
@@ -43,7 +24,7 @@ class Typhonio(CMakePackage):
     variant('doc', default=False, description='Build user guide and doxygen documentation')
 
     depends_on('mpi')
-    depends_on('hdf5')
+    depends_on('hdf5+hl')
 
     def cmake_args(self):
         spec = self.spec

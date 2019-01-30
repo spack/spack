@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
 from spack import *
 import glob
@@ -32,18 +13,19 @@ class Pfunit(CMakePackage):
     serial and MPI-parallel software written in Fortran."""
 
     homepage = "http://pfunit.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/pfunit/Source/pFUnit.tar.gz"
-    giturl   = "https://git.code.sf.net/p/pfunit/code"
+    url      = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/archive/3.2.9.tar.gz"
 
-    version('3.2.9', git=giturl,
-            commit='3c1d47f594a7e756f21be59074cb730d1a1e9a79')
-    version('develop', git=giturl, branch='master')
+    maintainers = ['citibeth']
 
+    version('3.2.9', 'e13d8362284b13b7c863e2fe769a9d5c')
+
+    variant('shared', default=True,
+            description='Build shared library in addition to static')
     variant('mpi', default=False, description='Enable MPI')
     variant('openmp', default=False, description='Enable OpenMP')
+    variant('docs', default=False, description='Build docs')
 
-    depends_on('python', type=('build', 'run'))
-    depends_on('py-unittest2', type=('run'))
+    depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
 
     def patch(self):
@@ -54,16 +36,18 @@ class Pfunit(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = ['-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include]
+        args = [
+            '-DPYTHON_EXECUTABLE=%s' % spec['python'].command,
+            '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
+            '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include,
+            '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO'),
+            '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO')]
+
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
                          '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
         else:
             args.append('-DMPI=NO')
-        if spec.satisfies('+openmp'):
-            args.append('-DOPENMP=YES')
-        else:
-            args.append('-DOPENMP=NO')
         return args
 
     def check(self):

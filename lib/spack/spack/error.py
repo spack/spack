@@ -1,34 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import sys
+import inspect
 
 import llnl.util.tty as tty
-import spack
-import inspect
+
+
+#: whether we should write stack traces or short error messages
+#: this is module-scoped because it needs to be set very early
+debug = False
 
 
 class SpackError(Exception):
@@ -59,7 +44,7 @@ class SpackError(Exception):
         """Print extended debug information about this exception.
 
         This is usually printed when the top-level Spack error handler
-        calls ``die()``, but it acn be called separately beforehand if a
+        calls ``die()``, but it can be called separately beforehand if a
         lower-level error handler needs to print error context and
         continue without raising the exception to the top level.
         """
@@ -73,7 +58,7 @@ class SpackError(Exception):
             sys.stderr.write('\n')
 
         # stack trace, etc. in debug mode.
-        if spack.debug:
+        if debug:
             if self.traceback:
                 # exception came from a build child, already got
                 # traceback in child, so print it.

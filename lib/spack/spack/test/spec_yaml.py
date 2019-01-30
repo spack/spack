@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Test YAML serialization for specs.
 
 YAML format preserves DAG information in the spec.
@@ -46,13 +27,13 @@ def test_simple_spec():
     check_yaml_round_trip(spec)
 
 
-def test_normal_spec(builtin_mock):
+def test_normal_spec(mock_packages):
     spec = Spec('mpileaks+debug~opt')
     spec.normalize()
     check_yaml_round_trip(spec)
 
 
-def test_external_spec(config, builtin_mock):
+def test_external_spec(config, mock_packages):
     spec = Spec('externaltool')
     spec.concretize()
     check_yaml_round_trip(spec)
@@ -62,13 +43,13 @@ def test_external_spec(config, builtin_mock):
     check_yaml_round_trip(spec)
 
 
-def test_ambiguous_version_spec(builtin_mock):
+def test_ambiguous_version_spec(mock_packages):
     spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
     spec.normalize()
     check_yaml_round_trip(spec)
 
 
-def test_concrete_spec(config, builtin_mock):
+def test_concrete_spec(config, mock_packages):
     spec = Spec('mpileaks+debug~opt')
     spec.concretize()
     check_yaml_round_trip(spec)
@@ -80,7 +61,7 @@ def test_yaml_multivalue():
     check_yaml_round_trip(spec)
 
 
-def test_yaml_subdag(config, builtin_mock):
+def test_yaml_subdag(config, mock_packages):
     spec = Spec('mpileaks^mpich+debug')
     spec.concretize()
     yaml_spec = Spec.from_yaml(spec.to_yaml())
@@ -89,7 +70,7 @@ def test_yaml_subdag(config, builtin_mock):
         assert spec[dep].eq_dag(yaml_spec[dep])
 
 
-def test_using_ordered_dict(builtin_mock):
+def test_using_ordered_dict(mock_packages):
     """ Checks that dicts are ordered
 
     Necessary to make sure that dag_hash is stable across python
@@ -122,7 +103,7 @@ def test_using_ordered_dict(builtin_mock):
 
 
 def test_ordered_read_not_required_for_consistent_dag_hash(
-        config, builtin_mock
+        config, mock_packages
 ):
     """Make sure ordered serialization isn't required to preserve hashes.
 

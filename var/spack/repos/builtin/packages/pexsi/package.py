@@ -1,31 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import inspect
 import os.path
-import shutil
 
 from spack import *
 
@@ -54,7 +34,7 @@ class Pexsi(MakefilePackage):
     depends_on('parmetis')
     depends_on('superlu-dist@3.3:3.999', when='@:0.9.0')
     depends_on('superlu-dist@4.3:4.999', when='@0.9.2')
-    depends_on('superlu-dist@5.1.2:', when='@0.10.2:')
+    depends_on('superlu-dist@5.1.2:5.3.999', when='@0.10.2:')
 
     variant(
         'fortran', default=False, description='Builds the Fortran interface'
@@ -64,27 +44,32 @@ class Pexsi(MakefilePackage):
 
     def edit(self, spec, prefix):
 
-        substitutions = {
-            '@MPICC': self.spec['mpi'].mpicc,
-            '@MPICXX': self.spec['mpi'].mpicxx,
-            '@MPIFC': self.spec['mpi'].mpifc,
-            '@MPICXX_LIB': self.spec['mpi:cxx'].libs.joined(),
-            '@RANLIB': 'ranlib',
-            '@PEXSI_STAGE': self.stage.source_path,
-            '@SUPERLU_PREFIX': self.spec['superlu-dist'].prefix,
-            '@METIS_PREFIX': self.spec['metis'].prefix,
-            '@PARMETIS_PREFIX': self.spec['parmetis'].prefix,
-            '@LAPACK_PREFIX': self.spec['lapack'].prefix,
-            '@BLAS_PREFIX': self.spec['blas'].prefix,
-            '@LAPACK_LIBS': self.spec['lapack'].libs.joined(),
-            '@BLAS_LIBS': self.spec['blas'].libs.joined(),
+        substitutions = [
+            ('@MPICC', self.spec['mpi'].mpicc),
+            ('@MPICXX_LIB', self.spec['mpi:cxx'].libs.joined()),
+            ('@MPICXX', self.spec['mpi'].mpicxx),
+            ('@MPIFC', self.spec['mpi'].mpifc),
+            ('@RANLIB', 'ranlib'),
+            ('@PEXSI_STAGE', self.stage.source_path),
+            ('@SUPERLU_PREFIX', self.spec['superlu-dist'].prefix),
+            ('@METIS_PREFIX', self.spec['metis'].prefix),
+            ('@PARMETIS_PREFIX', self.spec['parmetis'].prefix),
+            ('@LAPACK_PREFIX', self.spec['lapack'].prefix),
+            ('@BLAS_PREFIX', self.spec['blas'].prefix),
+            ('@LAPACK_LIBS', self.spec['lapack'].libs.joined()),
+            ('@BLAS_LIBS', self.spec['blas'].libs.joined()),
             # FIXME : what to do with compiler provided libraries ?
-            '@STDCXX_LIB': ' '.join(self.compiler.stdcxx_libs),
-            '@FLDFLAGS': ''
-        }
+            ('@STDCXX_LIB', ' '.join(self.compiler.stdcxx_libs))
+        ]
 
         if '@0.9.2' in self.spec:
-            substitutions['@FLDFLAGS'] = '-Wl,--allow-multiple-definition'
+            substitutions.append(
+                ('@FLDFLAGS', '-Wl,--allow-multiple-definition')
+            )
+        else:
+            substitutions.append(
+                ('@FLDFLAGS', '')
+            )
 
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),
@@ -94,8 +79,8 @@ class Pexsi(MakefilePackage):
             self.stage.source_path,
             'make.inc'
         )
-        shutil.copy(template, makefile)
-        for key, value in substitutions.items():
+        copy(template, makefile)
+        for key, value in substitutions:
             filter_file(key, value, makefile)
 
     def build(self, spec, prefix):

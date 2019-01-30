@@ -1,0 +1,41 @@
+diff --git a/backends/occa/ceed-occa-basis.c b/backends/occa/ceed-occa-basis.c
+index 85ec292..86a46ee 100644
+--- a/backends/occa/ceed-occa-basis.c
++++ b/backends/occa/ceed-occa-basis.c
+@@ -293,10 +293,6 @@ static int CeedBasisDestroy_Occa(CeedBasis basis) {
+   const Ceed ceed = basis->ceed;
+   CeedBasis_Occa *data = basis->data;
+   dbg("[CeedBasis][Destroy]");
+-  occaFree(data->kZero);
+-  occaFree(data->kInterp);
+-  occaFree(data->kGrad);
+-  occaFree(data->kWeight);
+   occaFree(data->qref1d);
+   occaFree(data->qweight1d);
+   occaFree(data->interp1d);
+diff --git a/backends/occa/ceed-occa-qfunction.c b/backends/occa/ceed-occa-qfunction.c
+index a2776c3..abf7de0 100644
+--- a/backends/occa/ceed-occa-qfunction.c
++++ b/backends/occa/ceed-occa-qfunction.c
+@@ -154,7 +154,6 @@ static int CeedQFunctionDestroy_Occa(CeedQFunction qf) {
+   CeedQFunction_Occa *data=qf->data;
+   free(data->oklPath);
+   dbg("[CeedQFunction][Destroy]");
+-  occaFree(data->kQFunctionApply);
+   if (data->ready) {
+     if (!data->op) occaFree(data->d_q);
+     occaFree(data->d_u);
+diff --git a/backends/occa/ceed-occa-restrict.c b/backends/occa/ceed-occa-restrict.c
+index 6b7786c..c5360dc 100644
+--- a/backends/occa/ceed-occa-restrict.c
++++ b/backends/occa/ceed-occa-restrict.c
+@@ -95,9 +95,6 @@ static int CeedElemRestrictionDestroy_Occa(CeedElemRestriction r) {
+   const Ceed ceed = r->ceed;
+   CeedElemRestriction_Occa *data = r->data;
+   dbg("[CeedElemRestriction][Destroy]");
+-  for (int i=0; i<9; i++) {
+-    occaFree(data->kRestrict[i]);
+-  }
+   ierr = CeedFree(&data); CeedChk(ierr);
+   return 0;
+ }

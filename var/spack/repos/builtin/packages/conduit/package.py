@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 import socket
@@ -46,8 +27,10 @@ class Conduit(Package):
     coupling between packages in-core, serialization, and I/O tasks."""
 
     homepage = "http://software.llnl.gov/conduit"
-    url = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
+    url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
+    git      = "https://github.com/LLNL/conduit.git"
 
+    version('master', branch='master', submodules=True)
     version('0.3.1', 'b98d1476199a46bde197220cd9cde042')
     version('0.3.0', '6396f1d1ca16594d7c66d4535d4f898e')
     # note: checksums on github automatic release source tars changed ~9/17
@@ -55,11 +38,6 @@ class Conduit(Package):
     version('0.2.0', 'a7b398d493fd71b881a217993a9a29d4')
 
     maintainers = ['cyrush']
-
-    version('master',
-            git='https://github.com/LLNL/conduit.git',
-            branch="master",
-            submodules=True)
 
     ###########################################################################
     # package variants
@@ -99,7 +77,7 @@ class Conduit(Package):
     #######################
     # we need a shared version of python b/c linking with static python lib
     # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared")
+    depends_on("python+shared", when="+python")
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=('build', 'run'))
 

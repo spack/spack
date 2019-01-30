@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This test checks the binary packaging infrastructure
 """
@@ -34,11 +15,12 @@ import argparse
 
 from llnl.util.filesystem import mkdirp
 
-import spack
+import spack.repo
 import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
+from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
@@ -113,7 +95,7 @@ echo $PATH"""
 
     # register mirror with spack config
     mirrors = {'spack-mirror-test': 'file://' + mirror_path}
-    spack.config.update_config('mirrors', mirrors)
+    spack.config.set('mirrors', mirrors)
 
     stage = spack.stage.Stage(
         mirrors['spack-mirror-test'], name="build_cache", keep=True)
@@ -201,7 +183,7 @@ echo $PATH"""
     buildcache.buildcache(parser, args)
 
     # Copy a key to the mirror to have something to download
-    shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
+    shutil.copyfile(mock_gpg_keys_path + '/external.key',
                     mirror_path + '/external.key')
 
     args = parser.parse_args(['keys'])
@@ -212,9 +194,12 @@ echo $PATH"""
 
     # unregister mirror with spack config
     mirrors = {}
-    spack.config.update_config('mirrors', mirrors)
+    spack.config.set('mirrors', mirrors)
     shutil.rmtree(mirror_path)
     stage.destroy()
+
+    # Remove cached binary specs since we deleted the mirror
+    bindist._cached_specs = None
 
 
 def test_relocate_text(tmpdir):

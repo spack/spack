@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This package contains directives that can be used within a package.
 
 Directives are functions that can be called inside a package
@@ -48,24 +29,20 @@ The available directives are:
 
 import collections
 import functools
-import inspect
 import os.path
 import re
 from six import string_types
 
 import llnl.util.lang
-from llnl.util.filesystem import join_path
 
-import spack
 import spack.error
 import spack.spec
 import spack.url
+import spack.variant
 from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.patch import Patch
 from spack.resource import Resource
-from spack.spec import Spec, parse_anonymous_spec
-from spack.variant import Variant
 from spack.version import Version
 
 __all__ = []
@@ -83,7 +60,7 @@ class DirectiveMeta(type):
     _directive_names = set()
     _directives_to_be_executed = []
 
-    def __new__(mcs, name, bases, attr_dict):
+    def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
         # to be executed. Here we go reversed because we want to execute
         # commands:
@@ -112,17 +89,17 @@ class DirectiveMeta(type):
                 DirectiveMeta._directives_to_be_executed)
             DirectiveMeta._directives_to_be_executed = []
 
-        return super(DirectiveMeta, mcs).__new__(
-            mcs, name, bases, attr_dict)
+        return super(DirectiveMeta, cls).__new__(
+            cls, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
         # The class is being created: if it is a package we must ensure
         # that the directives are called on the class to set it up
-        module = inspect.getmodule(cls)
-        if 'spack.pkg' in module.__name__:
+
+        if 'spack.pkg' in cls.__module__:
             # Package name as taken
             # from llnl.util.lang.get_calling_module_name
-            pkg_name = module.__name__.split('.')[-1]
+            pkg_name = cls.__module__.split('.')[-1]
             setattr(cls, 'name', pkg_name)
 
             # Ensure the presence of the dictionaries associated
@@ -243,16 +220,17 @@ directive = DirectiveMeta.directive
 
 @directive('versions')
 def version(ver, checksum=None, **kwargs):
-    """Adds a version and metadata describing how to fetch it.
-    Metadata is just stored as a dict in the package's versions
-    dictionary.  Package must turn it into a valid fetch strategy
-    later.
+    """Adds a version and metadata describing how to fetch its source code.
+
+    Metadata is stored as a dict of ``kwargs`` in the package class's
+    ``versions`` dictionary.
+
+    The ``dict`` of arguments is turned into a valid fetch strategy
+    later. See ``spack.fetch_strategy.for_package_version()``.
     """
     def _execute_version(pkg):
-        # TODO: checksum vs md5 distinction is confusing -- fix this.
-        # special case checksum for backward compatibility
         if checksum:
-            kwargs['md5'] = checksum
+            kwargs['checksum'] = checksum
 
         # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[Version(ver)] = kwargs
@@ -266,9 +244,9 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
     # If when is None or True make sure the condition is always satisfied
     if when is None or when is True:
         when = pkg.name
-    when_spec = parse_anonymous_spec(when, pkg.name)
+    when_spec = spack.spec.parse_anonymous_spec(when, pkg.name)
 
-    dep_spec = Spec(spec)
+    dep_spec = spack.spec.Spec(spec)
     if pkg.name == dep_spec.name:
         raise CircularReferenceError(
             "Package '%s' cannot depend on itself." % pkg.name)
@@ -329,7 +307,7 @@ def conflicts(conflict_spec, when=None, msg=None):
     def _execute_conflicts(pkg):
         # If when is not specified the conflict always holds
         condition = pkg.name if when is None else when
-        when_spec = parse_anonymous_spec(condition, pkg.name)
+        when_spec = spack.spec.parse_anonymous_spec(condition, pkg.name)
 
         # Save in a list the conflicts and the associated custom messages
         when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
@@ -381,9 +359,9 @@ def extends(spec, **kwargs):
         #     msg = 'Packages can extend at most one other package.'
         #     raise DirectiveError(directive, msg)
 
-        when = kwargs.pop('when', pkg.name)
+        when = kwargs.get('when', pkg.name)
         _depends_on(pkg, spec, when=when)
-        pkg.extendees[spec] = (Spec(spec), kwargs)
+        pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
     return _execute_extends
 
 
@@ -395,7 +373,7 @@ def provides(*specs, **kwargs):
     """
     def _execute_provides(pkg):
         spec_string = kwargs.get('when', pkg.name)
-        provider_spec = parse_anonymous_spec(spec_string, pkg.name)
+        provider_spec = spack.spec.parse_anonymous_spec(spec_string, pkg.name)
 
         for string in specs:
             for provided_spec in spack.spec.parse(string):
@@ -432,7 +410,8 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
     """
     def _execute_patch(pkg_or_dep):
         constraint = pkg_or_dep.name if when is None else when
-        when_spec = parse_anonymous_spec(constraint, pkg_or_dep.name)
+        when_spec = spack.spec.parse_anonymous_spec(
+            constraint, pkg_or_dep.name)
 
         # if this spec is identical to some other, then append this
         # patch to the existing list.
@@ -492,7 +471,7 @@ def variant(
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
-        pkg.variants[name] = Variant(
+        pkg.variants[name] = spack.variant.Variant(
             name, default, description, values, multi, validator
         )
     return _execute_variant
@@ -530,7 +509,7 @@ def resource(**kwargs):
         # Check if the path falls within the main package stage area
         test_path = 'stage_folder_root'
         normalized_destination = os.path.normpath(
-            join_path(test_path, destination)
+            os.path.join(test_path, destination)
         )  # Normalized absolute path
 
         if test_path not in normalized_destination:
@@ -539,7 +518,7 @@ def resource(**kwargs):
             message += "\tdestination : '{dest}'\n".format(dest=destination)
             raise RuntimeError(message)
 
-        when_spec = parse_anonymous_spec(when, pkg.name)
+        when_spec = spack.spec.parse_anonymous_spec(when, pkg.name)
         resources = pkg.resources.setdefault(when_spec, [])
         name = kwargs.get('name')
         fetcher = from_kwargs(**kwargs)

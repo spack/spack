@@ -21,10 +21,7 @@ from _pytest.compat import (
 from _pytest.outcomes import fail, TEST_OUTCOME
 
 
-if sys.version_info[:2] == (2, 6):
-    from ordereddict import OrderedDict
-else:
-    from collections import OrderedDict  # nopyqver
+from ordereddict_backport import OrderedDict
 
 
 def pytest_sessionstart(session):

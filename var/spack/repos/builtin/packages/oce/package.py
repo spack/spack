@@ -1,29 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
+from spack.operating_systems.mac_os import macos_version
 import platform
 
 
@@ -35,6 +16,7 @@ class Oce(Package):
     homepage = "https://github.com/tpaviot/oce"
     url = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
+    version('0.18.3', '1686393c8493bbbb2f3f242330b33cba')
     version('0.18.2', '6dfd68e459e2c62387579888a867281f')
     version('0.18.1', '2a7597f4243ee1f03245aeeb02d00956')
     version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
@@ -62,12 +44,12 @@ class Oce(Package):
 
     # OCE depends on xlocale.h from glibc-headers but it was removed in 2.26,
     # see https://github.com/tpaviot/oce/issues/675
-    patch('xlocale.patch', level=0, when='@0.18.1:')
+    patch('xlocale.patch', level=0, when='@0.18.1:0.18.2')
 
     # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
     # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
     if (platform.system() == "Darwin") and (
-       macOS_version() == Version('10.12')):
+       macos_version() == Version('10.12')):
         patch('sierra.patch', when='@0.17.2:0.18.0')
 
     def install(self, spec, prefix):
@@ -98,7 +80,7 @@ class Oce(Package):
             ])
 
         if platform.system() == 'Darwin' and (
-           macOS_version() >= Version('10.12')):
+           macos_version() >= Version('10.12')):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:

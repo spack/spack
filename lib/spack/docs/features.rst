@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 ================
 Feature Overview
 ================
@@ -126,7 +131,7 @@ It doesn't take much python coding to get from there to a working
 package:
 
 .. literalinclude:: ../../../var/spack/repos/builtin/packages/libelf/package.py
-   :lines: 25-
+   :lines: 6-
 
 Spack also provides wrapper functions around common commands like
 ``configure``, ``make``, and ``cmake`` to make writing packages

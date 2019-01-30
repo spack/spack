@@ -1,3 +1,8 @@
+.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 =========
 Workflows
 =========
@@ -276,11 +281,11 @@ have some drawbacks:
 2. The ``spack spec`` and ``spack install`` commands use a
    sophisticated concretization algorithm that chooses the "best"
    among several options, taking into account ``packages.yaml`` file.
-   The ``spack load`` and ``spack module loads`` commands, on the
+   The ``spack load`` and ``spack module tcl loads`` commands, on the
    other hand, are not very smart: if the user-supplied spec matches
-   more than one installed package, then ``spack module loads`` will
+   more than one installed package, then ``spack module tcl loads`` will
    fail. This may change in the future.  For now, the workaround is to
-   be more specific on any ``spack module loads`` lines that fail.
+   be more specific on any ``spack module tcl loads`` lines that fail.
 
 
 """"""""""""""""""""""
@@ -290,7 +295,7 @@ Generated Load Scripts
 Another problem with using `spack load` is, it is slow; a typical user
 environment could take several seconds to load, and would not be
 appropriate to put into ``.bashrc`` directly.  It is preferable to use
-a series of ``spack module loads`` commands to pre-compute which
+a series of ``spack module tcl loads`` commands to pre-compute which
 modules to load.  These can be put in a script that is run whenever
 installed Spack packages change.  For example:
 
@@ -301,7 +306,7 @@ installed Spack packages change.  For example:
    # Generate module load commands in ~/env/spackenv
 
    cat <<EOF | /bin/sh >$HOME/env/spackenv
-   FIND='spack module loads --prefix linux-SuSE11-x86_64/'
+   FIND='spack module tcl loads --prefix linux-SuSE11-x86_64/'
 
    \$FIND modele-utils
    \$FIND emacs
@@ -346,14 +351,14 @@ Users may now put ``source ~/env/spackenv`` into ``.bashrc``.
    Some module systems put a prefix on the names of modules created
    by Spack.  For example, that prefix is ``linux-SuSE11-x86_64/`` in
    the above case.  If a prefix is not needed, you may omit the
-   ``--prefix`` flag from ``spack module loads``.
+   ``--prefix`` flag from ``spack module tcl loads``.
 
 
 """""""""""""""""""""""
 Transitive Dependencies
 """""""""""""""""""""""
 
-In the script above, each ``spack module loads`` command generates a
+In the script above, each ``spack module tcl loads`` command generates a
 *single* ``module load`` line.  Transitive dependencies do not usually
 need to be loaded, only modules the user needs in ``$PATH``.  This is
 because Spack builds binaries with RPATH.  Spack's RPATH policy has
@@ -394,38 +399,13 @@ Unfortunately, Spack's RPATH support does not work in all case.  For example:
 In cases where RPATH support doesn't make things "just work," it can
 be necessary to load a module's dependencies as well as the module
 itself.  This is done by adding the ``--dependencies`` flag to the
-``spack module loads`` command.  For example, the following line,
+``spack module tcl loads`` command.  For example, the following line,
 added to the script above, would be used to load SciPy, along with
 Numpy, core Python, BLAS/LAPACK and anything else needed:
 
 .. code-block:: sh
 
-   spack module loads --dependencies py-scipy
-
-^^^^^^^^^^^^^^^^^^
-Extension Packages
-^^^^^^^^^^^^^^^^^^
-
-:ref:`packaging_extensions` may be used as an alternative to loading
-Python (and similar systems) packages directly.  If extensions are
-activated, then ``spack load python`` will also load all the
-extensions activated for the given ``python``.  This reduces the need
-for users to load a large number of modules.
-
-However, Spack extensions have two potential drawbacks:
-
-#. Activated packages that involve compiled C extensions may still
-   need their dependencies to be loaded manually.  For example,
-   ``spack load openblas`` might be required to make ``py-numpy``
-   work.
-
-#. Extensions "break" a core feature of Spack, which is that multiple
-   versions of a package can co-exist side-by-side.  For example,
-   suppose you wish to run a Python package in two different
-   environments but the same basic Python --- one with
-   ``py-numpy@1.7`` and one with ``py-numpy@1.8``.  Spack extensions
-   will not support this potential debugging use case.
-
+   spack module tcl loads --dependencies py-scipy
 
 ^^^^^^^^^^^^^^
 Dummy Packages
@@ -446,6 +426,8 @@ consistent.  This means that you can reliably build software against
 it.  A disadvantage is the set of packages will be consistent; this
 means you cannot load up two applications this way if they are not
 consistent with each other.
+
+.. _filesystem-views:
 
 ^^^^^^^^^^^^^^^^
 Filesystem Views
@@ -537,7 +519,7 @@ dependencies, but not ``appsy`` itself:
 
 .. code-block:: console
 
-   $ spack view symlink --dependencies yes --exclude appsy appsy
+   $ spack view --dependencies yes --exclude appsy symlink /path/to/MYVIEW/ appsy
 
 Alternately, you wish to create a view whose purpose is to provide
 binary executables to end users.  You only need to include
@@ -546,7 +528,7 @@ dependencies.  In this case, you might use:
 
 .. code-block:: console
 
-   $ spack view symlink --dependencies no cmake
+   $ spack view --dependencies no symlink /path/to/MYVIEW/ cmake
 
 
 """""""""""""""""""""""
@@ -587,6 +569,29 @@ symlinks.  At any time one can delete ``/path/to/MYVIEW`` or use
 ``spack view`` to manage it surgically.  None of this will affect the
 real Spack install area.
 
+^^^^^^^^^^^^^^^^^^
+Global Activations
+^^^^^^^^^^^^^^^^^^
+
+:ref:`cmd-spack-activate` may be used as an alternative to loading
+Python (and similar systems) packages directly or creating a view.
+If extensions are globally activated, then ``spack load python`` will
+also load all the extensions activated for the given ``python``.
+This reduces the need for users to load a large number of modules.
+
+However, Spack global activations have two potential drawbacks:
+
+#. Activated packages that involve compiled C extensions may still
+   need their dependencies to be loaded manually.  For example,
+   ``spack load openblas`` might be required to make ``py-numpy``
+   work.
+
+#. Global activations "break" a core feature of Spack, which is that
+   multiple versions of a package can co-exist side-by-side.  For example,
+   suppose you wish to run a Python package in two different
+   environments but the same basic Python --- one with
+   ``py-numpy@1.7`` and one with ``py-numpy@1.8``.  Spack extensions
+   will not support this potential debugging use case.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Discussion: Running Binaries
@@ -630,7 +635,7 @@ environments:
   and extension packages.
 
 * Views and activated extensions maintain state that is semantically
-  equivalent to the information in a ``spack module loads`` script.
+  equivalent to the information in a ``spack module tcl loads`` script.
   Administrators might find things easier to maintain without the
   added "heavyweight" state of a view.
 
@@ -787,7 +792,7 @@ for the ``mylib`` package (ellipses for brevity):
        depends_on('cmake', type='build')
        depends_on('doxygen', type='build')
 
-       def configure_args(self):
+       def cmake_args(self):
            spec = self.spec
            return [
                '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),

@@ -1,5 +1,11 @@
 #!/bin/bash -e
 #
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
 # Description:
 #     Common setup code to be sourced by Spack's test scripts.
 #
@@ -11,7 +17,7 @@ SPACK_ROOT="$QA_DIR/../../.."
 . "$SPACK_ROOT/share/spack/setup-env.sh"
 
 # Set up some variables for running coverage tests.
-if [[ "$COVERAGE" == true ]]; then
+if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
     coverage=coverage
     coverage_run="coverage run"
 else

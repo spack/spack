@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 import os
@@ -38,28 +19,22 @@ class Boost(Package):
     """
     homepage = "http://www.boost.org"
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
+    git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
 
-    version('develop',
-            git='https://github.com/boostorg/boost.git',
-            branch='develop',
-            submodules=True)
-
-    version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459',
-            url='https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2')
-    version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d',
-            url='https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2')
-    version('1.65.0', '5512d3809801b0a1b9dd58447b70915d',
-            url='https://dl.bintray.com/boostorg/release/1.65.0/source/boost_1_65_0.tar.bz2')
+    version('develop', branch='develop', submodules=True)
+    version('1.68.0', '18863a7cae4d58ae85eb63d400f774f60a383411')
+    version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae')
+    version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459')
+    version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d')
+    version('1.65.0', '5512d3809801b0a1b9dd58447b70915d')
     # NOTE: 1.64.0 seems fine for *most* applications, but if you need
     #       +python and +mpi, there seem to be errors with out-of-date
     #       API calls from mpi/python.
     #       See: https://github.com/spack/spack/issues/3963
-    version('1.64.0', '93eecce2abed9d2442c9676914709349',
-            url='https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2')
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847',
-            url='https://dl.bintray.com/boostorg/release/1.63.0/source/boost_1_63_0.tar.bz2')
+    version('1.64.0', '93eecce2abed9d2442c9676914709349')
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
     version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
@@ -124,6 +99,11 @@ class Boost(Package):
         variant(lib, default=(lib not in default_noinstall_libs),
                 description="Compile with {0} library".format(lib))
 
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
     variant('debug', default=False,
             description='Switch to the debug version of Boost')
     variant('shared', default=True,
@@ -134,22 +114,27 @@ class Boost(Package):
             description="Build single-threaded versions of libraries")
     variant('icu', default=False,
             description="Build with Unicode and ICU suport")
-    variant('graph', default=False,
-            description="Build the Boost Graph library")
     variant('taggedlayout', default=False,
             description="Augment library names with build options")
     variant('versionedlayout', default=False,
             description="Augment library layout with versioned subdirs")
     variant('clanglibcpp', default=False,
             description='Compile with clang libc++ instead of libstdc++')
+    variant('numpy', default=False,
+            description='Build the Boost NumPy library (requires +python)')
+    variant('pic', default=False,
+            description='Generate position-independent code (PIC), useful '
+                        'for building static libraries')
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
+    depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
     conflicts('+taggedlayout', when='+versionedlayout')
+    conflicts('+numpy', when='~python')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
@@ -166,11 +151,16 @@ class Boost(Package):
     patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
+    patch('boost_1.67.0_pgi.patch', when='@1.67.0%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
     def url_for_version(self, version):
-        url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
+        if version >= Version('1.63.0'):
+            url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
+        else:
+            url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
+
         return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
@@ -194,6 +184,10 @@ class Boost(Package):
         return 'gcc'
 
     def bjam_python_line(self, spec):
+        # avoid "ambiguous key" error
+        if spec.satisfies('@:1.58'):
+            return ''
+
         return 'using python : {0} : {1} : {2} : {3} ;\n'.format(
             spec['python'].version.up_to(2),
             spec['python'].command.path,
@@ -201,10 +195,10 @@ class Boost(Package):
             spec['python'].libs[0]
         )
 
-    def determine_bootstrap_options(self, spec, withLibs, options):
-        boostToolsetId = self.determine_toolset(spec)
-        options.append('--with-toolset=%s' % boostToolsetId)
-        options.append("--with-libraries=%s" % ','.join(withLibs))
+    def determine_bootstrap_options(self, spec, with_libs, options):
+        boost_toolset_id = self.determine_toolset(spec)
+        options.append('--with-toolset=%s' % boost_toolset_id)
+        options.append("--with-libraries=%s" % ','.join(with_libs))
 
         if '+python' in spec:
             options.append('--with-python=%s' % spec['python'].command.path)
@@ -218,18 +212,16 @@ class Boost(Package):
                 # error: duplicate initialization of intel-linux with the following parameters:  # noqa
                 # error: version = <unspecified>
                 # error: previous initialization at ./user-config.jam:1
-                f.write("using {0} : : {1} ;\n".format(boostToolsetId,
+                f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
                                                        spack_cxx))
 
             if '+mpi' in spec:
-
                 # Use the correct mpi compiler.  If the compiler options are
                 # empty or undefined, Boost will attempt to figure out the
                 # correct options by running "${mpicxx} -show" or something
                 # similar, but that doesn't work with the Cray compiler
                 # wrappers.  Since Boost doesn't use the MPI C++ bindings,
                 # that can be used as a compiler option instead.
-
                 mpi_line = 'using mpi : %s' % spec['mpi'].mpicxx
 
                 if 'platform=cray' in spec:
@@ -239,6 +231,26 @@ class Boost(Package):
 
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
+
+    def cxxstd_to_flag(self, std):
+        flag = ''
+        if self.spec.variants['cxxstd'].value == '98':
+            flag = self.compiler.cxx98_flag
+        elif self.spec.variants['cxxstd'].value == '11':
+            flag = self.compiler.cxx11_flag
+        elif self.spec.variants['cxxstd'].value == '14':
+            flag = self.compiler.cxx14_flag
+        elif self.spec.variants['cxxstd'].value == '17':
+            flag = self.compiler.cxx17_flag
+        elif self.spec.variants['cxxstd'].value == 'default':
+            # Let the compiler do what it usually does.
+            pass
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die("INTERNAL ERROR: cannot accommodate unexpected variant ",
+                    "cxxstd={0}".format(spec.variants['cxxstd'].value))
+        return flag
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
@@ -256,16 +268,16 @@ class Boost(Package):
                 '-s', 'ZLIB_INCLUDE=%s' % spec['zlib'].prefix.include,
                 '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib])
 
-        linkTypes = ['static']
+        link_types = ['static']
         if '+shared' in spec:
-            linkTypes.append('shared')
+            link_types.append('shared')
 
-        threadingOpts = []
+        threading_opts = []
         if '+multithreaded' in spec:
-            threadingOpts.append('multi')
+            threading_opts.append('multi')
         if '+singlethreaded' in spec:
-            threadingOpts.append('single')
-        if not threadingOpts:
+            threading_opts.append('single')
+        if not threading_opts:
             raise RuntimeError("At least one of {singlethreaded, " +
                                "multithreaded} must be enabled")
 
@@ -274,13 +286,13 @@ class Boost(Package):
         elif '+versionedlayout' in spec:
             layout = 'versioned'
         else:
-            if len(threadingOpts) > 1:
+            if len(threading_opts) > 1:
                 raise RuntimeError("Cannot build both single and " +
                                    "multi-threaded targets with system layout")
             layout = 'system'
 
         options.extend([
-            'link=%s' % ','.join(linkTypes),
+            'link=%s' % ','.join(link_types),
             '--layout=%s' % layout
         ])
 
@@ -289,6 +301,22 @@ class Boost(Package):
                 'toolset=%s' % self.determine_toolset(spec)
             ])
 
+        # Other C++ flags.
+        cxxflags = []
+
+        # Deal with C++ standard.
+        if spec.satisfies('@1.66:'):
+            if spec.variants['cxxstd'].value != 'default':
+                options.append('cxxstd={0}'.format(
+                    spec.variants['cxxstd'].value))
+        else:  # Add to cxxflags for older Boost.
+            flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
+            if flag:
+                cxxflags.append(flag)
+
+        if '+pic' in self.spec:
+            cxxflags.append(self.compiler.pic_flag)
+
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
         #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
@@ -296,11 +324,14 @@ class Boost(Package):
         if spec.satisfies('%clang'):
             options.extend(['pch=off'])
             if '+clanglibcpp' in spec:
+                cxxflags.append('-stdlib=libc++')
                 options.extend(['toolset=clang',
-                                'cxxflags="-stdlib=libc++"',
                                 'linkflags="-stdlib=libc++"'])
 
-        return threadingOpts
+        if cxxflags:
+            options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))
+
+        return threading_opts
 
     def add_buildopt_symlinks(self, prefix):
         with working_dir(prefix.lib):
@@ -319,11 +350,11 @@ class Boost(Package):
             force_symlink('/usr/bin/libtool', join_path(newdir, 'libtool'))
             env['PATH'] = newdir + ':' + env['PATH']
 
-        withLibs = list()
+        with_libs = list()
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
-                withLibs.append(lib)
-        if not withLibs:
+                with_libs.append(lib)
+        if not with_libs:
             # if no libraries are specified for compilation, then you dont have
             # to configure/build anything, just copy over to the prefix
             # directory.
@@ -335,27 +366,27 @@ class Boost(Package):
 
         # Remove libraries that the release version does not support
         if not spec.satisfies('@1.54.0:'):
-            withLibs.remove('log')
+            with_libs.remove('log')
         if not spec.satisfies('@1.53.0:'):
-            withLibs.remove('atomic')
+            with_libs.remove('atomic')
         if not spec.satisfies('@1.48.0:'):
-            withLibs.remove('locale')
+            with_libs.remove('locale')
         if not spec.satisfies('@1.47.0:'):
-            withLibs.remove('chrono')
+            with_libs.remove('chrono')
         if not spec.satisfies('@1.43.0:'):
-            withLibs.remove('random')
+            with_libs.remove('random')
         if not spec.satisfies('@1.39.0:'):
-            withLibs.remove('exception')
+            with_libs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
-            withLibs.append('graph_parallel')
+            with_libs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
-        env['BOOST_BUILD_PATH'] = './'
+        env['BOOST_BUILD_PATH'] = self.stage.source_path
 
         bootstrap = Executable('./bootstrap.sh')
 
         bootstrap_options = ['--prefix=%s' % prefix]
-        self.determine_bootstrap_options(spec, withLibs, bootstrap_options)
+        self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
         bootstrap(*bootstrap_options)
 
@@ -367,15 +398,20 @@ class Boost(Package):
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies('@:1.58'):
             jobs = 64
-        b2_options = ['-j', '%s' % jobs]
 
-        threadingOpts = self.determine_b2_options(spec, b2_options)
+        b2_options = [
+            '-j', '%s' % jobs,
+            '--user-config=%s' % os.path.join(
+                self.stage.source_path, 'user-config.jam')
+        ]
+
+        threading_opts = self.determine_b2_options(spec, b2_options)
 
         b2('--clean')
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
-        for threadingOpt in threadingOpts:
+        for threadingOpt in threading_opts:
             b2('install', 'threading=%s' % threadingOpt, *b2_options)
 
         if '+multithreaded' in spec and '~taggedlayout' in spec:

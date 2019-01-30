@@ -1,34 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
+from spack.operating_systems.mac_os import macos_version
 from llnl.util import tty
 
 import glob
 import os
-import shutil
 import sys
 
 
@@ -37,10 +17,12 @@ class Gcc(AutotoolsPackage):
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
     homepage = 'https://gcc.gnu.org'
-    url      = 'http://ftp.gnu.org/gnu/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
+    url      = 'https://ftpmirror.gnu.org/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
+    version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
+    version('8.1.0', '65f7c65818dc540b3437605026d329fc')
     version('7.3.0', 'be2da21680f27624f3a87055c4ba5af2')
     version('7.2.0', 'ff370482573133a7fcdd96cd2f552292')
     version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
@@ -89,10 +71,17 @@ class Gcc(AutotoolsPackage):
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
-    depends_on('mpfr@2.4.2:')
+    # GCC 7.3 does not compile with newer releases on some platforms, see
+    #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
+    depends_on('mpfr@2.4.2:3.1.6')
     depends_on('mpc@0.8.1:', when='@4.5:')
-    depends_on('isl@0.14', when='@5:5.9')
-    depends_on('isl@0.15:', when='@6:')
+    # Already released GCC versions do not support any newer version of ISL
+    #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
+    #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
+    #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
+    depends_on('isl@0.15', when='@5:5.9')
+    depends_on('isl@0.15:0.18', when='@6:8.9')
+    depends_on('isl@0.15:0.20', when='@9:')
     depends_on('zlib', when='@6:')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
@@ -102,13 +91,12 @@ class Gcc(AutotoolsPackage):
     # depends_on('ppl')
     # depends_on('cloog')
 
-    # TODO: Add a 'test' deptype
-    # https://github.com/spack/spack/issues/1279
-    # depends_on('dejagnu@1.4.4', type='test')
-    # depends_on('expect', type='test')
-    # depends_on('tcl', type='test')
-    # depends_on('autogen@5.5.4:', type='test')
-    # depends_on('guile@1.4.1:', type='test')
+    # https://gcc.gnu.org/install/test.html
+    depends_on('dejagnu@1.4.4', type='test')
+    depends_on('expect', type='test')
+    depends_on('tcl', type='test')
+    depends_on('autogen@5.5.4:', type='test')
+    depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
     provides('golang',        when='languages=go @4.6:')
@@ -157,15 +145,29 @@ class Gcc(AutotoolsPackage):
     if sys.platform == 'darwin':
         # Fix parallel build on APFS filesystem
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
-        if macOS_version() >= Version('10.13'):
-            patch('darwin/apfs.patch', when='@7.2.0')
+        if macos_version() >= Version('10.13'):
+            patch('darwin/apfs.patch', when='@5.5.0,6.1:6.4,7.1:7.3')
+            # from homebrew via macports
+            # https://trac.macports.org/ticket/56502#no1
+            # see also: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83531
+            patch('darwin/headers-10.13-fix.patch', when='@5.5.0')
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
-        patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
+        patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
 
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
+
+    # Older versions do not compile with newer versions of glibc
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
+    patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
+    patch('ucontext_t-java.patch', when='@4.9,5.1:5.4,6.1:6.4 languages=java')
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81066
+    patch('stack_t-4.9.patch', when='@4.9')
+    patch('stack_t.patch', when='@5.1:5.4,6.1:6.4,7.1')
+    # https://bugs.busybox.net/show_bug.cgi?id=10061
+    patch('signal.patch', when='@4.9,5.1:5.4')
 
     build_directory = 'spack-build'
 
@@ -192,7 +194,7 @@ class Gcc(AutotoolsPackage):
                 new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
                 mkdirp(new_dispatch_dir)
                 new_header = join_path(new_dispatch_dir, 'object.h')
-                shutil.copyfile('/usr/include/dispatch/object.h', new_header)
+                install('/usr/include/dispatch/object.h', new_header)
                 filter_file(r'typedef void \(\^dispatch_block_t\)\(void\)',
                             'typedef void* dispatch_block_t',
                             new_header)

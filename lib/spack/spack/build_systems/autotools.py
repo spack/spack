@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import inspect
 import os
@@ -32,7 +13,7 @@ from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, join_path, force_remove
+from llnl.util.filesystem import working_dir, force_remove
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
@@ -93,6 +74,11 @@ class AutotoolsPackage(PackageBase):
     force_autoreconf = False
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
+
+    @property
+    def archive_files(self):
+        """Files to archive for packages based on autotools"""
+        return [os.path.join(self.build_directory, 'config.log')]
 
     @run_after('autoreconf')
     def _do_patch_config_guess(self):
@@ -172,7 +158,7 @@ class AutotoolsPackage(PackageBase):
     @property
     def configure_abs_path(self):
         # Absolute path to configure
-        configure_abs_path = join_path(
+        configure_abs_path = os.path.join(
             os.path.abspath(self.configure_directory), 'configure'
         )
         return configure_abs_path
@@ -215,7 +201,7 @@ class AutotoolsPackage(PackageBase):
             if 'pkgconfig' in spec:
                 autoreconf_args += [
                     '-I',
-                    join_path(spec['pkgconfig'].prefix, 'share', 'aclocal'),
+                    os.path.join(spec['pkgconfig'].prefix, 'share', 'aclocal'),
                 ]
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)

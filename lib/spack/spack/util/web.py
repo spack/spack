@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import re
@@ -49,8 +30,12 @@ except ImportError:
 
 import llnl.util.tty as tty
 
-import spack
+import spack.config
+import spack.cmd
+import spack.url
+import spack.stage
 import spack.error
+import spack.util.crypto
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 
@@ -75,18 +60,30 @@ class LinkParser(HTMLParser):
 
 class NonDaemonProcess(multiprocessing.Process):
     """Process tha allows sub-processes, so pools can have sub-pools."""
-    def _get_daemon(self):
+    @property
+    def daemon(self):
         return False
 
-    def _set_daemon(self, value):
+    @daemon.setter
+    def daemon(self, value):
         pass
 
-    daemon = property(_get_daemon, _set_daemon)
 
+if sys.version_info[0] < 3:
+    class NonDaemonPool(multiprocessing.pool.Pool):
+        """Pool that uses non-daemon processes"""
+        Process = NonDaemonProcess
+else:
 
-class NonDaemonPool(multiprocessing.pool.Pool):
-    """Pool that uses non-daemon processes"""
-    Process = NonDaemonProcess
+    class NonDaemonContext(type(multiprocessing.get_context())):
+        Process = NonDaemonProcess
+
+    class NonDaemonPool(multiprocessing.pool.Pool):
+        """Pool that uses non-daemon processes"""
+
+        def __init__(self, *args, **kwargs):
+            kwargs['context'] = NonDaemonContext()
+            super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
@@ -111,18 +108,19 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
     try:
         context = None
-        if sys.version_info < (2, 7, 9) or \
-                ((3,) < sys.version_info < (3, 4, 3)):
-            if not spack.insecure:
+        verify_ssl = spack.config.get('config:verify_ssl')
+        pyver = sys.version_info
+        if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
+            if verify_ssl:
                 tty.warn("Spack will not check SSL certificates. You need to "
                          "update your Python to enable certificate "
                          "verification.")
-        else:
+        elif verify_ssl:
             # We explicitly create default context to avoid error described in
             # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
-            context = ssl._create_unverified_context() \
-                if spack.insecure \
-                else ssl.create_default_context()
+            context = ssl.create_default_context()
+        else:
+            context = ssl._create_unverified_context()
 
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
@@ -281,6 +279,13 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     for aurl in archive_urls:
         list_urls.add(spack.url.find_list_url(aurl))
 
+    # Add '/' to the end of the URL. Some web servers require this.
+    additional_list_urls = set()
+    for lurl in list_urls:
+        if not lurl.endswith('/'):
+            additional_list_urls.add(lurl + '/')
+    list_urls.update(additional_list_urls)
+
     # Grab some web pages to scrape.
     pages = {}
     links = set()
@@ -317,7 +322,7 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += '(\/download)?$'
+        url_regex += r'(\/download)?$'
 
         regexes.append(url_regex)
 
@@ -392,7 +397,7 @@ def get_checksums_for_versions(
 
                 # Checksum the archive and add it to the list
                 version_hashes.append((version, spack.util.crypto.checksum(
-                    hashlib.md5, stage.archive_file)))
+                    hashlib.sha256, stage.archive_file)))
                 i += 1
         except spack.stage.FailedDownloadError:
             tty.msg("Failed to fetch {0}".format(url))
@@ -408,7 +413,7 @@ def get_checksums_for_versions(
 
     # Generate the version directives to put in a package.py
     version_lines = "\n".join([
-        "    version('{0}', {1}'{2}')".format(
+        "    version('{0}', {1}sha256='{2}')".format(
             v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
     ])
 

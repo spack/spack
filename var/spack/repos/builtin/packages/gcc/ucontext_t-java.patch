@@ -1,0 +1,60 @@
+From 9b9287cde20ea57578cf07efb2a96ed4cc0da36f Mon Sep 17 00:00:00 2001
+From: doko <doko@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date: Thu, 7 Sep 2017 07:22:07 +0000
+Subject: [PATCH] 2017-09-07  Matthias Klose  <doko@ubuntu.com>
+
+        * include/x86_64-signal.h (HANDLE_DIVIDE_OVERFLOW): Replace
+        'struct ucontext' with ucontext_t.
+        * include/i386-signal.h (HANDLE_DIVIDE_OVERFLOW): Likewise.
+        * include/s390-signal.h (HANDLE_DIVIDE_OVERFLOW): Likewise.
+
+
+git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/branches/gcc-5-branch@251832 138bc75d-0d04-0410-961f-82ee72b054a4
+---
+ libjava/include/i386-signal.h   | 2 +-
+ libjava/include/s390-signal.h   | 2 +-
+ libjava/include/x86_64-signal.h | 2 +-
+ 4 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/libjava/include/i386-signal.h b/libjava/include/i386-signal.h
+index c2409b0..ef77e7e 100644
+--- a/libjava/include/i386-signal.h
++++ b/libjava/include/i386-signal.h
+@@ -29,7 +29,7 @@ static void _Jv_##_name (int, siginfo_t *,			\
+ #define HANDLE_DIVIDE_OVERFLOW						\
+ do									\
+ {									\
+-  struct ucontext *_uc = (struct ucontext *)_p;				\
++  ucontext_t *_uc = (ucontext_t *)_p;					\
+   gregset_t &_gregs = _uc->uc_mcontext.gregs;				\
+   unsigned char *_eip = (unsigned char *)_gregs[REG_EIP];		\
+ 									\
+diff --git a/libjava/include/s390-signal.h b/libjava/include/s390-signal.h
+index 4ca4c10..9261b52 100644
+--- a/libjava/include/s390-signal.h
++++ b/libjava/include/s390-signal.h
+@@ -51,7 +51,7 @@ do									\
+   struct                                                                \
+   {                                                                     \
+     unsigned long int uc_flags;                                         \
+-    struct ucontext *uc_link;                                           \
++    ucontext_t *uc_link;                                                \
+     stack_t uc_stack;                                                   \
+     mcontext_t uc_mcontext;                                             \
+     unsigned long sigmask[2];                                           \
+diff --git a/libjava/include/x86_64-signal.h b/libjava/include/x86_64-signal.h
+index 12383b5..e36c5a3 100644
+--- a/libjava/include/x86_64-signal.h
++++ b/libjava/include/x86_64-signal.h
+@@ -28,7 +28,7 @@ static void _Jv_##_name (int, siginfo_t *,			\
+ #define HANDLE_DIVIDE_OVERFLOW						\
+ do									\
+ {									\
+-  struct ucontext *_uc = (struct ucontext *)_p;				\
++  ucontext_t *_uc = (ucontext_t *)_p;					\
+   gregset_t &_gregs = _uc->uc_mcontext.gregs;				\
+   unsigned char *_rip = (unsigned char *)_gregs[REG_RIP];		\
+ 									\
+-- 
+2.9.3
+

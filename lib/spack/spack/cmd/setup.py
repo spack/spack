@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import argparse
 import copy
 import os
@@ -29,13 +10,16 @@ import string
 import sys
 
 import llnl.util.tty as tty
-import spack
+from llnl.util.filesystem import set_executable
+
+import spack.repo
 import spack.store
+import spack.build_systems.cmake
 import spack.cmd
 import spack.cmd.install as install
 import spack.cmd.common.arguments as arguments
-from llnl.util.filesystem import set_executable
-from spack import which
+from spack.util.executable import which
+
 from spack.stage import DIYStage
 
 description = "create a configuration script and module, but don't build"
@@ -47,6 +31,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="do not try to install dependencies of requested packages")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
@@ -134,7 +119,7 @@ def setup(self, args):
     # Take a write lock before checking for existence.
     with spack.store.db.write_transaction():
         spec = specs[0]
-        if not spack.repo.exists(spec.name):
+        if not spack.repo.path.exists(spec.name):
             tty.die("No package for '{0}' was found.".format(spec.name),
                     "  Use `spack create` to create a new package")
         if not spec.versions.concrete:
@@ -144,20 +129,19 @@ def setup(self, args):
 
         spec.concretize()
         package = spack.repo.get(spec)
-        if not isinstance(package, spack.CMakePackage):
+        if not isinstance(package, spack.build_systems.cmake.CMakePackage):
             tty.die(
                 'Support for {0} derived packages not yet implemented'.format(
-                    package.build_system_class
-                )
-            )
+                    package.build_system_class))
 
         # It's OK if the package is already installed.
 
         # Forces the build to run out of the current directory.
         package.stage = DIYStage(os.getcwd())
 
-        # TODO: make this an argument, not a global.
-        spack.do_checksum = False
+        # disable checksumming if requested
+        if args.no_checksum:
+            spack.config.set('config:checksum', False, scope='command_line')
 
         # Install dependencies if requested to do so
         if not args.ignore_deps:
@@ -169,12 +153,14 @@ def setup(self, args):
                 namespace=inst_args
             )
             install.install(parser, inst_args)
+
         # Generate spconfig.py
         tty.msg(
             'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
         )
         dirty = args.dirty
         write_spconfig(package, dirty)
+
         # Install this package to register it in the DB and permit
         # module file regeneration
         inst_args = copy.deepcopy(args)

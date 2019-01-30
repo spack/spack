@@ -1,28 +1,8 @@
-##############################################################################
-# Copyright (c) 2017 Mark Olesen, OpenCFD Ltd.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file was authored by Mark Olesen <mark.olesen@esi-group.com>
-# and is released as part of spack under the LGPL license.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
-#
-# License
-# -------
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -56,11 +36,11 @@ class OfAdiosWrite(Package):
     # Currently only via git, but with some branches corresponding to main
     # OpenFOAM releases.
     homepage = "https://develop.openfoam.com/Community/feature-adiosWrite/"
-    gitrepo  = "https://develop.openfoam.com/Community/feature-adiosWrite.git"
+    git      = "https://develop.openfoam.com/Community/feature-adiosWrite.git"
 
-    version('develop', branch='develop', git=gitrepo)
-    version('1706', branch='v1706', git=gitrepo)
-    version('1612', branch='v1612', git=gitrepo)
+    version('develop', branch='develop')
+    version('1706', branch='v1706')
+    version('1612', branch='v1612')
 
     variant('source', default=True, description='Install library source')
 

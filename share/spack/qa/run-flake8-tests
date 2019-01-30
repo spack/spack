@@ -1,5 +1,11 @@
 #!/bin/bash -e
 #
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
 # Description:
 #     Runs source code style checks on Spack.
 #     See $SPACK_ROOT/.flake8 for a list of
@@ -11,4 +17,8 @@
 . "$(dirname $0)/setup.sh"
 check_dependencies flake8
 
+# verify that the code style is correct
 spack flake8
+
+# verify that the license headers are present
+spack license verify

@@ -1,31 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import glob
 import os
-import shutil
 import tempfile
 
 
@@ -37,15 +17,16 @@ class Ncl(Package):
 
     homepage = "https://www.ncl.ucar.edu"
 
-    version('6.4.0', 'a981848ddcaf1c263279648265f24766',
-            url='https://www.earthsystemgrid.org/download/fileDownload.html?logicalFileId=86b9bec2-fa01-11e6-a976-00c0f03d5b7c',
-            extension='tar.gz')
+    url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
+
+    version('6.5.0', '133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591')
+    version('6.4.0', 'd891452cda7bb25afad9b6c876c73986')
 
     patch('spack_ncl.patch')
-    # Make ncl compile with hdf5 1.10
-    patch('hdf5.patch')
-    # ymake-filter's buffer may overflow
-    patch('ymake-filter.patch')
+    # Make ncl compile with hdf5 1.10 (upstream as of 6.5.0)
+    patch('hdf5.patch', when="@6.4.0")
+    # ymake-filter's buffer may overflow (upstream as of 6.5.0)
+    patch('ymake-filter.patch', when="@6.4.0")
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -263,8 +244,8 @@ class Ncl(Package):
             triangle_src = join_path(self.stage.source_path, 'triangle_src')
             triangle_dst = join_path(self.stage.source_path, 'ni', 'src',
                                      'lib', 'hlu')
-            shutil.copy(join_path(triangle_src, 'triangle.h'), triangle_dst)
-            shutil.copy(join_path(triangle_src, 'triangle.c'), triangle_dst)
+            copy(join_path(triangle_src, 'triangle.h'), triangle_dst)
+            copy(join_path(triangle_src, 'triangle.c'), triangle_dst)
 
     @staticmethod
     def delete_files(*filenames):

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
 import platform
@@ -60,16 +41,19 @@ class CudaPackage(PackageBase):
     depends_on("cuda@8:", when='cuda_arch=62')
     depends_on("cuda@9:", when='cuda_arch=70')
 
-    depends_on('cuda@:8.99', when='cuda_arch=20')
+    depends_on('cuda@:8', when='cuda_arch=20')
 
     # Compiler conflicts:
     # https://gist.github.com/ax3l/9489132
     conflicts('%gcc@5:', when='+cuda ^cuda@:7.5')
-    conflicts('%gcc@6:', when='+cuda ^cuda@:8.99')
-    conflicts('%gcc@7:', when='+cuda ^cuda@:9.99')
+    conflicts('%gcc@6:', when='+cuda ^cuda@:8')
+    conflicts('%gcc@7:', when='+cuda ^cuda@:9.1')
+    conflicts('%gcc@8:', when='+cuda ^cuda@:9.99')
     if (platform.system() != "Darwin"):
         conflicts('%clang@:3.4,3.7:', when='+cuda ^cuda@7.5')
-        conflicts('%clang@:3.7,4:', when='+cuda ^cuda@8:9')
+        conflicts('%clang@:3.7,4:', when='+cuda ^cuda@8:9.0')
+        conflicts('%clang@:3.7,5:', when='+cuda ^cuda@9.1')
+        conflicts('%clang@:3.7,6:', when='+cuda ^cuda@9.2')
     conflicts('%intel@:14,16:', when='+cuda ^cuda@7.5')
     conflicts('%intel@:14,17:', when='+cuda ^cuda@8.0.44')
     conflicts('%intel@:14,18:', when='+cuda ^cuda@8.0.61:9')
