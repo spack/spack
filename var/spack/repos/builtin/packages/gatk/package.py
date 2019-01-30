@@ -18,10 +18,15 @@ class Gatk(Package):
     url = "https://github.com/broadinstitute/gatk/releases/download/4.0.4.0/gatk-4.0.4.0.zip"
 
     version(
+        "4.1.0.0",
+        sha256="148aa061328d922a570d0120d88f27e61e5da877f542206f4d77f2d788b7d21d",
+        url="https://github.com/broadinstitute/gatk/releases/download/4.1.0.0/gatk-4.1.0.0.zip",
+        preferred=True,
+    )
+    version(
         "4.0.12.0",
         sha256="733134303f4961dec589247ff006612b7a94171fab8913c5d44c836aa086865f",
         url="https://github.com/broadinstitute/gatk/releases/download/4.0.12.0/gatk-4.0.12.0.zip",
-        preferred=True,
     )
     version(
         "4.0.11.0",
@@ -30,8 +35,8 @@ class Gatk(Package):
     )
     version(
         "4.0.8.1",
-        sha256="6d47463dfd8c16ffae82fd29e4e73503e5b7cd0fcc6fea2ed50ee3760dd9acd9",
-        url="https://github.com/broadinstitute/gatk/archive/4.0.8.1.tar.gz",
+        sha256="e4bb082d8c8826d4f8bc8c2f83811d0e81e5088b99099d3396d284f82fbf28c9",
+        url="https://github.com/broadinstitute/gatk/releases/download/4.0.8.1/gatk-4.0.8.1.zip",
     )
     version(
         "4.0.4.0",
