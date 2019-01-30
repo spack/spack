@@ -1350,7 +1350,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                    tests=False,
                    dirty=None,
                    spack_env=None,
-                   setup=set(),
+                   setup=None,
                    **kwargs):
         """Called by commands to install a package and its dependencies.
 
@@ -1387,18 +1387,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
                              % self.spec.name)
+        setup = setup or set()
         is_setup = (self.name in setup)
-
+        if is_setup:
+            keep_prefix = True
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
         if self.spec.external:
             return self._process_external_package(explicit)
 
-
         if not is_setup:
             restage = kwargs.get('restage', False)
-            partial = self.check_for_unfinished_installation(keep_prefix, restage)
+            partial = self.check_for_unfinished_installation(
+                keep_prefix, restage)
 
             # Ensure package is not already installed
             layout = spack.store.layout
@@ -1440,9 +1442,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     setup=setup,
                     **kwargs)
 
-        this_fake = fake
         if is_setup:
-            this_fake = True
             explicit = True
             self.stage = DIYStage(os.getcwd())    # Force build in cwd
 
@@ -1454,7 +1454,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             # Calls virtual function of subclass
             # (eg: CMakePackage, MakefilePackage, etc.)
-            spconfig_fname = self.write_spconfig(spack_env, spconfig_fname, dirty)
+            spconfig_fname = self.write_spconfig(
+                spack_env, spconfig_fname, dirty)
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
@@ -1488,7 +1489,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             """
 
             start_time = time.time()
-            if not this_fake:
+            if not (fake or is_setup):
                 if not skip_patch:
                     self.do_patch()
                 else:
@@ -1508,9 +1509,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self.spec)
-                if self.name in setup:
+                if is_setup:
                     pass    # Don't write any files in the install...
-                elif this_fake:
+                elif fake:
                     self.do_fake_install()
                 else:
                     source_path = self.stage.source_path
@@ -1550,7 +1551,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
 
-            if self.name in setup:
+            if is_setup:
                 tty.msg("Successfully setup %s" % self.name,
                         "Config file is %s" % spconfig_fname)
             else:
@@ -1565,24 +1566,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return echo
         # ------------------------- End of build_process()
 
-        if is_setup:
-            keep_prefix = True
-
         # hook that allow tests to inspect this Package before installation
         # see unit_test_check() docs.
         if not self.unit_test_check():
             return
 
-        try:
-            spack.store.layout.create_install_directory(self.spec)
-        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
-            # Abort install if install directory exists.
-            # But do NOT remove it (you'd be overwriting someone else's stuff)
-            tty.warn("Keeping existing install prefix in place.")
-            if is_setup:
-                keep_prefix = True
-            else:
-                raise
         try:
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
@@ -1612,11 +1600,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             spack.store.db.add(
                 self.spec, spack.store.layout, explicit=explicit
             )
-        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
-            # Abort install if install directory exists.
-            # But do NOT remove it (you'd be overwriting someone else's stuff)
-            tty.warn("Keeping existing install prefix in place.")
-            raise
         except StopIteration as e:
             # A StopIteration exception means that do_install
             # was asked to stop early from clients
