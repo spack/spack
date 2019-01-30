@@ -14,6 +14,7 @@ class PyPetsc4py(PythonPackage):
     url      = "https://bitbucket.org/petsc/petsc4py/get/3.10.0.tar.gz"
     git      = "https://bitbucket.org/petsc/petsc4py.git"
 
+    version('3.10.1', sha256='4eae5eaf459875b1329cae36fa1e5e185f603e8b01a4e05b59b0983c02b5a174')
     version('3.10.0', sha256='737e7812ccc54b1e0d6e8de4bdcd886c8ce287129297831f1f0e33089fa352f2')
     version('3.9.1',  sha256='9bad0bab69a19bbceb201b9203708104a0bbe0ee19c0fa839b6ea6aa55dc238c')
     version('3.9.0',  sha256='034d097b88ae874de712785f39f9d9a06329da071479c0dd834704dc6885dc97')
@@ -27,7 +28,8 @@ class PyPetsc4py(PythonPackage):
     depends_on('py-mpi4py', type=('build', 'run'))
 
     depends_on('petsc+mpi')
-    depends_on('petsc@3.10:3.10.99+mpi', when='@3.10:3.10.99')
+    depends_on('petsc@3.10.3:3.10.99+mpi', when='@3.10.1:3.10.99')
+    depends_on('petsc@3.10:3.10.2+mpi', when='@3.10.0')
     depends_on('petsc@3.9:3.9.99+mpi', when='@3.9:3.9.99')
     depends_on('petsc@3.8:3.8.99+mpi', when='@3.8:3.8.99')
     depends_on('petsc@3.7:3.7.99+mpi', when='@3.7:3.7.99')
