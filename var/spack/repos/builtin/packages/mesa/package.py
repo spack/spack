@@ -54,8 +54,8 @@ class Mesa(MesonPackage):
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@:4.5', when='+opengl')
-    provides('glx', when='+glx')
+    provides('gl@4.5', when='+opengl')
+    provides('glx@1.4', when='+glx')
     provides('egl', when='+egl')
 
     # Variant dependencies
