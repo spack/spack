@@ -26,7 +26,7 @@ class CudaPackage(PackageBase):
             description='CUDA architecture',
             values=spack.variant.any_combination_of(
                 '20', '30', '32', '35', '50', '52', '53', '60', '61',
-                '62', '70'
+                '62', '70', '72', '75'
             ))
 
     # see http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
@@ -44,6 +44,8 @@ class CudaPackage(PackageBase):
     depends_on("cuda@8:", when='cuda_arch=61')
     depends_on("cuda@8:", when='cuda_arch=62')
     depends_on("cuda@9:", when='cuda_arch=70')
+    depends_on("cuda@9:", when='cuda_arch=72')
+    depends_on("cuda@10:", when='cuda_arch=75')
 
     depends_on('cuda@:8', when='cuda_arch=20')
 
