@@ -258,21 +258,6 @@ class CMakePackage(PackageBase):
     run_after('install')(PackageBase.sanity_check_prefix)
 
     def write_spconfig(self, spack_env, spconfig_fname, dirty):
-        """Writes the spconfig.py (CMake setup file) to a file.
-        spack_env: Environment
-            If installing into an environment, this is it
-        spconfig_fname:
-            Leaf of filename for the resulting spconfig file.
-        dirty (bool): If True, do NOT clean the environment before
-            building.
-
-        Returns:
-            name of file written
-        """
-
-        # Execute all environment setup routines.
-        spack.build_environment.setup_package(self, dirty)
-
         fname = os.path.join(spack_env.path, spconfig_fname) \
             if spack_env is not None else spconfig_fname
 

@@ -1323,7 +1323,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return True
 
     def write_spconfig(self, spack_env, spconfig_fname, dirty):
-        """Execute all environment setup routines (dummy virtual function).
+        """Dump environment variable modifications to a script that can be run
+        to replicate the Spack build environment for this package. This must
+        be supported on a per-build-system basis.
+
+        This function executes inside of the build environment that is created
+        by Spack for the package to install in.
+
         spack_env: Environment
             If installing into an environment, this is it
         spconfig_fname:
@@ -1391,6 +1397,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         is_setup = (self.name in setup)
         if is_setup:
             keep_prefix = True
+            explicit = True
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
@@ -1441,21 +1448,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     spack_env=spack_env,
                     setup=setup,
                     **kwargs)
-
-        if is_setup:
-            explicit = True
-            self.stage = DIYStage(os.getcwd())    # Force build in cwd
-
-            # --- Generate spconfig.py
-            spconfig_fname = self.name + '-setup.py'
-            tty.msg(
-                'Generating config file {0} [{1}]'.format(
-                    spconfig_fname, self.spec.cshort_spec))
-
-            # Calls virtual function of subclass
-            # (eg: CMakePackage, MakefilePackage, etc.)
-            spconfig_fname = self.write_spconfig(
-                spack_env, spconfig_fname, dirty)
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
@@ -1510,7 +1502,17 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # the directory is created.
                 spack.hooks.pre_install(self.spec)
                 if is_setup:
-                    pass    # Don't write any files in the install...
+                    self.stage = DIYStage(os.getcwd())  # Force build in cwd
+
+                    spconfig_fname = self.name + '-setup.py'
+                    tty.msg(
+                        'Generating config file {0} [{1}]'.format(
+                            spconfig_fname, self.spec.cshort_spec))
+
+                    # Calls virtual function of subclass
+                    # (eg: CMakePackage, MakefilePackage, etc.)
+                    spconfig_fname = self.write_spconfig(
+                        spack_env, spconfig_fname, dirty)
                 elif fake:
                     self.do_fake_install()
                 else:
