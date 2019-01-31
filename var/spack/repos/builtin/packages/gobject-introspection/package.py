@@ -15,6 +15,7 @@ class GobjectIntrospection(Package):
     homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
     url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.49/gobject-introspection-1.49.2.tar.xz"
 
+    version('1.56.1', '5b2875ccff99ff7baab63a34b67f8c920def240e178ff50add809e267d9ea24b')
     version('1.49.2', 'c47a76b05b2d8438089f519922180747')
     version('1.48.0', '01301fa9019667d48e927353e08bc218')
 
@@ -51,6 +52,10 @@ class GobjectIntrospection(Package):
     #   an `#!/bin/bash /path/to/spack/bin/sbang` unconditionally being
     #   inserted into the scripts as they're generated.
     patch("sbang.patch")
+
+    def url_for_version(self, version):
+        url = 'http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz'
+        return url.format(version.up_to(2), version)
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
