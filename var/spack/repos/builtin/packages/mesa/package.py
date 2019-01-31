@@ -11,11 +11,14 @@ class Mesa(MesonPackage):
      - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
-    git      = "https://gitlab.freedesktop.org/mesa/mesa.git"
-    url      = "https://mesa.freedesktop.org/archive/mesa-18.3.2.tar.xz"
-    list_url = "https://mesa.freedesktop.org/archive"
 
-    version('18.3.2', '4a82bf3ac2e81493a1a84dd7581ec786')
+    # Note that we always want to build from the git repo instead of a
+    # tarball since the tarball has pre-generated files for certain versions
+    # of LLVM while the git repo doesn't so it can adapt at build time to
+    # whatever version of LLVM you're using.
+    git      = "https://gitlab.freedesktop.org/mesa/mesa.git"
+
+    version('18.3.2', tag='mesa-18.3.2')
 
     version('18.3.develop', branch='18.3')
     version('develop',      branch='master')
