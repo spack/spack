@@ -28,6 +28,6 @@ class Libsodium(AutotoolsPackage):
         url = 'https://download.libsodium.org/libsodium/releases/'
         if version < Version('1.0.4'):
             url += 'old/unsupported/'
-        elif version < Version('1.0.12'):
+        elif version < Version('1.0.16'):
             url += 'old/'
         return url + 'libsodium-{0}.tar.gz'.format(version)
