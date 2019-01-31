@@ -19,6 +19,9 @@ class Hdf5(AutotoolsPackage):
     url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
+    git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
+
+    version('develop', branch='develop')
 
     version('1.10.4', '8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
     version('1.10.3', 'b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
@@ -53,6 +56,11 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')
 
     depends_on('mpi', when='+mpi')
     # numactl does not currently build on darwin
@@ -105,6 +113,11 @@ class Hdf5(AutotoolsPackage):
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        autogen = Executable('./autogen.sh')
+        autogen()
 
     @property
     def libs(self):
