@@ -23,16 +23,16 @@ class Slate(Package):
 
     variant('cuda',   default=True, description='Build with CUDA support.')
     # SLATE will eventually be buildable without intel-mkl by using other
-    #    providers of cblas and scalapack.
-    #variant('mkl',  default=True, description='Build using Intel MKL.')
+    # providers of cblas and scalapack.
+    # variant('mkl',  default=True, description='Build using Intel MKL.')
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
 
     depends_on('cuda@9:', when='+cuda')
     depends_on('intel-mkl')
     # The cblas and scalapack dependencies are provided by MKL only for now.
-    #depends_on('cblas')
-    #depends_on('scalapack')
+    # depends_on('cblas')
+    # depends_on('scalapack')
     depends_on('mpi', when='+mpi')
 
     conflicts('%gcc@:5')
