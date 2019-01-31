@@ -82,10 +82,17 @@ class Go(Package):
 
     def install(self, spec, prefix):
         bash = which('bash')
-        with working_dir('src'):
+
+        wd = '.'
+
+        # 1.11.5 directory structure is slightly different
+        if self.version == Version('1.11.5'):
+            wd = 'go'
+
+        with working_dir(join_path(wd, 'src')):
             bash('{0}.bash'.format('all' if self.run_tests else 'make'))
 
-        install_tree('.', prefix)
+        install_tree(wd, prefix)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
