@@ -11,6 +11,7 @@ class Cmake(Package):
        tools designed to build, test and package software."""
     homepage = 'https://www.cmake.org'
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz'
+    maintainers = ['chuckatkins']
 
     version('3.13.3',   '665f905036b1f731a2a16f83fb298b1fb9d0f98c382625d023097151ad016b25')
     version('3.13.2',   'c925e7d2c5ba511a69f43543ed7b4182a7d446c274c7480d0e42cd933076ae25')
@@ -49,6 +50,10 @@ class Cmake(Package):
     version('3.1.0',    '188eb7dc9b1b82b363bc51c0d3f1d461')
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
+
+    # Fix linker error when using external libs on darwin.
+    # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
+    patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
 
     variant('ownlibs', default=False,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
