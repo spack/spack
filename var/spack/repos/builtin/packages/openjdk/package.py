@@ -55,7 +55,7 @@ class Openjdk(Package):
 
         Users may not know the actual installation directory and add ``/usr``
         to their ``packages.yaml`` unknowingly.
-        
+
         Run ``java_home`` if it exists
         to determine exactly where it is installed. Specify which version we
         are expecting in case multiple Java versions are installed.
