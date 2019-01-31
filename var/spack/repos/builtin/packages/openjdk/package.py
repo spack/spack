@@ -16,7 +16,6 @@ class Openjdk(Package):
         "11.0.2",
         sha256="99be79935354f5c0df1ad293620ea36d13f48ec3ea870c838f20c504c9668b57",
         url="https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz",
-        preferred=True,
     )
 
     version(
@@ -45,16 +44,24 @@ class Openjdk(Package):
 
     @property
     def home(self):
-        """Most of the time, ``JAVA_HOME`` is simply ``spec['java'].prefix``.
+        """
+        Most of the time, ``JAVA_HOME`` is simply ``spec['java'].prefix``.
         However, if the user is using an externally installed JDK, it may be
-        symlinked. For example, on macOS, the ``java`` executable can be found
+        symlinked.
+
+        For example, on macOS, the ``java`` executable can be found
         in ``/usr/bin``, but ``JAVA_HOME`` is actually
         ``/Library/Java/JavaVirtualMachines/jdk-10.0.1.jdk/Contents/Home``.
+
         Users may not know the actual installation directory and add ``/usr``
-        to their ``packages.yaml`` unknowingly. Run ``java_home`` if it exists
+        to their ``packages.yaml`` unknowingly.
+        
+        Run ``java_home`` if it exists
         to determine exactly where it is installed. Specify which version we
         are expecting in case multiple Java versions are installed.
-        See ``man java_home`` for more details."""
+
+        See ``man java_home`` for more details.
+        """
 
         prefix = self.prefix
         java_home = prefix.libexec.java_home
@@ -68,11 +75,15 @@ class Openjdk(Package):
 
     @property
     def libs(self):
-        """Depending on the version number and whether the full JDK or just
+        """
+        Depending on the version number and whether the full JDK or just
         the JRE was installed, Java libraries can be in several locations:
+
         * ``lib/libjvm.so``
         * ``jre/lib/libjvm.dylib``
-        Search recursively to find the correct library location."""
+
+        Search recursively to find the correct library location.
+        """
 
         return find_libraries(["libjvm"], root=self.home, recursive=True)
 
@@ -85,9 +96,11 @@ class Openjdk(Package):
         run_env.set("JAVA_HOME", self.home)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Set JAVA_HOME and CLASSPATH.
+        """
+        Set JAVA_HOME and CLASSPATH.
         CLASSPATH contains the installation prefix for the extension and any
-        other Java extensions it depends on."""
+        other Java extensions it depends on.
+        """
 
         spack_env.set("JAVA_HOME", self.home)
 
