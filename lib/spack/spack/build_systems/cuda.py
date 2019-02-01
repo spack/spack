@@ -106,11 +106,14 @@ class CudaPackage(PackageBase):
     conflicts('%xl@17:', when='+cuda ^cuda ^cuda@10.0.130')
 
     # Mac OS X
-    platform = ' platform=darwin'
-    conflicts('%clang@:3.4,3.7:', when='+cuda ^cuda@7.5' + platform)
-    conflicts('%clang@:3.7,4:', when='+cuda ^cuda@8:9.0' + platform)
-    conflicts('%clang@:3.7,5:', when='+cuda ^cuda@9.1' + platform)
-    conflicts('%clang@:3.7,6:', when='+cuda ^cuda@9.2' + platform)
+    # platform = ' platform=darwin'
+    # Apple XCode clang vs. github clang are difficult to specify
+    # with spack syntax. Xcode clang name is `clang@x.y.z-apple`
+    # which precludes ranges being specified. We have proposed
+    # rename XCode clang to `clang@apple-x.y.z` or even
+    # `clang-apple@x.y.z as a possible fix.
+    # Compiler conflicts will be eventual taken from here:
+    # https://docs.nvidia.com/cuda/cuda-installation-guide-mac-os-x/index.html#abstract
 
     # Make sure cuda_arch can not be used without +cuda
     conflicts('~cuda', when='cuda_arch=20')
