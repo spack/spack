@@ -59,19 +59,21 @@ class Trilinos(CMakePackage):
             description='Build python wrappers')
 
     # Build options
-    variant('complex', default=False,
+    variant('complex',      default=False,
             description='Enable complex numbers in Trilinos')
     variant('explicit_template_instantiation',  default=True,
             description='Enable explicit template instantiation (ETI)')
-    variant('float', default=False,
+    variant('float',        default=False,
             description='Enable single precision (float) numbers in Trilinos')
     variant('fortran',      default=True,
             description='Compile with Fortran support')
+    variant('ninja',        default=False,
+            description='Use Ninja as CMake generator')
     variant('openmp',       default=False,
             description='Enable OpenMP')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
-    variant('debug',       default=False,
+    variant('debug',        default=False,
             description='Enable runtime safety and debug checks')
     variant('xsdkflags',    default=False,
             description='Compile using the default xSDK configuration')
@@ -277,8 +279,7 @@ class Trilinos(CMakePackage):
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('zlib', when="+zlib")
-    depends_on('ninja@kitware', type='build')
-    generator = 'Ninja'
+    depends_on('ninja@kitware', type='build', when='+ninja')
 
     # MPI related dependencies
     depends_on('mpi')
@@ -331,6 +332,9 @@ class Trilinos(CMakePackage):
         options = []
 
         # #################### Base Settings #######################
+
+        if '+ninja' in spec:
+            generator = 'Ninja'
 
         mpi_bin = spec['mpi'].prefix.bin
         options.extend([
