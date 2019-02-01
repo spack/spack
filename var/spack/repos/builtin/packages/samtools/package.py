@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,8 @@ class Samtools(Package):
     depends_on('htslib@1.6',   when='@1.6')
     depends_on('htslib@1.4',   when='@1.4')
     depends_on('htslib@1.3.1', when='@1.3.1')
-    depends_on('zlib', when='@1.7:')
-    depends_on('bzip2', when='@1.7:')
+    depends_on('zlib')
+    depends_on('bzip2')
 
     def install(self, spec, prefix):
         if self.spec.version >= Version('1.3.1'):

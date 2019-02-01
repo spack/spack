@@ -1,9 +1,15 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from __future__ import print_function
+import os
+
+import llnl.util.tty as tty
+
 import spack.config
+import spack.environment as ev
 
 from spack.util.editor import editor
 
@@ -27,6 +33,7 @@ def setup_parser(subparser):
     get_parser.add_argument('section',
                             help="configuration section to print. "
                                  "options: %(choices)s",
+                            nargs='?',
                             metavar='SECTION',
                             choices=spack.config.section_schemas)
 
@@ -43,29 +50,81 @@ def setup_parser(subparser):
                              help="configuration section to edit. "
                                   "options: %(choices)s",
                              metavar='SECTION',
+                             nargs='?',
                              choices=spack.config.section_schemas)
+    edit_parser.add_argument(
+        '--print-file', action='store_true',
+        help="print the file name that would be edited")
+
+
+def _get_scope_and_section(args):
+    """Extract config scope and section from arguments."""
+    scope = args.scope
+    section = args.section
+
+    # w/no args and an active environment, point to env manifest
+    if not args.section:
+        env = ev.get_env(args, 'config edit')
+        if env:
+            scope = env.env_file_config_scope_name()
+
+    # set scope defaults
+    elif not args.scope:
+        if section == 'compilers':
+            scope = spack.config.default_modify_scope()
+        else:
+            scope = 'user'
+
+    return scope, section
 
 
 def config_get(args):
-    spack.config.config.print_section(args.section)
+    """Dump merged YAML configuration for a specific section.
+
+    With no arguments and an active environment, print the contents of
+    the environment's manifest file (spack.yaml).
+
+    """
+    scope, section = _get_scope_and_section(args)
+
+    if scope and scope.startswith('env:'):
+        config_file = spack.config.config.get_config_filename(scope, section)
+        if os.path.exists(config_file):
+            with open(config_file) as f:
+                print(f.read())
+        else:
+            tty.die('environment has no %s file' % ev.manifest_name)
+
+    elif section is not None:
+        spack.config.config.print_section(section)
+
+    else:
+        tty.die('`spack config get` requires a section argument '
+                'or an active environment.')
 
 
 def config_blame(args):
+    """Print out line-by-line blame of merged YAML."""
     spack.config.config.print_section(args.section, blame=True)
 
 
 def config_edit(args):
-    if not args.scope:
-        if args.section == 'compilers':
-            args.scope = spack.config.default_modify_scope()
-        else:
-            args.scope = 'user'
-    if not args.section:
-        args.section = None
+    """Edit the configuration file for a specific scope and config section.
 
-    config = spack.config.config
-    config_file = config.get_config_filename(args.scope, args.section)
-    editor(config_file)
+    With no arguments and an active environment, edit the spack.yaml for
+    the active environment.
+
+    """
+    scope, section = _get_scope_and_section(args)
+    if not scope and not section:
+        tty.die('`spack config edit` requires a section argument '
+                'or an active environment.')
+
+    config_file = spack.config.config.get_config_filename(scope, section)
+    if args.print_file:
+        print(config_file)
+    else:
+        editor(config_file)
 
 
 def config(parser, args):

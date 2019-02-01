@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class CbtfArgonavis(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
 
     version('develop', branch='master')
+    version('1.9.2', branch='1.9.2')
     version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
     version('1.9.1.0', branch='1.9.1.0')
@@ -36,8 +37,7 @@ class CbtfArgonavis(CMakePackage):
     depends_on("elf", type="link")
 
     # For boost
-    depends_on("boost@1.50.0:", when='@develop')
-    depends_on("boost@1.66.0", when='@1.9.1.0:9999')
+    depends_on("boost@1.66.0:")
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
@@ -61,8 +61,7 @@ class CbtfArgonavis(CMakePackage):
     depends_on("libmonitor@2013.02.18+krellpatch")
 
     # For PAPI
-    depends_on("papi", when='@develop')
-    depends_on("papi@5.5.1", when='@1.9.1.0:9999')
+    depends_on("papi@5.4.1:")
 
     # For CBTF-KRELL
     depends_on("cbtf-krell@develop", when='@develop')

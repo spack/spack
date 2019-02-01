@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,7 @@ import llnl.util.tty as tty
 
 import spack.paths
 import spack.build_environment as build_environment
-import spack.environment
+import spack.util.environment
 import spack.tengine as tengine
 import spack.util.path
 import spack.util.environment
@@ -256,7 +256,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        env_mods = spack.environment.EnvironmentModifications()
+        env_mods = spack.util.environment.EnvironmentModifications()
         actions = self.conf.get('environment', {})
 
         def process_arglist(arglist):
@@ -500,14 +500,14 @@ class BaseContext(tengine.Context):
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed inspecting the spec prefix
-        env = spack.environment.inspect_path(
+        env = spack.util.environment.inspect_path(
             self.spec.prefix,
             prefix_inspections,
             exclude=spack.util.environment.is_system_path
         )
 
         # Modifications that are coded at package level
-        _ = spack.environment.EnvironmentModifications()
+        _ = spack.util.environment.EnvironmentModifications()
         # TODO : the code down below is quite similar to
         # TODO : build_environment.setup_package and needs to be factored out
         # TODO : to a single place
@@ -515,22 +515,13 @@ class BaseContext(tengine.Context):
         # before asking for package-specific modifications
         for item in dependencies(self.spec, 'all'):
             package = self.spec[item.name].package
-            modules = build_environment.parent_class_modules(package.__class__)
-            for mod in modules:
-                build_environment.set_module_variables_for_package(
-                    package, mod
-                )
-            build_environment.set_module_variables_for_package(
-                package, package.module
-            )
+            build_environment.set_module_variables_for_package(package)
             package.setup_dependent_package(
                 self.spec.package.module, self.spec
             )
             package.setup_dependent_environment(_, env, self.spec)
         # Package specific modifications
-        build_environment.set_module_variables_for_package(
-            self.spec.package, self.spec.package.module
-        )
+        build_environment.set_module_variables_for_package(self.spec.package)
         self.spec.package.setup_environment(_, env)
 
         # Modifications required from modules.yaml
@@ -546,7 +537,7 @@ class BaseContext(tengine.Context):
         # tokens uppercase.
         transform = {}
         for token in _valid_tokens:
-            transform[token] = str.upper
+            transform[token] = lambda spec, string: str.upper(string)
 
         for x in env:
             # Ensure all the tokens are valid in this context

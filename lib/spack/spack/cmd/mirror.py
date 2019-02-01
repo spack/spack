@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ from spack.spec import Spec
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
 
-description = "manage mirrors"
+description = "manage mirrors (source and binary)"
 section = "config"
 level = "long"
 
@@ -44,9 +44,9 @@ def setup_parser(subparser):
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
     create_parser.add_argument(
-        '-o', '--one-version-per-spec', action='store_const',
-        const=1, default=0,
-        help="only fetch one 'preferred' version per spec, not all known")
+        '-n', '--versions-per-spec', type=int,
+        default=1,
+        help="the number of versions to fetch for each spec")
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -192,7 +192,7 @@ def mirror_create(args):
 
         # Actually do the work to create the mirror
         present, mirrored, error = spack.mirror.create(
-            directory, specs, num_versions=args.one_version_per_spec)
+            directory, specs, num_versions=args.versions_per_spec)
         p, m, e = len(present), len(mirrored), len(error)
 
         verb = "updated" if existed else "created"
@@ -213,5 +213,8 @@ def mirror(parser, args):
               'remove': mirror_remove,
               'rm': mirror_remove,
               'list': mirror_list}
+
+    if args.no_checksum:
+        spack.config.set('config:checksum', False, scope='command_line')
 
     action[args.mirror_command](args)

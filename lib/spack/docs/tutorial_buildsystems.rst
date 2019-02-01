@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,7 +110,7 @@ This will open the :code:`AutotoolsPackage` file in your text editor.
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/autotools.py
     :language: python
-    :emphasize-lines: 23,26,44
+    :emphasize-lines: 33,36,54
     :lines: 30-76,240-248
     :linenos:
 
@@ -168,7 +168,7 @@ to be overridden is :code:`configure_args()`.
 
 .. literalinclude:: tutorial/examples/Autotools/1.package.py
    :language: python
-   :emphasize-lines: 23,24
+   :emphasize-lines: 25,26,27,28,29,30,31,32
    :linenos:
 
 Since Spack takes care of setting the prefix for us we can exclude that as
@@ -209,8 +209,8 @@ Take note of the following:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/makefile.py
    :language: python
-   :lines: 14-60,70-88
-   :emphasize-lines: 48,54,61
+   :lines: 14,43-61,70-88
+   :emphasize-lines: 21,27,34
    :linenos:
 
 Similar to :code:`Autotools`, :code:`MakefilePackage` class has properties
@@ -307,7 +307,7 @@ Let's change the build and install phases of our package:
 
 .. literalinclude:: tutorial/examples/Makefile/3.package.py
    :language: python
-   :emphasize-lines: 27, 33
+   :emphasize-lines: 28,29,30,31,32,35,36
    :linenos:
 
 Here demonstrate another strategy that we can use to manipulate our package
@@ -323,23 +323,36 @@ Let's look at a couple of other examples and go through them:
 
 .. code-block:: console
 
-    $ spack edit cbench
+    $ spack edit esmf
 
 Some packages allow environment variables to be set and will honor them.
 Packages that use :code:`?=` for assignment in their :code:`Makefile`
-can be set using environment variables. In our :code:`cbench` example we
+can be set using environment variables. In our :code:`esmf` example we
 set two environment variables in our :code:`edit()` method:
 
 .. code-block:: python
 
     def edit(self, spec, prefix):
-        # The location of the Cbench source tree
-        env['CBENCHHOME'] = self.stage.source_path
+        for var in os.environ:
+            if var.startswith('ESMF_'):
+                os.environ.pop(var)
 
-        # The location that will contain all your tests and your results
-        env['CBENCHTEST'] = prefix
+        # More code ...
 
-        # ... more code
+        if self.compiler.name == 'gcc':
+            os.environ['ESMF_COMPILER'] = 'gfortran'
+        elif self.compiler.name == 'intel':
+            os.environ['ESMF_COMPILER'] = 'intel'
+        elif self.compiler.name == 'clang':
+            os.environ['ESMF_COMPILER'] = 'gfortranclang'
+        elif self.compiler.name == 'nag':
+            os.environ['ESMF_COMPILER'] = 'nag'
+        elif self.compiler.name == 'pgi':
+            os.environ['ESMF_COMPILER'] = 'pgi'
+        else:
+            msg  = "The compiler you are building with, "
+            msg += "'{0}', is not supported by ESMF."
+            raise InstallError(msg.format(self.compiler.name))
 
 As you may have noticed, we didn't really write anything to the :code:`Makefile`
 but rather we set environment variables that will override variables set in
@@ -360,7 +373,7 @@ Let's look at an example of this in the :code:`elk` package:
 .. code-block:: python
 
         def edit(self, spec, prefix):
-        # Dictionary of configuration options
+            # Dictionary of configuration options
             config = {
                 'MAKE': 'make',
                 'AR':   'ar'
@@ -475,20 +488,16 @@ In the :code:`CMakePackage` class we can override the following phases:
 The :code:`CMakePackage` class also provides sensible defaults so we only need to
 override :code:`cmake_args()`.
 
-Let's look at these defaults in the :code:`CMakePackage` class:
+Let's look at these defaults in the :code:`CMakePackage` class in the :code:`_std_args()` method:
 
 .. code-block:: console
 
     $ spack edit --build-system cmake
 
-
-And go into a bit of detail on the highlighted sections:
-
-
 .. literalinclude:: ../../../lib/spack/spack/build_systems/cmake.py
    :language: python
-   :lines: 18-73, 75-136, 155-192
-   :emphasize-lines: 38,49,67,75,77,80,81,82,83,92,98,116,117
+   :lines: 102-147
+   :emphasize-lines: 10,18,24,36,37,38,44
    :linenos:
 
 Some :code:`CMake` packages use different generators. Spack is able to support
@@ -497,16 +506,16 @@ Unix-Makefile_ generators as well as Ninja_ generators.
 .. _Unix-Makefile: https://cmake.org/cmake/help/v3.4/generator/Unix%20Makefiles.html
 .. _Ninja: https://cmake.org/cmake/help/v3.4/generator/Ninja.html
 
-Default generator is :code:`Unix Makefile`.
+If no generator is specified Spack will default to :code:`Unix Makefiles`.
 
 Next we setup the build type. In :code:`CMake` you can specify the build type
 that you want. Options include:
 
-1. empty
-2. Debug
-3. Release
-4. RelWithDebInfo
-5. MinSizeRel
+1. :code:`empty`
+2. :code:`Debug`
+3. :code:`Release`
+4. :code:`RelWithDebInfo`
+5. :code:`MinSizeRel`
 
 With these options you can specify whether you want your executable to have
 the debug version only, release version or the release with debug information.
@@ -514,7 +523,7 @@ Release executables tend to be more optimized than Debug. In Spack, we set
 the default as RelWithDebInfo unless otherwise specified through a variant.
 
 Spack then automatically sets up the :code:`-DCMAKE_INSTALL_PREFIX` path,
-appends the build type (RelDebInfo default), and then specifies a verbose
+appends the build type (:code:`RelWithDebInfo` default), and then specifies a verbose
 :code:`Makefile`.
 
 Next we add the :code:`rpaths` to :code:`-DCMAKE_INSTALL_RPATH:STRING`.
@@ -529,9 +538,8 @@ In the end our :code:`cmake` line will look like this (example is :code:`xrootd`
 
     $ cmake $HOME/spack/var/spack/stage/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/xrootd-4.6.0 -G Unix Makefiles -DCMAKE_INSTALL_PREFIX:PATH=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DCMAKE_FIND_FRAMEWORK:STRING=LAST -DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE -DCMAKE_INSTALL_RPATH:STRING=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/lib:$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/xrootd-4.6.0-4ydm74kbrp4xmcgda5upn33co5pwddyk/lib64 -DCMAKE_PREFIX_PATH:STRING=$HOME/spack/opt/spack/darwin-sierra-x86_64/clang-9.0.0-apple/cmake-3.9.4-hally3vnbzydiwl3skxcxcbzsscaasx5
 
-
-Saves a lot of typing doesn't it?
-
+We can see now how :code:`CMake` takes care of a lot of the boilerplate code
+that would have to be otherwise typed in.
 
 Let's try to recreate callpath_:
 
@@ -595,7 +603,7 @@ different location is found in :code:`spades`.
 
 .. code-block:: console
 
-    $ spack edit spade
+    $ spack edit spades
 
 .. code-block:: python
 
@@ -670,6 +678,12 @@ list you can run:
         check             perform some checks on the package
 
 
+We can write package files for Python packages using the :code:`Package` class,
+but the class brings with it a lot of methods that are useless for Python packages.
+Instead, Spack has a :code:`PythonPackage` subclass that allows packagers
+of Python modules to be able to invoke :code:`setup.py` and use :code:`Distutils`,
+which is much more familiar to a typical python user.
+
 To see the defaults that Spack has for each a methods, we will take a look
 at the :code:`PythonPackage` class:
 
@@ -682,17 +696,10 @@ We see the following:
 
 .. literalinclude:: ../../../lib/spack/spack/build_systems/python.py
    :language: python
-   :lines: 16, 142-345
+   :lines: 19,146-357
    :linenos:
 
 Each of these methods have sensible defaults or they can be overridden.
-
-We can write package files for Python packages using the :code:`Package` class,
-but the class brings with it a lot of methods that are useless for Python packages.
-Instead, Spack has a :code: `PythonPackage` subclass that allows packagers
-of Python modules to be able to invoke :code:`setup.py` and use :code:`Distutils`,
-which is much more familiar to a typical python user.
-
 
 We will write a package file for Pandas_:
 
@@ -788,7 +795,7 @@ for the following build systems:
 3. :code:`WafPackage`
 4. :code:`RPackage`
 5. :code:`PerlPackage`
-6. :code:`QMake`
+6. :code:`QMakePackage`
 
 
 Each of these classes have their own abstractions to help assist in writing

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Mpich(AutotoolsPackage):
     list_depth = 1
 
     version('develop', submodules=True)
+    version('3.3',   '574af413dc0dc7fbb929a761822beb06')
     version('3.2.1', 'e175452f4d61646a52c73031683fc375')
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')

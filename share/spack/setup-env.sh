@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,7 +77,7 @@ function spack {
                 _sp_arg="$1"
                 shift
             fi
-            if [ "$_sp_arg" = "-h" ]; then
+            if [[ "$_sp_arg" = "-h" || "$_sp_arg" = "--help" ]]; then
                 command spack cd -h
             else
                 LOC="$(spack location $_sp_arg "$@")"
@@ -86,6 +86,43 @@ function spack {
                 else
                     return 1
                 fi
+            fi
+            return
+            ;;
+        "env")
+            _sp_arg=""
+            if [ -n "$1" ]; then
+                _sp_arg="$1"
+                shift
+            fi
+
+            if [[ "$_sp_arg" = "-h" || "$_sp_arg" = "--help" ]]; then
+                command spack env -h
+            else
+                case $_sp_arg in
+                    activate)
+                        _a="$@"
+                        if [ -z "$1" -o "${_a#*--sh}" != "$_a" -o "${_a#*--csh}" != "$_a" -o "${_a#*-h}" != "$_a" ]; then
+                            # no args or args contain -h/--help, --sh, or --csh: just execute
+                            command spack "${args[@]}"
+                        else
+                            # actual call to activate: source the output
+                            eval $(command spack $_sp_flags env activate --sh "$@")
+                        fi
+                        ;;
+                    deactivate)
+                        if [ -n "$1" ]; then
+                            # with args: execute the command
+                            command spack "${args[@]}"
+                        else
+                            # no args: source the output.
+                            eval $(command spack $_sp_flags env deactivate --sh)
+                        fi
+                        ;;
+                    *)
+                        command spack "${args[@]}"
+                        ;;
+                esac
             fi
             return
             ;;

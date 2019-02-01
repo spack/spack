@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -149,78 +149,16 @@ how Spack can help with similar situations, as they will happen on real HPC clus
 For instance, it's often preferable for Spack to use vendor-provided MPI
 implementations than to build one itself.
 
-The best way to follow along is to use a Docker image, which comes
-with Spack and all the software used in the following parts already
-pre-installed. If you want to proceed this way, read :ref:`module_file_tutorial_use_docker`.
+To keep the set of software we're dealing with manageable, we're going
+to uninstall everything from earlier in the tutorial.
 
-If you don't have Docker installed or for any other reason you
-prefer to work locally, follow instead :ref:`module_file_tutorial_work_locally`
-to know how to clone Spack and install the software.
-Be aware that the set-up will take longer and that the details of the snippets
-below assume the Docker image and may need changes to work in your particular
-environment.
+.. code-block: console
 
-.. _module_file_tutorial_use_docker:
+  $ spack uninstall -ay
 
-^^^^^^^^^^^^^^^^^^
-Use a Docker image
-^^^^^^^^^^^^^^^^^^
-
-The fastest way to set-up your environment is to :ref:`use a Docker image <workflow_create_docker_image>`:
-
-.. code-block:: console
-
-  $ docker pull spack/module-tutorial:latest
-  $ docker run --rm -h module-file-tutorial -it spack/module-tutorial:latest
-  root@module-file-tutorial:/#
-
-If you arrived at this point you should be ready to start, as all the software needed is
-pre-installed in the image:
-
-.. code-block:: console
-
-  root@module-file-tutorial:/# which spack
-  /usr/local/bin/spack
-  root@module-file-tutorial:/# spack find
-  ==> 43 installed packages.
-  -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
-  autoconf@2.69    gdbm@1.14.1  isl@0.19         lmod@7.7.29              lua-luaposix@33.4.0  mpfr@4.0.1   pkgconf@1.4.2  zlib@1.2.11
-  automake@1.16.1  git@2.9.4    libsigsegv@2.11  lua@5.3.4                m4@1.4.18            ncurses@6.1  readline@7.0
-  gcc@7.2.0        gmp@6.1.2    libtool@2.4.6    lua-luafilesystem@1_6_3  mpc@1.1.0            perl@5.26.2  tcl@8.6.8
-
-  -- linux-ubuntu16.04-x86_64 / gcc@7.2.0 -------------------------
-  bzip2@1.0.6   mpich@3.2.1          netlib-scalapack@2.0.2  netlib-scalapack@2.0.2  openssl@1.0.2o   py-scipy@1.1.0        readline@7.0
-  cmake@3.12.0  ncurses@6.1          netlib-scalapack@2.0.2  openblas@0.3.0          pkgconf@1.4.2    py-setuptools@39.2.0  sqlite@3.23.1
-  gdbm@1.14.1   netlib-lapack@3.8.0  netlib-scalapack@2.0.2  openmpi@1.10.2          py-numpy@1.14.3  python@2.7.15         zlib@1.2.11
-
-Go to :ref:`module_file_tutorial_non_hierarchical` to proceed with the tutorial.
-
-.. note::
-  Dockerfile for this image
-    Those of you that want to build a similar container themselves can find the
-    ``Dockerfile`` and the other resources in Spack's ``share/spack/docs/docker``
-    folder.
-
-.. _module_file_tutorial_work_locally:
-
-^^^^^^^^^^^^^^^^^^^^^^
-Work in a local folder
-^^^^^^^^^^^^^^^^^^^^^^
-
-If you don't feel like using a container, you can set-up your environment
-locally. Let's start by cloning the Spack repository and moving to the directory
-where it was checked out:
-
-.. code-block:: console
-
-  $ git clone https://github.com/spack/spack.git
-  $ cd spack
-
-From here we'll be building the required stack of software.
-
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 Build a module tool
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 
 The first thing that we need is the module tool. In this case we
 choose ``lmod`` as it can work with both hierarchical and non-hierarchical
@@ -239,11 +177,12 @@ to remember, we'll employ the command ``spack location`` to retrieve the
 
   $ . $(spack location -i lmod)/lmod/lmod/init/bash
 
-Now we can source the setup file and activate the :ref:`shell support <shell-support>`:
+Now we can re-source the setup file and Spack modules will be put in
+our module path.
 
 .. code-block:: console
 
-  $ . share/spack/setup_env.sh
+  $ . share/spack/setup-env.sh
 
 .. FIXME: this needs bootstrap support for ``lmod``
 
@@ -252,26 +191,15 @@ Now we can source the setup file and activate the :ref:`shell support <shell-sup
   to the documentation :ref:`here <InstallEnvironmentModules>`.
 
 
-""""""""""""""""""
+^^^^^^^^^^^^^^^^^^
 Add a new compiler
-""""""""""""""""""
+^^^^^^^^^^^^^^^^^^
 
 The second step is to build a recent compiler. On first use, Spack
-scans the environment and automatically locates the
-compiler(s) already available on the system. This is what you'll see
-on Ubuntu 14.04:
+scans the environment and automatically locates the compiler(s)
+already available on the system. For this tutorial, however, we want
+to use ``gcc@7.2.0``.
 
-.. code-block:: console
-
-  $ uname -a
-  Linux nuvolari 4.4.0-45-generic #66~14.04.1-Ubuntu SMP Wed Oct 19 15:05:38 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
-
-  $ spack compilers
-  ==> Available compilers
-  -- gcc ----------------------------------------------------------
-  gcc@4.8
-
-Let's bootstrap a more recent compiler with the one that was automatically detected:
 
 .. code-block:: console
 
@@ -300,7 +228,7 @@ You can use this command to double check:
 
   $ module list
   Currently Loaded Modules:
-  1) lmod-7.7-gcc-4.8-okcwjgw 2) gcc-7.2.0-gcc-4.8-twd5nqg
+  1) gcc-7.2.0-gcc-5.4.0-b7smjjc
 
 Note that the 7-digit hash at the end of the generated module may vary depending
 on architecture or package version. Now that we have ``gcc@7.2.0`` in ``PATH`` we
@@ -309,38 +237,23 @@ can finally add it to the list of compilers known to Spack:
 .. code-block:: console
 
   $ spack compiler add
-  ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
+  ==> Added 1 new compiler to /home/spack1/.spack/linux/compilers.yaml
       gcc@7.2.0
+  ==> Compilers are defined in the following files:
+      /home/spack1/.spack/linux/compilers.yaml
 
-  $ spack compilers
+  $ spack compiler list
   ==> Available compilers
-  -- gcc ----------------------------------------------------------
-  gcc@7.2.0  gcc@4.8
+  -- clang ubuntu16.04-x86_64 -------------------------------------
+  clang@3.8.0-2ubuntu4  clang@3.7.1-2ubuntu2
+
+  -- gcc ubuntu16.04-x86_64 ---------------------------------------
+  gcc@7.2.0  gcc@5.4.0  gcc@4.7
 
 
-""""""""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Build the software that will be used in the tutorial
-""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-The last step is to install the software stack needed later on. To mimic
-an external installation of an MPI provider we'll install ``openmpi`` on
-the system we are working on. On Ubuntu 14.04 it boils down to:
-
-.. code-block:: console
-
-  $ sudo apt-get install openmpi-bin openmpi-common libopenmpi-dev
-  ...
-
-but the exact command varies according to your OS. Then we need to prepare
-a ``packages.yaml`` file that instructs Spack to use an externally provided MPI:
-
-.. code-block:: yaml
-
-  packages:
-    openmpi:
-      buildable: False
-      paths:
-        openmpi@1.6: /usr
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Finally, we should use Spack to install the packages used in the examples:
 
@@ -363,24 +276,36 @@ If you arrived to this point you should have an environment that looks similar t
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module avail
+  $ module avail
 
-  -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
-     autoconf-2.69-gcc-5.4.0-cbvv5rj              lua-luaposix-33.4.0-gcc-5.4.0-i7w7ynf       perl-5.26.2-gcc-5.4.0-n2k4mza
-     automake-1.16.1-gcc-5.4.0-lykrrr4            m4-1.4.18-gcc-5.4.0-3z33ecf                 pkgconf-1.4.2-gcc-5.4.0-fovrh7a
-     bzip2-1.0.6-gcc-7.2.0-mwamumj                mpc-1.1.0-gcc-5.4.0-56lbd3h                 pkgconf-1.4.2-gcc-7.2.0-yoxwmgb
-     cmake-3.12.0-gcc-7.2.0-6ovorxs               mpfr-4.0.1-gcc-5.4.0-dy5r7hi                py-numpy-1.14.3-gcc-7.2.0-t3loxvu
-     gcc-7.2.0-gcc-5.4.0-wwhgyej                  mpich-3.2.1-gcc-7.2.0-vt5xcat               py-scipy-1.1.0-gcc-7.2.0-fdiryak
-     gdbm-1.14.1-gcc-5.4.0-q4fpyuo                ncurses-6.1-gcc-5.4.0-3o765ou               py-setuptools-39.2.0-gcc-7.2.0-jqhycal
-     gdbm-1.14.1-gcc-7.2.0-zk5lhob                ncurses-6.1-gcc-7.2.0-xcgzqdv               python-2.7.15-gcc-7.2.0-c7pnzul
-     git-2.9.4-gcc-5.4.0-mkaoyhz                  netlib-lapack-3.8.0-gcc-7.2.0-7apabqu       readline-7.0-gcc-5.4.0-nxhwrg7
-     gmp-6.1.2-gcc-5.4.0-qc4qcfz                  netlib-scalapack-2.0.2-gcc-7.2.0-3bz5rxx    readline-7.0-gcc-7.2.0-ccruj2i
-     isl-0.19-gcc-5.4.0-hsl7f52                   netlib-scalapack-2.0.2-gcc-7.2.0-6i5qsqx    sqlite-3.23.1-gcc-7.2.0-5ltus3a
-     libsigsegv-2.11-gcc-5.4.0-fypapcp            netlib-scalapack-2.0.2-gcc-7.2.0-uhzmwog    tcl-8.6.8-gcc-5.4.0-qhwyccy
-     libtool-2.4.6-gcc-5.4.0-o2pfwjf              netlib-scalapack-2.0.2-gcc-7.2.0-z52ltyy    zlib-1.2.11-gcc-5.4.0-5nus6kn
-     lmod-7.7.29-gcc-5.4.0-wl6mywv                openblas-0.3.0-gcc-7.2.0-pdatzbi            zlib-1.2.11-gcc-7.2.0-ezuwp4p
-     lua-5.3.4-gcc-5.4.0-izvaota                  openmpi-1.10.2-gcc-7.2.0-6oewzwj
-     lua-luafilesystem-1_6_3-gcc-5.4.0-ywlmaou    openssl-1.0.2o-gcc-7.2.0-cvldq3v
+  ----------------------------------------------- /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64 -----------------------------------------------
+     autoconf-2.69-gcc-5.4.0-3sx2gxe              libsigsegv-2.11-gcc-7.2.0-g67xpfd            openssl-1.0.2o-gcc-5.4.0-b4y3w3b
+     autoconf-2.69-gcc-7.2.0-yb2makb              libtool-2.4.6-gcc-5.4.0-o2pfwjf              openssl-1.0.2o-gcc-7.2.0-cvldq3v
+     automake-1.16.1-gcc-5.4.0-rymw7im            libtool-2.4.6-gcc-7.2.0-kt2udm6              pcre-8.42-gcc-5.4.0-gt5lgzi
+     automake-1.16.1-gcc-7.2.0-qoowd5q            libxml2-2.9.8-gcc-5.4.0-wpexsph              perl-5.26.2-gcc-5.4.0-ic2kyoa
+     bzip2-1.0.6-gcc-5.4.0-ufczdvs                libxml2-2.9.8-gcc-7.2.0-47gf5kk              perl-5.26.2-gcc-7.2.0-fdwz5yu
+     bzip2-1.0.6-gcc-7.2.0-mwamumj                lmod-7.8-gcc-5.4.0-kmhks3p                   pkgconf-1.4.2-gcc-5.4.0-fovrh7a
+     cmake-3.12.3-gcc-7.2.0-obqgn2v               lua-5.3.4-gcc-5.4.0-cpfeo2w                  pkgconf-1.4.2-gcc-7.2.0-yoxwmgb
+     curl-7.60.0-gcc-5.4.0-vzqreb2                lua-luafilesystem-1_6_3-gcc-5.4.0-alakjim    py-numpy-1.15.2-gcc-7.2.0-wbwtcxf
+     diffutils-3.6-gcc-5.4.0-2rhuivg              lua-luaposix-33.4.0-gcc-5.4.0-7wqhwoc        py-scipy-1.1.0-gcc-7.2.0-d5n3cph
+     diffutils-3.6-gcc-7.2.0-eauxwi7              m4-1.4.18-gcc-5.4.0-suf5jtc                  py-setuptools-40.4.3-gcc-7.2.0-5dbwfwn
+     expat-2.2.5-gcc-5.4.0-emyv67q                m4-1.4.18-gcc-7.2.0-wdzvagl                  python-2.7.15-gcc-7.2.0-ucmr2mn
+     findutils-4.6.0-gcc-7.2.0-ca4b7zq            mpc-1.1.0-gcc-5.4.0-iuf3gc3                  readline-7.0-gcc-5.4.0-nxhwrg7
+     gcc-7.2.0-gcc-5.4.0-b7smjjc           (L)    mpfr-3.1.6-gcc-5.4.0-jnt2nnp                 readline-7.0-gcc-7.2.0-ccruj2i
+     gdbm-1.14.1-gcc-5.4.0-q4fpyuo                mpich-3.2.1-gcc-7.2.0-vt5xcat                sqlite-3.23.1-gcc-7.2.0-5ltus3a
+     gdbm-1.14.1-gcc-7.2.0-zk5lhob                ncurses-6.1-gcc-5.4.0-3o765ou                tar-1.30-gcc-5.4.0-dk7lrpo
+     gettext-0.19.8.1-gcc-5.4.0-tawgous           ncurses-6.1-gcc-7.2.0-xcgzqdv                tcl-8.6.8-gcc-5.4.0-qhwyccy
+     git-2.19.1-gcc-5.4.0-p3gjnfa                 netlib-lapack-3.8.0-gcc-7.2.0-fj7nayd        texinfo-6.5-gcc-7.2.0-cuqnfgf
+     gmp-6.1.2-gcc-5.4.0-qc4qcfz                  netlib-scalapack-2.0.2-gcc-7.2.0-67nmj7g     unzip-6.0-gcc-5.4.0-ba23fbg
+     hwloc-1.11.9-gcc-7.2.0-gbyc65s               netlib-scalapack-2.0.2-gcc-7.2.0-6jgjbyg     util-macros-1.19.1-gcc-7.2.0-t62kozq
+     isl-0.18-gcc-5.4.0-vttqout                   netlib-scalapack-2.0.2-gcc-7.2.0-prgo67d     xz-5.2.4-gcc-5.4.0-teneqii
+     libbsd-0.8.6-gcc-5.4.0-f4qkkwm               netlib-scalapack-2.0.2-gcc-7.2.0-zxpt252     xz-5.2.4-gcc-7.2.0-rql5kog
+     libiconv-1.15-gcc-5.4.0-u2x3umv              numactl-2.0.11-gcc-7.2.0-rifwktk             zlib-1.2.11-gcc-5.4.0-5nus6kn
+     libpciaccess-0.13.5-gcc-7.2.0-riipwi2        openblas-0.3.3-gcc-7.2.0-xxoxfh4             zlib-1.2.11-gcc-7.2.0-ezuwp4p
+     libsigsegv-2.11-gcc-5.4.0-fypapcp            openmpi-3.1.3-gcc-7.2.0-do5xfer
+
+    Where:
+     L:  Module is loaded
 
   Use "module spider" to find all possible modules.
   Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
@@ -391,24 +316,24 @@ Taking a look at the ``gcc`` module you'll see, for example:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module show gcc-7.2.0-gcc-5.4.0-wwhgyej
-  ----------------------------------------------------------------------------------------------------------------------------------------------
-     /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64/gcc-7.2.0-gcc-5.4.0-wwhgyej:
-  ----------------------------------------------------------------------------------------------------------------------------------------------
+  $ module show gcc-7.2.0-gcc-5.4.0-b7smjjc
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64/gcc-7.2.0-gcc-5.4.0-b7smjjc:
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("The GNU Compiler Collection includes front ends for C, C++, Objective-C, Fortran, Ada, and Go, as well as libraries for these languages. ")
-  prepend_path("PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin")
-  prepend_path("MANPATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/share/man")
-  prepend_path("LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib")
-  prepend_path("LD_LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib")
-  prepend_path("LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib64")
-  prepend_path("LD_LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib64")
-  prepend_path("CPATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/include")
-  prepend_path("CMAKE_PREFIX_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/")
-  setenv("CC","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gcc")
-  setenv("CXX","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/g++")
-  setenv("FC","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("F77","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("F90","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
+  prepend_path("PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin")
+  prepend_path("MANPATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/share/man")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib")
+  prepend_path("LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib64")
+  prepend_path("LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib64")
+  prepend_path("CPATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/include")
+  prepend_path("CMAKE_PREFIX_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/")
+  setenv("CC","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gcc")
+  setenv("CXX","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/g++")
+  setenv("FC","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("F77","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("F90","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
   help([[The GNU Compiler Collection includes front ends for C, C++, Objective-C,
   Fortran, Ada, and Go, as well as libraries for these languages.
   ]])
@@ -438,22 +363,26 @@ Next you should regenerate all the module files:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module tcl refresh
+  $ spack module tcl refresh
   ==> You are about to regenerate tcl module files for:
 
   -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
-  cbvv5rj autoconf@2.69    qc4qcfz gmp@6.1.2        izvaota lua@5.3.4                dy5r7hi mpfr@4.0.1     qhwyccy tcl@8.6.8
-  lykrrr4 automake@1.16.1  hsl7f52 isl@0.19         ywlmaou lua-luafilesystem@1_6_3  3o765ou ncurses@6.1    5nus6kn zlib@1.2.11
-  wwhgyej gcc@7.2.0        fypapcp libsigsegv@2.11  i7w7ynf lua-luaposix@33.4.0      n2k4mza perl@5.26.2
-  q4fpyuo gdbm@1.14.1      o2pfwjf libtool@2.4.6    3z33ecf m4@1.4.18                fovrh7a pkgconf@1.4.2
-  mkaoyhz git@2.9.4        wl6mywv lmod@7.7.29      56lbd3h mpc@1.1.0                nxhwrg7 readline@7.0
+  3sx2gxe autoconf@2.69    b7smjjc gcc@7.2.0         f4qkkwm libbsd@0.8.6     cpfeo2w lua@5.3.4                3o765ou ncurses@6.1     dk7lrpo tar@1.30
+  rymw7im automake@1.16.1  q4fpyuo gdbm@1.14.1       u2x3umv libiconv@1.15    alakjim lua-luafilesystem@1_6_3  b4y3w3b openssl@1.0.2o  qhwyccy tcl@8.6.8
+  ufczdvs bzip2@1.0.6      tawgous gettext@0.19.8.1  fypapcp libsigsegv@2.11  7wqhwoc lua-luaposix@33.4.0      gt5lgzi pcre@8.42       ba23fbg unzip@6.0
+  vzqreb2 curl@7.60.0      p3gjnfa git@2.19.1        o2pfwjf libtool@2.4.6    suf5jtc m4@1.4.18                ic2kyoa perl@5.26.2     teneqii xz@5.2.4
+  2rhuivg diffutils@3.6    qc4qcfz gmp@6.1.2         wpexsph libxml2@2.9.8    iuf3gc3 mpc@1.1.0                fovrh7a pkgconf@1.4.2   5nus6kn zlib@1.2.11
+  emyv67q expat@2.2.5      vttqout isl@0.18          kmhks3p lmod@7.8         jnt2nnp mpfr@3.1.6               nxhwrg7 readline@7.0
 
   -- linux-ubuntu16.04-x86_64 / gcc@7.2.0 -------------------------
-  mwamumj bzip2@1.0.6   7apabqu netlib-lapack@3.8.0     pdatzbi openblas@0.3.0   fdiryak py-scipy@1.1.0        ezuwp4p zlib@1.2.11
-  6ovorxs cmake@3.12.0  6i5qsqx netlib-scalapack@2.0.2  6oewzwj openmpi@1.10.2   jqhycal py-setuptools@39.2.0
-  zk5lhob gdbm@1.14.1   uhzmwog netlib-scalapack@2.0.2  cvldq3v openssl@1.0.2o   c7pnzul python@2.7.15
-  vt5xcat mpich@3.2.1   3bz5rxx netlib-scalapack@2.0.2  yoxwmgb pkgconf@1.4.2    ccruj2i readline@7.0
-  xcgzqdv ncurses@6.1   z52ltyy netlib-scalapack@2.0.2  t3loxvu py-numpy@1.14.3  5ltus3a sqlite@3.23.1
+  yb2makb autoconf@2.69    riipwi2 libpciaccess@0.13.5  6jgjbyg netlib-scalapack@2.0.2  fdwz5yu perl@5.26.2           cuqnfgf texinfo@6.5
+  qoowd5q automake@1.16.1  g67xpfd libsigsegv@2.11      zxpt252 netlib-scalapack@2.0.2  yoxwmgb pkgconf@1.4.2         t62kozq util-macros@1.19.1
+  mwamumj bzip2@1.0.6      kt2udm6 libtool@2.4.6        67nmj7g netlib-scalapack@2.0.2  wbwtcxf py-numpy@1.15.2       rql5kog xz@5.2.4
+  obqgn2v cmake@3.12.3     47gf5kk libxml2@2.9.8        prgo67d netlib-scalapack@2.0.2  d5n3cph py-scipy@1.1.0        ezuwp4p zlib@1.2.11
+  eauxwi7 diffutils@3.6    wdzvagl m4@1.4.18            rifwktk numactl@2.0.11          5dbwfwn py-setuptools@40.4.3
+  ca4b7zq findutils@4.6.0  vt5xcat mpich@3.2.1          xxoxfh4 openblas@0.3.3          ucmr2mn python@2.7.15
+  zk5lhob gdbm@1.14.1      xcgzqdv ncurses@6.1          do5xfer openmpi@3.1.3           ccruj2i readline@7.0
+  gbyc65s hwloc@1.11.9     fj7nayd netlib-lapack@3.8.0  cvldq3v openssl@1.0.2o          5ltus3a sqlite@3.23.1
 
   ==> Do you want to proceed? [y/n] y
   ==> Regenerating tcl module files
@@ -463,21 +392,21 @@ paths have disappeared:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module show gcc-7.2.0-gcc-5.4.0-wwhgyej
-  ----------------------------------------------------------------------------------------------------------------------------------------------
-     /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64/gcc-7.2.0-gcc-5.4.0-wwhgyej:
-  ----------------------------------------------------------------------------------------------------------------------------------------------
+  $ module show gcc-7.2.0-gcc-5.4.0-b7smjjc
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64/gcc-7.2.0-gcc-5.4.0-b7smjjc:
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("The GNU Compiler Collection includes front ends for C, C++, Objective-C, Fortran, Ada, and Go, as well as libraries for these languages. ")
-  prepend_path("PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin")
-  prepend_path("MANPATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/share/man")
-  prepend_path("LD_LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib")
-  prepend_path("LD_LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib64")
-  prepend_path("CMAKE_PREFIX_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/")
-  setenv("CC","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gcc")
-  setenv("CXX","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/g++")
-  setenv("FC","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("F77","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("F90","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
+  prepend_path("PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin")
+  prepend_path("MANPATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/share/man")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib64")
+  prepend_path("CMAKE_PREFIX_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/")
+  setenv("CC","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gcc")
+  setenv("CXX","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/g++")
+  setenv("FC","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("F77","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("F90","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
   help([[The GNU Compiler Collection includes front ends for C, C++, Objective-C,
   Fortran, Ada, and Go, as well as libraries for these languages.
   ]])
@@ -506,45 +435,54 @@ To do this you should add a ``blacklist`` keyword to ``~/.spack/modules.yaml``:
 
 and regenerate the module files:
 
+This time it is convenient to pass the option ``--delete-tree`` to the command that
+regenerates the module files to instruct it to delete the existing tree and regenerate
+a new one instead of overwriting the files in the existing directory.
+
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module tcl refresh --delete-tree
+  $ spack module tcl refresh --delete-tree
   ==> You are about to regenerate tcl module files for:
 
   -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
-  cbvv5rj autoconf@2.69    qc4qcfz gmp@6.1.2        izvaota lua@5.3.4                dy5r7hi mpfr@4.0.1     qhwyccy tcl@8.6.8
-  lykrrr4 automake@1.16.1  hsl7f52 isl@0.19         ywlmaou lua-luafilesystem@1_6_3  3o765ou ncurses@6.1    5nus6kn zlib@1.2.11
-  wwhgyej gcc@7.2.0        fypapcp libsigsegv@2.11  i7w7ynf lua-luaposix@33.4.0      n2k4mza perl@5.26.2
-  q4fpyuo gdbm@1.14.1      o2pfwjf libtool@2.4.6    3z33ecf m4@1.4.18                fovrh7a pkgconf@1.4.2
-  mkaoyhz git@2.9.4        wl6mywv lmod@7.7.29      56lbd3h mpc@1.1.0                nxhwrg7 readline@7.0
+  3sx2gxe autoconf@2.69    b7smjjc gcc@7.2.0         f4qkkwm libbsd@0.8.6     cpfeo2w lua@5.3.4                3o765ou ncurses@6.1     dk7lrpo tar@1.30
+  rymw7im automake@1.16.1  q4fpyuo gdbm@1.14.1       u2x3umv libiconv@1.15    alakjim lua-luafilesystem@1_6_3  b4y3w3b openssl@1.0.2o  qhwyccy tcl@8.6.8
+  ufczdvs bzip2@1.0.6      tawgous gettext@0.19.8.1  fypapcp libsigsegv@2.11  7wqhwoc lua-luaposix@33.4.0      gt5lgzi pcre@8.42       ba23fbg unzip@6.0
+  vzqreb2 curl@7.60.0      p3gjnfa git@2.19.1        o2pfwjf libtool@2.4.6    suf5jtc m4@1.4.18                ic2kyoa perl@5.26.2     teneqii xz@5.2.4
+  2rhuivg diffutils@3.6    qc4qcfz gmp@6.1.2         wpexsph libxml2@2.9.8    iuf3gc3 mpc@1.1.0                fovrh7a pkgconf@1.4.2   5nus6kn zlib@1.2.11
+  emyv67q expat@2.2.5      vttqout isl@0.18          kmhks3p lmod@7.8         jnt2nnp mpfr@3.1.6               nxhwrg7 readline@7.0
 
   -- linux-ubuntu16.04-x86_64 / gcc@7.2.0 -------------------------
-  mwamumj bzip2@1.0.6   7apabqu netlib-lapack@3.8.0     pdatzbi openblas@0.3.0   fdiryak py-scipy@1.1.0        ezuwp4p zlib@1.2.11
-  6ovorxs cmake@3.12.0  6i5qsqx netlib-scalapack@2.0.2  6oewzwj openmpi@1.10.2   jqhycal py-setuptools@39.2.0
-  zk5lhob gdbm@1.14.1   uhzmwog netlib-scalapack@2.0.2  cvldq3v openssl@1.0.2o   c7pnzul python@2.7.15
-  vt5xcat mpich@3.2.1   3bz5rxx netlib-scalapack@2.0.2  yoxwmgb pkgconf@1.4.2    ccruj2i readline@7.0
-  xcgzqdv ncurses@6.1   z52ltyy netlib-scalapack@2.0.2  t3loxvu py-numpy@1.14.3  5ltus3a sqlite@3.23.1
+  yb2makb autoconf@2.69    riipwi2 libpciaccess@0.13.5  6jgjbyg netlib-scalapack@2.0.2  fdwz5yu perl@5.26.2           cuqnfgf texinfo@6.5
+  qoowd5q automake@1.16.1  g67xpfd libsigsegv@2.11      zxpt252 netlib-scalapack@2.0.2  yoxwmgb pkgconf@1.4.2         t62kozq util-macros@1.19.1
+  mwamumj bzip2@1.0.6      kt2udm6 libtool@2.4.6        67nmj7g netlib-scalapack@2.0.2  wbwtcxf py-numpy@1.15.2       rql5kog xz@5.2.4
+  obqgn2v cmake@3.12.3     47gf5kk libxml2@2.9.8        prgo67d netlib-scalapack@2.0.2  d5n3cph py-scipy@1.1.0        ezuwp4p zlib@1.2.11
+  eauxwi7 diffutils@3.6    wdzvagl m4@1.4.18            rifwktk numactl@2.0.11          5dbwfwn py-setuptools@40.4.3
+  ca4b7zq findutils@4.6.0  vt5xcat mpich@3.2.1          xxoxfh4 openblas@0.3.3          ucmr2mn python@2.7.15
+  zk5lhob gdbm@1.14.1      xcgzqdv ncurses@6.1          do5xfer openmpi@3.1.3           ccruj2i readline@7.0
+  gbyc65s hwloc@1.11.9     fj7nayd netlib-lapack@3.8.0  cvldq3v openssl@1.0.2o          5ltus3a sqlite@3.23.1
 
   ==> Do you want to proceed? [y/n] y
   ==> Regenerating tcl module files
 
-  root@module-file-tutorial:/# module avail
+  $ module avail
 
-  -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
-     bzip2-1.0.6-gcc-7.2.0-mwamumj               netlib-scalapack-2.0.2-gcc-7.2.0-6i5qsqx    py-numpy-1.14.3-gcc-7.2.0-t3loxvu
-     cmake-3.12.0-gcc-7.2.0-6ovorxs              netlib-scalapack-2.0.2-gcc-7.2.0-uhzmwog    py-scipy-1.1.0-gcc-7.2.0-fdiryak
-     gdbm-1.14.1-gcc-7.2.0-zk5lhob               netlib-scalapack-2.0.2-gcc-7.2.0-z52ltyy    py-setuptools-39.2.0-gcc-7.2.0-jqhycal
-     mpich-3.2.1-gcc-7.2.0-vt5xcat               openblas-0.3.0-gcc-7.2.0-pdatzbi            python-2.7.15-gcc-7.2.0-c7pnzul
-     ncurses-6.1-gcc-7.2.0-xcgzqdv               openmpi-1.10.2-gcc-7.2.0-6oewzwj            readline-7.0-gcc-7.2.0-ccruj2i
-     netlib-lapack-3.8.0-gcc-7.2.0-7apabqu       openssl-1.0.2o-gcc-7.2.0-cvldq3v            sqlite-3.23.1-gcc-7.2.0-5ltus3a
-     netlib-scalapack-2.0.2-gcc-7.2.0-3bz5rxx    pkgconf-1.4.2-gcc-7.2.0-yoxwmgb             zlib-1.2.11-gcc-7.2.0-ezuwp4p
+  ----------------------------------------------- /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64 -----------------------------------------------
+     autoconf-2.69-gcc-7.2.0-yb2makb          m4-1.4.18-gcc-7.2.0-wdzvagl                 perl-5.26.2-gcc-7.2.0-fdwz5yu
+     automake-1.16.1-gcc-7.2.0-qoowd5q        mpich-3.2.1-gcc-7.2.0-vt5xcat               pkgconf-1.4.2-gcc-7.2.0-yoxwmgb
+     bzip2-1.0.6-gcc-7.2.0-mwamumj            ncurses-6.1-gcc-7.2.0-xcgzqdv               py-numpy-1.15.2-gcc-7.2.0-wbwtcxf
+     cmake-3.12.3-gcc-7.2.0-obqgn2v           netlib-lapack-3.8.0-gcc-7.2.0-fj7nayd       py-scipy-1.1.0-gcc-7.2.0-d5n3cph
+     diffutils-3.6-gcc-7.2.0-eauxwi7          netlib-scalapack-2.0.2-gcc-7.2.0-67nmj7g    py-setuptools-40.4.3-gcc-7.2.0-5dbwfwn
+     findutils-4.6.0-gcc-7.2.0-ca4b7zq        netlib-scalapack-2.0.2-gcc-7.2.0-6jgjbyg    python-2.7.15-gcc-7.2.0-ucmr2mn
+     gdbm-1.14.1-gcc-7.2.0-zk5lhob            netlib-scalapack-2.0.2-gcc-7.2.0-prgo67d    readline-7.0-gcc-7.2.0-ccruj2i
+     hwloc-1.11.9-gcc-7.2.0-gbyc65s           netlib-scalapack-2.0.2-gcc-7.2.0-zxpt252    sqlite-3.23.1-gcc-7.2.0-5ltus3a
+     libpciaccess-0.13.5-gcc-7.2.0-riipwi2    numactl-2.0.11-gcc-7.2.0-rifwktk            texinfo-6.5-gcc-7.2.0-cuqnfgf
+     libsigsegv-2.11-gcc-7.2.0-g67xpfd        openblas-0.3.3-gcc-7.2.0-xxoxfh4            util-macros-1.19.1-gcc-7.2.0-t62kozq
+     libtool-2.4.6-gcc-7.2.0-kt2udm6          openmpi-3.1.3-gcc-7.2.0-do5xfer             xz-5.2.4-gcc-7.2.0-rql5kog
+     libxml2-2.9.8-gcc-7.2.0-47gf5kk          openssl-1.0.2o-gcc-7.2.0-cvldq3v            zlib-1.2.11-gcc-7.2.0-ezuwp4p
 
   Use "module spider" to find all possible modules.
   Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
-
-This time it is convenient to pass the option ``--delete-tree`` to the command that
-regenerates the module files to instruct it to delete the existing tree and regenerate
-a new one instead of overwriting the files in the existing directory.
 
 If you look closely you'll see though that we went too far in blacklisting modules:
 the module for ``gcc@7.2.0`` disappeared as it was bootstrapped with ``gcc@5.4.0``. To specify
@@ -567,7 +505,7 @@ exceptions to the blacklist rules you can use ``whitelist``:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module tcl refresh -y
+  $ spack module tcl refresh -y
   ==> Regenerating tcl module files
 
 
@@ -575,14 +513,13 @@ you'll see that now the module for ``gcc@7.2.0`` has reappeared:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module av gcc-7.2.0-gcc-5.4.0-wwhgyej
+  $ module avail gcc-7.2.0-gcc-5.4.0-b7smjjc
 
-  -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
-     gcc-7.2.0-gcc-5.4.0-wwhgyej
+  -------------------------------------------- /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
+     gcc-7.2.0-gcc-5.4.0-b7smjjc
 
   Use "module spider" to find all possible modules.
   Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
-
 
 An additional possibility that you can leverage to unclutter the environment
 is that of preventing the generation of module files for implicitly installed
@@ -631,10 +568,10 @@ If you try to regenerate the module files now you will get an error:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module tcl refresh --delete-tree -y
+  $ spack module tcl refresh --delete-tree -y
   ==> Error: Name clashes detected in module files:
 
-  file: /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64/netlib-scalapack-2.0.2-gcc-7.2.0
+  file: /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64/netlib-scalapack-2.0.2-gcc-7.2.0
   spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
   spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
   spec: netlib-scalapack@2.0.2%gcc@7.2.0 build_type=RelWithDebInfo ~pic+shared arch=linux-ubuntu16.04-x86_64
@@ -678,18 +615,24 @@ Regenerating module files now we obtain:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module tcl refresh --delete-tree -y
+  $ spack module tcl refresh --delete-tree -y
   ==> Regenerating tcl module files
+  $ module avail
 
-  root@module-file-tutorial:/# module av
-
-  -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
-     bzip2-1.0.6-gcc-7.2.0     netlib-lapack-3.8.0-gcc-7.2.0                        openmpi-1.10.2-gcc-7.2.0              python-2.7.15-gcc-7.2.0
-     cmake-3.12.0-gcc-7.2.0    netlib-scalapack-2.0.2-gcc-7.2.0-netlib-mpich        openssl-1.0.2o-gcc-7.2.0              readline-7.0-gcc-7.2.0
-     gcc-7.2.0-gcc-5.4.0       netlib-scalapack-2.0.2-gcc-7.2.0-netlib-openmpi      pkgconf-1.4.2-gcc-7.2.0               sqlite-3.23.1-gcc-7.2.0
-     gdbm-1.14.1-gcc-7.2.0     netlib-scalapack-2.0.2-gcc-7.2.0-openblas-mpich      py-numpy-1.14.3-gcc-7.2.0-openblas    zlib-1.2.11-gcc-7.2.0
-     mpich-3.2.1-gcc-7.2.0     netlib-scalapack-2.0.2-gcc-7.2.0-openblas-openmpi    py-scipy-1.1.0-gcc-7.2.0-openblas
-     ncurses-6.1-gcc-7.2.0     openblas-0.3.0-gcc-7.2.0                             py-setuptools-39.2.0-gcc-7.2.0
+  ----------------------------------------------- /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64 -----------------------------------------------
+     autoconf-2.69-gcc-7.2.0          m4-1.4.18-gcc-7.2.0                                  pkgconf-1.4.2-gcc-7.2.0
+     automake-1.16.1-gcc-7.2.0        mpich-3.2.1-gcc-7.2.0                                py-numpy-1.15.2-gcc-7.2.0-openblas
+     bzip2-1.0.6-gcc-7.2.0            ncurses-6.1-gcc-7.2.0                                py-scipy-1.1.0-gcc-7.2.0-openblas
+     cmake-3.12.3-gcc-7.2.0           netlib-lapack-3.8.0-gcc-7.2.0                        py-setuptools-40.4.3-gcc-7.2.0
+     diffutils-3.6-gcc-7.2.0          netlib-scalapack-2.0.2-gcc-7.2.0-netlib-mpich        python-2.7.15-gcc-7.2.0
+     findutils-4.6.0-gcc-7.2.0        netlib-scalapack-2.0.2-gcc-7.2.0-netlib-openmpi      readline-7.0-gcc-7.2.0
+     gcc-7.2.0-gcc-5.4.0              netlib-scalapack-2.0.2-gcc-7.2.0-openblas-mpich      sqlite-3.23.1-gcc-7.2.0
+     gdbm-1.14.1-gcc-7.2.0            netlib-scalapack-2.0.2-gcc-7.2.0-openblas-openmpi    texinfo-6.5-gcc-7.2.0
+     hwloc-1.11.9-gcc-7.2.0           numactl-2.0.11-gcc-7.2.0                             util-macros-1.19.1-gcc-7.2.0
+     libpciaccess-0.13.5-gcc-7.2.0    openblas-0.3.3-gcc-7.2.0                             xz-5.2.4-gcc-7.2.0
+     libsigsegv-2.11-gcc-7.2.0        openmpi-3.1.3-gcc-7.2.0                              zlib-1.2.11-gcc-7.2.0
+     libtool-2.4.6-gcc-7.2.0          openssl-1.0.2o-gcc-7.2.0
+     libxml2-2.9.8-gcc-7.2.0          perl-5.26.2-gcc-7.2.0
 
   Use "module spider" to find all possible modules.
   Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
@@ -725,19 +668,24 @@ The final result should look like:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module tcl refresh --delete-tree -y
+  $ spack module tcl refresh --delete-tree -y
   ==> Regenerating tcl module files
-  root@module-file-tutorial:/# module av
+  $ module avail
 
-  -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
-     bzip2/1.0.6-gcc-7.2.0                            netlib-scalapack/2.0.2-gcc-7.2.0-netlib-openmpi          py-scipy/1.1.0-gcc-7.2.0-openblas
-     cmake/3.12.0-gcc-7.2.0                           netlib-scalapack/2.0.2-gcc-7.2.0-openblas-mpich          py-setuptools/39.2.0-gcc-7.2.0
-     gcc/7.2.0-gcc-5.4.0                              netlib-scalapack/2.0.2-gcc-7.2.0-openblas-openmpi (D)    python/2.7.15-gcc-7.2.0
-     gdbm/1.14.1-gcc-7.2.0                            openblas/0.3.0-gcc-7.2.0                                 readline/7.0-gcc-7.2.0
-     mpich/3.2.1-gcc-7.2.0                            openmpi/1.10.2-gcc-7.2.0                                 sqlite/3.23.1-gcc-7.2.0
-     ncurses/6.1-gcc-7.2.0                            openssl/1.0.2o-gcc-7.2.0                                 zlib/1.2.11-gcc-7.2.0
-     netlib-lapack/3.8.0-gcc-7.2.0                    pkgconf/1.4.2-gcc-7.2.0
-     netlib-scalapack/2.0.2-gcc-7.2.0-netlib-mpich    py-numpy/1.14.3-gcc-7.2.0-openblas
+  ----------------------------------------------- /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64 -----------------------------------------------
+     autoconf/2.69-gcc-7.2.0          m4/1.4.18-gcc-7.2.0                                      pkgconf/1.4.2-gcc-7.2.0
+     automake/1.16.1-gcc-7.2.0        mpich/3.2.1-gcc-7.2.0                                    py-numpy/1.15.2-gcc-7.2.0-openblas
+     bzip2/1.0.6-gcc-7.2.0            ncurses/6.1-gcc-7.2.0                                    py-scipy/1.1.0-gcc-7.2.0-openblas
+     cmake/3.12.3-gcc-7.2.0           netlib-lapack/3.8.0-gcc-7.2.0                            py-setuptools/40.4.3-gcc-7.2.0
+     diffutils/3.6-gcc-7.2.0          netlib-scalapack/2.0.2-gcc-7.2.0-netlib-mpich            python/2.7.15-gcc-7.2.0
+     findutils/4.6.0-gcc-7.2.0        netlib-scalapack/2.0.2-gcc-7.2.0-netlib-openmpi          readline/7.0-gcc-7.2.0
+     gcc/7.2.0-gcc-5.4.0              netlib-scalapack/2.0.2-gcc-7.2.0-openblas-mpich          sqlite/3.23.1-gcc-7.2.0
+     gdbm/1.14.1-gcc-7.2.0            netlib-scalapack/2.0.2-gcc-7.2.0-openblas-openmpi (D)    texinfo/6.5-gcc-7.2.0
+     hwloc/1.11.9-gcc-7.2.0           numactl/2.0.11-gcc-7.2.0                                 util-macros/1.19.1-gcc-7.2.0
+     libpciaccess/0.13.5-gcc-7.2.0    openblas/0.3.3-gcc-7.2.0                                 xz/5.2.4-gcc-7.2.0
+     libsigsegv/2.11-gcc-7.2.0        openmpi/3.1.3-gcc-7.2.0                                  zlib/1.2.11-gcc-7.2.0
+     libtool/2.4.6-gcc-7.2.0          openssl/1.0.2o-gcc-7.2.0
+     libxml2/2.9.8-gcc-7.2.0          perl/5.26.2-gcc-7.2.0
 
     Where:
      D:  Default Module
@@ -799,26 +747,26 @@ Regenerating the module files results in something like:
 .. code-block:: console
   :emphasize-lines: 15
 
-  root@module-file-tutorial:/# spack module tcl refresh -y
+  $ spack module tcl refresh -y
   ==> Regenerating tcl module files
 
-  root@module-file-tutorial:/# module show gcc
-  ----------------------------------------------------------------------------------------------------------------------------------------------
-     /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64/gcc/7.2.0-gcc-5.4.0:
-  ----------------------------------------------------------------------------------------------------------------------------------------------
+  $ module show gcc
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64/gcc/7.2.0-gcc-5.4.0:
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("The GNU Compiler Collection includes front ends for C, C++, Objective-C, Fortran, Ada, and Go, as well as libraries for these languages. ")
   conflict("gcc")
-  prepend_path("PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin")
-  prepend_path("MANPATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/share/man")
-  prepend_path("LD_LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib")
-  prepend_path("LD_LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib64")
-  prepend_path("CMAKE_PREFIX_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/")
-  setenv("CC","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gcc")
-  setenv("CXX","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/g++")
-  setenv("FC","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("F77","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("F90","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("GCC_ROOT","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o")
+  prepend_path("PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin")
+  prepend_path("MANPATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/share/man")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib64")
+  prepend_path("CMAKE_PREFIX_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/")
+  setenv("CC","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gcc")
+  setenv("CXX","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/g++")
+  setenv("FC","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("F77","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("F90","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("GCC_ROOT","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs")
   help([[The GNU Compiler Collection includes front ends for C, C++, Objective-C,
   Fortran, Ada, and Go, as well as libraries for these languages.
   ]])
@@ -875,48 +823,50 @@ This time we will be more selective and regenerate only the ``gcc`` and
 
 .. code-block:: console
 
-  root@module-file-tutorial:/#  spack module tcl refresh -y gcc
+  $ spack module tcl refresh -y gcc
   ==> Regenerating tcl module files
 
-  root@module-file-tutorial:/# spack module tcl refresh -y openmpi
+  $ spack module tcl refresh -y openmpi
   ==> Regenerating tcl module files
 
-  root@module-file-tutorial:/# module show gcc
-  ----------------------------------------------------------------------------------------------------------------------------------------------
-     /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64/gcc/7.2.0-gcc-5.4.0:
-  ----------------------------------------------------------------------------------------------------------------------------------------------
+  $ module show gcc
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64/gcc/7.2.0-gcc-5.4.0:
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("The GNU Compiler Collection includes front ends for C, C++, Objective-C, Fortran, Ada, and Go, as well as libraries for these languages. ")
   conflict("gcc")
-  prepend_path("PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin")
-  prepend_path("MANPATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/share/man")
-  prepend_path("LD_LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib")
-  prepend_path("LD_LIBRARY_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/lib64")
-  prepend_path("CMAKE_PREFIX_PATH","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/")
-  setenv("CC","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gcc")
-  setenv("CXX","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/g++")
-  setenv("FC","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("F77","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("F90","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o/bin/gfortran")
-  setenv("GCC_ROOT","/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-wwhgyejrjfjtdsgga3hn246bc64jtr6o")
+  prepend_path("PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin")
+  prepend_path("MANPATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/share/man")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/lib64")
+  prepend_path("CMAKE_PREFIX_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/")
+  setenv("CC","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gcc")
+  setenv("CXX","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/g++")
+  setenv("FC","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("F77","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("F90","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs/bin/gfortran")
+  setenv("GCC_ROOT","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-b7smjjcsmwe5u5fcsvjmonlhlzzctnfs")
   setenv("CC","gcc")
-  setenv("CXX","g++")
+  setenv("CXX","g++'")
   setenv("FC","gfortran")
-  setenv("F90","gfortran")
   setenv("F77","gfortran")
+  setenv("F90","gfortran")
   help([[The GNU Compiler Collection includes front ends for C, C++, Objective-C,
   Fortran, Ada, and Go, as well as libraries for these languages.
   ]])
 
-  root@module-file-tutorial:/# module show openmpi
-  ----------------------------------------------------------------------------------------------------------------------------------------------
-     /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64/openmpi/1.10.2-gcc-7.2.0:
-  ----------------------------------------------------------------------------------------------------------------------------------------------
+  $ module show openmpi
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64/openmpi/3.1.3-gcc-7.2.0:
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------
   whatis("An open source Message Passing Interface implementation. ")
   conflict("openmpi")
-  prepend_path("MANPATH","/usr/share/man")
-  prepend_path("ACLOCAL_PATH","/usr/share/aclocal")
-  prepend_path("PKG_CONFIG_PATH","/usr/lib/pkgconfig")
-  setenv("OPENMPI_ROOT","/usr")
+  prepend_path("PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/openmpi-3.1.3-do5xfer2whhk7gc26atgs3ozr3ljbvs4/bin")
+  prepend_path("MANPATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/openmpi-3.1.3-do5xfer2whhk7gc26atgs3ozr3ljbvs4/share/man")
+  prepend_path("LD_LIBRARY_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/openmpi-3.1.3-do5xfer2whhk7gc26atgs3ozr3ljbvs4/lib")
+  prepend_path("PKG_CONFIG_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/openmpi-3.1.3-do5xfer2whhk7gc26atgs3ozr3ljbvs4/lib/pkgconfig")
+  prepend_path("CMAKE_PREFIX_PATH","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/openmpi-3.1.3-do5xfer2whhk7gc26atgs3ozr3ljbvs4/")
+  setenv("OPENMPI_ROOT","/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/openmpi-3.1.3-do5xfer2whhk7gc26atgs3ozr3ljbvs4")
   setenv("SLURM_MPI_TYPE","pmi2")
   setenv("OMPI_MCA_btl_openib_warn_default_gid_prefix","0")
   help([[An open source Message Passing Interface implementation. The Open MPI
@@ -994,9 +944,9 @@ Now the ``py-scipy`` module will be:
 .. code-block:: tcl
 
   #%Module1.0
-  ## Module file created by spack (https://github.com/spack/spack) on 2018-07-10 15:15:09.308128
+  ## Module file created by spack (https://github.com/spack/spack) on 2018-11-11 22:10:48.834221
   ##
-  ## py-scipy@1.1.0%gcc@7.2.0 arch=linux-ubuntu16.04-x86_64 /fdiryak
+  ## py-scipy@1.1.0%gcc@7.2.0 arch=linux-ubuntu16.04-x86_64 /d5n3cph
   ##
 
 
@@ -1008,33 +958,33 @@ Now the ``py-scipy`` module will be:
   puts stderr "routines for numerical integration and optimization."
   }
 
-  if ![ is-loaded python/2.7.15-gcc-7.2.0 ] {
+  if { [ module-info mode load ] && ![ is-loaded python/2.7.15-gcc-7.2.0 ] } {
       puts stderr "Autoloading python/2.7.15-gcc-7.2.0"
       module load python/2.7.15-gcc-7.2.0
   }
-  if ![ is-loaded openblas/0.3.0-gcc-7.2.0 ] {
-      puts stderr "Autoloading openblas/0.3.0-gcc-7.2.0"
-      module load openblas/0.3.0-gcc-7.2.0
+  if { [ module-info mode load ] && ![ is-loaded openblas/0.3.3-gcc-7.2.0 ] } {
+      puts stderr "Autoloading openblas/0.3.3-gcc-7.2.0"
+      module load openblas/0.3.3-gcc-7.2.0
   }
-  if ![ is-loaded py-numpy/1.14.3-gcc-7.2.0-openblas ] {
-      puts stderr "Autoloading py-numpy/1.14.3-gcc-7.2.0-openblas"
-      module load py-numpy/1.14.3-gcc-7.2.0-openblas
+  if { [ module-info mode load ] && ![ is-loaded py-numpy/1.15.2-gcc-7.2.0-openblas ] } {
+      puts stderr "Autoloading py-numpy/1.15.2-gcc-7.2.0-openblas"
+      module load py-numpy/1.15.2-gcc-7.2.0-openblas
   }
   conflict py-scipy
 
-  prepend-path LD_LIBRARY_PATH "/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-fdiryak4ywv2krvqo7uzogfcc6uckkdp/lib"
-  prepend-path CMAKE_PREFIX_PATH "/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-fdiryak4ywv2krvqo7uzogfcc6uckkdp/"
-  prepend-path PYTHONPATH "/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-fdiryak4ywv2krvqo7uzogfcc6uckkdp/lib/python2.7/site-packages"
-  setenv PY_SCIPY_ROOT "/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-fdiryak4ywv2krvqo7uzogfcc6uckkdp"
+  prepend-path LD_LIBRARY_PATH "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn/lib"
+  prepend-path CMAKE_PREFIX_PATH "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn/"
+  prepend-path PYTHONPATH "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn/lib/python2.7/site-packages"
+  setenv PY_SCIPY_ROOT "/home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/py-scipy-1.1.0-d5n3cphk2lx2v74ypwb6h7tna7vvgdyn"
 
 and will contain code to autoload all the dependencies:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module load py-scipy
+  $ module load py-scipy
   Autoloading python/2.7.15-gcc-7.2.0
-  Autoloading openblas/0.3.0-gcc-7.2.0
-  Autoloading py-numpy/1.14.3-gcc-7.2.0-openblas
+  Autoloading openblas/0.3.3-gcc-7.2.0
+  Autoloading py-numpy/1.15.2-gcc-7.2.0-openblas
 
 In case messages are unwanted during the autoload procedure, it will be
 sufficient to omit the line setting ``verbose: True`` in the configuration file above.
@@ -1050,20 +1000,22 @@ all the software is visible at the same time:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module avail
+  $ module avail
 
-  -------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 ---------------------------------------------
-     bzip2/1.0.6-gcc-7.2.0                                    openblas/0.3.0-gcc-7.2.0           (L)
-     cmake/3.11.4-gcc-7.2.0                                   openmpi/1.10.2-gcc-7.2.0
-     gcc/7.2.0-gcc-5.4.0                                      openssl/1.0.2o-gcc-7.2.0
-     gdbm/1.14.1-gcc-7.2.0                                    pkgconf/1.4.2-gcc-7.2.0
-     mpich/3.2.1-gcc-7.2.0                                    py-numpy/1.14.3-gcc-7.2.0-openblas (L)
-     ncurses/6.1-gcc-7.2.0                                    py-scipy/1.1.0-gcc-7.2.0-openblas  (L)
-     netlib-lapack/3.8.0-gcc-7.2.0                            py-setuptools/39.2.0-gcc-7.2.0
-     netlib-scalapack/2.0.2-gcc-7.2.0-netlib-mpich            python/2.7.15-gcc-7.2.0            (L)
-     netlib-scalapack/2.0.2-gcc-7.2.0-netlib-openmpi          readline/7.0-gcc-7.2.0
-     netlib-scalapack/2.0.2-gcc-7.2.0-openblas-mpich          sqlite/3.23.1-gcc-7.2.0
-     netlib-scalapack/2.0.2-gcc-7.2.0-openblas-openmpi (D)    zlib/1.2.11-gcc-7.2.0
+  ----------------------------------------------- /home/spack1/spack/share/spack/modules/linux-ubuntu16.04-x86_64 -----------------------------------------------
+     autoconf/2.69-gcc-7.2.0          m4/1.4.18-gcc-7.2.0                                      pkgconf/1.4.2-gcc-7.2.0
+     automake/1.16.1-gcc-7.2.0        mpich/3.2.1-gcc-7.2.0                                    py-numpy/1.15.2-gcc-7.2.0-openblas (L)
+     bzip2/1.0.6-gcc-7.2.0            ncurses/6.1-gcc-7.2.0                                    py-scipy/1.1.0-gcc-7.2.0-openblas  (L)
+     cmake/3.12.3-gcc-7.2.0           netlib-lapack/3.8.0-gcc-7.2.0                            py-setuptools/40.4.3-gcc-7.2.0
+     diffutils/3.6-gcc-7.2.0          netlib-scalapack/2.0.2-gcc-7.2.0-netlib-mpich           python/2.7.15-gcc-7.2.0            (L)
+     findutils/4.6.0-gcc-7.2.0        netlib-scalapack/2.0.2-gcc-7.2.0-netlib-openmpi         readline/7.0-gcc-7.2.0
+     gcc/7.2.0-gcc-5.4.0              netlib-scalapack/2.0.2-gcc-7.2.0-openblas-mpich          sqlite/3.23.1-gcc-7.2.0
+     gdbm/1.14.1-gcc-7.2.0            netlib-scalapack/2.0.2-gcc-7.2.0-openblas-openmpi (D)    texinfo/6.5-gcc-7.2.0
+     hwloc/1.11.9-gcc-7.2.0           numactl/2.0.11-gcc-7.2.0                                 util-macros/1.19.1-gcc-7.2.0
+     libpciaccess/0.13.5-gcc-7.2.0    openblas/0.3.3-gcc-7.2.0                          (L)    xz/5.2.4-gcc-7.2.0
+     libsigsegv/2.11-gcc-7.2.0        openmpi/3.1.3-gcc-7.2.0                                  zlib/1.2.11-gcc-7.2.0
+     libtool/2.4.6-gcc-7.2.0          openssl/1.0.2o-gcc-7.2.0
+     libxml2/2.9.8-gcc-7.2.0          perl/5.26.2-gcc-7.2.0
 
     Where:
      L:  Module is loaded
@@ -1077,12 +1029,12 @@ that nothing prevents users from loading incompatible sets of modules:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module purge
-  root@module-file-tutorial:/# module load netlib-lapack/3.8.0-gcc-7.2.0 openblas/0.3.0-gcc-7.2.0
-  root@module-file-tutorial:/# module list
+  $ module purge
+  $ module load netlib-lapack/3.8.0-gcc-7.2.0 openblas/0.3.3-gcc-7.2.0
+  $ module list
 
   Currently Loaded Modules:
-    1) netlib-lapack/3.8.0-gcc-7.2.0   2) openblas/0.3.0-gcc-7.2.0
+    1) netlib-lapack/3.8.0-gcc-7.2.0   2) openblas/0.3.3-gcc-7.2.0
 
 Even if ``conflicts`` directives are carefully placed in module files, they:
 
@@ -1170,24 +1122,24 @@ If we now regenerate the module files:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# spack module lmod refresh --delete-tree -y
+  $ spack module lmod refresh --delete-tree -y
   ==> Regenerating lmod module files
 
 and update ``MODULEPATH`` to point to the ``Core``:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module purge
-  root@module-file-tutorial:/# module unuse /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64
-  root@module-file-tutorial:/# module use /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core
+  $ module purge
+  $ module unuse $HOME/spack/share/spack/modules/linux-ubuntu16.04-x86_64
+  $ module use $HOME/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/Core
 
 asking for the available modules will return:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module avail
+  $ module avail
 
-  ------------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core --------------------------------------------
+  ----------------------------------------------------------- share/spack/lmod/linux-ubuntu16.04-x86_64/Core ------------------------------------------------------------
      gcc/7.2.0
 
   Use "module spider" to find all possible modules.
@@ -1198,15 +1150,17 @@ the ``Compiler`` part of the hierarchy:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module load gcc
-  root@module-file-tutorial:/# module avail
+  $ module load gcc
+  $ module avail
 
-  ----------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 -----------------------------------------
-     bzip2/1.0.6     mpich/3.2.1            openblas/0.3.0    pkgconf/1.4.2               py-setuptools/39.2.0    sqlite/3.23.1
-     cmake/3.12.0    ncurses/6.1            openmpi/1.10.2    py-numpy/1.14.3-openblas    python/2.7.15           zlib/1.2.11
-     gdbm/1.14.1     netlib-lapack/3.8.0    openssl/1.0.2o    py-scipy/1.1.0-openblas     readline/7.0
+  ------------------------------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 --------------------------------------------
+     autoconf/2.69      findutils/4.6.0        libtool/2.4.6    netlib-lapack/3.8.0    perl/5.26.2                 python/2.7.15         xz/5.2.4
+     automake/1.16.1    gdbm/1.14.1            libxml2/2.9.8    numactl/2.0.11         pkgconf/1.4.2               readline/7.0          zlib/1.2.11
+     bzip2/1.0.6        hwloc/1.11.9           m4/1.4.18        openblas/0.3.3         py-numpy/1.15.2-openblas    sqlite/3.23.1
+     cmake/3.12.3       libpciaccess/0.13.5    mpich/3.2.1      openmpi/3.1.3          py-scipy/1.1.0-openblas     texinfo/6.5
+     diffutils/3.6      libsigsegv/2.11        ncurses/6.1      openssl/1.0.2o         py-setuptools/40.4.3        util-macros/1.19.1
 
-  ------------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core --------------------------------------------
+  ----------------------------------------------------------- share/spack/lmod/linux-ubuntu16.04-x86_64/Core ------------------------------------------------------------
      gcc/7.2.0 (L)
 
     Where:
@@ -1220,18 +1174,20 @@ either ``mpich`` or ``openmpi``. Let's start by loading ``mpich``:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module load mpich
-  root@module-file-tutorial:/# module avail
+  $ module load mpich
+  $ module avail
 
-  ------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/mpich/3.2.1-vt5xcat/gcc/7.2.0 -------------------------------
+  --------------------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/mpich/3.2.1-vt5xcat/gcc/7.2.0 ----------------------------------
      netlib-scalapack/2.0.2-netlib    netlib-scalapack/2.0.2-openblas (D)
 
-  ----------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 -----------------------------------------
-     bzip2/1.0.6     mpich/3.2.1         (L)    openblas/0.3.0    pkgconf/1.4.2               py-setuptools/39.2.0    sqlite/3.23.1
-     cmake/3.12.0    ncurses/6.1                openmpi/1.10.2    py-numpy/1.14.3-openblas    python/2.7.15           zlib/1.2.11
-     gdbm/1.14.1     netlib-lapack/3.8.0        openssl/1.0.2o    py-scipy/1.1.0-openblas     readline/7.0
+  ------------------------------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 --------------------------------------------
+     autoconf/2.69      findutils/4.6.0        libtool/2.4.6        netlib-lapack/3.8.0    perl/5.26.2                 python/2.7.15         xz/5.2.4
+     automake/1.16.1    gdbm/1.14.1            libxml2/2.9.8        numactl/2.0.11         pkgconf/1.4.2               readline/7.0          zlib/1.2.11
+     bzip2/1.0.6        hwloc/1.11.9           m4/1.4.18            openblas/0.3.3         py-numpy/1.15.2-openblas    sqlite/3.23.1
+     cmake/3.12.3       libpciaccess/0.13.5    mpich/3.2.1   (L)    openmpi/3.1.3          py-scipy/1.1.0-openblas     texinfo/6.5
+     diffutils/3.6      libsigsegv/2.11        ncurses/6.1          openssl/1.0.2o         py-setuptools/40.4.3        util-macros/1.19.1
 
-  ------------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core --------------------------------------------
+  ----------------------------------------------------------- share/spack/lmod/linux-ubuntu16.04-x86_64/Core ------------------------------------------------------------
      gcc/7.2.0 (L)
 
     Where:
@@ -1246,16 +1202,17 @@ either ``mpich`` or ``openmpi``. Let's start by loading ``mpich``:
   root@module-file-tutorial:/# module list
 
   Currently Loaded Modules:
-    1) gcc/7.2.0   2) mpich/3.2.1   3) openblas/0.3.0   4) netlib-scalapack/2.0.2-openblas
+    1) gcc/7.2.0   2) mpich/3.2.1   3) openblas/0.3.3   4) netlib-scalapack/2.0.2-openblas
 
 At this point we can showcase the improved consistency that a hierarchical layout provides
 over a non-hierarchical one:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module load openmpi
+  $ module load openmpi
 
-  Lmod is automatically replacing "mpich/3.2.1" with "openmpi/1.10.2".
+  Lmod is automatically replacing "mpich/3.2.1" with "openmpi/3.1.3".
+
 
   Due to MODULEPATH changes, the following have been reloaded:
     1) netlib-scalapack/2.0.2-openblas
@@ -1284,7 +1241,7 @@ for ``LAPACK`` implementations:
   root@module-file-tutorial:/# module list
 
   Currently Loaded Modules:
-    1) gcc/7.2.0   2) openblas/0.3.0   3) openmpi/1.10.2   4) netlib-scalapack/2.0.2-openblas
+    1) gcc/7.2.0   2) openblas/0.3.3   3) openmpi/3.1.3   4) netlib-scalapack/2.0.2-openblas
 
   root@module-file-tutorial:/# module load netlib-scalapack/2.0.2-netlib
 
@@ -1294,7 +1251,7 @@ for ``LAPACK`` implementations:
   root@module-file-tutorial:/# module list
 
   Currently Loaded Modules:
-    1) gcc/7.2.0   2) openblas/0.3.0   3) openmpi/1.10.2   4) netlib-scalapack/2.0.2-netlib
+    1) gcc/7.2.0   2) openblas/0.3.3   3) openmpi/3.1.3   4) netlib-scalapack/2.0.2-netlib
 
 Hierarchies that are deeper than ``Core``/``Compiler``/``MPI`` are
 probably still considered "unusual" or "impractical" at many sites, mainly because
@@ -1369,19 +1326,21 @@ we can see that now we have additional components in the hierarchy:
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module load gcc
-  root@module-file-tutorial:/# module load openblas
-  root@module-file-tutorial:/# module avail
+  $ module load gcc
+  $ module load openblas
+  $ module avail
 
-  ----------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/openblas/0.3.0-pdatzbi/gcc/7.2.0 ------------------------------
-     py-numpy/1.14.3    py-scipy/1.1.0
+  -------------------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/openblas/0.3.3-xxoxfh4/gcc/7.2.0 --------------------------------
+     py-numpy/1.15.2    py-scipy/1.1.0
 
-  ----------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 -----------------------------------------
-     bzip2/1.0.6     mpich/3.2.1            openblas/0.3.0 (L)    pkgconf/1.4.2           readline/7.0
-     cmake/3.12.0    ncurses/6.1            openmpi/1.10.2        py-setuptools/39.2.0    sqlite/3.23.1
-     gdbm/1.14.1     netlib-lapack/3.8.0    openssl/1.0.2o        python/2.7.15           zlib/1.2.11
+  ------------------------------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 --------------------------------------------
+     autoconf/2.69      findutils/4.6.0        libtool/2.4.6    netlib-lapack/3.8.0        perl/5.26.2             sqlite/3.23.1
+     automake/1.16.1    gdbm/1.14.1            libxml2/2.9.8    numactl/2.0.11             pkgconf/1.4.2           texinfo/6.5
+     bzip2/1.0.6        hwloc/1.11.9           m4/1.4.18        openblas/0.3.3      (L)    py-setuptools/40.4.3    util-macros/1.19.1
+     cmake/3.12.3       libpciaccess/0.13.5    mpich/3.2.1      openmpi/3.1.3              python/2.7.15           xz/5.2.4
+     diffutils/3.6      libsigsegv/2.11        ncurses/6.1      openssl/1.0.2o             readline/7.0            zlib/1.2.11
 
-  ------------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core --------------------------------------------
+  ----------------------------------------------------------- share/spack/lmod/linux-ubuntu16.04-x86_64/Core ------------------------------------------------------------
      gcc/7.2.0 (L)
 
     Where:
@@ -1391,21 +1350,23 @@ we can see that now we have additional components in the hierarchy:
   Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
 
 
-  root@module-file-tutorial:/# module load openmpi
-  root@module-file-tutorial:/# module avail
+  $ module load openmpi
+  $ module avail
 
-  ------------------ /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/openmpi/1.10.2-6oewzwj/openblas/0.3.0-pdatzbi/gcc/7.2.0 ------------------
+  --------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/openmpi/3.1.3-do5xfer/openblas/0.3.3-xxoxfh4/gcc/7.2.0 ---------------------
      netlib-scalapack/2.0.2
 
-  ----------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/openblas/0.3.0-pdatzbi/gcc/7.2.0 ------------------------------
-     py-numpy/1.14.3    py-scipy/1.1.0
+  -------------------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/openblas/0.3.3-xxoxfh4/gcc/7.2.0 --------------------------------
+     py-numpy/1.15.2    py-scipy/1.1.0
 
-  ----------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 -----------------------------------------
-     bzip2/1.0.6     mpich/3.2.1            openblas/0.3.0 (L)    pkgconf/1.4.2           readline/7.0
-     cmake/3.11.4    ncurses/6.1            openmpi/1.10.2 (L)    py-setuptools/39.2.0    sqlite/3.23.1
-     gdbm/1.14.1     netlib-lapack/3.8.0    openssl/1.0.2o        python/2.7.15           zlib/1.2.11
+  ------------------------------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/gcc/7.2.0 --------------------------------------------
+     autoconf/2.69      findutils/4.6.0        libtool/2.4.6    netlib-lapack/3.8.0        perl/5.26.2             sqlite/3.23.1
+     automake/1.16.1    gdbm/1.14.1            libxml2/2.9.8    numactl/2.0.11             pkgconf/1.4.2           texinfo/6.5
+     bzip2/1.0.6        hwloc/1.11.9           m4/1.4.18        openblas/0.3.3      (L)    py-setuptools/40.4.3    util-macros/1.19.1
+     cmake/3.12.3       libpciaccess/0.13.5    mpich/3.2.1      openmpi/3.1.3       (L)    python/2.7.15           xz/5.2.4
+     diffutils/3.6      libsigsegv/2.11        ncurses/6.1      openssl/1.0.2o             readline/7.0            zlib/1.2.11
 
-  ------------------------------------------- /usr/local/share/spack/lmod/linux-ubuntu16.04-x86_64/Core --------------------------------------------
+  ---------------------------------------------- /home/spack1/spack/share/spack/lmod/linux-ubuntu16.04-x86_64/Core ----------------------------------------------
      gcc/7.2.0 (L)
 
     Where:
@@ -1418,19 +1379,22 @@ Both ``MPI`` and ``LAPACK`` providers will now benefit from the same safety feat
 
 .. code-block:: console
 
-  root@module-file-tutorial:/# module load py-numpy netlib-scalapack
-  root@module-file-tutorial:/# module load mpich
+  $ module load py-numpy netlib-scalapack
+  $ module load mpich
 
-  Lmod is automatically replacing "openmpi/1.10.2" with "mpich/3.2.1".
+  Lmod is automatically replacing "openmpi/3.1.3" with "mpich/3.2.1".
 
 
   Due to MODULEPATH changes, the following have been reloaded:
     1) netlib-scalapack/2.0.2
 
-  root@module-file-tutorial:/# module load mpich
+  $ module load netlib-lapack
 
-  Lmod is automatically replacing "openmpi/1.10.2" with "mpich/3.2.1".
+  Lmod is automatically replacing "openblas/0.3.3" with "netlib-lapack/3.8.0".
 
+
+  Inactive Modules:
+    1) py-numpy
 
   Due to MODULEPATH changes, the following have been reloaded:
     1) netlib-scalapack/2.0.2

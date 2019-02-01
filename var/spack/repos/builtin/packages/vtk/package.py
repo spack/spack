@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -175,12 +175,6 @@ class Vtk(CMakePackage):
                     '-DModule_vtkGUISupportQtOpenGL:BOOL=ON',
                 ])
 
-        if '+mpi' in spec:
-            cmake_args.extend([
-                '-DVTK_Group_MPI:BOOL=ON',
-                '-DVTK_USE_SYSTEM_DIY2=OFF'
-            ])
-
         if '+xdmf' in spec:
             if spec.satisfies('^cmake@3.12:'):
                 # This policy exists only for CMake >= 3.12
@@ -190,7 +184,6 @@ class Vtk(CMakePackage):
                 # Enable XDMF Support here
                 "-DModule_vtkIOXdmf2:BOOL=ON",
                 "-DModule_vtkIOXdmf3:BOOL=ON",
-                "-DModule_vtkIOParallelXdmf3:BOOL=ON",
                 "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
                 "-DBOOST_LIBRARY_DIR={0}".format(spec['boost'].prefix.lib),
                 "-DBOOST_INCLUDE_DIR={0}".format(spec['boost'].prefix.include),

@@ -12,11 +12,7 @@ branches:
 # Build matrix
 #=============================================================================
 
-# Adding the keyword dist to permit an `allow_failures` section
-# under `matrix.include`. More information here:
-#
-# https://docs.travis-ci.com/user/customizing-the-build/#Rows-that-are-Allowed-to-Fail
-dist: trusty
+dist: xenial
 
 jobs:
   fast_finish: true
@@ -29,6 +25,7 @@ jobs:
       env: TEST_SUITE=flake8
     - stage: 'unit tests + documentation'
       python: '2.6'
+      dist: trusty
       sudo: required
       os: linux
       language: python
@@ -56,7 +53,6 @@ jobs:
     - python: '3.7'
       sudo: required
       os: linux
-      dist: xenial
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
@@ -108,14 +104,16 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-    - stage: 'docker build'
+    - python: '3.6'
+      stage: 'docker build'
       sudo: required
       os: linux
-      language: generic
+      language: python
       env: TEST_SUITE=docker
   allow_failures:
-    - dist: xenial
     - env: TEST_SUITE=docker
+    # temporary Python 2.6 exception while we figure out why Travis is hanging
+    - python: '2.6'
 
 stages:
   - 'style checks'
@@ -133,39 +131,49 @@ sudo: false
 
 # Docs need graphviz to build
 addons:
+  # for Linux builds, we use APT
   apt:
     packages:
+      - ccache
+      - cmake
       - gfortran
-      - mercurial
       - graphviz
       - gnupg2
-      - cmake
+      - kcov
+      - mercurial
       - ninja-build
+      - perl
+      - perl-base
+      - realpath
       - r-base
       - r-base-core
       - r-base-dev
-      - perl
-      - perl-base
+  # for Mac builds, we use Homebrew
+  homebrew:
+    packages:
+      - python@2
+      - gcc
+      - gnupg2
+      - ccache
 
+# ~/.ccache needs to be cached directly as Travis is not taking care of it
+# (possibly because we use 'language: python' and not 'language: c')
 cache:
   pip: true
+  ccache: true
   directories:
     - ~/.mirror
+    - ~/.ccache
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-        brew update;
-        export HOMEBREW_NO_AUTO_UPDATE=1;
-        rm /usr/local/include/c++ ;
-        brew ls --versions python@2 > /dev/null || brew install python@2;
-        brew ls --versions gcc      > /dev/null || brew install gcc;
-        brew ls --versions gnupg2   > /dev/null || brew install gnupg2;
         pip2 install --upgrade pip;
         pip2 install virtualenv;
         virtualenv venv;
         source venv/bin/activate;
     fi
+  - ccache -M 2G && ccache -z
 
 # Install various dependencies
 install:
@@ -188,8 +196,8 @@ before_script:
   - git fetch origin develop:develop
 
   # Set up external deps for build tests, b/c they take too long to compile
-  - if [[ "$TEST_SUITE" == "build" ]]; then cp
-        share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml;
+  - if [[ "$TEST_SUITE" == "build" ]]; then
+        cp share/spack/qa/configuration/*.yaml etc/spack/;
     fi
 
 #=============================================================================
@@ -200,27 +208,13 @@ services:
 
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
-  - if [[ "$TEST_SUITE" == "docker build" ]]; then
-        login_attempted=0; login_success=0;
-        for config in share/spack/docker/config/* ; do
-            source "$config" ;
-            ./share/spack/docker/build-image.sh;
-            if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then
-                if [ "$login_attempted" '=' '0' ]; then
-                    if echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin; then
-                        login_success=1;
-                    fi;
-                    login_attempted=1;
-                fi;
-                if [ "$login_success" '=' '1' ]; then
-                    ./share/spack/docker/push-image.sh;
-                fi
-            fi
-        done;
-    fi
+
+after_success:
+  - ccache -s
   - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
         codecov --env PYTHON_VERSION
-                --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
+                --required
+                --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
     fi
 
 #=============================================================================

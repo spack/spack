@@ -1,13 +1,13 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _config-yaml:
 
-====================================
-Basic settings in ``config.yaml``
-====================================
+==============
+Basic Settings
+==============
 
 Spack's basic configuration options are set in ``config.yaml``.  You can
 see the default settings by looking at
@@ -84,8 +84,8 @@ See :ref:`modules` for details.
 --------------------
 
 Spack is designed to run out of a user home directory, and on many
-systems the home directory is a (slow) network filesystem.  On most systems,
-building in a temporary filesystem results in faster builds than building
+systems the home directory is a (slow) network file system.  On most systems,
+building in a temporary file system results in faster builds than building
 in the home directory.  Usually, there is also more space available in
 the temporary location than in the home directory. So, Spack tries to
 create build stages in temporary space.
@@ -96,7 +96,6 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
     - $tempdir
-    - /nfs/tmp2/$user
     - $spack/var/spack/stage
 
 This is an ordered list of paths that Spack should search when trying to
@@ -106,11 +105,10 @@ See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``, and it creates a symbolic link to that directory in
-``$spack/var/spack/stage``. This is used to track the stage.
-
-After a package is successfully installed, Spack deletes the temporary
-directory it used to build.  Unsuccessful builds are not deleted, but you
-can manually purge them with :ref:`spack clean --stage
+``$spack/var/spack/stage``. This is used to track the temporary
+directory.  After the package is successfully installed, Spack deletes
+the temporary directory it used to build.  Unsuccessful builds are not
+deleted, but you can manually purge them with :ref:`spack clean --stage
 <cmd-spack-clean>`.
 
 .. note::
@@ -162,7 +160,7 @@ attacks.  Use at your own risk.
 When set to ``true``, concurrent instances of Spack will use locks to
 avoid modifying the install tree, database file, etc. If false, Spack
 will disable all locking, but you must **not** run concurrent instances
-of Spack.  For filesystems that don't support locking, you should set
+of Spack.  For file systems that don't support locking, you should set
 this to ``false`` and run one Spack at a time, but otherwise we recommend
 enabling locks.
 
@@ -202,16 +200,16 @@ To build all software in serial, set ``build_jobs`` to 1.
 --------------------
 
 When set to ``true`` Spack will use ccache to cache compiles. This is
-useful specifically un two cases: (1) Use with ``spack setup``, (2)
-Build the same package with many different variants. The default is
+useful specifically in two cases: (1) when using ``spack setup``, and (2)
+when building the same package with many different variants. The default is
 ``false``.
 
-When enabled Spack will look inside your ``PATH`` for a ``ccache``
+When enabled, Spack will look inside your ``PATH`` for a ``ccache``
 executable and stop if it is not found. Some systems come with
 ``ccache``, but it can also be installed using ``spack install
 ccache``. ``ccache`` comes with reasonable defaults for cache size
-and location. (See the *Configuration settings* secion of ``man
-ccache`` to learn more about the default settings and how change
-them.) Please note that we currently disable ccache's ``hash_dir``
+and location. (See the *Configuration settings* section of ``man
+ccache`` to learn more about the default settings and how to change
+them). Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
-https://github.com/LLNL/spack/pull/3761#issuecomment-294352232 ).
+https://github.com/LLNL/spack/pull/3761#issuecomment-294352232).

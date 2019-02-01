@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ def quote(sequence, q="'"):
     return ['%s%s%s' % (q, e, q) for e in sequence]
 
 
-def plural(n, singular, plural=None):
+def plural(n, singular, plural=None, show_n=True):
     """Pluralize <singular> word by adding an s if n != 1.
 
     Arguments:
@@ -43,13 +43,15 @@ def plural(n, singular, plural=None):
         singular (str): singular form of word
         plural (str, optional): optional plural form, for when it's not just
             singular + 's'
+        show_n (bool): whether to include n in the result string (default True)
 
     Returns:
         (str): "1 thing" if n == 1 or "n things" if n != 1
     """
+    number = '%s ' % n if show_n else ''
     if n == 1:
-        return "%d %s" % (n, singular)
+        return "%s%s" % (number, singular)
     elif plural is not None:
-        return "%d %s" % (n, plural)
+        return "%s%s" % (number, plural)
     else:
-        return "%d %ss" % (n, singular)
+        return "%s%ss" % (number, singular)

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from __future__ import division
 
 import os
 import sys
-from six import StringIO
+from six import StringIO, text_type
 
 from llnl.util.tty import terminal_size
 from llnl.util.tty.color import clen, cextra
@@ -137,7 +137,7 @@ def colify(elts, **options):
             % next(options.iterkeys()))
 
     # elts needs to be an array of strings so we can count the elements
-    elts = [str(elt) for elt in elts]
+    elts = [text_type(elt) for elt in elts]
     if not elts:
         return (0, ())
 

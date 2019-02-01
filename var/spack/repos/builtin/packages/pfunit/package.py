@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,11 +22,15 @@ class Pfunit(CMakePackage):
     variant('shared', default=True,
             description='Build shared library in addition to static')
     variant('mpi', default=False, description='Enable MPI')
+    variant('use_comm_world', default=False, description='Enable MPI_COMM_WORLD for testing')
     variant('openmp', default=False, description='Enable OpenMP')
     variant('docs', default=False, description='Build docs')
 
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
+
+    conflicts("use_comm_world", when="~mpi")
+    patch("mpi-test.patch", when="+use_comm_world")
 
     def patch(self):
         # The package tries to put .mod files in directory ./mod;

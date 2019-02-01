@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -82,6 +82,8 @@ class Caliper(CMakePackage):
             args.append('-DLIBPFM_INSTALL=%s' % spec['libpfm4'].prefix)
         if '+sosflow' in spec:
             args.append('-DSOS_PREFIX=%s'     % spec['sosflow'].prefix)
+        if '+callpath' in spec:
+            args.append('-DLIBUNWIND_PREFIX=%s' % spec['libunwind'].prefix)
 
         if '+mpi' in spec:
             args.append('-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc)

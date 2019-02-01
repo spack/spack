@@ -1,8 +1,11 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+#
+# Author: Mark Olesen <mark.olesen@esi-group.com>
+#
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -43,7 +46,7 @@ import re
 import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications
 import llnl.util.tty as tty
 
 
@@ -261,6 +264,7 @@ class OpenfoamCom(Package):
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')  # Needs credentials
+    version('1812', '6a315687b3601eeece7ff7c7aed3d9a5')
     version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
     version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
@@ -401,16 +405,16 @@ class OpenfoamCom(Package):
 
                         # Unneeded bits
                         # -------------
-                        'FOAM_SETTINGS',  # Do not use with modules
-                        'FOAM_INST_DIR',  # Old
-                        'FOAM_(APP|ETC|SRC|SOLVERS|UTILITIES)',
+                        # 'FOAM_SETTINGS',  # Do not use with modules
+                        # 'FOAM_INST_DIR',  # Old
+                        # 'FOAM_(APP|ETC|SRC|SOLVERS|UTILITIES)',
                         # 'FOAM_TUTORIALS',  # can be useful
-                        'WM_OSTYPE',      # Purely optional value
+                        # 'WM_OSTYPE',      # Purely optional value
 
                         # Third-party cruft - only used for orig compilation
                         # -----------------
                         '[A-Z].*_ARCH_PATH',
-                        '(KAHIP|METIS|SCOTCH)_VERSION',
+                        # '(KAHIP|METIS|SCOTCH)_VERSION',
 
                         # User-specific
                         # -------------
@@ -422,6 +426,7 @@ class OpenfoamCom(Package):
                     ])
 
                 run_env.extend(mods)
+                spack_env.extend(mods)
                 minimal = False
                 tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
             except Exception:
@@ -432,8 +437,11 @@ class OpenfoamCom(Package):
             tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
             run_env.set('FOAM_PROJECT_DIR', self.projectdir)
             run_env.set('WM_PROJECT_DIR', self.projectdir)
+            spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
+            spack_env.set('WM_PROJECT_DIR', self.projectdir)
             for d in ['wmake', self.archbin]:  # bin added automatically
                 run_env.prepend_path('PATH', join_path(self.projectdir, d))
+                spack_env.prepend_path('PATH', join_path(self.projectdir, d))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Location of the OpenFOAM project directory.
@@ -441,7 +449,7 @@ class OpenfoamCom(Package):
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.
         """
-        spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
+        self.setup_environment(spack_env, run_env)
 
     @property
     def projectdir(self):
@@ -469,9 +477,14 @@ class OpenfoamCom(Package):
            Where needed, apply filter as an alternative to normal patching."""
         add_extra_files(self, self.common, self.assets)
 
-        # Avoid WM_PROJECT_INST_DIR for ThirdParty, site or jobControl.
-        #
-        # Filtering: bashrc,cshrc (using a patch is less flexible)
+    @when('@:1806')
+    def patch(self):
+        """Adjust OpenFOAM build for spack.
+           Where needed, apply filter as an alternative to normal patching."""
+        add_extra_files(self, self.common, self.assets)
+
+        # Avoid WM_PROJECT_INST_DIR for ThirdParty
+        # This modification is non-critical
         edits = {
             'WM_THIRD_PARTY_DIR':
             r'$WM_PROJECT_DIR/ThirdParty  #SPACK: No separate third-party',
@@ -481,18 +494,10 @@ class OpenfoamCom(Package):
             posix=join_path('etc', 'bashrc'),
             cshell=join_path('etc', 'cshrc'))
 
-        # Filtering: settings
-        edits = {
-            'FOAM_EXT_LIBBIN': '#SPACK: No separate third-party',  # ie, unset
-        }
-        rewrite_environ_files(  # etc/config.{csh,sh}/settings
-            edits,
-            posix=join_path('etc', 'config.sh', 'settings'),
-            cshell=join_path('etc', 'config.csh', 'settings'))
-
-        # The following filtering is non-vital. It simply prevents 'site' dirs
-        # from the the wrong level (likely non-existent anyhow) from being
-        # added to PATH, LD_LIBRARY_PATH.
+        # The following filtering is non-critical.
+        # It simply prevents 'site' dirs at the wrong level
+        # (likely non-existent anyhow) from being added to
+        # PATH, LD_LIBRARY_PATH.
         for rcdir in ['config.sh', 'config.csh']:
             rcfile = join_path('etc', rcdir, 'settings')
             if os.path.isfile(rcfile):
@@ -575,6 +580,7 @@ class OpenfoamCom(Package):
                 'METIS_ARCH_PATH': spec['metis'].prefix,
             }
 
+        # ParaView_INCLUDE_DIR is not used in 1812, but has no ill-effect
         if '+paraview' in spec:
             pvmajor = 'paraview-{0}'.format(spec['paraview'].version.up_to(2))
             self.etc_config['paraview'] = [
@@ -632,15 +638,43 @@ class OpenfoamCom(Package):
         builder = Executable(self.build_script)
         builder(*args)
 
-    def install(self, spec, prefix):
-        """Install under the projectdir"""
+    def install_write_location(self):
+        """Set the installation location (projectdir) in bashrc,cshrc."""
+        mkdirp(self.projectdir)
+
+        # Filtering: bashrc, cshrc
+        edits = {
+            'WM_PROJECT_DIR': self.projectdir,
+        }
+        etc_dir = join_path(self.projectdir, 'etc')
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            edits,
+            posix=join_path(etc_dir, 'bashrc'),
+            cshell=join_path(etc_dir, 'cshrc'))
+
+    @when('@:1806')
+    def install_write_location(self):
+        """Set the installation location (projectdir) in bashrc,cshrc.
+        In 1806 and earlier, had WM_PROJECT_INST_DIR as the prefix
+        directory where WM_PROJECT_DIR was installed.
+        """
         mkdirp(self.projectdir)
         projdir = os.path.basename(self.projectdir)
+
         # Filtering: bashrc, cshrc
         edits = {
             'WM_PROJECT_INST_DIR': os.path.dirname(self.projectdir),
             'WM_PROJECT_DIR': join_path('$WM_PROJECT_INST_DIR', projdir),
         }
+        etc_dir = join_path(self.projectdir, 'etc')
+        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+            edits,
+            posix=join_path(etc_dir, 'bashrc'),
+            cshell=join_path(etc_dir, 'cshrc'))
+
+    def install(self, spec, prefix):
+        """Install under the projectdir"""
+        mkdirp(self.projectdir)
 
         # All top-level files, except spack build info and possibly Allwmake
         if '+source' in spec:
@@ -681,11 +715,7 @@ class OpenfoamCom(Package):
                 ignore=ignore,
                 symlinks=True)
 
-        etc_dir = join_path(self.projectdir, 'etc')
-        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
-            edits,
-            posix=join_path(etc_dir, 'bashrc'),
-            cshell=join_path(etc_dir, 'cshrc'))
+        self.install_write_location()
         self.install_links()
 
     def install_links(self):

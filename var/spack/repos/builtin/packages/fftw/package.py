@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,8 @@
 from spack import *
 
 import llnl.util.lang
+# os is used for rename, etc in patch()
+import os
 
 
 class Fftw(AutotoolsPackage):
@@ -72,6 +74,9 @@ class Fftw(AutotoolsPackage):
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
     conflicts('%gcc@8:8.9999', when="@3.3.7")
 
+    provides('fftw-api@2', when='@2.1.5')
+    provides('fftw-api@3', when='@3:')
+
     @property
     def libs(self):
 
@@ -103,6 +108,13 @@ class Fftw(AutotoolsPackage):
             libraries.append('libfftw3' + sfx)
 
         return find_libraries(libraries, root=self.prefix, recursive=True)
+
+    def patch(self):
+        # If fftw/config.h exists in the source tree, it will take precedence
+        # over the copy in build dir.  As only the latter has proper config
+        # for our build, this is a problem.  See e.g. issue #7372 on github
+        if os.path.isfile('fftw/config.h'):
+            os.rename('fftw/config.h', 'fftw/config.h.SPACK_RENAMED')
 
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:
@@ -166,10 +178,10 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make()
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make()
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make()
 
@@ -181,10 +193,10 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make("check")
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make("check")
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make("check")
 
@@ -195,9 +207,9 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make("install")
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make("install")
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make("install")

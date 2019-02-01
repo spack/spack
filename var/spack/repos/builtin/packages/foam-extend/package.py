@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ import re
 import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications
 from spack.pkg.builtin.openfoam_com import OpenfoamArch
 from spack.pkg.builtin.openfoam_com import add_extra_files
 from spack.pkg.builtin.openfoam_com import write_environ

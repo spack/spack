@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,5 +28,6 @@ if ($?SPACK_ROOT) then
     _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
     _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
 else
-    echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to the root of your spack installation"
+    echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to "
+    echo "       the root of your spack installation."
 endif

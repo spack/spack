@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -851,7 +851,8 @@ class Database(object):
             installed=True,
             explicit=any,
             start_date=None,
-            end_date=None
+            end_date=None,
+            hashes=None
     ):
         """Run a query on the database
 
@@ -885,19 +886,26 @@ class Database(object):
             end_date (datetime, optional): filters the query discarding
                 specs that have been installed after ``end_date``.
 
+            hashes (container): list or set of hashes that we can use to
+                restrict the search
+
         Returns:
             list of specs that match the query
+
         """
         # TODO: Specs are a lot like queries.  Should there be a
         # TODO: wildcard spec object, and should specs have attributes
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
+
+        # TODO: handling of hashes restriction is not particularly elegant.
         with self.read_transaction():
             # Just look up concrete specs with hashes; no fancy search.
             if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
 
                 hash_key = query_spec.dag_hash()
-                if hash_key in self._data:
+                if (hash_key in self._data and
+                    (not hashes or hash_key in hashes)):
                     return [self._data[hash_key].spec]
                 else:
                     return []
@@ -909,6 +917,9 @@ class Database(object):
             end_date = end_date or datetime.datetime.max
 
             for key, rec in self._data.items():
+                if hashes is not None and rec.spec.dag_hash() not in hashes:
+                    continue
+
                 if installed is not any and rec.installed != installed:
                     continue
 

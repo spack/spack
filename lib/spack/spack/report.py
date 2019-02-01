@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,6 +135,7 @@ class InfoCollector(object):
 
                     value = do_install(pkg, *args, **kwargs)
                     package['result'] = 'success'
+                    package['stdout'] = fetch_package_log(pkg)
                     if installed_on_entry:
                         return
 
@@ -227,15 +228,14 @@ class collect_info(object):
 
     Args:
         format_name (str or None): one of the supported formats
-        install_command (str): the command line passed to spack
-        cdash_upload_url (str or None): where to upload the report
+        args (dict): args passed to spack install
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, format_name, install_command, cdash_upload_url):
+    def __init__(self, format_name, args):
         self.filename = None
-        if cdash_upload_url:
+        if args.cdash_upload_url:
             self.format_name = 'cdash'
             self.filename = 'cdash_report'
         else:
@@ -244,8 +244,7 @@ class collect_info(object):
         if self.format_name not in valid_formats:
             raise ValueError('invalid report type: {0}'
                              .format(self.format_name))
-        self.report_writer = report_writers[self.format_name](
-            install_command, cdash_upload_url)
+        self.report_writer = report_writers[self.format_name](args)
 
     def concretization_report(self, msg):
         self.report_writer.concretization_report(self.filename, msg)

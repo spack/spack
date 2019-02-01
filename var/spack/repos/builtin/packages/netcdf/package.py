@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,24 +22,32 @@ class Netcdf(AutotoolsPackage):
     and sharing of array-oriented scientific data."""
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
-    url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.3.3.tar.gz"
+    git      = "https://github.com/Unidata/netcdf-c"
+    url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.6.1.tar.gz"
 
+    version('master', branch='master')
+    version('4.6.2',   sha256='c37525981167b3cd82d32e1afa3022afb94e59287db5f116c57f5ed4d9c6a638',
+            url="https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.6.2.tar.gz")
+    version('4.6.1',   sha256='89c7957458740b763ae828c345240b8a1d29c2c1fed0f065f99b73181b0b2642')
+    version('4.6.0',   sha256='4bf05818c1d858224942ae39bfd9c4f1330abec57f04f58b9c3c152065ab3825')
+    version('4.5.0',   sha256='cbe70049cf1643c4ad7453f86510811436c9580cb7a1684ada2f32b95b00ca79')
     # Version 4.4.1.1 is having problems in tests
     #    https://github.com/Unidata/netcdf-c/issues/343
-    version('4.6.1', 'ee81c593efc8a6229d9bcb350b6d7849')
-    version('4.4.1.1', '503a2d6b6035d116ed53b1d80c811bda')
+    version('4.4.1.1', sha256='4d44c6f4d02a8faf10ea619bfe1ba8224cd993024f4da12988c7465f663c8cae')
     # netcdf@4.4.1 can crash on you (in real life and in tests).  See:
     #    https://github.com/Unidata/netcdf-c/issues/282
-    version('4.4.1',   '7843e35b661c99e1d49e60791d5072d8')
-    version('4.4.0',   'cffda0cbd97fdb3a06e9274f7aef438e')
-    version('4.3.3.1', '5c9dad3705a3408d27f696e5b31fb88c')
-    version('4.3.3',   '5fbd0e108a54bd82cb5702a73f56d2ae')
+    version('4.4.1',   sha256='8915cc69817f7af6165fbe69a8d1dfe21d5929d7cca9d10b10f568669ec6b342')
+    version('4.4.0',   sha256='0d40cb7845abd03c363abcd5f57f16e3c0685a0faf8badb2c59867452f6bcf78')
+    version('4.3.3.1', sha256='bdde3d8b0e48eed2948ead65f82c5cfb7590313bc32c4cf6c6546e4cea47ba19')
+    version('4.3.3',   sha256='83223ed74423c685a10f6c3cfa15c2d6bf7dc84b46af1e95b9fa862016aaa27e')
 
     variant('mpi', default=True,
             description='Enable parallel I/O for netcdf-4')
     variant('parallel-netcdf', default=False,
             description='Enable parallel I/O for classic files')
     variant('hdf4', default=False, description='Enable HDF4 support')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
 
@@ -155,7 +163,7 @@ class Netcdf(AutotoolsPackage):
 
         config_args += self.enable_or_disable('shared')
 
-        if '~shared' in self.spec:
+        if '~shared' in self.spec or '+pic' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
             cflags.append(self.compiler.pic_flag)

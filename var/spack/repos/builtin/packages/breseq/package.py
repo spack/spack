@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Breseq(AutotoolsPackage):
     homepage = "http://barricklab.org/breseq"
     url      = "https://github.com/barricklab/breseq/archive/v0.31.1.tar.gz"
 
+    version('0.33.1', sha256='e24a50e254ad026c519747313b9e42bbeb32bd766a6a06ed369bd5b9dc50e84d')
     version('0.31.1', 'a4e602d5481f8692833ba3d5a3cd0394')
 
     depends_on('autoconf', type='build')

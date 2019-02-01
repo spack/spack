@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,17 +22,21 @@ class Snpeff(Package):
     def install(self, spec, prefix):
         install_tree('snpEff', prefix.bin)
 
-        # Set up a helper script to call java on the jar file,
-        # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "snpEff.sh")
-        script = prefix.bin.snpEff
-        install(script_sh, script)
-        set_executable(script)
+        # Set up a helper script to call java on the jar files,
+        # explicitly codes the path for java and the jar files.
+        scripts = ['snpEff', 'SnpSift']
 
-        # Munge the helper script to explicitly point to java and the
-        # jar file.
-        java = self.spec['java'].prefix.bin.java
-        kwargs = {'backup': False}
-        filter_file('^java', java, script, **kwargs)
-        filter_file('snpEff.jar', join_path(prefix.bin, 'snpEff.jar'),
-                    script, **kwargs)
+        for script in scripts:
+            script_sh = join_path(os.path.dirname(__file__), script + ".sh")
+            script_path = join_path(prefix.bin, script)
+            install(script_sh, script_path)
+            set_executable(script_path)
+
+            # Munge the helper script to explicitly point to java and the
+            # jar file.
+            java = self.spec['java'].prefix.bin.java
+            kwargs = {'backup': False}
+            filter_file('^java', java, script_path, **kwargs)
+            filter_file(script + '.jar',
+                        join_path(prefix.bin, script + '.jar'),
+                        script_path, **kwargs)

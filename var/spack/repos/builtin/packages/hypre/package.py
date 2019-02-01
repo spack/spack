@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,7 +49,7 @@ class Hypre(Package):
 
     # Patch to build shared libraries on Darwin
     patch('darwin-shared-libs-for-hypre-2.13.0.patch', when='+shared@2.13.0 platform=darwin')
-    patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0: platform=darwin')
+    patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0 platform=darwin')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")

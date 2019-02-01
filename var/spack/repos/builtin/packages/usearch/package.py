@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,3 +28,5 @@ class Usearch(Package):
         mkdirp(prefix.bin)
         install('usearch{0}_i86linux32'.format(self.version),
                 prefix.bin.usearch)
+        chmod = which('chmod')
+        chmod('+x', prefix.bin.usearch)

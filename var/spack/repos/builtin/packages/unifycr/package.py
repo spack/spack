@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ class Unifycr(AutotoolsPackage):
     depends_on('gotcha@0.0.2')
     depends_on('leveldb')
     depends_on('mpi')
-    depends_on('pkg-config@0.9.0:')
+    depends_on('pkgconfig')
 
     # Optional dependencies
 

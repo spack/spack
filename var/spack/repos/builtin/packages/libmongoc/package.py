@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class Libmongoc(AutotoolsPackage):
 
     maintainers = ['michaelkuhn']
 
+    version('1.9.5', sha256='4a4bd0b0375450250a3da50c050b84b9ba8950ce32e16555714e75ebae0b8019')
+    version('1.9.4', sha256='910c2f1b2e3df4d0ea39c2f242160028f90fcb8201f05339a730ec4ba70811fb')
+    version('1.9.3', sha256='c2c94ef63aaa09efabcbadc4ac3c8740faa102266bdd2559d550f1955b824398')
     version('1.9.1', '86f98ace1a5f073eea6875a96761b198')
     version('1.8.1', '52d54a4107a2da20c1a1b28bc1ff9d44')
     version('1.8.0', '8c271a16ff30f6d4f5e134f699f7360f')
@@ -49,8 +52,7 @@ class Libmongoc(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            '--disable-automatic-init-and-cleanup',
-            '--with-libbson=system'
+            '--disable-automatic-init-and-cleanup'
         ]
 
         if '+ssl' in spec:
@@ -70,4 +72,8 @@ class Libmongoc(AutotoolsPackage):
             elif spec.satisfies('@1.8.1:'):
                 args.append('--with-zlib=system')
 
+        if spec.satisfies('@1.9.3:'):
+            args.append('--with-libbson=auto')
+        else:
+            args.append('--with-libbson=system')
         return args

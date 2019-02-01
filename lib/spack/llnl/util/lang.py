@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -144,6 +144,26 @@ def has_method(cls, name):
         if name in base.__dict__:
             return True
     return False
+
+
+def union_dicts(*dicts):
+    """Use update() to combine all dicts into one.
+
+    This builds a new dictionary, into which we ``update()`` each element
+    of ``dicts`` in order.  Items from later dictionaries will override
+    items from earlier dictionaries.
+
+    Args:
+        dicts (list): list of dictionaries
+
+    Return: (dict): a merged dictionary containing combined keys and
+        values from ``dicts``.
+
+    """
+    result = {}
+    for d in dicts:
+        result.update(d)
+    return result
 
 
 class memoized(object):
@@ -440,11 +460,11 @@ def pretty_string_to_date(date_str, now=None):
     now = now or datetime.now()
 
     # datetime formats
-    pattern[re.compile('^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
-    pattern[re.compile('^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
+    pattern[re.compile(r'^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
+    pattern[re.compile(r'^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m'
     )
-    pattern[re.compile('^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m-%d'
     )
 
@@ -541,6 +561,9 @@ class Singleton(object):
 
     def __contains__(self, element):
         return element in self.instance
+
+    def __call__(self, *args, **kwargs):
+        return self.instance(*args, **kwargs)
 
     def __iter__(self):
         return iter(self.instance)

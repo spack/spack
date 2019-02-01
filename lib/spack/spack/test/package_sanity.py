@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,9 +47,12 @@ def test_all_virtual_packages_have_default_providers():
     defaults = spack.config.get('packages', scope='defaults')
     default_providers = defaults['all']['providers']
     providers = spack.repo.path.provider_index.providers
-
+    default_providers_filename = \
+        spack.config.config.scopes['defaults'].get_section_filename('packages')
     for provider in providers:
-        assert provider in default_providers
+        assert provider in default_providers, \
+            "all providers must have a default in %s" \
+            % default_providers_filename
 
 
 def test_package_version_consistency():
@@ -59,3 +62,28 @@ def test_package_version_consistency():
         spack.fetch_strategy.check_pkg_attributes(pkg)
         for version in pkg.versions:
             assert spack.fetch_strategy.for_package_version(pkg, version)
+
+
+def test_no_fixme():
+    """Packages should not contain any boilerplate such as
+       FIXME or example.com."""
+    errors = []
+    fixme_regexes = [
+        r'remove this boilerplate',
+        r'FIXME: Put',
+        r'FIXME: Add',
+        r'example.com',
+    ]
+    for name in spack.repo.all_package_names():
+        repo = spack.repo.Repo(spack.paths.packages_path)
+        filename = repo.filename_for_package_name(name)
+        with open(filename, 'r') as package_file:
+            for i, line in enumerate(package_file):
+                pattern = next((r for r in fixme_regexes
+                                if re.search(r, line)), None)
+                if pattern:
+                    errors.append(
+                        "%s:%d: boilerplate needs to be removed: %s" %
+                        (filename, i, line.strip())
+                    )
+            assert [] == errors

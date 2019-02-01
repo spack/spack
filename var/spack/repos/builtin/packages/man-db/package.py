@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class ManDb(AutotoolsPackage):
     depends_on('gettext')
     depends_on('libpipeline')
     depends_on('flex')
+    depends_on('gdbm')
     depends_on('groff', type=('build', 'link', 'run'))
 
     # TODO: add gzip support via a new package.

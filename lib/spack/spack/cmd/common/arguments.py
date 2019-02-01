@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import argparse
 
 import spack.cmd
 import spack.config
+import spack.environment as ev
 import spack.modules
 import spack.spec
 import spack.store
@@ -42,7 +43,6 @@ class ConstraintAction(argparse.Action):
 
     To obtain the specs from a command the function must be called.
     """
-
     def __call__(self, parser, namespace, values, option_string=None):
         # Query specs from command line
         self.values = values
@@ -52,16 +52,24 @@ class ConstraintAction(argparse.Action):
     def _specs(self, **kwargs):
         qspecs = spack.cmd.parse_specs(self.values)
 
+        # If an environment is provided, we'll restrict the search to
+        # only its installed packages.
+        env = ev._active_environment
+        if env:
+            kwargs['hashes'] = set(env.all_hashes())
+
         # return everything for an empty query.
         if not qspecs:
             return spack.store.db.query(**kwargs)
 
         # Return only matching stuff otherwise.
-        specs = set()
+        specs = {}
         for spec in qspecs:
             for s in spack.store.db.query(spec, **kwargs):
-                specs.add(s)
-        return sorted(specs)
+                # This is fast for already-concrete specs
+                specs[s.dag_hash()] = s
+
+        return sorted(specs.values())
 
 
 _arguments['constraint'] = Args(
@@ -75,6 +83,11 @@ _arguments['yes_to_all'] = Args(
 _arguments['recurse_dependencies'] = Args(
     '-r', '--dependencies', action='store_true', dest='recurse_dependencies',
     help='recursively traverse spec dependencies')
+
+_arguments['recurse_dependents'] = Args(
+    '-R', '--dependents', action='store_true', dest='dependents',
+    help='also uninstall any packages that depend on the ones given '
+    'via command line')
 
 _arguments['clean'] = Args(
     '--clean',
@@ -105,6 +118,16 @@ _arguments['jobs'] = Args(
 _arguments['tags'] = Args(
     '-t', '--tags', action='append',
     help='filter a package query by tags')
+
+_arguments['jobs'] = Args(
+    '-j', '--jobs', action='store', type=int, dest="jobs",
+    help="explicitly set number of make jobs, default is #cpus.")
+
+_arguments['install_status'] = Args(
+    '-I', '--install-status', action='store_true', default=False,
+    help='show install status of packages. packages can be: '
+         'installed [+], missing and needed by an installed package [-], '
+         'or not installed (no annotation)')
 
 _arguments['no_checksum'] = Args(
     '-n', '--no-checksum', action='store_true', default=False,

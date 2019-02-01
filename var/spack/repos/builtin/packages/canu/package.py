@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class Canu(MakefilePackage):
     depends_on('perl', type='run')
 
     build_directory = 'src'
+    build_targets = ['clean']
 
     def patch(self):
         # Use our perl, not whatever is in the environment
@@ -29,14 +30,5 @@ class Canu(MakefilePackage):
                     'src/pipelines/canu.pl')
 
     def install(self, spec, prefix):
-        # replicate the Makefile logic here:
-        # https://github.com/marbl/canu/blob/master/src/Makefile#L344
-        uname = which('uname')
-        ostype = uname(output=str).strip()
-        machinetype = uname('-m', output=str).strip()
-        if machinetype == 'x86_64':
-            machinetype = 'amd64'
-        target_dir = '{0}-{1}'.format(ostype, machinetype)
-        bin = join_path(target_dir, 'bin')
-
-        install_tree(bin, prefix.bin)
+        with working_dir(self.build_directory):
+            make('all', 'TARGET_DIR={0}'.format(prefix))

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Cbtf(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf.git"
 
     version('develop', branch='master')
+    version('1.9.2', branch='1.9.2')
     version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
     version('1.9.1.0', branch='1.9.1.0')
@@ -32,8 +33,7 @@ class Cbtf(CMakePackage):
 
     depends_on("cmake@3.0.2:", type='build')
 
-    depends_on("boost@1.66.0", when='@1.9.1.0:9999')
-    depends_on("boost@1.50.0:", when='@develop')
+    depends_on("boost@1.66.0:")
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
@@ -42,8 +42,7 @@ class Cbtf(CMakePackage):
     depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999')
 
     # For Xerces-C
-    depends_on("xerces-c@3.1.1:", when='@develop')
-    depends_on("xerces-c@3.1.4:", when='@1.9.1.0:9999')
+    depends_on("xerces-c")
 
     # For XML2
     depends_on("libxml2")

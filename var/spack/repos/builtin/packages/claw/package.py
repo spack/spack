@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Claw(CMakePackage):
     git      = 'https://github.com/claw-project/claw-compiler.git'
     maintainers = ['clementval']
 
+    version('1.2.0', commit='fc9c50fe02be97b910ff9c7015064f89be88a3a2', submodules=True)
     version('1.1.0', commit='16b165a443b11b025a77cad830b1280b8c9bcf01', submodules=True)
 
     depends_on('cmake@3.0:', type='build')
@@ -29,5 +30,8 @@ class Claw(CMakePackage):
 
         args.append('-DOMNI_CONF_OPTION=--with-libxml2={0}'.
                     format(spec['libxml2'].prefix))
+
+        args.append('-DCMAKE_Fortran_COMPILER={0}'.
+                    format(self.compiler.fc))
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,9 +21,12 @@ class Mpifileutils(AutotoolsPackage):
     git      = "https://github.com/hpc/mpifileutils.git"
 
     version('develop', branch='master')
+    version('0.8.1', 'acbd5b5c15919a67392509614bb7871e')
     version('0.8', '1082600e7ac4e6b2c13d91bbec40cffb')
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
+
+    conflicts('platform=darwin')
 
     depends_on('mpi')
     depends_on('libcircle')
@@ -50,6 +53,21 @@ class Mpifileutils(AutotoolsPackage):
 
     def configure_args(self):
         args = []
+        args.append("CPPFLAGS=-I%s/src/common" % pwd())
+        args.append("libarchive_CFLAGS=-I%s"
+                    % self.spec['libarchive'].prefix.include)
+        args.append("libarchive_LIBS=%s %s"
+                    % (self.spec['libarchive'].libs.search_flags,
+                       self.spec['libarchive'].libs.link_flags))
+        args.append("libcircle_CFLAGS=-I%s"
+                    % self.spec['libcircle'].prefix.include)
+        args.append("libcircle_LIBS=%s %s"
+                    % (self.spec['libcircle'].libs.search_flags,
+                       self.spec['libcircle'].libs.link_flags))
+        args.append("--with-dtcmp=%s" % self.spec['dtcmp'].prefix)
+
+        if '+xattr' in self.spec:
+            args.append('CFLAGS=-DDCOPY_USE_XATTRS')
 
         if '+lustre' in self.spec:
             args.append('--enable-lustre')
@@ -61,12 +79,4 @@ class Mpifileutils(AutotoolsPackage):
                 args.append('--enable-experimental')
             else:
                 args.append('--disable-experimental')
-
         return args
-
-    @property
-    def build_targets(self):
-        targets = []
-        if '+xattr' in self.spec:
-            targets.append('CFLAGS=-DDCOPY_USE_XATTRS')
-        return targets
