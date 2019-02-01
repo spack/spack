@@ -1,5 +1,8 @@
-Add explicit casts from boost::tribool to bool.
-This was breaking the build when using boost >= 1.69.
+Add explicit casts from boost::tribool to bool.  Starting with 1.69,
+tribool added 'explicit' to the conversion operator to bool, and this
+was breaking the build when using boost >= 1.69.
+
+Patch is from:  https://github.com/dyninst/dyninst/commit/54a2debd9
 
 
 diff --git a/dataflowAPI/rose/util/Message.C b/dataflowAPI/rose/util/Message.C
