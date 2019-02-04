@@ -66,7 +66,6 @@ class Cray(Platform):
                 setattr(self, name, safe_name)
                 self.add_target(name, self.targets[safe_name])
 
-
         if self.back_end is not None:
             self.default = self.back_end
             self.add_target('default', self.targets[self.back_end])
