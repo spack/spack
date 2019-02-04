@@ -325,6 +325,13 @@ class Trilinos(CMakePackage):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
 
+    @property
+    def generator(self):
+        if '+ninja' in self.spec:
+            return 'Ninja'
+        else:
+            return 'Unix Makefiles'
+
     def cmake_args(self):
         spec = self.spec
 
@@ -332,9 +339,6 @@ class Trilinos(CMakePackage):
         options = []
 
         # #################### Base Settings #######################
-
-        if '+ninja' in spec:
-            generator = 'Ninja'
 
         mpi_bin = spec['mpi'].prefix.bin
         options.extend([
