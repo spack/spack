@@ -107,7 +107,7 @@ class CudaPackage(PackageBase):
 
     # Mac OS X
     # platform = ' platform=darwin'
-    # Apple XCode clang vs. github clang are difficult to specify
+    # Apple XCode clang vs. LLVM clang are difficult to specify
     # with spack syntax. Xcode clang name is `clang@x.y.z-apple`
     # which precludes ranges being specified. We have proposed
     # rename XCode clang to `clang@apple-x.y.z` or even
