@@ -66,9 +66,9 @@ class CudaPackage(PackageBase):
     conflicts('%pgi@:16', when='+cuda ^cuda@9.2.88:10' + arch_platform)
     conflicts('%clang@:3.4', when='+cuda ^cuda@:7.5' + arch_platform)
     conflicts('%clang@:3.7,4:',
-              when='+cuda ^cuda@:9.0.176' + arch_platform)
+              when='+cuda ^cuda@8.0:9.0' + arch_platform)
     conflicts('%clang@:3.7,4.1:',
-              when='+cuda ^cuda@9.1.85:9.1' + arch_platform)
+              when='+cuda ^cuda@9.1' + arch_platform)
     conflicts('%clang@:3.7,5.1:', when='+cuda ^cuda@9.2' + arch_platform)
     conflicts('%clang@:3.7,6.1:', when='+cuda ^cuda@10.0.130' + arch_platform)
 
