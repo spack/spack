@@ -131,8 +131,10 @@ class Paraview(CMakePackage):
                                      'python{0}'.format(python_version),
                                      'site-packages')
                 run_env.prepend_path('PYTHONPATH', pv_pydir)
-                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir, 'vtkmodules'))
-                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir, 'paraview'))
+                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             'vtkmodules'))
+                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             'paraview'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
