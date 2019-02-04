@@ -34,6 +34,8 @@ class NetlibScalapack(CMakePackage):
 
     provides('scalapack')
 
+    patch('FortranMangling.patch', when='@2.0.2:')
+
     depends_on('mpi')
     depends_on('lapack')
     depends_on('blas')
