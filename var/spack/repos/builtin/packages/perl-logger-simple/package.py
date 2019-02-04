@@ -13,3 +13,5 @@ class PerlLoggerSimple(PerlPackage):
     url      = "https://cpan.metacpan.org/authors/id/T/TS/TSTANLEY/Logger-Simple-2.0.tar.gz"
 
     version('2.0', sha256='2e63fd3508775b5902132ba1bfb03b42bee468dfaf35dfe42e1909ff6d291b2d')
+
+    depends_on('perl-object-insideout', type=('build', 'run'))
