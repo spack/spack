@@ -37,19 +37,19 @@ class Geant4(CMakePackage):
 
     # C++11 support
     depends_on("clhep@2.4.0.0 cxxstd=11", when="@10.04 cxxstd=11")
-    depends_on("clhep@2.3.4.3 cxxstd=11", when="@10.03.p03 cxxstd=11")
+    depends_on("clhep@2.3.4.6 cxxstd=11", when="@10.03.p03 cxxstd=11")
     depends_on("vecgeom cxxstd=11", when="+vecgeom cxxstd=11")
 
     # C++14 support
     depends_on("clhep@2.4.0.0 cxxstd=14", when="@10.04 cxxstd=14")
-    depends_on("clhep@2.3.4.3 cxxstd=14", when="@10.03.p03 cxxstd=14")
+    depends_on("clhep@2.3.4.6 cxxstd=14", when="@10.03.p03 cxxstd=14")
     depends_on("vecgeom cxxstd=14", when="+vecgeom cxxstd=14")
 
     # C++17 support
     patch('cxx17.patch', level=1, when='@:10.03 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@4.10.0: cxxstd=17')
     depends_on("clhep@2.4.0.0 cxxstd=17", when="@10.04 cxxstd=17")
-    depends_on("clhep@2.3.4.3 cxxstd=14", when="@10.03.p03 cxxstd=17")
+    depends_on("clhep@2.3.4.6 cxxstd=14", when="@10.03.p03 cxxstd=17")
     depends_on("vecgeom cxxstd=17", when="+vecgeom cxxstd=17")
 
     depends_on("expat")
