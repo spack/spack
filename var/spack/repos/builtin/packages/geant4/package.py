@@ -88,7 +88,7 @@ class Geant4(CMakePackage):
             spec['xerces-c'].prefix, ]
 
         arch = platform.system().lower()
-        if arch is not 'darwin':
+        if arch != 'darwin':
             if "+x11" in spec and "+opengl" in spec:
                 options.append('-DGEANT4_USE_OPENGL_X11=ON')
             if "+motif" in spec and "+opengl" in spec:

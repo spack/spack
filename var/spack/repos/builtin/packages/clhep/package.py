@@ -44,6 +44,8 @@ class Clhep(CMakePackage):
     depends_on('cmake@2.8.12.2:', when='@2.2.0.4:2.3.0.0', type='build')
     depends_on('cmake@3.2:', when='@2.3.0.1:', type='build')
 
+    root_cmakelists_dir = 'CLHEP'  # Extra directory layer.
+
     def patch(self):
         filter_file('SET CMP0042 OLD',
                     'SET CMP0042 NEW',
@@ -53,26 +55,18 @@ class Clhep(CMakePackage):
     root_cmakelists_dir = 'CLHEP'
 
     def cmake_args(self):
-        spec = self.spec
-        cmake_args = ['-DCLHEP_BUILD_CXXSTD=%s' %
-                      spec.variants['cxxstd'].value]
-
-        if spec.variants['cxxstd'].value == '11':
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx11_flag
-
-        if spec.variants['cxxstd'].value == '14':
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx14_flag
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx14_flag
-
-        if spec.variants['cxxstd'].value == '17':
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx17_flag
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx17_flag
-
+        cxxstdflg = ''
+        if self.spec.variants['cxxstd'].value == '11':
+            cxxstdflg = self.compiler.cxx11_flag
+        elif self.spec.variants['cxxstd'].value == '14':
+            cxxstdflg = self.compiler.cxx14_flag
+        elif self.spec.variants['cxxstd'].value == '17':
+            cxxstdflg = self.compiler.cxx17_flag
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die(
+                "INTERNAL ERROR: cannot accommodate unexpected variant ",
+                "cxxstd={0}".format(spec.variants['cxxstd'].value))
+        cmake_args = ['-DCLHEP_BUILD_CXXSTD={0}'.format(cxxstdflg)]
         return cmake_args
