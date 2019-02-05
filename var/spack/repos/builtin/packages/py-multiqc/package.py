@@ -14,6 +14,7 @@ class PyMultiqc(PythonPackage):
     homepage = "https://multiqc.info"
     url      = "https://pypi.io/packages/source/m/multiqc/multiqc-1.0.tar.gz"
 
+    version('1.7', '2bb002028d8e4dbb1383d6d60d342080')
     version('1.5', 'c9fc5f54a75b1d0c3e119e0db7f5fe72')
     version('1.3', '78fef8a89c0bd40d559b10c1f736bbcd')
     version('1.0', '0b7310b3f75595e5be8099fbed2d2515')
