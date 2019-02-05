@@ -29,13 +29,14 @@ class GenemarkEt(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
+        mkdirp(prefix.bin.heu_dir)
         with working_dir('gmes_petap'):
             install_tree('lib', prefix.lib)
             files = glob.iglob('*')
             for file in files:
                 if os.path.isfile(file):
                     install(file, prefix.bin)
-            install_tree('heu_dir', prefix.bin)
+            install_tree('heu_dir', prefix.bin.heu_dir)
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PERL5LIB', prefix.lib)
