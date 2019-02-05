@@ -57,7 +57,6 @@ from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.stage import DIYStage
-from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
@@ -1454,7 +1453,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if kwargs.get('use_cache', True):
             if self.try_install_from_binary_cache(explicit):
                 tty.msg('Successfully installed %s from binary cache'
-                    % self.name)
+                        % self.name)
                 print_pkg(self.prefix)
                 spack.hooks.post_install(self.spec)
                 return
@@ -1561,7 +1560,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         "Fetch: %s.  Build: %s.  Total: %s." %
                         (_hms(self._fetch_time), _hms(build_time),
                          _hms(self._total_time)))
-    
+
             print_pkg(self.prefix)
 
             # preserve verbosity across runs

@@ -8,7 +8,6 @@ import inspect
 import os
 import platform
 import sys
-import os
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir
@@ -17,6 +16,7 @@ from llnl.util.filesystem import set_executable
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
 from spack.util.executable import which
+
 
 def spack_transitive_include_path():
     return ';'.join(
