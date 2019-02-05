@@ -35,8 +35,11 @@ class Clhep(CMakePackage):
     version('2.2.0.5', sha256='92e8b5d32ae96154edd27d0c641ba048ad33cb69dd4f1cfb72fc578770a34818')
     version('2.2.0.4', sha256='9bf7fcd9892313c8d1436bc4a4a285a016c4f8e81e1fc65bdf6783207ae57550')
 
-    variant('cxx11', default=True, description="Compile using c++11 dialect.")
-    variant('cxx14', default=False, description="Compile using c++14 dialect.")
+    variant('cxxstd',
+            default='11',
+            values=('11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
 
     depends_on('cmake@2.8.12.2:', when='@2.2.0.4:2.3.0.0', type='build')
     depends_on('cmake@3.2:', when='@2.3.0.1:', type='build')
@@ -51,22 +54,25 @@ class Clhep(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        cmake_args = []
+        cmake_args = ['-DCLHEP_BUILD_CXXSTD=%s' %
+                      spec.variants['cxxstd'].value]
 
-        if '+cxx11' in spec:
+        if spec.variants['cxxstd'].value == '11':
             if 'CXXFLAGS' in env and env['CXXFLAGS']:
                 env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
             else:
                 env['CXXFLAGS'] = self.compiler.cxx11_flag
-            cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
-                              self.compiler.cxx11_flag)
 
-        if '+cxx14' in spec:
+        if spec.variants['cxxstd'].value == '14':
             if 'CXXFLAGS' in env and env['CXXFLAGS']:
                 env['CXXFLAGS'] += ' ' + self.compiler.cxx14_flag
             else:
                 env['CXXFLAGS'] = self.compiler.cxx14_flag
-            cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
-                              self.compiler.cxx14_flag)
+
+        if spec.variants['cxxstd'].value == '17':
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx17_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx17_flag
 
         return cmake_args

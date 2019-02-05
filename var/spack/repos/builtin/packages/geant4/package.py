@@ -26,31 +26,43 @@ class Geant4(CMakePackage):
 
     variant('qt', default=False, description='Enable Qt support')
     variant('vecgeom', default=False, description='Enable vecgeom support')
-    variant('cxx11', default=True, description='Enable CXX11 support')
-    variant('cxx14', default=False, description='Enable CXX14 support')
     variant('opengl', default=False, description='Optional OpenGL support')
     variant('x11', default=False, description='Optional X11 support')
     variant('motif', default=False, description='Optional motif support')
     variant('threads', default=True, description='Build with multithreading')
 
+    variant('cxxstd',
+            default='11',
+            values=('11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
     depends_on('cmake@3.5:', type='build')
 
-    conflicts('+cxx14', when='+cxx11')
-    conflicts('+cxx11', when='+cxx14')
-
     # C++11 support
-    depends_on("clhep@2.4.0.0+cxx11~cxx14", when="@10.04+cxx11~cxx14")
-    depends_on("clhep@2.3.4.3+cxx11~cxx14", when="@10.03.p03+cxx11~cxx14")
-    depends_on("clhep@2.3.1.1+cxx11~cxx14", when="@10.02.p01+cxx11~cxx14")
-    depends_on("clhep@2.3.1.1+cxx11~cxx14", when="@10.02.p01+cxx11~cxx14")
-    depends_on("clhep@2.2.0.4+cxx11~cxx14", when="@10.01.p03+cxx11~cxx14")
+    depends_on("clhep@2.4.0.0 cxxstd=11", when="@10.04 cxxstd=11")
+    depends_on("clhep@2.3.4.3 cxxstd=11", when="@10.03.p03 cxxstd=11")
+    depends_on("clhep@2.3.1.1 cxxstd=11", when="@10.02.p01 cxxstd=11")
+    depends_on("clhep@2.3.1.1 cxxstd=11", when="@10.02.p01 cxxstd=11")
+    depends_on("clhep@2.2.0.4 cxxstd=11", when="@10.01.p03 cxxstd=11")
+    depends_on("vecgeom cxxstd=11", when="+vecgeom cxxstd=11")
 
     # C++14 support
-    depends_on("clhep@2.4.0.0+cxx11~cxx14", when="@10.04~cxx11+cxx14")
-    depends_on("clhep@2.3.4.3+cxx11~cxx14", when="@10.03.p03~cxx11+cxx14")
-    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p02~cxx11+cxx14")
-    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p01~cxx11+cxx14")
-    depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03~cxx11+cxx14")
+    depends_on("clhep@2.4.0.0 cxxstd=14", when="@10.04 cxxstd=14")
+    depends_on("clhep@2.3.4.3 cxxstd=14", when="@10.03.p03 cxxstd=14")
+    depends_on("clhep@2.3.1.1 cxxstd=14", when="@10.02.p02 cxxstd=14")
+    depends_on("clhep@2.3.1.1 cxxstd=14", when="@10.02.p01 cxxstd=14")
+    depends_on("clhep@2.2.0.4 cxxstd=14", when="@10.01.p03 cxxstd=14")
+    depends_on("vecgeom cxxstd=14", when="+vecgeom cxxstd=14")
+
+    # C++17 support
+    patch('cxx17.patch', when='cxxstd=17')
+    depends_on("clhep@2.4.0.0 cxxstd=17", when="@10.04 cxxstd=17")
+    depends_on("clhep@2.3.4.3 cxxstd=17", when="@10.03.p03 cxxstd=17")
+    depends_on("clhep@2.3.1.1 cxxstd=17", when="@10.02.p02 cxxstd=17")
+    depends_on("clhep@2.3.1.1 cxxstd=17", when="@10.02.p01 cxxstd=17")
+    depends_on("clhep@2.2.0.4 cxxstd=17", when="@10.01.p03 cxxstd=17")
+    depends_on("vecgeom cxxstd=14", when="+vecgeom cxxstd=14")
 
     depends_on("expat")
     depends_on("zlib")
@@ -59,7 +71,6 @@ class Geant4(CMakePackage):
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')
     depends_on("motif", when='+motif')
-    depends_on("vecgeom", when="+vecgeom")
     depends_on("qt@4.8:4.999", when="+qt")
 
     def cmake_args(self):
@@ -85,10 +96,8 @@ class Geant4(CMakePackage):
             if "+x11" in spec:
                 options.append('-DGEANT4_USE_RAYTRACER_X11=ON')
 
-        if '+cxx11' in spec:
-            options.append('-DGEANT4_BUILD_CXXSTD=c++11')
-        if '+cxx14' in spec:
-            options.append('-DGEANT4_BUILD_CXXSTD=c++14')
+        options.append('-DGEANT4_BUILD_CXXSTD=%s' %
+                       self.spec.variants['cxxstd'].value)
 
         if '+qt' in spec:
             options.append('-DGEANT4_USE_QT=ON')
