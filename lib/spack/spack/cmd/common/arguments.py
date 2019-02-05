@@ -119,6 +119,13 @@ _arguments['tags'] = Args(
     '-t', '--tags', action='append',
     help='filter a package query by tags')
 
+_arguments['test'] = Args(
+    '--test', default=None, choices=['root', 'all'],
+    help="If 'root' is chosen, run package tests during installation for "
+         "top-level packages (but skip tests for dependencies).  if 'all' "
+         "is chosen, run package tests during installation for all packages. "
+         "If neither are chosen, don't run tests for any packages.")
+
 _arguments['jobs'] = Args(
     '-j', '--jobs', action='store', type=int, dest="jobs",
     help="explicitly set number of make jobs, default is #cpus.")
@@ -132,3 +139,7 @@ _arguments['install_status'] = Args(
 _arguments['no_checksum'] = Args(
     '-n', '--no-checksum', action='store_true', default=False,
     help="do not use checksums to verify downloadeded files (unsafe)")
+
+_arguments['overwrite'] = Args(
+    '--overwrite', action='store_true',
+    help="reinstall an existing spec, even if it has dependents")
