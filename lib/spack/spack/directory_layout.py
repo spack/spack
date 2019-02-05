@@ -148,18 +148,6 @@ class ExtensionsLayout(object):
         raise NotImplementedError()
 
 
-def _nonempty_dir_exists(dir):
-    """Returns True if dir exists as a directory, AND it contains at least
-    one file.  If it just contains directories, returns False."""
-
-    if not os.path.isdir(dir):
-        return False
-
-    for _, _, files in os.walk(dir):
-        if len(files) > 0:
-            return True
-    return False
-
 class YamlDirectoryLayout(DirectoryLayout):
     """By default lays out installation directories like this::
            <install root>/
@@ -253,7 +241,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         prefix = self.check_installed(spec)
-        if prefix is not None:
+        if prefix:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
         # Create install directory with properly configured permissions
@@ -276,7 +264,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
 
-        if not _nonempty_dir_exists(path):
+        if not os.path.isdir(path):
             return None
 
         if not os.path.isfile(spec_file_path):
