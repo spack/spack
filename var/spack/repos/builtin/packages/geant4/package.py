@@ -62,7 +62,7 @@ class Geant4(CMakePackage):
     depends_on("clhep@2.3.1.1 cxxstd=17", when="@10.02.p02 cxxstd=17")
     depends_on("clhep@2.3.1.1 cxxstd=17", when="@10.02.p01 cxxstd=17")
     depends_on("clhep@2.2.0.4 cxxstd=17", when="@10.01.p03 cxxstd=17")
-    depends_on("vecgeom cxxstd=14", when="+vecgeom cxxstd=14")
+    depends_on("vecgeom cxxstd=17", when="+vecgeom cxxstd=17")
 
     depends_on("expat")
     depends_on("zlib")
