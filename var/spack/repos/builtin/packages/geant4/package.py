@@ -96,7 +96,7 @@ class Geant4(CMakePackage):
             if "+x11" in spec:
                 options.append('-DGEANT4_USE_RAYTRACER_X11=ON')
 
-        options.append('-DGEANT4_BUILD_CXXSTD=%s' %
+        options.append('-DGEANT4_BUILD_CXXSTD=c++%s' %
                        self.spec.variants['cxxstd'].value)
 
         if '+qt' in spec:
