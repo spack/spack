@@ -102,7 +102,7 @@ class CudaPackage(PackageBase):
 
     # XL is mostly relevant for ppc64le Linux
     conflicts('%xl@:12,14:', when='+cuda ^cuda@:9.1')
-    conflicts('%xl@:12,14:15', when='+cuda ^cuda@9.2:10')
+    conflicts('%xl@:12,14:15,17:', when='+cuda ^cuda@9.2')
     conflicts('%xl@17:', when='+cuda ^cuda ^cuda@10.0.130')
 
     # Mac OS X
