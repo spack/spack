@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -36,7 +17,7 @@ class Openfast(CMakePackage):
     version('develop', branch='dev')
     version('master', branch='master')
 
-    variant('shared', default=False,
+    variant('shared', default=True,
             description="Build shared libraries")
     variant('double-precision', default=True,
             description="Treat REAL as double precision")
@@ -44,6 +25,8 @@ class Openfast(CMakePackage):
             description="Enable dynamic library loading interface")
     variant('cxx', default=False,
             description="Enable C++ bindings")
+    variant('pic', default=True,
+            description="Position independent code")
 
     # Dependencies for OpenFAST Fortran
     depends_on('blas')
@@ -56,23 +39,24 @@ class Openfast(CMakePackage):
     depends_on('zlib', when='+cxx')
     depends_on('libxml2', when='+cxx')
 
-    # Disable parallel builds because of OpenFOAM Types modules dependencies
-    parallel = False
-
     def cmake_args(self):
         spec = self.spec
 
         options = []
 
         options.extend([
+            '-DBUILD_DOCUMENTATION:BOOL=OFF',
+            '-DBUILD_TESTING:BOOL=OFF',
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
             '-DDOUBLE_PRECISION:BOOL=%s' % (
                 'ON' if '+double-precision' in spec else 'OFF'),
             '-DUSE_DLL_INTERFACE:BOOL=%s' % (
                 'ON' if '+dll-interface' in spec else 'OFF'),
-            '-DBUILD_FAST_CPP_API:BOOL=%s' % (
+            '-DBUILD_OPENFAST_CPP_API:BOOL=%s' % (
                 'ON' if '+cxx' in spec else 'OFF'),
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
+                'ON' if '+pic' in spec else 'OFF'),
         ])
 
         # Make sure we use Spack's blas/lapack:
@@ -84,6 +68,9 @@ class Openfast(CMakePackage):
 
         if '+cxx' in spec:
             options.extend([
+                '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+                '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
                 '-DMPI_CXX_COMPILER:PATH=%s' % spec['mpi'].mpicxx,
                 '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
                 '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc,
@@ -95,5 +82,8 @@ class Openfast(CMakePackage):
                 options.extend([
                     '-DHDF5_USE_STATIC_LIBRARIES=ON',
                 ])
+
+        if 'darwin' in spec.architecture:
+            options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
         return options

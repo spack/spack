@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -45,6 +26,7 @@ class Gnuplot(AutotoolsPackage):
     # dependency of readline. Fix it with a small patch
     patch('term_include.patch')
 
+    version('5.2.5', '039db2cce62ddcfd31a6696fe576f4224b3bc3f919e66191dfe2cdb058475caa')
     version('5.2.2', '60aedd08998160593199459dea8467fe')
     version('5.2.0', '0bd8f9af84c0ad2fa9de16772c366416')
     version('5.0.7', '8eaafddb0b12795f82ed6dd2a6ebbe80')
@@ -64,6 +46,8 @@ class Gnuplot(AutotoolsPackage):
             description='Build with libcerf support')
     variant('pbm',     default=False,
             description='Enable PBM (Portable Bit Map) and other older bitmap terminals')  # NOQA: ignore=E501
+    variant('qt',      default=False,
+            description='Build with QT')
 
     # required dependencies
     depends_on('readline')
@@ -78,6 +62,8 @@ class Gnuplot(AutotoolsPackage):
     depends_on('wx', when='+wx')
     depends_on('pango@1.10:', when='+wx')
     depends_on('pango@1.10:', when='+cairo')
+    depends_on('libx11', when='+X')
+    depends_on('qt@5.7:+opengl', when='+qt')
 
     def configure_args(self):
         # see https://github.com/Homebrew/homebrew-core/blob/master/Formula/gnuplot.rb
@@ -104,6 +90,34 @@ class Gnuplot(AutotoolsPackage):
         else:
             options.append('--without-x')
 
+        if '+qt' in spec:
+            options.append('--with-qt=qt5')
+            # QT needs C++11 compiler:
+            os.environ['CXXFLAGS'] = '{0}'.format(self.compiler.cxx11_flag)
+
+            if spec.satisfies('platform=darwin'):
+                qt_path = spec['qt'].prefix
+                # see
+                # http://gnuplot.10905.n7.nabble.com/Building-with-Qt-depends-on-pkg-config-Qt-5-term-doesn-t-work-on-OS-X-td18063.html
+                os.environ['QT_LIBS'] = (
+                    '-F{0}/lib ' +
+                    '-framework QtCore ' +
+                    '-framework QtGui ' +
+                    '-framework QtWidgets ' +
+                    '-framework QtNetwork ' +
+                    '-framework QtSvg ' +
+                    '-framework QtPrintSupport').format(qt_path)
+
+                os.environ['QT_CFLAGS'] = (
+                    '-F{0}/lib ' +
+                    '-I{0}/lib/QtCore.framework/Headers ' +
+                    '-I{0}/lib/QtGui.framework/Headers ' +
+                    '-I{0}/lib/QtWidgets.framework/Headers ' +
+                    '-I{0}/lib/QtNetwork.framework/Headers ' +
+                    '-I{0}/lib/QtSvg.framework/Headers').format(qt_path)
+        else:
+            options.append('--with-qt=no')
+
         if '+wx' in spec:
             options.append('--with-wx=%s' % spec['wx'].prefix)
         else:
@@ -127,9 +141,6 @@ class Gnuplot(AutotoolsPackage):
         # TODO: Enable pdflib-based pdf terminal
         # '--with-pdf=%s' % spec['pdflib-lite'].prefix  (or pdflib)
         options.append('--without-pdf')
-
-        # TODO: Enable qt terminal qt@5.7
-        options.append('--with-qt=no')
 
         # TODO: Enable lua-based terminals
         options.append('--without-lua')

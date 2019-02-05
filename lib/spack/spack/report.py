@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Tools to produce reports of spec installations"""
 import codecs
 import collections
@@ -154,6 +135,7 @@ class InfoCollector(object):
 
                     value = do_install(pkg, *args, **kwargs)
                     package['result'] = 'success'
+                    package['stdout'] = fetch_package_log(pkg)
                     if installed_on_entry:
                         return
 
@@ -246,21 +228,23 @@ class collect_info(object):
 
     Args:
         format_name (str or None): one of the supported formats
-        install_command (str): the command line passed to spack
-        cdash_upload_url (str or None): where to upload the report
+        args (dict): args passed to spack install
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, format_name, install_command, cdash_upload_url):
+    def __init__(self, format_name, args):
         self.filename = None
-        self.format_name = format_name
+        if args.cdash_upload_url:
+            self.format_name = 'cdash'
+            self.filename = 'cdash_report'
+        else:
+            self.format_name = format_name
         # Check that the format is valid.
         if self.format_name not in valid_formats:
             raise ValueError('invalid report type: {0}'
                              .format(self.format_name))
-        self.report_writer = report_writers[self.format_name](
-            install_command, cdash_upload_url)
+        self.report_writer = report_writers[self.format_name](args)
 
     def concretization_report(self, msg):
         self.report_writer.concretization_report(self.filename, msg)

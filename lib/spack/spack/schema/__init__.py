@@ -1,33 +1,84 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-"""This module contains jsonschema files for all of Spack's YAML formats.
-"""
-from llnl.util.lang import list_modules
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# Automatically bring in all sub-modules
-__all__ = []
-for mod in list_modules(__path__[0]):
-    __import__('%s.%s' % (__name__, mod))
-    __all__.append(mod)
+"""This module contains jsonschema files for all of Spack's YAML formats."""
+
+import copy
+import re
+
+import six
+
+import llnl.util.lang
+import spack.spec
+
+
+# jsonschema is imported lazily as it is heavy to import
+# and increases the start-up time
+def _make_validator():
+    import jsonschema
+    _validate_properties = jsonschema.Draft4Validator.VALIDATORS["properties"]
+    _validate_pattern_properties = jsonschema.Draft4Validator.VALIDATORS[
+        "patternProperties"
+    ]
+
+    def _set_defaults(validator, properties, instance, schema):
+        """Adds support for the 'default' attribute in 'properties'.
+
+        ``jsonschema`` does not handle this out of the box -- it only
+        validates. This allows us to set default values for configs
+        where certain fields are `None` b/c they're deleted or
+        commented out.
+        """
+        for property, subschema in six.iteritems(properties):
+            if "default" in subschema:
+                instance.setdefault(
+                    property, copy.deepcopy(subschema["default"]))
+        for err in _validate_properties(
+                validator, properties, instance, schema):
+            yield err
+
+    def _set_pp_defaults(validator, properties, instance, schema):
+        """Adds support for the 'default' attribute in 'patternProperties'.
+
+        ``jsonschema`` does not handle this out of the box -- it only
+        validates. This allows us to set default values for configs
+        where certain fields are `None` b/c they're deleted or
+        commented out.
+        """
+        for property, subschema in six.iteritems(properties):
+            if "default" in subschema:
+                if isinstance(instance, dict):
+                    for key, val in six.iteritems(instance):
+                        if re.match(property, key) and val is None:
+                            instance[key] = copy.deepcopy(subschema["default"])
+
+        for err in _validate_pattern_properties(
+                validator, properties, instance, schema):
+            yield err
+
+    def _validate_spec(validator, is_spec, instance, schema):
+        """Check if the attributes on instance are valid specs."""
+        import jsonschema
+        if not validator.is_type(instance, "object"):
+            return
+
+        for spec_str in instance:
+            try:
+                spack.spec.parse(spec_str)
+            except spack.spec.SpecParseError as e:
+                yield jsonschema.ValidationError(
+                    '"{0}" is an invalid spec [{1}]'.format(spec_str, str(e))
+                )
+
+    return jsonschema.validators.extend(
+        jsonschema.Draft4Validator, {
+            "validate_spec": _validate_spec,
+            "properties": _set_defaults,
+            "patternProperties": _set_pp_defaults
+        }
+    )
+
+
+Validator = llnl.util.lang.Singleton(_make_validator)

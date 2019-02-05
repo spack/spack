@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -34,6 +15,10 @@ class Paraview(CMakePackage):
     url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
 
+    version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
+    version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
+    version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
+    version('5.5.0', 'a8f2f41edadffdcc89b37fdc9aa7f005')
     version('5.4.1', '4030c70477ec5a85aa72d6fc86a30753')
     version('5.4.0', 'b92847605bac9036414b644f33cb7163')
     version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
@@ -54,7 +39,8 @@ class Paraview(CMakePackage):
 
     depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
-    depends_on('py-matplotlib', when='+python', type='run')
+    # Matplotlib >2.x requires Python 3
+    depends_on('py-matplotlib@:2.99', when='+python', type='run')
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
     depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')
@@ -74,7 +60,8 @@ class Paraview(CMakePackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('libxml2')
-    # depends_on('netcdf')
+    depends_on('netcdf')
+    depends_on('expat')
     # depends_on('netcdf-cxx')
     # depends_on('protobuf') # version mismatches?
     # depends_on('sqlite') # external version not supported
@@ -89,6 +76,9 @@ class Paraview(CMakePackage):
     # Broken installation (ui_pqExportStateWizard.h) - fixed in 5.2.0
     patch('ui_pqExportStateWizard.patch', when='@:5.1.2')
 
+    # Broken vtk-m config. Upstream catalyst changes
+    patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
+
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
         if version < Version('5.1.0'):
@@ -96,34 +86,50 @@ class Paraview(CMakePackage):
         else:
             return self._urlfmt.format(version.up_to(2), version, '')
 
+    @property
+    def paraview_subdir(self):
+        """The paraview subdirectory name as paraview-major.minor"""
+        return 'paraview-{0}'.format(self.spec.version.up_to(2))
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
-        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
+        spack_env.set('ParaView_DIR', self.prefix)
         spack_env.set('PARAVIEW_VTK_DIR',
-                      join_path(lib_dir, 'cmake', paraview_version))
+                      join_path(lib_dir, 'cmake', self.paraview_subdir))
 
     def setup_environment(self, spack_env, run_env):
+        # paraview 5.5 and later
+        # - cmake under lib/cmake/paraview-5.5
+        # - libs  under lib
+        # - python bits under lib/python2.8/site-packages
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
-        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
-        run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
+
+        run_env.set('ParaView_DIR', self.prefix)
         run_env.set('PARAVIEW_VTK_DIR',
-                    join_path(lib_dir, 'cmake', paraview_version))
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+
+        if self.spec.version <= Version('5.4.1'):
+            lib_dir = join_path(lib_dir, self.paraview_subdir)
+
+        run_env.prepend_path('LIBRARY_PATH', lib_dir)
+        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+
         if '+python' in self.spec:
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version))
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version, 'site-packages'))
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version, 'site-packages', 'vtk'))
+            if self.spec.version <= Version('5.4.1'):
+                pv_pydir = join_path(lib_dir, 'site-packages')
+                run_env.prepend_path('PYTHONPATH', pv_pydir)
+                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir, 'vtk'))
+            else:
+                python_version = self.spec['python'].version.up_to(2)
+                run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                     'python{0}'.format(python_version),
+                                     'site-packages'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
@@ -154,7 +160,8 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
-            '-DVTK_USE_SYSTEM_NETCDF:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_NETCDF:BOOL=ON',
+            '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
             '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
         ]

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -40,6 +21,7 @@ class PySphinx(PythonPackage):
         'sphinx.environment.collectors', 'sphinx.environment.adapters'
     ]
 
+    version('1.8.2',   sha256='120732cbddb1b2364471c3d9f8bfd4b0c5b550862f99a65736c77f970b142aea')
     version('1.7.4', '95f3b83f521314600e5b09e99cf32c46')
     version('1.6.3', 'c5ad61f4e0974375ca2c2b58ef8d5411')
     version('1.6.1', '26cb1cdca7aa4afc8c925d926b6268e7')
@@ -76,13 +58,10 @@ class PySphinx(PythonPackage):
     # http://www.sphinx-doc.org/en/stable/changes.html
     depends_on('py-sphinxcontrib-websupport', when='@1.6:',
                type=('build', 'run'))
-    # TODO: incorporate the proper dependencies when concretizer is capable
     # Build dep for 1.6.1 all python (bug), see:
     # https://github.com/sphinx-doc/sphinx/pull/3789
-    # depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
-    # depends_on('py-typing', when='@1.6.2:^python@2.7:3.4',
-    #            type=('build', 'run'))
-    depends_on('py-typing', when='@1.6:', type=('build', 'run'))
+    depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
+    depends_on('py-typing', when='@1.6.2:^python@2.7:3.4', type=('build', 'run'))
 
     depends_on('py-pytest',     type='test')
     depends_on('py-mock',       type='test')
