@@ -12,6 +12,7 @@ class Cmake(Package):
     homepage = 'https://www.cmake.org'
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz'
 
+    version('3.13.3',   '665f905036b1f731a2a16f83fb298b1fb9d0f98c382625d023097151ad016b25')
     version('3.13.2',   'c925e7d2c5ba511a69f43543ed7b4182a7d446c274c7480d0e42cd933076ae25')
     version('3.13.1',   'befe1ce6d672f2881350e94d4e3cc809697dd2c09e5b708b76c1dae74e1b2210')
     version('3.13.0',   '4058b2f1a53c026564e8936698d56c3b352d90df067b195cb749a97a3d273c90')
@@ -49,7 +50,7 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
+    variant('ownlibs', default=False,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
@@ -62,7 +63,8 @@ class Cmake(Package):
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
     depends_on('libarchive',     when='~ownlibs')
-    depends_on('libuv@1.0.0:',   when='~ownlibs')
+    depends_on('libuv@1.0.0:',   when='@3.7.0:3.10.3~ownlibs')
+    depends_on('libuv@1.10.0:',  when='@3.11.0:~ownlibs')
     depends_on('rhash',          when='@3.8.0:~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
