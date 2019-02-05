@@ -41,6 +41,8 @@ class Clhep(CMakePackage):
             multi=False,
             description='Use the specified C++ standard when building.')
 
+    conflicts('cxxstd=17', when='@:2.3.9.9')
+
     depends_on('cmake@2.8.12.2:', when='@2.2.0.4:2.3.0.0', type='build')
     depends_on('cmake@3.2:', when='@2.3.0.1:', type='build')
 
