@@ -133,8 +133,6 @@ class Paraview(CMakePackage):
                 run_env.prepend_path('PYTHONPATH', pv_pydir)
                 run_env.prepend_path('PYTHONPATH', join_path(pv_pydir,
                                                              'vtkmodules'))
-                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir,
-                                                             'paraview'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
