@@ -17,7 +17,7 @@ class Geant4(CMakePackage):
     homepage = "http://geant4.cern.ch/"
     url = "http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz"
 
-    version('10.04', 'dbcbccab0f308c0dfab606ca9b01298f')
+    version('10.04', 'b84beeb756821d0c61f7c6c93a2b83de')
     version('10.03.p03', 'ccae9fd18e3908be78784dc207f2d73b')
 
     variant('qt', default=False, description='Enable Qt support')
