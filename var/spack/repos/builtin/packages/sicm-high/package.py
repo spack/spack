@@ -7,7 +7,7 @@ from spack import *
 
 
 class SicmHigh(CMakePackage):
-    """SICM's high-level interface. Seeks to automatically 
+    """SICM's high-level interface. Seeks to automatically
     profile and manage memory usage on heterogeneous memory systems."""
 
     homepage = "https://github.com/lanl/SICM/"
