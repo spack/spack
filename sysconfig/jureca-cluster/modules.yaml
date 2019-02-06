@@ -33,7 +33,6 @@ modules:
     whitelist:
       - 'neurodamus'
       - 'neuron'
-      - 'python'
       - 'py-bluepyopt'
     blacklist:
       - '%gcc'

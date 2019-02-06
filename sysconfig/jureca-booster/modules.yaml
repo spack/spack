@@ -33,8 +33,10 @@ modules:
     whitelist:
       - 'neurodamus'
       - 'neuron'
-      - 'python'
       - 'py-bluepyopt'
+      - 'python'
+      - 'py-matplotlib'
+      - 'py-ipyparallel'
     blacklist:
       - '%gcc'
       - '%intel'

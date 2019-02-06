@@ -1,40 +1,52 @@
 packages:
     autoconf:
         paths:
-            autoconf@system: /usr
+            autoconf@2.69: /usr
+        version: [2.69]
         buildable: False
-        version: [system]
     automake:
         paths:
-            automake@system: /usr
+            automake@1.13.4: /usr
+        version: [1.13.4]
         buildable: False
-        version: [system]
     bison:
         paths:
             bison@3.0.4: /usr
-        buildable: False
         version: [3.0.4]
+        buildable: False
+    binutils:
+        paths:
+            binutils@2.30: /usr/local/software/jurecabooster/Stages/2018a/software/binutils/2.30-GCCcore-5.5.0/
+        version: [2.30]
+        buildable: False
     cmake:
         paths:
             cmake@3.9.4: /usr/local/software/jurecabooster/Stages/2017b/software/CMake/3.9.4-GCCcore-5.4.0/
         version: [3.9.4]
         buildable: False
+    diffutils:
+        paths:
+            diffutils@3.3: /usr
+        version: [3.3]
+        buildable: False
     flex:
         paths:
             flex@2.6.4: /usr/local/software/jureca/Stages/2018a/software/flex/2.6.4-GCCcore-7.3.0
-        buildable: False
         version: [2.6.4]
+        buildable: False
+    freetype:
+        version: [2.7.1]
     gettext:
         paths:
             gettext@0.19.8: /usr
-        buildable: False
         version: [0.19.8]
+        buildable: False
     hdf5:
         paths:
             hdf5@1.8.20%intel: /usr/local/software/jurecabooster/Stages/2018a/software/HDF5/1.8.20-iimpi-2018a
         variants: ~fortran ~cxx
-        buildable: False
         version: [1.8.20]
+        buildable: False
     intel-mpi-external:
         paths:
             intel-mpi-external@5.5.0: /usr/local/software/jurecabooster/Stages/2018a/software/impi/2018.2.199-iccifort-2018.2.199-GCC-5.5.0/intel64
@@ -45,25 +57,41 @@ packages:
             intel-mkl@2018.2.199: /usr/local/software/jurecabooster/Stages/2018a/software/imkl/2018.2.199-ipsmpi-2018a/
         version: [2018.2.199]
         buildable: False
+    zeromq:
+        version: [4.1.4]
+        variants: ~libsodium
+    libtool:
+        paths:
+            libtool@2.4.6: /usr/local/software/jurecabooster/Stages/2018a/software/libtool/2.4.6-GCCcore-5.5.0
+        version: [2.4.6]
+        buildable: False
     m4:
         paths:
             m4@1.4.16: /usr
-        buildable: False
         version: [1.4.16]
-    perl:
-        paths:
-            perl@5.16.3: /usr
         buildable: False
-        version: [5.16.3]
+    ncurses:
+        paths:
+            ncurses@6.0: /usr/local/software/jurecabooster/Stages/2018a/software/ncurses/6.0-GCCcore-5.5.0
+        version: [6.0]
+        buildable: False
+    neuron:
+        variants: ~binary
     openssl:
         paths:
             openssl@system: /usr
+    perl:
+        paths:
+            perl@5.16.3: /usr
+        version: [5.16.3]
+        buildable: False
     pkg-config:
         paths:
             pkg-config@0.29.1: /usr
         version: [0.29.1]
-    python:
-        version: [2.7.15]
+    py-matplotlib:
+        version: [2.0.2]
+        variants: ~tk
     zlib:
         version: [1.2.8]
     all:

@@ -45,6 +45,8 @@ class Zeromq(AutotoolsPackage):
         config_args = []
         if '+libsodium' in self.spec:
             config_args.append('--with-libsodium')
+        else:
+            config_args.append('--without-libsodium')
         if 'clang' in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")

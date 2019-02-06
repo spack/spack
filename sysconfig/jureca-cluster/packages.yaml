@@ -1,32 +1,40 @@
 packages:
     autoconf:
         paths:
-            autoconf@system: /usr
+            autoconf@2.69: /usr
+        version: [2.69]
         buildable: False
-        version: [system]
     automake:
         paths:
-            automake@system: /usr
+            automake@1.13.4: /usr
+        version: [1.13.4]
         buildable: False
-        version: [system]
     bison:
         paths:
-            bison@3.0.4: /usr
-        buildable: False
+            bison@3.0.4: /usr/local/software/jureca/Stages/2018a/software/Bison/3.0.4
         version: [3.0.4]
+        buildable: False
     cmake:
+        paths:
+            cmake@3.10.3: /usr/local/software/jureca/Stages/2018a/software/CMake/3.10.3-GCCcore-5.5.0
         version: [3.9.4]
+        buildable: False
+    flex:
+        paths:
+            flex@2.6.4: /usr/local/software/jureca/Stages/2018a/software/flex/2.6.4
+        version: [2.6.4]
+        buildable: False
     gettext:
         paths:
             gettext@0.19.8: /usr
-        buildable: False
         version: [0.19.8]
+        buildable: False
     hdf5:
         paths:
             hdf5@1.8.20%intel: /usr/local/software/jureca/Stages/2018a/software/HDF5/1.8.20-iimpi-2018a
         variants: ~fortran ~cxx
-        buildable: False
         version: [1.8.20]
+        buildable: False
     intel-mpi-external:
         paths:
             intel-mpi-external@5.5.0: /usr/local/software/jureca/Stages/2018a/software/impi/2018.2.199-iccifort-2018.2.199-GCC-5.5.0/intel64
@@ -34,14 +42,26 @@ packages:
         buildable: False
     intel-mkl:
         paths:
-            intel-mkl@2018.2.199: /usr/local/software/jurecabooster/Stages/2018a/software/imkl/2018.2.199-ipsmpi-2018a
+            intel-mkl@2018.2.199: /usr/local/software/jureca/Stages/2018a/software/imkl/2018.2.199-ipsmpi-2018a
         version: [2018.2.199]
+        buildable: False
+    libtool:
+        paths:
+            libtool@2.4.6: /usr/local/software/jureca/Stages/2018a/software/libtool/2.4.6-GCCcore-5.5.0
+        version: [2.4.6]
         buildable: False
     m4:
         paths:
             m4@1.4.16: /usr
-        buildable: False
         version: [1.4.16]
+        buildable: False
+    ncurses:
+        paths:
+            ncurses@6.0: /usr/local/software/jureca/Stages/2018a/software/ncurses/6.0-GCCcore-5.5.0
+        version: [6.0]
+        buildable: False
+    neuron:
+        variants: ~binary
     openssl:
         paths:
             openssl@system: /usr
@@ -50,7 +70,30 @@ packages:
             pkg-config@0.29.1: /usr
         version: [0.29.1]
     python:
-        version: [2.7.15]
+        paths:
+            python@2.7.14: /usr/local/software/jureca/Stages/2018a/software/SciPy-Stack/2018a-intel-2018a-Python-2.7.14
+        version: [2.7.14]
+        buildable: False
+    py-ipyparallel:
+        paths:
+            py-ipyparallel@6.1.1: /usr/local/software/jureca/Stages/2018a/software/SciPy-Stack/2018a-intel-2018a-Python-2.7.14
+        version: [6.1.1]
+        buildable: False
+    py-matplotlib:
+        paths:
+            py-matplotlib@2.2.2: /usr/local/software/jureca/Stages/2018a/software/SciPy-Stack/2018a-intel-2018a-Python-2.7.14
+        version: [2.2.2]
+        buildable: False
+    py-numpy:
+        paths:
+            py-numpy@1.14.2: /usr/local/software/jureca/Stages/2018a/software/SciPy-Stack/2018a-intel-2018a-Python-2.7.14
+        version: [1.14.2]
+        buildable: False
+    py-pandas:
+        paths:
+            py-pandas@0.22.0: /usr/local/software/jureca/Stages/2018a/software/SciPy-Stack/2018a-intel-2018a-Python-2.7.14
+        version: [0.22.0]
+        buildable: False
     zlib:
         version: [1.2.8]
     all:

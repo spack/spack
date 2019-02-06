@@ -245,6 +245,7 @@ class Neuron(Package):
         run_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
         run_env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
         if self.spec.satisfies('+pysetup'):
+            run_env.prepend_path('PYTHONPATH', self.spec.prefix.lib64.python)
             run_env.prepend_path('PYTHONPATH', self.spec.prefix.lib.python)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
