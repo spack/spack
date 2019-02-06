@@ -59,7 +59,7 @@ class Repeatmasker(Package):
         if '+crossmatch' in spec:
             crossmatch = self.spec['phrap-crossmatch-swat'].prefix.bin
             config_answers.extend(['1\n', '%s\n' % crossmatch, 'N\n'])
-        
+
         config_answers.append('5\n')
 
         config_answers_filename = 'spack-config.in'
