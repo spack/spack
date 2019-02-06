@@ -307,7 +307,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         # If an arch spec is given, confirm that this compiler
         # is for the given operating system
         os = items.get('operating_system', None)
-        if arch_spec and os != arch_spec.platform_os:
+        if arch_spec and os != arch_spec.os:
             continue
 
         # If an arch spec is given, confirm that this compiler
@@ -333,7 +333,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
 
     compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec)
     if len(compilers) < 1:
-        raise NoCompilerForSpecError(compiler_spec, arch_spec.platform_os)
+        raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
     if len(compilers) > 1:
         raise CompilerDuplicateError(compiler_spec, arch_spec)
     return compilers[0]

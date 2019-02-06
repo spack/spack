@@ -1,3 +1,4 @@
+
 # Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -21,7 +22,7 @@ from spack.platforms.darwin import Darwin
 def test_dict_functions_for_architecture():
     arch = spack.architecture.Arch()
     arch.platform = spack.architecture.platform()
-    arch.platform_os = arch.platform.operating_system('default_os')
+    arch.os = arch.platform.operating_system('default_os')
     arch.target = arch.platform.target('default_target')
 
     new_arch = spack.architecture.Arch.from_dict(arch.to_dict())
@@ -29,26 +30,26 @@ def test_dict_functions_for_architecture():
     assert arch == new_arch
     assert isinstance(arch, spack.architecture.Arch)
     assert isinstance(arch.platform, spack.architecture.Platform)
-    assert isinstance(arch.platform_os, spack.architecture.OperatingSystem)
+    assert isinstance(arch.os, spack.architecture.OperatingSystem)
     assert isinstance(arch.target, spack.architecture.Target)
     assert isinstance(new_arch, spack.architecture.Arch)
     assert isinstance(new_arch.platform, spack.architecture.Platform)
-    assert isinstance(new_arch.platform_os, spack.architecture.OperatingSystem)
+    assert isinstance(new_arch.os, spack.architecture.OperatingSystem)
     assert isinstance(new_arch.target, spack.architecture.Target)
 
 
 def test_platform():
-        output_platform_class = spack.architecture.real_platform()
-        if os.environ.get('CRAYPE_VERSION') is not None:
-            my_platform_class = Cray()
-        elif os.path.exists('/bgsys'):
-            my_platform_class = Bgq()
-        elif 'Linux' in py_platform.system():
-            my_platform_class = Linux()
-        elif 'Darwin' in py_platform.system():
-            my_platform_class = Darwin()
+    output_platform_class = spack.architecture.real_platform()
+    if os.environ.get('CRAYPE_VERSION') is not None:
+        my_platform_class = Cray()
+    elif os.path.exists('/bgsys'):
+        my_platform_class = Bgq()
+    elif 'Linux' in py_platform.system():
+        my_platform_class = Linux()
+    elif 'Darwin' in py_platform.system():
+        my_platform_class = Darwin()
 
-        assert str(output_platform_class) == str(my_platform_class)
+    assert str(output_platform_class) == str(my_platform_class)
 
 
 def test_boolness():
@@ -67,7 +68,7 @@ def test_boolness():
     assert arch
 
     arch = spack.architecture.Arch()
-    arch.platform_os = plat_os
+    arch.os = plat_os
     assert arch
 
     arch = spack.architecture.Arch()
@@ -86,7 +87,7 @@ def test_user_front_end_input(config):
     frontend_spec = Spec('libelf os=frontend target=frontend')
     frontend_spec.concretize()
 
-    assert frontend_os == frontend_spec.architecture.platform_os
+    assert frontend_os == frontend_spec.architecture.os
     assert frontend_target == frontend_spec.architecture.target
 
 
@@ -101,7 +102,7 @@ def test_user_back_end_input(config):
     backend_spec = Spec("libelf os=backend target=backend")
     backend_spec.concretize()
 
-    assert backend_os == backend_spec.architecture.platform_os
+    assert backend_os == backend_spec.architecture.os
     assert backend_target == backend_spec.architecture.target
 
 
@@ -113,7 +114,7 @@ def test_user_defaults(config):
     default_spec = Spec("libelf")  # default is no args
     default_spec.concretize()
 
-    assert default_os == default_spec.architecture.platform_os
+    assert default_os == default_spec.architecture.os
     assert default_target == default_spec.architecture.target
 
 
@@ -133,7 +134,7 @@ def test_user_input_combination(config):
         spec = Spec("libelf os=%s target=%s" % (o, t))
         spec.concretize()
         results.append(
-            spec.architecture.platform_os == str(platform.operating_system(o))
+            spec.architecture.os == str(platform.operating_system(o))
         )
         results.append(
             spec.architecture.target == str(platform.target(t))

@@ -946,7 +946,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         checksum = spack.config.get('config:checksum')
         if checksum and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
-                     self.spec.cformat('$_$@'))
+                     self.spec.cformat('{name}{@version}'))
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
@@ -960,7 +960,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
-                                 self.spec.format('$_$@'), ck_msg)
+                                 self.spec.format('{name}{@version}'), ck_msg)
 
         self.stage.create()
         self.stage.fetch(mirror_only)
