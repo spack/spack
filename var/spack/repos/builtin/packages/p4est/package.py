@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,10 +31,12 @@ class P4est(AutotoolsPackage):
     # from sc upstream, correct the default libraries
     patch('https://github.com/cburstedde/libsc/commit/b506aab224b988fec210cc212469f2c4f58b2d04.patch',
           sha256='e9418b1a9347a409be241cd185519b31950e42a7f55b6fb80ce53097657098ee',
-          working_dir='sc')
+          working_dir='sc',
+          when='@2.0')
     patch('https://github.com/cburstedde/libsc/commit/b45a51a7ef97883a3d4dcbd05cb2c77890a76f75.patch',
           sha256='8fb829e34e3a1e28afdd6e56e0bdc1d377af569b7ccb9e9d8da0eeb5829ed27e',
-          working_dir='sc')
+          working_dir='sc',
+          when='@2.0')
 
     def autoreconf(self, spec, prefix):
         bootstrap = Executable('./bootstrap')

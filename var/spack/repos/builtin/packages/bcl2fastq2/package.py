@@ -1,10 +1,11 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 import os
+import shutil
 import glob
 import llnl.util.tty as tty
 
@@ -26,6 +27,9 @@ class Bcl2fastq2(Package):
     # source tarball, you can drop it into a local mirror w/ the name
     # mirror/bcl2fastq2/bcl2fastq2-2.17.1.14.zip and go from there.
     version('2.17.1.14', '7426226c6db095862e636b95c38608d3')
+
+    conflicts('platform=darwin',
+              msg='malloc.h/etc requirements break build on macs')
 
     depends_on('boost@1.54.0')
     depends_on('cmake@2.8.9:')
@@ -71,11 +75,10 @@ class Bcl2fastq2(Package):
                     tty.msg("The tarball has already been unpacked")
                 else:
                     tty.msg("Unpacking bcl2fastq2 tarball")
-                    tty.msg("cwd sez: {0}".format(os.getcwd()))
                     tarball = glob.glob(join_path('spack-expanded-archive',
                                         'bcl2fastq2*.tar.gz'))[0]
                     copy(tarball, '.')
-                    os.rmdir('spack-expanded-archive')
+                    shutil.rmtree('spack-expanded-archive')
                     tar = which('tar')
                     tarball = os.path.basename(tarball)
                     tar('-xf', tarball)

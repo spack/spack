@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -515,22 +515,13 @@ class BaseContext(tengine.Context):
         # before asking for package-specific modifications
         for item in dependencies(self.spec, 'all'):
             package = self.spec[item.name].package
-            modules = build_environment.parent_class_modules(package.__class__)
-            for mod in modules:
-                build_environment.set_module_variables_for_package(
-                    package, mod
-                )
-            build_environment.set_module_variables_for_package(
-                package, package.module
-            )
+            build_environment.set_module_variables_for_package(package)
             package.setup_dependent_package(
                 self.spec.package.module, self.spec
             )
             package.setup_dependent_environment(_, env, self.spec)
         # Package specific modifications
-        build_environment.set_module_variables_for_package(
-            self.spec.package, self.spec.package.module
-        )
+        build_environment.set_module_variables_for_package(self.spec.package)
         self.spec.package.setup_environment(_, env)
 
         # Modifications required from modules.yaml

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -123,8 +123,11 @@ class TestAutotoolsPackage(object):
         s.concretize()
         pkg = spack.repo.get(s)
 
-        # Called without parameters
         options = pkg.with_or_without('foo')
+
+        # Ensure that values that are not representing a feature
+        # are not used by with_or_without
+        assert '--without-none' not in options
         assert '--with-bar' in options
         assert '--without-baz' in options
         assert '--no-fee' in options
@@ -133,14 +136,30 @@ class TestAutotoolsPackage(object):
             return 'something'
 
         options = pkg.with_or_without('foo', activation_value=activate)
+        assert '--without-none' not in options
         assert '--with-bar=something' in options
         assert '--without-baz' in options
         assert '--no-fee' in options
 
         options = pkg.enable_or_disable('foo')
+        assert '--disable-none' not in options
         assert '--enable-bar' in options
         assert '--disable-baz' in options
         assert '--disable-fee' in options
 
         options = pkg.with_or_without('bvv')
         assert '--with-bvv' in options
+
+    def test_none_is_allowed(self):
+        s = Spec('a foo=none')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        options = pkg.with_or_without('foo')
+
+        # Ensure that values that are not representing a feature
+        # are not used by with_or_without
+        assert '--with-none' not in options
+        assert '--without-bar' in options
+        assert '--without-baz' in options
+        assert '--no-fee' in options

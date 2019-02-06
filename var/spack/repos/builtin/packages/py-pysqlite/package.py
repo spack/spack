@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,5 +14,6 @@ class PyPysqlite(PythonPackage):
 
     version('2.8.3', '033f17b8644577715aee55e8832ac9fc')
 
+    # pysqlite is built into Python3
     depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
     depends_on('sqlite', type=('build', 'run'))

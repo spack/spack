@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -342,7 +342,7 @@ def set_build_environment_variables(pkg, env, dirty):
         if os.path.isdir(ci):
             env_paths.append(ci)
 
-    for item in reversed(env_paths):
+    for item in env_paths:
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
 
@@ -370,10 +370,8 @@ def set_build_environment_variables(pkg, env, dirty):
     return env
 
 
-def set_module_variables_for_package(pkg, module):
-    """Populate the module scope of install() with some useful functions.
-       This makes things easier for package writers.
-    """
+def _set_variables_for_single_module(pkg, module):
+    """Helper function to set module variables for single module."""
     # number of jobs spack will build with.
     jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
     if not pkg.parallel:
@@ -442,6 +440,20 @@ def set_module_variables_for_package(pkg, module):
                                          static_lib, shared_lib, **kwargs)
 
     m.static_to_shared_library = static_to_shared_library
+
+
+def set_module_variables_for_package(pkg):
+    """Populate the module scope of install() with some useful functions.
+       This makes things easier for package writers.
+    """
+    # If a user makes their own package repo, e.g.
+    # spack.pkg.mystuff.libelf.Libelf, and they inherit from an existing class
+    # like spack.pkg.original.libelf.Libelf, then set the module variables
+    # for both classes so the parent class can still use them if it gets
+    # called. parent_class_modules includes pkg.module.
+    modules = parent_class_modules(pkg.__class__)
+    for mod in modules:
+        _set_variables_for_single_module(pkg, mod)
 
 
 def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
@@ -591,6 +603,8 @@ def get_std_meson_args(pkg):
 def parent_class_modules(cls):
     """
     Get list of superclass modules that descend from spack.package.PackageBase
+
+    Includes cls.__module__
     """
     if (not issubclass(cls, spack.package.PackageBase) or
         issubclass(spack.package.PackageBase, cls)):
@@ -634,23 +648,15 @@ def setup_package(pkg, dirty):
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False,
                                    deptype=('build', 'test')):
-        # If a user makes their own package repo, e.g.
-        # spack.pkg.mystuff.libelf.Libelf, and they inherit from
-        # an existing class like spack.pkg.original.libelf.Libelf,
-        # then set the module variables for both classes so the
-        # parent class can still use them if it gets called.
         spkg = dspec.package
-        modules = parent_class_modules(spkg.__class__)
-        for mod in modules:
-            set_module_variables_for_package(spkg, mod)
-        set_module_variables_for_package(spkg, spkg.module)
+        set_module_variables_for_package(spkg)
 
         # Allow dependencies to modify the module
         dpkg = dspec.package
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
-    set_module_variables_for_package(pkg, pkg.module)
+    set_module_variables_for_package(pkg)
     pkg.setup_environment(spack_env, run_env)
 
     # Loading modules, in particular if they are meant to be used outside

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PyJupyterCore(PythonPackage):
     homepage = "http://jupyter-core.readthedocs.io/"
     url      = "https://github.com/jupyter/jupyter_core/archive/4.2.0.tar.gz"
 
+    version('4.4.0', 'f2bdb8be2959d3043b77508dd6498687')
     version('4.2.0', '25c1fc68b1b73c0a2e616c76f02bf061')
     version('4.1.1', '2fce5ff60291bc01b39b1f00b3cbb784')
     version('4.1.0', 'b7e928f965f68aef13fea1bf9d6384aa')

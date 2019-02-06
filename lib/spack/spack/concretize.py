@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -380,13 +380,12 @@ class Concretizer(object):
                                if (compiler_match(p) and
                                    (p is not spec) and
                                    flag in p.compiler_flags))
-                nearest_flags = set(nearest.compiler_flags.get(flag, []))
-                flags = set(spec.compiler_flags.get(flag, []))
-                if (nearest_flags - flags):
-                    # TODO: these set operations may reorder the flags, which
-                    # for some orders of flags can be invalid. See:
-                    # https://github.com/spack/spack/issues/6154#issuecomment-342365573
-                    spec.compiler_flags[flag] = list(nearest_flags | flags)
+                nearest_flags = nearest.compiler_flags.get(flag, [])
+                flags = spec.compiler_flags.get(flag, [])
+                if set(nearest_flags) - set(flags):
+                    spec.compiler_flags[flag] = list(
+                        llnl.util.lang.dedupe(nearest_flags + flags)
+                    )
                     ret = True
             except StopIteration:
                 pass
@@ -402,10 +401,12 @@ class Concretizer(object):
                 raise
             return ret
         for flag in compiler.flags:
-            config_flags = set(compiler.flags.get(flag, []))
-            flags = set(spec.compiler_flags.get(flag, []))
-            spec.compiler_flags[flag] = list(config_flags | flags)
-            if (config_flags - flags):
+            config_flags = compiler.flags.get(flag, [])
+            flags = spec.compiler_flags.get(flag, [])
+            spec.compiler_flags[flag] = list(
+                llnl.util.lang.dedupe(config_flags + flags)
+            )
+            if set(config_flags) - set(flags):
                 ret = True
 
         return ret

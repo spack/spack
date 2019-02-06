@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -178,7 +178,7 @@ class Mfem(Package):
     depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
-    depends_on('conduit@0.3.1:', when='+conduit')
+    depends_on('conduit@0.3.1:,master:', when='+conduit')
     depends_on('conduit+mpi', when='+conduit+mpi')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')

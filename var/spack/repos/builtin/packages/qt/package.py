@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -79,6 +79,7 @@ class Qt(Package):
     patch('qt4-gcc-and-webkit.patch', when='@4')
 
     # Use system openssl for security.
+    depends_on("openssl@:1.0", when='@:5.9')
     depends_on("openssl")
     depends_on("glib", when='@4:')
     depends_on("gtkplus", when='+gtk')

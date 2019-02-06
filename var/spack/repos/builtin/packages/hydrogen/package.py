@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,11 @@ class Hydrogen(CMakePackage):
        and optimization library. Based on the Elemental library."""
 
     homepage = "http://libelemental.org"
-    url      = "https://github.com/LLNL/Elemental/archive/0.99.tar.gz"
+    url      = "https://github.com/LLNL/Elemental/archive/v1.0.1.tar.gz"
     git      = "https://github.com/LLNL/Elemental.git"
 
     version('develop', branch='hydrogen')
+    version('1.0.1', sha256='27cf76e1ef1d58bd8f9b1e34081a14a682b7ff082fb5d1da56713e5e0040e528')
     version('1.0', sha256='d8a97de3133f2c6b6bb4b80d32b4a4cc25eb25e0df4f0cec0f8cb19bf34ece98')
     version('0.99', 'b678433ab1d498da47acf3dc5e056c23')
 
@@ -72,14 +73,12 @@ class Hydrogen(CMakePackage):
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
     depends_on('aluminum@master', when='+al ~cuda')
-    depends_on('aluminum@master +gpu +mpi-cuda', when='+al +cuda ~nccl')
-    depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='+al +cuda +nccl')
+    depends_on('aluminum@master +gpu +mpi_cuda', when='+al +cuda')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
 
-    depends_on('mpi', when='~cuda')
-    depends_on('mpi +cuda', when='+cuda')
+    depends_on('mpi')
 
     depends_on('scalapack', when='+scalapack')
     depends_on('gmp', when='+mpfr')
@@ -92,6 +91,9 @@ class Hydrogen(CMakePackage):
 
     conflicts('@0:0.98', msg="Hydrogen did not exist before v0.99. " +
               "Did you mean to use Elemental instead?")
+
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
 
     @property
     def libs(self):
@@ -150,7 +152,7 @@ class Hydrogen(CMakePackage):
         if '+al' in spec:
             args.extend([
                 '-DHydrogen_ENABLE_ALUMINUM:BOOL=%s' % ('+al' in spec),
-                '-DHYDROGEN_Aluminum_DIR={0}'.format(
+                '-DALUMINUM_DIR={0}'.format(
                     spec['aluminum'].prefix)])
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,18 +23,24 @@ class Gcc(AutotoolsPackage):
 
     version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
     version('8.1.0', '65f7c65818dc540b3437605026d329fc')
+
+    version('7.4.0', 'eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51')
     version('7.3.0', 'be2da21680f27624f3a87055c4ba5af2')
     version('7.2.0', 'ff370482573133a7fcdd96cd2f552292')
     version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
+
+    version('6.5.0', '7ef1796ce497e89479183702635b14bb7a46b53249209a5e0f999bebf4740945')
     version('6.4.0', '11ba51a0cfb8471927f387c8895fe232')
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
+
     version('5.5.0', '0f70424213b4a1113c04ba66ddda0c1f')
     version('5.4.0', '4c626ac2a83ef30dfb9260e6f59c2b30')
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
     version('5.1.0', 'd5525b1127d07d215960e6051c5da35e')
+
     version('4.9.4', '87c24a4090c1577ba817ec6882602491')
     version('4.9.3', '6f831b4d251872736e8e9cc09746f327')
     version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43')
@@ -168,6 +174,9 @@ class Gcc(AutotoolsPackage):
     patch('stack_t.patch', when='@5.1:5.4,6.1:6.4,7.1')
     # https://bugs.busybox.net/show_bug.cgi?id=10061
     patch('signal.patch', when='@4.9,5.1:5.4')
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85835
+    patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
+    patch('sys_ustat-4.9.patch', when='@4.9')
 
     build_directory = 'spack-build'
 

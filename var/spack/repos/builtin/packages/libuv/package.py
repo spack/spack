@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,8 @@ class Libuv(AutotoolsPackage):
     homepage = "http://libuv.org"
     url      = "https://github.com/libuv/libuv/archive/v1.9.0.tar.gz"
 
-    version('1.9.0', '14737f9c76123a19a290dabb7d1cd04c')
+    version('1.25.0', '31a1873ebceacae42573bac8ec5da687')
+    version('1.9.0',  '14737f9c76123a19a290dabb7d1cd04c')
 
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')

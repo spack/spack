@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -328,7 +328,7 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
 
     # Build a dict version -> URL from any links that match the wildcards.
     versions = {}
-    for url in links:
+    for url in sorted(links):
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)

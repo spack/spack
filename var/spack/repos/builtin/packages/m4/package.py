@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,10 @@ class M4(AutotoolsPackage):
         args = ['--enable-c++']
 
         if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
-            args.append('CFLAGS=-rtlib=compiler-rt')
+            args.append('LDFLAGS=-rtlib=compiler-rt')
+
+        if spec.satisfies('%arm') and not spec.satisfies('platform=darwin'):
+            args.append('LDFLAGS=-rtlib=compiler-rt')
 
         if spec.satisfies('%intel'):
             args.append('CFLAGS=-no-gcc')

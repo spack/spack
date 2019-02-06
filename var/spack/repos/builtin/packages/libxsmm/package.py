@@ -1,9 +1,10 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 from glob import glob
 
 
@@ -13,32 +14,33 @@ class Libxsmm(MakefilePackage):
     and small convolutions.'''
 
     homepage = 'https://github.com/hfp/libxsmm'
-    url      = 'https://github.com/hfp/libxsmm/archive/1.9.tar.gz'
+    url      = 'https://github.com/hfp/libxsmm/archive/1.10.tar.gz'
     git      = 'https://github.com/hfp/libxsmm.git'
 
     version('develop', branch='master')
-    version('1.9',   'a001a491d9b98239bc2bfd906bd09d90')
-    version('1.8.3', '3415928340929c3a29773934de05c978')
-    version('1.8.2', '8f11ece699244c28dcb6742969a2ccd4')
-    version('1.8.1', 'ece51ec767580f4542f509655daa5ec0')
-    version('1.8',   '2d513afbdad99e5d04c6c4ab4c9bb25b')
-    version('1.7.1', 'a938335b1c2c90616dc72c2c1a5824ab')
-    version('1.7',   'cb3aff6d123ba70bd3d4daf575767d14')
-    version('1.6.6', '8b45ae022f36b8c212f579a0952b5034')
-    version('1.6.5', 'fa21fe88d092477fa796a346ac7674ff')
-    version('1.6.4', '23e484f7b9f980c2a3819db6e6c68710')
-    version('1.6.3', '7969c56e6faed66f9e07d86f063ecf0b')
-    version('1.6.2', '1920e58fdf00d2635d24cf5c07007bfc')
-    version('1.6.1', 'e3493c77c57d42cfa58e0e55a69ee22c')
-    version('1.6',   '31c130aa176db23944de420b59e1c74d')
-    version('1.5.2', 'ecda62ec3e5c60897d0d7780c524bc19')
-    version('1.5.1', '612244e92024e11ec672bafb6e85c01b')
-    version('1.5',   '7b550702b55dc8e73a42a2986a1e1b36')
-    version('1.4.4', '78beefa57da02126cf4556f0eef3f8f0')
-    version('1.4.3', '9839bf0fb8be7badf1e97ce4c817149b')
-    version('1.4.2', 'ea025761437f3b5c936821b9ca21ec31')
-    version('1.4.1', '71648500ea4510529845d329091917df')
-    version('1.4',   'b42f91bf5285e7ad0463446e55ebdc2b')
+    version('1.10',  '2904f7983719fd5c5af081121c1d028d45b10b854aec9a9e67996a0602631abc')
+    version('1.9',   'cd8532021352b4a0290d209f7f9bfd7c2411e08286a893af3577a43457287bfa')
+    version('1.8.3', '08ed4a67731d07c739fa83c426a06a5a8fe576bc273da4bab84eb0d1f4405011')
+    version('1.8.2', '252ab73e437f5fcc87268df1ac130ffe6eb41e4281d9d3a3eaa7d591a85a612f')
+    version('1.8.1', '2ade869c3f42f23b5263c7d594aa3c7e5e61ac6a3afcaf5d6e42899d2a7986ce')
+    version('1.8',   '0330201afb5525d0950ec861fec9dd75eb40a03845ebe03d2c635cf8bfc14fea')
+    version('1.7.1', '9d3f63ce3eed62f04e4036de6f2be2ce0ff07781ca571af6e0bf85b077edf17a')
+    version('1.7',   '2eea65624a697e74b939511cd2a686b4c957e90c99be168fe134d96771e811ad')
+    version('1.6.6', '7c048a48e17f7f14a475be7b83e6e941289e03debb42ce9e02a06353412f9f2a')
+    version('1.6.5', '5231419a8e13e7a6d286cf25d32a3aa75c443a625e5ea57024d36468bc3d5936')
+    version('1.6.4', '3788bf1cdb60f119f8a04ed7ed96861322e539ce2d2ea977f00431d6b2b80beb')
+    version('1.6.3', 'afad4f75ec5959bc3b18b741f3f16864f699c8b763598d01faf6af029dded48c')
+    version('1.6.2', 'c1ad21dee1239c9c2422b2dd2dc83e7a364909fc82ff9bd6ce7d9c73ee4569de')
+    version('1.6.1', '1dd81077b186300122dc8a8f1872c21fd2bd9b88286ab9f068cc7b62fa7593a7')
+    version('1.6',   'c2a56f8cdc2ab03a6477ef98dbaa00917674fda59caa2824a1a29f78d2255ba5')
+    version('1.5.2', 'a037b7335932921960d687ef3d49b50ee38a83e0c8ad237bc20d3f4a0523f7d3')
+    version('1.5.1', '9e2a400e63b6fb2d4954e53536090eb8eb6f0ca25d0f34dd3a4f166802aa3d54')
+    version('1.5',   'c52568c5e0e8dc9d8fcf869a716d73598e52f71c3d83af5a4c0b3be81403b423')
+    version('1.4.4', 'bf4a0fff05cf721e11cb6cdb74f3d27dd0fa67ccc024055f2d9dd5dbd928c7c0')
+    version('1.4.3', '5033c33038ba4a75c675387aeb7c86b629e43ffc0a40df0b78e4ed52e4b5bd90')
+    version('1.4.2', '9c89391635be96759486a245365793bc4593859e6d7957b37c39a29f9b4f95eb')
+    version('1.4.1', 'c19be118694c9b4e9a61ef4205b1e1a7e0c400c07f9bce65ae430d2dc2be5fe1')
+    version('1.4',   'cf483a370d802bd8800c06a12d14d2b4406a745c8a0b2c8722ccc992d0cd72dd')
 
     variant('debug', default=False,
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
@@ -71,7 +73,7 @@ class Libxsmm(MakefilePackage):
 
     def build(self, spec, prefix):
         # include symbols by default
-        make_args = ['SYM=1']
+        make_args = ['SYM=1', 'PREFIX=%s' % prefix]
 
         if '+header-only' in spec:
             make_args += ['header-only']
@@ -88,6 +90,13 @@ class Libxsmm(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree('include', prefix.include)
+
+        # move pkg-config files to their right place
+        mkdirp('lib/pkgconfig')
+        for pcfile in glob('lib/*.pc'):
+            os.rename(pcfile, os.path.join('lib/pkgconfig',
+                                           os.path.basename(pcfile)))
+
         if '+header-only' in spec:
             install_tree('src', prefix.src)
         else:

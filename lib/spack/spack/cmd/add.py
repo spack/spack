@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ def setup_parser(subparser):
 
 
 def add(parser, args):
-    env = ev.get_env(args, 'add')
+    env = ev.get_env(args, 'add', required=True)
 
     for spec in spack.cmd.parse_specs(args.specs):
         if not env.add(spec):

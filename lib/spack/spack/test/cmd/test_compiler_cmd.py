@@ -1,10 +1,13 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 import pytest
 import llnl.util.filesystem
+import llnl.util.multiproc
 
 import spack.cmd.compiler
 import spack.compilers
@@ -55,7 +58,12 @@ class TestCompilerCommand(object):
         compilers = spack.compilers.all_compiler_specs()
         assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
 
-    def test_compiler_add(self, mock_compiler_dir):
+    def test_compiler_add(self, mock_compiler_dir, monkeypatch):
+        # This test randomly stall on Travis when spawning processes
+        # in Python 2.6 unit tests
+        if sys.version_info < (3, 0, 0):
+            monkeypatch.setattr(llnl.util.multiproc, 'parmap', map)
+
         # Compilers available by default.
         old_compilers = set(spack.compilers.all_compiler_specs())
 

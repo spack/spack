@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class PySphinx(PythonPackage):
         'sphinx.environment.collectors', 'sphinx.environment.adapters'
     ]
 
+    version('1.8.2',   sha256='120732cbddb1b2364471c3d9f8bfd4b0c5b550862f99a65736c77f970b142aea')
     version('1.7.4', '95f3b83f521314600e5b09e99cf32c46')
     version('1.6.3', 'c5ad61f4e0974375ca2c2b58ef8d5411')
     version('1.6.1', '26cb1cdca7aa4afc8c925d926b6268e7')
@@ -57,13 +58,10 @@ class PySphinx(PythonPackage):
     # http://www.sphinx-doc.org/en/stable/changes.html
     depends_on('py-sphinxcontrib-websupport', when='@1.6:',
                type=('build', 'run'))
-    # TODO: incorporate the proper dependencies when concretizer is capable
     # Build dep for 1.6.1 all python (bug), see:
     # https://github.com/sphinx-doc/sphinx/pull/3789
-    # depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
-    # depends_on('py-typing', when='@1.6.2:^python@2.7:3.4',
-    #            type=('build', 'run'))
-    depends_on('py-typing', when='@1.6:', type=('build', 'run'))
+    depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
+    depends_on('py-typing', when='@1.6.2:^python@2.7:3.4', type=('build', 'run'))
 
     depends_on('py-pytest',     type='test')
     depends_on('py-mock',       type='test')

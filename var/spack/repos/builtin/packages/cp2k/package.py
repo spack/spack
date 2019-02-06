@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,48 +15,91 @@ class Cp2k(Package):
     periodic, material, crystal, and biological systems
     """
     homepage = 'https://www.cp2k.org'
-    url = 'https://sourceforge.net/projects/cp2k/files/cp2k-3.0.tar.bz2'
-    list_url = 'https://sourceforge.net/projects/cp2k/files/'
+    url = 'https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2'
+    list_url = 'https://github.com/cp2k/cp2k/releases'
 
+    version('6.1', '573a4de5a0ee2aaabb213e04543cb10f')
     version('5.1', 'f25cf301aec471d7059179de4dac3ee7')
     version('4.1', 'b0534b530592de15ac89828b1541185e')
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'none'),
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate'),
+            description='Enable the use of OpenBlas/MKL/Accelerate')
+    variant('openmp', default=False, description='Enable OpenMP support')
+    variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
+    variant('libxc', default=True,
+            description='Support additional functionals via libxc')
+    variant('pexsi', default=False,
+            description=('Enable the alternative PEXSI method'
+                         'for density matrix evaluation'))
+    variant('elpa', default=False,
+            description='Enable optimised diagonalisation routines from ELPA')
 
     depends_on('python', type='build')
 
-    depends_on('lapack')
-    depends_on('blas')
-    depends_on('fftw@3:')
-    depends_on('libint@1.1.4:1.2', when='@3.0:5.999')
-    depends_on('libxsmm', when='smm=libxsmm')
-    depends_on('libxc@2.2.2:')
+    depends_on('fftw@3:', when='~openmp')
+    depends_on('fftw@3:+openmp', when='+openmp')
+
+    # see #1712 for the reason to enumerate BLAS libraries here
+    depends_on('openblas threads=none', when='blas=openblas ~openmp')
+    depends_on('openblas threads=openmp', when='blas=openblas +openmp')
+    depends_on('lapack', when='blas=openblas ~openmp')
+
+    depends_on('intel-mkl', when="blas=mkl ~openmp")
+    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp')
+
+    conflicts('blas=accelerate', '+openmp')  # there is no Accelerate with OpenMP support
+
+    depends_on('libxsmm@1.10:~header-only', when='smm=libxsmm')
+    # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
+    depends_on('pkgconfig', type='build', when='smm=libxsmm')
+
+    # libint & libxc are always statically linked
+    depends_on('libint@1.1.4:1.2', when='@3.0:6.999', type='build')
+    depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
+    depends_on('libxc@4.0.3:', when='+libxc@6.0:', type='build')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
-    depends_on('elpa@2011.12:2016.13', when='+mpi')
-    depends_on('pexsi+fortran@0.9.0:0.9.999', when='+mpi@:4.999')
-    depends_on('pexsi+fortran@0.10.0:', when='+mpi@5.0:')
+    depends_on('elpa@2011.12:2016.13+openmp', when='+openmp+elpa@:5.999')
+    depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:')
+    depends_on('elpa@2011.12:2016.13~openmp', when='~openmp+elpa@:5.999')
+    depends_on('elpa@2011.12:2017.11~openmp', when='~openmp+elpa@6.0:')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
+
+    # while we link statically against PEXSI, its own deps may be linked in
+    # dynamically, therefore can't set this as pure build-type dependency.
+    depends_on('pexsi+fortran@0.9.0:0.9.999', when='+pexsi@:4.999')
+    depends_on('pexsi+fortran@0.10.0:', when='+pexsi@5.0:')
+
+    # PEXSI and ELPA need MPI in CP2K
+    conflicts('~mpi', '+pexsi')
+    conflicts('~mpi', '+elpa')
 
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
     # in the stage of cp2k@4.1
-    depends_on('wannier90', when='@3.0+mpi')
+    depends_on('wannier90', when='@3.0+mpi', type='build')
 
     # TODO : add dependency on CUDA
 
-    parallel = False
+    # CP2K needs compiler specific compilation flags, e.g. optflags
+    conflicts('%clang')
+    conflicts('%cray')
+    conflicts('%nag')
+    conflicts('%xl')
 
     def install(self, spec, prefix):
         # Construct a proper filename for the architecture file
         cp2k_architecture = '{0.architecture}-{0.compiler.name}'.format(spec)
-        cp2k_version = 'sopt' if '~mpi' in spec else 'popt'
+        cp2k_version = ('{prefix}{suffix}'
+                        .format(prefix='p' if '+mpi' in spec else 's',
+                                suffix='smp' if '+openmp' in spec else 'opt'))
+
         makefile_basename = '.'.join([cp2k_architecture, cp2k_version])
         makefile = join_path('arch', makefile_basename)
 
@@ -70,25 +113,30 @@ class Cp2k(Package):
                     '-funroll-loops',
                     '-ffast-math',
                     '-ftree-vectorize',
-                ], 'intel': [
+                ],
+                'intel': [
                     '-O2',
                     '-pc64',
                     '-unroll',
-                ]
+                ],
+                'pgi': [
+                    '-fast',
+                ],
             }
 
             dflags = ['-DNDEBUG']
 
-            libxc = spec['libxc:fortran,static']
+            if '+openmp' in spec:
+                fftw = spec['fftw:openmp']
+            else:
+                fftw = spec['fftw']
 
             cppflags = [
                 '-D__FFTW3',
                 '-D__LIBINT',
                 '-D__LIBINT_MAX_AM=6',
                 '-D__LIBDERIV_MAX_AM1=5',
-                '-D__LIBXC',
-                spec['fftw'].headers.cpp_flags,
-                libxc.headers.cpp_flags
+                fftw.headers.cpp_flags,
             ]
 
             if '^mpi@3:' in spec:
@@ -102,25 +150,40 @@ class Cp2k(Package):
             cflags = copy.deepcopy(optflags[self.spec.compiler.name])
             cxxflags = copy.deepcopy(optflags[self.spec.compiler.name])
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
+            ldflags = []
+            libs = []
 
             if '%intel' in spec:
                 cflags.append('-fp-model precise')
                 cxxflags.append('-fp-model precise')
                 fcflags.extend(['-fp-model source', '-heap-arrays 64'])
+                if '+openmp' in spec:
+                    fcflags.append('-openmp')
+                    ldflags.append('-openmp')
             elif '%gcc' in spec:
                 fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
+                if '+openmp' in spec:
+                    fcflags.append('-fopenmp')
+                    ldflags.append('-fopenmp')
+            elif '%pgi' in spec:
+                fcflags.extend(['-Mfreeform', '-Mextend'])
+                if '+openmp' in spec:
+                    fcflags.append('-mp')
+                    ldflags.append('-mp')
 
-            fftw = spec['fftw'].libs
-            ldflags = [fftw.search_flags]
+            ldflags.append(fftw.libs.search_flags)
 
             if 'superlu-dist@4.3' in spec:
-                ldflags = ['-Wl,--allow-multiple-definition'] + ldflags
+                ldflags.insert(0, '-Wl,--allow-multiple-definition')
 
-            libs = [
-                join_path(spec['libint'].prefix.lib, 'libint.so'),
-                join_path(spec['libint'].prefix.lib, 'libderiv.so'),
-                join_path(spec['libint'].prefix.lib, 'libr12.so')
-            ]
+            # libint-1.x.y has to be linked statically to work around
+            # inconsistencies in its Fortran interface definition
+            # (short-int vs int) which otherwise causes segfaults at runtime
+            # due to wrong offsets into the shared library symbols.
+            libs.extend([
+                join_path(spec['libint'].libs.directories[0], 'libderiv.a'),
+                join_path(spec['libint'].libs.directories[0], 'libint.a'),
+            ])
 
             if '+plumed' in self.spec:
                 # Include Plumed.inc in the Makefile
@@ -155,6 +218,7 @@ class Cp2k(Package):
             fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
             mkf.write('FC = {0}\n'.format(fc))
             mkf.write('LD = {0}\n'.format(fc))
+
             # Intel
             if '%intel' in self.spec:
                 cppflags.extend([
@@ -168,15 +232,78 @@ class Cp2k(Package):
                     '-free',
                     '-fpp'
                 ])
+
+            # FFTW, LAPACK, BLAS
+            lapack = spec['lapack'].libs
+            blas = spec['blas'].libs
+            ldflags.append((lapack + blas).search_flags)
+            libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+
             # MPI
             if '+mpi' in self.spec:
                 cppflags.extend([
                     '-D__parallel',
-                    '-D__LIBPEXSI',
                     '-D__SCALAPACK'
                 ])
 
+                scalapack = spec['scalapack'].libs
+                ldflags.append(scalapack.search_flags)
+
+                libs.extend(scalapack)
+                libs.extend(self.spec['mpi:cxx'].libs)
+                libs.extend(self.compiler.stdcxx_libs)
+
+                if 'wannier90' in spec:
+                    cppflags.append('-D__WANNIER90')
+                    wannier = join_path(
+                        spec['wannier90'].libs.directories[0], 'libwannier.a'
+                    )
+                    libs.append(wannier)
+
+            if '+libxc' in spec:
+                libxc = spec['libxc:fortran,static']
+                cppflags += [
+                    '-D__LIBXC',
+                    libxc.headers.cpp_flags
+                ]
+
+                ldflags.append(libxc.libs.search_flags)
+                libs.append(str(libxc.libs))
+
+            if '+pexsi' in self.spec:
+                cppflags.append('-D__LIBPEXSI')
+                fcflags.append('-I' + join_path(
+                    spec['pexsi'].prefix, 'fortran'))
+                libs.extend([
+                    join_path(spec['pexsi'].libs.directories[0],
+                              'libpexsi.a'),
+                    join_path(spec['superlu-dist'].libs.directories[0],
+                              'libsuperlu_dist.a'),
+                    join_path(
+                        spec['parmetis'].libs.directories[0],
+                        'libparmetis.{0}'.format(dso_suffix)
+                    ),
+                    join_path(
+                        spec['metis'].libs.directories[0],
+                        'libmetis.{0}'.format(dso_suffix)
+                    ),
+                ])
+
+            if '+elpa' in self.spec:
                 elpa = spec['elpa']
+                elpa_suffix = '_openmp' if '+openmp' in elpa else ''
+                elpa_base_path = join_path(
+                    elpa.prefix,
+                    'include',
+                    'elpa{suffix}-{version!s}'.format(
+                        suffix=elpa_suffix, version=elpa.version))
+
+                fcflags.append('-I' + join_path(elpa_base_path, 'modules'))
+                libs.append(join_path(elpa.libs.directories[0],
+                                      ('libelpa{elpa_suffix}.{dso_suffix}'
+                                       .format(elpa_suffix=elpa_suffix,
+                                               dso_suffix=dso_suffix))))
+
                 if spec.satisfies('@:4.999'):
                     if elpa.satisfies('@:2014.5.999'):
                         cppflags.append('-D__ELPA')
@@ -185,62 +312,10 @@ class Cp2k(Package):
                     else:
                         cppflags.append('-D__ELPA3')
                 else:
-                    cppflags.append('-D__ELPA={0}{1:02d}'.format(
-                        elpa.version[0], int(elpa.version[1])))
-                    fcflags.append('-I' + join_path(
-                        elpa.prefix, 'include',
-                        'elpa-{0}'.format(str(elpa.version)), 'elpa'
-                    ))
-
-                if 'wannier90' in spec:
-                    cppflags.append('-D__WANNIER90')
-
-                fcflags.extend([
-                    # spec['elpa:fortran'].headers.cpp_flags
-                    '-I' + join_path(
-                        elpa.prefix,
-                        'include',
-                        'elpa-{0}'.format(str(elpa.version)),
-                        'modules'
-                    ),
-                    # spec[pexsi:fortran].headers.cpp_flags
-                    '-I' + join_path(spec['pexsi'].prefix, 'fortran')
-                ])
-                scalapack = spec['scalapack'].libs
-                ldflags.append(scalapack.search_flags)
-                libs.extend([
-                    join_path(elpa.prefix.lib,
-                              'libelpa.{0}'.format(dso_suffix)),
-                    join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
-                    join_path(spec['superlu-dist'].prefix.lib,
-                              'libsuperlu_dist.a'),
-                    join_path(
-                        spec['parmetis'].prefix.lib,
-                        'libparmetis.{0}'.format(dso_suffix)
-                    ),
-                    join_path(
-                        spec['metis'].prefix.lib,
-                        'libmetis.{0}'.format(dso_suffix)
-                    ),
-                ])
-
-                if 'wannier90' in spec:
-                    wannier = join_path(
-                        spec['wannier90'].prefix.lib, 'libwannier.a'
-                    )
-                    libs.append(wannier)
-
-                libs.extend(scalapack)
-                libs.extend(self.spec['mpi:cxx'].libs)
-                libs.extend(self.compiler.stdcxx_libs)
-            # LAPACK / BLAS
-            lapack = spec['lapack'].libs
-            blas = spec['blas'].libs
-            ldflags.append((lapack + blas).search_flags)
-
-            ldflags.append(libxc.libs.search_flags)
-
-            libs.extend([str(x) for x in (fftw, lapack, blas, libxc.libs)])
+                    cppflags.append('-D__ELPA={0}{1:02d}'
+                                    .format(elpa.version[0],
+                                            int(elpa.version[1])))
+                    fcflags.append('-I' + join_path(elpa_base_path, 'elpa'))
 
             if 'smm=libsmm' in spec:
                 lib_dir = join_path('lib', cp2k_architecture, cp2k_version)
@@ -261,11 +336,10 @@ class Cp2k(Package):
             elif 'smm=libxsmm' in spec:
                 cppflags.extend([
                     '-D__LIBXSMM',
-                    spec['libxsmm'].headers.cpp_flags,
+                    '$(shell pkg-config --cflags-only-other libxsmmf)',
                 ])
-                libxsmm = spec['libxsmm'].libs
-                ldflags.append(libxsmm.search_flags)
-                libs.append(str(libxsmm))
+                fcflags.append('$(shell pkg-config --cflags-only-I libxsmmf)')
+                libs.append('$(shell pkg-config --libs libxsmmf)')
 
             dflags.extend(cppflags)
             cflags.extend(cppflags)
@@ -284,6 +358,7 @@ class Cp2k(Package):
                     ' '.join(ldflags) + ' -nofor_main')
                 )
             mkf.write('LIBS = {0}\n\n'.format(' '.join(libs)))
+            mkf.write('DATA_DIR = {0}\n\n'.format(self.prefix.share.data))
 
         with working_dir('makefiles'):
             # Apparently the Makefile bases its paths on PWD
@@ -295,3 +370,4 @@ class Cp2k(Package):
             env['PWD'] = pwd_backup
         exe_dir = join_path('exe', cp2k_architecture)
         install_tree(exe_dir, self.prefix.bin)
+        install_tree('data', self.prefix.share.data)

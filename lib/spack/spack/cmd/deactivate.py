@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import argparse
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.environment as ev
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
 from spack.graph import topological_sort
@@ -37,7 +38,8 @@ def deactivate(parser, args):
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))
 
-    spec = spack.cmd.disambiguate_spec(specs[0])
+    env = ev.get_env(args, 'deactivate')
+    spec = spack.cmd.disambiguate_spec(specs[0], env)
     pkg = spec.package
 
     if args.view:

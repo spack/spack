@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -185,14 +185,6 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
 def test_install_overwrite(
         mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
-    # It's not possible to overwrite something that is not yet installed
-    with pytest.raises(AssertionError):
-        install('--overwrite', 'libdwarf')
-
-    # --overwrite requires a single spec
-    with pytest.raises(AssertionError):
-        install('--overwrite', 'libdwarf', 'libelf')
-
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')
     spec.concretize()
@@ -215,6 +207,61 @@ def test_install_overwrite(
     assert os.path.exists(spec.prefix)
     assert fs.hash_directory(spec.prefix) == expected_md5
     assert fs.hash_directory(spec.prefix) != bad_md5
+
+
+def test_install_overwrite_not_installed(
+        mock_packages, mock_archive, mock_fetch, config, install_mockery
+):
+    # Try to install a spec and then to reinstall it.
+    spec = Spec('libdwarf')
+    spec.concretize()
+
+    assert not os.path.exists(spec.prefix)
+
+    install('--overwrite', '-y', 'libdwarf')
+    assert os.path.exists(spec.prefix)
+
+
+def test_install_overwrite_multiple(
+        mock_packages, mock_archive, mock_fetch, config, install_mockery
+):
+    # Try to install a spec and then to reinstall it.
+    libdwarf = Spec('libdwarf')
+    libdwarf.concretize()
+
+    install('libdwarf')
+
+    cmake = Spec('cmake')
+    cmake.concretize()
+
+    install('cmake')
+
+    assert os.path.exists(libdwarf.prefix)
+    expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix)
+
+    assert os.path.exists(cmake.prefix)
+    expected_cmake_md5 = fs.hash_directory(cmake.prefix)
+
+    # Modify the first installation to be sure the content is not the same
+    # as the one after we reinstalled
+    with open(os.path.join(libdwarf.prefix, 'only_in_old'), 'w') as f:
+        f.write('This content is here to differentiate installations.')
+    with open(os.path.join(cmake.prefix, 'only_in_old'), 'w') as f:
+        f.write('This content is here to differentiate installations.')
+
+    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix)
+    bad_cmake_md5 = fs.hash_directory(cmake.prefix)
+
+    assert bad_libdwarf_md5 != expected_libdwarf_md5
+    assert bad_cmake_md5 != expected_cmake_md5
+
+    install('--overwrite', '-y', 'libdwarf', 'cmake')
+    assert os.path.exists(libdwarf.prefix)
+    assert os.path.exists(cmake.prefix)
+    assert fs.hash_directory(libdwarf.prefix) == expected_libdwarf_md5
+    assert fs.hash_directory(cmake.prefix) == expected_cmake_md5
+    assert fs.hash_directory(libdwarf.prefix) != bad_libdwarf_md5
+    assert fs.hash_directory(cmake.prefix) != bad_cmake_md5
 
 
 @pytest.mark.usefixtures(
@@ -430,6 +477,29 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
             content = report_file.open().read()
             assert '</Build>' in content
             assert '<Text>' not in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            with pytest.raises((HTTPError, URLError)):
+                install(
+                    '--log-file=cdash_reports',
+                    '--cdash-build=my_custom_build',
+                    '--cdash-site=my_custom_site',
+                    '--cdash-track=my_custom_track',
+                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
+                    'a')
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Build.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert 'Site BuildName="my_custom_build"' in content
+            assert 'Name="my_custom_site"' in content
+            assert '-my_custom_track' in content
 
 
 @pytest.mark.disable_clean_stage_check

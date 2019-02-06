@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,17 +7,33 @@ from spack import *
 
 
 class ParallelNetcdf(AutotoolsPackage):
-    """Parallel netCDF (PnetCDF) is a library providing high-performance
-    parallel I/O while still maintaining file-format compatibility with
-    Unidata's NetCDF."""
+    """PnetCDF (Parallel netCDF) is a high-performance parallel I/O
+    library for accessing files in format compatibility with Unidata's
+    NetCDF, specifically the formats of CDF-1, 2, and 5.
+    """
 
-    homepage = "https://trac.mcs.anl.gov/projects/parallel-netcdf"
-    url      = "http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-1.6.1.tar.gz"
-    list_url = "http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html"
+    homepage = "https://parallel-netcdf.github.io/"
+    git      = "https://github.com/Parallel-NetCDF/PnetCDF"
+    url      = "https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz"
+    list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
-    version('1.8.0', '825825481aa629eb82f21ca37afff1609b8eeb07')
-    version('1.7.0', '267eab7b6f9dc78c4d0e6def2def3aea4bc7c9f0')
-    version('1.6.1', '62a094eb952f9d1e15f07d56e535052604f1ac34')
+    def url_for_version(self, version):
+        if version >= Version('1.11.0'):
+            url = "https://parallel-netcdf.github.io/Release/pnetcdf-{0}.tar.gz"
+        else:
+            url = "https://parallel-netcdf.github.io/Release/parallel-netcdf-{0}.tar.gz"
+
+        return url.format(version.dotted)
+
+    version('develop', branch='develop')
+    version('master', branch='master')
+    version('1.11.0', sha256='a18a1a43e6c4fd7ef5827dbe90e9dcf1363b758f513af1f1356ed6c651195a9f')
+    version('1.10.0', sha256='ed189228b933cfeac3b7b4f8944eb00e4ff2b72cf143365b1a77890980663a09')
+    version('1.9.0',  sha256='356e1e1fae14bc6c4236ec11435cfea0ff6bde2591531a4a329f9508a01fbe98')
+    version('1.8.1',  sha256='8d7d4c9c7b39bb1cbbcf087e0d726551c50f0cc30d44aed3df63daf3772c9043')
+    version('1.8.0',  sha256='ac00bb2333bee96354de9d9c32d3dfdaa919d878098762f146996578b7f0ede9')
+    version('1.7.0',  sha256='52f0d106c470a843c6176318141f74a21e6ece3f70ee8fe261c6b93e35f70a94')
+    version('1.6.1',  sha256='8cf1af7b640475e3cc931e5fbcfe52484c5055f2fab526691933c02eda388aae')
 
     variant('cxx', default=True, description='Build the C++ Interface')
     variant('fortran', default=True, description='Build the Fortran Interface')

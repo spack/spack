@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,9 +28,16 @@ class NetcdfFortran(AutotoolsPackage):
         if name in ['cflags', 'fflags'] and '+pic' in self.spec:
             flags.append(self.compiler.pic_flag)
         elif name == 'cppflags':
-            flags.append('-I' + self.spec['netcdf'].prefix.include)
+            flags.append(self.spec['netcdf'].headers.cpp_flags)
+        elif name == 'ldflags':
+            # We need to specify LDFLAGS to get correct dependency_libs
+            # in libnetcdff.la, so packages that use libtool for linking
+            # could correctly link to all the dependencies even when the
+            # building takes place outside of Spack environment, i.e.
+            # without Spack's compiler wrappers.
+            flags.append(self.spec['netcdf'].libs.search_flags)
 
-        return (None, None, flags)
+        return None, None, flags
 
     @property
     def libs(self):

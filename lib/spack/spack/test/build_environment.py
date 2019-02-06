@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -215,3 +215,18 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch):
     paths = os.environ['PATH'].split(':')
 
     assert paths.index(spack_path) < paths.index(module_path)
+
+
+def test_package_inheritance_module_setup(config, mock_packages):
+    s = spack.spec.Spec('multimodule-inheritance')
+    s.concretize()
+    pkg = s.package
+
+    spack.build_environment.setup_package(pkg, False)
+
+    os.environ['TEST_MODULE_VAR'] = 'failed'
+
+    assert pkg.use_module_variable() == 'test_module_variable'
+    assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
+
+    os.environ.pop('TEST_MODULE_VAR')
