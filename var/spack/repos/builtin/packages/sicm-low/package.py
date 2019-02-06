@@ -10,7 +10,6 @@ class SicmLow(CMakePackage):
     """SICM: Simplified Interface to Complex Memory.
     Includes only the low-level interface and arena allocator."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/lanl/SICM/"
     git      = "https://github.com/lanl/SICM"
 
