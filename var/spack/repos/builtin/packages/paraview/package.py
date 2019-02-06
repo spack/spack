@@ -131,6 +131,8 @@ class Paraview(CMakePackage):
                                      'python{0}'.format(python_version),
                                      'site-packages')
                 run_env.prepend_path('PYTHONPATH', pv_pydir)
+                # The Trilinos Catalyst adapter requires
+                # the vtkmodules directory in PYTHONPATH
                 run_env.prepend_path('PYTHONPATH', join_path(pv_pydir,
                                                              'vtkmodules'))
 
