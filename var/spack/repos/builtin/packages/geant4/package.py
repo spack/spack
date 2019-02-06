@@ -46,10 +46,10 @@ class Geant4(CMakePackage):
     depends_on("vecgeom cxxstd=14", when="+vecgeom cxxstd=14")
 
     # C++17 support
-    patch('cxx17.patch', level=1, when='@:10.03 cxxstd=17')
+    patch('cxx17.patch', when='@:10.03.zzzz cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@4.10.0: cxxstd=17')
     depends_on("clhep@2.4.0.0 cxxstd=17", when="@10.04 cxxstd=17")
-    depends_on("clhep@2.3.4.6 cxxstd=14", when="@10.03.p03 cxxstd=17")
+    depends_on("clhep@2.3.4.6 cxxstd=17", when="@10.03.p03 cxxstd=17")
     depends_on("vecgeom cxxstd=17", when="+vecgeom cxxstd=17")
 
     depends_on("expat")
@@ -84,8 +84,8 @@ class Geant4(CMakePackage):
             if "+x11" in spec:
                 options.append('-DGEANT4_USE_RAYTRACER_X11=ON')
 
-        options.append('-DGEANT4_BUILD_CXXSTD=c++%s' %
-                       self.spec.variants['cxxstd'].value)
+        options.append('-DGEANT4_BUILD_CXXSTD=-std=c++{0}'.format(
+                       self.spec.variants['cxxstd'].value))
 
         if '+qt' in spec:
             options.append('-DGEANT4_USE_QT=ON')

@@ -41,6 +41,8 @@ class Clhep(CMakePackage):
             multi=False,
             description='Use the specified C++ standard when building.')
 
+    conflicts('cxxstd=17', when='@:2.3.4.2')
+
     depends_on('cmake@2.8.12.2:', when='@2.2.0.4:2.3.0.0', type='build')
     depends_on('cmake@3.2:', when='@2.3.0.1:', type='build')
 
@@ -52,21 +54,7 @@ class Clhep(CMakePackage):
                     '%s/%s/CLHEP/CMakeLists.txt'
                     % (self.stage.path, self.spec.version))
 
-    root_cmakelists_dir = 'CLHEP'
-
     def cmake_args(self):
-        cxxstdflg = ''
-        if self.spec.variants['cxxstd'].value == '11':
-            cxxstdflg = self.compiler.cxx11_flag
-        elif self.spec.variants['cxxstd'].value == '14':
-            cxxstdflg = self.compiler.cxx14_flag
-        elif self.spec.variants['cxxstd'].value == '17':
-            cxxstdflg = self.compiler.cxx17_flag
-        else:
-            # The user has selected a (new?) legal value that we've
-            # forgotten to deal with here.
-            tty.die(
-                "INTERNAL ERROR: cannot accommodate unexpected variant ",
-                "cxxstd={0}".format(spec.variants['cxxstd'].value))
-        cmake_args = ['-DCLHEP_BUILD_CXXSTD={0}'.format(cxxstdflg)]
+        cmake_args = ['-DCLHEP_BUILD_CXXSTD=-std=c++{0}'.format(
+                      self.spec.variants['cxxstd'].value)]
         return cmake_args

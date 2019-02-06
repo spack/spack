@@ -1,6 +1,6 @@
 diff -Naur geant4.10.03.p03/cmake/Modules/Geant4LibraryBuildOptions.cmake geant4.10.03.p03/cmake/Modules/Geant4LibraryBuildOptions.cmake
---- geant4/cmake/Modules/Geant4LibraryBuildOptions.cmake	2017-10-20 06:30:46.000000000 -0500
-+++ geant4/cmake/Modules/Geant4LibraryBuildOptions.cmake	2018-04-16 16:48:02.194321171 -0500
+--- geant4.10.03.p03/cmake/Modules/Geant4LibraryBuildOptions.cmake	2017-10-20 06:30:46.000000000 -0500
++++ geant4.10.03.p03/cmake/Modules/Geant4LibraryBuildOptions.cmake	2018-04-16 16:48:02.194321171 -0500
 @@ -76,7 +76,7 @@
  # Mark as advanced because most users will not need it
  enum_option(GEANT4_BUILD_CXXSTD
