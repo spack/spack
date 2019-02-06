@@ -4,7 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import platform
 
+def getDistroName():
+    distro = platform.linux_distribution()
+    name = distro[0]
+    if name.startswith('Red'):
+        short_name = 'Redhat'
+    elif name.startswith('Ubuntu'):
+        short_name = 'Ubuntu'
+    return short_name
 
 class AllineaForge(Package):
     """Allinea Forge is the complete toolsuite for software development - with
@@ -16,6 +25,7 @@ class AllineaForge(Package):
 
     version('6.0', 'c85fec6d01680b5b46fea80111186244')
     version('7.0', '4c2f5b2ff83d494854df74e6df4be7be')
+    version('16.04', 'd8396b046e9b7f4241d69466f6155790')
 
     # Licensing
     license_required = True
@@ -26,9 +36,10 @@ class AllineaForge(Package):
 
     def url_for_version(self, version):
         # TODO: add support for other architectures/distributions
+        distro = getDistroName()
         url = "http://content.allinea.com/downloads/"
-        return url + "arm-forge-latest-Redhat-%s-x86_64.tar" % version
-
+        return url + "arm-forge-latest-%s-%s-x86_64.tar" % (distro, version)
+    
     def install(self, spec, prefix):
         bash = which("bash")
         bash('./textinstall.sh', '--accept-licence', prefix)
