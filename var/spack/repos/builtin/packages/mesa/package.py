@@ -37,8 +37,6 @@ class Mesa(MesonPackage):
     variant('swr', values=any_combination_of('avx', 'avx2', 'knl', 'skx'),
             description="Enable the SWR driver.")
     # conflicts('~llvm', when='~swr=none')
-    variant('a', default=True)
-    variant('b', default=False)
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
@@ -57,8 +55,8 @@ class Mesa(MesonPackage):
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5', when='+opengl')
-    provides('glx@1.4', when='+glx')
+    provides('gl@:4.5', when='+opengl')
+    provides('glx@:1.4', when='+glx')
     provides('egl', when='+egl')
 
     # Variant dependencies
