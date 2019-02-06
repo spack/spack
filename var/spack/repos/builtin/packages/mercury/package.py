@@ -22,10 +22,14 @@ class Mercury(CMakePackage):
     variant('selfforward', default=True,
             description='Mercury will short-circuit operations' +
                         ' by forwarding to itself when possible')
+# NOTE: the 'udreg' variant requires that the MPICH_GNI_NDREG_ENTRIES=1024
+#   environment variable be set at run time to avoid conflicts with
+#   Cray-MPICH if libfabric and MPI are used at the same time
+    variant('udreg', default=False,
+            description='Enable udreg on supported Cray platforms')
 
     depends_on('cci@master', when='+cci', type=('build', 'link', 'run'))
     depends_on('libfabric', when='+fabric', type=('build', 'link', 'run'))
-    depends_on('libfabric@develop', when='+fabric platform=cray', type=('build', 'link', 'run'))
     depends_on('bmi', when='+bmi', type=('build', 'link', 'run'))
     depends_on('openpa', type=('build', 'link', 'run'))
 
@@ -52,5 +56,10 @@ class Mercury(CMakePackage):
             args.extend(['-DMERCURY_USE_SELF_FORWARD=ON'])
         else:
             args.extend(['-DMERCURY_USE_SELF_FORWARD=OFF'])
+
+        if (self.spec.variants['udreg'].value):
+            args.extend(['-DNA_OFI_GNI_USE_UDREG=ON'])
+        else:
+            args.extend(['-DNA_OFI_GNI_USE_UDREG=OFF'])
 
         return args

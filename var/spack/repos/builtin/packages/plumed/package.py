@@ -22,8 +22,10 @@ class Plumed(AutotoolsPackage):
     and C/C++ codes.
     """
     homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
+    url = 'https://github.com/plumed/plumed2/archive/v2.5.0.tar.gz'
 
+    version('2.5.0', 'd1277d86a4aa766bfe97513d7969bfb7')
+    version('2.4.4', 'e8ef700fb4740b177cf660313c9805e6')
     version('2.4.2', '0f66f24b4c763ae8b2f39574113e9935')
     version('2.4.1', '6558e1fd02fc46e847ab6a3fb5ed5411')
     version('2.3.5', '3cc5f025cb6f5d963f3c778f15c77d44')

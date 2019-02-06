@@ -23,12 +23,12 @@ class Rhash(MakefilePackage):
 
     def build(self, spec, prefix):
         # Doesn't build shared libraries by default
-        make()
+        make('PREFIX={0}'.format(prefix))
 
         if spec.satisfies('platform=darwin'):
-            make('-C', 'librhash', 'dylib')
+            make('PREFIX={0}'.format(prefix), '-C', 'librhash', 'dylib')
         else:
-            make('lib-shared')
+            make('PREFIX={0}'.format(prefix), 'lib-shared')
 
     def check(self):
         # Makefile has both `test` and `check` targets:
