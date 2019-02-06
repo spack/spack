@@ -1,0 +1,22 @@
+From e87940f71cdf15bcf5587c1f5657b998c4556ab7 Mon Sep 17 00:00:00 2001
+From: Matthew Olson <macslayer@phobos.icl.utk.edu>
+Date: Sat, 24 Nov 2018 23:57:39 -0500
+Subject: [PATCH] Oops
+
+---
+ runtime/flang/allo.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/runtime/flang/allo.c b/runtime/flang/allo.c
+index e2a78475..fb5caaf4 100644
+--- a/runtime/flang/allo.c
++++ b/runtime/flang/allo.c
+@@ -2673,7 +2673,7 @@ ENTF90(SH_DEALLOC03A, sh_dealloc03a)(__STAT_T *stat, char *area,
+     *stat = 0;
+   if (reuse_alloc(stat, area))
+     return;
+-  (void)I8(__sh_fort_dealloc03)(area, stat, LOCAL_MODE ? __fort_free : __fort_gfree,
++  (void)I8(__sh_fort_dealloc03)(area, stat, LOCAL_MODE ? __sh_fort_free : __sh_fort_gfree,
+                             CADR(errmsg), CLEN(errmsg));
+ }
+ 

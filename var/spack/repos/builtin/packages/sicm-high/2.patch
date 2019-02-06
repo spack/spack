@@ -1,0 +1,58 @@
+From bdab2c45f0d1c780a7726e9e676ee2ff93b8922e Mon Sep 17 00:00:00 2001
+From: Matthew Olson <macslayer@phobos.icl.utk.edu>
+Date: Mon, 26 Nov 2018 14:08:40 -0500
+Subject: [PATCH] Fixed big bug
+
+---
+ runtime/flang/allo.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/runtime/flang/allo.c b/runtime/flang/allo.c
+index fb5caaf4..4fa6dd9a 100644
+--- a/runtime/flang/allo.c
++++ b/runtime/flang/allo.c
+@@ -2912,7 +2912,7 @@ void *
+ ENTF90(SH_AUTO_ALLOCV, sh_auto_allocv)(int id, __NELEM_T nelem, int sz)
+ {
+   void *p;
+-  p = I8(__sh_auto_alloc)(id, nelem, sz, malloc);
++  p = I8(__sh_auto_alloc)(id, nelem, sz, sh_alloc);
+   return p;
+ }
+ #endif
+@@ -2931,7 +2931,7 @@ ENTF90(SH_AUTO_ALLOC, sh_auto_alloc)(int id, __INT_T *nelem, __INT_T *sz)
+ {
+   void *p;
+ 
+-  p = I8(__sh_auto_alloc)(id, *nelem, *sz, malloc);
++  p = I8(__sh_auto_alloc)(id, *nelem, *sz, sh_alloc);
+   return p;
+ }
+ 
+@@ -2949,7 +2949,7 @@ ENTF90(SH_AUTO_ALLOC04, sh_auto_alloc04)(int id, __NELEM_T *nelem, __INT_T *sz)
+ {
+   void *p;
+ 
+-  p = I8(__sh_auto_alloc)(id, *nelem, *sz, malloc);
++  p = I8(__sh_auto_alloc)(id, *nelem, *sz, sh_alloc);
+   return p;
+ }
+ 
+@@ -2974,7 +2974,7 @@ ENTF90(SH_AUTO_CALLOC, sh_auto_calloc)(int id, __INT_T *nelem, __INT_T *sz)
+   size_t size;
+   void *p;
+ 
+-  p = I8(__sh_auto_alloc)(id, *nelem, *sz, malloc);
++  p = I8(__sh_auto_alloc)(id, *nelem, *sz, sh_alloc);
+   if (p && *nelem > 0) {
+     size = *nelem * *sz;
+     memset(p, 0, size);
+@@ -3004,7 +3004,7 @@ ENTF90(SH_AUTO_CALLOC04, sh_auto_calloc04)(int id, __NELEM_T *nelem, __INT_T *sz
+   size_t size;
+   void *p;
+ 
+-  p = I8(__sh_auto_alloc)(id, *nelem, *sz, malloc);
++  p = I8(__sh_auto_alloc)(id, *nelem, *sz, sh_alloc);
+   if (p && *nelem > 0) {
+     size = *nelem * *sz;
+     memset(p, 0, size);

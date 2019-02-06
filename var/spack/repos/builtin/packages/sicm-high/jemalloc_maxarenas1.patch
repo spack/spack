@@ -1,0 +1,29 @@
+From 0a1c685e974b843ab2dae985b9b39ee1df423e4a Mon Sep 17 00:00:00 2001
+From: Ben Olson <molson5@vols.utk.edu>
+Date: Wed, 5 Dec 2018 15:29:38 -0500
+Subject: [PATCH] Changed maximum number of arenas.
+
+---
+ include/jemalloc/internal/jemalloc_internal_types.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/jemalloc/internal/jemalloc_internal_types.h b/include/jemalloc/internal/jemalloc_internal_types.h
+index 1b750b122..8d171e557 100644
+--- a/include/jemalloc/internal/jemalloc_internal_types.h
++++ b/include/jemalloc/internal/jemalloc_internal_types.h
+@@ -21,11 +21,11 @@ typedef int malloc_cpuid_t;
+  *
+  * aaaaaaaa aaaatttt tttttttt 0znnnnnn
+  */
+-#define MALLOCX_ARENA_BITS	12
++#define MALLOCX_ARENA_BITS	18
+ #define MALLOCX_TCACHE_BITS	12
+-#define MALLOCX_LG_ALIGN_BITS	6
+-#define MALLOCX_ARENA_SHIFT	20
+-#define MALLOCX_TCACHE_SHIFT	8
++#define MALLOCX_LG_ALIGN_BITS	0
++#define MALLOCX_ARENA_SHIFT	14
++#define MALLOCX_TCACHE_SHIFT	2
+ #define MALLOCX_ARENA_MASK \
+     (((1 << MALLOCX_ARENA_BITS) - 1) << MALLOCX_ARENA_SHIFT)
+ /* NB: Arena index bias decreases the maximum number of arenas by 1. */
