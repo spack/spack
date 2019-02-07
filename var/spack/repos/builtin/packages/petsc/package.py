@@ -87,6 +87,10 @@ class Petsc(Package):
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
 
+    filter_compiler_wrappers(
+        'petscvariables', relative_root='lib/petsc/conf'
+    )
+
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
     # the patch is an adaptation of the original commit to 3.7.5
