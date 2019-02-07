@@ -20,11 +20,12 @@ class VotcaCsg(CMakePackage):
     git      = "https://github.com/votca/csg.git"
 
     version('develop', branch='master')
-    version('1.4', 'd009e761e5e3afd51eed89c420610a67')
+    version('1.5', sha256='160387cdc51f87dd20ff2e2eed97086beee415d48f3c92f4199f6109068c8ff4')
     version('1.4.1', 'e4195d69db2036e9d76f22115ae31f81')
+    version('1.4', 'd009e761e5e3afd51eed89c420610a67')
 
     depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@1.4:1.4.999", when='@1.4:1.4.999')
-    depends_on("votca-tools@develop", when='@develop')
+    for v in ["1.4", "1.4.1", "1.5", "develop"]:
+        depends_on('votca-tools@%s' % v, when="@%s" % v)
     depends_on("gromacs~mpi@5.1:")
     depends_on("hdf5~mpi")
