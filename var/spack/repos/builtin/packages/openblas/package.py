@@ -40,8 +40,10 @@ class Openblas(MakefilePackage):
     variant('pic', default=True, description='Build position independent code')
 
     variant('cpu_target', default='auto',
-            description='Set CPU target architecture (leave empty for '
-                        'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
+        description='Set CPU target architecture (leave empty for autodetection;'
+                    'Set DYNAMIC to compile all supported archs in a single DSO;'
+                    'See https://github.com/xianyi/OpenBLAS/blob/develop/TargetList.txt'
+                    'for the complete list of options)')
 
     variant(
         'threads', default='none',
@@ -155,12 +157,15 @@ class Openblas(MakefilePackage):
             make_defs += [
                 'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
             ]
+        elif self.spec.variants['cpu_target'].value == 'DYNAMIC':
+            make_defs += ['DYNAMIC_ARCH=1']
         # invoke make with the correct TARGET for aarch64
         elif 'aarch64' in spack.architecture.sys_type():
             make_defs += [
                 'TARGET=PILEDRIVER',
                 'TARGET=ARMV8'
             ]
+
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs += ['NO_AVX2=1']
         if '~shared' in self.spec:
@@ -170,6 +175,7 @@ class Openblas(MakefilePackage):
                     'FFLAGS={0}'.format(self.compiler.pic_flag)
                 ])
             make_defs += ['NO_SHARED=1']
+
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
