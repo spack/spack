@@ -16,11 +16,17 @@ class Repeatmasker(Package):
 
     version('4.0.7', '4dcbd7c88c5343e02d819f4b3e6527c6')
 
+    variant('crossmatch', description='Enable CrossMatch search engine',
+            default=False)
+
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-text-soundex', type=('build', 'run'))
     depends_on('hmmer')
     depends_on('ncbi-rmblastn')
     depends_on('trf')
+
+    depends_on('phrap-crossmatch-swat', type=('build', 'run'),
+               when='+crossmatch')
 
     def url_for_version(self, version):
         url = 'http://www.repeatmasker.org/RepeatMasker-open-{0}.tar.gz'
@@ -48,7 +54,13 @@ class Repeatmasker(Package):
                           '%s\n' % self.stage.source_path,
                           '%s\n' % self.spec['trf'].prefix.bin.trf, '2\n',
                           '%s\n' % self.spec['ncbi-rmblastn'].prefix.bin,
-                          'Y\n', '5\n']
+                          'Y\n']
+
+        if '+crossmatch' in spec:
+            crossmatch = self.spec['phrap-crossmatch-swat'].prefix.bin
+            config_answers.extend(['1\n', '%s\n' % crossmatch, 'N\n'])
+
+        config_answers.append('5\n')
 
         config_answers_filename = 'spack-config.in'
 
