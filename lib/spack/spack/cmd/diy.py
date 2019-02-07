@@ -98,33 +98,35 @@ def diy(self, args):
         tests=tests,
         dirty=args.dirty)
 
-    if args.overwrite:
-        assert package.installed, "to overwrite a spec you must install it first"
+    display_args = {
+        'long': True,
+        'show_flags': True,
+        'variants': True
+    }
 
-        # Give the user a last chance to think about overwriting an already
-        # existing installation
-        if not args.yes_to_all:
-            tty.msg('The following package will be reinstalled:\n')
+    if package.installed:
+        if args.overwrite:
+            if not args.yes_to_all:
+                tty.msg('The following package will be reinstalled:\n')
 
-            display_args = {
-                'long': True,
-                'show_flags': True,
-                'variants': True
-            }
-
-            t = spack.store.db.query(spec)
-            spack.cmd.display_specs(t, **display_args)
-            answer = tty.get_yes_or_no(
-                'Do you want to proceed?', default=False
-            )
-            if not answer:
-                tty.die('Reinstallation aborted.')
-
-        with fs.replace_directory_transaction(spec.prefix):
-            package.do_install(**kwargs)
-    elif package.installed:
-        tty.error("Already installed in %s" % package.prefix)
-        tty.msg("Uninstall or try adding a version suffix for this DIY build.")
-        sys.exit(1)
+                t = spack.store.db.query(spec)
+                spack.cmd.display_specs(t, **display_args)
+                answer = tty.get_yes_or_no(
+                    'Do you want to proceed?', default=False
+                )
+                if not answer:
+                    tty.die('Reinstallation aborted.')
+            with fs.replace_directory_transaction(spec.prefix):
+                package.do_install(**kwargs)
+        else:
+            tty.error("Already installed in %s" % package.prefix)
+            tty.msg("Uninstall or try adding a version suffix for this DIY build.")
+            sys.exit(1)
+            # Give the user a last chance to think about overwriting an already
+            # existing installation
     else:
+        if args.overwrite:
+            tty.msg("The following spec will be freshly installed, "
+                    "ignoring the --overwrite flag:")
+            spack.cmd.display_specs([spec], **display_args)
         package.do_install(**kwargs)
