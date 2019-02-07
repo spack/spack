@@ -22,7 +22,10 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['jobs', 'test', 'overwrite', 'yes_to_all'])
+    arguments.add_common_arguments(subparser, ['jobs',
+                                               'test',
+                                               'overwrite',
+                                               'yes_to_all'])
     subparser.add_argument(
         '-d', '--source-path', dest='source_path', default=None,
         help="path to source directory. defaults to the current directory")
@@ -120,7 +123,8 @@ def diy(self, args):
                 package.do_install(**kwargs)
         else:
             tty.error("Already installed in %s" % package.prefix)
-            tty.msg("Uninstall or try adding a version suffix for this DIY build.")
+            tty.msg("Uninstall or try adding a version suffix for "
+                    "this DIY build.")
             sys.exit(1)
             # Give the user a last chance to think about overwriting an already
             # existing installation
