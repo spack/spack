@@ -98,6 +98,7 @@ class Petsc(Package):
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@develop')
+    depends_on('sowing@1.1.23-p1', when='@xsdk-0.2.0')
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK
