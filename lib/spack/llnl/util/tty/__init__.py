@@ -9,6 +9,7 @@ import struct
 import sys
 import termios
 import textwrap
+import time
 import traceback
 from six import StringIO
 from six.moves import input
@@ -18,6 +19,10 @@ from llnl.util.tty.color import cprint, cwrite, cescape, clen
 _debug = False
 _verbose = False
 _stacktrace = False
+_suppress_msg = False
+_suppress_info = False
+_suppress_warn = False
+_suppress_error = False
 indent = "  "
 
 
@@ -43,6 +48,70 @@ def set_verbose(flag):
     _verbose = flag
 
 
+def suppress_msg(flag):
+    global _suppress_msg
+    _suppress_msg = flag
+
+
+def suppress_info(flag):
+    global _suppress_info
+    _suppress_info = flag
+
+
+def suppress_warn(flag):
+    global _suppress_warn
+    _suppress_warn = flag
+
+
+def suppress_error(flag):
+    global _suppress_error
+    _suppress_error = flag
+
+
+def msg_suppressed():
+    return _suppress_msg
+
+
+def info_suppressed():
+    return _suppress_info
+
+
+def warn_suppressed():
+    return _suppress_warn
+
+
+def error_suppressed():
+    return _suppress_error
+
+
+class SuppressOutput:
+    """Class for disabling output in a scope using 'with' keyword"""
+
+    def __init__(self, msg=False, info=False, warn=False, error=False):
+
+        self._suppress_msg_initial = _suppress_msg
+        self._suppress_info_initial = _suppress_info
+        self._suppress_warn_initial = _suppress_warn
+        self._suppress_error_initial = _suppress_error
+
+        self._suppress_msg = msg
+        self._suppress_info = info
+        self._suppress_warn = warn
+        self._suppress_error = error
+
+    def __enter__(self):
+        suppress_msg(self._suppress_msg)
+        suppress_info(self._suppress_info)
+        suppress_warn(self._suppress_warn)
+        suppress_error(self._suppress_error)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        suppress_msg(self._suppress_msg_initial)
+        suppress_info(self._suppress_info_initial)
+        suppress_warn(self._suppress_warn_initial)
+        suppress_error(self._suppress_error_initial)
+
+
 def set_stacktrace(flag):
     global _stacktrace
     _stacktrace = flag
@@ -65,20 +134,37 @@ def process_stacktrace(countback):
     return st_text
 
 
+def get_debug_text():
+    """When debugging is enabled, return a formatted string with milliseconds
+    since epoch"""
+    if _debug:
+        return '[%s] ' % int(round(time.time() * 1000))
+    else:
+        return
+
+
 def msg(message, *args, **kwargs):
+    if _suppress_msg:
+        return
+
     newline = kwargs.get('newline', True)
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(2)
     if newline:
-        cprint("@*b{%s==>} %s" % (st_text, cescape(message)))
+        cprint("@*b{%s==>} %s%s" % (
+            st_text, get_debug_text(), cescape(message)))
     else:
-        cwrite("@*b{%s==>} %s" % (st_text, cescape(message)))
+        cwrite("@*b{%s==>} %s%s" % (
+            st_text, get_debug_text(), cescape(message)))
     for arg in args:
         print(indent + str(arg))
 
 
 def info(message, *args, **kwargs):
+    if _suppress_info:
+        return
+
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
     wrap = kwargs.get('wrap', False)
@@ -88,8 +174,9 @@ def info(message, *args, **kwargs):
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(st_countback)
-    cprint("@%s{%s==>} %s" % (format, st_text, cescape(str(message))),
-           stream=stream)
+    cprint("@%s{%s==>} %s%s" % (
+        format, st_text, get_debug_text(), cescape(str(message))),
+        stream=stream)
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
@@ -115,12 +202,18 @@ def debug(message, *args, **kwargs):
 
 
 def error(message, *args, **kwargs):
+    if _suppress_error:
+        return
+
     kwargs.setdefault('format', '*r')
     kwargs.setdefault('stream', sys.stderr)
     info("Error: " + str(message), *args, **kwargs)
 
 
 def warn(message, *args, **kwargs):
+    if _suppress_warn:
+        return
+
     kwargs.setdefault('format', '*Y')
     kwargs.setdefault('stream', sys.stderr)
     info("Warning: " + str(message), *args, **kwargs)

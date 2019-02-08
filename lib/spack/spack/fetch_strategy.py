@@ -238,7 +238,7 @@ class URLFetchStrategy(FetchStrategy):
         if not spack.config.get('config:verify_ssl'):
             curl_args.append('-k')
 
-        if sys.stdout.isatty():
+        if sys.stdout.isatty() and not tty.msg_suppressed():
             curl_args.append('-#')  # status bar when using a tty
         else:
             curl_args.append('-sS')  # just errors when not.
