@@ -140,7 +140,7 @@ def get_debug_text():
     if _debug:
         return '[%s] ' % int(round(time.time() * 1000))
     else:
-        return
+        return ''
 
 
 def msg(message, *args, **kwargs):
