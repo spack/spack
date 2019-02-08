@@ -97,7 +97,7 @@ class CudaPackage(PackageBase):
     conflicts('%intel@:14,16:', when='+cuda ^cuda@7.5')
     conflicts('%intel@:14,17:', when='+cuda ^cuda@8.0.44')
     conflicts('%intel@:14,18:', when='+cuda ^cuda@8.0.61:9.1')
-    conflicts('%intel@17:18:', when='+cuda ^cuda@9.2:')
+    conflicts('%intel@17:18', when='+cuda ^cuda@9.2:')
     conflicts('%intel@19:', when='+cuda')
 
     # XL is mostly relevant for ppc64le Linux
