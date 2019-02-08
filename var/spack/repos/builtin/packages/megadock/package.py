@@ -26,8 +26,16 @@ class Megadock(MakefilePackage, CudaPackage):
         filter_file('/opt/cuda/6.5/samples', '$(CUDA_INSTALL_PATH)/samples',
                     'Makefile', string=True)
 
-        # sneak link to -lm for sin(), cos()
-        filter_file('-o calcrg', '-lm -o calcrg', 'Makefile', string=True)
+        # need to link calcrg to compiler's math impl
+        # libm seems to be present in most compilers
+        mathlib = '-lm'
+
+        # prefer libimf with intel
+        if '%intel' in spec:
+            mathlib = '-limf'
+
+        filter_file('-o calcrg', '%s -o calcrg' % mathlib,
+                    'Makefile', string=True)
 
         # makefile has a weird var for cuda_arch, use conditionally
         if '+cuda' in spec:
@@ -37,7 +45,8 @@ class Megadock(MakefilePackage, CudaPackage):
             if arch[0] != 'none':
                 archflag = '-arch=%s' % arch[0]
 
-            filter_file('-arch=$(SM_VERSIONS)', archflag, 'Makefile', string=True)
+            filter_file('-arch=$(SM_VERSIONS)', archflag,
+                        'Makefile', string=True)
 
     @property
     def build_targets(self):
