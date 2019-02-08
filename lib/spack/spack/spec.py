@@ -3026,22 +3026,70 @@ class Spec(object):
         """Prints out particular pieces of a spec, depending on what is
         in the format string.
 
-        Using the {attribute} syntax, any field of the spec can be selected.
-        Those attributes can be recursive. For example,
-        s.format({compiler.version}) will print the version of the compiler.
+        Using the ``{attribute}`` syntax, any field of the spec can be
+        selected.  Those attributes can be recursive. For example,
+        ``s.format({compiler.version})`` will print the version of the
+        compiler.
 
-        Some additional properties can be added:
-            hash:len      The DAG hash with optional length argument
+        Commonly used attributes of the Spec for format strings include::
+
+            name
+            version
+            compiler
+            compiler.name
+            compiler.version
+            compiler_flags
+            variants
+            architecture
+            architecture.platform
+            architecture.os
+            architecture.target
+            prefix
+
+        Some additional special-case properties can be added::
+
+            hash[:len]    The DAG hash with optional length argument
             spack_root    The spack root directory
             spack_install The spack install directory
 
         The ``^`` sigil can be used to access dependencies by name.
-        s.format({^mpi.name}) will print the name of the MPI implementation in
-        the spec.
+        ``s.format({^mpi.name})`` will print the name of the MPI
+        implementation in the spec.
 
-        The old format strings are deprecated. They can still be accessed by
-        the ``old_format`` method. The ``format`` method will call
-        ``old_format`` if the character ``$`` appears in the format string.
+        The ``@``, ``%``, ``arch=``, and ``/`` sigils
+        can be used to include the sigil with the printed
+        string. These sigils may only be used with the appropriate
+        attributes, listed below::
+
+            @        ``{@version}``, ``{@compiler.version}``
+            %        ``{%compiler}``, ``{%compiler.name}``
+            arch=    ``{arch=architecture}``
+            /        ``{/hash}``, ``{/hash:7}``, etc
+
+        The ``@`` sigil may also be used for any other property named
+        ``version``. Sigils printed with the attribute string are only
+        printed if the attribute string is non-empty, and are colored
+        according to the color of the attribute.
+
+        Sigils are not used for printing variants. Variants listed by
+        name naturally print with their sigil. For example,
+        ``spec.format('{variants.debug}')`` would print either
+        ``+debug`` or ``~debug`` depending on the name of the
+        variant. Non-boolean variants print as ``name=value``. To
+        print variant names or values independently, use
+        ``spec.format('{variants.<name>.name}')`` or
+        ``spec.format('{variants.<name>.value}')``.
+
+        Spec format strings use ``\`` as the escape character. Use
+        ``\{`` and ``\}`` for literal braces, and ``\\`` for the
+        literal ``\`` character. Also use ``\$`` for the literal ``$``
+        to differentiate from previous, deprecated format string
+        syntax.
+
+        The previous format strings are deprecated. They can still be
+        accessed by the ``old_format`` method. The ``format`` method
+        will call ``old_format`` if the character ``$`` appears
+        unescaped in the format string.
 
 
         Args:
@@ -3069,6 +3117,11 @@ class Spec(object):
             cwrite(f, stream=out, color=color)
 
         def write_attribute(spec, attribute, color):
+            if attribute.startswith('^'):
+                attribute = attribute[1:]
+                dep, attribute = attribute.split('.', 1)
+                current = self[dep]
+
             if attribute == '':
                 raise SpecFormatStringError(
                     'Format string attributes must be non-empty')
@@ -3076,23 +3129,15 @@ class Spec(object):
 
             current = spec
             sig = ''
-            if attribute[0] == '^':
-                attribute = attribute[1:]
-                parts = attribute.split('.')
-                dep = parts[0]
-                current = self[dep]
-                parts = parts[1:]
-            elif attribute[0] in '@%+~-/':
+            if attribute[0] in '@%/':
                 # color sigils that are inside braces
                 sig = attribute[0]
                 attribute = attribute[1:]
-                parts = attribute.split('.')
             elif attribute.startswith('arch='):
                 sig = ' arch='  # include space as separator
                 attribute = attribute[5:]
-                parts = attribute.split('.')
-            else:
-                parts = attribute.split('.')
+
+            parts = attribute.split('.')
             assert parts
 
             # check that the sigil is valid for the attribute.
@@ -3100,9 +3145,6 @@ class Spec(object):
                 raise SpecFormatSigilError(sig, 'versions', attribute)
             elif sig == '%' and attribute not in ('compiler', 'compiler.name'):
                 raise SpecFormatSigilError(sig, 'compilers', attribute)
-            elif sig in ['+', '~', '-'] and not re.match(r'variants\.\w*$',
-                                               attribute):
-                raise SpecFormatSigilError(sig, 'individual variants', attribute)
             elif sig == '/' and not re.match(r'hash(:\d+)?$', attribute):
                 raise SpecFormatSigilError(sig, 'DAG hashes', attribute)
             elif sig == ' arch=' and attribute not in ('architecture', 'arch'):

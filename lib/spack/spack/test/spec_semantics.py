@@ -759,8 +759,6 @@ class TestSpecSematics(object):
 
         sigil_package_segments = [("{@VERSIONS}", '@' + str(spec.version)),
                                   ("{%compiler}", '%' + str(spec.compiler)),
-                                  ("{+variants.debug}",
-                                   '+' + str(spec.variants['debug'])),
                                   ("{arch=architecture}",
                                    ' arch=' + str(spec.architecture))]
 
@@ -779,7 +777,7 @@ class TestSpecSematics(object):
         other_segments = [('{spack_root}', spack.paths.spack_root),
                           ('{spack_install}', spack.store.layout.root),
                           ('{hash:7}', spec.dag_hash(7)),
-                          ('{/hash:7}', '/' + spec.dag_hash(7))]
+                          ('{/hash}', '/' + spec.dag_hash())]
 
         for named_str, prop in package_segments:
             expected = getattr(spec, prop, "")
@@ -818,10 +816,6 @@ class TestSpecSematics(object):
             '{@name}',
             '{@version.concrete}',
             '{%compiler.version}',
-            '{+variants}',
-            '{+variants.debug.value}',
-            '{~variants.debug.value}',
-            '{-variants}',
             '{/hashd}',
             '{arch=architecture.os}'
         ]
@@ -838,7 +832,8 @@ class TestSpecSematics(object):
             '{name\}',  # NOQA: ignore=W605
             '{_concrete}',
             '{dag_hash}',
-            '{foo}'
+            '{foo}',
+            '{+variants.debug}'
         ]
 
         for fmt_str in bad_formats:

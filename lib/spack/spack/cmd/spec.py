@@ -47,7 +47,7 @@ def spec(parser, args):
     install_status_fn = spack.spec.Spec.install_status
     kwargs = {
         'cover': args.cover,
-        'format': name_fmt + fmt
+        'format': name_fmt + fmt,
         'hashlen': None if args.very_long else 7,
         'show_types': args.types,
         'status_fn': install_status_fn if args.install_status else None
