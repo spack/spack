@@ -7,6 +7,7 @@ import sys
 import os
 import argparse
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.config
@@ -21,7 +22,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['jobs'])
+    arguments.add_common_arguments(subparser, ['jobs', 'test', 'overwrite', 'yes_to_all'])
     subparser.add_argument(
         '-d', '--source-path', dest='source_path', default=None,
         help="path to source directory. defaults to the current directory")
@@ -32,10 +33,6 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="do not remove the install prefix if installation fails")
-    subparser.add_argument(
-        '--run-tests', action='store_true',
-        help='run package tests during installation'
-    )
     subparser.add_argument(
         '--skip-patch', action='store_true',
         help="skip patching for the DIY build")
@@ -63,6 +60,11 @@ def diy(self, args):
         tty.die("spack diy only takes one spec.")
 
     spec = specs[0]
+    tests = False
+    if args.test == 'all':
+        tests = True
+    elif args.test == 'root':
+        tests = [spec.name]
     if not spack.repo.path.exists(spec.name):
         tty.die("No package for '{0}' was found.".format(spec.name),
                 "  Use `spack create` to create a new package")
@@ -75,11 +77,6 @@ def diy(self, args):
     spec.concretize()
     package = spack.repo.get(spec)
 
-    if package.installed:
-        tty.error("Already installed in %s" % package.prefix)
-        tty.msg("Uninstall or try adding a version suffix for this DIY build.")
-        sys.exit(1)
-
     source_path = args.source_path
     if source_path is None:
         source_path = os.getcwd()
@@ -89,14 +86,47 @@ def diy(self, args):
     package.stage = DIYStage(source_path)
 
     # disable checksumming if requested
-    if args.no_checksum:
+    if args.no_checksum or args.yes_to_all:
         spack.config.set('config:checksum', False, scope='command_line')
 
-    package.do_install(
+    kwargs = dict(
         make_jobs=args.jobs,
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
         keep_stage=True,   # don't remove source dir for DIY.
-        tests=args.run_tests,
+        tests=tests,
         dirty=args.dirty)
+
+    display_args = {
+        'long': True,
+        'show_flags': True,
+        'variants': True
+    }
+
+    if package.installed:
+        if args.overwrite:
+            if not args.yes_to_all:
+                tty.msg('The following package will be reinstalled:\n')
+
+                t = spack.store.db.query(spec)
+                spack.cmd.display_specs(t, **display_args)
+                answer = tty.get_yes_or_no(
+                    'Do you want to proceed?', default=False
+                )
+                if not answer:
+                    tty.die('Reinstallation aborted.')
+            with fs.replace_directory_transaction(spec.prefix):
+                package.do_install(**kwargs)
+        else:
+            tty.error("Already installed in %s" % package.prefix)
+            tty.msg("Uninstall or try adding a version suffix for this DIY build.")
+            sys.exit(1)
+            # Give the user a last chance to think about overwriting an already
+            # existing installation
+    else:
+        if args.overwrite:
+            tty.msg("The following spec will be freshly installed, "
+                    "ignoring the --overwrite flag:")
+            spack.cmd.display_specs([spec], **display_args)
+        package.do_install(**kwargs)

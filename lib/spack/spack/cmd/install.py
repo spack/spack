@@ -61,10 +61,8 @@ the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
 the dependencies"""
     )
-    arguments.add_common_arguments(subparser, ['jobs', 'install_status'])
-    subparser.add_argument(
-        '--overwrite', action='store_true',
-        help="reinstall an existing spec, even if it has dependents")
+    arguments.add_common_arguments(subparser,
+                                   ['jobs', 'install_status', 'overwrite'])
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
@@ -113,14 +111,7 @@ the dependencies"""
         help="spec of the package to install"
     )
     testing = subparser.add_mutually_exclusive_group()
-    testing.add_argument(
-        '--test', default=None,
-        choices=['root', 'all'],
-        help="""If 'root' is chosen, run package tests during
-installation for top-level packages (but skip tests for dependencies).
-if 'all' is chosen, run package tests during installation for all
-packages. If neither are chosen, don't run tests for any packages."""
-    )
+    arguments.add_common_arguments(testing, ['test'])
     testing.add_argument(
         '--run-tests', action='store_true',
         help='run package tests during installation (same as --test=all)'
