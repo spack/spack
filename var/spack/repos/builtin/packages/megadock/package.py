@@ -22,37 +22,42 @@ class Megadock(MakefilePackage, CudaPackage):
     depends_on('mpi', when='+mpi')
 
     def edit(self, spec, prefix):
-        # point cuda samples to cuda prefix
+        # point cuda samples relative to cuda installation
         filter_file('/opt/cuda/6.5/samples', '$(CUDA_INSTALL_PATH)/samples',
                     'Makefile', string=True)
 
         # sneak link to -lm for sin(), cos()
         filter_file('-o calcrg', '-lm -o calcrg', 'Makefile', string=True)
 
-        # don't force a cuda architecture
-        filter_file('-arch=$(SM_VERSIONS) ', '', 'Makefile', string=True)
-
-        # set mpi, cuda installations
-        if '+mpi' in spec:
-            env['MPICOMPILER'] = self.spec['mpi'].mpicxx
-
+        # makefile has a weird var for cuda_arch, use conditionally
         if '+cuda' in spec:
-            env['CUDA_INSTALL_PATH'] = self.spec['cuda'].prefix
+            arch = spec.variants['cuda_arch'].value
+            archflag = ''
 
-        env['FFTW_INSTALL_PATH'] = self.spec['fftw'].prefix
-        env['CPPCOMPILER'] = 'c++'
+            if arch[0] != 'none':
+                archflag = '-arch=%s' % arch[0]
 
-        # use -fopenmp flag if gcc
-        if '%gcc' in spec:
-            env['OMPFLAG'] = '-fopenmp'
+            filter_file('-arch=$(SM_VERSIONS)', archflag, 'Makefile', string=True)
 
     @property
     def build_targets(self):
         spec = self.spec
-        return [
+
+        targets = [
             'USE_GPU=%s' % ('1' if '+cuda' in spec else '0'),
             'USE_MPI=%s' % ('1' if '+mpi' in spec else '0'),
+            'OMPFLAG=%s' % self.compiler.openmp_flag,
+            'CPPCOMPILER=c++',
+            'FFTW_INSTALL_PATH=%s' % self.spec['fftw'].prefix,
         ]
+
+        if '+cuda' in spec:
+            targets.append('CUDA_INSTALL_PATH=%s' % self.spec['cuda'].prefix)
+
+        if '+mpi' in spec:
+            targets.append('MPICOMPILER=%s' % self.spec['mpi'].mpicxx)
+
+        return targets
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
