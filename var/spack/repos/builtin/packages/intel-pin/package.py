@@ -9,7 +9,7 @@ from os import symlink
 
 class IntelPin(Package):
     """Intel Pin is a dynamic binary instrumentation framework for the IA-32,
-    x86-64 and MIC instruction-set architectures that enables the creation of 
+    x86-64 and MIC instruction-set architectures that enables the creation of
     dynamic program analysis tools."""
 
     homepage = "http://www.pintool.org"
