@@ -29,7 +29,7 @@ class Mpc(AutotoolsPackage):
         if version < Version("1.0.1"):
             url = "http://www.multiprecision.org/mpc/download/mpc-{0}.tar.gz"
         else:
-            url = "https://ftp.gnu.org/gnu/mpc/mpc-{0}.tar.gz"
+            url = "https://ftpmirror.gnu.org/mpc/mpc-{0}.tar.gz"
 
         return url.format(version)
 
