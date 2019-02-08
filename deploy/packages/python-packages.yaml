@@ -72,15 +72,19 @@ packages:
       # - py-neo
       # - py-networkx
       # - py-nose
+      - py-munkres
+      - py-neurom
       - py-pandas
       - py-perf
       - py-pillow
       - py-pip
+      - py-plotly
       - py-ply
       - py-progress
       - py-py4j
       - py-pyarrow+parquet
       # - py-pynn
+      - py-pylru
       - py-pyspark
       - py-pytest
       - py-pyyaml
@@ -125,6 +129,7 @@ packages:
       - py-scipy
       - py-matplotlib
       - python-dev
+      - py-scikit-learn
     # - py-scikit-learn@0.19.1 ^py-numpy@1.15.1 ^py-scipy@1.1.0
     # - py-theano@1.0.2 ^py-numpy@1.15.1 ^py-scipy@1.1.0
     # - py-pytorch@0.4.0 ^py-numpy@1.15.1
