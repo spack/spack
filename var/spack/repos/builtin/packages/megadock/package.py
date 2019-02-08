@@ -17,12 +17,9 @@ class Megadock(MakefilePackage, CudaPackage):
     version('4.0.3', sha256='c1409a411555f4f7b4eeeda81caf622d8a28259a599ea1d2181069c55f257664')
 
     variant('mpi', description='Enable MPI', default=False)
-    variant('cuda', description='Enable CUDA', default=False)
 
     depends_on('fftw')
-
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
 
     def edit(self, spec, prefix):
         # point cuda samples to cuda prefix
