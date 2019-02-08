@@ -21,15 +21,20 @@ ensure_docker_login() {
         return $__login_success
     fi
 
-    # NOTE: work around an issue with docker/docker hub
-    # https://github.com/docker/hub-feedback/issues/1222
-    # https://github.com/docker/cli/issues/1180
-    rm -f $HOME/.docker/config.json
+    if [ "$CI" '=' 'true' -a "$TRAVIS" '=' 'true' ] ; then
+        # NOTE: work around an issue with docker/docker hub
+        # https://github.com/docker/hub-feedback/issues/1222
+        # https://github.com/docker/cli/issues/1180
+        rm -f $HOME/.docker/config.json
+    fi
 
     echo "$DOCKER_PASSWORD" | \
         docker login -u "$DOCKER_USERNAME" --password-stdin
 
-    if [ '!' -f $HOME/.docker/config.json ] ; then
+    if [ "$CI" '=' 'true' -a \
+         "$TRAVIS" '=' 'true' -a \
+         '!' -f "$HOME/.docker/config.json" ]
+    then
         echo "Warning: config file $HOME/.docker/config.json not created" >&2
     fi
 
