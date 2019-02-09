@@ -50,6 +50,10 @@ class Cray(Platform):
             name = target.replace('-', '_')
             self.add_target(name, Target(name, 'craype-%s' % target))
 
+        self.add_target("x86_64", Target("x86_64"))
+        self.add_target("front_end", Target("x86_64"))
+        self.front_end = "x86_64"
+
         # Get aliased targets from config or best guess from environment:
         for name in ('front_end', 'back_end'):
             _target = getattr(self, name, None)
