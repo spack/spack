@@ -138,19 +138,21 @@ def get_timestamp(force=False):
 
 
 def msg(message, *args, **kwargs):
-    if msg_enabled():
-        newline = kwargs.get('newline', True)
-        st_text = ""
-        if _stacktrace:
-            st_text = process_stacktrace(2)
-        if newline:
-            cprint("@*b{%s==>} %s%s" % (
-                st_text, get_timestamp(), cescape(message)))
-        else:
-            cwrite("@*b{%s==>} %s%s" % (
-                st_text, get_timestamp(), cescape(message)))
-        for arg in args:
-            print(indent + str(arg))
+    if not msg_enabled():
+        return
+
+    newline = kwargs.get('newline', True)
+    st_text = ""
+    if _stacktrace:
+        st_text = process_stacktrace(2)
+    if newline:
+        cprint("@*b{%s==>} %s%s" % (
+            st_text, get_timestamp(), cescape(message)))
+    else:
+        cwrite("@*b{%s==>} %s%s" % (
+            st_text, get_timestamp(), cescape(message)))
+    for arg in args:
+        print(indent + str(arg))
 
 
 def info(message, *args, **kwargs):
@@ -191,17 +193,21 @@ def debug(message, *args, **kwargs):
 
 
 def error(message, *args, **kwargs):
-    if error_enabled():
-        kwargs.setdefault('format', '*r')
-        kwargs.setdefault('stream', sys.stderr)
-        info("Error: " + str(message), *args, **kwargs)
+    if not error_enabled():
+        return
+
+    kwargs.setdefault('format', '*r')
+    kwargs.setdefault('stream', sys.stderr)
+    info("Error: " + str(message), *args, **kwargs)
 
 
 def warn(message, *args, **kwargs):
-    if warn_enabled():
-        kwargs.setdefault('format', '*Y')
-        kwargs.setdefault('stream', sys.stderr)
-        info("Warning: " + str(message), *args, **kwargs)
+    if not warn_enabled():
+        return
+
+    kwargs.setdefault('format', '*Y')
+    kwargs.setdefault('stream', sys.stderr)
+    info("Warning: " + str(message), *args, **kwargs)
 
 
 def die(message, *args, **kwargs):
