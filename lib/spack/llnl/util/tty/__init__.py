@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from datetime import datetime
 import fcntl
 import os
 import struct
 import sys
 import termios
 import textwrap
-import time
 import traceback
 from six import StringIO
 from six.moves import input
@@ -19,10 +19,10 @@ from llnl.util.tty.color import cprint, cwrite, cescape, clen
 _debug = False
 _verbose = False
 _stacktrace = False
-_suppress_msg = False
-_suppress_info = False
-_suppress_warn = False
-_suppress_error = False
+_timestamp = False
+_msg_enabled = True
+_warn_enabled = True
+_error_enabled = True
 indent = "  "
 
 
@@ -48,68 +48,63 @@ def set_verbose(flag):
     _verbose = flag
 
 
-def suppress_msg(flag):
-    global _suppress_msg
-    _suppress_msg = flag
+def set_timestamp(flag):
+    global _timestamp
+    _timestamp = flag
 
 
-def suppress_info(flag):
-    global _suppress_info
-    _suppress_info = flag
+def set_msg_enabled(flag):
+    global _msg_enabled
+    _msg_enabled = flag
 
 
-def suppress_warn(flag):
-    global _suppress_warn
-    _suppress_warn = flag
+def set_warn_enabled(flag):
+    global _warn_enabled
+    _warn_enabled = flag
 
 
-def suppress_error(flag):
-    global _suppress_error
-    _suppress_error = flag
+def set_error_enabled(flag):
+    global _error_enabled
+    _error_enabled = flag
 
 
-def msg_suppressed():
-    return _suppress_msg
+def msg_enabled():
+    return _msg_enabled
 
 
-def info_suppressed():
-    return _suppress_info
+def warn_enabled():
+    return _warn_enabled
 
 
-def warn_suppressed():
-    return _suppress_warn
-
-
-def error_suppressed():
-    return _suppress_error
+def error_enabled():
+    return _error_enabled
 
 
 class SuppressOutput:
     """Class for disabling output in a scope using 'with' keyword"""
 
-    def __init__(self, msg=False, info=False, warn=False, error=False):
+    def __init__(self,
+                 msg_enabled=True,
+                 warn_enabled=True,
+                 error_enabled=True):
 
-        self._suppress_msg_initial = _suppress_msg
-        self._suppress_info_initial = _suppress_info
-        self._suppress_warn_initial = _suppress_warn
-        self._suppress_error_initial = _suppress_error
+        self._msg_enabled_initial = _msg_enabled
+        self._warn_enabled_initial = _warn_enabled
+        self._error_enabled_initial = _error_enabled
 
-        self._suppress_msg = msg
-        self._suppress_info = info
-        self._suppress_warn = warn
-        self._suppress_error = error
+        self._msg_enabled = msg_enabled
+        self._warn_enabled = warn_enabled
+        self._error_enabled = error_enabled
 
     def __enter__(self):
-        suppress_msg(self._suppress_msg)
-        suppress_info(self._suppress_info)
-        suppress_warn(self._suppress_warn)
-        suppress_error(self._suppress_error)
+        set_msg_enabled(self._msg_enabled)
+        set_warn_enabled(self._warn_enabled)
+        set_error_enabled(self._error_enabled)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        suppress_msg(self._suppress_msg_initial)
-        suppress_info(self._suppress_info_initial)
-        suppress_warn(self._suppress_warn_initial)
-        suppress_error(self._suppress_error_initial)
+        set_msg_enabled(self._msg_enabled_initial)
+        set_warn_enabled(self._warn_enabled_initial)
+        set_error_enabled(self._error_enabled_initial)
 
 
 def set_stacktrace(flag):
@@ -134,37 +129,31 @@ def process_stacktrace(countback):
     return st_text
 
 
-def get_debug_text():
-    """When debugging is enabled, return a formatted string with milliseconds
-    since epoch"""
-    if _debug:
-        return '[%s] ' % int(round(time.time() * 1000))
+def get_timestamp(force=False):
+    """Get a string timestamp"""
+    if _debug or _timestamp or force:
+        return datetime.now().strftime("[%Y-%m-%d-%H:%M:%S.%f] ")
     else:
         return ''
 
 
 def msg(message, *args, **kwargs):
-    if _suppress_msg:
-        return
-
-    newline = kwargs.get('newline', True)
-    st_text = ""
-    if _stacktrace:
-        st_text = process_stacktrace(2)
-    if newline:
-        cprint("@*b{%s==>} %s%s" % (
-            st_text, get_debug_text(), cescape(message)))
-    else:
-        cwrite("@*b{%s==>} %s%s" % (
-            st_text, get_debug_text(), cescape(message)))
-    for arg in args:
-        print(indent + str(arg))
+    if msg_enabled():
+        newline = kwargs.get('newline', True)
+        st_text = ""
+        if _stacktrace:
+            st_text = process_stacktrace(2)
+        if newline:
+            cprint("@*b{%s==>} %s%s" % (
+                st_text, get_timestamp(), cescape(message)))
+        else:
+            cwrite("@*b{%s==>} %s%s" % (
+                st_text, get_timestamp(), cescape(message)))
+        for arg in args:
+            print(indent + str(arg))
 
 
 def info(message, *args, **kwargs):
-    if _suppress_info:
-        return
-
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
     wrap = kwargs.get('wrap', False)
@@ -175,7 +164,7 @@ def info(message, *args, **kwargs):
     if _stacktrace:
         st_text = process_stacktrace(st_countback)
     cprint("@%s{%s==>} %s%s" % (
-        format, st_text, get_debug_text(), cescape(str(message))),
+        format, st_text, get_timestamp(), cescape(str(message))),
         stream=stream)
     for arg in args:
         if wrap:
@@ -202,21 +191,17 @@ def debug(message, *args, **kwargs):
 
 
 def error(message, *args, **kwargs):
-    if _suppress_error:
-        return
-
-    kwargs.setdefault('format', '*r')
-    kwargs.setdefault('stream', sys.stderr)
-    info("Error: " + str(message), *args, **kwargs)
+    if error_enabled():
+        kwargs.setdefault('format', '*r')
+        kwargs.setdefault('stream', sys.stderr)
+        info("Error: " + str(message), *args, **kwargs)
 
 
 def warn(message, *args, **kwargs):
-    if _suppress_warn:
-        return
-
-    kwargs.setdefault('format', '*Y')
-    kwargs.setdefault('stream', sys.stderr)
-    info("Warning: " + str(message), *args, **kwargs)
+    if warn_enabled():
+        kwargs.setdefault('format', '*Y')
+        kwargs.setdefault('stream', sys.stderr)
+        info("Warning: " + str(message), *args, **kwargs)
 
 
 def die(message, *args, **kwargs):
