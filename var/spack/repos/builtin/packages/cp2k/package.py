@@ -7,10 +7,10 @@ import os
 import os.path
 import copy
 
-from spack import *
+import spack.util.environment
 
 
-class Cp2k(Package):
+class Cp2k(MakefilePackage):
     """CP2K is a quantum chemistry and solid state physics software package
     that can perform atomistic simulations of solid state, liquid, molecular,
     periodic, material, crystal, and biological systems
@@ -116,14 +116,8 @@ class Cp2k(Package):
     def archive_files(self):
         return [os.path.join(self.stage.source_path, self.makefile)]
 
-    def install(self, spec, prefix):
-        # Construct a proper filename for the architecture file
-        cp2k_architecture = self.makefile_architecture
-        cp2k_version = self.makefile_version
-        makefile = self.makefile
-
-        # Write the custom makefile
-        with open(makefile, 'w') as mkf:
+    def edit(self, spec, prefix):
+        with open(self.makefile, 'w') as mkf:
             # Optimization flags
             optflags = {
                 'gcc': [
@@ -163,9 +157,9 @@ class Cp2k(Package):
             if '^intel-mkl' in spec:
                 cppflags.append('-D__FFTSG')
 
-            cflags = copy.deepcopy(optflags[self.spec.compiler.name])
-            cxxflags = copy.deepcopy(optflags[self.spec.compiler.name])
-            fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
+            cflags = optflags[self.spec.compiler.name][:]
+            cxxflags = optflags[self.spec.compiler.name][:]
+            fcflags = optflags[self.spec.compiler.name][:]
             ldflags = []
             libs = []
 
@@ -329,7 +323,9 @@ class Cp2k(Package):
                     fcflags.append('-I' + os.path.join(elpa_base_path, 'elpa'))
 
             if 'smm=libsmm' in spec:
-                lib_dir = os.path.join('lib', cp2k_architecture, cp2k_version)
+                lib_dir = os.path.join(
+                    'lib', self.makefile_architecture, self.makefile_version
+                )
                 mkdirp(lib_dir)
                 try:
                     copy(env['LIBSMM_PATH'], os.path.join(lib_dir, 'libsmm.a'))
@@ -371,14 +367,24 @@ class Cp2k(Package):
             mkf.write('LIBS = {0}\n\n'.format(' '.join(libs)))
             mkf.write('DATA_DIR = {0}\n\n'.format(self.prefix.share.data))
 
-        with working_dir('makefiles'):
-            # Apparently the Makefile bases its paths on PWD
-            # so we need to set PWD = os.getcwd()
-            pwd_backup = env['PWD']
-            env['PWD'] = os.getcwd()
-            make('ARCH={0}'.format(cp2k_architecture),
-                 'VERSION={0}'.format(cp2k_version))
-            env['PWD'] = pwd_backup
-        exe_dir = os.path.join('exe', cp2k_architecture)
+    @property
+    def build_directory(self):
+        return os.path.join(self.stage.source_path, 'makefiles')
+
+    @property
+    def build_targets(self):
+        return [
+            'ARCH={0}'.format(self.makefile_architecture),
+            'VERSION={0}'.format(self.makefile_version)
+        ]
+
+    def build(self, spec, prefix):
+        # Apparently the Makefile bases its paths on PWD
+        # so we need to set PWD = self.build_directory
+        with spack.util.environment.set_env(PWD=self.build_directory):
+            super(Cp2k, self).build(spec, prefix)
+
+    def install(self, spec, prefix):
+        exe_dir = os.path.join('exe', self.makefile_architecture)
         install_tree(exe_dir, self.prefix.bin)
         install_tree('data', self.prefix.share.data)
