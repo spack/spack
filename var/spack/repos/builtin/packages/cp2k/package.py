@@ -93,15 +93,33 @@ class Cp2k(Package):
     conflicts('%nag')
     conflicts('%xl')
 
+    @property
+    def makefile_architecture(self):
+        return '{0.architecture}-{0.compiler.name}'.format(self.spec)
+
+    @property
+    def makefile_version(self):
+        return '{prefix}{suffix}'.format(
+            prefix='p' if '+mpi' in self.spec else 's',
+            suffix='smp' if '+openmp' in self.spec else 'opt'
+        )
+
+    @property
+    def makefile(self):
+        makefile_basename = '.'.join([
+            self.makefile_architecture, self.makefile_version
+        ])
+        return os.path.join('arch', makefile_basename)
+
+    @property
+    def archive_files(self):
+        return [os.path.join(self.stage.source_path, self.makefile)]
+
     def install(self, spec, prefix):
         # Construct a proper filename for the architecture file
-        cp2k_architecture = '{0.architecture}-{0.compiler.name}'.format(spec)
-        cp2k_version = ('{prefix}{suffix}'
-                        .format(prefix='p' if '+mpi' in spec else 's',
-                                suffix='smp' if '+openmp' in spec else 'opt'))
-
-        makefile_basename = '.'.join([cp2k_architecture, cp2k_version])
-        makefile = join_path('arch', makefile_basename)
+        cp2k_architecture = self.makefile_architecture
+        cp2k_version = self.makefile_version
+        makefile = self.makefile
 
         # Write the custom makefile
         with open(makefile, 'w') as mkf:
