@@ -82,9 +82,9 @@ class Gcc(AutotoolsPackage):
     depends_on('mpfr@2.4.2:3.1.6')
     depends_on('mpc@0.8.1:', when='@4.5:')
     # Already released GCC versions do not support any newer version of ISL
-    #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
-    #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
-    #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
+    # GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
+    # GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
+    # GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
     depends_on('isl@0.15', when='@5:5.9')
     depends_on('isl@0.15:0.18', when='@6:8.9')
     depends_on('isl@0.15:0.20', when='@9:')
@@ -177,8 +177,8 @@ class Gcc(AutotoolsPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85835
     patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
     patch('sys_ustat-4.9.patch', when='@4.9')
-    # This patch fixes a case of false-negative invalid code (valid code parsed as invalid)
-    # as described in the links below
+    # This patch fixes a case of false-negative invalid code
+    # (valid code parsed as invalid) as described in the links below
     # The patch itself is in the last-but-one message of the nabble link
     # It had to be remade, moving 26 lines up to apply cleanly
     # (Patching the patch anyone?)
