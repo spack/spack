@@ -18,10 +18,10 @@ class Cp2k(Package):
     url = 'https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2'
     list_url = 'https://github.com/cp2k/cp2k/releases'
 
-    version('6.1', '573a4de5a0ee2aaabb213e04543cb10f')
-    version('5.1', 'f25cf301aec471d7059179de4dac3ee7')
-    version('4.1', 'b0534b530592de15ac89828b1541185e')
-    version('3.0', 'c05bc47335f68597a310b1ed75601d35')
+    version('6.1', sha256='af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b')
+    version('5.1', sha256='e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412')
+    version('4.1', sha256='4a3e4a101d8a35ebd80a9e9ecb02697fb8256364f1eccdbe4e5a85d31fe21343')
+    version('3.0', sha256='1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151')
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate'),
