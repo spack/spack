@@ -14,8 +14,7 @@ def _is_integral(x):
     """Accepts only integral values."""
     try:
         return isinstance(int(x), numbers.Integral) and \
-            (not isinstance(x, bool)) and \
-            int(x) == x
+            (not isinstance(x, bool))
     except ValueError:
         return False
 
