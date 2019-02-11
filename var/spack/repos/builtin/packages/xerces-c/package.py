@@ -21,6 +21,15 @@ class XercesC(AutotoolsPackage):
     version('3.2.1', '8f98a81a3589bbc2dad9837452f7d319')
     version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
 
+    # Whilst still using Autotools, can use full cxxstd with 'default'
+    # If build is moved to CMake, then will also need a patch to Xerces-C's
+    # CMakeLists.txt as a specific standard cannot be forced
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building')
+
     # It's best to be explicit about the transcoder or else xerces may
     # choose another value.
     if sys.platform == 'darwin':
@@ -42,6 +51,12 @@ class XercesC(AutotoolsPackage):
     # the xerces default will override the spack wrapper.
     def flag_handler(self, name, flags):
         spec = self.spec
+
+        # Need to pass -std flag explicitly
+        if name == 'cxxflags' and spec.variants['cxxstd'].value != 'default':
+            flags.append(getattr(self.compiler,
+                         'cxx{0}_flag'.format(
+                             spec.variants['cxxstd'].value)))
 
         # There is no --with-pkg for gnuiconv.
         if name == 'ldflags' and 'transcoder=gnuiconv' in spec:
