@@ -1,0 +1,89 @@
+[Fortran] Disable "Assignment to contiguous pointer from non-contiguous target" error
+
+2018-XX-YY  Cesar Philippidis  <cesar@codesourcery.com>
+
+	gcc/fortran/
+	* expr.c (gfc_check_pointer_assign): Demote "Assignment to
+	contiguous pointer from non-contiguous target" to a warning.
+
+	gcc/testsuite/
+	* gfortran.dg/contiguous_4.f90: Adjust.
+	* gfortran.dg/contiguous_4.f90: New test.
+---
+ gcc/fortran/expr.c                         |  6 +++---
+ gcc/testsuite/gfortran.dg/contiguous_4.f90 |  6 +++---
+ gcc/testsuite/gfortran.dg/contiguous_7.f90 | 24 ++++++++++++++++++++++++
+ 3 files changed, 30 insertions(+), 6 deletions(-)
+ create mode 100644 gcc/testsuite/gfortran.dg/contiguous_7.f90
+
+diff --git a/gcc/fortran/expr.c b/gcc/fortran/expr.c
+index 3315bb8..1cfda5f 100644
+--- a/gcc/fortran/expr.c    2019-02-11 10:25:28.142708056 -0500
++++ b/gcc/fortran/expr.c    2019-02-11 10:28:08.096736341 -0500
+@@ -3931,12 +3931,11 @@
+      }
+     }
+
+-  /* Error for assignments of contiguous pointers to targets which is not
+-     contiguous.  Be lenient in the definition of what counts as
+-     contiguous.  */
++  /* Warn for assignments of contiguous pointers to targets which is not contiguous.
++   * Be lenient in the definition of what counts as contiguous.  */
+
+   if (lhs_attr.contiguous && !gfc_is_simply_contiguous (rvalue, false, true))
+-    gfc_error ("Assignment to contiguous pointer from non-contiguous "
++    gfc_warning (OPT_Wextra, "Assignment to contiguous pointer from non-contiguous "
+           "target at %L", &rvalue->where);
+
+   /* Warn if it is the LHS pointer may lives longer than the RHS target.  */
+diff --git a/gcc/testsuite/gfortran.dg/contiguous_4.f90 b/gcc/testsuite/gfortran.dg/contiguous_4.f90
+index b05dcfb..874ef8b 100644
+--- a/gcc/testsuite/gfortran.dg/contiguous_4.f90
++++ b/gcc/testsuite/gfortran.dg/contiguous_4.f90
+@@ -10,10 +10,10 @@ program cont_01_neg
+ 
+   x = (/ (real(i),i=1,45) /)
+   x2 = reshape(x,shape(x2))
+-  r => x(::3)   ! { dg-error "Assignment to contiguous pointer" }
+-  r2 => x2(2:,:) ! { dg-error "Assignment to contiguous pointer" }
++  r => x(::3)
++  r2 => x2(2:,:)
+   r2 => x2(:,2:3)
+   r => x2(2:3,1)
+   r => x(::1)
+-  r => x(::n) ! { dg-error "Assignment to contiguous pointer" }
++  r => x(::n)
+ end program
+diff --git a/gcc/testsuite/gfortran.dg/contiguous_7.f90 b/gcc/testsuite/gfortran.dg/contiguous_7.f90
+new file mode 100644
+index 0000000..cccc89f
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/contiguous_7.f90
+@@ -0,0 +1,24 @@
++! { dg-do compile }
++! { dg-additional-options "-Wextra" }
++!
++! Ensure that contiguous pointers pointing to noncontiguous pointers
++! to array results in a warning with -Wextra.
++
++program cont_01_neg
++  implicit none
++  real, pointer, contiguous :: r(:)
++  real, pointer, contiguous :: r2(:,:)
++  real, target :: x(45)
++  real, target :: x2(5,9)
++  integer :: i
++  integer :: n=1
++
++  x = (/ (real(i),i=1,45) /)
++  x2 = reshape(x,shape(x2))
++  r => x(::3) ! { dg-warning "ssignment to contiguous pointer from non-contiguous target" }
++  r2 => x2(2:,:) ! { dg-warning "ssignment to contiguous pointer from non-contiguous target" }
++  r2 => x2(:,2:3)
++  r => x2(2:3,1)
++  r => x(::1)
++  r => x(::n) ! { dg-warning "ssignment to contiguous pointer from non-contiguous target" }
++end program
+-- 
+2.7.4
+

@@ -177,6 +177,19 @@ class Gcc(AutotoolsPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85835
     patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
     patch('sys_ustat-4.9.patch', when='@4.9')
+    # This patch fixes a case of false-negative invalid code (valid code parsed as invalid)
+    # as described in the links below
+    # The patch itself is in the last-but-one message of the nabble link
+    # It had to be remade, moving 26 lines up to apply cleanly
+    # (Patching the patch anyone?)
+    # http://gcc.1065356.n8.nabble.com/patch-wip-warn-on-noncontiguous-pointers-td1516622.html
+    # https://gcc.gnu.org/ml/fortran/2018-09/msg00210.html
+    # From the dates on the thread and the tentative release date of GCC 8.3,
+    # https://gcc.gnu.org/ml/gcc/2019-02/msg00034.html
+    # I'm guessing that this patch will make it
+    # but could not find the exact bug number in GCC's bugzilla,
+    # so pin to version 8.2 for now
+    patch('gfortran-noncontiguous-pointers.patch', when='@8.2')
 
     build_directory = 'spack-build'
 
