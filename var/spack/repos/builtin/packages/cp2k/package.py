@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import os.path
 import copy
 
 from spack import *
@@ -144,10 +145,7 @@ class Cp2k(Package):
 
             dflags = ['-DNDEBUG']
 
-            if '+openmp' in spec:
-                fftw = spec['fftw:openmp']
-            else:
-                fftw = spec['fftw']
+            fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
 
             cppflags = [
                 '-D__FFTW3',
@@ -175,19 +173,14 @@ class Cp2k(Package):
                 cflags.append('-fp-model precise')
                 cxxflags.append('-fp-model precise')
                 fcflags.extend(['-fp-model source', '-heap-arrays 64'])
-                if '+openmp' in spec:
-                    fcflags.append('-openmp')
-                    ldflags.append('-openmp')
             elif '%gcc' in spec:
                 fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
-                if '+openmp' in spec:
-                    fcflags.append('-fopenmp')
-                    ldflags.append('-fopenmp')
             elif '%pgi' in spec:
                 fcflags.extend(['-Mfreeform', '-Mextend'])
-                if '+openmp' in spec:
-                    fcflags.append('-mp')
-                    ldflags.append('-mp')
+
+            if '+openmp' in spec:
+                fcflags.append(self.compiler.openmp_flag)
+                ldflags.append(self.compiler.openmp_flag)
 
             ldflags.append(fftw.libs.search_flags)
 
@@ -199,25 +192,25 @@ class Cp2k(Package):
             # (short-int vs int) which otherwise causes segfaults at runtime
             # due to wrong offsets into the shared library symbols.
             libs.extend([
-                join_path(spec['libint'].libs.directories[0], 'libderiv.a'),
-                join_path(spec['libint'].libs.directories[0], 'libint.a'),
+                os.path.join(spec['libint'].libs.directories[0], 'libderiv.a'),
+                os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
             ])
 
             if '+plumed' in self.spec:
                 # Include Plumed.inc in the Makefile
                 mkf.write('include {0}\n'.format(
-                    join_path(self.spec['plumed'].prefix.lib,
-                              'plumed',
-                              'src',
-                              'lib',
-                              'Plumed.inc')
+                    os.path.join(self.spec['plumed'].prefix.lib,
+                                 'plumed',
+                                 'src',
+                                 'lib',
+                                 'Plumed.inc')
                 ))
                 # Add required macro
                 dflags.extend(['-D__PLUMED2'])
                 cppflags.extend(['-D__PLUMED2'])
                 libs.extend([
-                    join_path(self.spec['plumed'].prefix.lib,
-                              'libplumed.{0}'.format(dso_suffix))
+                    os.path.join(self.spec['plumed'].prefix.lib,
+                                 'libplumed.{0}'.format(dso_suffix))
                 ])
 
             mkf.write('CC = {0.compiler.cc}\n'.format(self))
@@ -273,7 +266,7 @@ class Cp2k(Package):
 
                 if 'wannier90' in spec:
                     cppflags.append('-D__WANNIER90')
-                    wannier = join_path(
+                    wannier = os.path.join(
                         spec['wannier90'].libs.directories[0], 'libwannier.a'
                     )
                     libs.append(wannier)
@@ -290,18 +283,18 @@ class Cp2k(Package):
 
             if '+pexsi' in self.spec:
                 cppflags.append('-D__LIBPEXSI')
-                fcflags.append('-I' + join_path(
+                fcflags.append('-I' + os.path.join(
                     spec['pexsi'].prefix, 'fortran'))
                 libs.extend([
-                    join_path(spec['pexsi'].libs.directories[0],
-                              'libpexsi.a'),
-                    join_path(spec['superlu-dist'].libs.directories[0],
-                              'libsuperlu_dist.a'),
-                    join_path(
+                    os.path.join(spec['pexsi'].libs.directories[0],
+                                 'libpexsi.a'),
+                    os.path.join(spec['superlu-dist'].libs.directories[0],
+                                 'libsuperlu_dist.a'),
+                    os.path.join(
                         spec['parmetis'].libs.directories[0],
                         'libparmetis.{0}'.format(dso_suffix)
                     ),
-                    join_path(
+                    os.path.join(
                         spec['metis'].libs.directories[0],
                         'libmetis.{0}'.format(dso_suffix)
                     ),
@@ -310,17 +303,17 @@ class Cp2k(Package):
             if '+elpa' in self.spec:
                 elpa = spec['elpa']
                 elpa_suffix = '_openmp' if '+openmp' in elpa else ''
-                elpa_base_path = join_path(
+                elpa_base_path = os.path.join(
                     elpa.prefix,
                     'include',
                     'elpa{suffix}-{version!s}'.format(
                         suffix=elpa_suffix, version=elpa.version))
 
-                fcflags.append('-I' + join_path(elpa_base_path, 'modules'))
-                libs.append(join_path(elpa.libs.directories[0],
-                                      ('libelpa{elpa_suffix}.{dso_suffix}'
-                                       .format(elpa_suffix=elpa_suffix,
-                                               dso_suffix=dso_suffix))))
+                fcflags.append('-I' + os.path.join(elpa_base_path, 'modules'))
+                libs.append(os.path.join(elpa.libs.directories[0],
+                                         ('libelpa{elpa_suffix}.{dso_suffix}'
+                                          .format(elpa_suffix=elpa_suffix,
+                                                  dso_suffix=dso_suffix))))
 
                 if spec.satisfies('@:4.999'):
                     if elpa.satisfies('@:2014.5.999'):
@@ -333,13 +326,13 @@ class Cp2k(Package):
                     cppflags.append('-D__ELPA={0}{1:02d}'
                                     .format(elpa.version[0],
                                             int(elpa.version[1])))
-                    fcflags.append('-I' + join_path(elpa_base_path, 'elpa'))
+                    fcflags.append('-I' + os.path.join(elpa_base_path, 'elpa'))
 
             if 'smm=libsmm' in spec:
-                lib_dir = join_path('lib', cp2k_architecture, cp2k_version)
+                lib_dir = os.path.join('lib', cp2k_architecture, cp2k_version)
                 mkdirp(lib_dir)
                 try:
-                    copy(env['LIBSMM_PATH'], join_path(lib_dir, 'libsmm.a'))
+                    copy(env['LIBSMM_PATH'], os.path.join(lib_dir, 'libsmm.a'))
                 except KeyError:
                     raise KeyError('Point environment variable LIBSMM_PATH to '
                                    'the absolute path of the libsmm.a file')
@@ -386,6 +379,6 @@ class Cp2k(Package):
             make('ARCH={0}'.format(cp2k_architecture),
                  'VERSION={0}'.format(cp2k_version))
             env['PWD'] = pwd_backup
-        exe_dir = join_path('exe', cp2k_architecture)
+        exe_dir = os.path.join('exe', cp2k_architecture)
         install_tree(exe_dir, self.prefix.bin)
         install_tree('data', self.prefix.share.data)
