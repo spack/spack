@@ -87,6 +87,10 @@ class Petsc(Package):
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
 
+    filter_compiler_wrappers(
+        'petscvariables', relative_root='lib/petsc/conf'
+    )
+
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
     # the patch is an adaptation of the original commit to 3.7.5
@@ -98,6 +102,7 @@ class Petsc(Package):
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@develop')
+    depends_on('sowing@1.1.23-p1', when='@xsdk-0.2.0')
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK
@@ -106,7 +111,8 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python@2.6:2.8', type='build')
+    depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
+    depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
 
     # Other dependencies
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')

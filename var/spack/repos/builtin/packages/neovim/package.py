@@ -11,8 +11,9 @@ class Neovim(CMakePackage):
     """NeoVim: the future of vim"""
 
     homepage = "http://neovim.io"
-    url      = "https://github.com/neovim/neovim/archive/v0.2.0.tar.gz"
+    url      = "https://github.com/neovim/neovim/archive/v0.3.4.tar.gz"
 
+    version('0.3.4', sha256='a641108bdebfaf319844ed46b1bf35d6f7c30ef5aeadeb29ba06e19c3274bc0e')
     version('0.3.1', '5405bced1c929ebc245c75409cd6c7ef')
     version('0.3.0', 'e5fdb2025757c337c17449c296eddf5b')
     version('0.2.2', '44b69f8ace88b646ec890670f1e462c4')
