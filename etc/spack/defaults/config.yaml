@@ -82,7 +82,7 @@ config:
   # If set to C, it will use English (see man locale).
   # If set to the empty string (''), it will use the language from the
   # user's environment.
-  build_language: ''
+  build_language: C
 
 
   # When set to true, concurrent instances of Spack will use locks to
