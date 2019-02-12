@@ -115,6 +115,23 @@ def test_cmake_std_args(config, mock_packages):
     assert get_std_cmake_args(pkg)
 
 
+def test_cmake_bad_generator(config, mock_packages):
+    s = Spec('cmake-client')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.generator = 'Yellow Sticky Notes'
+    with pytest.raises(spack.package.InstallError):
+        get_std_cmake_args(pkg)
+
+
+def test_cmake_secondary_generator(config, mock_packages):
+    s = Spec('cmake-client')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.generator = 'CodeBlocks - Unix Makefiles'
+    assert get_std_cmake_args(pkg)
+
+
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestAutotoolsPackage(object):
 
