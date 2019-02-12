@@ -25,6 +25,7 @@ class Openssl(Package):
 
     # Note: Version 1.1.1 is the current long-term support version that will
     # remain supported until September 2023.
+    version('1.1.1a', sha256='fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41')
     version('1.1.1',  '2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d')
     version('1.1.0i', 'ebbfc844a8c8cc0ea5dc10b86c9ce97f401837f3fa08c17b2cdadc118253cf99')
     version('1.1.0g', 'ba5f1b8b835b88cadbce9b35ed9531a6')
