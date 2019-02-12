@@ -1,38 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import sys
 
 from spack import *
-from spack.error import SpackError
-
-
-def _process_manager_validator(values):
-    if len(values) > 1 and 'slurm' in values:
-        raise SpackError(
-            'slurm cannot be activated along with other process managers'
-        )
 
 
 class Mvapich2(AutotoolsPackage):
@@ -89,9 +62,12 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'process_managers',
         description='List of the process managers to activate',
-        values=('slurm', 'hydra', 'gforker', 'remshell'),
-        multi=True,
-        validator=_process_manager_validator
+        values=disjoint_sets(
+            ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
+        ).prohibit_empty_set().with_error(
+            "'slurm' or 'auto' cannot be activated along with "
+            "other process managers"
+        ).with_default('auto').with_non_feature_values('auto'),
     )
 
     variant(
@@ -113,11 +89,12 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'file_systems',
         description='List of the ROMIO file systems to activate',
-        values=('lustre', 'gpfs', 'nfs', 'ufs'),
-        multi=True
+        values=auto_or_any_combination_of('lustre', 'gpfs', 'nfs', 'ufs'),
     )
 
+    depends_on('findutils', type='build')
     depends_on('bison', type='build')
+    depends_on('zlib')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')

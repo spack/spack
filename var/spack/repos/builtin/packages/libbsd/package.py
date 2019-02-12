@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,8 +14,11 @@ class Libbsd(AutotoolsPackage):
     """
 
     homepage = "https://libbsd.freedesktop.org/wiki/"
-    url      = "https://libbsd.freedesktop.org/releases/libbsd-0.8.6.tar.xz"
+    url      = "https://libbsd.freedesktop.org/releases/libbsd-0.9.1.tar.xz"
 
-    version('0.8.6', '4ab7bec639af17d0aacb50222b479110')
+    version('0.9.1', sha256='56d835742327d69faccd16955a60b6dcf30684a8da518c4eca0ac713b9e0a7a4')
+    version('0.9.0', sha256='8a469afd1bab340992cf99e1e6b7ae4f4c54882d663d8a2c5ea52250617afb01')
+    version('0.8.7', sha256='f548f10e5af5a08b1e22889ce84315b1ebe41505b015c9596bad03fd13a12b31')
+    version('0.8.6', sha256='467fbf9df1f49af11f7f686691057c8c0a7613ae5a870577bef9155de39f9687')
 
-    patch('cdefs.h.patch', when='%gcc@:4')
+    patch('cdefs.h.patch', when='@0.8.6 %gcc@:4')

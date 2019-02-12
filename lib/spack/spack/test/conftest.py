@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import collections
 import copy
 import inspect
@@ -42,6 +23,7 @@ import spack.config
 import spack.caches
 import spack.database
 import spack.directory_layout
+import spack.environment as ev
 import spack.paths
 import spack.platforms.test
 import spack.repo
@@ -54,6 +36,27 @@ from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version
+
+
+#
+# Disable any activate Spack environment BEFORE all tests
+#
+@pytest.fixture(scope='session', autouse=True)
+def clean_user_environment():
+    env_var = ev.spack_env_var in os.environ
+    active = ev._active_environment
+
+    if env_var:
+        spack_env_value = os.environ.pop(ev.spack_env_var)
+    if active:
+        ev.deactivate()
+
+    yield
+
+    if env_var:
+        os.environ[ev.spack_env_var] = spack_env_value
+    if active:
+        ev.activate(active)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -280,9 +283,12 @@ def config(configuration_dir):
 
     real_configuration = spack.config.config
 
-    spack.config.config = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(configuration_dir.join(name)))
-          for name in ['site', 'system', 'user']])
+    test_scopes = [
+        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+        for name in ['site', 'system', 'user']]
+    test_scopes.append(spack.config.InternalConfigScope('command_line'))
+
+    spack.config.config = spack.config.Configuration(*test_scopes)
 
     yield spack.config.config
 
@@ -310,8 +316,22 @@ def mutable_config(tmpdir_factory, configuration_dir, config):
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
+@pytest.fixture()
+def mock_config(tmpdir):
+    """Mocks two configuration scopes: 'low' and 'high'."""
+    real_configuration = spack.config.config
+
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(tmpdir.join(name)))
+          for name in ['low', 'high']])
+
+    yield spack.config.config
+
+    spack.config.config = real_configuration
+
+
 def _populate(mock_db):
-    """Populate a mock database with packages.
+    r"""Populate a mock database with packages.
 
     Here is what the mock DB looks like:
 
@@ -684,6 +704,16 @@ def mock_svn_repository(tmpdir_factory):
 
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
+
+
+@pytest.fixture()
+def mutable_mock_env_path(tmpdir_factory):
+    """Fixture for mocking the internal spack environments directory."""
+    saved_path = spack.environment.env_path
+    mock_path = tmpdir_factory.mktemp('mock-env-path')
+    spack.environment.env_path = str(mock_path)
+    yield mock_path
+    spack.environment.env_path = saved_path
 
 
 ##########

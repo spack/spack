@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import glob
 import os
 import pytest
@@ -143,8 +124,11 @@ class TestAutotoolsPackage(object):
         s.concretize()
         pkg = spack.repo.get(s)
 
-        # Called without parameters
         options = pkg.with_or_without('foo')
+
+        # Ensure that values that are not representing a feature
+        # are not used by with_or_without
+        assert '--without-none' not in options
         assert '--with-bar' in options
         assert '--without-baz' in options
         assert '--no-fee' in options
@@ -153,14 +137,30 @@ class TestAutotoolsPackage(object):
             return 'something'
 
         options = pkg.with_or_without('foo', activation_value=activate)
+        assert '--without-none' not in options
         assert '--with-bar=something' in options
         assert '--without-baz' in options
         assert '--no-fee' in options
 
         options = pkg.enable_or_disable('foo')
+        assert '--disable-none' not in options
         assert '--enable-bar' in options
         assert '--disable-baz' in options
         assert '--disable-fee' in options
 
         options = pkg.with_or_without('bvv')
         assert '--with-bvv' in options
+
+    def test_none_is_allowed(self):
+        s = Spec('a foo=none')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        options = pkg.with_or_without('foo')
+
+        # Ensure that values that are not representing a feature
+        # are not used by with_or_without
+        assert '--with-none' not in options
+        assert '--without-bar' in options
+        assert '--without-baz' in options
+        assert '--no-fee' in options

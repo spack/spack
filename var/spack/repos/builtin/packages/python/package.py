@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import ast
 import os
 import platform
@@ -48,7 +29,12 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
-    version('3.7.0', '41b6595deb4147a1ed517a7d9a580271')
+    version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
+    version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
+    version('3.7.0',  '41b6595deb4147a1ed517a7d9a580271')
+    version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
+    version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
+    version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
     version('3.6.5', 'ab25d24b1f8cc4990ade979f6dc37883')
     version('3.6.4', '9de6494314ea199e3633211696735f65')
     version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
@@ -101,6 +87,7 @@ class Python(AutotoolsPackage):
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
+    depends_on("pkgconfig", type="build")
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
@@ -110,6 +97,10 @@ class Python(AutotoolsPackage):
     depends_on("tk", when="+tk")
     depends_on("tcl", when="+tk")
     depends_on("gdbm", when='+dbm')
+
+    # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+    depends_on("libffi", when="@3.7:")
+    depends_on("openssl@1.0.2:", when="@3.7:")
 
     # Patch does not work for Python 3.1
     patch('ncurses.patch', when='@:2.8,3.2:')
@@ -168,12 +159,33 @@ class Python(AutotoolsPackage):
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
-        dep_pfxs = [dspec.prefix for dspec in spec.dependencies('link')]
-        config_args = [
-            '--with-threads',
-            'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
-            'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
-        ]
+        link_deps = spec.dependencies('link')
+
+        # Header files are often included assuming they reside in a
+        # subdirectory of prefix.include, e.g. #include <openssl/ssl.h>,
+        # which is why we don't use HeaderList here. The header files of
+        # libffi reside in prefix.lib but the configure script of Python
+        # finds them using pkg-config.
+        cppflags = '-I' + ' -I'.join(dep.prefix.include
+                                     for dep in link_deps
+                                     if dep.name != 'libffi')
+
+        # Currently, the only way to get SpecBuildInterface wrappers of the
+        # dependencies (which we need to get their 'libs') is to get them
+        # using spec.__getitem__.
+        ldflags = ' '.join(spec[dep.name].libs.search_flags
+                           for dep in link_deps)
+
+        config_args = ['CPPFLAGS=' + cppflags, 'LDFLAGS=' + ldflags]
+
+        # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+        if spec.satisfies('@:3.6'):
+            config_args.append('--with-threads')
+
+        if '^libffi' in spec:
+            config_args.append('--with-system-ffi')
+        else:
+            config_args.append('--without-system-ffi')
 
         if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
                 and '+optimizations' in spec:
@@ -502,7 +514,7 @@ class Python(AutotoolsPackage):
                 return LibraryList(os.path.join(frameworkprefix, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(self.name, libdir))
+                raise RuntimeError(msg.format(ldlibrary, libdir))
         else:
             library = self.get_config_var('LIBRARY')
 
@@ -512,7 +524,7 @@ class Python(AutotoolsPackage):
                 return LibraryList(os.path.join(frameworkprefix, library))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(self.name, libdir))
+                raise RuntimeError(msg.format(library, libdir))
 
     @property
     def headers(self):
@@ -687,7 +699,9 @@ class Python(AutotoolsPackage):
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
-        self.write_easy_install_pth(exts, prefix=view.root)
+        self.write_easy_install_pth(exts, prefix=view.get_projection_for_spec(
+            self.spec
+        ))
 
     def deactivate(self, ext_pkg, view, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
@@ -699,7 +713,10 @@ class Python(AutotoolsPackage):
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
-            self.write_easy_install_pth(exts, prefix=view.root)
+            self.write_easy_install_pth(exts,
+                                        prefix=view.get_projection_for_spec(
+                                            self.spec
+                                        ))
 
     def add_files_to_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
@@ -710,7 +727,13 @@ class Python(AutotoolsPackage):
                 copy(src, dst)
                 if 'script' in get_filetype(src):
                     filter_file(
-                        self.spec.prefix, os.path.abspath(view.root), dst)
+                        self.spec.prefix,
+                        os.path.abspath(
+                            view.get_projection_for_spec(self.spec)
+                        ),
+                        dst,
+                        backup=False
+                    )
             else:
                 orig_link_target = os.path.realpath(src)
                 new_link_target = os.path.abspath(merge_map[orig_link_target])

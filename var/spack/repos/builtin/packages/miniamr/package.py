@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -36,6 +17,7 @@ class Miniamr(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
+    version('1.4.1', sha256='dd8e8d9fd0768cb4f2c5d7fe6989dfa6bb95a8461f04deaccdbb50b0dd51e97a')
     version('1.4.0', '3aab0247047a94e343709cf2e51cc46e')
 
     variant('mpi', default=True, description='Build with MPI support')
@@ -59,8 +41,8 @@ class Miniamr(MakefilePackage):
     def install(self, spec, prefix):
         # Manual installation
         mkdir(prefix.bin)
-        mkdir(prefix.doc)
+        mkdir(prefix.docs)
 
         install('ref/ma.x', prefix.bin)
         # Install Support Documents
-        install('ref/README', prefix.doc)
+        install('ref/README', prefix.docs)

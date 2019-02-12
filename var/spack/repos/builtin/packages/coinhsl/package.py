@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -44,8 +25,25 @@ class Coinhsl(AutotoolsPackage):
     homepage = "http://www.hsl.rl.ac.uk/ipopt/"
     url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(os.getcwd())
 
-    version('2014.01.17', '9eb3dd40ed034814ed8dfee75b281180c1d9d2ae')
-    version('2014.01.10', '7c2be60a3913b406904c66ee83acdbd0709f229b652c4e39ee5d0876f6b2e907',
+    # CoinHSL has a few versions that vary with respect to stability/features
+    # and licensing terms.
+
+    # Version 2015.06.23 is a full-featured "release candidate"
+    # version available via an "academic license" that can be used for
+    # personal teaching and research purposes only. For a full list of
+    # conditions, see http://www.hsl.rl.ac.uk/academic.html.
+    version('2015.06.23', sha256='3e955a2072f669b8f357ae746531b37aea921552e415dc219a5dd13577575fb3')
+
+    # Version 2014.01.17 is a full-featured "stable" version available
+    # via an "academic license" that can be used for personal teaching
+    # and research purposes only.
+    version('2014.01.17', sha256='ed49fea62692c5d2f928d4007988930da9ff9a2e944e4c559d028671d122437b')
+
+    # Version 2014.01.10 only has MA27, MA28, and MC19, and is
+    # available as a "personal license" that is free to all, and
+    # permits commercial use, but *not redistribution* (emphasis from
+    # original source).
+    version('2014.01.10', sha256='7c2be60a3913b406904c66ee83acdbd0709f229b652c4e39ee5d0876f6b2e907',
             preferred=True)
 
     # CoinHSL fails to build in parallel

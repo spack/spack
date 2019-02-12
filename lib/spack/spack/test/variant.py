@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import pytest
 import numbers
@@ -32,6 +13,9 @@ from spack.variant import UnsatisfiableVariantSpecError
 from spack.variant import InconsistentValidationError
 from spack.variant import MultipleValuesInExclusiveVariantError
 from spack.variant import InvalidVariantValueError, DuplicateVariantError
+from spack.variant import disjoint_sets
+
+import spack.error
 
 
 class TestMultiValuedVariant(object):
@@ -711,3 +695,59 @@ class TestVariantMapTest(object):
         c['feebar'] = SingleValuedVariant('feebar', 'foo')
         c['shared'] = BoolValuedVariant('shared', True)
         assert str(c) == ' feebar=foo foo=bar,baz foobar=fee +shared'
+
+
+def test_disjoint_set_initialization_errors():
+    # Constructing from non-disjoint sets should raise an exception
+    with pytest.raises(spack.error.SpecError) as exc_info:
+        disjoint_sets(('a', 'b'), ('b', 'c'))
+    assert 'sets in input must be disjoint' in str(exc_info.value)
+
+    # A set containing the reserved item 'none' along with other items
+    # should raise an exception
+    with pytest.raises(spack.error.SpecError) as exc_info:
+        disjoint_sets(('a', 'b'), ('none', 'c'))
+    assert "The value 'none' represents the empty set," in str(exc_info.value)
+
+
+def test_disjoint_set_initialization():
+    # Test that no error is thrown when the sets are disjoint
+    d = disjoint_sets(('a',), ('b', 'c'), ('e', 'f'))
+
+    assert d.default is 'none'
+    assert d.multi is True
+    assert set(x for x in d) == set(['none', 'a', 'b', 'c', 'e', 'f'])
+
+
+def test_disjoint_set_fluent_methods():
+    # Construct an object without the empty set
+    d = disjoint_sets(('a',), ('b', 'c'), ('e', 'f')).prohibit_empty_set()
+    assert set(('none',)) not in d.sets
+
+    # Call this 2 times to check that no matter whether
+    # the empty set was allowed or not before, the state
+    # returned is consistent.
+    for _ in range(2):
+        d = d.allow_empty_set()
+        assert set(('none',)) in d.sets
+        assert 'none' in d
+        assert 'none' in [x for x in d]
+        assert 'none' in d.feature_values
+
+    # Marking a value as 'non-feature' removes it from the
+    # list of feature values, but not for the items returned
+    # when iterating over the object.
+    d = d.with_non_feature_values('none')
+    assert 'none' in d
+    assert 'none' in [x for x in d]
+    assert 'none' not in d.feature_values
+
+    # Call this 2 times to check that no matter whether
+    # the empty set was allowed or not before, the state
+    # returned is consistent.
+    for _ in range(2):
+        d = d.prohibit_empty_set()
+        assert set(('none',)) not in d.sets
+        assert 'none' not in d
+        assert 'none' not in [x for x in d]
+        assert 'none' not in d.feature_values

@@ -1,26 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.  #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import glob
 
@@ -52,6 +34,8 @@ class Amrvis(MakefilePackage):
     )
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('debug', default=False, description='Enable debugging features')
+    variant('profiling', default=False,
+            description='Enable AMReX profiling features')
 
     depends_on('gmake', type='build')
     depends_on('mpi', when='+mpi')
@@ -62,6 +46,17 @@ class Amrvis(MakefilePackage):
     depends_on('libxt')
     depends_on('libxext')
     depends_on('motif')
+    depends_on('flex')
+    depends_on('bison')
+
+    conflicts(
+        '+profiling', when='dims=1',
+        msg='Amrvis profiling support requires a 2D build'
+    )
+    conflicts(
+        '+profiling', when='dims=3',
+        msg='Amrvis profiling support requires a 2D build'
+    )
 
     # Only doing gcc and clang at the moment.
     # Intel currently fails searching for mpiicc, mpiicpc, etc.
@@ -81,7 +76,7 @@ class Amrvis(MakefilePackage):
         # Set all available makefile options to values we want
         makefile = FileFilter('GNUmakefile')
         makefile.filter(
-            r'^AMREX_HOME\s*=.*',
+            r'^AMREX_HOME\s*\?=.*',
             'AMREX_HOME = {0}'.format('./amrex')
         )
         makefile.filter(
@@ -94,15 +89,21 @@ class Amrvis(MakefilePackage):
         )
         makefile.filter(
             r'^PROFILE\s*=.*',
-            'PROFILE = FALSE'
+            'PROFILE = {0}'.format(
+                spec.variants['profiling'].value
+            ).upper()
         )
         makefile.filter(
             r'^TRACE_PROFILE\s*=.*',
-            'TRACE_PROFILE = FALSE'
+            'TRACE_PROFILE = {0}'.format(
+                spec.variants['profiling'].value
+            ).upper()
         )
         makefile.filter(
             r'^COMM_PROFILE\s*=.*',
-            'COMM_PROFILE = FALSE'
+            'COMM_PROFILE = {0}'.format(
+                spec.variants['profiling'].value
+            ).upper()
         )
         makefile.filter(
             r'^COMP\s*=.*',
@@ -134,7 +135,9 @@ class Amrvis(MakefilePackage):
         )
         makefile.filter(
             r'^USE_PROFPARSER\s*=.*',
-            'USE_PROFPARSER = FALSE'
+            'USE_PROFPARSER = {0}'.format(
+                spec.variants['profiling'].value
+            ).upper()
         )
 
         # A bit risky here deleting all /usr and /opt X
@@ -171,6 +174,8 @@ class Amrvis(MakefilePackage):
             file.writelines(contents)
 
     def setup_environment(self, spack_env, run_env):
+        # We don't want an AMREX_HOME the user may have set already
+        spack_env.unset('AMREX_HOME')
         # Help force Amrvis to not pick up random system compilers
         if '+mpi' in self.spec:
             spack_env.set('MPI_HOME', self.spec['mpi'].prefix)

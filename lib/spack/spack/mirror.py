@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This file contains code for creating spack mirror directories.  A
 mirror is an organized hierarchy containing specially named archive
@@ -102,7 +83,11 @@ def mirror_archive_path(spec, fetcher, resource_id=None):
 
 
 def get_matching_versions(specs, **kwargs):
-    """Get a spec for EACH known version matching any spec in the list."""
+    """Get a spec for EACH known version matching any spec in the list.
+    For concrete specs, this retrieves the concrete version and, if more
+    than one version per spec is requested, retrieves the latest versions
+    of the package.
+    """
     matching = []
     for spec in specs:
         pkg = spec.package
@@ -112,15 +97,22 @@ def get_matching_versions(specs, **kwargs):
             tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
             continue
 
-        num_versions = kwargs.get('num_versions', 0)
+        pkg_versions = kwargs.get('num_versions', 1)
+
+        version_order = list(reversed(sorted(pkg.versions)))
         matching_spec = []
-        for i, v in enumerate(reversed(sorted(pkg.versions))):
+        if spec.concrete:
+            matching_spec.append(spec)
+            pkg_versions -= 1
+            version_order.remove(spec.version)
+
+        for v in version_order:
             # Generate no more than num_versions versions for each spec.
-            if num_versions and i >= num_versions:
+            if pkg_versions < 1:
                 break
 
             # Generate only versions that satisfy the spec.
-            if v.satisfies(spec.versions):
+            if spec.concrete or v.satisfies(spec.versions):
                 s = Spec(pkg.name)
                 s.versions = VersionList([v])
                 s.variants = spec.variants.copy()
@@ -128,6 +120,7 @@ def get_matching_versions(specs, **kwargs):
                 # concretization phase
                 s.variants.spec = s
                 matching_spec.append(s)
+                pkg_versions -= 1
 
         if not matching_spec:
             tty.warn("No known version matches spec: %s" % spec)
@@ -158,9 +151,8 @@ def create(path, specs, **kwargs):
             to the mirror.
 
     Keyword args:
-        no_checksum: If True, do not checkpoint when fetching (default False)
         num_versions: Max number of versions to fetch per spec, \
-            if spec is ambiguous (default is 0 for all of them)
+            (default is 1 each spec)
 
     Return Value:
         Returns a tuple of lists: (present, mirrored, error)
@@ -182,7 +174,7 @@ def create(path, specs, **kwargs):
 
     # Get concrete specs for each matching version of these specs.
     version_specs = get_matching_versions(
-        specs, num_versions=kwargs.get('num_versions', 0))
+        specs, num_versions=kwargs.get('num_versions', 1))
     for s in version_specs:
         s.concretize()
 
@@ -202,57 +194,26 @@ def create(path, specs, **kwargs):
         'error': []
     }
 
-    # Iterate through packages and download all safe tarballs for each
-    for spec in version_specs:
-        add_single_spec(spec, mirror_root, categories, **kwargs)
+    mirror_cache = spack.caches.MirrorCache(mirror_root)
+    try:
+        spack.caches.mirror_cache = mirror_cache
+        # Iterate through packages and download all safe tarballs for each
+        for spec in version_specs:
+            add_single_spec(spec, mirror_root, categories, **kwargs)
+    finally:
+        spack.caches.mirror_cache = None
+
+    categories['mirrored'] = list(mirror_cache.new_resources)
+    categories['present'] = list(mirror_cache.existing_resources)
 
     return categories['present'], categories['mirrored'], categories['error']
 
 
 def add_single_spec(spec, mirror_root, categories, **kwargs):
     tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
-    spec_exists_in_mirror = True
     try:
-        with spec.package.stage:
-            # fetcher = stage.fetcher
-            # fetcher.fetch()
-            # ...
-            # fetcher.archive(archive_path)
-            for ii, stage in enumerate(spec.package.stage):
-                fetcher = stage.fetcher
-                if ii == 0:
-                    # create a subdirectory for the current package@version
-                    archive_path = os.path.abspath(os.path.join(
-                        mirror_root, mirror_archive_path(spec, fetcher)))
-                    name = spec.cformat("$_$@")
-                else:
-                    resource = stage.resource
-                    archive_path = os.path.abspath(os.path.join(
-                        mirror_root,
-                        mirror_archive_path(spec, fetcher, resource.name)))
-                    name = "{resource} ({pkg}).".format(
-                        resource=resource.name, pkg=spec.cformat("$_$@"))
-                subdir = os.path.dirname(archive_path)
-                mkdirp(subdir)
-
-                if os.path.exists(archive_path):
-                    tty.msg("{name} : already added".format(name=name))
-                else:
-                    spec_exists_in_mirror = False
-                    fetcher.fetch()
-                    if not kwargs.get('no_checksum', False):
-                        fetcher.check()
-                        tty.msg("{name} : checksum passed".format(name=name))
-
-                    # Fetchers have to know how to archive their files.  Use
-                    # that to move/copy/create an archive in the mirror.
-                    fetcher.archive(archive_path)
-                    tty.msg("{name} : added".format(name=name))
-
-        if spec_exists_in_mirror:
-            categories['present'].append(spec)
-        else:
-            categories['mirrored'].append(spec)
+        spec.package.do_fetch()
+        spec.package.do_clean()
 
     except Exception as e:
         if spack.config.get('config:debug'):
