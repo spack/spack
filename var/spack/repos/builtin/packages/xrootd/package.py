@@ -35,6 +35,14 @@ class Xrootd(CMakePackage):
     variant('readline', default=True,
             description='Use readline')
 
+    variant('cxxstd',
+            default='11',
+            values=('98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
+    conflicts('cxxstd=98', when='@4.7.0:')
+
     depends_on('bzip2')
     depends_on('cmake@2.6:', type='build')
     depends_on('libxml2', when='+http')
@@ -46,6 +54,12 @@ class Xrootd(CMakePackage):
 
     extends('python', when='+python')
     patch('python-support.patch', level=1, when='+python')
+
+    def patch(self):
+        """Remove hardcoded -std=c++0x flag
+        """
+        if self.spec.satisfies('@4.7.0:'):
+            filter_file(r'\-std=c\+\+0x', r'', 'cmake/XRootDOSDefs.cmake')
 
     def cmake_args(self):
         spec = self.spec
@@ -59,3 +73,23 @@ class Xrootd(CMakePackage):
             '-DENABLE_CEPH:BOOL=OFF'
         ]
         return options
+
+    def setup_environment(self, spack_env, run_env):
+        cxxstdflag = ''
+        if self.spec.variants['cxxstd'].value == '98':
+            cxxstdflag = self.compiler.cxx98_flag
+        elif self.spec.variants['cxxstd'].value == '11':
+            cxxstdflag = self.compiler.cxx11_flag
+        elif self.spec.variants['cxxstd'].value == '14':
+            cxxstdflag = self.compiler.cxx14_flag
+        elif self.spec.variants['cxxstd'].value == '17':
+            cxxstdflag = self.compiler.cxx17_flag
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die(
+                "INTERNAL ERROR: cannot accommodate unexpected variant ",
+                "cxxstd={0}".format(self.spec.variants['cxxstd'].value))
+
+        if cxxstdflag:
+            spack_env.append_flags('CXXFLAGS', cxxstdflag)
