@@ -550,6 +550,12 @@ class Llvm(CMakePackage):
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
 
+    # Work around constexpr build failure on PPC:
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1538817
+    @when('arch=ppc64e')
+    def patch(self):
+	filter_file('_LIBCPP_CONSTEXPR','', 'projects/libcxx/include/thread')
+
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
         if not self.spec.satisfies('+lldb platform=darwin'):
