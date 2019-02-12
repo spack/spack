@@ -19,6 +19,8 @@ class Aluminum(CMakePackage):
     git      = "https://github.com/LLNL/Aluminum.git"
 
     version('master', branch='master')
+    version('0.2.1', sha256='3d5d15853cccc718f60df68205e56a2831de65be4d96e7f7e8497097e7905f89')
+    version('0.2', sha256='fc8f06c6d8faab17a2aedd408d3fe924043bf857da1094d5553f35c4d2af893b')
     version('0.1', sha256='3880b736866e439dd94e6a61eeeb5bb2abccebbac82b82d52033bc6c94950bdb')
 
     variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
