@@ -503,6 +503,45 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.disable_clean_stage_check
+def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
+                                      capfd, mock_packages, mock_archive,
+                                      config):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+
+            spec_yaml_path = str(tmpdir.join('spec.yaml'))
+
+            pkg_spec = Spec('a')
+            pkg_spec.concretize()
+
+            with open(spec_yaml_path, 'w') as fd:
+                fd.write(pkg_spec.to_yaml(all_deps=True))
+
+            install(
+                '--log-format=cdash',
+                '--log-file=cdash_reports',
+                '--cdash-build=my_custom_build',
+                '--cdash-site=my_custom_site',
+                '--cdash-track=my_custom_track',
+                '-f', spec_yaml_path)
+
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Configure.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            import re
+            install_command_regex = re.compile(
+                r'<ConfigureCommand>(.+)</ConfigureCommand>',
+                re.MULTILINE | re.DOTALL)
+            m = install_command_regex.search(content)
+            assert m
+            install_command = m.group(1)
+            assert 'a@' in install_command
+
+
+@pytest.mark.disable_clean_stage_check
 def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         msg = ''
