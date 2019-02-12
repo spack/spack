@@ -104,7 +104,7 @@ packages:
       # - py-sphinx-rtd-theme
       # - py-sqlalchemy
       # - py-symengine
-      # - py-sympy
+      - py-sympy
       # - py-toml
       # - py-tornado
       - py-urllib3
