@@ -552,7 +552,7 @@ class Llvm(CMakePackage):
 
     # Work around constexpr build failure on PPC:
     # https://bugzilla.redhat.com/show_bug.cgi?id=1538817
-    @when('arch=ppc64e')
+    @when('arch=ppc64le')
     def patch(self):
         filter_file('_LIBCPP_CONSTEXPR', '', 'projects/libcxx/include/thread')
 
