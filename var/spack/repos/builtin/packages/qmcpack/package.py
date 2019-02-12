@@ -7,7 +7,7 @@ from spack import *
 import llnl.util.tty as tty
 
 
-class Qmcpack(CMakePackage):
+class Qmcpack(CMakePackage, CudaPackage):
     """QMCPACK, is a modern high-performance open-source Quantum Monte
        Carlo (QMC) simulation code."""
 
@@ -217,6 +217,9 @@ class Qmcpack(CMakePackage):
 
         if '+cuda' in spec:
             args.append('-DQMC_CUDA=1')
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch is not None:
+                args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
         else:
             args.append('-DQMC_CUDA=0')
 
