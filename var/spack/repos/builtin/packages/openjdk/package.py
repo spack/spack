@@ -24,10 +24,11 @@ class Openjdk(Package):
         url="https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz",
     )
 
+
     version(
-        "1.8.0_202-b03",
-        sha256="e535ff66bca1623937e833ed3651d03acb09da9faf5ecc514e66ec8344030494",
-        url="https://download.java.net/java/early_access/jdk8/b03/BCL/jdk-8u202-ea-bin-b03-linux-x64-07_nov_2018.tar.gz",
+        "1.8.0_202-b08",
+        sha256="e9e679edefde71fd6b78ccd37060e4bb9a3d47c0f291fe61790b76396794edde",
+        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/archive/jdk8u202-b08.tar.gz",
     )
 
     provides('java')
