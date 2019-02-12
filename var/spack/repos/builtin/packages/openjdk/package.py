@@ -24,7 +24,6 @@ class Openjdk(Package):
         url="https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz",
     )
 
-
     version(
         "1.8.0_202-b08",
         sha256="e9e679edefde71fd6b78ccd37060e4bb9a3d47c0f291fe61790b76396794edde",
