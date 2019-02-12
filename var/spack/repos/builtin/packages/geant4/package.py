@@ -61,11 +61,13 @@ class Geant4(CMakePackage):
     depends_on("libxmu", when='+x11')
     depends_on("motif", when='+motif')
     depends_on("qt@4.8:4.999", when="+qt")
+
     # if G4 data not installed with geant4
     # depend on G4 data packages
     # this allows external data installations
     # to avoid duplication
-    #geant4@10.03.p03
+
+    # geant4@10.03.p03
     depends_on("g4abla@3.0", when='@10.03.p03 ~data')
     depends_on("g4emlow@6.50", when='@10.03.p03 ~data')
     depends_on("g4neutron@4.5", when='@10.03.p03 ~data')
@@ -77,7 +79,7 @@ class Geant4(CMakePackage):
     depends_on("g4radiative@5.1.1", when='@10.03.p03 ~data')
     depends_on("g4surface@1.0", when='@10.03.p03 ~data')
     depends_on("g4tendl@1.3", when='@10.03.p03 ~data')
-    #geant4@10.04
+    # geant4@10.04
     depends_on("g4abla@3.1", when='@10.04 ~data')
     depends_on("g4emlow@7.3", when='@10.04 ~data')
     depends_on("g4neutron@4.5", when='@10.04 ~data')
