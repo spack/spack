@@ -554,7 +554,7 @@ class Llvm(CMakePackage):
     # https://bugzilla.redhat.com/show_bug.cgi?id=1538817
     @when('arch=ppc64e')
     def patch(self):
-	filter_file('_LIBCPP_CONSTEXPR','', 'projects/libcxx/include/thread')
+        filter_file('_LIBCPP_CONSTEXPR', '', 'projects/libcxx/include/thread')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
