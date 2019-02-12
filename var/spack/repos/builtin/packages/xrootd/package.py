@@ -13,6 +13,10 @@ class Xrootd(CMakePackage):
     homepage = "http://xrootd.org"
     url      = "http://xrootd.org/download/v4.6.0/xrootd-4.6.0.tar.gz"
 
+    version('4.8.5',
+            sha256='42e4d2cc6f8b442135f09bcc12c7be38b1a0c623a005cb5e69ff3d27997bdf73')
+    version('4.8.4',
+            sha256='f148d55b16525567c0f893edf9bb2975f7c09f87f0599463e19e1b456a9d95ba')
     version('4.8.3', 'bb6302703ffc123f7f9141ddb589435e')
     version('4.8.2', '531b632191b59c2cf76ab8d31af4a866')
     version('4.8.1', 'a307973f7f43b0cc2688dfe502e17709')
@@ -53,7 +57,7 @@ class Xrootd(CMakePackage):
     depends_on('zlib')
 
     extends('python', when='+python')
-    patch('python-support.patch', level=1, when='+python')
+    patch('python-support.patch', level=1, when='@:4.8.99+python')
 
     def patch(self):
         """Remove hardcoded -std=c++0x flag
