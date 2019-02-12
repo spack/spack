@@ -30,9 +30,9 @@ class Openjdk(Package):
         url="https://download.java.net/java/early_access/jdk8/b03/BCL/jdk-8u202-ea-bin-b03-linux-x64-07_nov_2018.tar.gz",
     )
 
-    provides("java")
-    provides("java@11", when="@11.0:11.99")
-    provides("java@8", when="@1.8.0:1.8.999")
+    provides('java')
+    provides('java@11', when='@11.0:11.99')
+    provides('java@8', when='@1.8.0:1.8.999')
 
     # FIXME:
     # 1. `extends('java')` doesn't work, you need to use `extends('openjdk')`
@@ -44,80 +44,69 @@ class Openjdk(Package):
 
     @property
     def home(self):
-        """
-        Most of the time, ``JAVA_HOME`` is simply ``spec['java'].prefix``.
+        """Most of the time, ``JAVA_HOME`` is simply ``spec['java'].prefix``.
         However, if the user is using an externally installed JDK, it may be
-        symlinked.
-
-        For example, on macOS, the ``java`` executable can be found
+        symlinked. For example, on macOS, the ``java`` executable can be found
         in ``/usr/bin``, but ``JAVA_HOME`` is actually
         ``/Library/Java/JavaVirtualMachines/jdk-10.0.1.jdk/Contents/Home``.
-
         Users may not know the actual installation directory and add ``/usr``
-        to their ``packages.yaml`` unknowingly.
-
-        Run ``java_home`` if it exists
+        to their ``packages.yaml`` unknowingly. Run ``java_home`` if it exists
         to determine exactly where it is installed. Specify which version we
         are expecting in case multiple Java versions are installed.
-
-        See ``man java_home`` for more details.
-        """
+        See ``man java_home`` for more details."""
 
         prefix = self.prefix
         java_home = prefix.libexec.java_home
         if os.path.exists(java_home):
             java_home = Executable(java_home)
             version = str(self.version.up_to(2))
-            prefix = java_home("--version", version, output=str).strip()
+            prefix = java_home('--version', version, output=str).strip()
             prefix = Prefix(prefix)
 
         return prefix
 
     @property
     def libs(self):
-        """
-        Depending on the version number and whether the full JDK or just
+        """Depending on the version number and whether the full JDK or just
         the JRE was installed, Java libraries can be in several locations:
 
         * ``lib/libjvm.so``
         * ``jre/lib/libjvm.dylib``
 
-        Search recursively to find the correct library location.
-        """
+        Search recursively to find the correct library location."""
 
-        return find_libraries(["libjvm"], root=self.home, recursive=True)
+        return find_libraries(['libjvm'], root=self.home, recursive=True)
 
     def install(self, spec, prefix):
-        install_tree(".", prefix)
+        install_tree('.', prefix)
 
     def setup_environment(self, spack_env, run_env):
         """Set JAVA_HOME."""
 
-        run_env.set("JAVA_HOME", self.home)
+        run_env.set('JAVA_HOME', self.home)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """
-        Set JAVA_HOME and CLASSPATH.
-        CLASSPATH contains the installation prefix for the extension and any
-        other Java extensions it depends on.
-        """
+        """Set JAVA_HOME and CLASSPATH.
 
-        spack_env.set("JAVA_HOME", self.home)
+        CLASSPATH contains the installation prefix for the extension and any
+        other Java extensions it depends on."""
+
+        spack_env.set('JAVA_HOME', self.home)
 
         class_paths = []
-        for d in dependent_spec.traverse(deptype=("build", "run", "test")):
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
-                class_paths.extend(find(d.prefix, "*.jar"))
+                class_paths.extend(find(d.prefix, '*.jar'))
 
         classpath = os.pathsep.join(class_paths)
-        spack_env.set("CLASSPATH", classpath)
+        spack_env.set('CLASSPATH', classpath)
 
         # For runtime environment set only the path for
         # dependent_spec and prepend it to CLASSPATH
         if dependent_spec.package.extends(self.spec):
-            class_paths = find(dependent_spec.prefix, "*.jar")
+            class_paths = find(dependent_spec.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
-            run_env.prepend_path("CLASSPATH", classpath)
+            run_env.prepend_path('CLASSPATH', classpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Allows spec['java'].home to work."""
