@@ -120,12 +120,8 @@ def test_cmake_bad_generator(config, mock_packages):
     s.concretize()
     pkg = spack.repo.get(s)
     pkg.generator = 'Yellow Sticky Notes'
-    try:
+    with pytest.raises(spack.package.InstallError):
         get_std_cmake_args(pkg)
-    except spack.package.InstallError as e:
-        return e
-    else:
-        pytest.fail('InstallError was not raised!')
 
 
 def test_cmake_secondary_generator(config, mock_packages):
