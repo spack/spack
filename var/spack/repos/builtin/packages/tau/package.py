@@ -202,7 +202,7 @@ class Tau(Package):
         spack_compilers = {'tau_cc': c_compiler,
                            'tau_cxx': cxx_compiler}
 
-        for tau_wrapper_compiler, tau_compiler in compilers.iteritems():
+        for tau_wrapper_compiler, tau_compiler in compilers.items():
             fname = join_path(self.prefix.bin, tau_wrapper_compiler)
             f = open(fname, 'w')
             content = 'if [ -n "${USE_PROFILER_WRAPPER}" ]; then' + '\n'
