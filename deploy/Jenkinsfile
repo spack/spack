@@ -81,7 +81,6 @@ pipeline {
         DEPLOYMENT_UPSTREAM = deployment_directory(true)
         DEPLOYMENT_ROOT = deployment_directory(false)
         BASEDIR = "${DEPLOYMENT_ROOT}/spack/deploy"
-        TMPDIR = "/dev/shm/jenkins"
     }
 
     triggers {
