@@ -18,13 +18,6 @@ from spack.package import PackageBase, InstallError, run_after
 from spack.util.executable import which
 
 
-def spack_transitive_include_path():
-    return ';'.join(
-        os.path.join(dep, 'include')
-        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
-    )
-
-
 class CMakePackage(PackageBase):
     """Specialized class for packages built using CMake
 
@@ -284,7 +277,6 @@ class CMakePackage(PackageBase):
         paths = os.environ['PATH'].split(':')
         paths = [item for item in paths if 'spack/env' not in item]
         env['PATH'] = ':'.join(paths)
-        env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
         env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
 
         if 'SPACK_CC' in os.environ:
@@ -316,10 +308,7 @@ def cmdlist(str):
             if name.find('PATH') < 0:
                 fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
             else:
-                if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
-                    sep = ';'
-                else:
-                    sep = ':'
+                sep = ':'
 
                 fout.write(
                     'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
