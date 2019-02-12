@@ -4,8 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-
-from spack import *
+import os.path
 
 
 class Plumed(AutotoolsPackage):
@@ -80,7 +79,7 @@ class Plumed(AutotoolsPackage):
 
         # Get available patches
         plumed_patch = Executable(
-            join_path(self.spec.prefix.bin, 'plumed-patch')
+            os.path.join(self.spec.prefix.bin, 'plumed-patch')
         )
 
         out = plumed_patch('-q', '-l', output=str)
@@ -102,6 +101,12 @@ class Plumed(AutotoolsPackage):
     def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
         module.plumed = dependent_spec['plumed'].command
+
+    @property
+    def plumed_inc(self):
+        return os.path.join(
+            self.prefix.lib, 'plumed', 'src', 'lib', 'Plumed.inc'
+        )
 
     @run_before('autoreconf')
     def filter_gslcblas(self):

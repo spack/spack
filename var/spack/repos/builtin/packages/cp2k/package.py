@@ -117,95 +117,217 @@ class Cp2k(MakefilePackage):
         return [os.path.join(self.stage.source_path, self.makefile)]
 
     def edit(self, spec, prefix):
-        with open(self.makefile, 'w') as mkf:
-            # Optimization flags
-            optflags = {
-                'gcc': [
-                    '-O2',
-                    '-mtune=native',
-                    '-funroll-loops',
-                    '-ffast-math',
-                    '-ftree-vectorize',
-                ],
-                'intel': [
-                    '-O2',
-                    '-pc64',
-                    '-unroll',
-                ],
-                'pgi': [
-                    '-fast',
-                ],
-            }
 
-            dflags = ['-DNDEBUG']
+        fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
 
-            fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
+        optimization_flags = {
+            'gcc': [
+                '-O2',
+                '-mtune=native',
+                '-funroll-loops',
+                '-ffast-math',
+                '-ftree-vectorize',
+            ],
+            'intel': ['-O2', '-pc64', '-unroll'],
+            'pgi': ['-fast'],
+        }
 
-            cppflags = [
-                '-D__FFTW3',
-                '-D__LIBINT',
-                '-D__LIBINT_MAX_AM=6',
-                '-D__LIBDERIV_MAX_AM1=5',
-                fftw.headers.cpp_flags,
-            ]
+        dflags = ['-DNDEBUG']
+        cppflags = [
+            '-D__FFTW3',
+            '-D__LIBINT',
+            '-D__LIBINT_MAX_AM=6',
+            '-D__LIBDERIV_MAX_AM1=5',
+            fftw.headers.cpp_flags,
+        ]
 
-            if '^mpi@3:' in spec:
-                cppflags.append('-D__MPI_VERSION=3')
-            elif '^mpi@2:' in spec:
-                cppflags.append('-D__MPI_VERSION=2')
+        if '^mpi@3:' in spec:
+            cppflags.append('-D__MPI_VERSION=3')
+        elif '^mpi@2:' in spec:
+            cppflags.append('-D__MPI_VERSION=2')
 
-            if '^intel-mkl' in spec:
-                cppflags.append('-D__FFTSG')
+        if '^intel-mkl' in spec:
+            cppflags.append('-D__FFTSG')
 
-            cflags = optflags[self.spec.compiler.name][:]
-            cxxflags = optflags[self.spec.compiler.name][:]
-            fcflags = optflags[self.spec.compiler.name][:]
-            ldflags = []
-            libs = []
+        cflags = optimization_flags[self.spec.compiler.name][:]
+        cxxflags = optimization_flags[self.spec.compiler.name][:]
+        fcflags = optimization_flags[self.spec.compiler.name][:]
+        ldflags = []
+        libs = []
 
-            if '%intel' in spec:
-                cflags.append('-fp-model precise')
-                cxxflags.append('-fp-model precise')
-                fcflags.extend(['-fp-model source', '-heap-arrays 64'])
-            elif '%gcc' in spec:
-                fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
-            elif '%pgi' in spec:
-                fcflags.extend(['-Mfreeform', '-Mextend'])
+        if '%intel' in spec:
+            cflags.append('-fp-model precise')
+            cxxflags.append('-fp-model precise')
+            fcflags.extend(['-fp-model source', '-heap-arrays 64'])
+        elif '%gcc' in spec:
+            fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
+        elif '%pgi' in spec:
+            fcflags.extend(['-Mfreeform', '-Mextend'])
 
-            if '+openmp' in spec:
-                fcflags.append(self.compiler.openmp_flag)
-                ldflags.append(self.compiler.openmp_flag)
+        if '+openmp' in spec:
+            fcflags.append(self.compiler.openmp_flag)
+            ldflags.append(self.compiler.openmp_flag)
 
-            ldflags.append(fftw.libs.search_flags)
+        ldflags.append(fftw.libs.search_flags)
 
-            if 'superlu-dist@4.3' in spec:
-                ldflags.insert(0, '-Wl,--allow-multiple-definition')
+        if 'superlu-dist@4.3' in spec:
+            ldflags.insert(0, '-Wl,--allow-multiple-definition')
 
-            # libint-1.x.y has to be linked statically to work around
-            # inconsistencies in its Fortran interface definition
-            # (short-int vs int) which otherwise causes segfaults at runtime
-            # due to wrong offsets into the shared library symbols.
+        # libint-1.x.y has to be linked statically to work around
+        # inconsistencies in its Fortran interface definition
+        # (short-int vs int) which otherwise causes segfaults at runtime
+        # due to wrong offsets into the shared library symbols.
+        libs.extend([
+            os.path.join(spec['libint'].libs.directories[0], 'libderiv.a'),
+            os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
+        ])
+
+        if '+plumed' in self.spec:
+            dflags.extend(['-D__PLUMED2'])
+            cppflags.extend(['-D__PLUMED2'])
             libs.extend([
-                os.path.join(spec['libint'].libs.directories[0], 'libderiv.a'),
-                os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
+                os.path.join(self.spec['plumed'].prefix.lib,
+                             'libplumed.{0}'.format(dso_suffix))
             ])
 
+        fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
+
+        # Intel
+        if '%intel' in self.spec:
+            cppflags.extend([
+                '-D__INTEL',
+                '-D__HAS_ISO_C_BINDING',
+                '-D__USE_CP2K_TRACE',
+                '-D__MKL'
+            ])
+            fcflags.extend([
+                '-diag-disable 8290,8291,10010,10212,11060',
+                '-free',
+                '-fpp'
+            ])
+
+        # FFTW, LAPACK, BLAS
+        lapack = spec['lapack'].libs
+        blas = spec['blas'].libs
+        ldflags.append((lapack + blas).search_flags)
+        libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+
+        # MPI
+        if '+mpi' in self.spec:
+            cppflags.extend([
+                '-D__parallel',
+                '-D__SCALAPACK'
+            ])
+
+            scalapack = spec['scalapack'].libs
+            ldflags.append(scalapack.search_flags)
+
+            libs.extend(scalapack)
+            libs.extend(self.spec['mpi:cxx'].libs)
+            libs.extend(self.compiler.stdcxx_libs)
+
+            if 'wannier90' in spec:
+                cppflags.append('-D__WANNIER90')
+                wannier = os.path.join(
+                    spec['wannier90'].libs.directories[0], 'libwannier.a'
+                )
+                libs.append(wannier)
+
+        if '+libxc' in spec:
+            libxc = spec['libxc:fortran,static']
+            cppflags += [
+                '-D__LIBXC',
+                libxc.headers.cpp_flags
+            ]
+
+            ldflags.append(libxc.libs.search_flags)
+            libs.append(str(libxc.libs))
+
+        if '+pexsi' in self.spec:
+            cppflags.append('-D__LIBPEXSI')
+            fcflags.append('-I' + os.path.join(
+                spec['pexsi'].prefix, 'fortran'))
+            libs.extend([
+                os.path.join(spec['pexsi'].libs.directories[0],
+                             'libpexsi.a'),
+                os.path.join(spec['superlu-dist'].libs.directories[0],
+                             'libsuperlu_dist.a'),
+                os.path.join(
+                    spec['parmetis'].libs.directories[0],
+                    'libparmetis.{0}'.format(dso_suffix)
+                ),
+                os.path.join(
+                    spec['metis'].libs.directories[0],
+                    'libmetis.{0}'.format(dso_suffix)
+                ),
+            ])
+
+        if '+elpa' in self.spec:
+            elpa = spec['elpa']
+            elpa_suffix = '_openmp' if '+openmp' in elpa else ''
+            elpa_base_path = os.path.join(
+                elpa.prefix,
+                'include',
+                'elpa{suffix}-{version!s}'.format(
+                    suffix=elpa_suffix, version=elpa.version))
+
+            fcflags.append('-I' + os.path.join(elpa_base_path, 'modules'))
+            libs.append(os.path.join(elpa.libs.directories[0],
+                                     ('libelpa{elpa_suffix}.{dso_suffix}'
+                                      .format(elpa_suffix=elpa_suffix,
+                                              dso_suffix=dso_suffix))))
+
+            if spec.satisfies('@:4.999'):
+                if elpa.satisfies('@:2014.5.999'):
+                    cppflags.append('-D__ELPA')
+                elif elpa.satisfies('@2014.6:2015.10.999'):
+                    cppflags.append('-D__ELPA2')
+                else:
+                    cppflags.append('-D__ELPA3')
+            else:
+                cppflags.append('-D__ELPA={0}{1:02d}'
+                                .format(elpa.version[0],
+                                        int(elpa.version[1])))
+                fcflags.append('-I' + os.path.join(elpa_base_path, 'elpa'))
+
+        if 'smm=libsmm' in spec:
+            lib_dir = os.path.join(
+                'lib', self.makefile_architecture, self.makefile_version
+            )
+            mkdirp(lib_dir)
+            try:
+                copy(env['LIBSMM_PATH'], os.path.join(lib_dir, 'libsmm.a'))
+            except KeyError:
+                raise KeyError('Point environment variable LIBSMM_PATH to '
+                               'the absolute path of the libsmm.a file')
+            except IOError:
+                raise IOError('The file LIBSMM_PATH pointed to does not '
+                              'exist. Note that it must be absolute path.')
+            cppflags.extend([
+                '-D__HAS_smm_dnn',
+                '-D__HAS_smm_vec',
+            ])
+            libs.append('-lsmm')
+
+        elif 'smm=libxsmm' in spec:
+            cppflags.extend([
+                '-D__LIBXSMM',
+                '$(shell pkg-config --cflags-only-other libxsmmf)',
+            ])
+            fcflags.append('$(shell pkg-config --cflags-only-I libxsmmf)')
+            libs.append('$(shell pkg-config --libs libxsmmf)')
+
+        dflags.extend(cppflags)
+        cflags.extend(cppflags)
+        cxxflags.extend(cppflags)
+        fcflags.extend(cppflags)
+
+        with open(self.makefile, 'w') as mkf:
             if '+plumed' in self.spec:
                 # Include Plumed.inc in the Makefile
                 mkf.write('include {0}\n'.format(
-                    os.path.join(self.spec['plumed'].prefix.lib,
-                                 'plumed',
-                                 'src',
-                                 'lib',
-                                 'Plumed.inc')
+                    self.spec['plumed'].package.plumed_inc
                 ))
-                # Add required macro
-                dflags.extend(['-D__PLUMED2'])
-                cppflags.extend(['-D__PLUMED2'])
-                libs.extend([
-                    os.path.join(self.spec['plumed'].prefix.lib,
-                                 'libplumed.{0}'.format(dso_suffix))
-                ])
 
             mkf.write('CC = {0.compiler.cc}\n'.format(self))
             if '%intel' in self.spec:
@@ -220,138 +342,8 @@ class Cp2k(MakefilePackage):
             else:
                 mkf.write('CPP = # {0.compiler.cc} -E\n\n'.format(self))
                 mkf.write('AR = ar -r\n\n')
-            fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
             mkf.write('FC = {0}\n'.format(fc))
             mkf.write('LD = {0}\n'.format(fc))
-
-            # Intel
-            if '%intel' in self.spec:
-                cppflags.extend([
-                    '-D__INTEL',
-                    '-D__HAS_ISO_C_BINDING',
-                    '-D__USE_CP2K_TRACE',
-                    '-D__MKL'
-                ])
-                fcflags.extend([
-                    '-diag-disable 8290,8291,10010,10212,11060',
-                    '-free',
-                    '-fpp'
-                ])
-
-            # FFTW, LAPACK, BLAS
-            lapack = spec['lapack'].libs
-            blas = spec['blas'].libs
-            ldflags.append((lapack + blas).search_flags)
-            libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
-
-            # MPI
-            if '+mpi' in self.spec:
-                cppflags.extend([
-                    '-D__parallel',
-                    '-D__SCALAPACK'
-                ])
-
-                scalapack = spec['scalapack'].libs
-                ldflags.append(scalapack.search_flags)
-
-                libs.extend(scalapack)
-                libs.extend(self.spec['mpi:cxx'].libs)
-                libs.extend(self.compiler.stdcxx_libs)
-
-                if 'wannier90' in spec:
-                    cppflags.append('-D__WANNIER90')
-                    wannier = os.path.join(
-                        spec['wannier90'].libs.directories[0], 'libwannier.a'
-                    )
-                    libs.append(wannier)
-
-            if '+libxc' in spec:
-                libxc = spec['libxc:fortran,static']
-                cppflags += [
-                    '-D__LIBXC',
-                    libxc.headers.cpp_flags
-                ]
-
-                ldflags.append(libxc.libs.search_flags)
-                libs.append(str(libxc.libs))
-
-            if '+pexsi' in self.spec:
-                cppflags.append('-D__LIBPEXSI')
-                fcflags.append('-I' + os.path.join(
-                    spec['pexsi'].prefix, 'fortran'))
-                libs.extend([
-                    os.path.join(spec['pexsi'].libs.directories[0],
-                                 'libpexsi.a'),
-                    os.path.join(spec['superlu-dist'].libs.directories[0],
-                                 'libsuperlu_dist.a'),
-                    os.path.join(
-                        spec['parmetis'].libs.directories[0],
-                        'libparmetis.{0}'.format(dso_suffix)
-                    ),
-                    os.path.join(
-                        spec['metis'].libs.directories[0],
-                        'libmetis.{0}'.format(dso_suffix)
-                    ),
-                ])
-
-            if '+elpa' in self.spec:
-                elpa = spec['elpa']
-                elpa_suffix = '_openmp' if '+openmp' in elpa else ''
-                elpa_base_path = os.path.join(
-                    elpa.prefix,
-                    'include',
-                    'elpa{suffix}-{version!s}'.format(
-                        suffix=elpa_suffix, version=elpa.version))
-
-                fcflags.append('-I' + os.path.join(elpa_base_path, 'modules'))
-                libs.append(os.path.join(elpa.libs.directories[0],
-                                         ('libelpa{elpa_suffix}.{dso_suffix}'
-                                          .format(elpa_suffix=elpa_suffix,
-                                                  dso_suffix=dso_suffix))))
-
-                if spec.satisfies('@:4.999'):
-                    if elpa.satisfies('@:2014.5.999'):
-                        cppflags.append('-D__ELPA')
-                    elif elpa.satisfies('@2014.6:2015.10.999'):
-                        cppflags.append('-D__ELPA2')
-                    else:
-                        cppflags.append('-D__ELPA3')
-                else:
-                    cppflags.append('-D__ELPA={0}{1:02d}'
-                                    .format(elpa.version[0],
-                                            int(elpa.version[1])))
-                    fcflags.append('-I' + os.path.join(elpa_base_path, 'elpa'))
-
-            if 'smm=libsmm' in spec:
-                lib_dir = os.path.join(
-                    'lib', self.makefile_architecture, self.makefile_version
-                )
-                mkdirp(lib_dir)
-                try:
-                    copy(env['LIBSMM_PATH'], os.path.join(lib_dir, 'libsmm.a'))
-                except KeyError:
-                    raise KeyError('Point environment variable LIBSMM_PATH to '
-                                   'the absolute path of the libsmm.a file')
-                except IOError:
-                    raise IOError('The file LIBSMM_PATH pointed to does not '
-                                  'exist. Note that it must be absolute path.')
-                cppflags.extend([
-                    '-D__HAS_smm_dnn',
-                    '-D__HAS_smm_vec',
-                ])
-                libs.append('-lsmm')
-            elif 'smm=libxsmm' in spec:
-                cppflags.extend([
-                    '-D__LIBXSMM',
-                    '$(shell pkg-config --cflags-only-other libxsmmf)',
-                ])
-                fcflags.append('$(shell pkg-config --cflags-only-I libxsmmf)')
-                libs.append('$(shell pkg-config --libs libxsmmf)')
-
-            dflags.extend(cppflags)
-            cflags.extend(cppflags)
-            cxxflags.extend(cppflags)
-            fcflags.extend(cppflags)
 
             # Write compiler flags to file
             mkf.write('DFLAGS = {0}\n\n'.format(' '.join(dflags)))
