@@ -16,7 +16,7 @@ class Pxz(MakefilePackage):
     version('develop', branch='master')
     version('4.999.9beta.20091201git', '4ae3926185978f5c95c9414dc4634451')
 
-    depends_on('lzma')
+    depends_on('xz')
 
     conflicts('platform=darwin', msg='Pxz runs only on Linux.')
 
