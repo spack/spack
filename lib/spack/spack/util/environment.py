@@ -338,7 +338,7 @@ class EnvironmentModifications(object):
             modifications[item.name].append(item)
         return modifications
 
-    def variable_is_explicitly_unset(self, var_name):
+    def is_unset(self, var_name):
         modifications = self.group_by_name()
         var_updates = modifications.get(var_name, None)
         if not var_updates:
