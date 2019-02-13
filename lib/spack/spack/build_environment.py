@@ -317,16 +317,6 @@ def set_build_environment_variables(pkg, env, dirty):
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
 
-    # TODO: this is no longer used by the wrapper (as of this PR) - it was
-    # originally only used for inserting RPATHs. That being said it may
-    # be useful in the future.
-    # Install prefix
-    env.set(SPACK_PREFIX, pkg.prefix)
-
-    # TODO: this was not used before this PR, should it be removed?
-    # Install root prefix
-    env.set(SPACK_INSTALL, spack.store.root)
-
     # Set environment variables if specified for
     # the given compiler
     compiler = pkg.compiler

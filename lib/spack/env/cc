@@ -24,7 +24,6 @@
 # the script runs. They are set by routines in spack.build_environment
 # as part of spack.package.Package.do_install().
 parameters=(
-    SPACK_PREFIX
     SPACK_ENV_PATH
     SPACK_DEBUG_LOG_DIR
     SPACK_DEBUG_LOG_ID
