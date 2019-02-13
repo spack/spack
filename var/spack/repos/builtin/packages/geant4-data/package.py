@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os, glob
+import os
+import glob
+
 
 class Geant4Data(Package):
     """An umbrella package to hold Geant4 data packages"""
@@ -40,7 +42,6 @@ class Geant4Data(Package):
     depends_on("g4realsurface@2.1", when='@10.04 ')
     depends_on("g4tendl@1.3.2", when='@10.04 ')
 
-
     def install(self, spec, prefix):
         spec = self.spec
         version = self.version
@@ -50,44 +51,45 @@ class Geant4Data(Package):
             patch = version[-1]
         else:
             patch = 0
-        datadir = join_path(spec.prefix.share,
-                            'Geant4-%s.%s.%s/data' % (major, minor, patch)
-        if '+data' not in self.spec:
-            with working_dir(datadir,create=True):
-                for d in glob.glob('%s/*' %
-                                     spec['g4abla'].prefix.share.data):
-                    os.symlink(rel, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4emlow'].prefix.share.data):
-                    os.symlink(rel, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4ndl'].prefix.share.data):
-                    os.symlink(rel, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4saiddata'].prefix.share.data):
-                    os.symlink(rel, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4neutronxs'].prefix.share.data):
-                    os.symlink(rel, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4ensdfstate'].prefix.share.data):
-                    os.symlink(rel, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4photonevaporation'].prefix.share.data):
-                    os.symlink(rel, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4pii'].prefix.share.data):
-                    os.symlink(d, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4radioactivedecay'].prefix.share.data):
-                    os.symlink(d, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4realsurface'].prefix.share.data):
-                    os.symlink(d, os.path.basename(d))
-                for d in glob.glob('%s/*' %
-                                     spec['g4tendl'].prefix.share.data):
-                    os.symlink(d, os.path.basename(d))
+        data = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
+        datadir = join_path(spec.prefix.share, data)
+        with working_dir(datadir, create=True):
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4abla'].prefix):
+                os.symlink(rel, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4emlow'].prefix):
+                os.symlink(rel, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4ndl'].prefix):
+                os.symlink(rel, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4saiddata'].prefix):
+                os.symlink(rel, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4neutronxs'].prefix):
+                os.symlink(rel, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4ensdfstate'].prefix):
+                os.symlink(rel, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4photonevaporation'].prefix):
+                os.symlink(rel, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4pii'].prefix):
+                os.symlink(d, os.path.basename(d))
+            for d in glob.glob('%s/share/data*' %
+                               spec['g4radioactivedecay'].prefix):
+                os.symlink(d, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4realsurface'].prefix):
+                os.symlink(d, os.path.basename(d))
+            for d in glob.glob('%s/share/data/*' %
+                               spec['g4tendl'].prefix):
+                os.symlink(d, os.path.basename(d))
 
     def url_for_version(self, version):
         """Handle version string."""
-        return 'http://geant4-data.web.cern.ch/geant4-data/ReleaseNotes/ReleaseNotes4.{0}.{1}.html'.format(version[0],version[1])
+        url = 'http://geant4-data.web.cern.ch/geant4-data/ReleaseNotes/'
+        url = url + 'ReleaseNotes4.{0}.{1}.html'.format(version[0], version[1])
+        return url
