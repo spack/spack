@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 def my_find_package_dir(spack_package_root, name):
 
     """Finds directory with a specific name, somewhere inside a Spack
@@ -52,7 +53,7 @@ def my_link_dir(src_root, dest_root, link=os.symlink):
         dest_path = os.path.join(dest_root, src_path[len(src_root) + 1:])
         try:
             os.makedirs(dest_path)
-        except:
+        except OSError:
             pass
 
         # Link all files from src to dest directory
@@ -105,8 +106,7 @@ class PyBasemap(PythonPackage):
             path_m = my_find_package_dir(
                 spec['py-matplotlib'].prefix, 'mpl_toolkits')
             path_b = my_find_package_dir(spec.prefix, 'mpl_toolkits')
-            print('path_m',path_m,type(path_m))
-            print('path_b',path_b,type(path_b))
+            print('path_m', path_m, type(path_m))
+            print('path_b', path_b, type(path_b))
             my_link_dir(path_m, path_b)
-
 
