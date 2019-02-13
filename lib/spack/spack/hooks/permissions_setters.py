@@ -15,7 +15,8 @@ def forall_files(path, fn, args, dir_args=None):
     """Apply function to all files in directory, with file as first arg.
 
     Does not apply to the root dir. Does not apply to links"""
-    for root, dirs, files in os.walk(path):
+    # os.walk explicitly set not to follow links
+    for root, dirs, files in os.walk(path, followlinks=False):
         for d in dirs:
             if not os.path.islink(os.path.join(root, d)):
                 if dir_args:
