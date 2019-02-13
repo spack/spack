@@ -34,8 +34,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True, description='Build with MPI support')
     variant('phdf5', default=True, description='Build with parallel collective I/O')
-    variant('cuda', default=False,
-            description='Enable CUDA and GPU acceleration')
     variant('complex', default=False,
             description='Build the complex (general twist/k-point) version')
     variant('mixed', default=False,
