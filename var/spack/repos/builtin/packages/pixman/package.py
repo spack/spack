@@ -15,8 +15,9 @@ class Pixman(AutotoolsPackage):
     homepage = "http://www.pixman.org"
     url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
 
-    version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
-    version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
+    version('0.38.0', sha256='a7592bef0156d7c27545487a52245669b00cf7e70054505381cff2136d890ca8')
+    version('0.34.0', sha256='21b6b249b51c6800dc9553b65106e1e37d0e25df942c90531d4c3997aa20a88e')
+    version('0.32.6', sha256='3dfed13b8060eadabf0a4945c7045b7793cc7e3e910e748a8bb0f0dc3e794904')
 
     depends_on('pkgconfig', type='build')
     depends_on('libpng')
