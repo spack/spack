@@ -154,7 +154,7 @@ class Geant4(CMakePackage):
         else:
             patch = 0
         datadir = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
-        if not '+data' in self.spec:
+        if '+data' not in self.spec:
             with working_dir(join_path(spec.prefix.share, datadir),
                              create=True):
                 for dir in glob.glob('%s/*' %
