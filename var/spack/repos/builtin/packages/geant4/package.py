@@ -6,6 +6,8 @@
 
 from spack import *
 import platform
+import os
+import glob
 
 
 class Geant4(CMakePackage):
@@ -26,7 +28,7 @@ class Geant4(CMakePackage):
     variant('x11', default=False, description='Optional X11 support')
     variant('motif', default=False, description='Optional motif support')
     variant('threads', default=True, description='Build with multithreading')
-    variant('data', default=False, description='Install geant4 data')
+    variant('data', default=True, description='Install geant4 data')
 
     variant('cxxstd',
             default='11',
@@ -140,3 +142,39 @@ class Geant4(CMakePackage):
     def url_for_version(self, version):
         """Handle Geant4's unusual version string."""
         return ("http://geant4.cern.ch/support/source/geant4.%s.tar.gz" % version)
+
+
+    @run_after('install')
+    def make_data_links(self):
+        major = self.version[0]
+        minor = self.version[1]
+        if len(self.version) > 2:
+            patch = self.version[-1]
+        else:
+            patch = 0
+        datadir='Geant4-%s.%s.%s/data' % (major, minor, patch)
+        if not '+data' in self.spec:
+            with working_dir(join_path(self.spec.prefix.share,datadir)
+                             ,create=True):
+                for dir in glob.glob('%s/*' % self.spec['g4abla'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4emlow'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4neutron'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4neutronxs'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4nucleonxs'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4nuclide'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4photon'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4pii'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4radiative'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4surface'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
+                for dir in glob.glob('%s/*' % self.spec['g4tendl'].prefix.share.data):
+                    os.symlink(dir,os.path.basename(dir))
