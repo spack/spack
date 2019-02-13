@@ -26,11 +26,11 @@ class Eigen(CMakePackage):
     variant('metis', default=False,
             description='Enables metis permutations in sparse algebra')
     variant('scotch', default=False,
-            description='Enables scotch/pastix factorizations in sparse algebra')
+            description='Enables scotch/pastix sparse factorization methods')
     variant('fftw', default=False,
             description='Enables FFTW backend for the FFT plugin')
     variant('suitesparse', default=False,
-            description='Enables SuiteSparse factorizations in sparse algebra')
+            description='Enables SuiteSparse sparse factorization methods')
     variant('mpfr', default=False,
             description='Enables the multi-precisions floating-point plugin')
     variant('build_type', default='RelWithDebInfo',
