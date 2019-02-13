@@ -218,6 +218,8 @@ class Qmcpack(CMakePackage, CudaPackage):
             cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch is not None:
                 args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
+            else:
+                args.append('-DCUDA_ARCH=sm_35')
         else:
             args.append('-DQMC_CUDA=0')
 
