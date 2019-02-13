@@ -30,8 +30,9 @@ class Nanoflann(CMakePackage):
     """
 
     homepage = "https://github.com/jlblancoc/nanoflann"
-    url      = "https://github.com/jlblancoc/nanoflann/archive/v1.2.3.tar.gz"
+    url      = "https://github.com/jlblancoc/nanoflann/archive/v1.3.0.tar.gz"
 
+    version('1.3.0', 'c9836578e97fca4f05335699b8394b4d')
     version('1.2.3', '92a0f44a631c41aa06f9716c51dcdb11')
 
     def cmake_args(self):
