@@ -14,7 +14,7 @@ from spack.util.executable import Executable
 from spack.util.spack_yaml import syaml_dict, syaml_str
 from spack.util.environment import EnvironmentModifications
 
-from llnl.util.filesystem import LibraryList
+from llnl.util.filesystem import LibraryList, HeaderList
 
 
 @pytest.fixture
@@ -221,7 +221,11 @@ def test_package_inheritance_module_setup(config, mock_packages):
 
 
 def test_set_build_environment_variables(
-        config, mock_packages, working_env, monkeypatch):
+        config, mock_packages, working_env, monkeypatch, tmpdir_factory):
+    """Check that build_environment supplies the needed library/include
+    directories via the SPACK_LINK_DIRS and SPACK_INCLUDE_DIRS environment
+    variables.
+    """
 
     root = spack.spec.Spec('dt-diamond')
     root.concretize()
@@ -233,8 +237,17 @@ def test_set_build_environment_variables(
     dep_lib_paths = ['/test/path/to/ex1.so', '/test/path/to/subdir/ex2.so']
     dep_lib_dirs = ['/test/path/to', '/test/path/to/subdir']
     dep_libs = LibraryList(dep_lib_paths)
-    setattr(dep_pkg, 'libs', dep_libs)
 
+    dep2_prefix = tmpdir_factory.mktemp('prefix')
+    dep2_include = dep2_prefix.ensure('include', dir=True)
+    dep2_pkg = root['dt-diamond-right'].package
+    dep2_pkg.spec.prefix = str(dep2_prefix)
+    dep2_inc_paths = ['/test2/path/to/ex1.h', '/test2/path/to/subdir/ex2.h']
+    dep2_inc_dirs = ['/test2/path/to', '/test2/path/to/subdir']
+    dep2_includes = HeaderList(dep2_inc_paths)
+
+    setattr(dep_pkg, 'libs', dep_libs)
+    setattr(dep2_pkg, 'headers', dep2_includes)
     try:
         pkg = root.package
         env_mods = EnvironmentModifications()
@@ -243,19 +256,25 @@ def test_set_build_environment_variables(
 
         env_mods.apply_modifications()
 
-        def ignore_trailing_slashes(paths):
-            return list(p.rstrip('/') for p in paths)
+        def normpaths(paths):
+            return list(os.path.normpath(p) for p in paths)
 
         link_dir_var = os.environ['SPACK_LINK_DIRS']
         assert (
-            ignore_trailing_slashes(link_dir_var.split(':')) == dep_lib_dirs)
+            normpaths(link_dir_var.split(':')) == normpaths(dep_lib_dirs))
 
-        root_rpaths = ['/dt-diamond-prefix/lib', '/dt-diamond-prefix/lib64']
+        root_libdirs = ['/dt-diamond-prefix/lib', '/dt-diamond-prefix/lib64']
         rpath_dir_var = os.environ['SPACK_RPATH_DIRS']
         # Note: the 'lib' and 'lib64' subdirectories of the root package
         # prefix should always be rpathed and should be the first rpaths
         assert (
-            ignore_trailing_slashes(rpath_dir_var.split(':')) ==
-            root_rpaths + dep_lib_dirs)
+            normpaths(rpath_dir_var.split(':')) ==
+            normpaths(root_libdirs + dep_lib_dirs))
+
+        header_dir_var = os.environ['SPACK_INCLUDE_DIRS']
+        assert (
+            normpaths(header_dir_var.split(':')) ==
+            normpaths(dep2_inc_dirs + [str(dep2_include)]))
     finally:
         delattr(dep_pkg, 'libs')
+        delattr(dep2_pkg, 'headers')
