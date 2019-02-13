@@ -15,6 +15,7 @@ class Pixman(AutotoolsPackage):
     homepage = "http://www.pixman.org"
     url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
 
+    version('0.38.0', '8f34a92041de2daaa4c34c5f7c860f21')
     version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
     version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
 
