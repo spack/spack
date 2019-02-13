@@ -14,7 +14,7 @@ from spack.util.executable import Executable
 from spack.util.spack_yaml import syaml_dict, syaml_str
 from spack.util.environment import EnvironmentModifications
 
-from llnl.util.filesystem import LibraryList, HeaderList
+from llnl.util.filesystem import LibraryList
 
 
 @pytest.fixture
@@ -219,6 +219,7 @@ def test_package_inheritance_module_setup(config, mock_packages):
 
     os.environ.pop('TEST_MODULE_VAR')
 
+
 def test_set_build_environment_variables(
         config, mock_packages, working_env, monkeypatch):
 
@@ -229,7 +230,7 @@ def test_set_build_environment_variables(
         s.prefix = '/{0}-prefix/'.format(s.name)
 
     dep_pkg = root['dt-diamond-left'].package
-    dep_lib_paths =  ['/test/path/to/ex1.so', '/test/path/to/subdir/ex2.so']
+    dep_lib_paths = ['/test/path/to/ex1.so', '/test/path/to/subdir/ex2.so']
     dep_lib_dirs = ['/test/path/to', '/test/path/to/subdir']
     dep_libs = LibraryList(dep_lib_paths)
     setattr(dep_pkg, 'libs', dep_libs)
@@ -242,8 +243,8 @@ def test_set_build_environment_variables(
 
         env_mods.apply_modifications()
 
-        def ignore_trailing_slashes(L):
-            return list(i.rstrip('/') for i in L)
+        def ignore_trailing_slashes(paths):
+            return list(p.rstrip('/') for p in paths)
 
         link_dir_var = os.environ['SPACK_LINK_DIRS']
         assert (
