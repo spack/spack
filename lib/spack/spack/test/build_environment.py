@@ -265,13 +265,15 @@ def test_set_build_environment_variables(
 
         root_libdirs = ['/dt-diamond-prefix/lib', '/dt-diamond-prefix/lib64']
         rpath_dir_var = os.environ['SPACK_RPATH_DIRS']
-        # Note: the 'lib' and 'lib64' subdirectories of the root package
-        # prefix should always be rpathed and should be the first rpaths
+        # The 'lib' and 'lib64' subdirectories of the root package prefix
+        # should always be rpathed and should be the first rpaths
         assert (
             normpaths(rpath_dir_var.split(':')) ==
             normpaths(root_libdirs + dep_lib_dirs))
 
         header_dir_var = os.environ['SPACK_INCLUDE_DIRS']
+        # As long as a dependency package has an 'include' prefix, it is added
+        # (regardless of whether it contains any header files)
         assert (
             normpaths(header_dir_var.split(':')) ==
             normpaths(dep2_inc_dirs + [str(dep2_include)]))
