@@ -56,25 +56,25 @@ class Geant4Data(Package):
         with working_dir(datadir, create=True):
             for d in glob.glob('%s/share/data/*' %
                                spec['g4abla'].prefix):
-                os.symlink(rel, os.path.basename(d))
+                os.symlink(d, os.path.basename(d))
             for d in glob.glob('%s/share/data/*' %
                                spec['g4emlow'].prefix):
-                os.symlink(rel, os.path.basename(d))
+                os.symlink(d, os.path.basename(d))
             for d in glob.glob('%s/share/data/*' %
                                spec['g4ndl'].prefix):
-                os.symlink(rel, os.path.basename(d))
+                os.symlink(d, os.path.basename(d))
             for d in glob.glob('%s/share/data/*' %
                                spec['g4saiddata'].prefix):
-                os.symlink(rel, os.path.basename(d))
+                os.symlink(d, os.path.basename(d))
             for d in glob.glob('%s/share/data/*' %
                                spec['g4neutronxs'].prefix):
-                os.symlink(rel, os.path.basename(d))
+                os.symlink(d, os.path.basename(d))
             for d in glob.glob('%s/share/data/*' %
                                spec['g4ensdfstate'].prefix):
-                os.symlink(rel, os.path.basename(d))
+                os.symlink(d, os.path.basename(d))
             for d in glob.glob('%s/share/data/*' %
                                spec['g4photonevaporation'].prefix):
-                os.symlink(rel, os.path.basename(d))
+                os.symlink(d, os.path.basename(d))
             for d in glob.glob('%s/share/data/*' %
                                spec['g4pii'].prefix):
                 os.symlink(d, os.path.basename(d))
