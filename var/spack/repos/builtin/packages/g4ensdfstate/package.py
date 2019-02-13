@@ -8,13 +8,13 @@ from spack import *
 import os
 
 
-class G4radiative(Package):
-    """Geant4 data files for radio-active decay hadronic processes"""
+class G4ensdfstate(Package):
+    """Geant4 data for nuclides properties"""
     homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4RadioactiveDecay.5.1.1.tar.gz"
+    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4ENSDFSTATE.2.1.tar.gz"
 
-    version('5.1.1', 'f7a9a0cc998f0d946359f2cb18d30dff1eabb7f3c578891111fc3641833870ae')
-    version('5.2', '99c038d89d70281316be15c3c98a66c5d0ca01ef575127b6a094063003e2af5d')
+    version('2.1', '933e7f99b1c70f24694d12d517dfca36d82f4e95b084c15d86756ace2a2790d9')
+    version('2.2', 'dd7e27ef62070734a4a709601f5b3bada6641b111eb7069344e4f99a01d6e0a6')
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
@@ -23,8 +23,8 @@ class G4radiative(Package):
         install_tree(self.stage.source_path, install_path)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        run_env.set('G4RADIOACTIVEDATA', join_path(prefix.share, 'data'))
+        run_env.set('G4ENSDFSTATEDATA', join_path(prefix.share, 'data'))
 
     def url_for_version(self, version):
         """Handle version string."""
-        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4RadioactiveDecay.%s.tar.gz" % version)
+        return "http://geant4-data.web.cern.ch/geant4-data/datasets/G4ENSDFSTATE.%s.tar.gz" % version

@@ -22,9 +22,6 @@ class G4emlow(Package):
                                  os.path.basename(self.stage.source_path))
         install_tree(self.stage.source_path, install_path)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        run_env.set('G4LEDATA', join_path(prefix.share, 'data'))
-
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4.web.cern.ch/support/source/G4EMLOW.%s.tar.gz" % version)

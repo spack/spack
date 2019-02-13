@@ -21,9 +21,6 @@ class G4pii(Package):
                                  os.path.basename(self.stage.source_path))
         install_tree(self.stage.source_path, install_path)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        run_env.set('G4PIIDATA', join_path(prefix.share, 'data'))
-
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4PII.1.3.tar.gz" % version)

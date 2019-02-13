@@ -8,13 +8,13 @@ from spack import *
 import os
 
 
-class G4photon(Package):
-    """Geant4 data for photon evaporation"""
+class G4radioactivedecay(Package):
+    """Geant4 data files for radio-active decay hadronic processes"""
     homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4PhotonEvaporation.4.3.2.tar.gz"
+    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4RadioactiveDecay.5.1.1.tar.gz"
 
-    version('4.3.2', 'd4641a6fe1c645ab2a7ecee09c34e5ea584fb10d63d2838248bfc487d34207c7')
-    version('5.2', '83607f8d36827b2a7fca19c9c336caffbebf61a359d0ef7cee44a8bcf3fc2d1f')
+    version('5.1.1', 'f7a9a0cc998f0d946359f2cb18d30dff1eabb7f3c578891111fc3641833870ae')
+    version('5.2', '99c038d89d70281316be15c3c98a66c5d0ca01ef575127b6a094063003e2af5d')
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
@@ -22,9 +22,6 @@ class G4photon(Package):
                                  os.path.basename(self.stage.source_path))
         install_tree(self.stage.source_path, install_path)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        run_env.set('G4LEVELGAMMADATA', join_path(prefix.share, 'data'))
-
     def url_for_version(self, version):
         """Handle version string."""
-        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4PhotonEvaporation.%s.tar.gz" % version)
+        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4RadioactiveDecay.%s.tar.gz" % version)

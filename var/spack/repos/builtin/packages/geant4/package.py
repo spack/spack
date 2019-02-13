@@ -39,16 +39,19 @@ class Geant4(CMakePackage):
     depends_on('cmake@3.5:', type='build')
 
     # C++11 support
+    depends_on("xerces-c cxxstd=11", when="cxxstd=11")
     depends_on("clhep@2.4.0.0 cxxstd=11", when="@10.04 cxxstd=11")
     depends_on("clhep@2.3.4.6 cxxstd=11", when="@10.03.p03 cxxstd=11")
     depends_on("vecgeom cxxstd=11", when="+vecgeom cxxstd=11")
 
     # C++14 support
+    depends_on("xerces-c cxxstd=14", when="cxxstd=14")
     depends_on("clhep@2.4.0.0 cxxstd=14", when="@10.04 cxxstd=14")
     depends_on("clhep@2.3.4.6 cxxstd=14", when="@10.03.p03 cxxstd=14")
     depends_on("vecgeom cxxstd=14", when="+vecgeom cxxstd=14")
 
     # C++17 support
+    depends_on("xerces-c cxxstd=17", when="cxxstd=17")
     patch('cxx17.patch', when='@:10.03.p99 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.04.00: cxxstd=17')
     depends_on("clhep@2.4.0.0 cxxstd=17", when="@10.04 cxxstd=17")
@@ -57,7 +60,6 @@ class Geant4(CMakePackage):
 
     depends_on("expat")
     depends_on("zlib")
-    depends_on("xerces-c")
     depends_on("mesa", when='+opengl')
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')
@@ -69,30 +71,8 @@ class Geant4(CMakePackage):
     # this allows external data installations
     # to avoid duplication
 
-    # geant4@10.03.p03
-    depends_on("g4abla@3.0", when='@10.03.p03 ~data')
-    depends_on("g4emlow@6.50", when='@10.03.p03 ~data')
-    depends_on("g4neutron@4.5", when='@10.03.p03 ~data')
-    depends_on("g4neutronxs@1.4", when='@10.03.p03 ~data')
-    depends_on("g4nucleonxs@1.1", when='@10.03.p03 ~data')
-    depends_on("g4nuclide@2.1", when='@10.03.p03 ~data')
-    depends_on("g4photon@4.3.2", when='@10.03.p03 ~data')
-    depends_on("g4pii@1.3", when='@10.03.p03 ~data')
-    depends_on("g4radiative@5.1.1", when='@10.03.p03 ~data')
-    depends_on("g4surface@1.0", when='@10.03.p03 ~data')
-    depends_on("g4tendl@1.3", when='@10.03.p03 ~data')
-    # geant4@10.04
-    depends_on("g4abla@3.1", when='@10.04 ~data')
-    depends_on("g4emlow@7.3", when='@10.04 ~data')
-    depends_on("g4neutron@4.5", when='@10.04 ~data')
-    depends_on("g4neutronxs@1.4", when='@10.04 ~data')
-    depends_on("g4nucleonxs@1.1", when='@10.04 ~data')
-    depends_on("g4nuclide@2.2", when='@10.04 ~data')
-    depends_on("g4photon@5.2", when='@10.04 ~data')
-    depends_on("g4pii@1.3", when='@10.04 ~data')
-    depends_on("g4radiative@5.2", when='@10.04 ~data')
-    depends_on("g4surface@2.1", when='@10.04 ~data')
-    depends_on("g4tendl@1.3.2", when='@10.04 ~data')
+    depends_on('geant4-data@10.03.p03', when='@10.03.p03 ~data')
+    depends_on('geant4-data@10.04', when='@10.04 ~data')
 
     def cmake_args(self):
         spec = self.spec
@@ -154,39 +134,10 @@ class Geant4(CMakePackage):
         else:
             patch = 0
         datadir = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
-        if '+data' not in self.spec:
-            with working_dir(join_path(spec.prefix.share, datadir),
-                             create=True):
-                for dir in glob.glob('%s/*' %
-                                     spec['g4abla'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4emlow'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4neutron'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4neutronxs'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4nucleonxs'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4nuclide'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4photon'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4pii'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4radiative'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4surface'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
-                for dir in glob.glob('%s/*' %
-                                     spec['g4tendl'].prefix.share.data):
-                    os.symlink(dir, os.path.basename(dir))
+        with working_dir(join_path(spec.prefix.share, datadir),
+                         create=True):
+            for d in glob.glob('%s/%s/*' %
+                                 (spec['geant4-data'].prefix.share.data,
+                                  datadir)):
+                target = os.readlink(d)
+                os.symlink(target, os.path.basename(target))

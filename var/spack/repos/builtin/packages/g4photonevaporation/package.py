@@ -8,13 +8,13 @@ from spack import *
 import os
 
 
-class G4abla(Package):
-    """Geant4 data for nuclear shell effects in INCL/ABLA hadronic mode"""
+class G4photonevaporation(Package):
+    """Geant4 data for photon evaporation"""
     homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4ABLA.3.0.tar.gz"
+    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4PhotonEvaporation.4.3.2.tar.gz"
 
-    version('3.0', sha256='99fd4dcc9b4949778f14ed8364088e45fa4ff3148b3ea36f9f3103241d277014')
-    version('3.1', sha256='7698b052b58bf1b9886beacdbd6af607adc1e099fc730ab6b21cf7f090c027ed')
+    version('4.3.2', 'd4641a6fe1c645ab2a7ecee09c34e5ea584fb10d63d2838248bfc487d34207c7')
+    version('5.2', '83607f8d36827b2a7fca19c9c336caffbebf61a359d0ef7cee44a8bcf3fc2d1f')
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
@@ -24,4 +24,4 @@ class G4abla(Package):
 
     def url_for_version(self, version):
         """Handle version string."""
-        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4ABLA.%s.tar.gz" % version)
+        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4PhotonEvaporation.%s.tar.gz" % version)
