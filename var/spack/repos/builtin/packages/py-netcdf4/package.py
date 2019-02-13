@@ -20,5 +20,5 @@ class PyNetcdf4(PythonPackage):
 
     depends_on('py-numpy@1.7:', type=('build', 'run'))
 
-    depends_on('netcdf')
+    depends_on('netcdf@4:')
     depends_on('hdf5@1.8.0:')
