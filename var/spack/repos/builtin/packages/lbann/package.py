@@ -68,9 +68,9 @@ class Lbann(CMakePackage):
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
                when='build_type=Debug @0.91:0.94')
 
-    depends_on('aluminum@master', when='@:0.90,0.95: +al ~gpu')
-    depends_on('aluminum@master +gpu +mpi_cuda', when='@:0.90,0.95: +al +gpu ~nccl')
-    depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
+    depends_on('aluminum', when='@:0.90,0.95: +al ~gpu')
+    depends_on('aluminum +gpu +mpi_cuda', when='@:0.90,0.95: +al +gpu ~nccl')
+    depends_on('aluminum +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
