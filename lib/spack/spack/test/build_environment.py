@@ -12,6 +12,9 @@ from spack.paths import build_env_path
 from spack.build_environment import dso_suffix, _static_to_shared_library
 from spack.util.executable import Executable
 from spack.util.spack_yaml import syaml_dict, syaml_str
+from spack.util.environment import EnvironmentModifications
+
+from llnl.util.filesystem import LibraryList, HeaderList
 
 
 @pytest.fixture
@@ -215,3 +218,43 @@ def test_package_inheritance_module_setup(config, mock_packages):
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
 
     os.environ.pop('TEST_MODULE_VAR')
+
+def test_set_build_environment_variables(
+        config, mock_packages, working_env, monkeypatch):
+
+    root = spack.spec.Spec('dt-diamond')
+    root.concretize()
+
+    for s in root.traverse():
+        s.prefix = '/{0}-prefix/'.format(s.name)
+
+    dep_pkg = root['dt-diamond-left'].package
+    dep_lib_paths =  ['/test/path/to/ex1.so', '/test/path/to/subdir/ex2.so']
+    dep_lib_dirs = ['/test/path/to', '/test/path/to/subdir']
+    dep_libs = LibraryList(dep_lib_paths)
+    setattr(dep_pkg, 'libs', dep_libs)
+
+    try:
+        pkg = root.package
+        env_mods = EnvironmentModifications()
+        spack.build_environment.set_build_environment_variables(
+            pkg, env_mods, dirty=False)
+
+        env_mods.apply_modifications()
+
+        def ignore_trailing_slashes(L):
+            return list(i.rstrip('/') for i in L)
+
+        link_dir_var = os.environ['SPACK_LINK_DIRS']
+        assert (
+            ignore_trailing_slashes(link_dir_var.split(':')) == dep_lib_dirs)
+
+        root_rpaths = ['/dt-diamond-prefix/lib', '/dt-diamond-prefix/lib64']
+        rpath_dir_var = os.environ['SPACK_RPATH_DIRS']
+        # Note: the 'lib' and 'lib64' subdirectories of the root package
+        # prefix should always be rpathed and should be the first rpaths
+        assert (
+            ignore_trailing_slashes(rpath_dir_var.split(':')) ==
+            root_rpaths + dep_lib_dirs)
+    finally:
+        delattr(dep_pkg, 'libs')

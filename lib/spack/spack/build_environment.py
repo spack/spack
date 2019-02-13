@@ -263,6 +263,13 @@ def set_build_environment_variables(pkg, env, dirty):
     include_dirs = []
     rpath_dirs = []
 
+    # The top-level package is always RPATHed. It hasn't been installed yet
+    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
+    # not be created for the install).
+    for libdir in ['lib', 'lib64']:
+        lib_path = os.path.join(pkg.prefix, libdir)
+        rpath_dirs.append(lib_path)
+
     # Set up link, include, RPATH directories that are passed to the
     # compiler wrapper
     for dep in link_deps:
@@ -286,13 +293,6 @@ def set_build_environment_variables(pkg, env, dirty):
             tty.debug("No headers found for {0}".format(dep.name))
         if os.path.isdir(dep.prefix.include):
             include_dirs.append(dep.prefix.include)
-
-    # The top-level package is always RPATHed. It hasn't been installed yet
-    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
-    # not be created for the install).
-    for libdir in ['lib', 'lib64']:
-        lib_path = os.path.join(pkg.prefix, libdir)
-        rpath_dirs.append(lib_path)
 
     env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
@@ -690,7 +690,7 @@ def setup_package(pkg, dirty):
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
-    if (not dirty) and spack_env.variable_is_possibly_set('CPATH'):
+    if (not dirty) and (not spack_env.variable_is_explicitly_unset('CPATH')):
         tty.warn("A dependency has updated CPATH, this may lead pkg-config"
                  " to assume that the package is part of the system"
                  " includes and omit it when invoked with '--cflags'.")
