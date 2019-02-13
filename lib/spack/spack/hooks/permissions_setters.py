@@ -23,7 +23,7 @@ def forall_files(path, fn, args, dir_args=None):
                 else:
                     fn(os.path.join(root, d), *args)
         for f in files:
-            if not os.path.islink(os.path.join(root, d)):
+            if not os.path.islink(os.path.join(root, f)):
                 fn(os.path.join(root, f), *args)
 
 
