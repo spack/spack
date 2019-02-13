@@ -107,7 +107,7 @@ import spack.util.spack_yaml as syaml
 
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.util.module_cmd import get_path_from_module, load_module
-from spack.error import SpecError, UnsatisfiableSpecError
+from spack.error import SpackError, SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
@@ -669,7 +669,7 @@ def _headers_default_handler(descriptor, spec, cls):
         HeaderList: The headers in ``prefix.include``
 
     Raises:
-        RuntimeError: If no headers are found
+        NoHeadersError: If no headers are found
     """
     headers = find_headers('*', root=spec.prefix.include, recursive=True)
 
@@ -677,7 +677,7 @@ def _headers_default_handler(descriptor, spec, cls):
         return headers
     else:
         msg = 'Unable to locate {0} headers in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix.include))
+        raise NoHeadersError(msg.format(spec.name, spec.prefix.include))
 
 
 def _libs_default_handler(descriptor, spec, cls):
@@ -697,7 +697,7 @@ def _libs_default_handler(descriptor, spec, cls):
         LibraryList: The libraries found
 
     Raises:
-        RuntimeError: If no libraries are found
+        NoLibrariesError: If no libraries are found
     """
 
     # Variable 'name' is passed to function 'find_libraries', which supports
@@ -737,7 +737,7 @@ def _libs_default_handler(descriptor, spec, cls):
                 return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
-    raise RuntimeError(msg.format(spec.name, prefix))
+    raise NoLibrariesError(msg.format(spec.name, prefix))
 
 
 class ForwardQueryToPackage(object):
@@ -3719,6 +3719,14 @@ class DuplicateDependencyError(SpecError):
 
 class DuplicateCompilerSpecError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
+
+
+class NoLibrariesError(SpackError):
+    """Raised when package libraries are requested but cannot be found"""
+
+
+class NoHeadersError(SpackError):
+    """Raised when package headers are requested but cannot be found"""
 
 
 class UnsupportedCompilerError(SpecError):
