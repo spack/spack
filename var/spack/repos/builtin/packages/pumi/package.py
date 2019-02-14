@@ -47,9 +47,9 @@ class Pumi(CMakePackage):
     variant('fortran', default=False, description='Enable FORTRAN interface')
     variant('simmodsuite', default='none',
         values=('none', 'base', 'kernels', 'full'),
-        description='''Enable Simmetrix SimModSuite Support: \'base\' enables
-        the minimum set of functionality, \'kernels\' adds CAD kernel support
-        to \'base\', and \'full\' enables all functionality''')
+        description="Enable Simmetrix SimModSuite Support: 'base' enables "
+        "the minimum set of functionality, 'kernels' adds CAD kernel support "
+        "to 'base', and 'full' enables all functionality.")
 
     depends_on('mpi')
     depends_on('cmake@3:', type='build')
