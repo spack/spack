@@ -385,26 +385,24 @@ esac
 # Prepend include directories
 IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"
 if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
-    for include_dir in "${include_dirs[@]}"; do
-        includes=("${includes[@]}" "$include_dir")
-    done
+    includes=("${includes[@]}" "${include_dirs[@]}")
 fi
 
 IFS=':' read -ra rpath_dirs <<< "$SPACK_RPATH_DIRS"
 if [[ $mode == ccld || $mode == ld ]]; then
-    for rpath_dir in "${rpath_dirs[@]}"; do
+
+    if [[ "$add_rpaths" != "false" ]] ; then
         # Append RPATH directories. Note that in the case of the
         # top-level package these directories may not exist yet. For dependencies
         # it is assumed that paths have already been confirmed.
-        $add_rpaths && rpaths=("${rpaths[@]}" "$rpath_dir")
-    done
+        rpaths=("${rpaths[@]}" "${rpath_dirs[@]}")
+    fi
+
 fi
 
 IFS=':' read -ra link_dirs <<< "$SPACK_LINK_DIRS"
 if [[ $mode == ccld || $mode == ld ]]; then
-    for link_dir in "${link_dirs[@]}"; do
-        libdirs=("${libdirs[@]}" "$link_dir")
-    done
+    libdirs=("${libdirs[@]}" "${link_dirs[@]}")
 fi
 
 # add RPATHs if we're in in any linking mode
