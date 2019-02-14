@@ -137,7 +137,7 @@ class Geant4(CMakePackage):
         with working_dir(join_path(spec.prefix.share, datadir),
                          create=True):
             dirs = glob.glob('%s/%s/*' %
-                            (spec['geant4-data'].prefix.share, datadir))
+                             (spec['geant4-data'].prefix.share, datadir))
             for d in dirs:
                 target = os.readlink(d)
                 os.symlink(target, os.path.basename(target))
