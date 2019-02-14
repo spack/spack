@@ -310,18 +310,36 @@ def validate(data, filename=None):
             e, data, filename, e.instance.lc.line + 1)
 
 
+import tempfile
+
+
+def _validate_config(data, schema):
+    t = tempfile.NamedTemporaryFile()
+    with open(t.name, 'wb') as f:
+        ruamel.yaml.dump(data, f, Dumper=ruamel.yaml.RoundTripDumper)
+
+    spack.config._read_config_file(t.name, schema)
+
+
+def _validate_file(path, schema):
+    spack.config._read_config_file(path, schema)
+
+
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
     data = ruamel.yaml.load(str_or_file, ruamel.yaml.RoundTripLoader)
     filename = getattr(str_or_file, 'name', None)
-    validate(data, filename)
+    if filename:
+        _validate_file(filename, spack.schema.env.schema)
+    else:
+        _validate_config(data, spack.schema.env.schema)
     return data
 
 
 def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, 'name', None)
-    validate(data, filename)
+    _validate_config(data, spack.schema.env.schema)
     ruamel.yaml.dump(data, str_or_file, Dumper=ruamel.yaml.RoundTripDumper,
                      default_flow_style=False)
 

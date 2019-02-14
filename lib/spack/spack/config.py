@@ -193,6 +193,22 @@ class SingleFileScope(ConfigScope):
         #      ... data ...
         #   },
         # }
+        #
+        # To preserve overrides up to the section level (e.g. to override
+        # the "packages" section with the "::" syntax), data in self.sections
+        # looks like this:
+        # {
+        #   'config': {
+        #      'config': {
+        #         ... data ...
+        #       }
+        #   },
+        #   'packages': {
+        #      'packages': {
+        #         ... data ...
+        #      }
+        #   }
+        # }
         if self._raw_data is None:
             self._raw_data = _read_config_file(self.path, self.schema)
             if self._raw_data is None:
@@ -208,28 +224,9 @@ class SingleFileScope(ConfigScope):
 
                 self._raw_data = self._raw_data[key]
 
-        # data in self.sections looks (awkwardly) like this:
-        # {
-        #   'config': {
-        #      'config': {
-        #         ... data ...
-        #       }
-        #   },
-        #   'packages': {
-        #      'packages': {
-        #         ... data ...
-        #      }
-        #   }
-        # }
-        #
-        # UNLESS there is no section, in which case it is stored as:
-        # {
-        #   'config': None,
-        #   ...
-        # }
-        value = self._raw_data.get(section)
-        self.sections.setdefault(
-            section, None if value is None else {section: value})
+            for section, data in self._raw_data.items():
+                self.sections[section] = {section : data}
+
         return self.sections[section]
 
     def write_section(self, section):
@@ -680,7 +677,8 @@ def _read_config_file(filename, schema):
     try:
         tty.debug("Reading config file %s" % filename)
         with open(filename) as f:
-            data = _mark_overrides(syaml.load(f))
+            base_data = syaml.load(f)
+            data = _mark_overrides(base_data)
 
         if data:
             validate(data, schema)
