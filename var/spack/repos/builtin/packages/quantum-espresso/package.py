@@ -216,6 +216,13 @@ class QuantumEspresso(Package):
             filter_file(r'HDF5_LIB([\s]*)=([\s\w\-\/.,]*)',
                         'HDF5_LIB = {0}'.format(hdf5_libs),
                         make_inc)
+            if self.spec.variants['hdf5'].value == 'serial':
+                # Note that there is a benign side effect with this filter
+                # file statement. It replaces an instance of MANUAL_DFLAGS
+                # that is a comment in make.inc.
+                filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)',
+                            'MANUAL_DFLAGS = -D__HDF5_SERIAL',
+                            make_inc)
 
         make('all')
 
