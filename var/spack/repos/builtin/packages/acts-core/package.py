@@ -9,17 +9,31 @@ from spack import *
 class ActsCore(CMakePackage):
     """
     A Common Tracking Software (ACTS)
-    
-    This project contains an experiment-independent set of track reconstruction tools. The main philosophy is to provide high-level track reconstruction modules that can be used for any tracking detector. The description of the tracking detector's geometry is optimized for efficient navigation and quick extrapolation of tracks. Converters for several common geometry description languages exist. Having a highly performant, yet largely customizable implementation of track reconstruction algorithms was a primary objective for the design of this toolset. Additionally, the applicability to real-life HEP experiments plays major role in the development process. Apart from algorithmic code, this project also provides an event data model for the description of track parameters and measurements.
 
-    Key features of this project include: tracking geometry description which can be constructed from TGeo, DD4Hep, or GDML input, simple and efficient event data model, performant and highly flexible algorithms for track propagation and fitting, basic seed finding algorithms.
+    This project contains an experiment-independent set of track reconstruction
+    tools. The main philosophy is to provide high-level track reconstruction
+    modules that can be used for any tracking detector. The description of the
+    tracking detector's geometry is optimized for efficient navigation and
+    quick extrapolation of tracks. Converters for several common geometry
+    description languages exist. Having a highly performant, yet largely
+    customizable implementation of track reconstruction algorithms was a
+    primary objective for the design of this toolset. Additionally, the
+    applicability to real-life HEP experiments plays major role in the
+    development process. Apart from algorithmic code, this project also
+    provides an event data model for the description of track parameters and
+    measurements.
+
+    Key features of this project include: tracking geometry description which
+    can be constructed from TGeo, DD4Hep, or GDML input, simple and efficient
+    event data model, performant and highly flexible algorithms for track
+    propagation and fitting, basic seed finding algorithms.
     """
 
     homepage = "http://acts.web.cern.ch/ACTS/"
     git      = "https://gitlab.cern.ch/acts/acts-core.git"
 
     version('develop', branch='master')
-    version('0.8.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9') # Used by acts-framework
+    version('0.8.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9')  # Used by acts-framework
 
     variant('legacy', default=True, description='Build the Legacy package')
     variant('examples', default=False, description='Build the examples')
@@ -39,16 +53,20 @@ class ActsCore(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+
+        def cmake_variant(cmake_label, spack_variant):
+            enabled = spec.satisfies('+' + spack_variant)
+            return "-DACTS_BUILD_{0}={1}".format(cmake_label, enabled)
+
         args = [
-            "-DACTS_BUILD_LEGACY={0}".format(spec.satisfies('+legacy')),
-            "-DACTS_BUILD_EXAMPLES={0}".format(spec.satisfies('+examples')),
-            "-DACTS_BUILD_TESTS={0}".format(spec.satisfies('+tests')),
-            "-DACTS_BUILD_INTEGRATION_TESTS={0}".format(spec.satisfies('+integration_tests')),
-            "-DACTS_BUILD_DIGITIZATION_PLUGIN={0}".format(spec.satisfies('+digitization')),
-            "-DACTS_BUILD_DD4HEP_PLUGIN={0}".format(spec.satisfies('+dd4hep')),
-            "-DACTS_BUILD_TGEO_PLUGIN={0}".format(spec.satisfies('+tgeo')),
-            "-DACTS_BUILD_JSON_PLUGIN={0}".format(spec.satisfies('+json')),
-            "-DACTS_BUILD_MATERIAL_PLUGIN={0}".format(spec.satisfies('+material'))
+            cmake_variant("LEGACY", "legacy"),
+            cmake_variant("EXAMPLES", "examples"),
+            cmake_variant("TESTS", "tests"),
+            cmake_variant("INTEGRATION_TESTS", "integration_tests"),
+            cmake_variant("DIGITIZATION_PLUGIN", "digitization"),
+            cmake_variant("DD4HEP_PLUGIN", "dd4hep"),
+            cmake_variant("TGEO_PLUGIN", "tgeo"),
+            cmake_variant("JSON_PLUGIN", "json"),
+            cmake_variant("MATERIAL_PLUGIN", "material")
         ]
         return args
-
