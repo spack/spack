@@ -21,23 +21,25 @@ class Root(CMakePackage):
         branch='master')
 
     # Development versions
-    version('6.13.08', '2b4546fc4b712ba1d672401bee07f5b3')
+    version('6.15.02', sha256='2236fe4935139459239c935b2f93b3aa6bbfe92765ae9d9db9dd0b947bf19071')
 
     # Production version
-    version('6.14.04', '58d78513abdcba3f12f0c838d00987bb', preferred=True)
+    version('6.16.00', sha256='2a45055c6091adaa72b977c512f84da8ef92723c30837c7e2643eecc9c5ce4d8', preferred=True)
 
     # Old versions
-    version('6.14.02', 'f27351828e2f28137eca3d5302ad0376')
-    version('6.14.00', '3613c930589734531ac8995486d41af5')
-    version('6.12.06', 'bef6535a5d0cdf471b550da45a10f605')
-    version('6.10.08', '88532f68e9e14691f530c60b55beb698')
-    version('6.09.02', '4188dfeafb72df339a3d688fe92f57ec')
-    version('6.08.06', 'bcf0be2df31a317d25694ad2736df268')
-    version('6.06.08', '6ef0fe9bd9f88f3ce8890e3651142ee4')
-    version('6.06.06', '4308449892210c8d36e36924261fea26')
-    version('6.06.04', '55a2f98dd4cea79c9c4e32407c2d6d17')
-    version('6.06.02', 'e9b8b86838f65b0a78d8d02c66c2ec55')
-    version('5.34.36', '6a1ad549b3b79b10bbb1f116b49067ee')
+    version('6.14.04', sha256='463ec20692332a422cfb5f38c78bedab1c40ab4d81be18e99b50cf9f53f596cf')
+    version('6.14.02', sha256='93816519523e87ac75924178d87112d1573eaa108fc65691aea9a9dd5bc05b3e')
+    version('6.14.00', sha256='7946430373489310c2791ff7a3520e393dc059db1371272bcd9d9cf0df347a0b')
+    version('6.13.08', sha256='353e6aab4826b981190ad45678cc7d3d9ca5ba02469e5d8aa46543ea61961139')
+    version('6.12.06', sha256='aedcfd2257806e425b9f61b483e25ba600eb0ea606e21262eafaa9dc745aa794')
+    version('6.10.08', sha256='2cd276d2ac365403c66f08edd1be62fe932a0334f76349b24d8c737c0d6dad8a')
+    version('6.09.02', sha256='5348096084adea514297050884baa33f6cf6fd9e91e83e9967c6f07528588639')
+    version('6.08.06', sha256='ea31b047ba6fc04b0b312667349eaf1498a254ccacd212144f15ffcb3f5c0592')
+    version('6.06.08', sha256='7cb836282014cce822ef589cad27811eb7a86d7fad45a871fa6b0e6319ec201a')
+    version('6.06.06', sha256='0a7d702a130a260c72cb6ea754359eaee49a8c4531b31f23de0bfcafe3ce466b')
+    version('6.06.04', sha256='ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b')
+    version('6.06.02', sha256='18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1')
+    version('5.34.36', sha256='fc868e5f4905544c3f392cc9e895ef5571a08e48682e7fe173bd44c0ba0c7dcd')
 
     if sys.platform == 'darwin':
         patch('math_uint.patch', when='@6.06.02')
