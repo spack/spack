@@ -1,0 +1,13 @@
+diff --git a/cmake/GaudiProjectConfig.cmake b/cmake/GaudiProjectConfig.cmake
+index ab1a24e1d..dc938da79 100644
+--- a/cmake/GaudiProjectConfig.cmake
++++ b/cmake/GaudiProjectConfig.cmake
+@@ -410,7 +410,7 @@ macro(gaudi_project project version)
+       # Avoid interference from user environment
+       unset(ENV{GIT_DIR})
+       unset(ENV{GIT_WORK_TREE})
+-      execute_process(COMMAND git clone -b 0.0.1 https://gitlab.cern.ch/gaudi/xenv.git ${CMAKE_BINARY_DIR}/contrib/xenv)
++      execute_process(COMMAND git clone https://gitlab.cern.ch/gaudi/xenv.git ${CMAKE_BINARY_DIR}/contrib/xenv)
+     endif()
+     # I'd like to generate the script with executable permission, but I only
+     # found this workaround: https://stackoverflow.com/a/45515418
