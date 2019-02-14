@@ -11,7 +11,7 @@ class Nasm(AutotoolsPackage):
     portability and modularity. It includes a disassembler as well."""
 
     homepage = "http://www.nasm.us"
-    url = "https://src.fedoraproject.org/repo/pkgs/nasm/nasm-2.13.03.tar.bz2/sha512/d7a6b4cee8dfd603d8d4c976e5287b5cc542fa0b466ff989b743276a6e28114e64289bf02a7819eca63142a5278aa6eed57773007e5f589e15768e6456a8919d/nasm-2.13.03.tar.bz2"
+    url      = "https://src.fedoraproject.org/repo/pkgs/nasm/nasm-2.13.03.tar.bz2/sha512/d7a6b4cee8dfd603d8d4c976e5287b5cc542fa0b466ff989b743276a6e28114e64289bf02a7819eca63142a5278aa6eed57773007e5f589e15768e6456a8919d/nasm-2.13.03.tar.bz2"
     list_url = "http://www.nasm.us/pub/nasm/releasebuilds"
     list_depth = 1
 
