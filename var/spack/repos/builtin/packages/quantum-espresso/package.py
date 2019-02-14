@@ -199,12 +199,14 @@ class QuantumEspresso(Package):
 
         configure(*options)
 
-        # Apparently the build system of QE is so broken that:
+        # Apparently the build system of QE is so broken that
+        # make_inc needs to be modified manually:
         #
         # 1. The variable reported on stdout as HDF5_LIBS is actually
         #    called HDF5_LIB (singular)
         # 2. The link flags omit a few `-L` from the line, and this
         #    causes the linker to break
+        # 3. Serial HDF5 case is supported both with and without MPI.
         #
         # Below we try to match the entire HDF5_LIB line and substitute
         # with the list of libraries that needs to be linked.
