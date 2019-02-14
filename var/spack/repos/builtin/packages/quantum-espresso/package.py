@@ -37,7 +37,10 @@ class QuantumEspresso(Package):
 
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
-    variant('hdf5', default=False, description='Builds with HDF5 support')
+    variant(
+        'hdf5', default='none', description='Builds with HDF5 support',
+        values=('parallel', 'serial', 'none'), multi=False
+    )
 
     # Dependencies
     depends_on('blas')
@@ -73,13 +76,15 @@ class QuantumEspresso(Package):
         msg='elpa is a parallel library and needs MPI support'
     )
 
-    # HDF5 support introduced in 6.1 but requires MPI, develop
-    # branch and future releases will support serial HDF5
-    conflicts('+hdf5', when='@:6.0.0')
+    # HDF5 support introduced in 6.1
+    hdf5_warning = 'HDF5 support in QE 6.1 and later'
+    conflicts('hdf5=parallel', when='@:6.0', msg=hdf5_warning)
+    conflicts('hdf5=serial', when='@:6.0', msg=hdf5_warning)
+
     conflicts(
-        '+hdf5',
-        when='~mpi@6.1.0:6.3',
-        msg='HDF5 support only available with MPI for QE 6.1:6.3'
+        'hdf5=parallel',
+        when='~mpi',
+        msg='parallel HDF5 requires MPI support'
     )
 
     # Elpa is formally supported by @:5.4.0, but QE configure searches
