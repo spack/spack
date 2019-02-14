@@ -51,7 +51,8 @@ class QuantumEspresso(Package):
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
     # Versions of HDF5 prior to 1.8.16 lead to QE runtime errors
-    depends_on('hdf5@1.8.16:+fortran', when='+hdf5')
+    depends_on('hdf5@1.8.16:+fortran+hl+mpi', when='hdf5=parallel')
+    depends_on('hdf5@1.8.16:+fortran+hl~mpi', when='hdf5=serial')
 
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
