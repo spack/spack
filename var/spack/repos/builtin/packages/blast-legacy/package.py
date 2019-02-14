@@ -11,9 +11,21 @@ class BlastLegacy(Package):
        Contains older programs including `blastall'"""
 
     homepage = "https://www.ncbi.nlm.nih.gov/"
-    url      = "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/blast-2.2.26-x64-linux.tar.gz"
+    url      = "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/ncbi.tar.gz"
 
-    version('2.2.26', sha256='8a2f986cf47f0f7cbdb3478c4fc7e25c7198941d2262264d0b6b86194b3d063d')
+    version('2.2.26', sha256='d8fffac25efc8ca894c707c840a4797a8a949ae6fd983d2f91c9972f788efb7d')
+
+    depends_on('tcsh', type='build')
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        tcsh = which('tcsh')
+        with working_dir('..'):
+            tcsh('./ncbi/make/makedis.csh')
+
+        # depends on local data in the source tree
+        install_path = join_path(prefix, 'usr/local/blast-legacy')
+        mkdirp(install_path)
+        install_tree('.', install_path)
+
+        # symlink build output with binaries
+        symlink(join_path(install_path, 'build'), prefix.bin)
