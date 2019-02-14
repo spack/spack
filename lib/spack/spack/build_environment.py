@@ -287,10 +287,11 @@ def set_build_environment_variables(pkg, env, dirty):
         except spack.spec.NoLibrariesError:
             tty.debug("No libraries found for {0}".format(dep.name))
 
-        try:
-            include_dirs.extend(query.headers.directories)
-        except spack.spec.NoHeadersError:
-            tty.debug("No headers found for {0}".format(dep.name))
+        # TODO: fix the line below, currently the logic is broken for
+        # TODO: packages that uses directories as namespaces e.g.
+        # TODO: #include <boost/xxx.hpp>
+        # include_dirs.extend(query.headers.directories)
+
         if os.path.isdir(dep.prefix.include):
             include_dirs.append(dep.prefix.include)
 
