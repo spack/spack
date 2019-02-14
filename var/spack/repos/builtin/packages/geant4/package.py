@@ -125,6 +125,8 @@ class Geant4(CMakePackage):
 
     @run_before('cmake')
     def make_data_links(self):
+        if '+data' in self.spec:
+            return
         spec = self.spec
         version = self.version
         major = version[0]
