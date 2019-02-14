@@ -123,7 +123,7 @@ class Geant4(CMakePackage):
         """Handle Geant4's unusual version string."""
         return ("http://geant4.cern.ch/support/source/geant4.%s.tar.gz" % version)
 
-    @run_after('install')
+    @run_before('cmake')
     def make_data_links(self):
         spec = self.spec
         version = self.version
@@ -136,8 +136,8 @@ class Geant4(CMakePackage):
         datadir = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
         with working_dir(join_path(spec.prefix.share, datadir),
                          create=True):
-            for d in glob.glob('%s/%s/*' %
-                               (spec['geant4-data'].prefix.share.data,
-                                datadir)):
+            dirs = glob.glob('%s/%s/*' %
+                            (spec['geant4-data'].prefix.share, datadir))
+            for d in dirs:
                 target = os.readlink(d)
                 os.symlink(target, os.path.basename(target))

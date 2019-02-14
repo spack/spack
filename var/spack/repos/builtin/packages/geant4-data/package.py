@@ -78,7 +78,7 @@ class Geant4Data(Package):
             for d in glob.glob('%s/share/data/*' %
                                spec['g4pii'].prefix):
                 os.symlink(d, os.path.basename(d))
-            for d in glob.glob('%s/share/data*' %
+            for d in glob.glob('%s/share/data/*' %
                                spec['g4radioactivedecay'].prefix):
                 os.symlink(d, os.path.basename(d))
             for d in glob.glob('%s/share/data/*' %
