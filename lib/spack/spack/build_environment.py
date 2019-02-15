@@ -45,6 +45,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
+from llnl.util.lang import dedupe
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -275,17 +276,24 @@ def set_build_environment_variables(pkg, env, dirty):
     for dep in link_deps:
         if is_system_path(dep.prefix):
             continue
-        # TODO: packages with alternative implementations of .libs which
-        # are external may place libraries in nonstandard directories, so
-        # there should be a check for that
         query = pkg.spec[dep.name]
+        dep_link_dirs = list()
         try:
-            dep_link_dirs = list(query.libs.directories)
-            link_dirs.extend(dep_link_dirs)
-            if dep in rpath_deps:
-                rpath_dirs.extend(dep_link_dirs)
+            # TODO: packages with alternative implementations of .libs which
+            # are external may place libraries in nonstandard directories, so
+            # there should be a check for that
+            dep_link_dirs.extend(query.libs.directories)
         except spack.spec.NoLibrariesError:
             tty.debug("No libraries found for {0}".format(dep.name))
+
+        for default_lib_dir in ['lib', 'lib64']:
+            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
+            if os.path.isdir(default_lib_prefix):
+                dep_link_dirs.append(default_lib_prefix)
+
+        link_dirs.extend(dep_link_dirs)
+        if dep in rpath_deps:
+            rpath_dirs.extend(dep_link_dirs)
 
         # TODO: fix the line below, currently the logic is broken for
         # TODO: packages that uses directories as namespaces e.g.
@@ -294,6 +302,10 @@ def set_build_environment_variables(pkg, env, dirty):
 
         if os.path.isdir(dep.prefix.include):
             include_dirs.append(dep.prefix.include)
+
+    link_dirs = list(dedupe(filter_system_paths(link_dirs)))
+    include_dirs = list(dedupe(filter_system_paths(include_dirs)))
+    rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
     env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
