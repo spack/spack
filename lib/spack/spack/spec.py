@@ -695,7 +695,9 @@ def _libs_default_handler(descriptor, spec, cls):
 
     Tries to search for ``lib{spec.name}`` recursively starting from
     ``spec.prefix``. If ``spec.name`` starts with ``lib``, searches for
-    ``{spec.name}`` instead.
+    ``{spec.name}`` instead. If this search fails, infers that the package name
+    may not match the library name and enumerates every library in the target
+    installation prefix instead.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -720,21 +722,26 @@ def _libs_default_handler(descriptor, spec, cls):
     # depending on which one exists (there is a possibility, of course, to
     # get something like 'libabcXabc.so, but for now we consider this
     # unlikely).
-    name = spec.name.replace('-', '?')
+    spec_name = spec.name.replace('-', '?')
 
     # Avoid double 'lib' for packages whose names already start with lib
-    if not name.startswith('lib'):
-        name = 'lib' + name
+    if not spec_name.startswith('lib'):
+        spec_name = 'lib' + spec_name
+
+    # Use a catch-all fallback in case the library name does not match the
+    # package name (as in Intel packages, X11 packages, gettext...).
+    search_names = [spec_name, 'lib*']
 
     # If '+shared' search only for shared library; if '~shared' search only for
     # static library; otherwise, first search for shared and then for static.
     search_shared = [True] if ('+shared' in spec) else \
         ([False] if ('~shared' in spec) else [True, False])
 
-    for shared in search_shared:
-        libs = find_libraries(name, spec.prefix, shared=shared, recursive=True)
-        if libs:
-            return libs
+    for name in search_names:
+        for shared in search_shared:
+            libs = find_libraries(name, spec.prefix, shared=shared, recursive=True)
+            if libs:
+                return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
     raise NoLibrariesError(msg.format(spec.name, spec.prefix))
