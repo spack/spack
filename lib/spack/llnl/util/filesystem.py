@@ -23,6 +23,7 @@ import six
 from llnl.util import tty
 from llnl.util.lang import dedupe
 from spack.util.executable import Executable
+from spack.error import NoLibrariesError
 
 __all__ = [
     'FileFilter',
@@ -1233,7 +1234,8 @@ def find_system_libraries(libraries, shared=True):
 
     for library in libraries:
         for root in search_locations:
-            result = find_libraries(library, root, shared, recursive=True)
+            result = find_libraries(library, root, shared, recursive=True,
+                                    return_empty=True)
             if result:
                 libraries_found += result
                 break
@@ -1241,7 +1243,8 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False):
+def find_libraries(libraries, root, shared=True, recursive=False,
+                   return_empty=False):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -1262,6 +1265,8 @@ def find_libraries(libraries, root, shared=True, recursive=False):
             otherwise for static. Defaults to True.
         recursive (bool, optional): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
+        return_empty (bool, optional): if False the function will raise
+            NoLibrariesError if no libraries were found.
 
     Returns:
         LibraryList: The libraries that have been found
@@ -1282,4 +1287,9 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # List of libraries we are searching with suffixes
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
-    return LibraryList(find(root, libraries, recursive))
+    res = LibraryList(find(root, libraries, recursive))
+    if res or return_empty:
+        return res
+
+    msg = 'Unable to locate libraries in {0}'
+    raise NoLibrariesError(msg.format(root))

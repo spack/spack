@@ -107,7 +107,8 @@ import spack.util.spack_yaml as syaml
 
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.util.module_cmd import get_path_from_module, load_module
-from spack.error import SpackError, SpecError, UnsatisfiableSpecError
+from spack.error import NoLibrariesError, NoHeadersError
+from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
@@ -731,7 +732,8 @@ def _libs_default_handler(descriptor, spec, cls):
     for shared in search_shared:
         for path, recursive in search_paths:
             libs = find_libraries(
-                name, root=path, shared=shared, recursive=recursive
+                name, root=path, shared=shared, recursive=recursive,
+                return_empty=True
             )
             if libs:
                 return libs
@@ -3719,14 +3721,6 @@ class DuplicateDependencyError(SpecError):
 
 class DuplicateCompilerSpecError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
-
-
-class NoLibrariesError(SpackError):
-    """Raised when package libraries are requested but cannot be found"""
-
-
-class NoHeadersError(SpackError):
-    """Raised when package headers are requested but cannot be found"""
 
 
 class UnsupportedCompilerError(SpecError):

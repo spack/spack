@@ -53,6 +53,7 @@ from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
+from spack.error import NoLibrariesError
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
@@ -2156,13 +2157,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the rpath this package links with, as a list of paths."""
         try:
             rpaths = self.spec[self.name].libs.directories
-        except (RuntimeError, AttributeError, InstallError):
+        except (NoLibrariesError):
             rpaths = [self.prefix.lib, self.prefix.lib64]
 
         for d in self.rpath_deps:
             try:
                 rpaths.extend(d[d.name].libs.directories)
-            except (RuntimeError, AttributeError):
+            except (NoLibrariesError):
                 # fallback to prefix.lib/lib64
                 if os.path.isdir(d.prefix.lib64):
                     rpaths.append(d.prefix.lib64)
