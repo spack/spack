@@ -84,6 +84,25 @@ class NewLayoutException(spack.error.SpackError):
     pass
 
 
+class temp_environment:
+    def __enter__(self):
+        self._safe_env = os.environ.copy()
+        return os.environ
+
+    def __exit__(self, type, value, traceback):
+        os.environ.clear()
+        os.environ.update(self._safe_env)
+
+
+def get_environment(spec):
+    # get the build environment of this package in the current spack
+    # install area. From this the SPACK_LINK_DEPS can be extracted
+    with temp_environment():
+        spack.build_environment.setup_package(spec.package, False)
+        environment = os.environ.copy()
+    return environment
+
+
 def has_gnupg2():
     try:
         gpg_util.Gpg.gpg()('--version', output=os.devnull)
@@ -417,10 +436,12 @@ def make_package_placeholder(workdir, prefix, allow_root):
     relocate.make_link_placeholder(cur_path_names, workdir, prefix)
 
 
-def relocate_package(workdir, allow_root):
+def relocate_package(spec, workdir, allow_root):
     """
     Relocate the given package
     """
+    # environment = get_environment(spec)
+    # link_paths = environment['SPACK_LINK_DEPS'].split(':')
     buildinfo = read_buildinfo_file(workdir)
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
@@ -534,7 +555,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     os.remove(specfile_path)
 
     try:
-        relocate_package(workdir, allow_root)
+        relocate_package(spec, workdir, allow_root)
     except Exception as e:
         shutil.rmtree(workdir)
         tty.die(str(e))
