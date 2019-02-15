@@ -279,9 +279,6 @@ def set_build_environment_variables(pkg, env, dirty):
         query = pkg.spec[dep.name]
         dep_link_dirs = list()
         try:
-            # TODO: packages with alternative implementations of .libs which
-            # are external may place libraries in nonstandard directories, so
-            # there should be a check for that
             dep_link_dirs.extend(query.libs.directories)
         except spack.spec.NoLibrariesError:
             tty.debug("No libraries found for {0}".format(dep.name))
