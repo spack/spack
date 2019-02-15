@@ -56,14 +56,6 @@ packages:
       paths:
         m4@1.4.16 arch=linux-centos7-x86_64: /usr
       buildable: False 
-    pkgconfig:
-      paths:
-        pkgconfig@0.27.1 arch=linux-centos7-x86_64: /usr
-      buildable: False 
-    pkgconfig:
-      paths:
-        pkgconfig@0.27.1 arch=linux-centos7-x86_64: /usr
-      buildable: False 
     binutils:
       paths:
         binutils@2.25.1 arch=linux-centos7-x86_64: /usr
