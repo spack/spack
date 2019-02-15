@@ -98,6 +98,14 @@ class UnsupportedPlatformError(SpackError):
         super(UnsupportedPlatformError, self).__init__(message)
 
 
+class NoLibrariesError(SpackError):
+    """Raised when package libraries are requested but cannot be found"""
+
+
+class NoHeadersError(SpackError):
+    """Raised when package headers are requested but cannot be found"""
+
+
 class SpecError(SpackError):
     """Superclass for all errors that occur while constructing specs."""
 
