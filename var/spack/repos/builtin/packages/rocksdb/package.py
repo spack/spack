@@ -44,7 +44,7 @@ class Rocksdb(MakefilePackage):
     variant('zlib', default=True, description='Enable zlib compression support')
     variant('zstd', default=False, description='Enable zstandard compression support')
 
-    depends_on('bzip2', when='+bzip2')
+    depends_on('bzip2', when='+bz2')
     depends_on('gflags')
     depends_on('lz4', when='+lz4')
     depends_on('snappy', when='+snappy')
@@ -59,8 +59,8 @@ class Rocksdb(MakefilePackage):
             cflags.append('-I' + self.spec['zlib'].prefix.include)
             ldflags.append(self.spec['zlib'].libs.ld_flags)
         if '+bz2' in self.spec:
-            cflags.append('-I' + self.spec['bz2'].prefix.include)
-            ldflags.append(self.spec['bz2'].libs.ld_flags)
+            cflags.append('-I' + self.spec['bzip2'].prefix.include)
+            ldflags.append(self.spec['bzip2'].libs.ld_flags)
 
         for pkg in ['lz4', 'snappy', 'zstd']:
             if '+' + pkg in self.spec:
