@@ -168,3 +168,11 @@ class IntelTbb(Package):
                           'tbb_config_generator.cmake')
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
+
+    @property
+    def libs(self):
+        """Export the libraries of TBB.
+        """
+        return find_libraries(['libtbb'], root=self.prefix.lib,
+                              shared=('+shared' in self.spec),
+                              recursive=False)
