@@ -223,7 +223,8 @@ class Mfem(Package):
             for shared in [True, False]:
                 for path in ['lib64', 'lib']:
                     lib = find_libraries(name, join_path(prefix, path),
-                                         shared=shared, recursive=False)
+                                         shared=shared, recursive=False,
+                                         return_empty=True)
                     if lib:
                         return lib
             return LibraryList([])
@@ -463,9 +464,8 @@ class Mfem(Package):
     def libs(self):
         """Export the mfem library file.
         """
-        libs = find_libraries('libmfem', root=self.prefix.lib,
+        return find_libraries('libmfem', root=self.prefix.lib,
                               shared=('+shared' in self.spec), recursive=False)
-        return libs or None
 
     @property
     def config_mk(self):

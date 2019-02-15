@@ -52,11 +52,12 @@ class Libxsmm(MakefilePackage):
     @property
     def libs(self):
         result = find_libraries(['libxsmm', 'libxsmmf'], root=self.prefix,
-                                recursive=True)
-        if len(result) == 0:
-            result = find_libraries(['libxsmm', 'libxsmmf'], root=self.prefix,
-                                    shared=False, recursive=True)
-        return result
+                                recursive=True, return_empty=True)
+        if result:
+            return result
+
+        return find_libraries(['libxsmm', 'libxsmmf'], root=self.prefix,
+                              shared=False, recursive=True)
 
     def edit(self, spec, prefix):
         kwargs = {'ignore_absent': False, 'backup': False, 'string': True}

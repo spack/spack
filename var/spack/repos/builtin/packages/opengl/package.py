@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 
 
 class Opengl(Package):
@@ -65,6 +66,9 @@ class Opengl(Package):
     def libs(self):
         for dir in ['lib64', 'lib']:
             libs = find_libraries('libGL', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
+                                  shared=True, recursive=False,
+                                  return_empty=True)
             if libs:
                 return libs
+        msg = 'Unable to locate {0} libraries in {1}'
+        raise NoLibrariesError(msg.format(self.name, self.prefix))

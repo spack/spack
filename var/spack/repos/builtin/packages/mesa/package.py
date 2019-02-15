@@ -5,6 +5,7 @@
 
 import sys
 from spack import *
+from spack.error import NoLibrariesError
 
 
 class Mesa(AutotoolsPackage):
@@ -186,9 +187,12 @@ class Mesa(AutotoolsPackage):
     def libs(self):
         for dir in ['lib64', 'lib']:
             libs = find_libraries('libGL', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
+                                  shared=True, recursive=False,
+                                  return_empty=True)
             if libs:
                 return libs
+        msg = 'Unable to locate {0} libraries in {1}'
+        raise NoLibrariesError(msg.format(self.name, self.prefix))
 
     @when('^python@3:')
     def setup_environment(self, spack_env, run_env):

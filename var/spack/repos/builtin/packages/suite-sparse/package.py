@@ -130,7 +130,5 @@ class SuiteSparse(Package):
         comps = all_comps if not query_parameters else query_parameters
         libs = find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
                               shared=True, recursive=False)
-        if not libs:
-            return None
         libs += find_system_libraries('librt')
         return libs

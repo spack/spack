@@ -52,13 +52,11 @@ class Essl(Package):
                         essl_lib = ['libesslsmp']
 
         essl_root = prefix.lib64
-        essl_libs = find_libraries(
+        return find_libraries(
             essl_lib,
             root=essl_root,
             shared=True
         )
-
-        return essl_libs
 
     def install(self, spec, prefix):
         raise InstallError('IBM ESSL is not installable;'

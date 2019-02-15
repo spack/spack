@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 
 
 class Libx11(AutotoolsPackage):
@@ -31,7 +32,9 @@ class Libx11(AutotoolsPackage):
     def libs(self):
         for dir in ['lib64', 'lib']:
             libs = find_libraries('libX11', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
+                                  shared=True, recursive=False,
+                                  return_empty=True)
             if libs:
                 return libs
-        return None
+        msg = 'Unable to locate Libx11 libraries in {0}'
+        raise NoLibrariesError(msg.format(self.prefix))

@@ -141,14 +141,12 @@ class Nek5000(Package):
                 filter_file(r'^\$FC -c ', '$FC -qextname -c ', 'maketools')
 
             libx11_lib = find_libraries('libX11', spec['libx11'].prefix.lib,
-                                        shared=True, recursive=True)
+                                        shared=True, recursive=True,
+                                        return_empty=True)
             if not libx11_lib:
                 libx11_lib = \
                     find_libraries('libX11', spec['libx11'].prefix.lib64,
                                    shared=True, recursive=True)
-            if not libx11_lib:
-                raise RuntimeError('libX11 not found in %s/{lib,lib64}' %
-                                   spec['libx11'].prefix)
             # There is no other way to set the X11 library path except brute
             # force:
             filter_file(r'-L\$\(X\)', libx11_lib.search_flags,

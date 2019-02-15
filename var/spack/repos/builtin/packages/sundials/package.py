@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 import os
 import sys
 
@@ -504,7 +505,8 @@ class Sundials(CMakePackage):
         is_shared = '+shared' in self.spec
         for path, recursive in search_paths:
             libs = find_libraries(sun_libs, root=path, shared=is_shared,
-                                  recursive=recursive)
+                                  recursive=recursive, return_empty=True)
             if libs:
                 return libs
-        return None  # Raise an error
+        msg = 'Unable to locate Sundials libraries in {0}'
+        raise NoLibrariesError(msg.format(self.prefix))

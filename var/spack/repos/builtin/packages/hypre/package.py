@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 import os
 import sys
 
@@ -140,7 +141,9 @@ class Hypre(Package):
         is_shared = '+shared' in self.spec
         for path, recursive in search_paths:
             libs = find_libraries('libHYPRE', root=path,
-                                  shared=is_shared, recursive=recursive)
+                                  shared=is_shared, recursive=recursive,
+                                  return_empty=True)
             if libs:
                 return libs
-        return None
+        msg = 'Unable to locate Hypre libraries in {0}'
+        raise NoLibrariesError(msg.format(self.prefix))

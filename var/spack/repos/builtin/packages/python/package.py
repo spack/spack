@@ -18,6 +18,7 @@ import spack.store
 import spack.util.spack_json as sjson
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
+from spack.error import NoLibrariesError
 from spack import *
 
 
@@ -495,6 +496,11 @@ class Python(AutotoolsPackage):
 
     @property
     def libs(self):
+        msg = 'Unable to locate {0} libraries in {1}'
+        # we will call command(), if prefix.bin does not exist,
+        # raise exception soon to make catching easier
+        if not os.path.exists(self.prefix.bin):
+            raise NoLibrariesError(msg.format('Python', self.prefix))
         # Spack installs libraries into lib, except on openSUSE where it
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
@@ -513,8 +519,7 @@ class Python(AutotoolsPackage):
             elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
                 return LibraryList(os.path.join(frameworkprefix, ldlibrary))
             else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(ldlibrary, libdir))
+                raise NoLibrariesError(msg.format(ldlibrary, libdir))
         else:
             library = self.get_config_var('LIBRARY')
 
@@ -523,8 +528,7 @@ class Python(AutotoolsPackage):
             elif os.path.exists(os.path.join(frameworkprefix, library)):
                 return LibraryList(os.path.join(frameworkprefix, library))
             else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(library, libdir))
+                raise NoLibrariesError(msg.format(library, libdir))
 
     @property
     def headers(self):
