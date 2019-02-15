@@ -581,7 +581,7 @@ def get_specs(force=False):
                 if re.search("spec.yaml", link) and re.search(path, link):
                     urls.add(link)
 
-    _cached_specs = set()
+    _cached_specs = []
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
@@ -597,7 +597,7 @@ def get_specs(force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = spack.spec.Spec.from_yaml(f)
                 spec._mark_concrete()
-                _cached_specs.add(spec)
+                _cached_specs.append(spec)
 
     return _cached_specs
 
