@@ -28,6 +28,8 @@ class Doxygen(CMakePackage):
             description='Build with dot command support from Graphviz.')
 
     depends_on("cmake@2.8.12:", type='build')
+    depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
+    depends_on("libiconv")
     depends_on("flex", type='build')
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed
@@ -41,11 +43,3 @@ class Doxygen(CMakePackage):
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified
     # Also - https://github.com/doxygen/doxygen/pull/6588
     patch('shared_ptr.patch', when='@1.8.14')
-
-    # Doxygen has an undeclared depenendency on a System-installed
-    # Python2 at /usr/bin/python.  Avoid polluting this with any
-    # Spack-installed Pythons in our tree.
-    def setup_environment(self, spack_env, run_env):
-        spack_env.unset('PYTHONPATH')
-        spack_env.unset('PYTHONHOME')
-        spack_env.unset('PYTHONSTARTUP')
