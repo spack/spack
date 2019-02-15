@@ -28,6 +28,8 @@ packages:
     intel-parallel-studio:
       variants: +ipp +mkl +mpi +openmp
       version: [cluster]
+    python:
+      variants: +ucs4
     autoconf:
       paths:
         autoconf@2.69 arch=linux-centos7-x86_64: /usr

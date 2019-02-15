@@ -21,6 +21,8 @@ packages:
         blas: [openblas, intel-parallel-studio+mkl]
         lapack: [openblas, intel-parallel-studio+mkl]
         scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
+    python:
+      variants: +ucs4
     autoconf:
       paths:
         autoconf@2.69 arch=linux-centos7-x86_64: /usr
