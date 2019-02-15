@@ -84,3 +84,6 @@ class Reportinglib(CMakePackage):
             if libs:
                 return libs
         return None
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.unset('LC_ALL')

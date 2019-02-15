@@ -153,6 +153,7 @@ class Neurodamus(NeurodamusBase):
             sed('-i', 's#-dll .*#-dll %s#' % prefix.lib.join('libnrnmech.so'), prefix.bin.special)
 
     def setup_environment(self, spack_env, run_env):
+        spack_env.unset('LC_ALL')
         run_env.prepend_path('PATH', self.prefix.bin)
         run_env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoclib)
         if os.path.isdir(self.prefix.python):
