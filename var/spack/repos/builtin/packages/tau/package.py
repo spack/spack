@@ -97,8 +97,8 @@ class Tau(Package):
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
-        compiler_options = ['-c++=%s' % self.compiler.cxx,
-                            '-cc=%s' % self.compiler.cc]
+        compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
+                            '-cc=%s' % self.compiler.cc_names[0]]
 
         if self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
