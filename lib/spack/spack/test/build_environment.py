@@ -243,6 +243,7 @@ def test_set_build_environment_variables(
     dep2_pkg = root['dt-diamond-right'].package
     dep2_pkg.spec.prefix = str(dep2_prefix)
     dep2_inc_paths = ['/test2/path/to/ex1.h', '/test2/path/to/subdir/ex2.h']
+    dep2_inc_dirs = ['/test2/path/to', '/test2/path/to/subdir']
     dep2_includes = HeaderList(dep2_inc_paths)
 
     setattr(dep_pkg, 'libs', dep_libs)
@@ -275,7 +276,7 @@ def test_set_build_environment_variables(
         # (regardless of whether it contains any header files)
         assert (
             normpaths(header_dir_var.split(':')) ==
-            normpaths([str(dep2_include)]))
+            normpaths(dep2_inc_dirs + [str(dep2_include)]))
     finally:
         delattr(dep_pkg, 'libs')
         delattr(dep2_pkg, 'headers')

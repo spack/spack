@@ -956,10 +956,25 @@ class HeaderList(FileList):
     commonly used compiler flags or names.
     """
 
+    include_regex = re.compile(r'(.*)(include)(.*)')
+
     def __init__(self, files):
         super(HeaderList, self).__init__(files)
 
         self._macro_definitions = []
+
+    @property
+    def directories(self):
+        dir_list = super(HeaderList, self).directories
+        values = []
+        for d in dir_list:
+            # If the path contains a subdirectory named 'include' then stop
+            # there and don't add anything else to the path.
+            m = self.include_regex.match(d)
+            value = os.path.join(*m.group(1, 2)) if m else d
+            values.append(value)
+
+        return list(dedupe(values))
 
     @property
     def headers(self):
