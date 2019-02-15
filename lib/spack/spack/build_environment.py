@@ -281,6 +281,9 @@ def set_build_environment_variables(pkg, env, dirty):
         query = pkg.spec[dep.name]
         try:
             dep_link_dirs = list(query.libs.directories)
+            # libraries used by a package might include system libs,
+            # filter dirs
+            dep_link_dirs = filter_system_paths(dep_link_dirs)
             link_dirs.extend(dep_link_dirs)
             if dep in rpath_deps:
                 rpath_dirs.extend(dep_link_dirs)
