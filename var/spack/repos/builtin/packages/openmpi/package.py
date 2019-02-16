@@ -350,7 +350,7 @@ class Openmpi(AutotoolsPackage):
 
     def with_or_without_tm(self, activated):
         opt = 'tm'
-        # If the option has not been activated return --without-mxm
+        # If the option has not been activated return --without-tm
         if not activated:
             return '--without-{0}'.format(opt)
         line = '--with-{0}'.format(opt)
