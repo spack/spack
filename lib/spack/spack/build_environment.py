@@ -283,10 +283,15 @@ def set_build_environment_variables(pkg, env, dirty):
         except spack.spec.NoLibrariesError:
             tty.debug("No libraries found for {0}".format(dep.name))
 
-        for default_lib_dir in ['lib', 'lib64']:
-            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-            if os.path.isdir(default_lib_prefix):
-                dep_link_dirs.append(default_lib_prefix)
+            # Fallback to default lib/lib64 ONLY if the package failed to
+            # provide working libs(). Otherwise with complicated Intel packages
+            # we may end up including un-versioned lib folder
+            # /apps/intel/ComposerXE2017/lib instead of
+            # /apps/intel/ComposerXE2017/compilers_and_libraries_2018.3.222/...
+            for default_lib_dir in ['lib', 'lib64']:
+                default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
+                if os.path.isdir(default_lib_prefix):
+                    dep_link_dirs.append(default_lib_prefix)
 
         link_dirs.extend(dep_link_dirs)
         if dep in rpath_deps:
