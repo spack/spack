@@ -11,10 +11,10 @@ Tutorial: Spack 101
 
 This is a full-day introduction to Spack with lectures and live demos.
 It was presented as a tutorial at the `Exascale Computing Project Annual
-Meeting <https://ecpannualmeeting.com/agenda.php>`_ in 2019.  You can use
-these materials to teach a course on Spack at your own site, or you can
-just skip ahead and read the live demo scripts to see how Spack is used
-in practice.
+Meeting <https://whova.com/embedded/subsession/aecm_201901/503158/503161/>`_
+in 2019.  You can use these materials to teach a course on Spack at your
+own site, or you can just skip ahead and read the live demo scripts to
+see how Spack is used in practice.
 
 .. _sc16-slides:
 
