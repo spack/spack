@@ -60,7 +60,8 @@ RUN yum update -y
 
   MASK PUSH
   MASK [[ $DISTRO =~ rhel.* ]]
-  RUN yum install -y yum-conf-repos.noarch \
+  RUN (  yum install -y yum-conf-repos.noarch                         \
+   ||    yum install -y yum-conf-epel.noarch yum-conf-elrepo.noarch ) \
    && yum update -y
   MASK POP
 
@@ -110,7 +111,7 @@ RUN apt-get -yqq update                                   \
         openssh-server  python          python-pip tcl
 
   MASK PUSH
-  MASK [[ $DISTRO_VERSION == bionic ]]
+  MASK [[ $DISTRO_VERSION == 18.04 ]]
   # [WORKAROUND]
   # https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
   RUN ln -s posix_c.so /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so
