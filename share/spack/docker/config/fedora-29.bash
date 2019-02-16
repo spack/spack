@@ -11,6 +11,6 @@ unset BASE_TAG
 unset TAG
 unset EXTRA_TAGS
 
-export BASE_IMAGE=centos
-export BASE_TAG="7"
+export BASE_IMAGE=fedora
+export BASE_TAG="29"
 export EXTRA_TAGS="latest"
