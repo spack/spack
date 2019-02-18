@@ -237,3 +237,17 @@ def test_recursive_search_of_headers_from_prefix(tmp_installation_dir):
     assert os.path.join(prefix, 'include', 'boost') not in include_dirs
     assert os.path.join(prefix, 'path', 'to') in include_dirs
     assert os.path.join(prefix, 'path', 'to', 'subdir') in include_dirs
+
+
+@pytest.mark.parametrize('list_of_headers,expected_directories', [
+    (['/pfx/include/foo.h', '/pfx/include/subdir/foo.h'], ['/pfx/include']),
+    (['/pfx/include/foo.h', '/pfx/subdir/foo.h'],
+     ['/pfx/include', '/pfx/subdir']),
+    (['/pfx/include/subdir/foo.h', '/pfx/subdir/foo.h'],
+     ['/pfx/include', '/pfx/subdir'])
+])
+def test_computation_of_header_directories(
+        list_of_headers, expected_directories
+):
+    hl = fs.HeaderList(list_of_headers)
+    assert hl.directories == expected_directories
