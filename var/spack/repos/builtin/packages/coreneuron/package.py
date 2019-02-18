@@ -36,10 +36,7 @@ class Coreneuron(CMakePackage):
     homepage = "https://github.com/BlueBrain/CoreNeuron"
     url      = "https://github.com/BlueBrain/CoreNeuron"
 
-    version('develop', git=url, submodules=True)
-    version('hippocampus', git=url, submodules=True)
-    version('master', git=url, submodules=True)
-    version('plasticity', git=url, preferred=True, submodules=True)
+    version('develop', git=url, submodules=True, preferred=True)
 
     variant('debug', default=False, description='Build debug with O0')
     variant('gpu', default=False, description="Enable GPU build")
@@ -55,12 +52,17 @@ class Coreneuron(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('cuda', when='+gpu')
     depends_on('mpi', when='+mpi')
-    depends_on('neurodamus-base@plasticity', when='@plasticity')
-    depends_on('neurodamus-base@hippocampus', when='@hippocampus')
-    depends_on('neurodamus-base@master', when='@master')
     depends_on('reportinglib', when='+report')
     depends_on('reportinglib+profile', when='+report+profile')
     depends_on('tau', when='+profile')
+
+    # Old versions. Required by previous neurodamus package.
+    version('master',      git=url, submodules=True)
+    version('hippocampus', git=url, submodules=True)
+    version('plasticity',  git=url, submodules=True)
+    depends_on('neurodamus-base@master', when='@master')
+    depends_on('neurodamus-base@plasticity', when='@plasticity')
+    depends_on('neurodamus-base@hippocampus', when='@hippocampus')
 
     @run_before('build')
     def profiling_wrapper_on(self):
@@ -114,7 +116,8 @@ class Coreneuron(CMakePackage):
                    '-DENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
                    '-DCORENEURON_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
                    '-DUNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
-                   '-DFUNCTIONAL_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF')
+                   '-DFUNCTIONAL_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
+                   '-DENABLE_HEADER_INSTALL=ON'  # for compiling mods to corenrn-special
                    ]
 
         if spec.satisfies('~shared') or spec.satisfies('+gpu'):
@@ -134,6 +137,7 @@ class Coreneuron(CMakePackage):
             # OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU
             options.append('-DENABLE_REPORTINGLIB=OFF')
 
+        # Suppport for previous neurodamus package
         if '^neurodamus-base' in spec:
             modlib_dir = self.spec['neurodamus-base'].prefix.lib.modlib
             modfile_list = '%s/coreneuron_modlist.txt' % modlib_dir

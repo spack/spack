@@ -1,8 +1,7 @@
 # Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 from spack import *
-from spack.pkg.builtin.neurodamus_model import NeurodamusModel
-import shutil
+from spack.pkg.builtin.neurodamus_model import NeurodamusModel, copy_all
 
 
 class NeurodamusNeocortex(NeurodamusModel):
@@ -13,12 +12,17 @@ class NeurodamusNeocortex(NeurodamusModel):
     git      = "ssh://bbpcode.epfl.ch/sim/models/neocortex"
 
     version('develop', git=git, branch='master', submodules=True)
-    version('1.1', tag='1.1', submodules=True)
 
     variant('v5', default=True, description='Enable support for previous v5 circuits')
+    variant('plasticity', default=False, description="Use optimized ProbAMPANMDA_EMS and ProbGABAAB_EMS")
+
+    mech_name = "neocortex"
 
     @run_before('merge_hoc_mod')
-    def include_v5(self):
+    def prepare_mods(self):
         if self.spec.satisfies('+v5'):
-            self.copy_all('mod/v5', 'mod', copyfunc=shutil.move)
-
+            copy_all('mod/v5', 'mod', copyfunc=copy_all.symlink2)
+        copy_all('mod/v6', 'mod', copyfunc=copy_all.symlink2)
+        # Plasticity
+        if self.spec.satisfies('+plasticity'):
+            copy_all('mod/v6/optimized', 'mod', copyfunc=copy_all.symlink2)
