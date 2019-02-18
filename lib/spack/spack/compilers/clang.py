@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 import os
 import sys
@@ -29,10 +10,29 @@ from shutil import copytree, ignore_patterns
 
 import llnl.util.tty as tty
 
-import spack
-from spack.compiler import Compiler, _version_cache
+import spack.paths
+from spack.compiler import Compiler, _version_cache, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
+
+
+#: compiler symlink mappings for mixed f77 compilers
+f77_mapping = [
+    ('gfortran', 'clang/gfortran'),
+    ('xlf_r', 'xl_r/xlf_r'),
+    ('xlf', 'xl/xlf'),
+    ('pgfortran', 'pgi/pgfortran'),
+    ('ifort', 'intel/ifort')
+]
+
+#: compiler symlink mappings for mixed f90/fc compilers
+fc_mapping = [
+    ('gfortran', 'clang/gfortran'),
+    ('xlf90_r', 'xl_r/xlf90_r'),
+    ('xlf90', 'xl/xlf90'),
+    ('pgfortran', 'pgi/pgfortran'),
+    ('ifort', 'intel/ifort')
+]
 
 
 class Clang(Compiler):
@@ -43,23 +43,36 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['flang', 'gfortran']
+    f77_names = ['flang', 'gfortran', 'xlf_r']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['flang', 'gfortran']
+    fc_names = ['flang', 'gfortran', 'xlf90_r']
 
-    # Named wrapper links within spack.build_env_path
-    link_paths = {'cc': 'clang/clang',
-                  'cxx': 'clang/clang++'}
+    # Clang has support for using different fortran compilers with the
+    # clang executable.
+    @property
+    def link_paths(self):
+        # clang links are always the same
+        link_paths = {'cc': 'clang/clang',
+                      'cxx': 'clang/clang++'}
 
-    if sys.platform == 'darwin':
-        # Use default wrappers for fortran, in case provided in
-        # compilers.yaml
-        link_paths['f77'] = 'clang/gfortran'
-        link_paths['fc'] = 'clang/gfortran'
-    else:
-        link_paths['f77'] = 'clang/flang'
-        link_paths['fc'] = 'clang/flang'
+        # fortran links need to look at the actual compiler names from
+        # compilers.yaml to figure out which named symlink to use
+        for compiler_name, link_path in f77_mapping:
+            if self.f77 and compiler_name in self.f77:
+                link_paths['f77'] = link_path
+                break
+        else:
+            link_paths['f77'] = 'clang/flang'
+
+        for compiler_name, link_path in fc_mapping:
+            if self.fc and compiler_name in self.fc:
+                link_paths['fc'] = link_path
+                break
+        else:
+            link_paths['fc'] = 'clang/flang'
+
+        return link_paths
 
     @property
     def is_apple(self):
@@ -69,7 +82,10 @@ class Clang(Compiler):
     @property
     def openmp_flag(self):
         if self.is_apple:
-            tty.die("Clang from Apple does not support Openmp yet.")
+            raise UnsupportedCompilerFlag(self,
+                                          "OpenMP",
+                                          "openmp_flag",
+                                          "Xcode {0}".format(self.version))
         else:
             return "-fopenmp"
 
@@ -77,14 +93,20 @@ class Clang(Compiler):
     def cxx11_flag(self):
         if self.is_apple:
             # Adapted from CMake's AppleClang-CXX rules
-            # Spack's AppleClang detection only valid form Xcode >= 4.6
+            # Spack's AppleClang detection only valid from Xcode >= 4.6
             if self.version < ver('4.0.0'):
-                tty.die("Only Apple LLVM 4.0 and above support c++11")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++11 standard",
+                                              "cxx11_flag",
+                                              "Xcode < 4.0.0")
             else:
                 return "-std=c++11"
         else:
             if self.version < ver('3.3'):
-                tty.die("Only Clang 3.3 and above support c++11.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++11 standard",
+                                              "cxx11_flag",
+                                              "< 3.3")
             else:
                 return "-std=c++11"
 
@@ -93,14 +115,20 @@ class Clang(Compiler):
         if self.is_apple:
             # Adapted from CMake's rules for AppleClang
             if self.version < ver('5.1.0'):
-                tty.die("Only Apple LLVM 5.1 and above support c++14.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++14 standard",
+                                              "cxx14_flag",
+                                              "Xcode < 5.1.0")
             elif self.version < ver('6.1.0'):
                 return "-std=c++1y"
             else:
                 return "-std=c++14"
         else:
             if self.version < ver('3.4'):
-                tty.die("Only Clang 3.4 and above support c++14.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++14 standard",
+                                              "cxx14_flag",
+                                              "< 3.5")
             elif self.version < ver('3.5'):
                 return "-std=c++1y"
             else:
@@ -111,14 +139,22 @@ class Clang(Compiler):
         if self.is_apple:
             # Adapted from CMake's rules for AppleClang
             if self.version < ver('6.1.0'):
-                tty.die("Only Apple LLVM 6.1 and above support c++17.")
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++17 standard",
+                                              "cxx17_flag",
+                                              "Xcode < 6.1.0")
             else:
                 return "-std=c++1z"
         else:
             if self.version < ver('3.5'):
-                tty.die("Only Clang 3.5 and above support c++17.")
-            else:
+                raise UnsupportedCompilerFlag(self,
+                                              "the C++17 standard",
+                                              "cxx17_flag",
+                                              "< 5.0")
+            elif self.version < ver('5.0'):
                 return "-std=c++1z"
+            else:
+                return "-std=c++17"
 
     @property
     def pic_flag(self):
@@ -228,7 +264,7 @@ class Clang(Compiler):
             raise OSError(msg)
 
         real_root = os.path.dirname(os.path.dirname(real_root))
-        developer_root = os.path.join(spack.stage_path,
+        developer_root = os.path.join(spack.paths.stage_path,
                                       'xcode-select',
                                       self.name,
                                       str(self.version))
@@ -267,8 +303,9 @@ class Clang(Compiler):
                 for fname in os.listdir(dev_dir):
                     if fname in bins:
                         os.unlink(os.path.join(dev_dir, fname))
-                        os.symlink(os.path.join(spack.build_env_path, 'cc'),
-                                   os.path.join(dev_dir, fname))
+                        os.symlink(
+                            os.path.join(spack.paths.build_env_path, 'cc'),
+                            os.path.join(dev_dir, fname))
 
             os.symlink(developer_root, xcode_link)
 

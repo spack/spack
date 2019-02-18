@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,6 +14,8 @@ class Scotch(Package):
     url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
+    version('6.0.6', 'ef676a3118b5590c416176e402fac248')
+    version('6.0.5a', '8430dff7175a1dfd5a3258e75260cf71')
     version('6.0.4', 'd58b825eb95e1db77efe8c6ff42d329f')
     version('6.0.3', '10b0cc0f184de2de99859eafaca83cfc')
     version('6.0.0', 'c50d6187462ba801f9a82133ee666e8e')
@@ -60,6 +43,9 @@ class Scotch(Package):
     # Version-specific patches
     patch('nonthreaded-6.0.4.patch', when='@6.0.4')
     patch('esmumps-ldflags-6.0.4.patch', when='@6.0.4')
+    patch('metis-headers-6.0.4.patch', when='@6.0.4')
+
+    patch('libscotchmetis-return-6.0.5a.patch', when='@6.0.5a')
 
     # NOTE: In cross-compiling environment parallel build
     # produces weird linker errors.
@@ -159,7 +145,7 @@ class Scotch(Package):
         if self.compiler.name == 'gcc':
             cflags.append('-Drestrict=__restrict')
         elif self.compiler.name == 'intel':
-            cflags.append('-restrict')
+            cflags.append('-Drestrict=')
 
         mpicc_path = self.spec['mpi'].mpicc if '+mpi' in self.spec else 'mpicc'
         makefile_inc.append('CCS       = $(CC)')

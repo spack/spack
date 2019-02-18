@@ -1,27 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from datetime import datetime
 import fcntl
 import os
 import struct
@@ -37,6 +19,10 @@ from llnl.util.tty.color import cprint, cwrite, cescape, clen
 _debug = False
 _verbose = False
 _stacktrace = False
+_timestamp = False
+_msg_enabled = True
+_warn_enabled = True
+_error_enabled = True
 indent = "  "
 
 
@@ -62,6 +48,65 @@ def set_verbose(flag):
     _verbose = flag
 
 
+def set_timestamp(flag):
+    global _timestamp
+    _timestamp = flag
+
+
+def set_msg_enabled(flag):
+    global _msg_enabled
+    _msg_enabled = flag
+
+
+def set_warn_enabled(flag):
+    global _warn_enabled
+    _warn_enabled = flag
+
+
+def set_error_enabled(flag):
+    global _error_enabled
+    _error_enabled = flag
+
+
+def msg_enabled():
+    return _msg_enabled
+
+
+def warn_enabled():
+    return _warn_enabled
+
+
+def error_enabled():
+    return _error_enabled
+
+
+class SuppressOutput:
+    """Class for disabling output in a scope using 'with' keyword"""
+
+    def __init__(self,
+                 msg_enabled=True,
+                 warn_enabled=True,
+                 error_enabled=True):
+
+        self._msg_enabled_initial = _msg_enabled
+        self._warn_enabled_initial = _warn_enabled
+        self._error_enabled_initial = _error_enabled
+
+        self._msg_enabled = msg_enabled
+        self._warn_enabled = warn_enabled
+        self._error_enabled = error_enabled
+
+    def __enter__(self):
+        set_msg_enabled(self._msg_enabled)
+        set_warn_enabled(self._warn_enabled)
+        set_error_enabled(self._error_enabled)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        set_msg_enabled(self._msg_enabled_initial)
+        set_warn_enabled(self._warn_enabled_initial)
+        set_error_enabled(self._error_enabled_initial)
+
+
 def set_stacktrace(flag):
     global _stacktrace
     _stacktrace = flag
@@ -84,15 +129,28 @@ def process_stacktrace(countback):
     return st_text
 
 
+def get_timestamp(force=False):
+    """Get a string timestamp"""
+    if _debug or _timestamp or force:
+        return datetime.now().strftime("[%Y-%m-%d-%H:%M:%S.%f] ")
+    else:
+        return ''
+
+
 def msg(message, *args, **kwargs):
+    if not msg_enabled():
+        return
+
     newline = kwargs.get('newline', True)
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(2)
     if newline:
-        cprint("@*b{%s==>} %s" % (st_text, cescape(message)))
+        cprint("@*b{%s==>} %s%s" % (
+            st_text, get_timestamp(), cescape(message)))
     else:
-        cwrite("@*b{%s==>} %s" % (st_text, cescape(message)))
+        cwrite("@*b{%s==>} %s%s" % (
+            st_text, get_timestamp(), cescape(message)))
     for arg in args:
         print(indent + str(arg))
 
@@ -107,8 +165,9 @@ def info(message, *args, **kwargs):
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(st_countback)
-    cprint("@%s{%s==>} %s" % (format, st_text, cescape(str(message))),
-           stream=stream)
+    cprint("@%s{%s==>} %s%s" % (
+        format, st_text, get_timestamp(), cescape(str(message))),
+        stream=stream)
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
@@ -134,12 +193,18 @@ def debug(message, *args, **kwargs):
 
 
 def error(message, *args, **kwargs):
+    if not error_enabled():
+        return
+
     kwargs.setdefault('format', '*r')
     kwargs.setdefault('stream', sys.stderr)
     info("Error: " + str(message), *args, **kwargs)
 
 
 def warn(message, *args, **kwargs):
+    if not warn_enabled():
+        return
+
     kwargs.setdefault('format', '*Y')
     kwargs.setdefault('stream', sys.stderr)
     info("Warning: " + str(message), *args, **kwargs)
@@ -246,18 +311,18 @@ def hline(label=None, **kwargs):
 
 def terminal_size():
     """Gets the dimensions of the console: (rows, cols)."""
-    def ioctl_GWINSZ(fd):
+    def ioctl_gwinsz(fd):
         try:
             rc = struct.unpack('hh', fcntl.ioctl(
                 fd, termios.TIOCGWINSZ, '1234'))
         except BaseException:
             return
         return rc
-    rc = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
+    rc = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
     if not rc:
         try:
             fd = os.open(os.ctermid(), os.O_RDONLY)
-            rc = ioctl_GWINSZ(fd)
+            rc = ioctl_gwinsz(fd)
             os.close(fd)
         except BaseException:
             pass

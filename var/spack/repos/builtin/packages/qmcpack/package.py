@@ -1,55 +1,39 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import llnl.util.tty as tty
 
 
-class Qmcpack(CMakePackage):
+class Qmcpack(CMakePackage, CudaPackage):
     """QMCPACK, is a modern high-performance open-source Quantum Monte
        Carlo (QMC) simulation code."""
 
     # Package information
     homepage = "http://www.qmcpack.org/"
-    url      = "https://github.com/QMCPACK/qmcpack.git"
+    git      = "https://github.com/QMCPACK/qmcpack.git"
+
+    tags = ['ecp', 'ecp-apps']
 
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
-    version('3.4.0', git=url, tag='v3.4.0')
-    version('3.3.0', git=url, tag='v3.3.0')
-    version('3.2.0', git=url, tag='v3.2.0')
-    version('3.1.1', git=url, tag='v3.1.1')
-    version('3.1.0', git=url, tag='v3.1.0')
-    version('develop', git=url)
+    version('develop')
+    version('3.6.0', tag='v3.6.0')
+    version('3.5.0', tag='v3.5.0')
+    version('3.4.0', tag='v3.4.0')
+    version('3.3.0', tag='v3.3.0')
+    version('3.2.0', tag='v3.2.0')
+    version('3.1.1', tag='v3.1.1')
+    version('3.1.0', tag='v3.1.0')
 
     # These defaults match those in the QMCPACK manual
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True, description='Build with MPI support')
-    variant('cuda', default=False,
-            description='Enable CUDA and GPU acceleration')
+    variant('phdf5', default=True, description='Build with parallel collective I/O')
     variant('complex', default=False,
             description='Build the complex (general twist/k-point) version')
     variant('mixed', default=False,
@@ -66,54 +50,95 @@ class Qmcpack(CMakePackage):
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
     variant('qe', default=True,
-            description='Install with patched Quantum Espresso 5.3.0')
+            description='Install with patched Quantum Espresso 6.3.0')
 
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
     # variant('+mixed', default=True, when='+cuda', description="...")
 
     # conflicts
-    conflicts('+soa', when='+cuda')
-    conflicts('^openblas+ilp64')
-    conflicts('^intel-mkl+ilp64')
+    conflicts(
+        '+phdf5',
+        when='~mpi',
+        msg='Parallel collective I/O requires MPI-enabled QMCPACK. ' \
+        'Please add "~phdf5" to the Spack install line for serial QMCPACK.'
+    )
+    conflicts(
+        '+qe',
+        when='~mpi',
+        msg='QMCPACK QE variant requires MPI due to limitation in QE build ' \
+        'system. Please add "~qe" to the Spack install line for serial ' \
+        'QMCPACK.'
+    )
+    conflicts(
+        '+soa',
+        when='+cuda',
+        msg='QMCPACK SOA variant does not exist for CUDA'
+    )
+    conflicts(
+        '^openblas+ilp64',
+        msg='QMCPACK does not support OpenBLAS 64-bit integer variant'
+    )
+    conflicts(
+        '^intel-mkl+ilp64',
+        msg='QMCPACK does not support MKL 64-bit integer variant'
+    )
+
+    # QMCPACK 3.6.0 or later requires support for C++14
+    compiler_warning = 'QMCPACK 3.6.0 or later requires a ' \
+                       'compiler with support for C++14'
+    conflicts('%gcc@:4', when='@3.6.0:', msg=compiler_warning)
+    conflicts('%intel@:17', when='@3.6.0:', msg=compiler_warning)
+    conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
+    conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
 
     # Dependencies match those in the QMCPACK manual.
     # FIXME: once concretizer can unite unconditional and conditional
-    # dependencies the some of the '~mpi' will not be necessary.
-    depends_on('cmake@3.4.3:', type='build')
-    depends_on('mpi', when='+mpi')
-    depends_on('libxml2')
-    depends_on('hdf5')
-    depends_on('hdf5+mpi', when='+mpi')
-    depends_on('hdf5~mpi', when='~mpi')
+    # dependencies, some of the '~mpi' variants below will not be necessary.
+    # Essential libraries
+    depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
+    depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
     depends_on('boost')
+    depends_on('boost@1.61.0:', when='@3.6.0:')
+    depends_on('libxml2')
+    depends_on('mpi', when='+mpi')
+    depends_on('cuda', when='+cuda')
+    # HDF5
+    depends_on('hdf5+hl+fortran', when='+qe')
+    depends_on('hdf5+hl+fortran+mpi', when='+qe+mpi')
+    depends_on('hdf5+hl+fortran~mpi', when='+qe~mpi')
+    depends_on('hdf5~hl~fortran', when='~qe')
+    depends_on('hdf5~hl~fortran+mpi', when='~qe+mpi')
+    depends_on('hdf5~hl~fortran~mpi', when='~qe~mpi')
+    # Math libraries
     depends_on('blas')
     depends_on('lapack')
-    depends_on('fftw')
-    depends_on('fftw+mpi', when='+mpi')
-    depends_on('fftw~mpi', when='~mpi')
-    depends_on('cuda', when='+cuda')
+    depends_on('fftw-api@3')
 
     # qmcpack data analysis tools
     # basic command line tool based on Python and NumPy
-    # blas and lapack patching fails often and so are disabled at this time
-    depends_on('py-numpy~blas~lapack', type='run', when='+da')
+    # It may be necesseary to disable the blas and lapack
+    # when building the 'py-numpy' package, but it should not be a hard
+    # dependency on the 'py-numpy~blas~lapack' variant
+    depends_on('py-numpy', when='+da', type='run')
 
     # GUI is optional for data anlysis
     # py-matplotlib leads to a long complex DAG for dependencies
-    depends_on('py-matplotlib', type='run', when='+gui')
+    depends_on('py-matplotlib', when='+gui', type='run')
 
     # B-spline basis calculation require a patched version of
-    # Quantum Espresso 5.3.0 (see QMCPACK manual)
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_espresso-5.3.0.diff'
-    patch_checksum = '0d8d7ba805313ddd4c02ee32c96d2f12e7091e9e82e22671d3ad5a24247860c4'
-    depends_on('espresso@5.3.0~elpa',
+    # Quantum Espresso 6.3 (see QMCPACK manual)
+    # Building explicitly without ELPA due to issues in Quantum Espresso
+    # Spack package
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
+    patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
+    depends_on('quantum-espresso@6.3~elpa+mpi+hdf5',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
-               when='+qe+mpi')
+                   when='+qe+mpi', type='run')
 
-    depends_on('espresso@5.3.0~elpa~scalapack~mpi',
+    depends_on('quantum-espresso@6.3~elpa~scalapack~mpi+hdf5',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
-               when='+qe~mpi')
+                   when='+qe~mpi', type='run')
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0
@@ -155,10 +180,11 @@ class Qmcpack(CMakePackage):
         args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(xml2_prefix.include))
         args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(xml2_prefix.lib))
 
-        fftw_prefix = spec['fftw'].prefix
-        args.append('-DFFTW_HOME={0}'.format(fftw_prefix))
-        args.append('-DFFTW_INCLUDE_DIRS={0}'.format(fftw_prefix.include))
-        args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
+        if '^fftw@3:' in spec:
+            fftw_prefix = spec['fftw'].prefix
+            args.append('-DFFTW_HOME={0}'.format(fftw_prefix))
+            args.append('-DFFTW_INCLUDE_DIRS={0}'.format(fftw_prefix.include))
+            args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
 
         args.append('-DBOOST_ROOT={0}'.format(self.spec['boost'].prefix))
         args.append('-DHDF5_ROOT={0}'.format(self.spec['hdf5'].prefix))
@@ -166,13 +192,19 @@ class Qmcpack(CMakePackage):
         # Default is MPI, serial version is convenient for cases, e.g. laptops
         if '+mpi' in spec:
             args.append('-DQMC_MPI=1')
-        elif '~mpi' in spec:
+        else:
             args.append('-DQMC_MPI=0')
+
+        # Default is parallel collective I/O enabled
+        if '+phdf5' in spec:
+            args.append('-DENABLE_PHDF5=1')
+        else:
+            args.append('-DENABLE_PHDF5=0')
 
         # Default is real-valued single particle orbitals
         if '+complex' in spec:
             args.append('-DQMC_COMPLEX=1')
-        elif '~complex' in spec:
+        else:
             args.append('-DQMC_COMPLEX=0')
 
         # When '-DQMC_CUDA=1', CMake automatically sets:
@@ -183,13 +215,18 @@ class Qmcpack(CMakePackage):
 
         if '+cuda' in spec:
             args.append('-DQMC_CUDA=1')
-        elif '~cuda' in spec:
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch is not None:
+                args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
+            else:
+                args.append('-DCUDA_ARCH=sm_35')
+        else:
             args.append('-DQMC_CUDA=0')
 
         # Mixed-precision versues double-precision CPU and GPU code
         if '+mixed' in spec:
             args.append('-DQMC_MIXED_PRECISION=1')
-        elif '~mixed' in spec:
+        else:
             args.append('-DQMC_MIXED_PRECISION=0')
 
         # New Structure-of-Array (SOA) code, much faster than default
@@ -197,13 +234,13 @@ class Qmcpack(CMakePackage):
         # No support for local atomic orbital basis.
         if '+soa' in spec:
             args.append('-DENABLE_SOA=1')
-        elif '~soa' in spec:
+        else:
             args.append('-DENABLE_SOA=0')
 
         # Manual Timers
         if '+timers' in spec:
             args.append('-DENABLE_TIMERS=1')
-        elif '~timers' in spec:
+        else:
             args.append('-DENABLE_TIMERS=0')
 
         # Proper detection of optimized BLAS and LAPACK.
@@ -219,10 +256,16 @@ class Qmcpack(CMakePackage):
         ])
 
         # Additionally, we need to pass the BLAS+LAPACK include directory for
-        # header files. Intel MKL requires special case due to differences in
-        # Darwin vs. Linux $MKLROOT naming schemes
-        if 'intel-mkl' in self.spec:
+        # header files. This is to insure vectorized math and FFT libraries
+        # get properly detected. Intel MKL requires special case due to
+        # differences in Darwin vs. Linux $MKLROOT naming schemes. This section
+        # of code is intentionally redundant for backwards compatibility.
+        if 'intel-mkl' in spec:
             lapack_dir = format(join_path(env['MKLROOT'], 'include'))
+            # Next two lines were introduced in QMCPACK 3.5.0 and later.
+            # Prior to v3.5.0, these lines should be benign.
+            args.append('-DENABLE_MKL=1')
+            args.append('-DMKL_ROOT=%s' % env['MKLROOT'])
         else:
             lapack_dir = ':'.join((
                 spec['lapack'].prefix.include,
@@ -236,6 +279,11 @@ class Qmcpack(CMakePackage):
 
         return args
 
+    # QMCPACK 3.6.0 release and later has a functional 'make install',
+    # the Spack 'def install' is retained for backwards compatiblity.
+    # Note that the two install methods differ in their directory
+    # structure.
+    @when('@:3.5.0')
     def install(self, spec, prefix):
         """Make the install targets"""
 
@@ -262,6 +310,23 @@ class Qmcpack(CMakePackage):
 
             # install binaries
             install_tree('bin', prefix.bin)
+
+    # QMCPACK 3.6.0 install directory structure changed, thus there
+    # thus are two version of the setup_environment method
+    @when('@:3.5.0')
+    def setup_environment(self, spack_env, run_env):
+        """Set-up runtime environment for QMCPACK.
+        Set PYTHONPATH for basic analysis scripts and for Nexus."""
+        run_env.prepend_path('PYTHONPATH', self.prefix.nexus)
+
+    @when('@3.6.0:')
+    def setup_environment(self, spack_env, run_env):
+        """Set-up runtime environment for QMCPACK.
+        Set PYTHONPATH for basic analysis scripts and for Nexus. Binaries
+        are in the  'prefix' directory instead of 'prefix.bin' which is
+        not set by the default module environment"""
+        run_env.prepend_path('PATH', self.prefix)
+        run_env.prepend_path('PYTHONPATH', self.prefix)
 
     @run_after('build')
     @on_package_attributes(run_tests=True)

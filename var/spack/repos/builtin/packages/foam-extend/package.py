@@ -1,29 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# License
-# -------
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -54,11 +33,10 @@
 ##############################################################################
 import glob
 import re
-import shutil
 import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications
 from spack.pkg.builtin.openfoam_com import OpenfoamArch
 from spack.pkg.builtin.openfoam_com import add_extra_files
 from spack.pkg.builtin.openfoam_com import write_environ
@@ -76,10 +54,10 @@ class FoamExtend(Package):
 
     homepage = "http://www.extend-project.de/"
 
-    version('4.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-4.0')
-    version('3.2', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.2')
-    version('3.1', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.1')
-    version('3.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.0')
+    version('4.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git')
+    version('3.2', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git')
+    version('3.1', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git')
+    version('3.0', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git')
 
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
@@ -382,7 +360,6 @@ class FoamExtend(Package):
 
     def install(self, spec, prefix):
         """Install under the projectdir"""
-        opts = str(self.foam_arch)
 
         # Fairly ugly since intermediate targets are scattered inside sources
         appdir = 'applications'
@@ -419,19 +396,22 @@ class FoamExtend(Package):
             subitem = join_path(appdir, 'Allwmake')
             install(subitem, join_path(self.projectdir, subitem))
 
-            ignored = [opts]  # Ignore intermediate targets
+            foam_arch_str = str(self.foam_arch)
+            # Ignore intermediate targets
+            ignore = lambda p: os.path.basename(p) == foam_arch_str
+
             for d in ['src', 'tutorials']:
                 install_tree(
                     d,
                     join_path(self.projectdir, d),
-                    ignore=shutil.ignore_patterns(*ignored),
+                    ignore=ignore,
                     symlinks=True)
 
             for d in ['solvers', 'utilities']:
                 install_tree(
                     join_path(appdir, d),
                     join_path(self.projectdir, appdir, d),
-                    ignore=shutil.ignore_patterns(*ignored),
+                    ignore=ignore,
                     symlinks=True)
 
         etc_dir = join_path(self.projectdir, 'etc')

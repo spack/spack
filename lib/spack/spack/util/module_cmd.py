@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This module contains routines related to the module command for accessing and
 parsing environment modules.
@@ -115,11 +96,29 @@ def get_module_cmd_from_bash(bashopts=''):
     return module_cmd
 
 
+def unload_module(mod):
+    """Takes a module name and unloads the module from the environment. It does
+    not check whether conflicts arise from the unloaded module"""
+    tty.debug("Unloading module: {0}".format(mod))
+
+    modulecmd = get_module_cmd()
+    unload_output = modulecmd('unload', mod, output=str, error=str)
+
+    try:
+        exec(compile(unload_output, '<string>', 'exec'))
+    except Exception:
+        tty.debug("Module unload output of {0}:\n{1}\n".format(
+            mod, unload_output))
+        raise
+
+
 def load_module(mod):
     """Takes a module name and removes modules until it is possible to
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
+    tty.debug("Loading module: {0}".format(mod))
+
     # Create an executable of the module command that will output python code
     modulecmd = get_module_cmd()
 
@@ -127,20 +126,31 @@ def load_module(mod):
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
     # loaded does nothing.
-    text = modulecmd('show', mod, output=str, error=str).split()
-    for i, word in enumerate(text):
-        if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i + 1], output=str,
-                                   error=str), '<string>', 'exec'))
+    module_content = modulecmd('show', mod, output=str, error=str)
+    text = module_content.split()
+    try:
+        for i, word in enumerate(text):
+            if word == 'conflict':
+                unload_module(text[i + 1])
+    except Exception:
+        tty.debug("Module show output of {0}:\n{1}\n".format(
+            mod, module_content))
+        raise
+
     # Load the module now that there are no conflicts
     # Some module systems use stdout and some use stderr
     load = modulecmd('load', mod, output=str, error='/dev/null')
     if not load:
         load = modulecmd('load', mod, error=str)
-    exec(compile(load, '<string>', 'exec'))
+
+    try:
+        exec(compile(load, '<string>', 'exec'))
+    except Exception:
+        tty.debug("Module load output of {0}:\n{1}\n".format(mod, load))
+        raise
 
 
-def get_argument_from_module_line(line):
+def get_path_arg_from_module_line(line):
     if '(' in line and ')' in line:
         # Determine which lua quote symbol is being used for the argument
         comma_index = line.index(',')
@@ -152,9 +162,10 @@ def get_argument_from_module_line(line):
             # Change error text to describe what is going on.
             raise ValueError("No lua quote symbol found in lmod module line.")
         words_and_symbols = line.split(lua_quote)
-        return words_and_symbols[-2]
+        path_arg = words_and_symbols[-2]
     else:
-        return line.split()[2]
+        path_arg = line.split()[2]
+    return path_arg
 
 
 def get_path_from_module(mod):
@@ -167,16 +178,35 @@ def get_path_from_module(mod):
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
 
+    p = get_path_from_module_contents(text, mod)
+    if p and not os.path.exists(p):
+        tty.warn("Extracted path from module does not exist:"
+                 "\n\tExtracted path: " + p)
+    return p
+
+
+def get_path_from_module_contents(text, module_name):
+    tty.debug("Module name: " + module_name)
+    pkg_var_prefix = module_name.replace('-', '_').upper()
+    components = pkg_var_prefix.split('/')
+    # For modules with multiple components like foo/1.0.1, retrieve the package
+    # name "foo" from the module name
+    if len(components) > 1:
+        pkg_var_prefix = components[-2]
+    tty.debug("Package directory variable prefix: " + pkg_var_prefix)
+
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
-        if line.find('LD_LIBRARY_PATH') >= 0:
-            path = get_argument_from_module_line(line)
+        pattern = r'\W(CRAY_)?LD_LIBRARY_PATH'
+        if re.search(pattern, line):
+            path = get_path_arg_from_module_line(line)
             return path[:path.find('/lib')]
 
     # If it lists its package directory, return that
     for line in text:
-        if line.find(mod.upper() + '_DIR') >= 0:
-            return get_argument_from_module_line(line)
+        pattern = r'\W{0}_DIR'.format(pkg_var_prefix)
+        if re.search(pattern, line):
+            return get_path_arg_from_module_line(line)
 
     # If it lists a -rpath instruction, use that
     for line in text:
@@ -186,14 +216,15 @@ def get_path_from_module(mod):
 
     # If it lists a -L instruction, use that
     for line in text:
-        L = line.find('-L/')
-        if L >= 0:
-            return line[L + 2:line.find('/lib')]
+        lib_paths = line.find('-L/')
+        if lib_paths >= 0:
+            return line[lib_paths + 2:line.find('/lib')]
 
     # If it sets the PATH, use it
     for line in text:
-        if line.find('PATH') >= 0:
-            path = get_argument_from_module_line(line)
+        pattern = r'\WPATH'
+        if re.search(pattern, line):
+            path = get_path_arg_from_module_line(line)
             return path[:path.find('/bin')]
 
     # Unable to find module path

@@ -1,29 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-from spack import spack_root
+from spack.paths import spack_root
 
 
 class GobjectIntrospection(Package):
@@ -34,6 +15,7 @@ class GobjectIntrospection(Package):
     homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
     url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.49/gobject-introspection-1.49.2.tar.xz"
 
+    version('1.56.1', '5b2875ccff99ff7baab63a34b67f8c920def240e178ff50add809e267d9ea24b')
     version('1.49.2', 'c47a76b05b2d8438089f519922180747')
     version('1.48.0', '01301fa9019667d48e927353e08bc218')
 
@@ -70,6 +52,10 @@ class GobjectIntrospection(Package):
     #   an `#!/bin/bash /path/to/spack/bin/sbang` unconditionally being
     #   inserted into the scripts as they're generated.
     patch("sbang.patch")
+
+    def url_for_version(self, version):
+        url = 'http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz'
+        return url.format(version.up_to(2), version)
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

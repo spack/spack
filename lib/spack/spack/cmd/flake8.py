@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import re
@@ -33,7 +14,7 @@ import argparse
 
 from llnl.util.filesystem import working_dir, mkdirp
 
-import spack
+import spack.paths
 from spack.util.executable import which
 
 
@@ -53,7 +34,7 @@ def is_package(f):
 
 
 #: List of directories to exclude from checks.
-exclude_directories = [spack.external_path]
+exclude_directories = [spack.paths.external_path]
 
 
 #: This is a dict that maps:
@@ -243,11 +224,12 @@ def flake8(parser, args):
         if file_list:
             def prefix_relative(path):
                 return os.path.relpath(
-                    os.path.abspath(os.path.realpath(path)), spack.prefix)
+                    os.path.abspath(os.path.realpath(path)),
+                    spack.paths.prefix)
 
             file_list = [prefix_relative(p) for p in file_list]
 
-        with working_dir(spack.prefix):
+        with working_dir(spack.paths.prefix):
             if not file_list:
                 file_list = changed_files(args)
 
@@ -261,7 +243,7 @@ def flake8(parser, args):
 
         # filter files into a temporary directory with exemptions added.
         for filename in file_list:
-            src_path = os.path.join(spack.prefix, filename)
+            src_path = os.path.join(spack.paths.prefix, filename)
             dest_path = os.path.join(temp, filename)
             filter_file(src_path, dest_path, args.output)
 
@@ -275,13 +257,14 @@ def flake8(parser, args):
             if file_list:
                 output += flake8(
                     '--format', 'pylint',
-                    '--config=%s' % os.path.join(spack.prefix, '.flake8'),
+                    '--config=%s' % os.path.join(spack.paths.prefix,
+                                                 '.flake8'),
                     *file_list, fail_on_error=False, output=str)
                 returncode |= flake8.returncode
             if package_file_list:
                 output += flake8(
                     '--format', 'pylint',
-                    '--config=%s' % os.path.join(spack.prefix,
+                    '--config=%s' % os.path.join(spack.paths.prefix,
                                                  '.flake8_packages'),
                     *package_file_list, fail_on_error=False, output=str)
                 returncode |= flake8.returncode
@@ -293,7 +276,8 @@ def flake8(parser, args):
             # print results relative to current working directory
             def cwd_relative(path):
                 return '{0}: ['.format(os.path.relpath(
-                    os.path.join(spack.prefix, path.group(1)), os.getcwd()))
+                    os.path.join(
+                        spack.paths.prefix, path.group(1)), os.getcwd()))
 
             for line in output.split('\n'):
                 print(re.sub(r'^(.*): \[', cwd_relative, line))

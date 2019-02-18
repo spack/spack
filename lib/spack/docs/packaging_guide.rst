@@ -1,3 +1,8 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _packaging-guide:
 
 ===============
@@ -413,27 +418,26 @@ The most straightforward way to add new versions to your package is to
 add a line like this in the package class:
 
 .. code-block:: python
-   :linenos:
 
    class Foo(Package):
-       url = 'http://example.com/foo-1.0.tar.gz'
-       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
-       ...
 
-Versions should be listed with the newest version first.
+       url = "http://example.com/foo-1.0.tar.gz"
+
+       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
+       version('8.2.0', '1c9f62f0778697a09d36121ead88e08e')
+       version('8.1.2', 'd47dd09ed7ae6e7fd6f9a816d7f5fdf6')
+
+Versions should be listed in descending order, from newest to oldest.
 
 ^^^^^^^^^^^^^
 Date Versions
 ^^^^^^^^^^^^^
 
 If you wish to use dates as versions, it is best to use the format
-``@date-yyyy-mm-dd``.  This will ensure they sort in the correct
-order.  If you want your date versions to be numeric (assuming they
-don't conflict with other numeric versions), you can use just
-``yyyy.mm.dd``.
+``@yyyy-mm-dd``.  This will ensure they sort in the correct order.
 
 Alternately, you might use a hybrid release-version / date scheme.
-For example, ``@1.3.2016.08.31`` would mean the version from the
+For example, ``@1.3_2016-08-31`` would mean the version from the
 ``1.3`` branch, as of August 31, 2016.
 
 ^^^^^^^^^^^^
@@ -442,7 +446,7 @@ Version URLs
 
 By default, each version's URL is extrapolated from the ``url`` field
 in the package.  For example, Spack is smart enough to download
-version ``8.2.1.`` of the ``Foo`` package above from
+version ``8.2.1`` of the ``Foo`` package above from
 http://example.com/foo-8.2.1.tar.gz.
 
 If the URL is particularly complicated or changes based on the release,
@@ -515,44 +519,28 @@ of its versions, you can add an explicit URL for a particular version:
 
 
 When you supply a custom URL for a version, Spack uses that URL
-*verbatim* and does not perform extrapolation.
+*verbatim* and does not perform extrapolation. The order of precedence
+of these methods is:
 
-^^^^^^^^^^^^^^^^^^^^^
-PyPI and version URLs
-^^^^^^^^^^^^^^^^^^^^^
+#. package-level ``url``
+#. ``url_for_version()``
+#. version-specific ``url``
 
-In addition to their developer websites, many python packages are hosted at the
-`Python Package Index (PyPi) <https://pypi.python.org/pypi>`_. Although links to
-these individual files are typically `generated using a hash
-<https://bitbucket.org/pypa/pypi/issues/438>`_ it is often possible to find a
-reliable link of the format
+so if your package contains a ``url_for_version()``, it can be overridden
+by a version-specific ``url``.
 
-.. code-block:: sh
-
-  https://pypi.python.org/packages/source/<first letter of package>/<package>/<package>-<version>.<extension>
-
-Packages hosted on GitHub and the like are often developer versions that do not
-contain all of the files (e.g. configuration scripts) necessary to support
-compilation. For this reason it is ideal to link to a repository such as PyPi
-if possible.
-
-More recently, sources are being indexed at `pypi.io <https://pypi.io>`_ as
-well. Links obtained from this site follow a similar pattern, namely
-
-.. code-block:: sh
-
-  https://pypi.io/packages/source/<first letter of package>/<package>/<package>-<version>.<extension>
-
-These links currently redirect back to `pypi.python.org
-<https://pypi.python.org>`_, but this `may change in the future
-<https://bitbucket.org/pypa/pypi/issues/438#comment-27243225>`_.
-
+If your package does not contain a package-level ``url`` or ``url_for_version()``,
+Spack can determine which URL to download from even if only some of the versions
+specify their own ``url``. Spack will use the nearest URL *before* the requested
+version. This is useful for packages that have an easy to extrapolate URL, but
+keep changing their URL format every few releases. With this method, you only
+need to specify the ``url`` when the URL changes.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Skipping the expand step
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack normally expands archives (e.g. `*.tar.gz` and `*.zip`) automatically
+Spack normally expands archives (e.g. ``*.tar.gz`` and ``*.zip``) automatically
 after downloading them. If you want to skip this step (e.g., for
 self-extracting executables and other custom archive types), you can add
 ``expand=False`` to a ``version`` directive.
@@ -560,7 +548,7 @@ self-extracting executables and other custom archive types), you can add
 .. code-block:: python
 
    version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
-           url='http://example.com/foo-8.2.1-special-version.tar.gz', expand=False)
+           url='http://example.com/foo-8.2.1-special-version.sh', expand=False)
 
 When ``expand`` is set to ``False``, Spack sets the current working
 directory to the directory containing the downloaded archive before it
@@ -605,7 +593,7 @@ here will suffice; for example, ``@develop``, ``@master``, ``@local``.
 The following rules determine the sort order of numeric
 vs. non-numeric versions:
 
-#. The non-numeric versions ``@develop`` is considered greatest (newest).
+#. The non-numeric version ``@develop`` is considered greatest (newest).
 
 #. Numeric versions are all less than ``@develop`` version, and are
    sorted numerically.
@@ -617,7 +605,7 @@ The logic behind this sort order is two-fold:
 
 #. Non-numeric versions are usually used for special cases while
    developing or debugging a piece of software.  Keeping most of them
-   less than numeric versions ensures that Spack choose numeric
+   less than numeric versions ensures that Spack chooses numeric
    versions by default whenever possible.
 
 #. The most-recent development version of a package will usually be
@@ -679,7 +667,7 @@ example for ``libelf``:
      ...
      0.5.2     http://www.mr511.de/software/libelf-0.5.2.tar.gz
 
-   How many would you like to checksum? (default is 5, q to abort)
+   How many would you like to checksum? (default is 1, q to abort)
 
 This does the same thing that ``spack create`` does, but it allows you
 to go back and add new versions easily as you need them (e.g., as
@@ -805,12 +793,12 @@ But its downloads are in many different subdirectories of
        homepage   = "http://www.mpich.org"
        url        = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
        list_url   = "http://www.mpich.org/static/downloads/"
-       list_depth = 2
+       list_depth = 1
 
 By default, Spack only looks at the top-level page available at
-``list_url``.  ``list_depth`` tells it to follow up to 2 levels of
-links from the top-level page.  Note that here, this implies two
-levels of subdirectories, as the ``mpich`` website is structured much
+``list_url``.  ``list_depth = 1`` tells it to follow up to 1 level of
+links from the top-level page.  Note that here, this implies 1
+level of subdirectories, as the ``mpich`` website is structured much
 like a filesystem.  But ``list_depth`` really refers to link depth
 when spidering the page.
 
@@ -823,13 +811,57 @@ Fetching from code repositories
 For some packages, source code is provided in a Version Control System
 (VCS) repository rather than in a tarball.  Spack can fetch packages
 from VCS repositories. Currently, Spack supports fetching with `Git
-<git-fetch_>`_, `Mercurial (hg) <hg-fetch_>`_, and `Subversion (SVN)
-<svn-fetch_>`_.
+<git-fetch_>`_, `Mercurial (hg) <hg-fetch_>`_, `Subversion (svn)
+<svn-fetch_>`_, and `Go <go-fetch_>`_.
 
-To fetch a package from a source repository, you add a ``version()``
-call to your package with parameters indicating the repository URL and
-any branch, tag, or revision to fetch.  See below for the parameters
-you'll need for each VCS system.
+To fetch a package from a source repository, Spack needs to know which
+VCS to use and where to download from. Much like with ``url``, package
+authors can specify a class-level ``git``, ``hg``, ``svn``, or ``go``
+attribute containing the correct download location.
+
+Many packages developed with Git have both a Git repository as well as
+release tarballs available for download. Packages can define both a
+class-level tarball URL and VCS. For example:
+
+.. code-block:: python
+
+   class Trilinos(CMakePackage):
+
+       homepage = "https://trilinos.org/"
+       url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
+       git      = "https://github.com/trilinos/Trilinos.git"
+
+       version('develop', branch='develop')
+       version('master',  branch='master')
+       version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
+       version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
+       version('12.8.1',  '9f37f683ee2b427b5540db8a20ed6b15')
+
+If a package contains both a ``url`` and ``git`` class-level attribute,
+Spack decides which to use based on the arguments to the ``version()``
+directive. Versions containing a specific branch, tag, or revision are
+assumed to be for VCS download methods, while versions containing a
+checksum are assumed to be for URL download methods.
+
+Like ``url``, if a specific version downloads from a different repository
+than the default repo, it can be overridden with a version-specific argument.
+
+.. note::
+
+   In order to reduce ambiguity, each package can only have a single VCS
+   top-level attribute in addition to ``url``. In the rare case that a
+   package uses multiple VCS, a fetch strategy can be specified for each
+   version. For example, the ``rockstar`` package contains:
+
+   .. code-block:: python
+
+      class Rockstar(MakefilePackage):
+
+          homepage = "https://bitbucket.org/gfcstanford/rockstar"
+
+          version('develop', git='https://bitbucket.org/gfcstanford/rockstar.git')
+          version('yt', hg='https://bitbucket.org/MatthewTurk/rockstar')
+
 
 .. _git-fetch:
 
@@ -837,11 +869,11 @@ you'll need for each VCS system.
 Git
 ^^^
 
-Git fetching is enabled with the following parameters to ``version``:
+Git fetching supports the following parameters to ``version``:
 
-* ``git``: URL of the git repository.
-* ``tag``: name of a tag to fetch.
-* ``branch``: name of a branch to fetch.
+* ``git``: URL of the git repository, if different than the class-level ``git``.
+* ``branch``: Name of a branch to fetch.
+* ``tag``: Name of a tag to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
 * ``submodules``: Also fetch submodules recursively when checking out this repository.
 
@@ -853,66 +885,72 @@ Default branch
   .. code-block:: python
 
      class Example(Package):
-         ...
-         version('develop', git='https://github.com/example-project/example.git')
 
-  This download method is untrusted, and is not recommended.
+         git = "https://github.com/example-project/example.git"
 
-Tags
-  To fetch from a particular tag, use the ``tag`` parameter along with
-  ``git``:
+         version('develop')
 
-  .. code-block:: python
-
-     version('1.0.1', git='https://github.com/example-project/example.git',
-             tag='v1.0.1')
-
-  This download method is untrusted, and is not recommended.
+  This download method is untrusted, and is not recommended. Aside from HTTPS,
+  there is no way to verify that the repository has not been compromised, and
+  the commit you get when you install the package likely won't be the same
+  commit that was used when the package was first written. Additionally, the
+  default branch may change. It is best to at least specify a branch name.
 
 Branches
-  To fetch a particular branch, use ``branch`` instead:
+  To fetch a particular branch, use the ``branch`` parameter:
 
   .. code-block:: python
 
-     version('experimental', git='https://github.com/example-project/example.git',
-             branch='experimental')
+     version('experimental', branch='experimental')
 
-  This download method is untrusted, and is not recommended.
+  This download method is untrusted, and is not recommended. Branches are
+  moving targets, so the commit you get when you install the package likely
+  won't be the same commit that was used when the package was first written.
+
+Tags
+  To fetch from a particular tag, use ``tag`` instead:
+
+  .. code-block:: python
+
+     version('1.0.1', tag='v1.0.1')
+
+  This download method is untrusted, and is not recommended. Although tags
+  are generally more stable than branches, Git allows tags to be moved.
+  Many developers use tags to denote rolling releases, and may move the
+  tag when a bug is patched.
 
 Commits
   Finally, to fetch a particular commit, use ``commit``:
 
   .. code-block:: python
 
-     version('2014-10-08', git='https://github.com/example-project/example.git',
-             commit='9d38cd4e2c94c3cea97d0e2924814acc')
+     version('2014-10-08', commit='9d38cd4e2c94c3cea97d0e2924814acc')
 
   This doesn't have to be a full hash; you can abbreviate it as you'd
   expect with git:
 
   .. code-block:: python
 
-     version('2014-10-08', git='https://github.com/example-project/example.git',
-             commit='9d38cd')
+     version('2014-10-08', commit='9d38cd')
 
   This download method *is trusted*.  It is the recommended way to
   securely download from a Git repository.
 
   It may be useful to provide a saner version for commits like this,
-  e.g. you might use the date as the version, as done above.  Or you
-  could just use the abbreviated commit hash.  It's up to the package
-  author to decide what makes the most sense.
+  e.g. you might use the date as the version, as done above. Or, if you
+  know the commit at which a release was cut, you can use the release
+  version. It's up to the package author to decide what makes the most
+  sense. Although you can use the commit hash as the version number,
+  this is not recommended, as it won't sort properly.
 
 Submodules
-
   You can supply ``submodules=True`` to cause Spack to fetch submodules
   recursively along with the repository at fetch time. For more information
   about git submodules see the manpage of git: ``man git-submodule``.
 
   .. code-block:: python
 
-     version('1.0.1', git='https://github.com/example-project/example.git',
-             tag='v1.0.1', submodules=True)
+     version('1.0.1', tag='v1.0.1', submodules=True)
 
 
 .. _github-fetch:
@@ -921,7 +959,7 @@ Submodules
 GitHub
 ^^^^^^
 
-If a project is hosted on GitHub, *any* valid Git branch, tag or hash
+If a project is hosted on GitHub, *any* valid Git branch, tag, or hash
 may be downloaded as a tarball.  This is accomplished simply by
 constructing an appropriate URL.  Spack can checksum any package
 downloaded this way, thereby producing a trusted download.  For
@@ -931,7 +969,7 @@ checksum.
 .. code-block:: python
 
        version('1.9.5.1.1', 'd035e4bc704d136db79b43ab371b27d2',
-           url='https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f')
+               url='https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f')
 
 .. _hg-fetch:
 
@@ -939,34 +977,38 @@ checksum.
 Mercurial
 ^^^^^^^^^
 
-Fetching with mercurial works much like `git <git-fetch>`_, but you
+Fetching with Mercurial works much like `Git <git-fetch>`_, but you
 use the ``hg`` parameter.
 
-Default
-  Add the ``hg`` parameter with no ``revision``:
+Default branch
+  Add the ``hg`` attribute with no ``revision`` passed to ``version``:
 
   .. code-block:: python
 
-     version('develop', hg='https://jay.grs.rwth-aachen.de/hg/example')
+     class Example(Package):
 
-  This download method is untrusted, and is not recommended.
+         hg = "https://bitbucket.org/example-project/example"
+
+         version('develop')
+
+  This download method is untrusted, and is not recommended. As with
+  Git's default fetching strategy, there is no way to verify the
+  integrity of the download.
 
 Revisions
-  Add ``hg`` and ``revision`` parameters:
+  To fetch a particular revision, use the ``revision`` parameter:
 
   .. code-block:: python
 
-     version('1.0', hg='https://jay.grs.rwth-aachen.de/hg/example',
-             revision='v1.0')
-
-  This download method is untrusted, and is not recommended.
+     version('1.0', revision='v1.0')
 
   Unlike ``git``, which has special parameters for different types of
   revisions, you can use ``revision`` for branches, tags, and commits
-  when you fetch with Mercurial.
+  when you fetch with Mercurial. Like Git, fetching specific branches
+  or tags is an untrusted download method, and is not recommended.
+  The recommended fetch strategy is to specify a particular commit
+  hash as the revision.
 
-As with git, you can fetch these versions using the ``spack install
-example@<version>`` command-line syntax.
 
 .. _svn-fetch:
 
@@ -974,34 +1016,238 @@ example@<version>`` command-line syntax.
 Subversion
 ^^^^^^^^^^
 
-To fetch with subversion, use the ``svn`` and ``revision`` parameters:
+To fetch with subversion, use the ``svn`` and ``revision`` parameters.
 
 Fetching the head
-  Simply add an ``svn`` parameter to ``version``:
+  Simply add an ``svn`` parameter to the package:
 
   .. code-block:: python
 
-     version('develop', svn='https://outreach.scidac.gov/svn/libmonitor/trunk')
+     class Example(Package):
 
-  This download method is untrusted, and is not recommended.
+         svn = "https://outreach.scidac.gov/svn/example/trunk"
+
+         version('develop')
+
+  This download method is untrusted, and is not recommended for the
+  same reasons as mentioned above.
 
 Fetching a revision
-  To fetch a particular revision, add a ``revision`` to the
-  version call:
+  To fetch a particular revision, add a ``revision`` argument to the
+  version directive:
 
   .. code-block:: python
 
-     version('develop', svn='https://outreach.scidac.gov/svn/libmonitor/trunk',
-             revision=128)
+     version('develop', revision=128)
 
   This download method is untrusted, and is not recommended.
 
-Subversion branches are handled as part of the directory structure, so
-you can check out a branch or tag by changing the ``url``.
+  Unfortunately, Subversion has no commit hashing scheme like Git and
+  Mercurial do, so there is no way to guarantee that the download you
+  get is the same as the download used when the package was created.
+  Use at your own risk.
 
--------------------------------------------------
+Subversion branches are handled as part of the directory structure, so
+you can check out a branch or tag by changing the URL. If you want to
+package multiple branches, simply add a ``svn`` argument to each
+version directive.
+
+.. _go-fetch:
+
+^^
+Go
+^^
+
+Go isn't a VCS, it is a programming language with a builtin command,
+`go get <https://golang.org/cmd/go/#hdr-Download_and_install_packages_and_dependencies>`_,
+that fetches packages and their dependencies automatically.
+It can clone a Git repository, or download from another source location.
+For example:
+
+.. code-block:: python
+
+   class ThePlatinumSearcher(Package):
+
+       homepage = "https://github.com/monochromegane/the_platinum_searcher"
+       go       = "github.com/monochromegane/the_platinum_searcher/..."
+
+       version('head')
+
+Go cannot be used to fetch a particular commit or branch, it always
+downloads the head of the repository. This download method is untrusted,
+and is not recommended. Use another fetch strategy whenever possible.
+
+--------
+Variants
+--------
+
+Many software packages can be configured to enable optional
+features, which often come at the expense of additional dependencies or
+longer build-times. To be flexible enough and support a wide variety of
+use cases, Spack permits to expose to the end-user the ability to choose
+which features should be activated in a package at the time it is installed.
+The mechanism to be employed is the :py:func:`spack.directives.variant` directive.
+
+^^^^^^^^^^^^^^^^
+Boolean variants
+^^^^^^^^^^^^^^^^
+
+In their simplest form variants are boolean options specified at the package
+level:
+
+  .. code-block:: python
+
+    class Hdf5(AutotoolsPackage):
+        ...
+        variant(
+            'shared', default=True, description='Builds a shared version of the library'
+        )
+
+with a default value and a description of their meaning / use in the package.
+*Variants can be tested in any context where a spec constraint is expected.*
+In the example above the ``shared`` variant is tied to the build of shared dynamic
+libraries. To pass the right option at configure time we can branch depending on
+its value:
+
+  .. code-block:: python
+
+    def configure_args(self):
+        ...
+        if '+shared' in self.spec:
+            extra_args.append('--enable-shared')
+        else:
+            extra_args.append('--disable-shared')
+            extra_args.append('--enable-static-exec')
+
+As explained in :ref:`basic-variants` the constraint ``+shared`` means
+that the boolean variant is set to ``True``, while ``~shared`` means it is set
+to ``False``.
+Another common example is the optional activation of an extra dependency
+which requires to use the variant in the ``when`` argument of
+:py:func:`spack.directives.depends_on`:
+
+  ..  code-block:: python
+
+    class Hdf5(AutotoolsPackage):
+        ...
+        variant('szip', default=False, description='Enable szip support')
+        depends_on('szip', when='+szip')
+
+as shown in the snippet above where ``szip`` is modeled to be an optional
+dependency of ``hdf5``.
+
+^^^^^^^^^^^^^^^^^^^^^
+Multi-valued variants
+^^^^^^^^^^^^^^^^^^^^^
+
+If need be, Spack can go beyond Boolean variants and permit an arbitrary
+number of allowed values. This might be useful when modeling
+options that are tightly related to each other.
+The values in this case are passed to the :py:func:`spack.directives.variant`
+directive as a tuple:
+
+  .. code-block:: python
+
+    class Blis(Package):
+        ...
+        variant(
+            'threads', default='none', description='Multithreading support',
+            values=('pthreads', 'openmp', 'none'), multi=False
+        )
+
+In the example above the argument ``multi`` is set to ``False`` to indicate
+that only one among all the variant values can be active at any time. This
+constraint is enforced by the parser and an error is emitted if a user
+specifies two or more values at the same time:
+
+  .. code-block:: console
+
+    $ spack spec blis threads=openmp,pthreads
+    Input spec
+    --------------------------------
+    blis threads=openmp,pthreads
+
+    Concretized
+    --------------------------------
+    ==> Error: multiple values are not allowed for variant "threads"
+
+Another useful note is that *Python's* ``None`` *is not allowed as a default value*
+and therefore it should not be used to denote that no feature was selected.
+Users should instead select another value, like ``'none'``, and handle it explicitly
+within the package recipe if need be:
+
+  .. code-block:: python
+
+      if self.spec.variants['threads'].value == 'none':
+         options.append('--no-threads')
+
+In cases where multiple values can be selected at the same time ``multi`` should
+be set to ``True``:
+
+  .. code-block:: python
+
+    class Gcc(AutotoolsPackage):
+        ...
+        variant(
+            'languages', default='c,c++,fortran',
+            values=('ada', 'brig', 'c', 'c++', 'fortran',
+                    'go', 'java', 'jit', 'lto', 'objc', 'obj-c++'),
+            multi=True,
+            description='Compilers and runtime libraries to build'
+        )
+
+Within a package recipe a multi-valued variant is tested using a ``key=value`` syntax:
+
+  .. code-block:: python
+
+    if 'languages=jit' in spec:
+        options.append('--enable-host-shared')
+
+"""""""""""""""""""""""""""""""""""""""""""
+Complex validation logic for variant values
+"""""""""""""""""""""""""""""""""""""""""""
+To cover complex use cases, the :py:func:`spack.directives.variant` directive
+could accept as the ``values`` argument a full-fledged object which has
+``default`` and other arguments of the directive embedded as attributes.
+
+An example, already implemented in Spack's core, is :py:class:`spack.variant.DisjointSetsOfValues`.
+This class is used to implement a few convenience functions, like
+:py:func:`spack.variant.any_combination_of`:
+
+  ..  code-block:: python
+
+    class Adios(AutotoolsPackage):
+        ...
+        variant(
+            'staging',
+            values=any_combination_of('flexpath', 'dataspaces'),
+            description='Enable dataspaces and/or flexpath staging transports'
+        )
+
+that allows any combination of the specified values, and also allows the
+user to specify ``'none'`` (as a string) to choose none of them.
+The objects returned by these functions can be modified at will by chaining
+method calls to change the default value, customize the error message or
+other similar operations:
+
+  .. code-block:: python
+
+    class Mvapich2(AutotoolsPackage):
+        ...
+        variant(
+            'process_managers',
+            description='List of the process managers to activate',
+            values=disjoint_sets(
+                ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
+            ).prohibit_empty_set().with_error(
+                "'slurm' or 'auto' cannot be activated along with "
+                "other process managers"
+            ).with_default('auto').with_non_feature_values('auto'),
+        )
+
+------------------------------------
 Resources (expanding extra tarballs)
--------------------------------------------------
+------------------------------------
 
 Some packages (most notably compilers) provide optional features if additional
 resources are expanded within their source tree before building. In Spack it is
@@ -1344,6 +1590,73 @@ with all packages in Spack, a patched dependency library can coexist with
 other versions of that library.  See the `section on depends_on
 <dependency_dependency_patching_>`_ for more details.
 
+.. _patch_inspecting_patches:
+
+^^^^^^^^^^^^^^^^^^^
+Inspecting patches
+^^^^^^^^^^^^^^^^^^^
+
+If you want to better understand the patches that Spack applies to your
+packages, you can do that using ``spack spec``, ``spack find``, and other
+query commands.  Let's look at ``m4``.  If you run ``spack spec m4``, you
+can see the patches that would be applied to ``m4``::
+
+  $ spack spec m4
+  Input spec
+  --------------------------------
+  m4
+
+  Concretized
+  --------------------------------
+  m4@1.4.18%clang@9.0.0-apple patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
+      ^libsigsegv@2.11%clang@9.0.0-apple arch=darwin-highsierra-x86_64
+
+You can also see patches that have been applied to installed packages
+with ``spack find -v``::
+
+  $ spack find -v m4
+  ==> 1 installed package
+  -- darwin-highsierra-x86_64 / clang@9.0.0-apple -----------------
+  m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
+
+.. _cmd-spack-resource:
+
+In both cases above, you can see that the patches' sha256 hashes are
+stored on the spec as a variant.  As mentioned above, this means that you
+can have multiple, differently-patched versions of a package installed at
+once.
+
+You can look up a patch by its sha256 hash (or a short version of it)
+using the ``spack resource show`` command::
+
+  $ spack resource show 3877ab54
+  3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00
+      path:       /home/spackuser/src/spack/var/spack/repos/builtin/packages/m4/gnulib-pgi.patch
+      applies to: builtin.m4
+
+``spack resource show`` looks up downloadable resources from package
+files by hash and prints out information about them.  Above, we see that
+the ``3877ab54`` patch applies to the ``m4`` package.  The output also
+tells us where to find the patch.
+
+Things get more interesting if you want to know about dependency
+patches. For example, when ``dealii`` is built with ``boost@1.68.0``, it
+has to patch boost to work correctly.  If you didn't know this, you might
+wonder where the extra boost patches are coming from::
+
+  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep '\^boost'
+      ^boost@1.68.0
+          ^boost@1.68.0%clang@9.0.0-apple+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
+  $ spack resource show b37164268
+  b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
+      path:       /home/spackuser/src/spack/var/spack/repos/builtin/packages/dealii/boost_1.68.0.patch
+      applies to: builtin.boost
+      patched by: builtin.dealii
+
+Here you can see that the patch is applied to ``boost`` by ``dealii``,
+and that it lives in ``dealii``'s directory in Spack's ``builtin``
+package repository.
+
 .. _handling_rpaths:
 
 ---------------
@@ -1564,6 +1877,14 @@ correct way to specify this would be:
 .. code-block:: python
 
    depends_on('python@2.6.0:2.6.999')
+
+A spec can contain multiple version ranges separated by commas.
+For example, if you need Boost 1.59.0 or newer, but there are known
+issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
+
+.. code-block:: python
+
+   depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
 
 
 ^^^^^^^^^^^^^^^^
@@ -1846,18 +2167,38 @@ from being linked in at activation time.
    ``depends_on('python')`` and ``extends(python)`` in the same
    package.  ``extends`` implies ``depends_on``.
 
+-----
+Views
+-----
+
+As covered in :ref:`filesystem-views`, the ``spack view`` command can be
+used to symlink a number of packages into a merged prefix. The methods of
+``PackageViewMixin`` can be overridden to customize how packages are added
+to views. Generally this can be used to create copies of specific files rather
+than symlinking them when symlinking does not work. For example, ``Python``
+overrides ``add_files_to_view`` in order to create a copy of the ``python``
+binary since the real path of the Python executable is used to detect
+extensions; as a consequence python extension packages (those inheriting from
+``PythonPackage``) likewise override ``add_files_to_view`` in order to rewrite
+shebang lines which point to the Python interpreter.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Activation & deactivation
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Adding an extension to a view is referred to as an activation. If the view is
+maintained in the Spack installation prefix of the extendee this is called a
+global activation. Activations may involve updating some centralized state
+that is maintained by the extendee package, so there can be additional work
+for adding extensions compared with non-extension packages.
+
 Spack's ``Package`` class has default ``activate`` and ``deactivate``
 implementations that handle symbolically linking extensions' prefixes
-into the directory of the parent package.  However, extendable
-packages can override these methods to add custom activate/deactivate
-logic of their own.  For example, the ``activate`` and ``deactivate``
-methods in the Python class use the symbolic linking, but they also
-handle details surrounding Python's ``.pth`` files, and other aspects
-of Python packaging.
+into a specified view. Extendable packages can override these methods
+to add custom activate/deactivate logic of their own.  For example,
+the ``activate`` and ``deactivate`` methods in the Python class handle
+symbolic linking of extensions, but they also handle details surrounding
+Python's ``.pth`` files, and other aspects of Python packaging.
 
 Spack's extensions mechanism is designed to be extensible, so that
 other packages (like Ruby, R, Perl, etc.)  can provide their own
@@ -1872,7 +2213,7 @@ Let's look at Python's activate function:
 
 This function is called on the *extendee* (Python).  It first calls
 ``activate`` in the superclass, which handles symlinking the
-extension package's prefix into this package's prefix.  It then does
+extension package's prefix into the specified view.  It then does
 some special handling of the ``easy-install.pth`` file, part of
 Python's setuptools.
 
@@ -2588,13 +2929,13 @@ Here are the definitions of the three built-in flag handlers:
 
 .. code-block:: python
 
-   def inject_flags(self, name, flags):
+   def inject_flags(pkg, name, flags):
        return (flags, None, None)
 
-   def env_flags(self, name, flags):
+   def env_flags(pkg, name, flags):
        return (None, flags, None)
 
-   def build_system_flags(self, name, flags):
+   def build_system_flags(pkg, name, flags):
        return (None, None, flags)
 
 .. note::
@@ -2607,10 +2948,7 @@ the built-in flag handlers,
 
 .. code-block:: python
 
-   flag_handler = <PackageClass>.env_flags
-
-where ``<PackageClass>`` can be any of the subclasses of PackageBase
-discussed in :ref:`installation_procedure`,
+   flag_handler = env_flags
 
 or by implementing the flag_handler method. Suppose for a package
 ``Foo`` we need to pass ``cflags``, ``cxxflags``, and ``cppflags``
@@ -2636,7 +2974,7 @@ method of the ``EnvironmentModifications`` class to append values to a
 list of flags whenever the flag handler is ``env_flags``. If the
 package passes flags through the environment or the build system
 manually (in the install method, for example), we recommend using the
-default flag handler, or removind manual references and implementing a
+default flag handler, or removing manual references and implementing a
 custom flag handler method that adds the desired flags to export as
 environment variables or pass to the build system. Manual flag passing
 is likely to interfere with the ``env_flags`` and
@@ -2646,8 +2984,8 @@ In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
 alike. To that end the compiler classes in ``spack`` implement the
-following **properties**: ``openmp_flag``, ``cxx11_flag``,
-``cxx14_flag``, which can be accessed in a package by
+following **properties**: ``openmp_flag``, ``cxx98_flag``, ``cxx11_flag``,
+``cxx14_flag``, and ``cxx17_flag``, which can be accessed in a package by
 ``self.compiler.cxx11_flag`` and alike. Note that the implementation is
 such that if a given compiler version does not support this feature, an
 error will be produced. Therefore package developers can also use these
@@ -2657,6 +2995,8 @@ is handy when a package supports additional variants like
 .. code-block:: python
 
    variant('openmp', default=True, description="Enable OpenMP support.")
+
+.. _blas_lapack_scalapack:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Blas, Lapack and ScaLapack libraries
@@ -2755,11 +3095,11 @@ Prefix Attribute        Location
 
 Of course, this only works if your file or directory is a valid Python
 variable name. If your file or directory contains dashes or dots, use
-``join_path`` instead:
+``join`` instead:
 
 .. code-block:: python
 
-   join_path(prefix.lib, 'libz.a')
+   prefix.lib.join('libz.a')
 
 
 .. _spec-objects:

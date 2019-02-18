@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import platform
 
@@ -34,7 +15,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.15.1.zip"
 
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
@@ -45,9 +26,12 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
-    # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
-    # FIXME: Is this expected?
-
+    version('1.15.2', sha256='27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1')
+    version('1.15.1', '898004d5be091fde59ae353e3008fe9b')
+    version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
+    version('1.14.2', '080f01a19707cf467393e426382c7619')
+    version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
+    version('1.14.0', 'c12d4bf380ac925fcdc8a59ada6c3298')
     version('1.13.3', '300a6f0528122128ac07c6deb5c95917')
     version('1.13.1', '2c3c0f4edf720c3a7b525dacc825b9ae')
     version('1.13.0', 'fd044f0b8079abeaf5e6d2e93b2c1d03')
@@ -63,36 +47,49 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    # Tests require:
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.0.0:', type='test')
+    depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
+    depends_on('py-pytest', when='@1.15:', type='test')
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
-        arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
 
         self.spec.include = join_path(
             self.prefix.lib,
             'python{0}'.format(python_version),
             'site-packages',
-            'numpy-{0}-py{1}-{2}.egg'.format(
-                self.spec.version, python_version, arch),
             'numpy/core/include')
 
     def patch(self):
         spec = self.spec
+
+        def write_library_dirs(f, dirs):
+            f.write('library_dirs=%s\n' % dirs)
+            if not ((platform.system() == "Darwin") and
+                    (platform.mac_ver()[0] == '10.12')):
+                f.write('rpath=%s\n' % dirs)
+
         # for build notes see http://www.scipy.org/scipylib/building/linux.html
-        lapackblas = LibraryList('')
+        blas_info = []
+        lapack_info = []
+        lapackblas_info = []
+
         if '+lapack' in spec:
-            lapackblas += spec['lapack'].libs
+            lapack_info += spec['lapack'].libs
 
         if '+blas' in spec:
-            lapackblas += spec['blas'].libs
+            blas_info += spec['blas'].libs
+
+        lapackblas_info = lapack_info + blas_info
+
+        def write_empty_libs(f, provider):
+            f.write('[{0}]\n'.format(provider))
+            f.write('libraries=\n')
+            write_library_dirs(f, '')
 
         if '+blas' in spec or '+lapack' in spec:
             # note that one should not use [blas_opt] and [lapack_opt], see
@@ -100,15 +97,26 @@ class PyNumpy(PythonPackage):
             with open('site.cfg', 'w') as f:
                 # Unfortunately, numpy prefers to provide each BLAS/LAPACK
                 # differently.
-                names  = ','.join(lapackblas.names)
-                dirs   = ':'.join(lapackblas.directories)
+                blas_names  = ','.join(blas_info.names)
+                blas_dirs   = ':'.join(blas_info.directories)
+                lapack_names  = ','.join(lapack_info.names)
+                lapack_dirs   = ':'.join(lapack_info.directories)
+                lapackblas_names  = ','.join(lapackblas_info.names)
+                lapackblas_dirs   = ':'.join(lapackblas_info.directories)
+
+                handled_blas_and_lapack = False
 
                 # Special treatment for some (!) BLAS/LAPACK. Note that
                 # in this case library_dirs can not be specified within [ALL].
                 if '^openblas' in spec:
                     f.write('[openblas]\n')
-                    f.write('libraries=%s\n'    % names)
-                elif '^mkl' in spec:
+                    f.write('libraries=%s\n' % lapackblas_names)
+                    write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
+                else:
+                    write_empty_libs(f, 'openblas')
+
+                if '^mkl' in spec:
                     # numpy does not expect system libraries needed for MKL
                     # here.
                     # names = [x for x in names if x.startswith('mkl')]
@@ -125,32 +133,69 @@ class PyNumpy(PythonPackage):
                     # perspective it is no different from throwing away RPATH's
                     # and using LD_LIBRARY_PATH throughout Spack.
                     f.write('[mkl]\n')
-                    f.write('mkl_libs=%s\n'     % 'mkl_rt')
-                elif '^atlas' in spec:
-                    f.write('[atlas]\n')
-                    f.write('atlas_libs=%s\n'   % names)
+                    f.write('mkl_libs=%s\n' % 'mkl_rt')
+                    write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
                 else:
+                    # Without explicitly setting the search directories to be
+                    # an empty list, numpy may retrieve and use mkl libs from
+                    # the system.
+                    write_empty_libs(f, 'mkl')
+
+                if '^atlas' in spec:
+                    f.write('[atlas]\n')
+                    f.write('atlas_libs=%s\n' % lapackblas_names)
+                    write_library_dirs(f, lapackblas_dirs)
+                    handled_blas_and_lapack = True
+                else:
+                    write_empty_libs(f, 'atlas')
+
+                if '^netlib-lapack' in spec:
+                    # netlib requires blas and lapack listed
+                    # separately so that scipy can find them
+                    if spec.satisfies('+blas'):
+                        f.write('[blas]\n')
+                        f.write('blas_libs=%s\n' % blas_names)
+                        write_library_dirs(f, blas_dirs)
+                    if spec.satisfies('+lapack'):
+                        f.write('[lapack]\n')
+                        f.write('lapack_libs=%s\n' % lapack_names)
+                        write_library_dirs(f, lapack_dirs)
+                    handled_blas_and_lapack = True
+
+                if not handled_blas_and_lapack:
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
                     if spec.satisfies('@:1.9.2'):
                         f.write('[DEFAULT]\n')
                     else:
                         f.write('[ALL]\n')
-                    f.write('libraries=%s\n'    % names)
-
-                f.write('library_dirs=%s\n' % dirs)
-                if not ((platform.system() == "Darwin") and
-                        (platform.mac_ver()[0] == '10.12')):
-                    f.write('rpath=%s\n' % dirs)
+                    f.write('libraries=%s\n' % lapackblas_names)
+                    write_library_dirs(f, lapackblas_dirs)
 
     def build_args(self, spec, prefix):
         args = []
 
-        # From NumPy 1.10.0 on it's possible to do a parallel build
+        # From NumPy 1.10.0 on it's possible to do a parallel build.
         if self.version >= Version('1.10.0'):
-            args = ['-j', str(make_jobs)]
+            # But Parallel build in Python 3.5+ is broken.  See:
+            # https://github.com/spack/spack/issues/7927
+            # https://github.com/scipy/scipy/issues/7112
+            if spec['python'].version < Version('3.5'):
+                args = ['-j', str(make_jobs)]
 
         return args
+
+    def setup_environment(self, spack_env, run_env):
+        python_version = self.spec['python'].version.up_to(2)
+
+        include_path = join_path(
+            self.prefix.lib,
+            'python{0}'.format(python_version),
+            'site-packages',
+            'numpy/core/include')
+
+        run_env.prepend_path('CPATH', include_path)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following
@@ -168,5 +213,5 @@ class PyNumpy(PythonPackage):
         # ImportError: Error importing numpy: you should not try to import
         #       numpy from its source directory; please exit the numpy
         #       source tree, and relaunch your python interpreter from there.
-        with working_dir('..'):
+        with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')

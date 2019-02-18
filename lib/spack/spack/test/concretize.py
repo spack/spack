@@ -1,34 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import pytest
-import spack
+import llnl.util.lang
+
 import spack.architecture
+import spack.repo
+
 from spack.concretize import find_spec
 from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 
 def check_spec(abstract, concrete):
@@ -94,7 +79,7 @@ def spec(request):
     return request.param
 
 
-@pytest.mark.usefixtures('config', 'builtin_mock')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
@@ -145,11 +130,20 @@ class TestConcretize(object):
         concrete = check_concretize('mpileaks   ^mpich2@1.3.1:1.4')
         assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
+    def test_concretize_disable_compiler_existence_check(self):
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            check_concretize('dttop %gcc@100.100')
+
+        with spack.concretize.concretizer.disable_compiler_existence_check():
+            spec = check_concretize('dttop %gcc@100.100')
+            assert spec.satisfies('%gcc@100.100')
+            assert spec['dtlink3'].satisfies('%gcc@100.100')
+
     def test_concretize_with_provides_when(self):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
         """
-        repo = spack.repo
+        repo = spack.repo.path
         assert not any(
             s.satisfies('mpich2@:1.0') for s in repo.providers_for('mpi@2.1')
         )
@@ -169,7 +163,7 @@ class TestConcretize(object):
     def test_provides_handles_multiple_providers_of_same_vesrion(self):
         """
         """
-        providers = spack.repo.providers_for('mpi@3.0')
+        providers = spack.repo.path.providers_for('mpi@3.0')
 
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can
@@ -185,10 +179,39 @@ class TestConcretize(object):
                       ' ^cmake %clang@3.5 platform=test os=fe target=fe')
         client.concretize()
         cmake = client['cmake']
-        assert set(client.compiler_flags['cflags']) == set(['-O0'])
+        assert set(client.compiler_flags['cflags']) == set(['-O0', '-g'])
         assert set(cmake.compiler_flags['cflags']) == set(['-O3'])
-        assert set(client.compiler_flags['fflags']) == set(['-O0'])
+        assert set(client.compiler_flags['fflags']) == set(['-O0', '-g'])
         assert not set(cmake.compiler_flags['fflags'])
+
+    def test_architecture_inheritance(self):
+        """test_architecture_inheritance is likely to fail with an
+        UnavailableCompilerVersionError if the architecture is concretized
+        incorrectly.
+        """
+        spec = Spec('cmake-client %gcc@4.7.2 os=fe ^ cmake')
+        spec.concretize()
+        assert spec['cmake'].architecture == spec.architecture
+
+    def test_architecture_deep_inheritance(self):
+        """Make sure that indirect dependencies receive architecture
+        information from the root even when partial architecture information
+        is provided by an intermediate dependency.
+        """
+        default_dep = ('link', 'build')
+
+        bazpkg = MockPackage('bazpkg', [], [])
+        barpkg = MockPackage('barpkg', [bazpkg], [default_dep])
+        foopkg = MockPackage('foopkg', [barpkg], [default_dep])
+        mock_repo = MockPackageMultiRepo([foopkg, barpkg, bazpkg])
+
+        with spack.repo.swap(mock_repo):
+            spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
+                        ' ^barpkg os=SuSE11 ^bazpkg os=be')
+            spec.concretize()
+
+            for s in spec.traverse(root=False):
+                assert s.architecture.target == spec.architecture.target
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
@@ -201,12 +224,24 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
 
+    @pytest.mark.parametrize("spec,version", [
+        ('dealii', 'develop'),
+        ('xsdk', '0.4.0'),
+    ])
+    def concretize_difficult_packages(self, a, b):
+        """Test a couple of large packages that are often broken due
+        to current limitations in the concretizer"""
+        s = Spec(a + '@' + b)
+        s.concretize()
+        assert s[a].version == ver(b)
+
     def test_concretize_two_virtuals(self):
+
         """Test a package with multiple virtual dependencies."""
         Spec('hypre').concretize()
 
     def test_concretize_two_virtuals_with_one_bound(
-            self, refresh_builtin_mock
+            self, mutable_mock_packages
     ):
         """Test a package with multiple virtual dependencies and one preset."""
         Spec('hypre ^openblas').concretize()
@@ -444,3 +479,44 @@ class TestConcretize(object):
         s._concrete = False
 
         assert not s.concrete
+
+    @pytest.mark.regression('7239')
+    def test_regression_issue_7239(self):
+        # Constructing a SpecBuildInterface from another SpecBuildInterface
+        # results in an inconsistent MRO
+
+        # Normal Spec
+        s = Spec('mpileaks')
+        s.concretize()
+
+        assert llnl.util.lang.ObjectWrapper not in type(s).__mro__
+
+        # Spec wrapped in a build interface
+        build_interface = s['mpileaks']
+        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+
+        # Mimics asking the build interface from a build interface
+        build_interface = s['mpileaks']['mpileaks']
+        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+
+    @pytest.mark.regression('7705')
+    def test_regression_issue_7705(self):
+        # spec.package.provides(name) doesn't account for conditional
+        # constraints in the concretized spec
+        s = Spec('simple-inheritance~openblas')
+        s.concretize()
+
+        assert not s.package.provides('lapack')
+
+    @pytest.mark.regression('7941')
+    def test_regression_issue_7941(self):
+        # The string representation of a spec containing
+        # an explicit multi-valued variant and a dependency
+        # might be parsed differently than the originating spec
+        s = Spec('a foobar=bar ^b')
+        t = Spec(str(s))
+
+        s.concretize()
+        t.concretize()
+
+        assert s.dag_hash() == t.dag_hash()

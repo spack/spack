@@ -1,32 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 These tests check Spec DAG operations using dummy packages.
 """
 import pytest
-import spack
 import spack.architecture
 import spack.package
 
@@ -86,8 +66,6 @@ packages in the following spec DAG::
 w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 """
-    saved_repo = spack.repo
-
     default = ('build', 'link')
     test_only = ('test',)
 
@@ -97,20 +75,53 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     w = MockPackage('w', [x, y], [test_only, default])
 
     mock_repo = MockPackageMultiRepo([w, x, y, z])
-    try:
-        spack.package_testing.test(w.name)
-        spack.repo = mock_repo
+    with spack.repo.swap(mock_repo):
         spec = Spec('w')
-        spec.concretize()
+        spec.concretize(tests=(w.name,))
 
         assert ('x' in spec)
         assert ('z' not in spec)
-    finally:
-        spack.repo = saved_repo
-        spack.package_testing.clear()
 
 
-@pytest.mark.usefixtures('refresh_builtin_mock')
+@pytest.mark.usefixtures('config')
+def test_conditional_dep_with_user_constraints():
+    """This sets up packages X->Y such that X depends on Y conditionally. It
+    then constructs a Spec with X but with no constraints on X, so that the
+    initial normalization pass cannot determine whether the constraints are
+    met to add the dependency; this checks whether a user-specified constraint
+    on Y is applied properly.
+    """
+    default = ('build', 'link')
+
+    y = MockPackage('y', [], [])
+    x_on_y_conditions = {
+        y.name: {
+            'x@2:': 'y'
+        }
+    }
+    x = MockPackage('x', [y], [default], conditions=x_on_y_conditions)
+
+    mock_repo = MockPackageMultiRepo([x, y])
+    with spack.repo.swap(mock_repo):
+        spec = Spec('x ^y@2')
+        spec.concretize()
+
+        assert ('y@2' in spec)
+
+    with spack.repo.swap(mock_repo):
+        spec = Spec('x@1')
+        spec.concretize()
+
+        assert ('y' not in spec)
+
+    with spack.repo.swap(mock_repo):
+        spec = Spec('x')
+        spec.concretize()
+
+        assert ('y@3' in spec)
+
+
+@pytest.mark.usefixtures('mutable_mock_packages')
 class TestSpecDag(object):
 
     def test_conflicting_package_constraints(self, set_dependency):
@@ -308,18 +319,19 @@ class TestSpecDag(object):
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
             spec.normalize()
 
+    @pytest.mark.usefixtures('config')
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.concretize()
 
         spec = Spec('libelf ^libdwarf')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.concretize()
 
         spec = Spec('mpich ^dyninst ^libelf')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.concretize()
 
     def test_equal(self):
         # Different spec structures to test for equality

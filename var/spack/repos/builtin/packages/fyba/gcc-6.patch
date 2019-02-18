@@ -1,0 +1,18 @@
+diff -Nuar a/src/FYBA/FYLU.cpp b/src/FYBA/FYLU.cpp
+--- a/src/FYBA/FYLU.cpp	2014-09-22 00:36:49.000000000 -0500
++++ b/src/FYBA/FYLU.cpp	2018-05-24 15:35:43.584181379 -0500
+@@ -4,12 +4,12 @@
+ /*  Innhold: Rutiner for utvalg                                             */
+ /* ======================================================================== */
+ 
+-#include "stdafx.h"
+-
+ #include <ctype.h>
+ #include <math.h>
+ #include <locale>
+ 
++#include "stdafx.h"
++
+ using namespace std;
+ 
+ #define U_PARA_LEN    128     /* Max lengde av parameterstreng */

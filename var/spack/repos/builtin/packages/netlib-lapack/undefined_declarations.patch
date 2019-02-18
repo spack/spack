@@ -1,0 +1,26 @@
+diff --git a/SRC/dsytrf_aa_2stage.f b/SRC/dsytrf_aa_2stage.f
+index 2991305..f5f06cc 100644
+--- a/SRC/dsytrf_aa_2stage.f
++++ b/SRC/dsytrf_aa_2stage.f
+@@ -191,7 +191,7 @@
+       EXTERNAL           LSAME, ILAENV
+ *     ..
+ *     .. External Subroutines ..
+-      EXTERNAL           XERBLA, DCOPY, DLACGV, DLACPY,
++      EXTERNAL           XERBLA, DCOPY, DLACPY,
+      $                   DLASET, DGBTRF, DGEMM,  DGETRF, 
+      $                   DSYGST, DSWAP, DTRSM 
+ *     ..
+diff --git a/SRC/ssytrf_aa_2stage.f b/SRC/ssytrf_aa_2stage.f
+index be6809d..a929749 100644
+--- a/SRC/ssytrf_aa_2stage.f
++++ b/SRC/ssytrf_aa_2stage.f
+@@ -191,7 +191,7 @@
+       EXTERNAL           LSAME, ILAENV
+ *     ..
+ *     .. External Subroutines ..
+-      EXTERNAL           XERBLA, SCOPY, SLACGV, SLACPY,
++      EXTERNAL           XERBLA, SCOPY, SLACPY,
+      $                   SLASET, SGBTRF, SGEMM,  SGETRF, 
+      $                   SSYGST, SSWAP, STRSM 
+ *     ..

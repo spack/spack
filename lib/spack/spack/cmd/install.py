@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import argparse
 import os
 import shutil
@@ -30,17 +11,43 @@ import sys
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 import spack.fetch_strategy
+import spack.paths
 import spack.report
+from spack.error import SpackError
 
 
 description = "build and install packages"
 section = "build"
 level = "short"
+
+
+def update_kwargs_from_args(args, kwargs):
+    """Parse cli arguments and construct a dictionary
+    that will be passed to Package.do_install API"""
+
+    kwargs.update({
+        'keep_prefix': args.keep_prefix,
+        'keep_stage': args.keep_stage,
+        'restage': not args.dont_restage,
+        'install_source': args.install_source,
+        'make_jobs': args.jobs,
+        'verbose': args.verbose,
+        'fake': args.fake,
+        'dirty': args.dirty,
+        'use_cache': args.use_cache
+    })
+    if hasattr(args, 'setup'):
+        setups = set()
+        for arglist_s in args.setup:
+            for arg in [x.strip() for x in arglist_s.split(',')]:
+                setups.add(arg)
+        kwargs['setup'] = setups
+        tty.msg('Setup={0}'.format(kwargs['setup']))
 
 
 def setup_parser(subparser):
@@ -54,9 +61,7 @@ the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
 the dependencies"""
     )
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs (default: #cpus)")
+    arguments.add_common_arguments(subparser, ['jobs', 'install_status'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -69,24 +74,31 @@ the dependencies"""
     subparser.add_argument(
         '--dont-restage', action='store_true',
         help="if a partial install is detected, don't delete prior state")
-    subparser.add_argument(
-        '--use-cache', action='store_true', dest='use_cache',
-        help="check for pre-built Spack packages in mirrors")
+
+    cache_group = subparser.add_mutually_exclusive_group()
+    cache_group.add_argument(
+        '--use-cache', action='store_true', dest='use_cache', default=True,
+        help="check for pre-built Spack packages in mirrors (default)")
+    cache_group.add_argument(
+        '--no-cache', action='store_false', dest='use_cache', default=True,
+        help="do not check for pre-built Spack packages in mirrors")
+
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")
     subparser.add_argument(
         '--source', action='store_true', dest='install_source',
         help="install source files in prefix")
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true',
-        help="do not check packages against checksum")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true',
         help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true',
         help="fake install for debug purposes.")
+    subparser.add_argument(
+        '--only-concrete', action='store_true', default=False,
+        help='(with environment) only install already concretized specs')
     subparser.add_argument(
         '-f', '--file', action='append', default=[],
         dest='specfiles', metavar='SPEC_YAML_FILE',
@@ -124,6 +136,29 @@ packages. If neither are chosen, don't run tests for any packages."""
         default=None,
         help="filename for the log file. if not passed a default will be used"
     )
+    subparser.add_argument(
+        '--cdash-upload-url',
+        default=None,
+        help="CDash URL where reports will be uploaded"
+    )
+    subparser.add_argument(
+        '--cdash-build',
+        default=None,
+        help="""The name of the build that will be reported to CDash.
+Defaults to spec of the package to install."""
+    )
+    subparser.add_argument(
+        '--cdash-site',
+        default=None,
+        help="""The site name that will be reported to CDash.
+Defaults to current system hostname."""
+    )
+    subparser.add_argument(
+        '--cdash-track',
+        default='Experimental',
+        help="""Results will be reported to this group on CDash.
+Defaults to Experimental."""
+    )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
@@ -133,23 +168,33 @@ def default_log_file(spec):
     """
     fmt = 'test-{x.name}-{x.version}-{hash}.xml'
     basename = fmt.format(x=spec, hash=spec.dag_hash())
-    dirname = fs.join_path(spack.var_path, 'junit-report')
+    dirname = fs.os.path.join(spack.paths.var_path, 'junit-report')
     fs.mkdirp(dirname)
-    return fs.join_path(dirname, basename)
+    return fs.os.path.join(dirname, basename)
 
 
-def install_spec(cli_args, kwargs, spec):
-    # Do the actual installation
+def install_spec(cli_args, kwargs, abstract_spec, spec):
+    """Do the actual installation."""
+
+    # handle active environment, if any
+    def install(spec, kwargs):
+        env = ev.get_env(cli_args, 'install')
+        if env:
+            env.install(abstract_spec, spec, **kwargs)
+            env.write()
+        else:
+            spec.package.do_install(**kwargs)
+
     try:
         if cli_args.things_to_install == 'dependencies':
             # Install dependencies as-if they were installed
             # for root (explicit=False in the DB)
             kwargs['explicit'] = False
             for s in spec.dependencies():
-                s.package.do_install(**kwargs)
+                install(s, kwargs)
         else:
             kwargs['explicit'] = True
-            spec.package.do_install(**kwargs)
+            install(spec, kwargs)
 
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
@@ -165,42 +210,56 @@ def install_spec(cli_args, kwargs, spec):
 
 def install(parser, args, **kwargs):
     if not args.package and not args.specfiles:
-        tty.die("install requires at least one package argument or yaml file")
+        # if there are no args but an active environment or spack.yaml file
+        # then install the packages from it.
+        env = ev.get_env(args, 'install')
+        if env:
+            if not args.only_concrete:
+                env.concretize()
+                env.write()
+            tty.msg("Installing environment %s" % env.name)
+            env.install_all(args)
+            return
+        else:
+            tty.die("install requires a package argument or a spack.yaml file")
 
     if args.jobs is not None:
         if args.jobs <= 0:
             tty.die("The -j option must be a positive integer!")
 
     if args.no_checksum:
-        spack.do_checksum = False  # TODO: remove this global.
+        spack.config.set('config:checksum', False, scope='command_line')
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
+    update_kwargs_from_args(args, kwargs)
     kwargs.update({
-        'keep_prefix': args.keep_prefix,
-        'keep_stage': args.keep_stage,
-        'restage': not args.dont_restage,
-        'install_source': args.install_source,
-        'install_deps': 'dependencies' in args.things_to_install,
-        'make_jobs': args.jobs,
-        'verbose': args.verbose,
-        'fake': args.fake,
-        'dirty': args.dirty,
-        'use_cache': args.use_cache
+        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_package': ('package' in args.things_to_install)
     })
 
     if args.run_tests:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
-    specs = spack.cmd.parse_specs(args.package)
-    if args.test == 'all' or args.run_tests:
-        spack.package_testing.test_all()
-    elif args.test == 'root':
-        for spec in specs:
-            spack.package_testing.test(spec.name)
+    reporter = spack.report.collect_info(args.log_format, args)
+    if args.log_file:
+        reporter.filename = args.log_file
 
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    abstract_specs = spack.cmd.parse_specs(args.package)
+    tests = False
+    if args.test == 'all' or args.run_tests:
+        tests = True
+    elif args.test == 'root':
+        tests = [spec.name for spec in abstract_specs]
+    kwargs['tests'] = tests
+
+    try:
+        specs = spack.cmd.parse_specs(
+            args.package, concretize=True, tests=tests)
+    except SpackError as e:
+        reporter.concretization_report(e.message)
+        raise
 
     # 2. Concrete specs from yaml files
     for file in args.specfiles:
@@ -213,46 +272,54 @@ def install(parser, args, **kwargs):
             tty.warn(msg.format(file))
             continue
 
+        abstract_specs.append(s)
         specs.append(s.concretized())
 
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')
 
-    if args.overwrite:
-        # If we asked to overwrite an existing spec we must ensure that:
-        # 1. We have only one spec
-        # 2. The spec is already installed
-        assert len(specs) == 1, \
-            "only one spec is allowed when overwriting an installation"
+    if not args.log_file and not reporter.filename:
+        reporter.filename = default_log_file(specs[0])
+    reporter.specs = specs
+    with reporter:
+        if args.overwrite:
 
-        spec = specs[0]
-        t = spack.store.db.query(spec)
-        assert len(t) == 1, "to overwrite a spec you must install it first"
+            installed = list(filter(lambda x: x,
+                                    map(spack.store.db.query_one, specs)))
+            if not args.yes_to_all:
+                display_args = {
+                    'long': True,
+                    'show_flags': True,
+                    'variants': True
+                }
 
-        # Give the user a last chance to think about overwriting an already
-        # existing installation
-        if not args.yes_to_all:
-            tty.msg('The following package will be reinstalled:\n')
+                if installed:
+                    tty.msg('The following package specs will be '
+                            'reinstalled:\n')
+                    spack.cmd.display_specs(installed, **display_args)
 
-            display_args = {
-                'long': True,
-                'show_flags': True,
-                'variants': True
-            }
+                not_installed = list(filter(lambda x: x not in installed,
+                                            specs))
+                if not_installed:
+                    tty.msg('The following package specs are not installed and'
+                            ' the --overwrite flag was given. The package spec'
+                            ' will be newly installed:\n')
+                    spack.cmd.display_specs(not_installed, **display_args)
 
-            spack.cmd.display_specs(t, **display_args)
-            answer = tty.get_yes_or_no(
-                'Do you want to proceed?', default=False
-            )
-            if not answer:
-                tty.die('Reinstallation aborted.')
+                # We have some specs, so one of the above must have been true
+                answer = tty.get_yes_or_no(
+                    'Do you want to proceed?', default=False
+                )
+                if not answer:
+                    tty.die('Reinstallation aborted.')
 
-        with fs.replace_directory_transaction(specs[0].prefix):
-            install_spec(args, kwargs, specs[0])
+            for abstract, concrete in zip(abstract_specs, specs):
+                if concrete in installed:
+                    with fs.replace_directory_transaction(concrete.prefix):
+                        install_spec(args, kwargs, abstract, concrete)
+                else:
+                    install_spec(args, kwargs, abstract, concrete)
 
-    else:
-
-        filename = args.log_file or default_log_file(specs[0])
-        with spack.report.collect_info(specs, args.log_format, filename):
-            for spec in specs:
-                install_spec(args, kwargs, spec)
+        else:
+            for abstract, concrete in zip(abstract_specs, specs):
+                install_spec(args, kwargs, abstract, concrete)

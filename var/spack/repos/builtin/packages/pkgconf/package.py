@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,26 +13,23 @@ class Pkgconf(AutotoolsPackage):
     maintaining compatibility."""
 
     homepage = "http://pkgconf.org/"
-    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.10.tar.xz"
+    url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.5.4.tar.xz"
 
-    version('1.4.0', 'c509c0dad5a70aa4bc3210557b7eafce')
+    version('1.5.4',  '9c5864a4e08428ef52f05a41c948529555458dec6d283b50f8b7d32463c54664')
+    version('1.4.2',  '678d242b4eef1754bba6a58642af10bb')
+    version('1.4.0',  'c509c0dad5a70aa4bc3210557b7eafce')
     version('1.3.10', '9b63707bf6f8da6efb3868101d7525fe')
-    version('1.3.8', '484ba3360d983ce07416843d5bc916a8')
+    version('1.3.8',  '484ba3360d983ce07416843d5bc916a8')
 
     provides('pkgconfig')
 
+    # TODO: Add a package for the kyua testing framework
+    # depends_on('kyua', type='test')
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """spack built pkg-config on cray's requires adding /usr/local/
-        and /usr/lib64/  to PKG_CONFIG_PATH in order to access cray '.pc'
-        files.
-        Adds the ACLOCAL path for autotools."""
+        """Adds the ACLOCAL path for autotools."""
         spack_env.append_path('ACLOCAL_PATH',
                               join_path(self.prefix.share, 'aclocal'))
-        if 'platform=cray' in self.spec:
-            spack_env.append_path('PKG_CONFIG_PATH',
-                                  '/usr/lib64/pkgconfig')
-            spack_env.append_path('PKG_CONFIG_PATH',
-                                  '/usr/local/lib64/pkgconfig')
 
     @run_after('install')
     def link_pkg_config(self):

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -34,6 +15,9 @@ class PyMatplotlib(PythonPackage):
     homepage = "https://pypi.python.org/pypi/matplotlib"
     url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-2.0.2.tar.gz"
 
+    version('3.0.0', '39c7f44c8fa0f24cbf684137371ce4ae')
+    version('2.2.3', '403b0bddd751d71187416f20d4cff100')
+    version('2.2.2', 'dd1e49e041309a7fd4e32be8bf17c3b6')
     version('2.0.2', '061111784278bde89b5d4987014be4ca')
     version('2.0.0', '7aa54b06327f0e1c4f3877fc2f7d6b17')
     version('1.5.3', 'ba993b06113040fee6628d74b80af0fd')
@@ -65,8 +49,10 @@ class PyMatplotlib(PythonPackage):
     # directories (i.e., matplotlib and basemap)
     depends_on('py-setuptools', type=('build', 'run'))
 
+    depends_on('python@3.5:', when='@3:')
     depends_on('libpng@1.2:')
     depends_on('freetype@2.3:')
+    patch('freetype-include-path.patch', when='@2.2.2:2.9.9')  # Patch to pick up correct freetype headers
 
     depends_on('py-numpy@1.6:', type=('build', 'run'))
     depends_on('py-dateutil@1.1:', type=('build', 'run'))
@@ -75,6 +61,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-cycler@0.9:', type=('build', 'run'))
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='^python@2.7')
+    depends_on('py-kiwisolver', type=('build', 'run'), when='@2.2.0:')
 
     # ------ Optional GUI frameworks
     depends_on('tk@8.3:', when='+tk')  # not 8.6.0 or 8.6.1
@@ -93,9 +80,8 @@ class PyMatplotlib(PythonPackage):
     depends_on('texlive', when='+latex', type='run')
 
     # Testing dependencies
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
-    # depends_on('py-mock', type='test')
+    depends_on('py-nose', type='test')
+    depends_on('py-mock', type='test')
 
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')

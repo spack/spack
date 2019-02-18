@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 '''Produce a "view" of a Spack DAG.
 
 A "view" is file hierarchy representing the union of a number of
@@ -52,16 +33,22 @@ All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 '''
-
 import os
-import spack
+
+import llnl.util.tty as tty
+from llnl.util.link_tree import MergeConflictError
+from llnl.util.tty.color import colorize
+
+import spack.environment as ev
 import spack.cmd
 import spack.store
+import spack.schema.projections
+from spack.config import validate
 from spack.filesystem_view import YamlFilesystemView
-import llnl.util.tty as tty
+from spack.util import spack_yaml as s_yaml
 
-description = "produce a single-rooted directory view of packages"
-section = "environment"
+description = "project packages to a compact naming scheme on the filesystem."
+section = "environments"
 level = "short"
 
 actions_link = ["symlink", "add", "soft", "hardlink", "hard"]
@@ -69,28 +56,28 @@ actions_remove = ["remove", "rm"]
 actions_status = ["statlink", "status", "check"]
 
 
-def relaxed_disambiguate(specs, view):
+def disambiguate_in_view(specs, view):
     """
-        When dealing with querying actions (remove/status) the name of the spec
-        is sufficient even though more versions of that name might be in the
-        database.
+        When dealing with querying actions (remove/status) we only need to
+        disambiguate among specs in the view
     """
-    name_to_spec = dict((s.name, s) for s in view.get_all_specs())
+    view_specs = set(view.get_all_specs())
 
     def squash(matching_specs):
         if not matching_specs:
             tty.die("Spec matches no installed packages.")
 
-        elif len(matching_specs) == 1:
-            return matching_specs[0]
+        matching_in_view = [ms for ms in matching_specs if ms in view_specs]
 
-        elif matching_specs[0].name in name_to_spec:
-            return name_to_spec[matching_specs[0].name]
+        if len(matching_in_view) > 1:
+            args = ["Spec matches multiple packages.",
+                    "Matching packages:"]
+            args += [colorize("  @K{%s} " % s.dag_hash(7)) +
+                     s.cformat('$_$@$%@$=') for s in matching_in_view]
+            args += ["Use a more specific spec."]
+            tty.die(*args)
 
-        else:
-            # we just return the first matching spec, the error about the
-            # missing spec will be printed later on
-            return matching_specs[0]
+        return matching_in_view[0] if matching_in_view else matching_specs[0]
 
     # make function always return a list to keep consistency between py2/3
     return list(map(squash, map(spack.store.db.query, specs)))
@@ -137,6 +124,13 @@ def setup_parser(sp):
         act.add_argument('path', nargs=1,
                          help="path to file system view directory")
 
+        if cmd in ("symlink", "hardlink"):
+            # invalid for remove/statlink, for those commands the view needs to
+            # already know its own projections.
+            help_msg = "Initialize view using projections from file."
+            act.add_argument('--projection-file', dest='projection_file',
+                             type=spack.cmd.extant_file, help=help_msg)
+
         if cmd == "remove":
             grp = act.add_mutually_exclusive_group(required=True)
             act.add_argument(
@@ -172,13 +166,23 @@ def setup_parser(sp):
 def view(parser, args):
     'Produce a view of a set of packages.'
 
+    specs = spack.cmd.parse_specs(args.specs)
     path = args.path[0]
+
+    if args.action in actions_link and args.projection_file:
+        # argparse confirms file exists
+        with open(args.projection_file, 'r') as f:
+            projections_data = s_yaml.load(f)
+            validate(projections_data, spack.schema.projections.schema)
+            ordered_projections = projections_data['projections']
+    else:
+        ordered_projections = {}
 
     view = YamlFilesystemView(
         path, spack.store.layout,
+        projections=ordered_projections,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
-        link=os.link if args.action in ["hardlink", "hard"]
-        else os.symlink,
+        link=os.link if args.action in ["hardlink", "hard"] else os.symlink,
         verbose=args.verbose)
 
     # Process common args and specs
@@ -189,26 +193,33 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        specs = [spack.cmd.disambiguate_spec(s) for s in args.specs]
+        env = ev.get_env(args, 'view link')
+        specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:
         # no specs implies all
-        if len(args.specs) == 0:
+        if len(specs) == 0:
             specs = view.get_all_specs()
         else:
-            specs = relaxed_disambiguate(args.specs, view)
+            specs = disambiguate_in_view(specs, view)
 
     else:
-        # status and remove can map the name to packages in view
-        specs = relaxed_disambiguate(args.specs, view)
+        # status and remove can map a partial spec to packages in view
+        specs = disambiguate_in_view(specs, view)
 
     with_dependencies = args.dependencies.lower() in ['true', 'yes']
 
     # Map action to corresponding functionality
     if args.action in actions_link:
-        view.add_specs(*specs,
-                       with_dependencies=with_dependencies,
-                       exclude=args.exclude)
+        try:
+            view.add_specs(*specs,
+                           with_dependencies=with_dependencies,
+                           exclude=args.exclude)
+        except MergeConflictError:
+            tty.info("Some file blocked the merge, adding the '-i' flag will "
+                     "ignore this conflict. For more information see e.g. "
+                     "https://github.com/spack/spack/issues/9029")
+            raise
 
     elif args.action in actions_remove:
         view.remove_specs(*specs,

@@ -1,30 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import collections
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import collections
+import os.path
 
 
 class Plumed(AutotoolsPackage):
@@ -41,8 +21,13 @@ class Plumed(AutotoolsPackage):
     and C/C++ codes.
     """
     homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
+    url = 'https://github.com/plumed/plumed2/archive/v2.5.0.tar.gz'
 
+    version('2.5.0', 'd1277d86a4aa766bfe97513d7969bfb7')
+    version('2.4.4', 'e8ef700fb4740b177cf660313c9805e6')
+    version('2.4.2', '0f66f24b4c763ae8b2f39574113e9935')
+    version('2.4.1', '6558e1fd02fc46e847ab6a3fb5ed5411')
+    version('2.3.5', '3cc5f025cb6f5d963f3c778f15c77d44')
     version('2.3.3', '9f5729e406e79a06a16976fcb020e024')
     version('2.3.0', 'a9b5728f115dca8f0519111f1f5a6fa5')
     version('2.2.4', 'afb00da25a3fbd47acf377e53342059d')
@@ -66,6 +51,9 @@ class Plumed(AutotoolsPackage):
     depends_on('zlib')
     depends_on('blas')
     depends_on('lapack')
+    # For libmatheval support through the 'function' module
+    # which is enabled by default (or when optional_modules=all)
+    depends_on('libmatheval')
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
@@ -91,7 +79,7 @@ class Plumed(AutotoolsPackage):
 
         # Get available patches
         plumed_patch = Executable(
-            join_path(self.spec.prefix.bin, 'plumed-patch')
+            os.path.join(self.spec.prefix.bin, 'plumed-patch')
         )
 
         out = plumed_patch('-q', '-l', output=str)
@@ -113,6 +101,12 @@ class Plumed(AutotoolsPackage):
     def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
         module.plumed = dependent_spec['plumed'].command
+
+    @property
+    def plumed_inc(self):
+        return os.path.join(
+            self.prefix.lib, 'plumed', 'src', 'lib', 'Plumed.inc'
+        )
 
     @run_before('autoreconf')
     def filter_gslcblas(self):

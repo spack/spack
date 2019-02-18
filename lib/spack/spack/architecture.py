@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This module contains all the elements that are required to create an
 architecture object. These include, the target processor, the operating system,
@@ -79,16 +60,15 @@ import os
 import inspect
 import platform as py_platform
 
-from llnl.util.lang import memoized, list_modules, key_ordering
-from llnl.util.filesystem import join_path
+import llnl.util.multiproc as mp
 import llnl.util.tty as tty
+from llnl.util.lang import memoized, list_modules, key_ordering
 
-import spack
+import spack.paths
+import spack.error as serr
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
-from spack.util.multiproc import parmap
 from spack.util.spack_yaml import syaml_dict
-import spack.error as serr
 
 
 class NoPlatformError(serr.SpackError):
@@ -194,14 +174,13 @@ class Platform(object):
         return self.operating_sys.get(name, None)
 
     @classmethod
-    def setup_platform_environment(self, pkg, env):
+    def setup_platform_environment(cls, pkg, env):
         """ Subclass can override this method if it requires any
             platform-specific build environment modifications.
         """
-        pass
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         """ Subclass is responsible for implementing this method.
             Returns True if the Platform class detects that
             it is the current platform
@@ -271,7 +250,7 @@ class OperatingSystem(object):
             filtered_path.append(p)
 
             # Check for a bin directory, add it if it exists
-            bin = join_path(p, 'bin')
+            bin = os.path.join(p, 'bin')
             if os.path.isdir(bin):
                 filtered_path.append(os.path.realpath(bin))
 
@@ -281,9 +260,9 @@ class OperatingSystem(object):
         # NOTE: we import spack.compilers here to avoid init order cycles
         import spack.compilers
         types = spack.compilers.all_compiler_types()
-        compiler_lists = parmap(lambda cmp_cls:
-                                self.find_compiler(cmp_cls, *filtered_path),
-                                types)
+        compiler_lists = mp.parmap(
+            lambda cmp_cls: self.find_compiler(cmp_cls, *filtered_path),
+            types)
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
@@ -301,7 +280,7 @@ class OperatingSystem(object):
            prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
            be grouped with g++-mp-4.7 and gfortran-mp-4.7.
         """
-        dicts = parmap(
+        dicts = mp.parmap(
             lambda t: cmp_cls._find_matches_in_path(*t),
             [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(path),
              (cmp_cls.cxx_names, cmp_cls.cxx_version) + tuple(path),
@@ -463,7 +442,7 @@ def arch_for_spec(arch_spec):
 @memoized
 def all_platforms():
     classes = []
-    mod_path = spack.platform_path
+    mod_path = spack.paths.platform_path
     parent_module = "spack.platforms"
 
     for name in list_modules(mod_path):

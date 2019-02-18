@@ -1,32 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 import platform
 import re
-import spack
+import spack.repo
 import spack.cmd
 from spack.util.executable import Executable, ProcessError
 from llnl.util.filesystem import filter_file
@@ -139,7 +120,7 @@ def macho_get_paths(path_name):
         if match:
             lhs = match.group(1).lstrip().rstrip()
             rhs = match.group(2)
-            match2 = re.search('(.*) \(.*\)', rhs)
+            match2 = re.search(r'(.*) \(.*\)', rhs)
             if match2:
                 rhs = match2.group(1)
             if lhs == 'cmd':
@@ -256,17 +237,6 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     return
 
 
-def get_filetype(path_name):
-    """
-    Return the output of file path_name as a string to identify file type.
-    """
-    file = Executable('file')
-    file.add_default_env('LC_ALL', 'C')
-    output = file('-b', '-h', '%s' % path_name,
-                  output=str, error=str)
-    return output.strip()
-
-
 def strings_contains_installroot(path_name, root_dir):
     """
     Check if the file contain the install root string.
@@ -355,6 +325,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
+                old_dir != new_dir and
                 strings_contains_installroot(path_name, old_dir)):
                     raise InstallRootStringException(path_name, old_dir)
 
@@ -373,10 +344,23 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                                                   old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
+                    old_dir != new_dir and
                     strings_contains_installroot(path_name, old_dir)):
                         raise InstallRootStringException(path_name, old_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
+
+
+def make_link_relative(cur_path_names, orig_path_names):
+    """
+    Change absolute links to be relative.
+    """
+    for cur_path, orig_path in zip(cur_path_names, orig_path_names):
+        old_src = os.readlink(orig_path)
+        new_src = os.path.relpath(old_src, orig_path)
+
+        os.unlink(cur_path)
+        os.symlink(new_src, cur_path)
 
 
 def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
@@ -426,8 +410,8 @@ def make_binary_placeholder(cur_path_names, allow_root):
             if (not allow_root and
                 strings_contains_installroot(cur_path,
                                              spack.store.layout.root)):
-                raise InstallRootStringException(cur_path,
-                                                 spack.store.layout.root)
+                raise InstallRootStringException(
+                    cur_path, spack.store.layout.root)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -435,12 +419,47 @@ def make_binary_placeholder(cur_path_names, allow_root):
                 new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
                 if (not allow_root and
-                    strings_contains_installroot(cur_path,
-                                                 spack.store.layout.root)):
-                    raise InstallRootStringException(cur_path,
-                                                     spack.store.layout.root)
+                    strings_contains_installroot(
+                        cur_path, spack.store.layout.root)):
+                    raise InstallRootStringException(
+                        cur_path, spack.store.layout.root)
     else:
         tty.die("Placeholder not implemented for %s" % platform.system())
+
+
+def make_link_placeholder(cur_path_names, cur_dir, old_dir):
+    """
+    Replace old install path with placeholder in absolute links.
+
+    Links in ``cur_path_names`` must link to absolute paths.
+    """
+    for cur_path in cur_path_names:
+        placeholder = set_placeholder(spack.store.layout.root)
+        placeholder_prefix = old_dir.replace(spack.store.layout.root,
+                                             placeholder)
+        cur_src = os.readlink(cur_path)
+        rel_src = os.path.relpath(cur_src, cur_dir)
+        new_src = os.path.join(placeholder_prefix, rel_src)
+
+        os.unlink(cur_path)
+        os.symlink(new_src, cur_path)
+
+
+def relocate_links(path_names, old_dir, new_dir):
+    """
+    Replace old path with new path in link sources.
+
+    Links in ``path_names`` must link to absolute paths or placeholders.
+    """
+    placeholder = set_placeholder(old_dir)
+    for path_name in path_names:
+        old_src = os.readlink(path_name)
+        # replace either placeholder or old_dir
+        new_src = old_src.replace(placeholder, new_dir, 1)
+        new_src = new_src.replace(old_dir, new_dir, 1)
+
+        os.unlink(path_name)
+        os.symlink(new_src, path_name)
 
 
 def relocate_text(path_names, old_dir, new_dir):

@@ -1,31 +1,10 @@
-##############################################################################
-# Copyright (c) 2016, International Business Machines Corporation
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Serban Maerean, serban@us.ibm.com based on a similar file,
-# spack/lib/spack/spack/compilers/xl.py, produced by Todd Gamblin,
-# tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import llnl.util.tty as tty
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, get_compiler_version
+from spack.compiler import \
+    Compiler, get_compiler_version, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -42,7 +21,7 @@ class XlR(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['xlf90_r', 'xlf95_r', 'xlf2003_r', 'xlf2008_r']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     link_paths = {'cc': 'xl_r/xlc_r',
                   'cxx': 'xl_r/xlc++_r',
                   'f77': 'xl_r/xlf_r',
@@ -55,7 +34,10 @@ class XlR(Compiler):
     @property
     def cxx11_flag(self):
         if self.version < ver('13.1'):
-            tty.die("Only xlC 13.1 and above have some c++11 support.")
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          "< 13.1")
         else:
             return "-qlanglvl=extended0x"
 
@@ -72,7 +54,7 @@ class XlR(Compiler):
         return "-qzerosize"
 
     @classmethod
-    def default_version(self, comp):
+    def default_version(cls, comp):
         """The '-qversion' is the standard option fo XL compilers.
            Output looks like this::
 
@@ -113,6 +95,12 @@ class XlR(Compiler):
            older version of AIX and linux on power.
         """
         fver = get_compiler_version(fc, '-qversion', r'([0-9]?[0-9]\.[0-9])')
+        if fver >= 16:
+            """Starting with version 16.1, the XL C and Fortran compilers
+               have the same version.  So no need to downgrade the Fortran
+               compiler version to match that of the C compiler version.
+            """
+            return str(fver)
         cver = float(fver) - 2
         if cver < 10:
             cver = cver - 0.1

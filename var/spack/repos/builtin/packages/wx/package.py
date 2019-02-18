@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 
@@ -35,14 +16,15 @@ class Wx(AutotoolsPackage):
        native look and feel because it uses the platform's native API
        rather than emulating the GUI. It's also extensive, free,
        open-source and mature."""
+
     homepage = "http://www.wxwidgets.org/"
     url      = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.0/wxWidgets-3.1.0.tar.bz2"
+    git      = "https://github.com/wxWidgets/wxWidgets.git"
 
+    version('develop', branch='master')
     version('3.1.0', '2170839cfa9d9322e8ee8368b21a15a2497b4f11')
     version('3.0.2', '6461eab4428c0a8b9e41781b8787510484dea800')
     version('3.0.1', '73e58521d6871c9f4d1e7974c6e3a81629fddcf8')
-
-    version('develop', git='https://github.com/wxWidgets/wxWidgets.git', branch='master')
 
     patch('math_include.patch', when='@3.0.1:3.0.2')
 

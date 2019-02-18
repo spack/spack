@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -38,10 +19,24 @@ class RPkgmaker(RPackage):
     url      = "https://cran.r-project.org/src/contrib/pkgmaker_0.22.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/pkgmaker"
 
+    version('0.27', sha256='17a289d8f596ba5637b07077b3bff22411a2c2263c0b7de59fe848666555ec6a')
     version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-registry', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-stringi', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-xtable', type=('build', 'run'))
+    depends_on('r-withr', type=('build', 'run'))
+    depends_on('r-bibtex@0.4:', type=('build', 'run'))
+    depends_on('r-devtools@0.8:', type=('build', 'run'))
+    depends_on('r-roxygen2', type=('build', 'run'))
+    depends_on('r-runit', type=('build', 'run'))
+    depends_on('r-testthat', type=('build', 'run'))
+    depends_on('r-knitr', type=('build', 'run'))
+    depends_on('r-rmarkdown', type=('build', 'run'))
+    depends_on('r-yaml', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))

@@ -1,30 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import inspect
-import distutils.dir_util
 
 
 class Repeatmasker(Package):
@@ -36,10 +16,17 @@ class Repeatmasker(Package):
 
     version('4.0.7', '4dcbd7c88c5343e02d819f4b3e6527c6')
 
+    variant('crossmatch', description='Enable CrossMatch search engine',
+            default=False)
+
     depends_on('perl', type=('build', 'run'))
+    depends_on('perl-text-soundex', type=('build', 'run'))
     depends_on('hmmer')
     depends_on('ncbi-rmblastn')
     depends_on('trf')
+
+    depends_on('phrap-crossmatch-swat', type=('build', 'run'),
+               when='+crossmatch')
 
     def url_for_version(self, version):
         url = 'http://www.repeatmasker.org/RepeatMasker-open-{0}.tar.gz'
@@ -67,7 +54,13 @@ class Repeatmasker(Package):
                           '%s\n' % self.stage.source_path,
                           '%s\n' % self.spec['trf'].prefix.bin.trf, '2\n',
                           '%s\n' % self.spec['ncbi-rmblastn'].prefix.bin,
-                          'Y\n', '5\n']
+                          'Y\n']
+
+        if '+crossmatch' in spec:
+            crossmatch = self.spec['phrap-crossmatch-swat'].prefix.bin
+            config_answers.extend(['1\n', '%s\n' % crossmatch, 'N\n'])
+
+        config_answers.append('5\n')
 
         config_answers_filename = 'spack-config.in'
 
@@ -77,4 +70,4 @@ class Repeatmasker(Package):
         with open(config_answers_filename, 'r') as f:
             inspect.getmodule(self).perl('configure', input=f)
 
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix.bin)
