@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Libyaml(Package):
     """A C library for parsing and emitting YAML."""
 
