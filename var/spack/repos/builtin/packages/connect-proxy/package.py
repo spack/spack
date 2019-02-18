@@ -13,7 +13,7 @@ class ConnectProxy(MakefilePackage):
     homepage = "https://bitbucket.org/gotoh/connect"
     url      = "https://bitbucket.org/gotoh/connect/get/1.105.tar.bz2"
 
-    version('1.105', '0e5581651ce31a78ae87bdffb086c3ad')
+    version('1.105', '07366026b1f81044ecd8da9b5b5b51321327ecdf6ba23576271a311bbd69d403')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
