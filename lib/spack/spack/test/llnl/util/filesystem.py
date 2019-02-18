@@ -215,3 +215,25 @@ def test_move_transaction_rollback(tmpdir):
         pass
 
     assert h == fs.hash_directory(str(tmpdir))
+
+
+@pytest.mark.regression('10601')
+@pytest.mark.regression('10603')
+def test_recursive_search_of_headers_from_prefix(tmp_installation_dir):
+    # Try to inspect recursively from <prefix> and ensure we don't get
+    # subdirectories of the '<prefix>/include' path
+    prefix = str(tmp_installation_dir)
+    header_list = fs.find_headers('*', root=prefix, recursive=True)
+
+    # Check that the header files we expect are all listed
+    assert os.path.join(prefix, 'include', 'ex3.h') in header_list
+    assert os.path.join(prefix, 'include', 'boost', 'ex3.h') in header_list
+    assert os.path.join(prefix, 'path', 'to', 'ex1.h') in header_list
+    assert os.path.join(prefix, 'path', 'to', 'subdir', 'ex2.h') in header_list
+
+    # Check that when computing directories we exclude <prefix>/include/boost
+    include_dirs = header_list.directories
+    assert os.path.join(prefix, 'include') in include_dirs
+    assert os.path.join(prefix, 'include', 'boost') not in include_dirs
+    assert os.path.join(prefix, 'path', 'to') in include_dirs
+    assert os.path.join(prefix, 'path', 'to', 'subdir') in include_dirs

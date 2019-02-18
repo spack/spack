@@ -297,9 +297,6 @@ def set_build_environment_variables(pkg, env, dirty):
         except spack.spec.NoHeadersError:
             tty.debug("No headers found for {0}".format(dep.name))
 
-        if os.path.isdir(dep.prefix.include):
-            include_dirs.append(dep.prefix.include)
-
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
