@@ -78,7 +78,7 @@ class QuantumEspresso(Package):
     )
 
     # HDF5 support introduced in 6.1
-    hdf5_warning = 'HDF5 support in QE 6.1 and later'
+    hdf5_warning = 'HDF5 support only in QE 6.1 and later'
     conflicts('hdf5=parallel', when='@:6.0', msg=hdf5_warning)
     conflicts('hdf5=serial', when='@:6.0', msg=hdf5_warning)
 
