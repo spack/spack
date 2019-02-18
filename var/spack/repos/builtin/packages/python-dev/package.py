@@ -25,6 +25,7 @@ class PythonDev(Package):
     depends_on('py-ipyparallel', type=('build', 'run'))
     depends_on('py-ipython', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
+    depends_on('py-jinja2-cli', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))
     depends_on('py-lxml', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
