@@ -37,7 +37,8 @@ class Spykfunc(PythonPackage):
     version('develop', git=url, submodules=True, clean=False)
     version('0.11.0', git=url, tag='v0.11.0', submodules=True, clean=False)
     version('0.12.0', git=url, tag='v0.12.0', submodules=True, clean=False)
-    version('0.12.1', git=url, tag='v0.12.1', submodules=True, preferred=True, clean=False)
+    version('0.12.1', git=url, tag='v0.12.1', submodules=True, clean=False)
+    version('0.12.2', git=url, tag='v0.12.2', submodules=True, preferred=True, clean=False)
 
     depends_on('hdf5~mpi')
     depends_on('highfive~mpi', type='build')
