@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
+
 class Wtdbg2(MakefilePackage):
     """A fuzzy Bruijn graph approach to long noisy reads assembly"""
 
