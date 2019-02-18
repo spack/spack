@@ -37,6 +37,8 @@ class PyUnicycler(PythonPackage):
     homepage = "https://github.com/rrwick/Unicycler"
     url      = "https://github.com/rrwick/Unicycler/archive/v0.4.5.tar.gz"
 
+    version('0.4.7', '78633a5f557af23e62d6b37d1caedf53')
+    version('0.4.6', '78633a5f557af23e62d6b37d1caedf53')
     version('0.4.5', 'f7b4f6b712fee6a4fa86a046a6781768')
 
     depends_on('python@3.4:', type=('build', 'link', 'run'))
