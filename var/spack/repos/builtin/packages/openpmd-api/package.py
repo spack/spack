@@ -30,8 +30,8 @@ class OpenpmdApi(CMakePackage):
             description='Enable Python bindings')
 
     depends_on('cmake@3.11.0:', type='build')
-    depends_on('mpark-variant@1.3.0:')
-    depends_on('catch@2.3.0: ~single_header', type='test')
+    depends_on('mpark-variant@1.4.0:')
+    depends_on('catch@2.6.1: ~single_header', type='test')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
     depends_on('hdf5@1.8.13:', when='+hdf5')
     depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
@@ -42,10 +42,11 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios2@2.3.0:', when='+adios2')
     depends_on('adios2@2.3.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.3.0: +mpi', when='+mpi +adios2')
-    depends_on('nlohmann-json@3.4.0:', when='+json')
+    depends_on('nlohmann-json@3.5.0:', when='+json')
     # ideally we want 2.3.0+ for full C++11 CT function signature support
-    depends_on('py-pybind11@2.2.3:', when='+python', type='link')
+    depends_on('py-pybind11@2.2.4:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
+    depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
     depends_on('python@3.5:', when='+python', type=['link', 'test', 'run'])
 
     extends('python', when='+python')
