@@ -34,6 +34,7 @@ class ActsCore(CMakePackage):
 
     version('develop', branch='master')
     version('0.8.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9')  # Used by acts-framework
+    version('0.8.1', commit='289bdcc320f0b3ff1d792e29e462ec2d3ea15df6')
 
     variant('legacy', default=True, description='Build the Legacy package')
     variant('examples', default=False, description='Build the examples')
@@ -48,17 +49,20 @@ class ActsCore(CMakePackage):
     depends_on('cmake @3.7:', type='build')
     depends_on('boost @1.62: +program_options +test')
     depends_on('eigen @3.2.9:', type='build')
-    depends_on('root @6.10: cxxstd=14', when='+tgeo')
+    depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
+    depends_on('root @6.10:', when='+tgeo @0.8.1:')
     depends_on('dd4hep @1.2:', when='+dd4hep')
 
     def cmake_args(self):
         spec = self.spec
+        cxxstd = spec['root'].variants['cxxstd'].value
 
         def cmake_variant(cmake_label, spack_variant):
             enabled = spec.satisfies('+' + spack_variant)
             return "-DACTS_BUILD_{0}={1}".format(cmake_label, enabled)
 
         args = [
+            "-DCMAKE_CXX_STANDARD={0}".format(cxxstd),
             cmake_variant("LEGACY", "legacy"),
             cmake_variant("EXAMPLES", "examples"),
             cmake_variant("TESTS", "tests"),
