@@ -174,6 +174,49 @@ class PyNumpy(PythonPackage):
                     f.write('libraries=%s\n' % lapackblas_names)
                     write_library_dirs(f, lapackblas_dirs)
 
+        # See: https://github.com/numpy/numpy/pull/12991
+        # Bug introduced: https://github.com/numpy/numpy/pull/10665
+        # So affects 1.15.* => 1.16.* releases
+        # Patch not needed after numpy@1.17.0
+        if '%intel' in spec and spec.satisfies('@1.15.0:1.16.999'):
+            # Need to add #pragma intel optimization_level 2, cannot use
+            # llnl.util.filter_file because this is a multiline match, but a
+            # patch file cannot be used either because the code has moved
+            # around over this release range.
+            try:
+                import os, re, shutil  # noqa
+                # stolen from llnl.util.filter_file
+                filename = 'numpy/core/src/umath/loops.c.src'
+                backup_filename = filename + '~'
+                if not os.path.exists(backup_filename):
+                    shutil.copy(filename, backup_filename)
+                # read the whole file in and do a multiline regex replace
+                with open(filename) as loops_c_src:
+                    contents = loops_c_src.read()
+                contents = re.sub(
+                    # Find and capture the function signature needing patch
+                    r"(NPY_NO_EXPORT void\n"
+                    r"@TYPE@_@kind@\(char \*\*args, npy_intp \*dimensions, npy_intp \*steps, void \*NPY_UNUSED\(func\)\))",  # noqa: E501
+                    # Add #pragma patch and paste back function signature
+                    "#ifdef __INTEL_COMPILER\n"
+                    "    #pragma intel optimization_level 2\n"
+                    "#endif\n"
+                    r"\1",
+                    contents,
+                    re.MULTILINE
+                )
+                with open(filename, "w") as loops_c_src:
+                    loops_c_src.write(contents)
+                # double check that something was actualy patched
+                with open(backup_filename) as backup:
+                    backup_contents = backup.read()
+                with open(filename) as patched:
+                    patched_contents = patched.read()
+                if backup_contents == patched_contents:
+                    raise RuntimeError("No patch was actually performed.")
+            except Exception as e:
+                raise InstallError("Unable to patch %intel: {0}\n".format(e))
+
     def build_args(self, spec, prefix):
         args = []
 
