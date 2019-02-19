@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,17 +12,19 @@ class Nix(AutotoolsPackage):
     homepage = "http://nixos.org/nix"
     url      = "https://github.com/NixOS/nix/archive/2.0.4.zip"
 
-    version('2.0.4', '045adeb4714f559386e391cc3c411710')
+    version('2.2.1', sha256='b591664dd1b04a8f197407d445799ece41140a3117bcbdf8e3c5e94cd3f59854')
+    version('2.1.3', sha256='80d0834f3e34b3e91bd20969733d8010b3e253517ea64bf12258c5f450f86425')
+    version('2.0.4', sha256='49c78122b20e3ad894f546dd2a2f01c32ec528de790314820b1f1335276e3c22')
 
     patch('fix-doc-build.patch')
 
-    variant('storedir', values=str, default=None,
+    variant('storedir', values=str, default="none",
             description='path of the Nix store (defaults to /nix)')
-    variant('statedir', values=str, default=None,
+    variant('statedir', values=str, default="none",
             description='path to the locale state (defaults to /nix/var)')
-    variant('doc', values=bool, default=True,
+    variant('doc', default=True,
             description="Build and install documentation")
-    variant('sandboxing', values=bool, default=True,
+    variant('sandboxing', default=True,
             description='Enable build isolation')
 
     depends_on('autoconf', type='build')
@@ -52,6 +35,7 @@ class Nix(AutotoolsPackage):
     depends_on('libxslt', when="+doc", type='build')
     depends_on('m4', type='build')
 
+    depends_on('bzip2')
     depends_on('curl')
     depends_on('libseccomp', when="+sandboxing")
     depends_on('sqlite')
@@ -67,9 +51,9 @@ class Nix(AutotoolsPackage):
         if '+doc' not in self.spec:
             args.append('--disable-doc-gen')
         storedir = self.spec.variants['storedir'].value
-        if storedir:
+        if storedir != "none":
             args.append('--with-store-dir=' + storedir)
         statedir = self.spec.variants['statedir'].value
-        if statedir:
+        if statedir != "none":
             args.append('--localstatedir=' + statedir)
         return args
