@@ -37,19 +37,19 @@ class PyUnicycler(PythonPackage):
     homepage = "https://github.com/rrwick/Unicycler"
     url      = "https://github.com/rrwick/Unicycler/archive/v0.4.5.tar.gz"
 
-    version('0.4.7', '78633a5f557af23e62d6b37d1caedf53')
+    version('0.4.7', '10ee4fef4bd9a46702de83537a902164')
     version('0.4.6', '78633a5f557af23e62d6b37d1caedf53')
     version('0.4.5', 'f7b4f6b712fee6a4fa86a046a6781768')
 
     depends_on('python@3.4:', type=('build', 'link', 'run'))
-    depends_on('py-setuptools')
-    depends_on('spades')
-    depends_on('pilon')
-    depends_on('jdk')
-    depends_on('bowtie2')
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('spades', type='run')
+    depends_on('pilon', type='run')
+    depends_on('jdk', type=('build', 'run'))
+    depends_on('bowtie2', type='run')
     depends_on('samtools@1.0:', type=('build', 'link', 'run'))
     depends_on('racon', type=('build', 'link', 'run'))
-    depends_on('blast-plus')
+    depends_on('blast-plus', type='run')
 
     conflicts('%gcc@:4.9.0')
     conflicts('%clang@:3.4.2')
