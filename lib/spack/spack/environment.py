@@ -302,15 +302,6 @@ def all_environments():
         yield read(name)
 
 
-def validate(data, filename=None):
-    import jsonschema
-    try:
-        spack.schema.Validator(spack.schema.env.schema).validate(data)
-    except jsonschema.ValidationError as e:
-        raise spack.config.ConfigFormatError(
-            e, data, filename, e.instance.lc.line + 1)
-
-
 def _validate_config(data, schema):
     t = tempfile.NamedTemporaryFile()
     with open(t.name, 'wb') as f:
