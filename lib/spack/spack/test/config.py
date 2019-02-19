@@ -672,6 +672,40 @@ env:
             '/x/y/z', '$spack/var/spack/repos/builtin']
 
 
+def test_single_file_scope_section_override(tmpdir, config):
+    """Check that individual config sections can be overridden in an
+    environment config. The config here primarily differs in that the
+    ``packages`` section is intended to override all other scopes (using the
+    "::" syntax).
+    """
+    env_yaml = str(tmpdir.join("env.yaml"))
+    with open(env_yaml, 'w') as f:
+        f.write("""\
+env:
+    config:
+        verify_ssl: False
+    packages::
+        libelf:
+            compiler: [ 'gcc@4.5.3' ]
+    repos:
+        - /x/y/z
+""")
+
+    scope = spack.config.SingleFileScope(
+        'env', env_yaml, spack.schema.env.schema, ['env'])
+
+    with spack.config.override(scope):
+        # from the single-file config
+        assert spack.config.get('config:verify_ssl') is False
+        assert spack.config.get('packages:libelf:compiler') == ['gcc@4.5.3']
+
+        # from the lower config scopes
+        assert spack.config.get('config:checksum') is True
+        assert not spack.config.get('packages:externalmodule')
+        assert spack.config.get('repos') == [
+            '/x/y/z', '$spack/var/spack/repos/builtin']
+
+
 def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
     f = StringIO(file_contents)
