@@ -51,10 +51,10 @@ class Neurodamus(NeurodamusBase):
     depends_on('boost@1.55:', when="+syntool")
     depends_on('libsonata+mpi', when='+sonata')
 
-    depends_on('coreneuron', when='+coreneuron')
-    depends_on('coreneuron+profile', when='+profile')
-    depends_on('coreneuron@plasticity', when='@plasicity')
-    depends_on('coreneuron@master', when='@master')
+    depends_on('coreneuron+profile', when='+coreneuron+profile')
+    depends_on('coreneuron@master',  when='@master+coreneuron')
+    depends_on('coreneuron@plasticity',  when='@plasticity+coreneuron')
+    depends_on('coreneuron@hippocampus', when='@hippocampus+coreneuron')
 
     depends_on('neurodamus-base@master', when='@master')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
