@@ -65,4 +65,10 @@ class IntelMkl(IntelPackage):
 
     @property
     def libs(self):
-        return self.scalapack_libs + self.lapack_libs + self.blas_libs
+        res = self.lapack_libs + self.blas_libs
+        # we may not have MPI in spec to get correct
+        # ScaLAPACK
+        try:
+            return self.scalapack_libs + res
+        except (InstallError):
+            return res
