@@ -27,10 +27,20 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
+    def setup_environment(self, spack_env, run_env):
+        # Allow pkgconf to return paths that are considered system paths
+        spack_env.set('PKG_CONFIG_ALLOW_SYSTEM_CFLAGS', '1')
+        spack_env.set('PKG_CONFIG_ALLOW_SYSTEM_LIBS', '1')
+        run_env.set('PKG_CONFIG_ALLOW_SYSTEM_CFLAGS', '1')
+        run_env.set('PKG_CONFIG_ALLOW_SYSTEM_LIBS', '1')
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Adds the ACLOCAL path for autotools."""
+        # Adds the ACLOCAL path for autotools.
         spack_env.append_path('ACLOCAL_PATH',
                               join_path(self.prefix.share, 'aclocal'))
+        # Allow pkgconf to return paths that are considered system paths
+        spack_env.set('PKG_CONFIG_ALLOW_SYSTEM_CFLAGS', '1')
+        spack_env.set('PKG_CONFIG_ALLOW_SYSTEM_LIBS', '1')
 
     def configure_args(self):
         config_args = ['--enable-shared']
