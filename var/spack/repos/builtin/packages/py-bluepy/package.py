@@ -13,7 +13,8 @@ class PyBluepy(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/bluepy"
 
     version('develop', branch='master')
-    version('0.12.7', tag='bluepy-v0.12.7', preferred=True)
+    version('0.13.0', tag='bluepy-v0.13.0', preferred=True)
+    version('0.12.7', tag='bluepy-v0.12.7')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
