@@ -42,10 +42,9 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
                         'configure.ac', string=True)
 
     def configure_args(self):
-        spec = self.spec
         args = []
 
-        if '+cuda' in spec:
+        if '+cuda' in self.spec:
             args.append('--with-cuda=%s' % spec['cuda'].prefix)
         else:
             args.append('--without-cuda')
