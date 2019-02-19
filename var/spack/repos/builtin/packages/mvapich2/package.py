@@ -76,7 +76,7 @@ class Mvapich2(AutotoolsPackage):
         default='psm',
         values=(
             'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
-            'nemesistcpib'
+            'nemesistcpib', 'nemesisofi'
         )
     )
 
@@ -94,14 +94,17 @@ class Mvapich2(AutotoolsPackage):
 
     depends_on('findutils', type='build')
     depends_on('bison', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('zlib')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
+    depends_on('libxml2')
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
     depends_on('rdma-core', when='fabrics=mrail')
     depends_on('rdma-core', when='fabrics=nemesisib')
     depends_on('rdma-core', when='fabrics=nemesistcpib')
     depends_on('rdma-core', when='fabrics=nemesisibtcp')
+    depends_on('libfabric', when='fabrics=nemesisofi')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -163,6 +166,9 @@ class Mvapich2(AutotoolsPackage):
         elif 'fabrics=mrail' in self.spec:
             opts = ["--with-device=ch3:mrail", "--with-rdma=gen2",
                     "--disable-mcast"]
+        elif 'fabrics=nemesisofi' in self.spec:
+            opts = ["--with-device=ch3:nemesis:ofi",
+                    "--with-ofi={0}".format(self.spec['libfabric'].prefix)]
         return opts
 
     @property
