@@ -667,7 +667,6 @@ env:
 
         # from the lower config scopes
         assert spack.config.get('config:checksum') is True
-        assert spack.config.get('config:checksum') is True
         assert spack.config.get('packages:externalmodule:buildable') is False
         assert spack.config.get('repos') == [
             '/x/y/z', '$spack/var/spack/repos/builtin']
