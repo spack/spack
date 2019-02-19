@@ -109,4 +109,3 @@ class PyBasemap(PythonPackage):
             print('path_m', path_m, type(path_m))
             print('path_b', path_b, type(path_b))
             my_link_dir(path_m, path_b)
-
