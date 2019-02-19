@@ -224,8 +224,8 @@ class SingleFileScope(ConfigScope):
 
                 self._raw_data = self._raw_data[key]
 
-            for section, data in self._raw_data.items():
-                self.sections[section] = {section : data}
+            for section_key, data in self._raw_data.items():
+                self.sections[section_key] = {section_key : data}
 
         return self.sections[section]
 
@@ -471,7 +471,6 @@ class Configuration(object):
     """
         # TODO: Currently only handles maps. Think about lists if neded.
         section, _, rest = path.partition(':')
-
         value = self.get_config(section, scope=scope)
         if not rest:
             return value
