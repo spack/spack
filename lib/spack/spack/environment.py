@@ -327,7 +327,6 @@ def _read_yaml(str_or_file):
 
 def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
-    filename = getattr(str_or_file, 'name', None)
     _validate_config(data, spack.schema.env.schema)
     ruamel.yaml.dump(data, str_or_file, Dumper=ruamel.yaml.RoundTripDumper,
                      default_flow_style=False)

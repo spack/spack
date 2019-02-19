@@ -225,7 +225,7 @@ class SingleFileScope(ConfigScope):
                 self._raw_data = self._raw_data[key]
 
             for section_key, data in self._raw_data.items():
-                self.sections[section_key] = {section_key : data}
+                self.sections[section_key] = {section_key: data}
 
         return self.sections[section]
 
