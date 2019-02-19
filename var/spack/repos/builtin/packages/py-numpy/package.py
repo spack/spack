@@ -26,6 +26,7 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('1.16.1', 'dafda51934f645d888866f98424521ae')
     version('1.15.2', sha256='27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1')
     version('1.15.1', '898004d5be091fde59ae353e3008fe9b')
     version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
