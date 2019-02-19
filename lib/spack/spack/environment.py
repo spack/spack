@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import shutil
+import tempfile
 
 import ruamel.yaml
 
@@ -308,9 +309,6 @@ def validate(data, filename=None):
     except jsonschema.ValidationError as e:
         raise spack.config.ConfigFormatError(
             e, data, filename, e.instance.lc.line + 1)
-
-
-import tempfile
 
 
 def _validate_config(data, schema):
