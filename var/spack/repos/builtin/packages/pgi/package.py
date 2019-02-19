@@ -56,12 +56,12 @@ class Pgi(Package):
             os.getcwd(), version.up_to(1), version.joined)
         if os.path.is_file(url):
             return "file://" + url
-        
+
         url = "{0}/pgilinux-20{1}-{2}-x86_64.tar.gz".format(
             os.getcwd(), version.up_to(1), version.joined)
         if os.path.is_file(url):
             return "file://" + url
-        
+
         raise RuntimeError("Missing PGI tarball")
 
     def install(self, spec, prefix):
