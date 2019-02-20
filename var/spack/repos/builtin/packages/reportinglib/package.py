@@ -33,7 +33,7 @@ class Reportinglib(CMakePackage):
     homepage = "https://bbpcode.epfl.ch/code/a/sim/reportinglib/bbp"
     url      = "ssh://bbpcode.epfl.ch/sim/reportinglib/bbp"
 
-    version('develop', git=url, preferred=True)
+    version('develop', git=url, tag='2.5.0', preferred=True)
 
     variant('profile', default=False, description="Enable profiling using Tau")
     variant('shared', default=True, description="Build shared library")
