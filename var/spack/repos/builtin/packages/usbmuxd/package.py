@@ -32,4 +32,3 @@ class Usbmuxd(Package):
                   '--disable-silent-rules',
                   '--prefix=%s' % self.spec.prefix)
         make('install')
-
