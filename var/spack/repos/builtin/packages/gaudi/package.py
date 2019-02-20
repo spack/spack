@@ -14,6 +14,7 @@ class Gaudi(CMakePackage):
 
     version('develop', branch='master')
     version('30.5',    commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230')
+    version('31.0',    commit='aeb156f0c40571b5753a9e1dab31e331491b2f3e')
 
     variant('tests', default=False,
             description='Prepare to run the test suite')
