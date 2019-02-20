@@ -30,7 +30,7 @@ class Libplist(Package):
     depends_on('libtool',  when='@master')
 
     def install(self, spec, prefix):
-        if self.spec.satisfies('@master:'):
+        if self.spec.satisfies('@master'):
             autogen = Executable('./autogen.sh')
             autogen()
         configure('--disable-dependency-tracking',
