@@ -21,7 +21,6 @@ class Libusbmuxd(Package):
     depends_on('automake', when='@master')
     depends_on('libtool',  when='@master')
     depends_on('libplist')
-    depends_on('libusb')
     depends_on('pkg-config')
 
     def install(self, spec, prefix):
