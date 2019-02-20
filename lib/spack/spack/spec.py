@@ -729,8 +729,12 @@ def _libs_default_handler(descriptor, spec, cls):
         spec_name = 'lib' + spec_name
 
     # Use a catch-all fallback in case the library name does not match the
-    # package name (as in Intel packages, X11 packages, gettext...).
-    search_names = [spec_name, 'lib*']
+    # package name (as in Intel packages, X11 packages, gettext...). This is
+    # only safe for "internal" spack packages which each get their own prefix:
+    # with external packages, we could end up pulling all of /usr/lib(64)...
+    search_names = [spec_name]
+    if not spec.external:
+        search_names.append('lib*')
 
     # If '+shared' search only for shared library; if '~shared' search only for
     # static library; otherwise, first search for shared and then for static.
