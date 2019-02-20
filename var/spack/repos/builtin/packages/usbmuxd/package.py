@@ -11,7 +11,7 @@ class Usbmuxd(Package):
 
     homepage = "https://www.libimobiledevice.org/"
     url      = "https://www.libimobiledevice.org/downloads/usbmuxd-1.1.0.tar.bz2"
-    git      = "https://cgit.libimobiledevice.org/usbmuxd.git"
+    git      = "https://git.libimobiledevice.org/usbmuxd.git"
 
     version('master', branch='master')
     version('1.1.0',  sha256='3e8948b4fe4250ee5c4bd41ccd1b83c09b8a6f5518a7d131a66fd38bd461b42d')
