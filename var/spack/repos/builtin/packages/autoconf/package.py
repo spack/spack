@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import shutil
 
 class Autoconf(AutotoolsPackage):
     """Autoconf -- system configuration part of autotools"""
@@ -21,6 +22,7 @@ class Autoconf(AutotoolsPackage):
     # needed when autoconf runs, not only when autoconf is built.
     depends_on('m4@1.4.6:', type=('build', 'run'))
     depends_on('perl', type=('build', 'run'))
+#    depends_on('help2man', type=('build'))
 
     build_directory = 'spack-build'
 
@@ -31,20 +33,45 @@ class Autoconf(AutotoolsPackage):
                     '#! /usr/bin/env perl',
                     'bin/autom4te.in')
 
-    def configure(self, spec, prefix):
+#    def configure(self, spec, prefix):
+#        # Intel compiler modules set TMPDIR; and must be loaded for
+#        # Intel compiler to run.  If TMPDIR is set, then the autoconf
+#        # build will use it; but autoconf does not actually create
+#        # TMPDIR.  Autoconf build will crash if TMPDIR has not already
+#        # been created.
+#
+#        print('fffffffffffffffffffff', os.environ['TMPDIR'])
+#        if 'TMPDIR' in os.environ:
+#            try:
+#                print('Creating TMPDIR')
+#                os.makedirs(os.environ['TMPDIR'])
+#                with open('__CREATED_TMPDIR__', 'w') as fout:
+#                    pass
+#                self.created_tmpdir = True
+#            except OSError:
+#                pass   # Already exists
+#
+#        super(Autoconf, self).configure(spec, prefix)
+
+    @run_before('configure')
+    def create_tmpdir(self):
         # Intel compiler modules set TMPDIR; and must be loaded for
         # Intel compiler to run.  If TMPDIR is set, then the autoconf
         # build will use it; but autoconf does not actually create
         # TMPDIR.  Autoconf build will crash if TMPDIR has not already
         # been created.
 
-        if 'TMPDIR' in os.environ:
-            try:
-                os.makedirs(os.environ['TMPDIR'])
-            except OSError:
-                pass   # Already exists
+        if ('TMPDIR' in os.environ) and (not os.path.exists(os.environ['TMPDIR'])):
+            os.makedirs(os.environ['TMPDIR'])
+            with open('__CREATED_TMPDIR__', 'w') as fout:
+                pass
+            self.created_tmpdir = True
 
-        super(Autoconf, self).configure(spec, prefix)
+    @run_after('install')
+    def remove_tmpdir(self):
+        if os.path.exists('__CREATED_TMPDIR__'):
+            shutil.rmtree(os.environ['TMPDIR'], ignore_errors=True)
+            os.remove('__CREATED_TMPDIR__')
 
     @run_after('install')
     def filter_sbang(self):
@@ -57,6 +84,10 @@ class Autoconf(AutotoolsPackage):
                     '#! {0} -w'.format(self.spec['perl'].command.path),
                     self.prefix.bin.autom4te,
                     backup=False)
+
+        # Remove TMPDIR
+
+
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
