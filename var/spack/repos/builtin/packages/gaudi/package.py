@@ -15,8 +15,6 @@ class Gaudi(CMakePackage):
     version('develop', branch='master')
     version('30.5',    commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230')
 
-    patch('use-xenv-master.diff')
-
     variant('tests', default=False,
             description='Prepare to run the test suite')
     variant('optional', default=False,
@@ -30,6 +28,7 @@ class Gaudi(CMakePackage):
     depends_on('intel-tbb')
     depends_on('libuuid')
     depends_on('python@:2.99.99')
+    depends_on('py-xenv@develop_2018-12-20:')
     depends_on('range-v3')
     depends_on('root +python +root7 +ssl +tbb +threads')
     depends_on('zlib')
