@@ -19,7 +19,6 @@ class Libimobiledevice(Package):
     depends_on('autoconf', when='@master')
     depends_on('automake', when='@master')
     depends_on('libtool',  when='@master')
-    depends_on('libxml2',  when='@master')
     depends_on('libplist')
     depends_on('libtasn1')
     depends_on('libusbmuxd')
