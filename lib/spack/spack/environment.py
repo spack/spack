@@ -305,7 +305,8 @@ def all_environments():
 def _validate_config(data, schema):
     t = tempfile.NamedTemporaryFile()
     with open(t.name, 'wb') as f:
-        ruamel.yaml.dump(data, f, Dumper=ruamel.yaml.RoundTripDumper)
+        ruamel.yaml.dump(data, f, Dumper=ruamel.yaml.RoundTripDumper,
+                         encoding='utf-8')
 
     spack.config._read_config_file(t.name, schema)
 
