@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import os
 
 class Autoconf(AutotoolsPackage):
     """Autoconf -- system configuration part of autotools"""
@@ -30,6 +30,21 @@ class Autoconf(AutotoolsPackage):
         filter_file('^#! @PERL@ -w',
                     '#! /usr/bin/env perl',
                     'bin/autom4te.in')
+
+    def configure(self, spec, prefix):
+        # Intel compiler modules set TMPDIR; and must be loaded for
+        # Intel compiler to run.  If TMPDIR is set, then the autoconf
+        # build will use it; but autoconf does not actually create
+        # TMPDIR.  Autoconf build will crash if TMPDIR has not already
+        # been created.
+
+        if 'TMPDIR' in os.environ:
+            try:
+                os.makedirs(os.environ['TMPDIR'])
+            except OSError:
+                pass   # Already exists
+
+        super(Autoconf, self).configure(spec, prefix)
 
     @run_after('install')
     def filter_sbang(self):
