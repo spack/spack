@@ -13,7 +13,7 @@ class PyTns(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/molecularsystems/TNS"
 
     version('develop', branch='master')
-    version('1.0.5', tag='tns-v1.0.5', preferred=True)
+    version('1.0.6', tag='tns-v1.0.6', preferred=True)
 
     depends_on('py-setuptools', type='build')
 
