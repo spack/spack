@@ -17,3 +17,6 @@ class PyJinja2Cli(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-jinja2', type='run')
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        run_env.prepend_path('PATH', self.prefix.bin)
