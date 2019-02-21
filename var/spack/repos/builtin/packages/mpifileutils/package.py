@@ -60,27 +60,28 @@ class Mpifileutils(Package):
     def configure_args_cmake(self):
         args = []
         args.append("-DWITH_DTCMP_PREFIX=%s" % self.spec['dtcmp'].prefix)
-	args.append("-DWITH_LibCircle_PREFIX=%s" % self.spec['libcircle'].prefix)
+        args.append("-DWITH_LibCircle_PREFIX=%s" %
+                    self.spec['libcircle'].prefix)
 
-	if '+xattr' in self.spec:
-	    args.append("-DENABLE_XATTRS=ON")
-	else:
-	    args.append("-DENABLE_XATTRS=OFF")
+        if '+xattr' in self.spec:
+            args.append("-DENABLE_XATTRS=ON")
+        else:
+            args.append("-DENABLE_XATTRS=OFF")
 
-	if '+lustre' in self.spec:
-	    args.append("-DENABLE_LUSTRE=ON")
-	else:
-	    args.append("-DENABLE_LUSTRE=OFF")
+        if '+lustre' in self.spec:
+            args.append("-DENABLE_LUSTRE=ON")
+        else:
+            args.append("-DENABLE_LUSTRE=OFF")
 
         if '+gpfs' in self.spec:
-	    args.append("-DENABLE_GPFS=ON")
-	else:
-	    args.append("-DENABLE_GPFS=OFF")
+            args.append("-DENABLE_GPFS=ON")
+        else:
+            args.append("-DENABLE_GPFS=OFF")
 
-	if '+experimental' in self.spec:
-	    args.append("-DENABLE_EXPERIMENTAL=ON")
-	else:
-	    args.append("-DENABLE_EXPERIMENTAL=OFF")
+        if '+experimental' in self.spec:
+            args.append("-DENABLE_EXPERIMENTAL=ON")
+        else:
+            args.append("-DENABLE_EXPERIMENTAL=OFF")
 
         return args
 
