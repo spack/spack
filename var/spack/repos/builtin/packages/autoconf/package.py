@@ -46,16 +46,16 @@ class Autoconf(AutotoolsPackage):
            (not os.path.exists(os.environ['TMPDIR'])):
             os.makedirs(os.environ['TMPDIR'])
             # Store the fact that we created TMPDIR, so we can remove it later
-            with open('__CREATED_TMPDIR__', 'w'):
+            with open('__SPACK_CREATED_TMPDIR__', 'w'):
                 pass
             self.created_tmpdir = True
 
     @run_after('install')
     def remove_tmpdir(self):
         # Clean up, remove the TMPDIR that we created
-        if os.path.exists('__CREATED_TMPDIR__'):
+        if os.path.exists('__SPACK_CREATED_TMPDIR__'):
             shutil.rmtree(os.environ['TMPDIR'], ignore_errors=True)
-            os.remove('__CREATED_TMPDIR__')
+            os.remove('__SPACK_CREATED_TMPDIR__')
 
     @run_after('install')
     def filter_sbang(self):
