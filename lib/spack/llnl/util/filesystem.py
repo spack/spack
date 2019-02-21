@@ -962,9 +962,30 @@ class HeaderList(FileList):
         super(HeaderList, self).__init__(files)
 
         self._macro_definitions = []
+        self._directories = None
 
     @property
     def directories(self):
+        """Directories to be searched for header files."""
+        values = self._directories or self._default_directories()
+        return list(dedupe(values))
+
+    @directories.setter
+    def directories(self, value):
+        # Accept a single directory as input
+        if isinstance(value, six.string_types):
+            value = [value]
+
+        # Setting the property to None makes the initial default
+        # kick-in again
+        self._directories = None if value is None else [
+            os.path.normpath(x) for x in value
+        ]
+
+    def _default_directories(self):
+        """Default computation of directories based on the list of
+        header files.
+        """
         dir_list = super(HeaderList, self).directories
         values = []
         for d in dir_list:
@@ -973,8 +994,7 @@ class HeaderList(FileList):
             m = self.include_regex.match(d)
             value = os.path.join(*m.group(1, 2)) if m else d
             values.append(value)
-
-        return list(dedupe(values))
+        return values
 
     @property
     def headers(self):

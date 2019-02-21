@@ -251,3 +251,28 @@ def test_computation_of_header_directories(
 ):
     hl = fs.HeaderList(list_of_headers)
     assert hl.directories == expected_directories
+
+
+def test_directories_can_be_set():
+    hl = fs.HeaderList(
+        ['/pfx/include/subdir/foo.h', '/pfx/include/subdir/bar.h']
+    )
+
+    # Set directories using a list
+    hl.directories = ['/pfx/include/subdir']
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # If it's a single directory it's fine to not wrap it into a list
+    # when setting the property
+    hl.directories = '/pfx/include/subdir'
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # Paths are normalized, so it doesn't matter how many backslashes etc.
+    # are present in the original directory being used
+    hl.directories = '/pfx/include//subdir/'
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # Setting the property back to None makes the default computation
+    # kick-in again
+    hl.directories = None
+    assert hl.directories == ['/pfx/include']
