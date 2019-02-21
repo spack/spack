@@ -19,7 +19,6 @@ class CxxstdPackage(PackageBase):
             multi=False,
             description='Use the specified C++ standard when building.')
  
-    @staticmethod
     def cxxstd_to_flag(self):
         flag = ''
         if self.spec.variants['cxxstd'].value == '98':
@@ -36,7 +35,6 @@ class CxxstdPackage(PackageBase):
         else:
             # The user has selected a (new?) legal value that we've
             # forgotten to deal with here.
-            tty.warn("INTERNAL ERROR: cannot accommodate unexpected variant ",
+            tty.die("INTERNAL ERROR: cannot accommodate unexpected variant ",
                     "cxxstd={0}".format(self.spec.variants['cxxstd'].value))
-            pass
         return flag
