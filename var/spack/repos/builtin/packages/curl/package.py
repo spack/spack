@@ -67,7 +67,7 @@ class Curl(AutotoolsPackage):
     conflicts('platform=darwin', when='+libssh')
     conflicts('platform=linux', when='+darwinssl')
 
-    # ================= 
+    # =================
     depends_on('zlib')
     depends_on('cares', when='+cares')
     depends_on('gnutls', when='+gnutls')
