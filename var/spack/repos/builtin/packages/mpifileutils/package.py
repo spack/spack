@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mpifileutils(AutotoolsPackage):
+class Mpifileutils(Package):
     """mpiFileUtils is a suite of MPI-based tools to manage large datasets,
        which may vary from large directory trees to large files.
        High-performance computing users often generate large datasets with
@@ -40,7 +40,7 @@ class Mpifileutils(AutotoolsPackage):
 
     depends_on('libarchive')
 
-    depends_on('cmake@3.1', when='@0.9:', type='build')
+    depends_on('cmake@3.1:', when='@0.9:', type='build')
 
     variant('xattr', default=True,
         description="Enable code for extended attributes")
