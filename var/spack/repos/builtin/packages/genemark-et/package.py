@@ -28,7 +28,7 @@ class GenemarkEt(Package):
         return "file://{0}/gm_et_linux_64.tar.gz".format(os.getcwd())
 
     def patch(self):
-        with working_dir(join_path(self.stage.source_path)):
+        with working_dir(join_path(self.stage.source_path, "gmes_petap")):
             perlscripts = glob.glob('*.pl')
             filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', *perlscripts)
 
@@ -37,7 +37,7 @@ class GenemarkEt(Package):
         mkdirp(prefix.bin.heu_dir)
         with working_dir('gmes_petap'):
             install_tree('lib', prefix.lib)
-            files = glob.iglob('*')
+            files = glob.iglob('*[!~]')
             for file in files:
                 if os.path.isfile(file):
                     install(file, prefix.bin)
