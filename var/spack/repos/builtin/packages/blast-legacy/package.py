@@ -19,6 +19,9 @@ class BlastLegacy(Package):
     depends_on('tcsh', type='build')
 
     def install(self, spec, prefix):
+        filter_file('/bin/csh -f', '/bin/env tcsh', 'make/ln-if-absent',
+                    string=True)
+
         tcsh = which('tcsh')
         with working_dir('..'):
             tcsh('./ncbi/make/makedis.csh')
