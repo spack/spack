@@ -82,7 +82,24 @@ class Mpifileutils(Package):
 	else:
 	    args.append("-DENABLE_EXPERIMENTAL=OFF")
 
-	return args
+        return args
+
+    @when('@0.9:')
+    def install(self, spec, prefix):
+        args = []
+        args.append('-DCMAKE_INSTALL_PREFIX=%s' % prefix)
+        args += self.configure_args_cmake()
+
+        source_directory = self.stage.source_path
+        build_directory = join_path(source_directory, 'build')
+
+        with working_dir(build_directory, create=True):
+            cmake(source_directory, *args)
+            make()
+            make('install')
+
+        if self.run_tests:
+            make('test')
 
     def configure_args_autotools(self):
         args = []
@@ -113,3 +130,16 @@ class Mpifileutils(Package):
             else:
                 args.append('--disable-experimental')
         return args
+
+    @when('@:0.8.1')
+    def install(self, spec, prefix):
+        args = []
+        args.append('--prefix=%s' % prefix)
+        args += self.configure_args_autotools()
+
+        configure(*args)
+        make()
+        make('install')
+
+        if self.run_tests:
+            make('test')
