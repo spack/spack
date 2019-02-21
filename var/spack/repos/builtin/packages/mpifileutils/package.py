@@ -17,10 +17,11 @@ class Mpifileutils(AutotoolsPackage):
        for such datasets, providing speedups of up to 20-30x."""
 
     homepage = "https://github.com/hpc/mpifileutils"
-    url      = "https://github.com/hpc/mpifileutils/releases/download/v0.6/mpifileutils-0.6.tar.gz"
+    url      = "https://github.com/hpc/mpifileutils/archive/v0.9.tar.gz"
     git      = "https://github.com/hpc/mpifileutils.git"
 
     version('develop', branch='master')
+    version('0.9', sha256='1b8250af01aae91c985ca5d61521bfaa4564e46efa15cee65cd0f82cf5a2bcfb')
     version('0.8.1', 'acbd5b5c15919a67392509614bb7871e')
     version('0.8', '1082600e7ac4e6b2c13d91bbec40cffb')
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
@@ -30,14 +31,16 @@ class Mpifileutils(AutotoolsPackage):
 
     depends_on('mpi')
     depends_on('libcircle')
-    depends_on('lwgrp')
 
     # need precise version of dtcmp, since DTCMP_Segmented_exscan added
     # in v1.0.3 but renamed in v1.1.0 and later
     depends_on('dtcmp@1.0.3',  when='@:0.7')
     depends_on('dtcmp@1.1.0:', when='@0.8:')
+    #depends_on('lwgrp')
 
     depends_on('libarchive')
+
+    depends_on('cmake@3.1', when='@0.9:', type='build')
 
     variant('xattr', default=True,
         description="Enable code for extended attributes")
@@ -47,11 +50,41 @@ class Mpifileutils(AutotoolsPackage):
 
     variant('experimental', default=False,
         description="Install experimental tools")
-
-    # --enable-experimental fails with v0.6 and earlier
     conflicts('+experimental', when='@:0.6')
 
-    def configure_args(self):
+    variant('gpfs', default=False,
+        description="Enable optimizations and features for GPFS")
+    conflicts('+gpfs', when='@:0.8.1')
+
+
+    def configure_args_cmake(self):
+        args = []
+        args.append("-DWITH_DTCMP_PREFIX=%s" % self.spec['dtcmp'].prefix)
+	args.append("-DWITH_LibCircle_PREFIX=%s" % self.spec['libcircle'].prefix)
+
+	if '+xattr' in self.spec:
+	    args.append("-DENABLE_XATTRS=ON")
+	else:
+	    args.append("-DENABLE_XATTRS=OFF")
+
+	if '+lustre' in self.spec:
+	    args.append("-DENABLE_LUSTRE=ON")
+	else:
+	    args.append("-DENABLE_LUSTRE=OFF")
+
+        if '+gpfs' in self.spec:
+	    args.append("-DENABLE_GPFS=ON")
+	else:
+	    args.append("-DENABLE_GPFS=OFF")
+
+	if '+experimental' in self.spec:
+	    args.append("-DENABLE_EXPERIMENTAL=ON")
+	else:
+	    args.append("-DENABLE_EXPERIMENTAL=OFF")
+
+	return args
+
+    def configure_args_autotools(self):
         args = []
         args.append("CPPFLAGS=-I%s/src/common" % pwd())
         args.append("libarchive_CFLAGS=-I%s"
