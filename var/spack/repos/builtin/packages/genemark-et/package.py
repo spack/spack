@@ -27,6 +27,11 @@ class GenemarkEt(Package):
     def url_for_version(self, version):
         return "file://{0}/gm_et_linux_64.tar.gz".format(os.getcwd())
 
+    def patch(self):
+        with working_dir(join_path(self.stage.source_path)):
+            perlscripts = glob.glob('*.pl')
+            filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', *perlscripts)
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.bin.heu_dir)
