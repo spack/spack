@@ -33,11 +33,30 @@ class Curl(AutotoolsPackage):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
-    variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
-    variant('libssh2',    default=False, description='enable libssh2 support')
-    variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
-    variant('darwinssl',  default=sys.platform == 'darwin', description="use Apple's SSL/TLS implementation")
+    # =================== Variants for Optional Dependencies
+    # http://www.linuxfromscratch.org/blfs/view/cvs/basicnet/curl.html
 
+    # c-ares: A C library for asynchronous DNS requests
+    variant('cares', default=False, description='Use c-cares library')
+    # GnuTLS is a secure communications library implementing the SSL,
+    # TLS and DTLS protocols and technologies around them.
+    variant('gnutls', default=False, description='Use GNU TLS library')
+    # libssh: the SSH library"""
+    variant('libssh',     default=False, description='use libssh library')  # , when='7.58:')
+    # libssh2 is a client-side C library implementing the SSH2 protocol
+    variant('libssh2',    default=True, description='use libssh2 library')
+    # nghttp2 is an implementation of HTTP/2 and its header
+    # compression algorithm HPACK in C.
+    variant('nghttp2',    default=False, description='use nghttp2 library (requires C++11)')
+
+    # mbed TLS (formerly known as PolarSSL) makes it trivially easy
+    # for developers to include cryptographic and SSL/TLS capabilities
+    variant('mbedtls', default=False, description='Use mbed TLS library')
+
+    variant('darwinssl',  default=sys.platform == 'darwin',
+            description="use Apple's SSL/TLS implementation")
+
+    # ================ Conflicts
     conflicts('+libssh', when='@:7.57.99')
     # on OSX and --with-ssh the configure steps fails with
     # one or more libs available at link-time are not available run-time
@@ -48,22 +67,45 @@ class Curl(AutotoolsPackage):
     conflicts('platform=darwin', when='+libssh')
     conflicts('platform=linux', when='+darwinssl')
 
-    depends_on('openssl', when='~darwinssl')
+    # ================= 
     depends_on('zlib')
-    depends_on('nghttp2', when='+nghttp2')
-    depends_on('libssh2', when='+libssh2')
+    depends_on('cares', when='+cares')
+    depends_on('gnutls', when='+gnutls')
     depends_on('libssh', when='+libssh')
+    depends_on('libssh2', when='+libssh2')
+    depends_on('nghttp2', when='+nghttp2')
+    depends_on('mbedtls', when='+mbedtls')
+    depends_on('openssl', when='~darwinssl')
 
     def configure_args(self):
         spec = self.spec
 
-        args = ['--with-zlib={0}'.format(spec['zlib'].prefix)]
+        args = []
+
+        # Same order as ./configure --help
+        args += ['--with-zlib={0}'.format(spec['zlib'].prefix)]
+        args.append('--without-brotli')
+        args += ['--disable-ldap', '--disable-ldaps']
+        args.append('--without-winssl')
+
         if spec.satisfies('+darwinssl'):
             args.append('--with-darwinssl')
         else:
             args.append('--with-ssl={0}'.format(spec['openssl'].prefix))
 
-        args += self.with_or_without('nghttp2')
+        args += self.with_or_without('gnutls')
+        args.append('--without-polarssl')
+        args += self.with_or_without('mbedtls')
+        args.append('--without-cyassl')
+        args.append('--without-wolfssl')
+        args.append('--without-nss')
+        args.append('--without-axtls')
+        args.append('--without-libmetalink')
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
+        args.append('--without-librtmp')
+        args.append('--without-winidn')
+        args.append('--without-libidn2')
+        args += self.with_or_without('nghttp2')
+
         return args
