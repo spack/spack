@@ -16,6 +16,7 @@ class Automake(AutotoolsPackage):
     version('1.15.1', '95df3f2d6eb8f81e70b8cb63a93c8853')
     version('1.15',   '716946a105ca228ab545fc37a70df3a3')
     version('1.14.1', 'd052a3e884631b9c7892f2efce542d75')
+    version('1.13.4', '4c93abc0bff54b296f41f92dd3aa1e73e554265a6f719df465574983ef6f878c')
     version('1.11.6', '0286dc30295b62985ca51919202ecfcc')
 
     depends_on('autoconf', type='build')
