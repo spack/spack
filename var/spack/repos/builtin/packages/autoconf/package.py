@@ -7,6 +7,7 @@ from spack import *
 import os
 import shutil
 
+
 class Autoconf(AutotoolsPackage):
     """Autoconf -- system configuration part of autotools"""
 
@@ -41,10 +42,11 @@ class Autoconf(AutotoolsPackage):
         # TMPDIR.  Autoconf build will crash if TMPDIR has not already
         # been created.
 
-        if ('TMPDIR' in os.environ) and (not os.path.exists(os.environ['TMPDIR'])):
+        if ('TMPDIR' in os.environ) and \
+           (not os.path.exists(os.environ['TMPDIR'])):
             os.makedirs(os.environ['TMPDIR'])
             # Store the fact that we created TMPDIR, so we can remove it later
-            with open('__CREATED_TMPDIR__', 'w') as fout:
+            with open('__CREATED_TMPDIR__', 'w'):
                 pass
             self.created_tmpdir = True
 
@@ -68,8 +70,6 @@ class Autoconf(AutotoolsPackage):
                     backup=False)
 
         # Remove TMPDIR
-
-
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
