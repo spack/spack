@@ -315,11 +315,13 @@ class Gcc(AutotoolsPackage):
 
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
-    @when('+nvptx')
     @run_before('configure')
     def nvptx_install(self):
         spec = self.spec
         prefix = self.prefix
+
+        if not spec.satisfies('+nvptx'):
+            return
 
         # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
         guess = Executable('./config.guess')
