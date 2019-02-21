@@ -22,7 +22,7 @@ class Autoconf(AutotoolsPackage):
     # needed when autoconf runs, not only when autoconf is built.
     depends_on('m4@1.4.6:', type=('build', 'run'))
     depends_on('perl', type=('build', 'run'))
-#    depends_on('help2man', type=('build'))
+    # depends_on('help2man', type=('build'))   # Optional dependency
 
     build_directory = 'spack-build'
 
@@ -32,26 +32,6 @@ class Autoconf(AutotoolsPackage):
         filter_file('^#! @PERL@ -w',
                     '#! /usr/bin/env perl',
                     'bin/autom4te.in')
-
-#    def configure(self, spec, prefix):
-#        # Intel compiler modules set TMPDIR; and must be loaded for
-#        # Intel compiler to run.  If TMPDIR is set, then the autoconf
-#        # build will use it; but autoconf does not actually create
-#        # TMPDIR.  Autoconf build will crash if TMPDIR has not already
-#        # been created.
-#
-#        print('fffffffffffffffffffff', os.environ['TMPDIR'])
-#        if 'TMPDIR' in os.environ:
-#            try:
-#                print('Creating TMPDIR')
-#                os.makedirs(os.environ['TMPDIR'])
-#                with open('__CREATED_TMPDIR__', 'w') as fout:
-#                    pass
-#                self.created_tmpdir = True
-#            except OSError:
-#                pass   # Already exists
-#
-#        super(Autoconf, self).configure(spec, prefix)
 
     @run_before('configure')
     def create_tmpdir(self):
@@ -63,12 +43,14 @@ class Autoconf(AutotoolsPackage):
 
         if ('TMPDIR' in os.environ) and (not os.path.exists(os.environ['TMPDIR'])):
             os.makedirs(os.environ['TMPDIR'])
+            # Store the fact that we created TMPDIR, so we can remove it later
             with open('__CREATED_TMPDIR__', 'w') as fout:
                 pass
             self.created_tmpdir = True
 
     @run_after('install')
     def remove_tmpdir(self):
+        # Clean up, remove the TMPDIR that we created
         if os.path.exists('__CREATED_TMPDIR__'):
             shutil.rmtree(os.environ['TMPDIR'], ignore_errors=True)
             os.remove('__CREATED_TMPDIR__')
