@@ -320,56 +320,57 @@ class Gcc(AutotoolsPackage):
         spec = self.spec
         prefix = self.prefix
 
-        if spec.satisfies('+nvptx'):
+        if not spec.satisfies('+nvptx'):
+            return
 
-            # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
-            guess = Executable('./config.guess')
-            targetguess = guess(output=str).rstrip('\n')
+        # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
+        guess = Executable('./config.guess')
+        targetguess = guess(output=str).rstrip('\n')
 
-            options = getattr(self, 'configure_flag_args', [])
-            options += ['--prefix={0}'.format(prefix)]
+        options = getattr(self, 'configure_flag_args', [])
+        options += ['--prefix={0}'.format(prefix)]
 
-            options += [
-                '--with-cuda-driver-include={0}'.format(
-                    spec['cuda'].prefix.include),
-                '--with-cuda-driver-lib={0}'.format(
-                    spec['cuda'].libs.directories[0]),
-            ]
+        options += [
+            '--with-cuda-driver-include={0}'.format(
+                spec['cuda'].prefix.include),
+            '--with-cuda-driver-lib={0}'.format(
+                spec['cuda'].libs.directories[0]),
+        ]
 
-            with working_dir('nvptx-tools'):
-                configure = Executable("./configure")
-                configure(*options)
-                make()
-                make('install')
+        with working_dir('nvptx-tools'):
+            configure = Executable("./configure")
+            configure(*options)
+            make()
+            make('install')
 
-            pattern = join_path(self.stage.source_path, 'newlibsource', '*')
-            files = glob.glob(pattern)
+        pattern = join_path(self.stage.source_path, 'newlibsource', '*')
+        files = glob.glob(pattern)
 
-            if files:
-                symlink(join_path(files[0], 'newlib'), 'newlib')
+        if files:
+            symlink(join_path(files[0], 'newlib'), 'newlib')
 
-            # self.build_directory = 'spack-build-nvptx'
-            with working_dir('spack-build-nvptx', create=True):
+        # self.build_directory = 'spack-build-nvptx'
+        with working_dir('spack-build-nvptx', create=True):
 
-                options = ['--prefix={0}'.format(prefix),
-                           '--enable-languages={0}'.format(
-                           ','.join(spec.variants['languages'].value)),
-                           '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-                           '--with-gmp={0}'.format(spec['gmp'].prefix),
-                           '--target=nvptx-none',
-                           '--with-build-time-tools={0}'.format(
-                               join_path(prefix,
-                                         'nvptx-none', 'bin')),
-                           '--enable-as-accelerator-for={0}'.format(
-                               targetguess),
-                           '--disable-sjlj-exceptions',
-                           '--enable-newlib-io-long-long',
-                           ]
+            options = ['--prefix={0}'.format(prefix),
+                       '--enable-languages={0}'.format(
+                       ','.join(spec.variants['languages'].value)),
+                       '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+                       '--with-gmp={0}'.format(spec['gmp'].prefix),
+                       '--target=nvptx-none',
+                       '--with-build-time-tools={0}'.format(
+                           join_path(prefix,
+                                     'nvptx-none', 'bin')),
+                       '--enable-as-accelerator-for={0}'.format(
+                           targetguess),
+                       '--disable-sjlj-exceptions',
+                       '--enable-newlib-io-long-long',
+                       ]
 
-                configure = Executable("../configure")
-                configure(*options)
-                make()
-                make('install')
+            configure = Executable("../configure")
+            configure(*options)
+            make()
+            make('install')
 
     @property
     def build_targets(self):
