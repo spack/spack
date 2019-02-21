@@ -257,7 +257,8 @@ class CMakePackage(PackageBase):
         with open(fname, 'w') as fout:
             self._write_spconfig(fout, dirty)
             fout.write('\nproc = subprocess.Popen(cmd, env=env)\n'
-                       'proc.wait()\n')
+                       'proc.wait()\n'
+                       'sys.exit(proc.returncode)\n')
 
         set_executable(fname)
         return fname
