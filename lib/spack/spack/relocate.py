@@ -328,7 +328,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
             if (not allow_root and
                 old_dir != new_dir and
                 strings_contains_installroot(path_name, old_dir)):
-                    raise InstallRootStringException(path_name, old_dir)
+                raise InstallRootStringException(path_name, old_dir)
 
     elif platform.system() == 'Linux':
         for path_name in path_names:
@@ -347,7 +347,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                 if (not allow_root and
                     old_dir != new_dir and
                     strings_contains_installroot(path_name, old_dir)):
-                        raise InstallRootStringException(path_name, old_dir)
+                    raise InstallRootStringException(path_name, old_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
@@ -380,7 +380,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
                 strings_contains_installroot(cur_path)):
-                    raise InstallRootStringException(cur_path)
+                raise InstallRootStringException(cur_path)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -390,7 +390,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
                 modify_elf_object(cur_path, new_rpaths)
                 if (not allow_root and
                     strings_contains_installroot(cur_path, old_dir)):
-                        raise InstallRootStringException(cur_path, old_dir)
+                    raise InstallRootStringException(cur_path, old_dir)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
@@ -499,7 +499,7 @@ def is_relocatable(spec):
 
     if spec.external or spec.virtual:
         return False
- 
+
     # Explore the installation prefix of the spec
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in ('.spack', 'man')]
