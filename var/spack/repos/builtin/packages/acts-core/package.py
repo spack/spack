@@ -36,7 +36,7 @@ class ActsCore(CMakePackage):
     version('0.8.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9')  # Used by acts-framework
     version('0.8.1', commit='289bdcc320f0b3ff1d792e29e462ec2d3ea15df6')
 
-    variant('legacy', default=True, description='Build the Legacy package')
+    variant('legacy', default=False, description='Build the Legacy package')
     variant('examples', default=False, description='Build the examples')
     variant('tests', default=False, description='Build the unit tests')
     variant('integration_tests', default=False, description='Build the integration tests')
