@@ -525,8 +525,10 @@ def file_is_relocatable(file):
 
         ValueError: if the file does not exist or the path is not absolute
     """
-    if platform.system().lower() != 'linux':
-        msg = 'function currently implemented only for linux'
+
+    if not (platform.system().lower() == 'darwin'
+            or platform.system().lower() == 'linux'):
+        msg = 'function currently implemented only for linux and macOS'
         raise NotImplementedError(msg)
 
     if not os.path.exists(file):
@@ -544,9 +546,18 @@ def file_is_relocatable(file):
     m_type, m_subtype = mime_type(file)
     if m_type == 'application':
         tty.debug('{0},{1}'.format(m_type, m_subtype))
+
+    if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
             rpaths = patchelf('--print-rpath', file, output=str).strip()
             set_of_strings.discard(rpaths.strip())
+    if platform.system().lower() == 'darwin':
+        if m_subtype == 'x-mach-binary':
+            rpaths, deps, idpath  = macho_get_paths(file)
+            set_of_strings.discard(set(rpaths))
+            set_of_strings.discard(set(deps))
+            if idpath is not None:
+                set_of_strings.discard(idpath)
 
     if any(spack.store.layout.root in x for x in set_of_strings):
         # One binary has the root folder not in the RPATH,
