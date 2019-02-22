@@ -88,6 +88,12 @@ class QuantumEspresso(Package):
         msg='parallel HDF5 requires MPI support'
     )
 
+    conflicts(
+        'hdf5=serial',
+        when='~mpi @6.1:6.3',
+        msg='serial HDF5 in serial QE only works in develop version'
+    )
+
     # Elpa is formally supported by @:5.4.0, but QE configure searches
     # for it in the wrong folders (or tries to download it within
     # the build directory). Instead of patching Elpa to provide the
@@ -216,13 +222,14 @@ class QuantumEspresso(Package):
             filter_file(r'HDF5_LIB([\s]*)=([\s\w\-\/.,]*)',
                         'HDF5_LIB = {0}'.format(hdf5_libs),
                         make_inc)
-            if self.spec.variants['hdf5'].value == 'serial':
-                # Note that there is a benign side effect with this filter
-                # file statement. It replaces an instance of MANUAL_DFLAGS
-                # that is a comment in make.inc.
-                filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)',
-                            'MANUAL_DFLAGS = -D__HDF5_SERIAL',
-                            make_inc)
+            if spec.variants['hdf5'].value == 'serial':
+                if '+mpi' or '@develop' in spec:
+                    # Note that there is a benign side effect with the
+                    # first filter file statement. It replaces an instance
+                    # of MANUAL_DFLAGS that is a comment in make.inc.
+                    filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)'
+                                'MANUAL_DFLAGS = -D__HDF5_SERIAL',
+                                make_inc)
 
         make('all')
 
