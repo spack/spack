@@ -9,8 +9,9 @@ import platform
 import re
 import spack.repo
 import spack.cmd
+import llnl.util.lang
+import llnl.util.filesystem as fs
 from spack.util.executable import Executable, ProcessError
-from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
 
@@ -18,7 +19,6 @@ class InstallRootStringException(spack.error.SpackError):
     """
     Raised when the relocated binary still has the install root string.
     """
-
     def __init__(self, file_path, root_path):
         super(InstallRootStringException, self).__init__(
             "\n %s \ncontains string\n %s \n"
@@ -339,8 +339,8 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root, prefix):
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
                     old_dir != new_dir and
-                        strings_contains_installroot(path_name, prefix)):
-                    raise InstallRootStringException(path_name, prefix)
+                    strings_contains_installroot(path_name, old_dir)):
+                    raise InstallRootStringException(path_name, old_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
@@ -372,7 +372,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
-                    strings_contains_installroot(cur_path)):
+                strings_contains_installroot(cur_path)):
                 raise InstallRootStringException(cur_path)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
@@ -464,8 +464,7 @@ def relocate_text(path_names, old_dir, new_dir):
     """
     Replace old path with new path in text file path_name
     """
-    filter_file('%s' % old_dir, '%s' % new_dir,
-                *path_names, backup=False)
+    fs.filter_file('%s' % old_dir, '%s' % new_dir, *path_names, backup=False)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
@@ -477,3 +476,127 @@ def substitute_rpath(orig_rpath, topdir, new_root_path):
         new_rpath = path.replace(topdir, new_root_path)
         new_rpaths.append(new_rpath)
     return new_rpaths
+
+
+def is_relocatable(spec):
+    """Returns True if an installed spec is relocatable.
+
+    Args:
+        spec (Spec): spec to be analyzed
+
+    Returns:
+        True if the binaries of an installed spec
+        are relocatable and False otherwise.
+
+    Raises:
+        ValueError: if the spec is not installed
+    """
+    if not spec.install_status():
+        raise ValueError('spec is not installed [{0}]'.format(str(spec)))
+
+    if spec.external or spec.virtual:
+        return False
+
+    # Explore the installation prefix of the spec
+    for root, dirs, files in os.walk(spec.prefix, topdown=True):
+        dirs[:] = [d for d in dirs if d not in ('.spack', 'man')]
+        abs_files = [os.path.join(root, f) for f in files]
+        if not all(file_is_relocatable(f) for f in abs_files if is_binary(f)):
+            # If any of the file is not relocatable, the entire
+            # package is not relocatable
+            return False
+
+    return True
+
+
+def file_is_relocatable(file):
+    """Returns True if the file passed as argument is relocatable.
+
+    Args:
+        file: absolute path of the file to be analyzed
+
+    Returns:
+        True or false
+
+    Raises:
+
+        ValueError: if the file does not exist or the path is not absolute
+    """
+
+    if not (platform.system().lower() == 'darwin'
+            or platform.system().lower() == 'linux'):
+        msg = 'function currently implemented only for linux and macOS'
+        raise NotImplementedError(msg)
+
+    if not os.path.exists(file):
+        raise ValueError('{0} does not exist'.format(file))
+
+    if not os.path.isabs(file):
+        raise ValueError('{0} is not an absolute path'.format(file))
+
+    strings = Executable('strings')
+    patchelf = Executable('patchelf')
+
+    # Remove the RPATHS from the strings in the executable
+    set_of_strings = set(strings(file, output=str).split())
+
+    m_type, m_subtype = mime_type(file)
+    if m_type == 'application':
+        tty.debug('{0},{1}'.format(m_type, m_subtype))
+
+    if platform.system().lower() == 'linux':
+        if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
+            rpaths = patchelf('--print-rpath', file, output=str).strip()
+            set_of_strings.discard(rpaths.strip())
+    if platform.system().lower() == 'darwin':
+        if m_subtype == 'x-mach-binary':
+            rpaths, deps, idpath  = macho_get_paths(file)
+            set_of_strings.discard(set(rpaths))
+            set_of_strings.discard(set(deps))
+            if idpath is not None:
+                set_of_strings.discard(idpath)
+
+    if any(spack.store.layout.root in x for x in set_of_strings):
+        # One binary has the root folder not in the RPATH,
+        # meaning that this spec is not relocatable
+        msg = 'Found "{0}" in {1} strings'
+        tty.debug(msg.format(spack.store.layout.root, file))
+        return False
+
+    return True
+
+
+def is_binary(file):
+    """Returns true if a file is binary, False otherwise
+
+    Args:
+        file: file to be tested
+
+    Returns:
+        True or False
+    """
+    m_type, _ = mime_type(file)
+
+    msg = '[{0}] -> '.format(file)
+    if m_type == 'application':
+        tty.debug(msg + 'BINARY FILE')
+        return True
+
+    tty.debug(msg + 'TEXT FILE')
+    return False
+
+
+@llnl.util.lang.memoized
+def mime_type(file):
+    """Returns the mime type and subtype of a file.
+
+    Args:
+        file: file to be analyzed
+
+    Returns:
+        Tuple containing the MIME type and subtype
+    """
+    file_cmd = Executable('file')
+    output = file_cmd('-b', '--mime-type', file, output=str, error=str)
+    tty.debug('[MIME_TYPE] {0} -> {1}'.format(file, output.strip()))
+    return tuple(output.strip().split('/'))

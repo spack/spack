@@ -13,6 +13,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.spec
 
 description = "show what would be installed, given a spec"
 section = "build"
@@ -42,11 +43,14 @@ def setup_parser(subparser):
 
 def spec(parser, args):
     name_fmt = '$.' if args.namespaces else '$_'
-    kwargs = {'cover': args.cover,
-              'format': name_fmt + '$@$%@+$+$=',
-              'hashlen': None if args.very_long else 7,
-              'show_types': args.types,
-              'install_status': args.install_status}
+    install_status_fn = spack.spec.Spec.install_status
+    kwargs = {
+        'cover': args.cover,
+        'format': name_fmt + '$@$%@+$+$=',
+        'hashlen': None if args.very_long else 7,
+        'show_types': args.types,
+        'status_fn': install_status_fn if args.install_status else None
+    }
 
     if not args.specs:
         tty.die("spack spec requires at least one spec")
