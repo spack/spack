@@ -4,21 +4,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import PackageBase
-from spack.directives import depends_on, variant, conflicts
-
-import spack.variant
+import llnl.util.tty as tty
+from spack.directives import variant
 
 
 class CxxstdPackage(PackageBase):
-    """Auxiliary class which contains cxxstd variant, dependencies and conflicts
-    and is meant to unify and facilitate its usage.
+    """Auxiliary class which contains cxxstd variant, dependencies and
+    conflicts and is meant to unify and facilitate its usage.
     """
     variant('cxxstd',
             default='default',
             values=('default', '98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
- 
+
     def cxxstd_to_flag(self):
         flag = ''
         if self.spec.variants['cxxstd'].value == '98':
