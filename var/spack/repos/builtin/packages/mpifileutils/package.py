@@ -36,7 +36,6 @@ class Mpifileutils(Package):
     # in v1.0.3 but renamed in v1.1.0 and later
     depends_on('dtcmp@1.0.3',  when='@:0.7')
     depends_on('dtcmp@1.1.0:', when='@0.8:')
-    # depends_on('lwgrp')
 
     depends_on('libarchive')
 
@@ -56,8 +55,9 @@ class Mpifileutils(Package):
         description="Enable optimizations and features for GPFS")
     conflicts('+gpfs', when='@:0.8.1')
 
-    def configure_args_cmake(self):
-        args = []
+    def cmake_args(self):
+        args = std_cmake_args
+        args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.spec.prefix)
         args.append("-DWITH_DTCMP_PREFIX=%s" % self.spec['dtcmp'].prefix)
         args.append("-DWITH_LibCircle_PREFIX=%s" %
                     self.spec['libcircle'].prefix)
@@ -86,9 +86,7 @@ class Mpifileutils(Package):
 
     @when('@0.9:')
     def install(self, spec, prefix):
-        args = []
-        args.append('-DCMAKE_INSTALL_PREFIX=%s' % prefix)
-        args += self.configure_args_cmake()
+        args = self.cmake_args()
 
         source_directory = self.stage.source_path
         build_directory = join_path(source_directory, 'build')
@@ -101,8 +99,9 @@ class Mpifileutils(Package):
         if self.run_tests:
             make('test')
 
-    def configure_args_autotools(self):
+    def configure_args(self):
         args = []
+        args.append('--prefix=%s' % self.spec.prefix)
         args.append("CPPFLAGS=-I%s/src/common" % pwd())
         args.append("libarchive_CFLAGS=-I%s"
                     % self.spec['libarchive'].prefix.include)
@@ -133,9 +132,7 @@ class Mpifileutils(Package):
 
     @when('@:0.8.1')
     def install(self, spec, prefix):
-        args = []
-        args.append('--prefix=%s' % prefix)
-        args += self.configure_args_autotools()
+        args = self.configure_args()
 
         configure(*args)
         make()
