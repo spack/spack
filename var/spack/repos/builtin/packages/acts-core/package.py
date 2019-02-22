@@ -36,15 +36,19 @@ class ActsCore(CMakePackage):
     version('0.8.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9')  # Used by acts-framework
     version('0.8.1', commit='289bdcc320f0b3ff1d792e29e462ec2d3ea15df6')
 
+    # Variants that affect the core ACTS library
     variant('legacy', default=False, description='Build the Legacy package')
     variant('examples', default=False, description='Build the examples')
     variant('tests', default=False, description='Build the unit tests')
     variant('integration_tests', default=False, description='Build the integration tests')
+
+    # Variants the enable / disable ACTS plugins
     variant('digitization', default=False, description='Build the geometric digitization plugin')
     variant('dd4hep', default=False, description='Build the DD4hep plugin')
-    variant('tgeo', default=False, description='Build the TGeo plugin')
-    variant('json', default=False, description='Build the Json plugin for Json geometry input/output')
+    variant('identification', default=False, description='Build the Identification plugin')
+    variant('json', default=False, description='Build the Json plugin')
     variant('material', default=False, description='Build the material plugin')
+    variant('tgeo', default=False, description='Build the TGeo plugin')
 
     depends_on('cmake @3.7:', type='build')
     depends_on('boost @1.62: +program_options +test')
@@ -69,8 +73,9 @@ class ActsCore(CMakePackage):
             cmake_variant("INTEGRATION_TESTS", "integration_tests"),
             cmake_variant("DIGITIZATION_PLUGIN", "digitization"),
             cmake_variant("DD4HEP_PLUGIN", "dd4hep"),
-            cmake_variant("TGEO_PLUGIN", "tgeo"),
+            cmake_variant("IDENTIFICATION", "identification"),
             cmake_variant("JSON_PLUGIN", "json"),
-            cmake_variant("MATERIAL_PLUGIN", "material")
+            cmake_variant("MATERIAL_PLUGIN", "material"),
+            cmake_variant("TGEO_PLUGIN", "tgeo")
         ]
         return args
