@@ -219,10 +219,12 @@ def test_move_transaction_rollback(tmpdir):
 
 @pytest.mark.regression('10601')
 @pytest.mark.regression('10603')
-def test_recursive_search_of_headers_from_prefix(tmp_installation_dir):
+def test_recursive_search_of_headers_from_prefix(
+        installation_dir_with_headers
+):
     # Try to inspect recursively from <prefix> and ensure we don't get
     # subdirectories of the '<prefix>/include' path
-    prefix = str(tmp_installation_dir)
+    prefix = str(installation_dir_with_headers)
     header_list = fs.find_headers('*', root=prefix, recursive=True)
 
     # Check that the header files we expect are all listed
@@ -253,7 +255,7 @@ def test_computation_of_header_directories(
     assert hl.directories == expected_directories
 
 
-def test_directories_can_be_set():
+def test_headers_directory_setter():
     hl = fs.HeaderList(
         ['/pfx/include/subdir/foo.h', '/pfx/include/subdir/bar.h']
     )
@@ -271,6 +273,10 @@ def test_directories_can_be_set():
     # are present in the original directory being used
     hl.directories = '/pfx/include//subdir/'
     assert hl.directories == ['/pfx/include/subdir']
+
+    # Setting an empty list is allowed and returns an empty list
+    hl.directories = []
+    assert hl.directories == []
 
     # Setting the property back to None makes the default computation
     # kick-in again

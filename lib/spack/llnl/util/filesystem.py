@@ -967,7 +967,9 @@ class HeaderList(FileList):
     @property
     def directories(self):
         """Directories to be searched for header files."""
-        values = self._directories or self._default_directories()
+        values = self._directories
+        if values is None:
+            values = self._default_directories()
         return list(dedupe(values))
 
     @directories.setter

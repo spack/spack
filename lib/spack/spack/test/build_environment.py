@@ -221,7 +221,9 @@ def test_package_inheritance_module_setup(config, mock_packages):
 
 
 def test_set_build_environment_variables(
-        config, mock_packages, working_env, monkeypatch, tmp_installation_dir):
+        config, mock_packages, working_env, monkeypatch,
+        installation_dir_with_headers
+):
     """Check that build_environment supplies the needed library/include
     directories via the SPACK_LINK_DIRS and SPACK_INCLUDE_DIRS environment
     variables.
@@ -239,7 +241,7 @@ def test_set_build_environment_variables(
     dep_libs = LibraryList(dep_lib_paths)
 
     dep2_pkg = root['dt-diamond-right'].package
-    dep2_pkg.spec.prefix = str(tmp_installation_dir)
+    dep2_pkg.spec.prefix = str(installation_dir_with_headers)
 
     setattr(dep_pkg, 'libs', dep_libs)
     try:
@@ -269,7 +271,7 @@ def test_set_build_environment_variables(
 
         # The default implementation looks for header files only
         # in <prefix>/include and subdirectories
-        prefix = str(tmp_installation_dir)
+        prefix = str(installation_dir_with_headers)
         include_dirs = normpaths(header_dir_var.split(':'))
 
         assert os.path.join(prefix, 'include') in include_dirs

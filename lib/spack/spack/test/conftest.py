@@ -717,7 +717,11 @@ def mutable_mock_env_path(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def tmp_installation_dir(tmpdir_factory):
+def installation_dir_with_headers(tmpdir_factory):
+    """Mock installation tree with a few headers placed in different
+    subdirectories. Shouldn't be modified by tests as it is session
+    scoped.
+    """
     root = tmpdir_factory.mktemp('prefix')
 
     # Create a few header files:
