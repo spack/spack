@@ -32,10 +32,25 @@ class Pumi(CMakePackage):
     variant('shared', default=False, description='Build shared libraries')
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
+    variant('simmodsuite', default='none',
+        values=('none', 'base', 'kernels', 'full'),
+        description="Enable Simmetrix SimModSuite Support: 'base' enables "
+        "the minimum set of functionality, 'kernels' adds CAD kernel support "
+        "to 'base', and 'full' enables all functionality.")
 
     depends_on('mpi')
     depends_on('cmake@3:', type='build')
     depends_on('zoltan', when='+zoltan')
+    simbase = "+base"
+    simkernels = simbase + "+parasolid+acis+discrete"
+    simfull = simkernels + "+abstract+adv+advmodel\
+                            +import+paralleladapt+parallelmesh"
+    depends_on('simmetrix-simmodsuite' + simbase,
+        when='simmodsuite=base')
+    depends_on('simmetrix-simmodsuite' + simkernels,
+        when='simmodsuite=kernels')
+    depends_on('simmetrix-simmodsuite' + simfull,
+        when='simmodsuite=full')
 
     def cmake_args(self):
         spec = self.spec
@@ -50,5 +65,14 @@ class Pumi(CMakePackage):
             '-DPUMI_FORTRAN_INTERFACE=%s' %
             ('ON' if '+fortran' in spec else 'OFF')
         ]
-
+        if self.spec.satisfies('simmodsuite=base'):
+            args.append('-DENABLE_SIMMETRIX=ON')
+        if self.spec.satisfies('simmodsuite=kernels') or \
+           self.spec.satisfies('simmodsuite=full'):
+            args.append('-DENABLE_SIMMETRIX=ON')
+            args.append('-DSIM_PARASOLID=ON')
+            args.append('-DSIM_ACIS=ON')
+            args.append('-DSIM_DISCRETE=ON')
+            mpi_id = spec['mpi'].name + spec['mpi'].version.string
+            args.append('-DSIM_MPI=' + mpi_id)
         return args

@@ -330,6 +330,9 @@ def make_argument_parser(**kwargs):
         '-d', '--debug', action='store_true',
         help="write out debug logs during compile")
     parser.add_argument(
+        '--timestamp', action='store_true',
+        help="Add a timestamp to tty output")
+    parser.add_argument(
         '--pdb', action='store_true',
         help="run spack under the pdb debugger")
 
@@ -398,6 +401,9 @@ def setup_main_options(args):
         spack.error.debug = True
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
+
+    if args.timestamp:
+        tty.set_timestamp(True)
 
     # override lock configuration if passed on command line
     if args.locks is not None:

@@ -31,7 +31,3 @@ class Freetype(AutotoolsPackage):
         if self.spec.satisfies('@2.9.1:'):
             args.append('--enable-freetype-config')
         return args
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('CPATH', self.prefix.include.freetype2)
-        run_env.prepend_path('CPATH', self.prefix.include.freetype2)

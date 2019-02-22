@@ -76,7 +76,7 @@ def make_log_context(log_events, width=None):
     error_lines = set(e.line_no for e in log_events)
     log_events = sorted(log_events, key=lambda e: e.line_no)
 
-    num_width = len(str(max(error_lines))) + 4
+    num_width = len(str(max(error_lines or [0]))) + 4
     line_fmt = '%%-%dd%%s' % num_width
     indent = ' ' * (5 + num_width)
 
