@@ -18,6 +18,10 @@ class Lbann(CMakePackage):
     git      = "https://github.com/LLNL/lbann.git"
 
     version('develop', branch='develop')
+    version('0.98.1', sha256='9a2da8f41cd8bf17d1845edf9de6d60f781204ebd37bffba96d8872036c10c66')
+    version('0.98',   sha256='8d64b9ac0f1d60db553efa4e657f5ea87e790afe65336117267e9c7ae6f68239')
+    version('0.97.1', sha256='2f2756126ac8bb993202cf532d72c4d4044e877f4d52de9fdf70d0babd500ce4')
+    version('0.97',   sha256='9794a706fc7ac151926231efdf74564c39fbaa99edca4acb745ee7d20c32dae7')
     version('0.96', sha256='97af78e9d3c405e963361d0db96ee5425ee0766fa52b43c75b8a5670d48e4b4a')
     version('0.95', sha256='d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2')
     version('0.94', sha256='567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf')
@@ -64,9 +68,9 @@ class Lbann(CMakePackage):
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
                when='build_type=Debug @0.91:0.94')
 
-    depends_on('aluminum@master', when='@:0.90,0.95: +al ~gpu')
-    depends_on('aluminum@master +gpu +mpi_cuda', when='@:0.90,0.95: +al +gpu ~nccl')
-    depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
+    depends_on('aluminum', when='@:0.90,0.95: +al ~gpu')
+    depends_on('aluminum +gpu +mpi_cuda', when='@:0.90,0.95: +al +gpu ~nccl')
+    depends_on('aluminum +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')

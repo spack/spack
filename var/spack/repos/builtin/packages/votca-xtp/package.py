@@ -20,13 +20,13 @@ class VotcaXtp(CMakePackage):
     git      = "https://github.com/votca/xtp.git"
 
     version('develop', branch='master')
+    version('1.5', sha256='b40b6d19e13f0650e84b8beebe86ce5c09071624f18d66df826f9d8584b4d3c8')
     version('1.4.1', '31a2dbd8bd48bf337bc88b20ab312050')
 
     depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
-    depends_on("votca-tools@1.4:1.4.999", when='@1.4:1.4.999')
-    depends_on("votca-csg@develop", when='@develop')
-    depends_on("votca-csg@1.4:1.4.999", when='@1.4:1.4.999')
+    for v in ["1.4.1", "1.5", "develop"]:
+        depends_on('votca-tools@%s' % v, when="@%s" % v)
+        depends_on('votca-csg@%s' % v, when="@%s" % v)
     depends_on("votca-ctp@develop", when='@develop')
     depends_on("libxc", when='@1.5:')
     depends_on("ceres-solver", when='@1.5:')

@@ -20,11 +20,26 @@ class Icu4c(AutotoolsPackage):
     version('58.2', 'fac212b32b7ec7ab007a12dff1f3aea1')
     version('57.1', '976734806026a4ef8bdd17937c8898b9')
 
+    variant('cxxstd',
+            default='11',
+            values=('11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building')
+
     configure_directory = 'source'
 
     def url_for_version(self, version):
         url = "http://download.icu-project.org/files/icu4c/{0}/icu4c-{1}-src.tgz"
         return url.format(version.dotted, version.underscored)
+
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags':
+            # Control of the C++ Standard is via adding the required "-std"
+            # flag to CXXFLAGS in env
+            flags.append(getattr(self.compiler,
+                         'cxx{0}_flag'.format(
+                             self.spec.variants['cxxstd'].value)))
+        return (None, flags, None)
 
     def configure_args(self):
         args = []

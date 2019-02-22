@@ -26,4 +26,5 @@ class PyLibensemble(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-petsc4py@3.5:', type=('build', 'run'))
+    depends_on('py-petsc4py@develop', type=('build', 'run'), when='@develop')
     depends_on('nlopt', type=('build', 'run'))

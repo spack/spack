@@ -17,6 +17,7 @@ class Hydrogen(CMakePackage):
     git      = "https://github.com/LLNL/Elemental.git"
 
     version('develop', branch='hydrogen')
+    version('1.1.0', sha256='b4c12913acd01c72d31f4522266bfeb8df1d4d3b4aef02e07ccbc9a477894e71')
     version('1.0.1', sha256='27cf76e1ef1d58bd8f9b1e34081a14a682b7ff082fb5d1da56713e5e0040e528')
     version('1.0', sha256='d8a97de3133f2c6b6bb4b80d32b4a4cc25eb25e0df4f0cec0f8cb19bf34ece98')
     version('0.99', 'b678433ab1d498da47acf3dc5e056c23')
@@ -72,8 +73,8 @@ class Hydrogen(CMakePackage):
     depends_on('essl threads=openmp +ilp64', when='blas=essl +openmp_blas +int64_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
-    depends_on('aluminum@master', when='+al ~cuda')
-    depends_on('aluminum@master +gpu +mpi_cuda', when='+al +cuda')
+    depends_on('aluminum', when='+al ~cuda')
+    depends_on('aluminum +gpu +mpi_cuda', when='+al +cuda')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
@@ -86,7 +87,6 @@ class Hydrogen(CMakePackage):
     depends_on('mpfr', when='+mpfr')
 
     depends_on('cuda', when='+cuda')
-    depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
 
     conflicts('@0:0.98', msg="Hydrogen did not exist before v0.99. " +
