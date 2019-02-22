@@ -225,7 +225,7 @@ def test_recursive_search_of_headers_from_prefix(
     # Try to inspect recursively from <prefix> and ensure we don't get
     # subdirectories of the '<prefix>/include' path
     prefix = str(installation_dir_with_headers)
-    header_list = fs.find_headers('*', root=prefix, recursive=True)
+    header_list = fs.find_all_headers(prefix)
 
     # Check that the header files we expect are all listed
     assert os.path.join(prefix, 'include', 'ex3.h') in header_list
