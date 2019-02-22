@@ -36,6 +36,7 @@ __all__ = [
     'filter_file',
     'find',
     'find_headers',
+    'find_all_headers',
     'find_libraries',
     'find_system_libraries',
     'fix_darwin_install_name',
@@ -1130,6 +1131,19 @@ def find_headers(headers, root, recursive=False):
     headers = ['{0}.{1}'.format(header, suffix) for header in headers]
 
     return HeaderList(find(root, headers, recursive))
+
+
+def find_all_headers(root):
+    """Convenience function that returns the list of all headers found
+    in the directory passed as argument.
+
+    Args:
+        root (path): directory where to look recursively for header files
+
+    Returns:
+        List of all headers found in ``root`` and subdirectories.
+    """
+    return find_headers('*', root=root, recursive=True)
 
 
 class LibraryList(FileList):
