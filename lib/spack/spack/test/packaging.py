@@ -154,52 +154,51 @@ echo $PATH"""
             os.path.join(spec.prefix, 'link_to_dummy.txt')
         ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
-    else:
-        # create build cache without signing
-        args = parser.parse_args(
-            ['create', '-d', mirror_path, '-u', str(spec)])
-        buildcache.buildcache(parser, args)
+    # create build cache without signing
+    args = parser.parse_args(
+        ['create', '-d', mirror_path, '-f', '-u', str(spec)])
+    buildcache.buildcache(parser, args)
 
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
+    # Uninstall the package
+    pkg.do_uninstall(force=True)
 
-        # install build cache without verification
-        args = parser.parse_args(['install', '-u', str(spec)])
-        buildcache.install_tarball(spec, args)
+    # install build cache without verification
+    args = parser.parse_args(['install', '-u', str(spec)])
+    buildcache.install_tarball(spec, args)
 
-        files = os.listdir(spec.prefix)
-        assert 'link_to_dummy.txt' in files
-        assert 'dummy.txt' in files
-        assert os.path.realpath(
-            os.path.join(spec.prefix, 'link_to_dummy.txt')
-        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+    files = os.listdir(spec.prefix)
+    assert 'link_to_dummy.txt' in files
+    assert 'dummy.txt' in files
+    assert os.path.realpath(
+        os.path.join(spec.prefix, 'link_to_dummy.txt')
+    ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
-        # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
+    # test overwrite install without verification
+    args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
+    buildcache.buildcache(parser, args)
 
-        # create build cache with relative path
-        args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
+    # create build cache with relative path
+    args = parser.parse_args(
+        ['create', '-d', mirror_path, '-f', '-r', '-u', str(pkghash)])
+    buildcache.buildcache(parser, args)
 
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
+    # Uninstall the package
+    pkg.do_uninstall(force=True)
 
-        # install build cache
-        args = parser.parse_args(['install', '-u', str(spec)])
-        buildcache.install_tarball(spec, args)
+    # install build cache
+    args = parser.parse_args(['install', '-u', str(spec)])
+    buildcache.install_tarball(spec, args)
 
-        # test overwrite install
-        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
+    # test overwrite install
+    args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
+    buildcache.buildcache(parser, args)
 
-        files = os.listdir(spec.prefix)
-        assert 'link_to_dummy.txt' in files
-        assert 'dummy.txt' in files
-        assert os.path.realpath(
-            os.path.join(spec.prefix, 'link_to_dummy.txt')
-        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+    files = os.listdir(spec.prefix)
+    assert 'link_to_dummy.txt' in files
+    assert 'dummy.txt' in files
+    assert os.path.realpath(
+        os.path.join(spec.prefix, 'link_to_dummy.txt')
+    ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
@@ -235,6 +234,7 @@ echo $PATH"""
     bindist._cached_specs = None
 
 
+@pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
 def test_relocate_text(tmpdir):
     with tmpdir.as_cwd():
         # Validate the text path replacement
@@ -252,6 +252,7 @@ def test_relocate_text(tmpdir):
         assert(strings_contains_installroot(filename, old_dir) is False)
 
 
+@pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
 def test_relocate_links(tmpdir):
     with tmpdir.as_cwd():
         old_dir = '/home/spack/opt/spack'
@@ -366,6 +367,7 @@ def test_elf_paths():
 
 @pytest.mark.skipif(sys.platform != 'darwin',
                     reason="only works with Mach-o objects")
+@pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
 def test_relocate_macho(tmpdir):
     with tmpdir.as_cwd():
 

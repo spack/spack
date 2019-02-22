@@ -36,12 +36,16 @@ def get_patchelf():
     # as we may need patchelf, find out where it is
     if platform.system() == 'Darwin':
         return None
-    patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-    patchelf = spack.repo.get(patchelf_spec)
-    if not patchelf.installed:
-        patchelf.do_install()
-    patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
-    return patchelf_executable
+    patchelf = spack.util.executable.which('patchelf')
+    if patchelf is None:
+        patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
+        patchelf = spack.repo.get(patchelf_spec)
+        if not patchelf.installed:
+            patchelf.do_install()
+        patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
+        return patchelf_executable
+    else:
+        return patchelf.path
 
 
 def get_existing_elf_rpaths(path_name):
@@ -495,13 +499,16 @@ def is_relocatable(spec):
         raise ValueError('spec is not installed [{0}]'.format(str(spec)))
 
     if spec.external or spec.virtual:
+        tty.warn('external or virtual package %s is not relocatable' %
+                 spec.name)
         return False
 
     # Explore the installation prefix of the spec
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in ('.spack', 'man')]
         abs_files = [os.path.join(root, f) for f in files]
-        if not all(file_is_relocatable(f) for f in abs_files if is_binary(f)):
+        if not all(file_is_relocatable(f, root) for f in abs_files
+                   if is_binary(f)):
             # If any of the file is not relocatable, the entire
             # package is not relocatable
             return False
@@ -509,7 +516,7 @@ def is_relocatable(spec):
     return True
 
 
-def file_is_relocatable(file):
+def file_is_relocatable(file, prefix):
     """Returns True if the file passed as argument is relocatable.
 
     Args:
@@ -535,7 +542,7 @@ def file_is_relocatable(file):
         raise ValueError('{0} is not an absolute path'.format(file))
 
     strings = Executable('strings')
-    patchelf = Executable('patchelf')
+    patchelf = Executable(get_patchelf())
 
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
@@ -556,11 +563,11 @@ def file_is_relocatable(file):
             if idpath is not None:
                 set_of_strings.discard(idpath)
 
-    if any(spack.store.layout.root in x for x in set_of_strings):
+    if any(prefix in x for x in set_of_strings):
         # One binary has the root folder not in the RPATH,
         # meaning that this spec is not relocatable
         msg = 'Found "{0}" in {1} strings'
-        tty.debug(msg.format(spack.store.layout.root, file))
+        tty.debug(msg.format(prefix, file))
         return False
 
     return True
