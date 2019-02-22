@@ -25,8 +25,6 @@ from spack.paths import etc_path
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.spec_set import CombinatorialSpecSet
 
-import spack.binary_distribution as bindist
-import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 
 description = "create, download and install binary packages"
@@ -191,7 +189,6 @@ def setup_parser(subparser):
     saveyaml.set_defaults(func=save_spec_yamls)
 
 
-
 def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
@@ -308,7 +305,6 @@ def createtarball(args):
     # restrict matching to current environment if one is active
     env = ev.get_env(args, 'buildcache create')
 
-
     matches = find_matching_specs(pkgs, env=env)
 
     if matches:
@@ -408,6 +404,7 @@ def preview(args):
         print("Relocatable nodes")
         print("--------------------------------")
         print(spec.tree(status_fn=spack.relocate.is_relocatable))
+
 
 def check_binaries(args):
     """Check specs (either a single spec from --spec, or else the full set
@@ -552,6 +549,7 @@ def save_spec_yamls(args):
         root_spec_as_yaml, args.yaml_dir, args.specs.split())
 
     sys.exit(0)
+
 
 def buildcache(parser, args):
     if args.func:
