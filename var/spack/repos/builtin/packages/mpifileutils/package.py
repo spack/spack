@@ -36,7 +36,7 @@ class Mpifileutils(Package):
     # in v1.0.3 but renamed in v1.1.0 and later
     depends_on('dtcmp@1.0.3',  when='@:0.7')
     depends_on('dtcmp@1.1.0:', when='@0.8:')
-    #depends_on('lwgrp')
+    # depends_on('lwgrp')
 
     depends_on('libarchive')
 
@@ -55,7 +55,6 @@ class Mpifileutils(Package):
     variant('gpfs', default=False,
         description="Enable optimizations and features for GPFS")
     conflicts('+gpfs', when='@:0.8.1')
-
 
     def configure_args_cmake(self):
         args = []
