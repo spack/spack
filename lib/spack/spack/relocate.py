@@ -497,6 +497,9 @@ def is_relocatable(spec):
     if not spec.install_status():
         raise ValueError('spec is not installed [{0}]'.format(str(spec)))
 
+    if spec.external or spec.virtual:
+        return False
+ 
     # Explore the installation prefix of the spec
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in ('.spack', 'man')]
@@ -539,9 +542,11 @@ def file_is_relocatable(file):
     set_of_strings = set(strings(file, output=str).split())
 
     m_type, m_subtype = mime_type(file)
-    if m_type == 'application' and m_subtype != 'x-archive':
-        rpaths = patchelf('--print-rpath', file, output=str).strip()
-        set_of_strings.discard(rpaths.strip())
+    if m_type == 'application':
+        tty.debug('{0},{1}'.format(m_type, m_subtype))
+        if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
+            rpaths = patchelf('--print-rpath', file, output=str).strip()
+            set_of_strings.discard(rpaths.strip())
 
     if any(spack.store.layout.root in x for x in set_of_strings):
         # One binary has the root folder not in the RPATH,
