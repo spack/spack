@@ -17,7 +17,7 @@ class PyPymol(PythonPackage):
 
     version('2.1.0', 'ef2ab2ce11d65785ca3258b4e6982dfb')
 
-    depends_on('python+tk', type=('build', 'run'))
+    depends_on('python+tkinter', type=('build', 'run'))
     depends_on('tcl')
     depends_on('tk')
     depends_on('py-pmw')

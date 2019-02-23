@@ -33,11 +33,6 @@ class Tcl(AutotoolsPackage):
 
     configure_directory = 'unix'
 
-    def setup_environment(self, spack_env, run_env):
-        # When using Tkinter from within spack provided python+tk, python
-        # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        run_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
-
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             make('install')
@@ -77,7 +72,8 @@ class Tcl(AutotoolsPackage):
 
     @property
     def libs(self):
-        return LibraryList([])
+        return find_libraries(['libtcl{0}'.format(self.version.up_to(2))],
+                              root=self.prefix, recursive=True)
 
     @property
     def command(self):
@@ -101,10 +97,17 @@ class Tcl(AutotoolsPackage):
         return join_path(self.tcl_lib_dir,
                          'tcl{0}'.format(self.version.up_to(2)))
 
+    def setup_environment(self, spack_env, run_env):
+        # When using Tkinter from within spack provided python+tkinter, python
+        # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
+        run_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
         For further info see: https://wiki.tcl.tk/1787"""
+
+        spack_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases

@@ -30,12 +30,17 @@ class Tk(AutotoolsPackage):
 
     @property
     def libs(self):
-        return LibraryList([])
+        return find_libraries(['libtk{0}'.format(self.version.up_to(2))],
+                              root=self.prefix, recursive=True)
 
     def setup_environment(self, spack_env, run_env):
-        # When using Tkinter from within spack provided python+tk, python
+        # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+            self.spec.version.up_to(2))))
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
     def configure_args(self):
