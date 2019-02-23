@@ -17,6 +17,7 @@ class Cdo(AutotoolsPackage):
 
     maintainers = ['skosukhin']
 
+    version('1.9.6', '322f56c5e13f525c585ee5318d4435db', url='https://code.mpimet.mpg.de/attachments/download/19299/cdo-1.9.6.tar.gz')
     version('1.9.5', '0c60f2c94dc5c76421ecf363153a5043', url='https://code.mpimet.mpg.de/attachments/download/18264/cdo-1.9.5.tar.gz')
     version('1.9.4', '377c9e5aa7d8cbcb4a6c558abb2eb053', url='https://code.mpimet.mpg.de/attachments/download/17374/cdo-1.9.4.tar.gz')
     version('1.9.3', '13ae222164413dbd53532b03b072def5', url='https://code.mpimet.mpg.de/attachments/download/16435/cdo-1.9.3.tar.gz')
