@@ -41,7 +41,6 @@ from spack.pkg.builtin.openfoam_com import OpenfoamArch
 from spack.pkg.builtin.openfoam_com import add_extra_files
 from spack.pkg.builtin.openfoam_com import write_environ
 from spack.pkg.builtin.openfoam_com import rewrite_environ_files
-import llnl.util.tty as tty
 
 
 class FoamExtend(Package):
@@ -176,15 +175,13 @@ class FoamExtend(Package):
 
                 run_env.extend(mods)
                 minimal = False
-                with self.logger.force_echo():
-                    tty.info('foam-extend env: {0}'.format(bashrc))
+                tty.info('foam-extend env: {0}'.format(bashrc))
             except Exception:
                 minimal = True
 
         if minimal:
             # pre-build or minimal environment
-            with self.logger.force_echo():
-                tty.info('foam-extend minimal env {0}'.format(self.prefix))
+            tty.info('foam-extend minimal env {0}'.format(self.prefix))
             run_env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
             run_env.set('FOAM_PROJECT_DIR', self.projectdir)
             run_env.set('WM_PROJECT_DIR', self.projectdir)

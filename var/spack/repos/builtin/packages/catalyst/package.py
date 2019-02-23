@@ -6,7 +6,6 @@
 from spack import *
 import os
 import subprocess
-import llnl.util.tty as tty
 
 
 class Catalyst(CMakePackage):
@@ -112,12 +111,10 @@ class Catalyst(CMakePackage):
         if not os.path.isdir(catalyst_source_dir):
             os.mkdir(catalyst_source_dir)
             subprocess.check_call(command)
-            with self.logger.force_echo():
-                tty.msg("Generated catalyst source in %s" % self.stage.path)
+            tty.msg("Generated catalyst source in %s" % self.stage.path)
         else:
-            with self.logger.force_echo():
-                tty.msg("Already generated %s in %s" % (self.name,
-                                                        self.stage.path))
+            tty.msg("Already generated %s in %s" % (self.name,
+                                                    self.stage.path))
 
     def setup_environment(self, spack_env, run_env):
         # paraview 5.5 and later

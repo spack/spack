@@ -11,7 +11,6 @@ import socket
 import glob
 import shutil
 
-import llnl.util.tty as tty
 from os import environ as env
 
 
@@ -431,7 +430,5 @@ class Ascent(Package):
         cfg.close()
 
         host_cfg_fname = os.path.abspath(host_cfg_fname)
-        with self.logger.force_echo():
-            msg = "spack generated conduit host-config file: " + host_cfg_fname
-            tty.info(msg)
+        tty.info("spack generated conduit host-config file: " + host_cfg_fname)
         return host_cfg_fname

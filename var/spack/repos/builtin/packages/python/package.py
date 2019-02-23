@@ -9,7 +9,6 @@ import platform
 import re
 import sys
 
-import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 from llnl.util.filesystem import (force_remove, get_filetype,
                                   path_contains_subdirectory)
@@ -148,10 +147,8 @@ class Python(AutotoolsPackage):
         # adding support for ignoring user configuration will require
         # significant changes to this package for other Python versions.
         if not spec.satisfies('@2.7,3.4:'):
-            with self.logger.force_echo():
-                tty.warn(('Python v{0} may not install properly if Python '
-                          'user configurations are present.').format(
-                              self.version))
+            tty.warn(('Python v{0} may not install properly if Python '
+                      'user configurations are present.').format(self.version))
 
         # Need this to allow python build to find the Python installation.
         spack_env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
@@ -321,24 +318,21 @@ class Python(AutotoolsPackage):
             pass
 
         if not input_dict:
-            with self.logger.force_echo():
-                tty.warn("Failed to find 'build_time_vars' dictionary in file "
-                         "'%s'. This might cause the extensions that are "
-                         "installed with distutils to call compilers directly "
-                         "avoiding Spack's wrappers." % input_filename)
+            tty.warn("Failed to find 'build_time_vars' dictionary in file "
+                     "'%s'. This might cause the extensions that are "
+                     "installed with distutils to call compilers directly "
+                     "avoiding Spack's wrappers." % input_filename)
             return
 
         for var_name in Python._DISTUTIL_VARS_TO_SAVE:
             if var_name in input_dict:
                 self._distutil_vars[var_name] = input_dict[var_name]
             else:
-                with self.logger.force_echo():
-                    tty.warn("Failed to find key '%s' in 'build_time_vars' "
-                             "dictionary in file '%s'. This might cause the "
-                             "extensions that are installed with distutils to "
-                             "call compilers directly avoiding Spack's "
-                             "wrappers."
-                             % (var_name, input_filename))
+                tty.warn("Failed to find key '%s' in 'build_time_vars' "
+                         "dictionary in file '%s'. This might cause the "
+                         "extensions that are installed with distutils to "
+                         "call compilers directly avoiding Spack's wrappers."
+                         % (var_name, input_filename))
 
         if len(self._distutil_vars) > 0:
             output_filename = None
@@ -349,11 +343,10 @@ class Python(AutotoolsPackage):
                 with open(output_filename, 'w') as output_file:
                     sjson.dump(self._distutil_vars, output_file)
             except Exception:
-                with self.logger.force_echo():
-                    tty.warn("Failed to save metadata for distutils. This "
-                             "might cause the extensions that are installed "
-                             "with distutils to call compilers directly "
-                             "avoiding Spack's wrappers.")
+                tty.warn("Failed to save metadata for distutils. This might "
+                         "cause the extensions that are installed with "
+                         "distutils to call compilers directly avoiding "
+                         "Spack's wrappers.")
                 # We make the cache empty if we failed to save it to file
                 # to provide the same behaviour as in the case when the cache
                 # is initialized by the method load_distutils_data().

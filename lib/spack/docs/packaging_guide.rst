@@ -2849,8 +2849,7 @@ be avoided like so:
 .. code-block:: python
 
    if spec.satisfies('platform=darwin'):
-      with self.logger.force_echo():
-         tty.warn('This package may not work properly on macOS')
+       tty.warn('This package may not work properly on macOS')
 
 
 This will send a warning message directly to the terminal and continue
@@ -2861,10 +2860,9 @@ messages similar to Homebrew's caveats like so:
 
    @run_after('install')
    def caveats(self):
-      with self.logger.force_echo():
-         msg = ('To use this package, make sure to source the '
-                'foo_bar.sh script')
-         tty.info(msg)
+       msg = ('To use this package, make sure to source the '
+              'foo_bar.sh script')
+       tty.info(msg)
 
 
 See :py:mod:`llnl.util.tty` for details on
@@ -3191,9 +3189,7 @@ Or for combinations of spec constraints:
 
 .. code-block:: python
 
-   if spec.satisfies('@1.2%intel'):
-       with self.logger.force_echo():
-          tty.error("Version 1.2 breaks when using Intel compiler!")
+   conflicts('@1.2%intel', msg='Version 1.2 breaks when using Intel compiler!')
 
 You can also do similar satisfaction tests for dependencies:
 

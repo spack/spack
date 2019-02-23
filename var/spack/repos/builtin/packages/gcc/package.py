@@ -5,7 +5,6 @@
 
 from spack import *
 from spack.operating_systems.mac_os import macos_version
-from llnl.util import tty
 
 import glob
 import os
@@ -395,9 +394,8 @@ class Gcc(AutotoolsPackage):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""
         if not self.spec_dir:
-            with self.logger.force_echo():
-                tty.warn('Could not install specs for {0}.'.format(
-                         self.spec.format('$_$@')))
+            tty.warn('Could not install specs for {0}.'.format(
+                     self.spec.format('$_$@')))
             return
 
         gcc = self.spec['gcc'].command

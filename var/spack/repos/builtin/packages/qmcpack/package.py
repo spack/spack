@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import llnl.util.tty as tty
 
 
 class Qmcpack(CMakePackage, CudaPackage):
@@ -348,5 +347,4 @@ class Qmcpack(CMakePackage, CudaPackage):
                 warn  = 'Unit tests passed, but short tests have failed.\n'
                 warn += 'Please review failed tests before proceeding\n'
                 warn += 'with production calculations.\n'
-                with self.logger.force_echo():
-                    tty.msg(warn)
+                tty.msg(warn)

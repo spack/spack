@@ -7,7 +7,6 @@ from spack import *
 import os
 import shutil
 import glob
-import llnl.util.tty as tty
 
 
 # This application uses cmake to build, but they wrap it with a
@@ -72,11 +71,9 @@ class Bcl2fastq2(Package):
             f()                 # call the original expand_archive()
             with working_dir(self.stage.path):
                 if os.path.isdir('bcl2fastq'):
-                    with self.logger.force_echo():
-                        tty.msg("The tarball has already been unpacked")
+                    tty.msg("The tarball has already been unpacked")
                 else:
-                    with self.logger.force_echo():
-                        tty.msg("Unpacking bcl2fastq2 tarball")
+                    tty.msg("Unpacking bcl2fastq2 tarball")
                     tarball = glob.glob(join_path('spack-expanded-archive',
                                         'bcl2fastq2*.tar.gz'))[0]
                     copy(tarball, '.')
@@ -84,8 +81,7 @@ class Bcl2fastq2(Package):
                     tar = which('tar')
                     tarball = os.path.basename(tarball)
                     tar('-xf', tarball)
-                    with self.logger.force_echo():
-                        tty.msg("Finished unpacking bcl2fastq2 tarball")
+                    tty.msg("Finished unpacking bcl2fastq2 tarball")
         return wrap
 
     def install(self, spec, prefix):

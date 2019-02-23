@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-
 from spack import *
 import spack.architecture
 
@@ -67,11 +65,9 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         return find_libraries(['libssl', 'libcrypto'], root=self.prefix.lib)
 
     def handle_fetch_error(self, error):
-        with self.logger.force_echo():
-            tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL "
-                     "has been updated, and the version in your instance of "
-                     "Spack is insecure. Consider updating to the latest "
-                     "OpenSSL version.")
+        tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
+                 "been updated, and the version in your instance of Spack is "
+                 "insecure. Consider updating to the latest OpenSSL version.")
 
     def install(self, spec, prefix):
         # OpenSSL uses a variable APPS in its Makefile. If it happens to be set

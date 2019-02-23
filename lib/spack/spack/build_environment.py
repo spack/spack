@@ -32,6 +32,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+import functools
 import inspect
 import multiprocessing
 import os
@@ -474,6 +475,33 @@ def _set_variables_for_single_module(pkg, module):
                                          static_lib, shared_lib, **kwargs)
 
     m.static_to_shared_library = static_to_shared_library
+
+    def echoize(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            if hasattr(pkg, 'logger'):
+                with pkg.logger.force_echo():
+                    fn(*args, **kwargs)
+            else:
+                fn(*args, **kwargs)
+        return wrapper
+
+    class TtyWrapper(object):
+        msg = echoize(tty.msg)
+        info = echoize(tty.info)
+        verbose = echoize(tty.verbose)
+        debug = echoize(tty.debug)
+        error = echoize(tty.error)
+        warn = echoize(tty.warn)
+        die = echoize(tty.die)
+        get_number = echoize(tty.get_number)
+        get_yes_or_no = echoize(tty.get_yes_or_no)
+        hline = echoize(tty.hline)
+
+        def __getattr__(self, attr):
+            return getattr(tty, attr)
+
+    m.tty = TtyWrapper()
 
 
 def set_module_variables_for_package(pkg):

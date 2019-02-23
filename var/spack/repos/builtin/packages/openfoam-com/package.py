@@ -47,7 +47,6 @@ import os
 
 from spack import *
 from spack.util.environment import EnvironmentModifications
-import llnl.util.tty as tty
 
 
 # Not the nice way of doing things, but is a start for refactoring
@@ -71,14 +70,12 @@ def add_extra_files(foam_pkg, common, local, **kwargs):
 
     indir  = join_path(os.path.dirname(__file__), 'common')
     for f in common:
-        with self.logger.force_echo():
-            tty.info('Added file {0}'.format(f))
+        tty.info('Added file {0}'.format(f))
         install(join_path(indir, f), join_path(outdir, f))
 
     indir  = join_path(foam_pkg.package_dir, 'assets')
     for f in local:
-        with self.logger.force_echo():
-            tty.info('Added file {0}'.format(f))
+        tty.info('Added file {0}'.format(f))
         install(join_path(indir, f), join_path(outdir, f))
 
 
@@ -430,15 +427,13 @@ class OpenfoamCom(Package):
                 run_env.extend(mods)
                 spack_env.extend(mods)
                 minimal = False
-                with self.logger.force_echo():
-                    tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
+                tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
             except Exception:
                 minimal = True
 
         if minimal:
             # pre-build or minimal environment
-            with self.logger.force_echo():
-                tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
+            tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
             run_env.set('FOAM_PROJECT_DIR', self.projectdir)
             run_env.set('WM_PROJECT_DIR', self.projectdir)
             spack_env.set('FOAM_PROJECT_DIR', self.projectdir)

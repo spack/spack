@@ -6,7 +6,6 @@
 from spack.util.prefix import Prefix
 from spack import *
 
-import llnl.util.tty as tty
 import os
 
 
@@ -143,8 +142,7 @@ and adding entries for each installation:
                 jdk@1.7.0_45-b18: /path/to/jdk/Home
             buildable: False""".format(self.homepage)
 
-            with self.logger.force_echo():
-                tty.die(msg)
+            tty.die(msg)
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

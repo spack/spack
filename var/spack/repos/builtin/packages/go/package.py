@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import llnl.util.tty as tty
 from spack import *
 
 # - vanilla CentOS 7, and possibly other systems, fail a test:
@@ -115,8 +114,7 @@ class Go(Package):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if os.environ.get('GOROOT', False):
-            with self.logger.force_echo():
-                tty.warn('GOROOT is set, this is not recommended')
+            tty.warn('GOROOT is set, this is not recommended')
 
         path_components = []
         # Set GOPATH to include paths of dependencies

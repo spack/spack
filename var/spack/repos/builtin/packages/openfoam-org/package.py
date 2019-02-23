@@ -37,8 +37,6 @@ import glob
 import re
 import os
 
-import llnl.util.tty as tty
-
 from spack import *
 from spack.pkg.builtin.openfoam_com import add_extra_files
 from spack.pkg.builtin.openfoam_com import write_environ
@@ -183,8 +181,7 @@ class OpenfoamOrg(Package):
             if original != target and not os.path.lexists(target):
                 os.rename(original, target)
                 os.symlink(target, original)
-                with self.logger.force_echo():
-                    tty.info('renamed {0} -> {1}'.format(original, target))
+                tty.info('renamed {0} -> {1}'.format(original, target))
 
     def patch(self):
         """Adjust OpenFOAM build for spack.

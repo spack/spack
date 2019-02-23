@@ -6,7 +6,6 @@
 from spack import *
 from spack.package_test import compare_output
 from spack.util.executable import Executable
-import llnl.util.tty as tty
 import os
 
 
@@ -260,8 +259,7 @@ class Bohrium(CMakePackage, CudaPackage):
 
         # Run tests for each available stack
         for bh_stack in stacks:
-            with self.logger.force_echo():
-                tty.info("Testing with bohrium stack '" + bh_stack + "'")
+            tty.info("Testing with bohrium stack '" + bh_stack + "'")
             test_env["BH_STACK"] = bh_stack
 
             cpp_output = test_cxxadd(output=str, env=test_env)
