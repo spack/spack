@@ -975,15 +975,14 @@ class HeaderList(FileList):
 
     @directories.setter
     def directories(self, value):
+        value = value or []
         # Accept a single directory as input
         if isinstance(value, six.string_types):
             value = [value]
 
         # Setting the property to None makes the initial default
         # kick-in again
-        self._directories = None if value is None else [
-            os.path.normpath(x) for x in value
-        ]
+        self._directories = [os.path.normpath(x) for x in value]
 
     def _default_directories(self):
         """Default computation of directories based on the list of

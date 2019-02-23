@@ -716,7 +716,7 @@ def mutable_mock_env_path(tmpdir_factory):
     spack.environment.env_path = saved_path
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def installation_dir_with_headers(tmpdir_factory):
     """Mock installation tree with a few headers placed in different
     subdirectories. Shouldn't be modified by tests as it is session

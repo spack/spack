@@ -278,7 +278,6 @@ def test_headers_directory_setter():
     hl.directories = []
     assert hl.directories == []
 
-    # Setting the property back to None makes the default computation
-    # kick-in again
+    # Setting directories to None also returns an empty list
     hl.directories = None
-    assert hl.directories == ['/pfx/include']
+    assert hl.directories == []
