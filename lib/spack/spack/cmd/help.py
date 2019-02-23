@@ -20,6 +20,7 @@ spec expression syntax:
   package [constraints] [^dependency [constraints] ...]
 
   package                           any package from 'spack list'
+  /hash                             unique hash of an installed package
 
   constraints:
     versions:
