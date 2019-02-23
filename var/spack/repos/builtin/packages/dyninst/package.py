@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+
 import os.path
+import sys
 
 
 class Dyninst(CMakePackage):
@@ -18,7 +20,7 @@ class Dyninst(CMakePackage):
     version('10.0.0', tag='v10.0.0')
     version('9.3.2', tag='v9.3.2')
     version('9.3.0', tag='v9.3.0')
-    version('9.2.0', tag='v9.2.0')
+    version('9.2.0', tag='v9.2.0', preferred=(sys.platform == 'darwin'))
     version('9.1.0', tag='v9.1.0')
     version('8.2.1', tag='v8.2.1')
 
