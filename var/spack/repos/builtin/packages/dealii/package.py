@@ -276,7 +276,7 @@ class Dealii(CMakePackage, CudaPackage):
             if not spec.satisfies('^cuda@9:'):
                 options.append('-DDEAL_II_WITH_CXX14=OFF')
             cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch is not None and cuda_arch[0] is not '':
+            if cuda_arch != 'none':
                 if len(cuda_arch) > 1:
                     raise InstallError(
                         'deal.II only supports compilation for a single GPU!'
