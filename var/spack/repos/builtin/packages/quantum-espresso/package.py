@@ -223,13 +223,12 @@ class QuantumEspresso(Package):
                         'HDF5_LIB = {0}'.format(hdf5_libs),
                         make_inc)
             if spec.variants['hdf5'].value == 'serial':
-                if '+mpi' or '@develop' in spec:
-                    # Note that there is a benign side effect with the
-                    # first filter file statement. It replaces an instance
-                    # of MANUAL_DFLAGS that is a comment in make.inc.
-                    filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)'
-                                'MANUAL_DFLAGS = -D__HDF5_SERIAL',
-                                make_inc)
+                # Note that there is a benign side effect with this filter
+                # file statement. It replaces an instance of MANUAL_DFLAGS
+                # that is a comment in make.inc.
+                filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)'
+                            'MANUAL_DFLAGS = -D__HDF5_SERIAL',
+                            make_inc)
 
         make('all')
 
