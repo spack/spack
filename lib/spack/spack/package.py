@@ -1139,6 +1139,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             bool: True if 'target' is found, else False
         """
+        # Prevent altering LC_ALL for 'make' outside this function
         make = copy.deepcopy(inspect.getmodule(self).make)
 
         # Use English locale for missing target message comparison
