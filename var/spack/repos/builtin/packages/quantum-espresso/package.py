@@ -226,7 +226,7 @@ class QuantumEspresso(Package):
                 # Note that there is a benign side effect with this filter
                 # file statement. It replaces an instance of MANUAL_DFLAGS
                 # that is a comment in make.inc.
-                filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)'
+                filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)',
                             'MANUAL_DFLAGS = -D__HDF5_SERIAL',
                             make_inc)
 
