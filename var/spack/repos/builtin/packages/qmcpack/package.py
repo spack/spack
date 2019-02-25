@@ -102,7 +102,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('boost@1.61.0:', when='@3.6.0:')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
+
     # HDF5
     depends_on('hdf5+hl+fortran', when='+qe')
     depends_on('hdf5+hl+fortran+mpi', when='+qe+mpi')
