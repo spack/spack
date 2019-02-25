@@ -717,8 +717,9 @@ def setup_package(pkg, dirty):
                 load_module("cce")
             load_module(mod)
 
-        if "cce" not in pkg.compiler.modules:
-            unload_module("cce")
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            if "cce" not in pkg.compiler.modules:
+                unload_module("cce")
 
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
