@@ -980,8 +980,6 @@ class HeaderList(FileList):
         if isinstance(value, six.string_types):
             value = [value]
 
-        # Setting the property to None makes the initial default
-        # kick-in again
         self._directories = [os.path.normpath(x) for x in value]
 
     def _default_directories(self):
