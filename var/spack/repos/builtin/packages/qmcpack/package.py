@@ -132,11 +132,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Spack package
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
     patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
-    depends_on('quantum-espresso@6.3~elpa+mpi+hdf5',
+    depends_on('quantum-espresso@6.3~elpa+mpi hdf5=parallel',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                    when='+qe+mpi', type='run')
 
-    depends_on('quantum-espresso@6.3~elpa~scalapack~mpi+hdf5',
+    depends_on('quantum-espresso@6.3~elpa~scalapack~mpi hdf5=serial',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                    when='+qe~mpi', type='run')
 
