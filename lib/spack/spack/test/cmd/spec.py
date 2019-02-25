@@ -55,11 +55,13 @@ def test_spec_deptypes_nodes():
     output = spec('--types', '--cover', 'nodes', 'dt-diamond')
     types = _parse_types(output)
 
+    print output
+    print types
     assert types['dt-diamond']        == ['    ']
     assert types['dt-diamond-left']   == ['bl  ']
     assert types['dt-diamond-right']  == ['bl  ']
     assert types['dt-diamond-bottom'] == ['blr ']
-
+    assert False
 
 def test_spec_deptypes_edges():
     output = spec('--types', '--cover', 'edges', 'dt-diamond')

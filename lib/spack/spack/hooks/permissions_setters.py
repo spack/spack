@@ -31,6 +31,8 @@ def forall_files(path, fn, args, dir_args=None):
 def chmod_real_entries(path, perms):
     # Don't follow links so we don't change things outside the prefix
     if not os.path.islink(path):
+        mode = os.stat(path).st_mode
+        perms |= mode & (stat.S_ISUID | stat.S_ISGID | stat.S_ISVTX)
         chmod_x(path, perms)
 
 
