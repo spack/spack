@@ -59,7 +59,8 @@ from spack.util.environment import (
     EnvironmentModifications, validate, preserve_environment)
 from spack.util.environment import system_dirs
 from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, get_path_from_module
+from spack.util.module_cmd import (
+    load_module, get_path_from_module, unload_module)
 from spack.util.log_parse import parse_log_events, make_log_context
 
 
@@ -715,6 +716,9 @@ def setup_package(pkg, dirty):
             if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
                 load_module("cce")
             load_module(mod)
+
+        if "cce" not in pkg.compiler.modules:
+            unload_module("cce")
 
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
