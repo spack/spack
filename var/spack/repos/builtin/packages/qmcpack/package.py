@@ -216,9 +216,13 @@ class Qmcpack(CMakePackage, CudaPackage):
         if '+cuda' in spec:
             args.append('-DQMC_CUDA=1')
             cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch is not None:
+            if cuda_arch != 'none':
                 args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
             else:
+                # This is the default value set in QMCPACK's CMake
+                # Not possible to set default value for cuda_arch,
+                # thus this won't be stored in the spec, which is
+                # a problem.
                 args.append('-DCUDA_ARCH=sm_35')
         else:
             args.append('-DQMC_CUDA=0')
