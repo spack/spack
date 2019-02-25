@@ -1476,6 +1476,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         # Save the build environment in a file before building.
                         dump_environment(self.env_path)
 
+                        # cache debug settings
+                        debug_enabled = tty.is_debug()
+
                         # Spawn a daemon that reads from a pipe and redirects
                         # everything to log_path
                         with log_output(self.log_path, echo, True) as logger:
@@ -1483,8 +1486,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                     self.phases, self._InstallPhase_phases):
 
                                 with logger.force_echo():
+                                    inner_debug = tty.is_debug()
+                                    tty.set_debug(debug_enabled)
                                     tty.msg(
                                         "Executing phase: '%s'" % phase_name)
+                                    tty.set_debug(inner_debug)
 
                                 # Redirect stdout and stderr to daemon pipe
                                 phase = getattr(self, phase_attr)

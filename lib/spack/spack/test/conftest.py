@@ -137,6 +137,13 @@ def remove_whatever_it_is(path):
         shutil.rmtree(path)
 
 
+@pytest.fixture
+def working_env():
+    saved_env = os.environ.copy()
+    yield
+    os.environ = saved_env
+
+
 @pytest.fixture(scope='function', autouse=True)
 def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
     """Ensure that each test leaves a clean stage when done.
