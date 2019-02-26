@@ -215,3 +215,69 @@ def test_move_transaction_rollback(tmpdir):
         pass
 
     assert h == fs.hash_directory(str(tmpdir))
+
+
+@pytest.mark.regression('10601')
+@pytest.mark.regression('10603')
+def test_recursive_search_of_headers_from_prefix(
+        installation_dir_with_headers
+):
+    # Try to inspect recursively from <prefix> and ensure we don't get
+    # subdirectories of the '<prefix>/include' path
+    prefix = str(installation_dir_with_headers)
+    header_list = fs.find_all_headers(prefix)
+
+    # Check that the header files we expect are all listed
+    assert os.path.join(prefix, 'include', 'ex3.h') in header_list
+    assert os.path.join(prefix, 'include', 'boost', 'ex3.h') in header_list
+    assert os.path.join(prefix, 'path', 'to', 'ex1.h') in header_list
+    assert os.path.join(prefix, 'path', 'to', 'subdir', 'ex2.h') in header_list
+
+    # Check that when computing directories we exclude <prefix>/include/boost
+    include_dirs = header_list.directories
+    assert os.path.join(prefix, 'include') in include_dirs
+    assert os.path.join(prefix, 'include', 'boost') not in include_dirs
+    assert os.path.join(prefix, 'path', 'to') in include_dirs
+    assert os.path.join(prefix, 'path', 'to', 'subdir') in include_dirs
+
+
+@pytest.mark.parametrize('list_of_headers,expected_directories', [
+    (['/pfx/include/foo.h', '/pfx/include/subdir/foo.h'], ['/pfx/include']),
+    (['/pfx/include/foo.h', '/pfx/subdir/foo.h'],
+     ['/pfx/include', '/pfx/subdir']),
+    (['/pfx/include/subdir/foo.h', '/pfx/subdir/foo.h'],
+     ['/pfx/include', '/pfx/subdir'])
+])
+def test_computation_of_header_directories(
+        list_of_headers, expected_directories
+):
+    hl = fs.HeaderList(list_of_headers)
+    assert hl.directories == expected_directories
+
+
+def test_headers_directory_setter():
+    hl = fs.HeaderList(
+        ['/pfx/include/subdir/foo.h', '/pfx/include/subdir/bar.h']
+    )
+
+    # Set directories using a list
+    hl.directories = ['/pfx/include/subdir']
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # If it's a single directory it's fine to not wrap it into a list
+    # when setting the property
+    hl.directories = '/pfx/include/subdir'
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # Paths are normalized, so it doesn't matter how many backslashes etc.
+    # are present in the original directory being used
+    hl.directories = '/pfx/include//subdir/'
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # Setting an empty list is allowed and returns an empty list
+    hl.directories = []
+    assert hl.directories == []
+
+    # Setting directories to None also returns an empty list
+    hl.directories = None
+    assert hl.directories == []

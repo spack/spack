@@ -410,10 +410,10 @@ case "$mode" in
     ld|ccld)
         # Set extra RPATHs
         IFS=':' read -ra extra_rpaths <<< "$SPACK_COMPILER_EXTRA_RPATHS"
-        for extra_rpath in "${extra_rpaths[@]}"; do
-            $add_rpaths && rpaths+=("$extra_rpath")
-            libdirs+=("$extra_rpath")
-        done
+        libdirs+=("${extra_rpaths[@]}")
+        if [[ "$add_rpaths" != "false" ]] ; then
+            rpaths+=("${extra_rpaths[@]}")
+        fi
 
         # Add SPACK_LDLIBS to args
         for lib in "${SPACK_LDLIBS[@]}"; do
