@@ -415,4 +415,4 @@ class Gcc(AutotoolsPackage):
         run_env.set('CXX', join_path(self.spec.prefix.bin, 'g++'))
         run_env.set('FC', join_path(self.spec.prefix.bin, 'gfortran'))
         run_env.set('F77', join_path(self.spec.prefix.bin, 'gfortran'))
-        run_env.set('F90', join_path(self.spec.prefix.bin, 'gfortran'))
+
