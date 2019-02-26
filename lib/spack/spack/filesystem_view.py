@@ -593,7 +593,7 @@ class YamlFilesystemView(FilesystemView):
             Ascend up from the leaves accessible from `path`
             and remove broken links (uninstalled packages).
         """
-        for dirpath, subdirs, files in os.walk(self.root, topdown=False):
+        for dirpath, subdirs, files in os.walk(self._root, topdown=False):
             for f in files:
                 filename = os.path.join(dirpath, f)
                 if not os.path.exists(filename):  # filename is broken link
