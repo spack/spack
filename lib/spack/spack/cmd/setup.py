@@ -57,7 +57,7 @@ def write_spconfig(package, dirty):
     paths = os.environ['PATH'].split(':')
     paths = [item for item in paths if 'spack/env' not in item]
     env['PATH'] = ':'.join(paths)
-    env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
+    #env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
     env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
     env['CC'] = os.environ['SPACK_CC']
     env['CXX'] = os.environ['SPACK_CXX']
