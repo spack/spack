@@ -663,7 +663,7 @@ def test_env_updates_view_uninstall(
         uninstall('-ay')
 
     assert (not os.path.exists(str(view_dir.join('.spack'))) or
-            os.listdir(str(view_dir.join('.spack'))) == [])
+            os.listdir(str(view_dir.join('.spack'))) == ['projections.yaml'])
 
 
 def test_env_updates_view_uninstall_referenced_elsewhere(
@@ -684,7 +684,7 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
         uninstall('-ay')
 
     assert (not os.path.exists(str(view_dir.join('.spack'))) or
-            os.listdir(str(view_dir.join('.spack'))) == [])
+            os.listdir(str(view_dir.join('.spack'))) == ['projections.yaml'])
 
 
 def test_env_updates_view_remove_concretize(
@@ -706,7 +706,7 @@ def test_env_updates_view_remove_concretize(
         concretize()
 
     assert (not os.path.exists(str(view_dir.join('.spack'))) or
-            os.listdir(str(view_dir.join('.spack'))) == [])
+            os.listdir(str(view_dir.join('.spack'))) == ['projections.yaml'])
 
 
 def test_env_updates_view_force_remove(
@@ -725,7 +725,7 @@ def test_env_updates_view_force_remove(
         remove('-f', 'mpileaks')
 
     assert (not os.path.exists(str(view_dir.join('.spack'))) or
-            os.listdir(str(view_dir.join('.spack'))) == [])
+            os.listdir(str(view_dir.join('.spack'))) == ['projections.yaml'])
 
 
 def test_env_activate_view_fails(

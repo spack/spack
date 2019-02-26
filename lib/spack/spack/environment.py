@@ -707,7 +707,7 @@ class Environment(object):
             # Link the resulting log file into logs dir
             build_log_link = os.path.join(
                 log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
-            if os.path.exists(build_log_link):
+            if os.path.lexists(build_log_link):
                 os.remove(build_log_link)
             os.symlink(spec.package.build_log_path, build_log_link)
 
@@ -819,7 +819,7 @@ class Environment(object):
                 # Link the resulting log file into logs dir
                 build_log_link = os.path.join(
                     self.log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
-                if os.path.exists(build_log_link):
+                if os.path.lexists(build_log_link):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
 
