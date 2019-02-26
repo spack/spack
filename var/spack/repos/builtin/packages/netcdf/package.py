@@ -41,6 +41,8 @@ class Netcdf(AutotoolsPackage):
             description='Enable parallel I/O for classic files')
     variant('hdf4', default=False, description='Enable HDF4 support')
     variant('shared', default=True, description='Enable shared library')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
     variant('dap', default=False, description='Enable DAP support')
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
@@ -155,9 +157,7 @@ class Netcdf(AutotoolsPackage):
 
         config_args += self.enable_or_disable('shared')
 
-        if '~shared' in self.spec:
-            # We don't have shared libraries but we still want it to be
-            # possible to use this library in shared builds
+        if '+pic' in self.spec:
             cflags.append(self.compiler.pic_flag)
 
         config_args += self.enable_or_disable('dap')
