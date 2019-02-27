@@ -20,12 +20,14 @@ class Caliper(CMakePackage):
     git      = "https://github.com/LLNL/Caliper.git"
 
     version('master')
+    version('1.8.0', tag='v1.8.0')
     version('1.7.0', tag='v1.7.0')
     # version 1.6.0 is broken b/c it downloads the wrong gotcha version
     version('1.6.0', tag='v1.6.0')
 
     is_linux = sys.platform.startswith('linux')
-
+    variant('shared', default=True,
+            description='Build shared libraries')
     variant('mpi', default=True,
             description='Enable MPI wrappers')
     variant('dyninst', default=False,
@@ -63,6 +65,7 @@ class Caliper(CMakePackage):
         args = [
             '-DBUILD_TESTING=Off',
             '-DBUILD_DOCS=Off',
+            '-DBUILD_SHARED_LIBS=%s' % ('On' if '+shared'  in spec else 'Off'),
             '-DWITH_DYNINST=%s'  % ('On' if '+dyninst'  in spec else 'Off'),
             '-DWITH_CALLPATH=%s' % ('On' if '+callpath' in spec else 'Off'),
             '-DWITH_GOTCHA=%s'   % ('On' if '+gotcha'   in spec else 'Off'),
