@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 from spack import *
 
 import spack.store
+import os
 
 
 class Openspeedshop(CMakePackage):
@@ -290,6 +291,16 @@ class Openspeedshop(CMakePackage):
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         run_env.set('OPENSS_RAWDATA_DIR', '.')
+
+        # Set the openspeedshop plugin path
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
+        plugin_path = '/openspeedshop'
+        oss_plugin_path = lib_dir + plugin_path
+        run_env.set('OPENSS_PLUGIN_PATH', oss_plugin_path)
+
         cbtf_mc = '/sbin/cbtf_mrnet_commnode'
         cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
         run_env.set('XPLAT_RSH', 'ssh')

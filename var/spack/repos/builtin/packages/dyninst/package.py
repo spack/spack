@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,6 +53,8 @@ class Dyninst(CMakePackage):
 
     patch('stat_dysect.patch', when='+stat_dysect')
     patch('stackanalysis_h.patch', when='@9.2.0')
+    patch('v9.3.2-auto.patch', when='@9.3.2 %gcc@:4.7.99')
+    patch('tribool.patch', when='@9.3.0:10.0.0 ^boost@1.69:')
 
     # Versions 9.3.x used cotire, but have no knob to turn it off.
     # Cotire has no real use for one-time builds and can break

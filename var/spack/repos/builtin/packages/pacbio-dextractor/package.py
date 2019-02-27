@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,10 +21,10 @@ class PacbioDextractor(MakefilePackage):
     def edit(self, spec, prefix):
         mkdirp(prefix.bin)
         makefile = FileFilter('Makefile')
-        makefile.filter('PATH_HDF5\s*=\s*/sw/apps/hdf5/current',
+        makefile.filter(r'PATH_HDF5\s*=\s*/sw/apps/hdf5/current',
                         'PATH_HDF5 = ' + spec['hdf5'].prefix)
-        makefile.filter('PATH_HDF5\*s=\s*/usr/local/hdf5', '')
-        makefile.filter('DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
+        makefile.filter(r'PATH_HDF5\*s=\s*/usr/local/hdf5', '')
+        makefile.filter(r'DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
         gmf = FileFilter('GNUmakefile')
-        gmf.filter('rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
+        gmf.filter(r'rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
                    'cp ${ALL} ' + prefix.bin)

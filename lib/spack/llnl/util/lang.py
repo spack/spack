@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -448,7 +448,8 @@ def pretty_string_to_date(date_str, now=None):
 
     Args:
         date_str (str): string representing a date. This string might be
-            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``)
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``,
+            ``YYYY-MM-DD HH:MM``, ``YYYY-MM-DD HH:MM:SS``)
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
     Returns:
@@ -467,6 +468,10 @@ def pretty_string_to_date(date_str, now=None):
     pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m-%d'
     )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M')
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
 
     pretty_regex = re.compile(
         r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')
@@ -561,6 +566,9 @@ class Singleton(object):
 
     def __contains__(self, element):
         return element in self.instance
+
+    def __call__(self, *args, **kwargs):
+        return self.instance(*args, **kwargs)
 
     def __iter__(self):
         return iter(self.instance)

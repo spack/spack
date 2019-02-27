@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,7 +46,7 @@ def bootstrap(parser, args, **kwargs):
     # Define requirement dictionary defining general specs which need
     # to be satisfied, and the specs to install when the general spec
     # isn't satisfied.
-    requirement_dict = {'environment-modules': 'environment-modules~X'}
+    requirement_dict = {'environment-modules': 'environment-modules@3.2.10~X'}
 
     for requirement in requirement_dict:
         installed_specs = spack.store.db.query(requirement)

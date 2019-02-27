@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,10 @@ class Poppler(CMakePackage):
     """Poppler is a PDF rendering library based on the xpdf-3.0 code base."""
 
     homepage = "https://poppler.freedesktop.org"
-    url      = "https://poppler.freedesktop.org/poppler-0.65.0.tar.xz"
+    url      = "https://poppler.freedesktop.org/poppler-0.72.0.tar.xz"
     list_url = "https://poppler.freedesktop.org/releases.html"
 
+    version('0.72.0', sha256='c1747eb8f26e9e753c4001ed951db2896edc1021b6d0f547a0bd2a27c30ada51')
     version('0.65.0', 'b9a0af02e43deb26265f130343e90d78')
     version('0.64.0', 'f7f687ebb60004f8ad61994575018044')
 

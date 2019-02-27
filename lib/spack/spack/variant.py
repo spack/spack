@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,13 +9,20 @@ variants both in packages and in specs.
 
 import functools
 import inspect
+import itertools
 import re
 from six import StringIO
 
+import llnl.util.tty.color
 import llnl.util.lang as lang
 
 import spack.directives
 import spack.error as error
+
+try:
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
 
 
 class Variant(object):
@@ -71,8 +78,8 @@ class Variant(object):
 
         else:
             # Otherwise assume values is the set of allowed explicit values
-            self.values = tuple(values)
-            allowed = self.values + (self.default,)
+            self.values = values
+            allowed = tuple(self.values) + (self.default,)
             self.single_value_validator = lambda x: x in allowed
 
         self.multi = multi
@@ -118,7 +125,7 @@ class Variant(object):
 
         # Validate the group of values if needed
         if self.group_validator is not None:
-            self.group_validator(value)
+            self.group_validator(pkg.name, self.name, value)
 
     @property
     def allowed_values(self):
@@ -596,6 +603,172 @@ def substitute_abstract_variants(spec):
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
+
+
+# The class below inherit from Sequence to disguise as a tuple and comply
+# with the semantic expected by the 'values' argument of the variant directive
+class DisjointSetsOfValues(Sequence):
+    """Allows combinations from one of many mutually exclusive sets.
+
+    The value ``('none',)`` is reserved to denote the empty set
+    and therefore no other set can contain the item ``'none'``.
+
+    Args:
+        *sets (list of tuples): mutually exclusive sets of values
+    """
+
+    _empty_set = set(('none',))
+
+    def __init__(self, *sets):
+        self.sets = [set(x) for x in sets]
+
+        # 'none' is a special value and can appear only in a set of
+        # a single element
+        if any('none' in s and s != set(('none',)) for s in self.sets):
+            raise error.SpecError("The value 'none' represents the empty set,"
+                                  " and must appear alone in a set. Use the "
+                                  "method 'allow_empty_set' to add it.")
+
+        # Sets should not intersect with each other
+        if any(s1 & s2 for s1, s2 in itertools.combinations(self.sets, 2)):
+            raise error.SpecError('sets in input must be disjoint')
+
+        #: Attribute used to track values which correspond to
+        #: features which can be enabled or disabled as understood by the
+        #: package's build system.
+        self.feature_values = tuple(itertools.chain.from_iterable(self.sets))
+        self.default = None
+        self.multi = True
+        self.error_fmt = "this variant accepts combinations of values from " \
+                         "exactly one of the following sets '{values}' " \
+                         "@*r{{[{package}, variant '{variant}']}}"
+
+    def with_default(self, default):
+        """Sets the default value and returns self."""
+        self.default = default
+        return self
+
+    def with_error(self, error_fmt):
+        """Sets the error message format and returns self."""
+        self.error_fmt = error_fmt
+        return self
+
+    def with_non_feature_values(self, *values):
+        """Marks a few values as not being tied to a feature."""
+        self.feature_values = tuple(
+            x for x in self.feature_values if x not in values
+        )
+        return self
+
+    def allow_empty_set(self):
+        """Adds the empty set to the current list of disjoint sets."""
+        if self._empty_set in self.sets:
+            return self
+
+        # Create a new object to be returned
+        object_with_empty_set = type(self)(('none',), *self.sets)
+        object_with_empty_set.error_fmt = self.error_fmt
+        object_with_empty_set.feature_values = self.feature_values + ('none', )
+        return object_with_empty_set
+
+    def prohibit_empty_set(self):
+        """Removes the empty set from the current list of disjoint sets."""
+        if self._empty_set not in self.sets:
+            return self
+
+        # Create a new object to be returned
+        sets = [s for s in self.sets if s != self._empty_set]
+        object_without_empty_set = type(self)(*sets)
+        object_without_empty_set.error_fmt = self.error_fmt
+        object_without_empty_set.feature_values = tuple(
+            x for x in self.feature_values if x != 'none'
+        )
+        return object_without_empty_set
+
+    def __getitem__(self, idx):
+        return tuple(itertools.chain.from_iterable(self.sets))[idx]
+
+    def __len__(self):
+        return len(itertools.chain.from_iterable(self.sets))
+
+    @property
+    def validator(self):
+        def _disjoint_set_validator(pkg_name, variant_name, values):
+            # If for any of the sets, all the values are in it return True
+            if any(all(x in s for x in values) for s in self.sets):
+                return
+
+            format_args = {
+                'variant': variant_name, 'package': pkg_name, 'values': values
+            }
+            msg = self.error_fmt + \
+                " @*r{{[{package}, variant '{variant}']}}"
+            msg = llnl.util.tty.color.colorize(msg.format(**format_args))
+            raise error.SpecError(msg)
+        return _disjoint_set_validator
+
+
+def _a_single_value_or_a_combination(single_value, *values):
+    error = "the value '" + single_value + \
+            "' is mutually exclusive with any of the other values"
+    return DisjointSetsOfValues(
+        (single_value,), values
+    ).with_default(single_value).with_error(error).\
+        with_non_feature_values(single_value)
+
+
+# TODO: The factories below are used by package writers to set values of
+# TODO: multi-valued variants. It could be worthwhile to gather them in
+# TODO: a common namespace (like 'multi') in the future.
+
+
+def any_combination_of(*values):
+    """Multi-valued variant that allows any combination of the specified
+    values, and also allows the user to specify 'none' (as a string) to choose
+    none of them.
+
+    It is up to the package implementation to handle the value 'none'
+    specially, if at all.
+
+    Args:
+        *values: allowed variant values
+
+    Returns:
+        a properly initialized instance of DisjointSetsOfValues
+    """
+    return _a_single_value_or_a_combination('none', *values)
+
+
+def auto_or_any_combination_of(*values):
+    """Multi-valued variant that allows any combination of a set of values
+    (but not the empty set) or 'auto'.
+
+    Args:
+        *values: allowed variant values
+
+    Returns:
+        a properly initialized instance of DisjointSetsOfValues
+    """
+    return _a_single_value_or_a_combination('auto', *values)
+
+
+#: Multi-valued variant that allows any combination picking
+#: from one of multiple disjoint sets
+def disjoint_sets(*sets):
+    """Multi-valued variant that allows any combination picking from one
+    of multiple disjoint sets of values, and also allows the user to specify
+    'none' (as a string) to choose none of them.
+
+    It is up to the package implementation to handle the value 'none'
+    specially, if at all.
+
+    Args:
+        *sets:
+
+    Returns:
+        a properly initialized instance of DisjointSetsOfValues
+    """
+    return DisjointSetsOfValues(*sets).allow_empty_set().with_default('none')
 
 
 class DuplicateVariantError(error.SpecError):

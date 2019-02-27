@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,7 +92,7 @@ from six import iteritems
 
 from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
-from llnl.util.lang import check_kwargs
+from llnl.util.lang import check_kwargs, memoized
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
 import spack.architecture
@@ -107,7 +107,7 @@ import spack.util.spack_yaml as syaml
 
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.util.module_cmd import get_path_from_module, load_module
-from spack.error import SpecError, UnsatisfiableSpecError
+from spack.error import SpackError, SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
@@ -669,7 +669,7 @@ def _headers_default_handler(descriptor, spec, cls):
         HeaderList: The headers in ``prefix.include``
 
     Raises:
-        RuntimeError: If no headers are found
+        NoHeadersError: If no headers are found
     """
     headers = find_headers('*', root=spec.prefix.include, recursive=True)
 
@@ -677,7 +677,7 @@ def _headers_default_handler(descriptor, spec, cls):
         return headers
     else:
         msg = 'Unable to locate {0} headers in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix.include))
+        raise NoHeadersError(msg.format(spec.name, spec.prefix.include))
 
 
 def _libs_default_handler(descriptor, spec, cls):
@@ -697,7 +697,7 @@ def _libs_default_handler(descriptor, spec, cls):
         LibraryList: The libraries found
 
     Raises:
-        RuntimeError: If no libraries are found
+        NoLibrariesError: If no libraries are found
     """
 
     # Variable 'name' is passed to function 'find_libraries', which supports
@@ -737,7 +737,7 @@ def _libs_default_handler(descriptor, spec, cls):
                 return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
-    raise RuntimeError(msg.format(spec.name, prefix))
+    raise NoLibrariesError(msg.format(spec.name, prefix))
 
 
 class ForwardQueryToPackage(object):
@@ -2665,6 +2665,7 @@ class Spec(object):
         return [spec for spec in self.traverse() if spec.virtual]
 
     @property
+    @memoized
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
 
@@ -2674,27 +2675,22 @@ class Spec(object):
         TODO: this only checks in the package; it doesn't resurrect old
         patches from install directories, but it probably should.
         """
+        if not self.concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+
         if 'patches' not in self.variants:
             return []
 
-        patches = []
-
-        # FIXME: The private attribute below is attached after
+        # FIXME: _patches_in_order_of_appearance is attached after
         # FIXME: concretization to store the order of patches somewhere.
         # FIXME: Needs to be refactored in a cleaner way.
+
+        # translate patch sha256sums to patch objects by consulting the index
+        patches = []
         for sha256 in self.variants['patches']._patches_in_order_of_appearance:
-            patch = self.package_class.lookup_patch(sha256)
-            if patch:
-                patches.append(patch)
-                continue
-
-            # if not found in this package, check immediate dependents
-            # for dependency patches
-            for dep_spec in self._dependents.values():
-                patch = dep_spec.parent.package_class.lookup_patch(sha256)
-
-                if patch:
-                    patches.append(patch)
+            index = spack.repo.path.patch_index
+            patch = index.patch_for_package(sha256, self.package)
+            patches.append(patch)
 
         return patches
 
@@ -3029,6 +3025,8 @@ class Spec(object):
             ${SHA1}          Dependencies 8-char sha1 prefix
             ${HASH:len}      DAG hash with optional length specifier
 
+            ${DEP:name:OPTION} Evaluates as OPTION would for self['name']
+
             ${SPACK_ROOT}    The spack root directory
             ${SPACK_INSTALL} The default spack install directory,
                              ${SPACK_PREFIX}/opt
@@ -3222,6 +3220,10 @@ class Spec(object):
                     out.write(fmt % (self.dag_hash(hashlen)))
                 elif named_str == 'NAMESPACE':
                     out.write(fmt % transform(self.namespace))
+                elif named_str.startswith('DEP:'):
+                    _, dep_name, dep_option = named_str.lower().split(':', 2)
+                    dep_spec = self[dep_name]
+                    out.write(fmt % (dep_spec.format('${%s}' % dep_option)))
 
                 named = False
 
@@ -3693,6 +3695,33 @@ def parse_anonymous_spec(spec_like, pkg_name):
     return anon_spec
 
 
+def save_dependency_spec_yamls(
+        root_spec_as_yaml, output_directory, dependencies=None):
+    """Given a root spec (represented as a yaml object), index it with a subset
+       of its dependencies, and write each dependency to a separate yaml file
+       in the output directory.  By default, all dependencies will be written
+       out.  To choose a smaller subset of dependencies to be written, pass a
+       list of package names in the dependencies parameter.  In case of any
+       kind of error, SaveSpecDependenciesError is raised with a specific
+       message about what went wrong."""
+    root_spec = Spec.from_yaml(root_spec_as_yaml)
+
+    dep_list = dependencies
+    if not dep_list:
+        dep_list = [dep.name for dep in root_spec.traverse()]
+
+    for dep_name in dep_list:
+        if dep_name not in root_spec:
+            msg = 'Dependency {0} does not exist in root spec {1}'.format(
+                dep_name, root_spec.name)
+            raise SpecDependencyNotFoundError(msg)
+        dep_spec = root_spec[dep_name]
+        yaml_path = os.path.join(output_directory, '{0}.yaml'.format(dep_name))
+
+        with open(yaml_path, 'w') as fd:
+            fd.write(dep_spec.to_yaml(all_deps=True))
+
+
 def base32_prefix_bits(hash_string, bits):
     """Return the first <bits> bits of a base32 string as an integer."""
     if bits > len(hash_string) * 5:
@@ -3717,6 +3746,14 @@ class DuplicateDependencyError(SpecError):
 
 class DuplicateCompilerSpecError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
+
+
+class NoLibrariesError(SpackError):
+    """Raised when package libraries are requested but cannot be found"""
+
+
+class NoHeadersError(SpackError):
+    """Raised when package headers are requested but cannot be found"""
 
 
 class UnsupportedCompilerError(SpecError):
@@ -3870,3 +3907,8 @@ class ConflictsInSpecError(SpecError, RuntimeError):
                 long_message += match_fmt_custom.format(idx + 1, c, w, msg)
 
         super(ConflictsInSpecError, self).__init__(message, long_message)
+
+
+class SpecDependencyNotFoundError(SpecError):
+    """Raised when a failure is encountered writing the dependencies of
+    a spec."""

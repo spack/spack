@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,14 +6,6 @@
 import sys
 
 from spack import *
-from spack.error import SpackError
-
-
-def _process_manager_validator(values):
-    if len(values) > 1 and 'slurm' in values:
-        raise SpackError(
-            'slurm cannot be activated along with other process managers'
-        )
 
 
 class Mvapich2(AutotoolsPackage):
@@ -70,9 +62,12 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'process_managers',
         description='List of the process managers to activate',
-        values=('slurm', 'hydra', 'gforker', 'remshell'),
-        multi=True,
-        validator=_process_manager_validator
+        values=disjoint_sets(
+            ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
+        ).prohibit_empty_set().with_error(
+            "'slurm' or 'auto' cannot be activated along with "
+            "other process managers"
+        ).with_default('auto').with_non_feature_values('auto'),
     )
 
     variant(
@@ -81,7 +76,7 @@ class Mvapich2(AutotoolsPackage):
         default='psm',
         values=(
             'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
-            'nemesistcpib'
+            'nemesistcpib', 'nemesisofi'
         )
     )
 
@@ -94,19 +89,22 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'file_systems',
         description='List of the ROMIO file systems to activate',
-        values=('lustre', 'gpfs', 'nfs', 'ufs'),
-        multi=True
+        values=auto_or_any_combination_of('lustre', 'gpfs', 'nfs', 'ufs'),
     )
 
     depends_on('findutils', type='build')
     depends_on('bison', type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('zlib')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
+    depends_on('libxml2')
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
     depends_on('rdma-core', when='fabrics=mrail')
     depends_on('rdma-core', when='fabrics=nemesisib')
     depends_on('rdma-core', when='fabrics=nemesistcpib')
     depends_on('rdma-core', when='fabrics=nemesisibtcp')
+    depends_on('libfabric', when='fabrics=nemesisofi')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -168,6 +166,9 @@ class Mvapich2(AutotoolsPackage):
         elif 'fabrics=mrail' in self.spec:
             opts = ["--with-device=ch3:mrail", "--with-rdma=gen2",
                     "--disable-mcast"]
+        elif 'fabrics=nemesisofi' in self.spec:
+            opts = ["--with-device=ch3:nemesis:ofi",
+                    "--with-ofi={0}".format(self.spec['libfabric'].prefix)]
         return opts
 
     @property

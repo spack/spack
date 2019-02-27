@@ -1,9 +1,7 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 
 
 class OmegaH(CMakePackage):
@@ -13,9 +11,9 @@ class OmegaH(CMakePackage):
     hardware including GPUs.
     """
 
-    homepage = "https://github.com/ibaned/omega_h"
-    url      = "https://github.com/ibaned/omega_h/archive/v9.13.4.tar.gz"
-    git      = "https://github.com/ibaned/omega_h.git"
+    homepage = "https://github.com/SNLComputation/omega_h"
+    url      = "https://github.com/SNLComputation/omega_h/archive/v9.13.4.tar.gz"
+    git      = "https://github.com/SNLComputation/omega_h.git"
 
     version('develop', branch='master')
     version('9.19.1', sha256='60ef65c2957ce03ef9d1b995d842fb65c32c5659d064de002c071effe66b1b1f')
@@ -28,8 +26,7 @@ class OmegaH(CMakePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('zlib', default=True, description='Activates ZLib support')
-    variant('trilinos', default=False, description='Use Teuchos and Kokkos')
-    variant('build_type', default='')
+    variant('trilinos', default=True, description='Use Teuchos and Kokkos')
     variant('throw', default=False, description='Errors throw exceptions instead of abort')
     variant('examples', default=False, description='Compile examples')
     variant('optimize', default=True, description='Compile C++ with optimization')
@@ -81,6 +78,8 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_THROW:BOOL=ON')
         else:
             args.append('-DOmega_h_THROW:BOOL=OFF')
+        # omega-h requires empty CMAKE_BUILD_TYPE
+        args.append('-DCMAKE_BUILD_TYPE:STRING=')
         args += list(self._bob_options())
         return args
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,11 @@ class Git(AutotoolsPackage):
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
 
     releases = [
+        {
+            'version': '2.20.1',
+            'sha256': 'edc3bc1495b69179ba4e272e97eff93334a20decb1d8db6ec3c19c16417738fd',
+            'sha256_manpages': 'e9c123463abd05e142defe44a8060ce6e9853dfd8c83b2542e38b7deac4e6d4c'
+        },
         {
             'version': '2.19.2',
             'sha256': 'db893ad69c9ac9498b09677c5839787eba2eb3b7ef2bc30bfba7e62e77cf7850',

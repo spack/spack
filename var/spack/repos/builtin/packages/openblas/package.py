@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.5', sha256='0950c14bd77c90a6427e26210d6dab422271bc86f9fc69126725833ecdaa0e85')
     version('0.3.4', sha256='4b4b4453251e9edb5f57465bf2b3cf67b19d811d50c8588cdf2ea1f201bb834f')
     version('0.3.3', sha256='49d88f4494ae780e3d7fa51769c00d982d7cdb73e696054ac3baa81d42f13bab')
     version('0.3.2', sha256='e8ba64f6b103c511ae13736100347deb7121ba9b41ba82052b1a018a65c0cb15')
@@ -38,8 +39,8 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='64 bit integers')
     variant('pic', default=True, description='Build position independent code')
 
-    variant('cpu_target', default='',
-                    description='Set CPU target architecture (leave empty for '
+    variant('cpu_target', default='auto',
+            description='Set CPU target architecture (leave empty for '
                         'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
 
     variant(
@@ -150,14 +151,13 @@ class Openblas(MakefilePackage):
                 'NUM_THREADS=64',  # OpenBLAS stores present no of CPUs as max
             ]
 
-        if self.spec.variants['cpu_target'].value:
+        if self.spec.variants['cpu_target'].value != 'auto':
             make_defs += [
                 'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
             ]
         # invoke make with the correct TARGET for aarch64
         elif 'aarch64' in spack.architecture.sys_type():
             make_defs += [
-                'TARGET=PILEDRIVER',
                 'TARGET=ARMV8'
             ]
         if self.spec.satisfies('%gcc@:4.8.4'):

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ class Kokkos(Package):
     # Host architecture variant
     variant(
         'host_arch',
-        default=None,
+        default='none',
         values=('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
                 'Power7', 'Power8', 'Power9',
                 'WSM', 'SNB', 'HSW', 'BDW', 'SKX', 'KNC', 'KNL'),
@@ -81,7 +81,7 @@ class Kokkos(Package):
     # GPU architecture variant
     variant(
         'gpu_arch',
-        default=None,
+        default='none',
         values=gpu_values,
         description='Set the GPU architecture to use'
     )
@@ -159,9 +159,9 @@ class Kokkos(Package):
             host_arch = spec.variants['host_arch'].value
             # GPU architectures
             gpu_arch  = spec.variants['gpu_arch'].value
-            if host_arch:
+            if host_arch != 'none':
                 arch_args.append(host_arch)
-            if gpu_arch:
+            if gpu_arch != 'none':
                 arch_args.append(gpu_arch)
             # Combined architecture flags
             if arch_args:

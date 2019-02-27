@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,9 @@ from llnl.util.filesystem import working_dir
 import spack.paths
 import spack.stage
 import spack.util.executable
-from spack.stage import Stage
+
+from spack.resource import Resource
+from spack.stage import Stage, StageComposite, ResourceStage
 
 
 def check_expand_archive(stage, stage_name, mock_archive):
@@ -92,7 +94,7 @@ def get_stage_path(stage, stage_name):
 
 
 @pytest.fixture()
-def tmpdir_for_stage(mock_archive, mutable_config):
+def tmpdir_for_stage(mock_archive):
     """Uses a temporary directory for staging"""
     current = spack.paths.stage_path
     spack.config.set(
@@ -104,7 +106,7 @@ def tmpdir_for_stage(mock_archive, mutable_config):
 
 
 @pytest.fixture()
-def mock_archive(tmpdir, monkeypatch, mutable_config):
+def mock_archive(tmpdir, monkeypatch):
     """Creates a mock archive with the structure expected by the tests"""
     # Mock up a stage area that looks like this:
     #
@@ -145,6 +147,52 @@ def mock_archive(tmpdir, monkeypatch, mutable_config):
         test_tmp_dir=test_tmp_path,
         archive_dir=archive_dir
     )
+
+
+@pytest.fixture()
+def mock_noexpand_resource(tmpdir):
+    test_resource = tmpdir.join('resource-no-expand.sh')
+    test_resource.write("an example resource")
+    return str(test_resource)
+
+
+@pytest.fixture()
+def mock_expand_resource(tmpdir):
+    resource_dir = tmpdir.join('resource-expand')
+    archive_name = 'resource.tar.gz'
+    archive = tmpdir.join(archive_name)
+    archive_url = 'file://' + str(archive)
+    test_file = resource_dir.join('resource-file.txt')
+    resource_dir.ensure(dir=True)
+    test_file.write('test content\n')
+    current = tmpdir.chdir()
+    tar = spack.util.executable.which('tar', required=True)
+    tar('czf', str(archive_name), 'resource-expand')
+    current.chdir()
+
+    MockResource = collections.namedtuple(
+        'MockResource', ['url', 'files'])
+
+    return MockResource(archive_url, ['resource-file.txt'])
+
+
+@pytest.fixture()
+def composite_stage_with_expanding_resource(
+        mock_archive, mock_expand_resource):
+    composite_stage = StageComposite()
+    root_stage = Stage(mock_archive.url)
+    composite_stage.append(root_stage)
+
+    test_resource_fetcher = spack.fetch_strategy.from_kwargs(
+        url=mock_expand_resource.url)
+    # Specify that the resource files are to be placed in the 'resource-dir'
+    # directory
+    test_resource = Resource(
+        'test_resource', test_resource_fetcher, '', 'resource-dir')
+    resource_stage = ResourceStage(
+        test_resource_fetcher, root_stage, test_resource)
+    composite_stage.append(resource_stage)
+    return composite_stage, root_stage, resource_stage
 
 
 @pytest.fixture()
@@ -201,6 +249,47 @@ class TestStage(object):
         with Stage(mock_archive.url) as stage:
             check_setup(stage, None, mock_archive)
         check_destroy(stage, None)
+
+    @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_composite_stage_with_noexpand_resource(
+            self, mock_archive, mock_noexpand_resource):
+        composite_stage = StageComposite()
+        root_stage = Stage(mock_archive.url)
+        composite_stage.append(root_stage)
+
+        resource_dst_name = 'resource-dst-name.sh'
+        test_resource_fetcher = spack.fetch_strategy.from_kwargs(
+            url='file://' + mock_noexpand_resource, expand=False)
+        test_resource = Resource(
+            'test_resource', test_resource_fetcher, resource_dst_name, None)
+        resource_stage = ResourceStage(
+            test_resource_fetcher, root_stage, test_resource)
+        composite_stage.append(resource_stage)
+
+        composite_stage.create()
+        composite_stage.fetch()
+        composite_stage.expand_archive()
+        assert os.path.exists(
+            os.path.join(composite_stage.source_path, resource_dst_name))
+
+    @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_composite_stage_with_expand_resource(
+            self, mock_archive, mock_expand_resource,
+            composite_stage_with_expanding_resource):
+
+        composite_stage, root_stage, resource_stage = (
+            composite_stage_with_expanding_resource)
+
+        composite_stage.create()
+        composite_stage.fetch()
+        composite_stage.expand_archive()
+
+        for fname in mock_expand_resource.files:
+            file_path = os.path.join(
+                root_stage.source_path, 'resource-dir', fname)
+            assert os.path.exists(file_path)
 
     def test_setup_and_destroy_no_name_without_tmp(self, mock_archive):
         with Stage(mock_archive.url) as stage:

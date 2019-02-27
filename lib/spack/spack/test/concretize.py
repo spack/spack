@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -223,6 +223,17 @@ class TestConcretize(object):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
+
+    @pytest.mark.parametrize("spec,version", [
+        ('dealii', 'develop'),
+        ('xsdk', '0.4.0'),
+    ])
+    def concretize_difficult_packages(self, a, b):
+        """Test a couple of large packages that are often broken due
+        to current limitations in the concretizer"""
+        s = Spec(a + '@' + b)
+        s.concretize()
+        assert s[a].version == ver(b)
 
     def test_concretize_two_virtuals(self):
 
