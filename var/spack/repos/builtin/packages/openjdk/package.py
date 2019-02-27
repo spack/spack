@@ -26,8 +26,8 @@ class Openjdk(Package):
 
     version(
         "1.8.0_202-b08",
-        sha256="e9e679edefde71fd6b78ccd37060e4bb9a3d47c0f291fe61790b76396794edde",
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/archive/jdk8u202-b08.tar.gz",
+        sha256="533dcd8d9ca15df231a1eb392fa713a66bca85a8e76d9b4ee30975f3823636b7",
+        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u202-b08/OpenJDK8U-jdk_x64_linux_openj9_8u202b08_openj9-0.12.0.tar.gz",
     )
 
     provides('java')
