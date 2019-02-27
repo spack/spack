@@ -137,6 +137,13 @@ def remove_whatever_it_is(path):
         shutil.rmtree(path)
 
 
+@pytest.fixture
+def working_env():
+    saved_env = os.environ.copy()
+    yield
+    os.environ = saved_env
+
+
 @pytest.fixture(scope='function', autouse=True)
 def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
     """Ensure that each test leaves a clean stage when done.
@@ -707,6 +714,35 @@ def mutable_mock_env_path(tmpdir_factory):
     spack.environment.env_path = str(mock_path)
     yield mock_path
     spack.environment.env_path = saved_path
+
+
+@pytest.fixture()
+def installation_dir_with_headers(tmpdir_factory):
+    """Mock installation tree with a few headers placed in different
+    subdirectories. Shouldn't be modified by tests as it is session
+    scoped.
+    """
+    root = tmpdir_factory.mktemp('prefix')
+
+    # Create a few header files:
+    #
+    # <prefix>
+    # |-- include
+    # |   |--boost
+    # |   |   |-- ex3.h
+    # |   |-- ex3.h
+    # |-- path
+    #     |-- to
+    #         |-- ex1.h
+    #         |-- subdir
+    #             |-- ex2.h
+    #
+    root.ensure('include', 'boost', 'ex3.h')
+    root.ensure('include', 'ex3.h')
+    root.ensure('path', 'to', 'ex1.h')
+    root.ensure('path', 'to', 'subdir', 'ex2.h')
+
+    return root
 
 
 ##########

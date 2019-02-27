@@ -9,9 +9,10 @@ from spack import *
 class OpaPsm2(MakefilePackage):
     """ Intel Omni-Path Performance Scaled Messaging 2 (PSM2) library"""
 
-    homepage = "http://github.com/01org/opa-psm2"
-    url      = "https://github.com/01org/opa-psm2/archive/PSM2_10.3-8.tar.gz"
+    homepage = "http://github.com/intel/opa-psm2"
+    url      = "https://github.com/intel/opa-psm2/archive/PSM2_10.3-8.tar.gz"
 
+    version('11.2.68', sha256='42e16a14fc8c90b50855dcea46af3315bee32fb1ae89d83060f9b2ebdce1ec26')
     version('10.3-37',  '9bfca04f29b937b3856f893e1f8b1b60')
     version('10.3-17',  'e7263eb449939cb87612e2c7623ca21c')
     version('10.3-10',  '59d36b49eb126f980f3272a9d66a8e98')
@@ -20,16 +21,21 @@ class OpaPsm2(MakefilePackage):
     version('10.2-235', '23539f725a597bf2d35aac47a793a37b')
     version('10.2-175', 'c542b8641ad573f08f61d0a6a70f4013')
 
+    variant('avx2', default=True, description='Enable AVX2 instructions')
+
     depends_on('numactl')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('DESTDIR', self.prefix)
-        run_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'usr', 'include'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'usr', 'lib64'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'usr', 'lib64'))
+
+    def edit(self, spec, prefix):
+        # Change the makefile so libraries and includes are not
+        # placed under $PREFIX/usr
+        env['LIBDIR'] = '/lib'
+        filter_file(r'${DESTDIR}/usr', '${DESTDIR}', 'Makefile')
+
+        if '~avx2' in spec:
+            env['PSM_DISABLE_AVX2'] = 'True'
 
     def install(self, spec, prefix):
         make('--environment-overrides', 'install')

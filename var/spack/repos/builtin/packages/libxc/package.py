@@ -13,10 +13,11 @@ class Libxc(AutotoolsPackage):
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
     url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
 
-    version('4.2.3', '6176ac7edf234425d973903f82199350')
-    version('3.0.0', '8227fa3053f8fc215bd9d7b0d36de03c')
-    version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
-    version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
+    version('4.3.2', sha256='bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
+    version('4.2.3', sha256='02e49e9ba7d21d18df17e9e57eae861e6ce05e65e966e1e832475aa09e344256')
+    version('3.0.0', sha256='5542b99042c09b2925f2e3700d769cda4fb411b476d446c833ea28c6bfa8792a')
+    version('2.2.2', sha256='6ca1d0bb5fdc341d59960707bc67f23ad54de8a6018e19e02eee2b16ea7cc642')
+    version('2.2.1', sha256='ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00')
 
     def url_for_version(self, version):
         if version < Version('3.0.0'):

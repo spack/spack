@@ -24,7 +24,6 @@
 # the script runs. They are set by routines in spack.build_environment
 # as part of spack.package.Package.do_install().
 parameters=(
-    SPACK_PREFIX
     SPACK_ENV_PATH
     SPACK_DEBUG_LOG_DIR
     SPACK_DEBUG_LOG_ID
@@ -46,8 +45,6 @@ parameters=(
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
 #   SPACK_TEST_COMMAND
-# Dependencies can be empty for pkgs with no deps:
-#   SPACK_DEPENDENCIES
 
 # die()
 # Prints a message and exits with error 1.
@@ -385,62 +382,38 @@ case "$mode" in
         flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
 esac
 
+# Prepend include directories
+IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"
+if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
+    includes=("${includes[@]}" "${include_dirs[@]}")
+fi
 
-# Include the package's prefix/lib[64] dirs in rpath. We don't know until
-# *after* installation which one's correct, so we include both lib and
-# lib64, assuming that only one will be present.
-case "$mode" in
-    ld|ccld)
-        $add_rpaths && rpaths+=("$SPACK_PREFIX/lib")
-        $add_rpaths && rpaths+=("$SPACK_PREFIX/lib64")
-        ;;
-esac
+IFS=':' read -ra rpath_dirs <<< "$SPACK_RPATH_DIRS"
+if [[ $mode == ccld || $mode == ld ]]; then
 
-# Read spack dependencies from the environment. This is a list of prefixes.
-IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
-for dep in "${deps[@]}"; do
-    # Append include directories in any compilation mode
-    case "$mode" in
-        cpp|cc|as|ccld)
-            if [[ -d $dep/include ]]; then
-                includes=("${includes[@]}" "$dep/include")
-            fi
-            ;;
-    esac
+    if [[ "$add_rpaths" != "false" ]] ; then
+        # Append RPATH directories. Note that in the case of the
+        # top-level package these directories may not exist yet. For dependencies
+        # it is assumed that paths have already been confirmed.
+        rpaths=("${rpaths[@]}" "${rpath_dirs[@]}")
+    fi
 
-    # Append lib/lib64 and RPATH directories, but only if we're linking
-    case "$mode" in
-        ld|ccld)
-            if [[ -d $dep/lib ]]; then
-                if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
-                    $add_rpaths && rpaths=("${rpaths[@]}" "$dep/lib")
-                fi
-                if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-                    libdirs=("${libdirs[@]}" "$dep/lib")
-                fi
-            fi
+fi
 
-            if [[ -d $dep/lib64 ]]; then
-                if [[ $SPACK_RPATH_DEPS == *$dep* ]]; then
-                    $add_rpaths && rpaths+=("$dep/lib64")
-                fi
-                if [[ $SPACK_LINK_DEPS == *$dep* ]]; then
-                    libdirs+=("$dep/lib64")
-                fi
-            fi
-            ;;
-    esac
-done
+IFS=':' read -ra link_dirs <<< "$SPACK_LINK_DIRS"
+if [[ $mode == ccld || $mode == ld ]]; then
+    libdirs=("${libdirs[@]}" "${link_dirs[@]}")
+fi
 
 # add RPATHs if we're in in any linking mode
 case "$mode" in
     ld|ccld)
         # Set extra RPATHs
         IFS=':' read -ra extra_rpaths <<< "$SPACK_COMPILER_EXTRA_RPATHS"
-        for extra_rpath in "${extra_rpaths[@]}"; do
-            $add_rpaths && rpaths+=("$extra_rpath")
-            libdirs+=("$extra_rpath")
-        done
+        libdirs+=("${extra_rpaths[@]}")
+        if [[ "$add_rpaths" != "false" ]] ; then
+            rpaths+=("${extra_rpaths[@]}")
+        fi
 
         # Add SPACK_LDLIBS to args
         for lib in "${SPACK_LDLIBS[@]}"; do

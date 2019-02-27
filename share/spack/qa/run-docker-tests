@@ -38,9 +38,7 @@ for config in share/spack/docker/config/* ; do
 done
 
 if [ "$TEST_SUITE" '=' "docker" -a \
-     "$TRAVIS_EVENT_TYPE" != "pull_request" -a \
-     ensure_docker_login ] ; then
-
+     "$TRAVIS_EVENT_TYPE" != "pull_request" ] && ensure_docker_login ; then
     for config in share/spack/docker/config/* ; do
         source "$config"
         ./share/spack/docker/push-image.sh

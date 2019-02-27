@@ -26,6 +26,7 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('1.16.2', sha256='6c692e3879dde0b67a9dc78f9bfb6f61c666b4562fd8619632d7043fb5b691b0')
     version('1.15.2', sha256='27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1')
     version('1.15.1', '898004d5be091fde59ae353e3008fe9b')
     version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
@@ -86,6 +87,11 @@ class PyNumpy(PythonPackage):
 
         lapackblas_info = lapack_info + blas_info
 
+        def write_empty_libs(f, provider):
+            f.write('[{0}]\n'.format(provider))
+            f.write('libraries=\n')
+            write_library_dirs(f, '')
+
         if '+blas' in spec or '+lapack' in spec:
             # note that one should not use [blas_opt] and [lapack_opt], see
             # https://github.com/numpy/numpy/commit/ffd4332262ee0295cb942c94ed124f043d801eb6
@@ -99,13 +105,19 @@ class PyNumpy(PythonPackage):
                 lapackblas_names  = ','.join(lapackblas_info.names)
                 lapackblas_dirs   = ':'.join(lapackblas_info.directories)
 
+                handled_blas_and_lapack = False
+
                 # Special treatment for some (!) BLAS/LAPACK. Note that
                 # in this case library_dirs can not be specified within [ALL].
                 if '^openblas' in spec:
                     f.write('[openblas]\n')
                     f.write('libraries=%s\n' % lapackblas_names)
                     write_library_dirs(f, lapackblas_dirs)
-                elif '^mkl' in spec:
+                    handled_blas_and_lapack = True
+                else:
+                    write_empty_libs(f, 'openblas')
+
+                if '^mkl' in spec:
                     # numpy does not expect system libraries needed for MKL
                     # here.
                     # names = [x for x in names if x.startswith('mkl')]
@@ -124,11 +136,22 @@ class PyNumpy(PythonPackage):
                     f.write('[mkl]\n')
                     f.write('mkl_libs=%s\n' % 'mkl_rt')
                     write_library_dirs(f, lapackblas_dirs)
-                elif '^atlas' in spec:
+                    handled_blas_and_lapack = True
+                else:
+                    # Without explicitly setting the search directories to be
+                    # an empty list, numpy may retrieve and use mkl libs from
+                    # the system.
+                    write_empty_libs(f, 'mkl')
+
+                if '^atlas' in spec:
                     f.write('[atlas]\n')
                     f.write('atlas_libs=%s\n' % lapackblas_names)
                     write_library_dirs(f, lapackblas_dirs)
-                elif '^netlib-lapack' in spec:
+                    handled_blas_and_lapack = True
+                else:
+                    write_empty_libs(f, 'atlas')
+
+                if '^netlib-lapack' in spec:
                     # netlib requires blas and lapack listed
                     # separately so that scipy can find them
                     if spec.satisfies('+blas'):
@@ -139,7 +162,9 @@ class PyNumpy(PythonPackage):
                         f.write('[lapack]\n')
                         f.write('lapack_libs=%s\n' % lapack_names)
                         write_library_dirs(f, lapack_dirs)
-                else:
+                    handled_blas_and_lapack = True
+
+                if not handled_blas_and_lapack:
                     # The section title for the defaults changed in @1.10, see
                     # https://github.com/numpy/numpy/blob/master/site.cfg.example
                     if spec.satisfies('@:1.9.2'):

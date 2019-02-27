@@ -13,12 +13,13 @@ class Adios2(CMakePackage):
     url      = "https://github.com/ornladios/ADIOS2/archive/v2.0.0.tar.gz"
     git      = "https://github.com/ornladios/ADIOS2.git"
 
-    maintainers = ['ax3l']
+    maintainers = ['ax3l', 'chuckatkins']
 
     version('develop', branch='master')
+    version('2.3.1', sha256='3bf81ccc20a7f2715935349336a76ba4c8402355e1dc3848fcd6f4c3c5931893')
     version('2.2.0', sha256='77058ea2ff7224dc02ea519733de42d89112cf21ffe7474fb2fa3c5696152948')
-    version('2.1.0', '431fa5b015349f1838b96b8f5a1cc8f8')
-    version('2.0.0', 'da39655b51745d2c5f3f1e46c5abc4d7')
+    version('2.1.0', sha256='d4df3b3035b4236b51c77b59d68e756e825834b2ea3cb17439927a027831453b')
+    version('2.0.0', sha256='4eeedf4404824d8de6e4ef580b8a703c0aedb5c03f900f5ce6f85f0b35980135')
 
     variant('shared', default=True,
             description='Also build shared libraries')
@@ -56,19 +57,12 @@ class Adios2(CMakePackage):
     # DataMan needs dlopen
     conflicts('+dataman', when='~shared')
 
-    depends_on('cmake@3.5.0:', type='build')
+    depends_on('cmake@3.6.0:', type='build')
     depends_on('pkgconfig', type='build', when='@2.2.0:')
     # The included ffs requires bison and flex but using them makes
     # the build fail due to an undefined reference.
     # depends_on('bison', type='build', when='@2.2.0:')
     # depends_on('flex', when='@2.2.0:')
-
-    # contained in thirdparty/
-    # depends_on('googletest')
-    # depends_on('pugixml')
-    # depends_on('kwsys')
-    # depends_on('nlohmann-json')
-    # depends_on('pybind11@2.1.1:', when='+python')
 
     depends_on('mpi', when='+mpi')
     depends_on('zeromq', when='+dataman')
