@@ -30,5 +30,5 @@ class Breseq(AutotoolsPackage):
     def setup_environment(self, spack_env, run_env):
         spack_env.set('LDFLAGS',
                       "-L{}".format(self.spec['zlib'].prefix.lib))
-        spack_env.set('CFLAGS', 
+        spack_env.set('CFLAGS',
                       "-I{}".format(self.spec['zlib'].prefix.include))
