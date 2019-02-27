@@ -13,6 +13,7 @@ class PyScikitImage(PythonPackage):
     homepage = "http://scikit-image.org/"
     url      = "https://pypi.io/packages/source/s/scikit-image/scikit-image-0.12.3.tar.gz"
 
+    version('0.14.2', sha256='1afd0b84eefd77afd1071c5c1c402553d67be2d7db8950b32d6f773f25850c1f')
     version('0.12.3', '04ea833383e0b6ad5f65da21292c25e1')
 
     extends('python', ignore=r'bin/.*\.py$')

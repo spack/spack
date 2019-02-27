@@ -12,6 +12,7 @@ class PyPkgconfig(PythonPackage):
     homepage = "http://github.com/matze/pkgconfig"
     url      = "https://pypi.io/packages/source/p/pkgconfig/pkgconfig-1.2.2.tar.gz"
 
+    version('1.4.0',  sha256='048c3b457da7b6f686b647ab10bf09e2250e4c50acfe6f215398a8b5e6fcdb52')
     version('1.2.2', '81a8f6ef3371831d081e03db39e09683')
 
     depends_on('python@2.6:')
