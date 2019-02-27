@@ -7,8 +7,8 @@ from spack import *
 
 
 class Breseq(AutotoolsPackage):
-    """breseq is a computational pipeline for finding mutations relative to a
-    reference sequence in short-read DNA re-sequencing data for haploid
+    """breseq is a computational pipeline for finding mutations relative to
+    a reference sequence in short-read DNA re-sequencing data for haploid
     microbial-sized genomes."""
 
     homepage = "http://barricklab.org/breseq"
