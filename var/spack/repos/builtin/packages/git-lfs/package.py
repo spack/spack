@@ -23,7 +23,7 @@ class GitLfs(MakefilePackage):
     depends_on('git@1.8.2:', type='run')
 
     patch('patches/issue-10702.patch', when='@2.7.0')
-    
+
     parallel = False
 
     # Git-lfs does not provide an 'install' target in the Makefile
