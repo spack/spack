@@ -13,7 +13,7 @@ class Transdecoder(MakefilePackage):
        the genome using Tophat and Cufflinks."""
 
     homepage = "http://transdecoder.github.io/"
-    url      = "https://github.com/TransDecoder/TransDecoder/archive/v3.0.1.tar.gz"
+    url      = "https://github.com/TransDecoder/TransDecoder/archive/TransDecoder-v5.5.0.tar.gz"
 
     version('5.5.0', sha256='c800d9226350817471e9f51267c91f7cab99dbc9b26c980527fc1019e7d90a76')
     version('3.0.1', 'f62b86a15fcb78b1dada9f80cc25f300',
