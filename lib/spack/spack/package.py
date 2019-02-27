@@ -1139,7 +1139,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             bool: True if 'target' is found, else False
         """
-        make = inspect.getmodule(self).make
+        # Prevent altering LC_ALL for 'make' outside this function
+        make = copy.deepcopy(inspect.getmodule(self).make)
+
+        # Use English locale for missing target message comparison
+        make.add_default_env('LC_ALL', 'C')
 
         # Check if we have a Makefile
         for makefile in ['GNUmakefile', 'Makefile', 'makefile']:
