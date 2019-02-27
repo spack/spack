@@ -109,7 +109,40 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
         spack.patch.UrlPatch(
             dependent.package, 'file://fake.patch', sha256='unused-hash')]
 
-    assert dependent['dependency-install'] == dependency
+    try:
+        assert dependent['dependency-install'] == dependency
+    finally:
+        dependency.package.patches['dependency-install'] = []
+
+
+def test_setup_dependent(install_mockery, mock_fetch, tmpdir_factory,
+                         monkeypatch):
+    dependent = Spec('dependent-install')
+    dependent.concretize()
+
+    spconfig_root = tmpdir_factory.mktemp('spconfig_root')
+    spconfig_path = os.path.join(str(spconfig_root), 'test')
+
+    def write_spconfig(spack_env, fname, dirty):
+        with open(spconfig_path, 'w'):
+            pass
+
+    setattr(dependent.package, 'write_spconfig', write_spconfig)
+
+    def fail_install(spec, prefix):
+        raise ValueError("Package.install should not be called for packages"
+                         " marked as setup")
+
+    monkeypatch.setattr(dependent.package, 'install', fail_install)
+
+    try:
+        dependent.package.do_install(setup=set(['dependent-install']))
+
+        assert dependent['dependency-install'].package.installed
+        assert dependent.package.installed
+        assert os.path.exists(spconfig_path)
+    finally:
+        delattr(dependent.package, 'write_spconfig')
 
 
 def test_installed_dependency_request_conflicts(
