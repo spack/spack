@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Intel(IntelPackage):
 
     # Same as in ../intel-parallel-studio/package.py, Composer Edition,
     # but the version numbering in Spack differs.
+    version('19.0.1',              'db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
     version('19.0.0',              'e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
     #
     version('18.0.4',              '94aca8f091dff9535b02f022a37aef150b36925c8ef069335621496f8e4db267', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13722/parallel_studio_xe_2018_update4_composer_edition.tgz')

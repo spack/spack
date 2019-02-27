@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,6 @@
 
 import os
 import sys
-
-from spack import *
 
 
 def _verbs_dir():
@@ -62,12 +60,15 @@ class Openmpi(AutotoolsPackage):
     homepage = "http://www.open-mpi.org"
     url = "https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-4.0.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
+    git = "https://github.com/open-mpi/ompi.git"
+
+    version('develop', branch='master')
 
     # Current
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
 
     # Still supported
-    version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
+    version('3.1.3', preferred=True, sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
     version('3.1.2', sha256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
     version('3.1.1', sha256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
     version('3.1.0', sha256='b25c044124cc859c0b4e6e825574f9439a51683af1950f6acda1951f5ccdf06c')  # libmpi.so.40.10.0
@@ -76,6 +77,7 @@ class Openmpi(AutotoolsPackage):
     version('3.0.1', sha256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
     version('3.0.0', sha256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
 
+    version('2.1.6', sha256='98b8e1b8597bbec586a0da79fcd54a405388190247aa04d48e8c40944d4ca86e')  # libmpi.20.20.10.3
     version('2.1.5', sha256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
     version('2.1.4', sha256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
     version('2.1.3', sha256='285b3e2a69ed670415524474496043ecc61498f2c63feb48575f8469354d79e8')  # libmpi.so.20.10.2
@@ -180,20 +182,17 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
     fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
-
     variant(
-        'fabrics',
-        default=None if _verbs_dir() is None else 'verbs',
+        'fabrics', values=auto_or_any_combination_of(*fabrics).with_default(
+            'auto' if _verbs_dir() is None else 'verbs'
+        ),
         description="List of fabrics that are enabled",
-        values=fabrics,
-        multi=True
     )
 
+    schedulers = ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
     variant(
-        'schedulers',
-        description='List of schedulers for which support is enabled',
-        values=('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler'),
-        multi=True
+        'schedulers', values=auto_or_any_combination_of(*schedulers),
+        description='List of schedulers for which support is enabled'
     )
 
     # Additional support options
@@ -230,6 +229,12 @@ class Openmpi(AutotoolsPackage):
 
     if sys.platform != 'darwin':
         depends_on('numactl')
+
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')
+    depends_on('perl',     type='build', when='@develop')
 
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
@@ -341,6 +346,11 @@ class Openmpi(AutotoolsPackage):
                 'OpenMPI requires both C and Fortran compilers!'
             )
 
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        perl = which('perl')
+        perl('autogen.pl')
+
     def configure_args(self):
         spec = self.spec
         config_args = [
@@ -359,8 +369,12 @@ class Openmpi(AutotoolsPackage):
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
         #
         # adding --enable-static silently disables slurm support via pmi/pmi2
+        # for versions older than 3.0.3,3.1.3,4.0.0
+        # Presumably future versions after 11/2018 should support slurm+static
         if spec.satisfies('schedulers=slurm'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+            if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
+                config_args.append('--enable-static')
         else:
             config_args.append('--enable-static')
             config_args.extend(self.with_or_without('pmi'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,13 +20,8 @@ class PyIpython(PythonPackage):
 
     depends_on('python@2.7:2.8,3.3:')
 
-    # These dependencies breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")  # noqa
-    # depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
-    depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'))
-    depends_on('py-pathlib2',                   type=('build', 'run'))
-
+    depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")
+    depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
     depends_on('py-pygments',                   type=('build', 'run'))
     depends_on('py-pickleshare',                type=('build', 'run'))
     depends_on('py-simplegeneric@0.8:',         type=('build', 'run'))

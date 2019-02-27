@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import re
 import sys
+import argparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault, index_by
@@ -158,8 +159,16 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec):
-    matching_specs = spack.store.db.query(spec)
+def disambiguate_spec(spec, env):
+    """Given a spec, figure out which installed package it refers to.
+
+    Arguments:
+        spec (spack.spec.Spec): a spec to disambiguate
+        env (spack.environment.Environment): a spack environment,
+            if one is active, or None if no environment is active
+    """
+    hashes = env.all_hashes() if env else None
+    matching_specs = spack.store.db.query(spec, hashes=hashes)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
@@ -334,3 +343,15 @@ def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
     with working_dir(spack.paths.prefix):
         return os.path.isdir('.git')
+
+
+########################################
+# argparse types for argument validation
+########################################
+def extant_file(f):
+    """
+    Argparse type for files that exist.
+    """
+    if not os.path.isfile(f):
+        raise argparse.ArgumentTypeError('%s does not exist' % f)
+    return f

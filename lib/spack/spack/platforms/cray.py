@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,6 +49,10 @@ class Cray(Platform):
         for target in self._avail_targets():
             name = target.replace('-', '_')
             self.add_target(name, Target(name, 'craype-%s' % target))
+
+        self.add_target("x86_64", Target("x86_64"))
+        self.add_target("front_end", Target("x86_64"))
+        self.front_end = "x86_64"
 
         # Get aliased targets from config or best guess from environment:
         for name in ('front_end', 'back_end'):

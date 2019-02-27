@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class Lammps(CMakePackage):
     tags = ['ecp', 'ecp-apps']
 
     version('develop', branch='master')
+    version('20181212', sha256='ccc5d2c21c4b62ce4afe7b3a0fe2f37b83e5a5e43819b7c2e2e255cce2ce0f24')
+    version('20181207', sha256='d92104d008a7f1d0b6071011decc5c6dc8b936a3418b20bd34b055371302557f')
+    version('20181127', sha256='c076b633eda5506f895de4c73103df8b995d9fec01be82c67c7608efcc345179')
     version('20181115', sha256='3bc9c166e465cac625c4a8e4060e597003f4619dadd57d3bc8d25bcd930f286e')
     version('20181109', sha256='dd30fe492fa147fb6f39bfcc79d8c786b9689f7fbe86d56de58cace53b6198c9')
     version('20181024', sha256='a171dff5aff7aaa2c9606ab2abc9260f2b685a5c7f6d650e7f2b59cf4aa149d6')
@@ -59,7 +62,7 @@ class Lammps(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
     depends_on('fftw', when='+kspace')
-    depends_on('voropp', when='+voronoi')
+    depends_on('voropp+pic', when='+voronoi')
     depends_on('netcdf+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')

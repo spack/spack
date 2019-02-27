@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -151,7 +151,7 @@ def find(parser, args):
     added = set()
     removed = set()
 
-    env = ev.get_env(args, 'find', required=False)
+    env = ev.get_env(args, 'find')
     if env:
         decorator, added, roots, removed = setup_env(env)
 

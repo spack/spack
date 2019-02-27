@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -82,6 +82,8 @@ def test_pretty_string_to_date_delta(now, delta, pretty_string):
     ('%Y', '2018'),
     ('%Y-%m', '2015-03'),
     ('%Y-%m-%d', '2015-03-28'),
+    ('%Y-%m-%d %H:%M', '2015-03-28 11:12'),
+    ('%Y-%m-%d %H:%M:%S', '2015-03-28 23:34:45'),
 ])
 def test_pretty_string_to_date(format, pretty_string):
     t1 = datetime.strptime(pretty_string, format)

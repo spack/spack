@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,6 +52,7 @@ class IntelParallelStudio(IntelPackage):
     # NB: Pre-2018 download packages for Professional are the same as for
     # Cluster; differences manifest only in the tokens present in the license
     # file delivered as part of the purchase.
+    version('professional.2019.1', 'bc83ef5a728903359ae11a2b90ad7dae4ae61194afb28bb5bb419f6a6aea225d', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14825/parallel_studio_xe_2019_update1_professional_edition.tgz')
     version('professional.2019.0', '94b9714e353e5c4f58d38cb236e2f8911cbef31c4b42a148d60c988e926411e2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13578/parallel_studio_xe_2019_professional_edition.tgz')
     #
     version('professional.2018.4', '54ab4320da849108602096fa7a34aa21751068467e0d1584aa8f16352b77d323', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13718/parallel_studio_xe_2018_update4_professional_edition.tgz')
@@ -79,6 +80,7 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2015.1', '542b78c86beff9d7b01076a7be9c6ddc', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Composer Edition (basic tier; excluded: MPI/..., Advisor/Inspector/Vtune)
+    version('composer.2019.1',     'db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
     version('composer.2019.0',     'e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
     #
     version('composer.2018.4',     '94aca8f091dff9535b02f022a37aef150b36925c8ef069335621496f8e4db267', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13722/parallel_studio_xe_2018_update4_composer_edition.tgz')

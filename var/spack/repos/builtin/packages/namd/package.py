@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,7 +92,7 @@ class Namd(MakefilePackage):
 
         self._copy_arch_file('base')
 
-        opts = ['--charm-base', spec['charm'].prefix]
+        opts = ['--charm-base', spec['charmpp'].prefix]
         fftw_version = spec.variants['fftw'].value
         if fftw_version == 'none':
             opts.append('--without-fftw')

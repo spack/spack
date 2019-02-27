@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Percept(CMakePackage):
     # commit dc1c8ec0175213146ac139946beca185a84c22e8
     version('develop', branch='master')
 
-    depends_on('googletest~shared')
+    depends_on('googletest~shared@:1.8.0')
     depends_on('opennurbs@percept')
     depends_on('boost+graph+mpi')
     depends_on('yaml-cpp+pic~shared@0.5.3:')

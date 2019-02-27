@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,3 +19,6 @@ class MultimethodBase(Package):
 
     def base_method(self):
         return "base_method"
+
+    def diamond_inheritance(self):
+        return "base_package"
