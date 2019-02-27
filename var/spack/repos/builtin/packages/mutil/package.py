@@ -41,14 +41,19 @@ class Mutil(CoreutilsSpack):
     def enable_mutil(self):
         patch = which('patch')
         patch("-p1", "--input=mutil/patch/coreutils-8.22.patch")
-        # The patch touches the configure script which means the force_autoreconf option
-        # won't work correctly so we remove it manually here
+        # The patch touches the configure script which means the
+        # force_autoreconf option won't work correctly so we
+        # remove it manually here
         os.remove('configure')
 
     def install(self, spec, prefix):
         mkdirp(self.prefix.bin)
         mkdirp(self.prefix.share.man.man1)
-        install('spack-build/src/cp', '{0}/mcp'.format(self.prefix.bin))
-        install('spack-build/src/md5sum', '{0}/msum'.format(self.prefix.bin))
-        install('spack-build/man/cp.1', '{0}/mcp.1'.format(self.prefix.share.man.man1))
-        install('spack-build/man/md5sum.1', '{0}/msum.1'.format(self.prefix.share.man.man1))
+        install('spack-build/src/cp',
+                '{0}/mcp'.format(self.prefix.bin))
+        install('spack-build/src/md5sum',
+                '{0}/msum'.format(self.prefix.bin))
+        install('spack-build/man/cp.1',
+                '{0}/mcp.1'.format(self.prefix.share.man.man1))
+        install('spack-build/man/md5sum.1',
+                '{0}/msum.1'.format(self.prefix.share.man.man1))
