@@ -16,6 +16,7 @@ class PyJinja2(PythonPackage):
 
     import_modules = ['jinja2']
 
+    version('2.10', '61ef1117f945486472850819b8d1eb3d')
     version('2.9.6', '6411537324b4dba0956aaa8109f3c77b')
     version('2.8',   'edb51693fe22c53cee5403775c71a99e')
     version('2.7.3', 'b9dffd2f3b43d673802fe857c8445b1a')
