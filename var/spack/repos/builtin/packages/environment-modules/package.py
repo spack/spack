@@ -68,6 +68,14 @@ class EnvironmentModules(Package):
                 '--enable-auto-handling'
             ])
 
+        if '@4.1.0:' in self.spec:
+            config_args.extend([
+                # Variables in quarantine are empty during module command
+                # start-up and they will be restored to the value they had
+                # in the environment once the command starts
+                '--with-quarantine-vars=LD_LIBRARY_PATH'
+            ])
+
         if '@4.0.0:' in self.spec:
             config_args.extend([
                 '--disable-compat-version',
