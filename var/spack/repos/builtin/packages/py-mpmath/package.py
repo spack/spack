@@ -11,5 +11,6 @@ class PyMpmath(PythonPackage):
     homepage = "http://mpmath.org"
     url      = "https://pypi.io/packages/source/m/mpmath/mpmath-1.0.0.tar.gz"
 
+    version('1.1.0', sha256='fc17abe05fbab3382b61a123c398508183406fa132e0223874578e20946499f6')
     version('1.0.0', '998f10cb231af62743212ca80693f1b5')
     version('0.19', 'af5cc956b2673b33a25c3e57299bae7b')

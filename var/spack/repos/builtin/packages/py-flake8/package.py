@@ -13,6 +13,7 @@ class PyFlake8(PythonPackage):
     homepage = "https://github.com/PyCQA/flake8"
     url      = "https://github.com/PyCQA/flake8/archive/3.0.4.tar.gz"
 
+    version('3.7.7',  sha256='b3f76b02351008dc772276e74b09dd3d4b5c567ff8c6ab573352cb8fd7007444')
     version('3.5.0', '4e312803bbd8e4a1e566ffac887ae647')
     version('3.0.4', 'cf2a7d8c92070f7b62253404ffb54df7')
     version('2.5.4', '366dd1de6c300254c830b81e66979f06')

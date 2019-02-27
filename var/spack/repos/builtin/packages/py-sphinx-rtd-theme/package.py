@@ -14,6 +14,7 @@ class PySphinxRtdTheme(PythonPackage):
 
     import_modules = ['sphinx_rtd_theme']
 
+    version('0.4.3',  sha256='728607e34d60456d736cc7991fd236afb828b21b82f956c5ea75f94c8414040a')
     version('0.2.5b1',  '0923473a43bd2527f32151f195f2a521')
     version('0.1.10a0', '83bd95cae55aa8b773a8cc3a41094282')
 

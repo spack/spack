@@ -23,6 +23,7 @@ class PyRequests(PythonPackage):
         'requests.packages.urllib3.contrib._securetransport'
     ]
 
+    version('2.21.0', sha256='502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e')
     version('2.14.2', '4c3c169ed67466088a2a6947784fe444')
     version('2.13.0', '921ec6b48f2ddafc8bb6160957baf444')
     version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')

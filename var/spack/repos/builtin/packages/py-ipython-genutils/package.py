@@ -12,6 +12,7 @@ class PyIpythonGenutils(PythonPackage):
     homepage = "https://pypi.python.org/pypi/ipython_genutils"
     url      = "https://pypi.io/packages/source/i/ipython_genutils/ipython_genutils-0.1.0.tar.gz"
 
+    version('0.2.0', '5a4f9781f78466da0ea1a648f3e1f79f')
     version('0.1.0', '9a8afbe0978adbcbfcb3b35b2d015a56')
 
     depends_on('python@2.7:2.8,3.3:')
