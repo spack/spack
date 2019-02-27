@@ -27,6 +27,7 @@ class Kealib(CMakePackage):
     hg       = "https://bitbucket.org/chchrsc/kealib"
 
     version('develop', hg=hg)
+    version('1.4.11', '90f581c794bb7c7e6d76b0ad29f0ca40')
     version('1.4.10', '5684aeb2085a67a4270c73e79d4ab768')
     version('1.4.9',  'a095d0b9d6de1d609ffaf242e00cc2b6')
     version('1.4.8',  '1af2514c908f9168ff6665cc012815ad')
