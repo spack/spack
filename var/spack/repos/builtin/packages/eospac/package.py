@@ -15,6 +15,8 @@ class Eospac(Package):
     homepage = "https://laws.lanl.gov/projects/data/eos.html"
     list_url = "https://laws.lanl.gov/projects/data/eos/eospacReleases.php"
 
+    version('6.4.0', 'ecee3abe9c7a3e4b32d68dc3177b088e',
+            url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0_612ea8c9b8ffa6d9175d9118955571d9107f1e3c.tgz")
     version('6.4.0beta.4', 'd0875390d08538a3caa8ad1f43c6d789',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.4_aff6429bb6868de31a980278bafa13487c2ce83f.tgz")
     version('6.4.0beta.3', '672c16e522908281168815a74626ec66',
