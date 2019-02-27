@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+import os.path
 
 
 class EnvironmentModules(Package):
@@ -13,6 +13,8 @@ class EnvironmentModules(Package):
 
     homepage = 'https://cea-hpc.github.io/modules/'
     url = 'https://github.com/cea-hpc/modules/releases/download/v4.2.2/modules-4.2.2.tar.gz'
+
+    maintainers = ['xdelaruelle']
 
     version('4.2.2', sha256='481fe8d03eec6806c1b401d764536edc2c233ac9d82091a10094de6101867afc')
     version('4.2.1', sha256='c796ea6a03e22d63886ca9ec6b1bef821e8cb09f186bd007f63653e31e9cb595')
@@ -33,8 +35,6 @@ class EnvironmentModules(Package):
     # Dependencies:
     depends_on('tcl', type=('build', 'link', 'run'))
     depends_on('tcl@8.4:', type=('build', 'link', 'run'), when='@4.0.0:')
-
-    depends_on('py-sphinx', type='build', when='@4.0.0:')
 
     def install(self, spec, prefix):
         tcl = spec['tcl']
@@ -63,8 +63,14 @@ class EnvironmentModules(Package):
         if '~X' in spec:
             config_args = ['--without-x'] + config_args
 
+        if '@4.2.0:' in self.spec:
+            config_args.extend([
+                '--enable-auto-handling'
+            ])
+
         if '@4.0.0:' in self.spec:
             config_args.extend([
+                '--disable-compat-version',
                 '--with-tclsh={0}'.format(tcl.prefix.bin.tclsh)
             ])
 
@@ -76,8 +82,5 @@ class EnvironmentModules(Package):
             ])
 
         configure(*config_args)
-
-        targets = ['-C', 'doc', 'all'] if '@4.0.0:' else []
-        make(*targets)
-
+        make()
         make('install')
