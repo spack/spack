@@ -11,7 +11,6 @@ class Blast2go(Package):
        annotation and analysis of genomic datasets."""
 
     homepage = "https://www.blast2go.com/"
-    url      = "http://resources.biobam.com/software/blast2go/nico/Blast2GO_unix_5_2_5.zip"
 
     version('5.2.5', sha256='c37aeda25f96ac0553b52da6b5af3167d50671ddbfb3b39bcb11afe5d0643891')
 
