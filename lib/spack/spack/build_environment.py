@@ -292,13 +292,10 @@ def set_build_environment_variables(pkg, env, dirty):
         if dep in rpath_deps:
             rpath_dirs.extend(dep_link_dirs)
 
-        # TODO: fix the line below, currently the logic is broken for
-        # TODO: packages that uses directories as namespaces e.g.
-        # TODO: #include <boost/xxx.hpp>
-        # include_dirs.extend(query.headers.directories)
-
-        if os.path.isdir(dep.prefix.include):
-            include_dirs.append(dep.prefix.include)
+        try:
+            include_dirs.extend(query.headers.directories)
+        except spack.spec.NoHeadersError:
+            tty.debug("No headers found for {0}".format(dep.name))
 
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
