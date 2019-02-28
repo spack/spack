@@ -70,9 +70,10 @@ def test_file_is_relocatable(source_file, is_relocatable):
         'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
     }
     compiler(str(source_file), '-o', executable, env=compiler_env)
-
+    pfx = spack.store.layout.root
     assert spack.relocate.is_binary(executable)
-    assert spack.relocate.file_is_relocatable(executable) is is_relocatable
+    assert spack.relocate.file_is_relocatable(executable,
+                                              pfx) is is_relocatable
 
 
 @pytest.mark.skipif(
@@ -82,7 +83,9 @@ def test_file_is_relocatable(source_file, is_relocatable):
 def test_file_is_relocatable_errors(tmpdir):
     # The file passed in as argument must exist...
     with pytest.raises(ValueError) as exc_info:
-        spack.relocate.file_is_relocatable('/usr/bin/does_not_exist')
+        pfx = spack.store.layout.root
+        spack.relocate.file_is_relocatable('/usr/bin/does_not_exist',
+                                           pfx)
     assert 'does not exist' in str(exc_info.value)
 
     # ...and the argument must be an absolute path to it
@@ -91,5 +94,7 @@ def test_file_is_relocatable_errors(tmpdir):
 
     with llnl.util.filesystem.working_dir(str(tmpdir)):
         with pytest.raises(ValueError) as exc_info:
-            spack.relocate.file_is_relocatable('delete.me')
+            pfx = spack.store.layout.root
+            spack.relocate.file_is_relocatable('delete.me',
+                                               pfx)
         assert 'is not an absolute path' in str(exc_info.value)
