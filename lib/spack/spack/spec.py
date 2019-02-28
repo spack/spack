@@ -218,7 +218,7 @@ class ArchSpec(object):
     # TODO: Formalize the specifications for architectures and then use
     # the appropriate parser here to read these specifications.
     def __init__(self, *args):
-        def to_attr_string(s): return str(s) if s and s != "None" else None
+        to_attr_string = lambda s: str(s) if s and s != "None" else None
 
         self.platform, self.platform_os, self.target = (None, None, None)
 
@@ -1129,9 +1129,9 @@ class Spec(object):
         direction = kwargs.get('direction', 'children')
         depth = kwargs.get('depth', False)
 
-        def get_spec(s): return s.spec
+        get_spec = lambda s: s.spec
         if direction == 'parents':
-            def get_spec(s): return s.parent
+            get_spec = lambda s: s.parent
 
         if depth:
             for d, dspec in self.traverse_edges(**kwargs):
@@ -1233,12 +1233,10 @@ class Spec(object):
             # This code determines direction and yields the children/parents
             if direction == 'children':
                 where = self._dependencies
-
-                def succ(dspec): return dspec.spec
+                succ = lambda dspec: dspec.spec
             elif direction == 'parents':
                 where = self._dependents
-
-                def succ(dspec): return dspec.parent
+                succ = lambda dspec: dspec.parent
             else:
                 raise ValueError('Invalid traversal direction: %s' % direction)
 
@@ -1364,7 +1362,7 @@ class Spec(object):
         deps = self.dependencies_dict(deptype=deptypes)
         if deps:
             if hash_function is None:
-                def hash_function(s): return s.dag_hash()
+                hash_function = lambda s: s.dag_hash()
             d['dependencies'] = syaml_dict([
                 (name,
                  syaml_dict([
