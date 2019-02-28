@@ -81,7 +81,8 @@ class Petsc(Package):
             multi=False)
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
-
+    variant('knl', default=False,
+            description='Build for KNL')
     variant('X', default=False,
             description='Activate X support')
 
@@ -225,6 +226,9 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
+        if '+knl' in spec:
+            options.append('--with-avx-512-kernels')
+            options.append('--with-memalign=64')
         if '+X' in spec:
             options.append('--with-x=1')
         else:
