@@ -12,6 +12,7 @@ from spack.package_prefs import get_package_permissions, get_package_group
 from spack.package_prefs import get_package_dir_permissions
 from spack.error import SpackError
 
+
 def forall_files(path, fn, args, dir_args=None):
     """Apply function to all files in directory, with file as first arg.
 
