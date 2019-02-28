@@ -61,6 +61,7 @@ from spack.util.package_hash import package_hash
 from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
+
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
@@ -1410,6 +1411,34 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     dirty=dirty,
                     **kwargs)
 
+        # Then, install the compiler if it is not already installed.
+        if install_deps:
+            compilers = spack.compilers.compilers_for_spec(
+                self.spec.compiler,
+                arch_spec=self.spec.architecture
+            )
+            if not compilers:
+                dep = spack.compilers.pkg_spec_for_compiler(self.spec.compiler)
+                dep.concretize()  # compiler specs don't have all info concrete
+                dep.package.do_install(
+                    install_deps=True,
+                    explicit=False,
+                    keep_prefix=keep_prefix,
+                    keep_stage=keep_stage,
+                    install_source=install_source,
+                    fake=fake,
+                    skip_patch=skip_patch,
+                    verbose=verbose,
+                    make_jobs=make_jobs,
+                    tests=tests,
+                    dirty=dirty,
+                    **kwargs
+                )
+                spack.compilers.add_compilers_to_config(
+                    spack.compilers.find_compilers(dep.prefix)
+                )
+
+        # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
         if kwargs.get('use_cache', True):
