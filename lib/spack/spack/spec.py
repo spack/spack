@@ -218,7 +218,7 @@ class ArchSpec(object):
     # TODO: Formalize the specifications for architectures and then use
     # the appropriate parser here to read these specifications.
     def __init__(self, *args):
-        to_attr_string = lambda s: str(s) if s and s != "None" else None
+        def to_attr_string(s): return str(s) if s and s != "None" else None
 
         self.platform, self.platform_os, self.target = (None, None, None)
 
@@ -810,7 +810,7 @@ class ForwardQueryToPackage(object):
                 # A callback can return None to trigger an error indicating
                 # that the query failed.
                 if value is None:
-                    msg  = "Query of package '{name}' for '{attrib}' failed\n"
+                    msg = "Query of package '{name}' for '{attrib}' failed\n"
                     msg += "\tprefix : {spec.prefix}\n"
                     msg += "\tspec : {spec}\n"
                     msg += "\tqueried as : {query.name}\n"
@@ -1129,9 +1129,9 @@ class Spec(object):
         direction = kwargs.get('direction', 'children')
         depth = kwargs.get('depth', False)
 
-        get_spec = lambda s: s.spec
+        def get_spec(s): return s.spec
         if direction == 'parents':
-            get_spec = lambda s: s.parent
+            def get_spec(s): return s.parent
 
         if depth:
             for d, dspec in self.traverse_edges(**kwargs):
@@ -1233,10 +1233,12 @@ class Spec(object):
             # This code determines direction and yields the children/parents
             if direction == 'children':
                 where = self._dependencies
-                succ = lambda dspec: dspec.spec
+
+                def succ(dspec): return dspec.spec
             elif direction == 'parents':
                 where = self._dependents
-                succ = lambda dspec: dspec.parent
+
+                def succ(dspec): return dspec.parent
             else:
                 raise ValueError('Invalid traversal direction: %s' % direction)
 
@@ -1362,7 +1364,7 @@ class Spec(object):
         deps = self.dependencies_dict(deptype=deptypes)
         if deps:
             if hash_function is None:
-                hash_function = lambda s: s.dag_hash()
+                def hash_function(s): return s.dag_hash()
             d['dependencies'] = syaml_dict([
                 (name,
                  syaml_dict([
@@ -2680,7 +2682,9 @@ class Spec(object):
 
         if 'patches' not in self.variants:
             return []
-
+        if not hasattr(self.variants['patches'],
+                       '_patches_in_order_of_appearance'):
+            return []
         # FIXME: _patches_in_order_of_appearance is attached after
         # FIXME: concretization to store the order of patches somewhere.
         # FIXME: Needs to be refactored in a cleaner way.
@@ -2796,7 +2800,7 @@ class Spec(object):
         for dspec in other.traverse_edges(cover='edges',
                                           root=False):
             if (dspec.deptypes and
-                not any(d in deptypes for d in dspec.deptypes)):
+                    not any(d in deptypes for d in dspec.deptypes)):
                 continue
 
             if dspec.parent.name not in new_specs:
@@ -3349,6 +3353,7 @@ class LazySpecCache(collections.defaultdict):
     """Cache for Specs that uses a spec_like as key, and computes lazily
     the corresponding value ``Spec(spec_like``.
     """
+
     def __init__(self):
         super(LazySpecCache, self).__init__(Spec)
 
@@ -3734,6 +3739,7 @@ def base32_prefix_bits(hash_string, bits):
 
 class SpecParseError(SpecError):
     """Wrapper for ParseError for when we're parsing specs."""
+
     def __init__(self, parse_error):
         super(SpecParseError, self).__init__(parse_error.message)
         self.string = parse_error.string
@@ -3758,6 +3764,7 @@ class NoHeadersError(SpackError):
 
 class UnsupportedCompilerError(SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
+
     def __init__(self, compiler_name):
         super(UnsupportedCompilerError, self).__init__(
             "The '%s' compiler is not yet supported." % compiler_name)
@@ -3781,6 +3788,7 @@ class NoProviderError(SpecError):
     """Raised when there is no package that provides a particular
        virtual dependency.
     """
+
     def __init__(self, vpkg):
         super(NoProviderError, self).__init__(
             "No providers found for virtual package: '%s'" % vpkg)
@@ -3791,6 +3799,7 @@ class MultipleProviderError(SpecError):
     """Raised when there is no package that provides a particular
        virtual dependency.
     """
+
     def __init__(self, vpkg, providers):
         """Takes the name of the vpkg"""
         super(MultipleProviderError, self).__init__(
@@ -3802,6 +3811,7 @@ class MultipleProviderError(SpecError):
 
 class UnsatisfiableSpecNameError(UnsatisfiableSpecError):
     """Raised when two specs aren't even for the same package."""
+
     def __init__(self, provided, required):
         super(UnsatisfiableSpecNameError, self).__init__(
             provided, required, "name")
@@ -3809,6 +3819,7 @@ class UnsatisfiableSpecNameError(UnsatisfiableSpecError):
 
 class UnsatisfiableVersionSpecError(UnsatisfiableSpecError):
     """Raised when a spec version conflicts with package constraints."""
+
     def __init__(self, provided, required):
         super(UnsatisfiableVersionSpecError, self).__init__(
             provided, required, "version")
@@ -3816,6 +3827,7 @@ class UnsatisfiableVersionSpecError(UnsatisfiableSpecError):
 
 class UnsatisfiableCompilerSpecError(UnsatisfiableSpecError):
     """Raised when a spec comiler conflicts with package constraints."""
+
     def __init__(self, provided, required):
         super(UnsatisfiableCompilerSpecError, self).__init__(
             provided, required, "compiler")
@@ -3823,6 +3835,7 @@ class UnsatisfiableCompilerSpecError(UnsatisfiableSpecError):
 
 class UnsatisfiableCompilerFlagSpecError(UnsatisfiableSpecError):
     """Raised when a spec variant conflicts with package constraints."""
+
     def __init__(self, provided, required):
         super(UnsatisfiableCompilerFlagSpecError, self).__init__(
             provided, required, "compiler_flags")
@@ -3830,6 +3843,7 @@ class UnsatisfiableCompilerFlagSpecError(UnsatisfiableSpecError):
 
 class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
     """Raised when a spec architecture conflicts with package constraints."""
+
     def __init__(self, provided, required):
         super(UnsatisfiableArchitectureSpecError, self).__init__(
             provided, required, "architecture")
@@ -3838,6 +3852,7 @@ class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
 class UnsatisfiableProviderSpecError(UnsatisfiableSpecError):
     """Raised when a provider is supplied but constraints don't match
        a vpkg requirement"""
+
     def __init__(self, provided, required):
         super(UnsatisfiableProviderSpecError, self).__init__(
             provided, required, "provider")
@@ -3847,6 +3862,7 @@ class UnsatisfiableProviderSpecError(UnsatisfiableSpecError):
 # dep constraints
 class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
     """Raised when some dependency of constrained specs are incompatible"""
+
     def __init__(self, provided, required):
         super(UnsatisfiableDependencySpecError, self).__init__(
             provided, required, "dependency")
