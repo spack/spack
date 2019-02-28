@@ -12,6 +12,7 @@ class PyPydot(PythonPackage):
     homepage = "https://github.com/erocarrera/pydot/"
     url      = "https://pypi.io/packages/source/p/pydot/pydot-1.2.3.tar.gz"
 
+    version('1.4.1', '0ee9da6823c2fcad4ea380f65730dec5')
     version('1.2.3', '5b50fd8cf022811d8718562ebc8aefb2')
     version('1.2.2', 'fad67d9798dbb33bb3dca3e6d4c47665')
 
