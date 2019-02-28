@@ -565,7 +565,12 @@ class EnvironmentModifications(object):
                              for k, v in env_after.items())
 
         # Other variables unrelated to sourcing a file
-        blacklist.extend(['SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'])
+        blacklist.extend([
+            # Bash internals
+            'SHLVL', '_', 'PWD', 'OLDPWD', 'PS2', 'ENV',
+            # Environment modules v4
+            'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()'
+        ])
 
         def set_intersection(fullset, *args):
             # A set intersection using string literals and regexs
