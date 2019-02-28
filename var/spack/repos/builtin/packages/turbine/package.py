@@ -29,6 +29,7 @@ class Turbine(AutotoolsPackage):
     depends_on('swig', type='build')
     depends_on('python', when='+python')
     depends_on('r', when='+r')
+    depends_on('r-rinside', when='+r')
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
