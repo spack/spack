@@ -324,7 +324,7 @@ def check_kwargs(kwargs, fun):
     if kwargs:
         raise TypeError(
             "'%s' is an invalid keyword argument for function %s()."
-            % (next(kwargs.iterkeys()), fun.__name__))
+            % (next(iter(kwargs)), fun.__name__))
 
 
 def match_predicate(*args):

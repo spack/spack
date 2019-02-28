@@ -8,9 +8,15 @@ import os
 import sys
 
 import llnl.util.tty as tty
-
+import spack.binary_distribution as bindist
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+import spack.relocate
+import spack.repo
+import spack.spec
+import spack.store
+
 from spack.error import SpecError
 import spack.config
 import spack.repo
@@ -19,8 +25,6 @@ from spack.paths import etc_path
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.spec_set import CombinatorialSpecSet
 
-import spack.binary_distribution as bindist
-import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 
 description = "create, download and install binary packages"
@@ -100,6 +104,15 @@ def setup_parser(subparser):
                         help="force new download of keys")
     dlkeys.set_defaults(func=getkeys)
 
+    preview_parser = subparsers.add_parser(
+        'preview',
+        help='analyzes an installed spec and reports whether '
+             'executables and libraries are relocatable'
+    )
+    preview_parser.add_argument(
+        'packages', nargs='+', help='list of installed packages'
+    )
+    preview_parser.set_defaults(func=preview)
     # Check if binaries need to be rebuilt on remote mirror
     check = subparsers.add_parser('check', help=check_binaries.__doc__)
     check.add_argument(
@@ -176,8 +189,7 @@ def setup_parser(subparser):
     saveyaml.set_defaults(func=save_spec_yamls)
 
 
-def find_matching_specs(
-        pkgs, allow_multiple_matches=False, force=False, env=None):
+def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -293,7 +305,7 @@ def createtarball(args):
     # restrict matching to current environment if one is active
     env = ev.get_env(args, 'buildcache create')
 
-    matches = find_matching_specs(pkgs, False, False, env=env)
+    matches = find_matching_specs(pkgs, env=env)
 
     if matches:
         tty.msg('Found at least one matching spec')
@@ -376,6 +388,22 @@ def listspecs(args):
 def getkeys(args):
     """get public keys available on mirrors"""
     bindist.get_keys(args.install, args.trust, args.force)
+
+
+def preview(args):
+    """Print a status tree of the selected specs that shows which nodes are
+    relocatable and which might not be.
+
+    Args:
+        args: command line arguments
+    """
+    specs = find_matching_specs(args.packages, allow_multiple_matches=True)
+
+    # Cycle over the specs that match
+    for spec in specs:
+        print("Relocatable nodes")
+        print("--------------------------------")
+        print(spec.tree(status_fn=spack.relocate.is_relocatable))
 
 
 def check_binaries(args):

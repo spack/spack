@@ -3251,7 +3251,7 @@ class Spec(object):
         ret = self.format() + self.dep_string()
         return ret.strip()
 
-    def _install_status(self):
+    def install_status(self):
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return None
@@ -3278,7 +3278,7 @@ class Spec(object):
         depth = kwargs.pop('depth', False)
         hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)
-        install_status = kwargs.pop('install_status', False)
+        status_fn = kwargs.pop('status_fn', False)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
@@ -3300,8 +3300,8 @@ class Spec(object):
             if depth:
                 out += "%-4d" % d
 
-            if install_status:
-                status = node._install_status()
+            if status_fn:
+                status = status_fn(node)
                 if status is None:
                     out += colorize("@K{ - }  ", color=color)  # not installed
                 elif status:
