@@ -50,9 +50,10 @@ class CombinatorialSpecSet:
 
         # initialize these from data.
         self.cdash = self.data.get('cdash', None)
-        if isinstance(self.cdash, str):
-            self.cdash = [self.cdash]
         self.project = self.data.get('project', None)
+        self.release_tag = self.data.get('release-tag', None)
+        self.ci_only = self.data.get('ci-only', [])
+        self.ci_except = self.data.get('ci-except', [])
 
         # _spec_lists is a list of lists of specs, to be combined as a
         # cartesian product when we iterate over all specs in the set.
@@ -60,6 +61,26 @@ class CombinatorialSpecSet:
         self._spec_lists = None
         self._include = []
         self._exclude = []
+
+    @property
+    def cdash(self):
+        return self.cdash
+
+    @property
+    def project(self):
+        return self.project
+
+    @property
+    def release_tag(self):
+        return self.release_tag
+
+    @property
+    def ci_only(self):
+        return self.ci_only
+
+    @property
+    def ci_except(self):
+        return self.ci_except
 
     @staticmethod
     def from_file(path):

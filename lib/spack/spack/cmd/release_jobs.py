@@ -12,6 +12,7 @@ import tempfile
 import subprocess
 from jsonschema import validate, ValidationError
 from six import iteritems
+from six.moves.urllib.parse import urlencode
 
 import llnl.util.tty as tty
 
@@ -52,10 +53,6 @@ def setup_parser(subparser):
         help="hash of gpg key to use for package signing")
 
     subparser.add_argument(
-        '-c', '--cdash-url', default='https://cdash.spack.io',
-        help="Base url of CDash instance jobs should communicate with")
-
-    subparser.add_argument(
         '-p', '--print-summary', action='store_true', default=False,
         help="Print summary of staged jobs to standard output")
 
@@ -80,9 +77,9 @@ def setup_parser(subparser):
              ".gitlab-ci.yml file.")
 
 
-def get_job_name(spec, osarch):
-    return '{0} {1} {2} {3}'.format(spec.name, spec.version,
-                                    spec.compiler, osarch)
+def get_job_name(spec, osarch, tag):
+    return '{0} {1} {2} {3} {4}'.format(spec.name, spec.version,
+                                    spec.compiler, osarch, tag)
 
 
 def get_spec_string(spec):
@@ -485,13 +482,19 @@ def release_jobs(parser, args):
         raise SpackError('Must provide path to release spec-set')
 
     release_spec_set = CombinatorialSpecSet.from_file(release_specs_path)
+    release_tag = release_spec_set.release_tag
+    release_jobs_only = release_spec_set.ci_only
+    release_jobs_except = release_spec_set.ci_except
+    cdash_base_url = release_spec_set.cdash['baseurl']
+    cdash_project = release_spec_set.cdash['project']
+    proj_enc = urlencode({'project': cdash_project})
+    eq_idx = proj_enc.find('=') + 1
+    cdash_project_enc = proj_enc[eq_idx:]
 
     mirror_url = args.mirror_url
 
     if not mirror_url:
         raise SpackError('Must provide url of target binary mirror')
-
-    cdash_url = args.cdash_url
 
     spec_labels, dependencies, stages = stage_spec_jobs(
         release_spec_set, containers, current_system)
@@ -520,7 +523,7 @@ def release_jobs(parser, args):
             pkg_hash = release_spec.dag_hash()
 
             osname = str(release_spec.architecture)
-            job_name = get_job_name(release_spec, osname)
+            job_name = get_job_name(release_spec, osname, release_tag)
             container_info = containers[osname]
             build_image = container_info['image']
 
@@ -533,15 +536,16 @@ def release_jobs(parser, args):
             job_dependencies = []
             if spec_label in dependencies:
                 job_dependencies = (
-                    [get_job_name(spec_labels[dep_label]['spec'], osname)
+                    [get_job_name(spec_labels[dep_label]['spec'], osname, release_tag)
                         for dep_label in dependencies[spec_label]])
 
             job_object = {
                 'stage': stage_name,
                 'variables': {
                     'MIRROR_URL': mirror_url,
-                    'CDASH_BASE_URL': cdash_url,
-                    'HASH': pkg_hash,
+                    'CDASH_BASE_URL': cdash_base_url,
+                    'CDASH_PROJECT': cdash_project,
+                    'CDASH_PROJECT_ENC': cdash_project_enc,
                     'DEPENDENCIES': ';'.join(job_dependencies),
                     'ROOT_SPEC': str(root_spec),
                 },
@@ -569,6 +573,12 @@ def release_jobs(parser, args):
                         do_job = True
             else:
                 do_job = True
+
+            if release_jobs_only:
+                job_object['only'] = release_jobs_only
+
+            if release_jobs_except:
+                job_object['except'] = release_jobs_except
 
             if args.shared_runner_tag:
                 job_object['tags'] = [args.shared_runner_tag]

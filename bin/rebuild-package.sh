@@ -45,7 +45,7 @@ SPEC_DIR="${TEMP_DIR}/specs"
 LOCAL_MIRROR="${CI_PROJECT_DIR}/local_mirror"
 BUILD_CACHE_DIR="${LOCAL_MIRROR}/build_cache"
 SPACK_BIN_DIR="${CI_PROJECT_DIR}/bin"
-CDASH_UPLOAD_URL="${CDASH_BASE_URL}/submit.php?project=Spack"
+CDASH_UPLOAD_URL="${CDASH_BASE_URL}/submit.php?project=${CDASH_PROJECT_ENC}"
 DEP_JOB_RELATEBUILDS_URL="${CDASH_BASE_URL}/api/v1/relateBuilds.php"
 declare -a JOB_DEPS_PKG_NAMES
 
@@ -163,8 +163,10 @@ gen_full_specs_for_job_and_deps() {
     local pkgVersion="${PARTSARRAY[1]}"
     local compiler="${PARTSARRAY[2]}"
     local osarch="${PARTSARRAY[3]}"
+    local releaseTag="${PARTSARRAY[4]}"
 
-    JOB_SPEC_NAME="${pkgName}@${pkgVersion}%${compiler} arch=${osarch}"
+    JOB_SPEC_NAME="${pkgName}@${pkgVersion}%${compiler} arch=${osarch} (${releaseTag})"
+    JOB_GROUP="${releaseTag}"
     JOB_PKG_NAME="${pkgName}"
     SPEC_YAML_PATH="${SPEC_DIR}/${pkgName}.yaml"
     local root_spec_name="${ROOT_SPEC}"
@@ -233,8 +235,15 @@ if [[ $? -ne 0 ]]; then
 
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
-    BUILD_ID_LINE=`spack -d -k -v install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${JOB_SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}" | grep "buildSummary\\.php"`
+    BUILD_ID_LINE=`spack -d -k -v install --use-cache --keep-stage --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${JOB_SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "${JOB_GROUP}" -f "${SPEC_YAML_PATH}" | grep "buildSummary\\.php"`
     check_error $? "spack install"
+
+    # Copy some log files into an artifact location
+    stage_dir=$(spack location --stage-dir -f "${SPEC_YAML_PATH}")
+    build_log_file=$(find -L "${stage_dir}" | grep "spack-build\\.out")
+    config_log_file=$(find -L "${stage_dir}" | grep "config\\.log")
+    cp "${build_log_file}" "${JOB_LOG_DIR}/"
+    cp "${config_log_file}" "${JOB_LOG_DIR}/"
 
     # By parsing the output of the "spack install" command, we can get the
     # buildid generated for us by CDash
@@ -288,7 +297,7 @@ if [ -f "${JOB_CDASH_ID_FILE}" ]; then
                 DEP_JOB_CDASH_BUILD_ID=$(<${DEP_JOB_ID_FILE})
                 echo "File ${DEP_JOB_ID_FILE} contained value ${DEP_JOB_CDASH_BUILD_ID}"
                 echo "Relating builds -> ${JOB_SPEC_NAME} (buildid=${JOB_CDASH_BUILD_ID}) depends on ${DEP_PKG_NAME} (buildid=${DEP_JOB_CDASH_BUILD_ID})"
-                relateBuildsPostBody="$(get_relate_builds_post_data "Spack" ${JOB_CDASH_BUILD_ID} ${DEP_JOB_CDASH_BUILD_ID})"
+                relateBuildsPostBody="$(get_relate_builds_post_data "${CDASH_PROJECT}" ${JOB_CDASH_BUILD_ID} ${DEP_JOB_CDASH_BUILD_ID})"
                 relateBuildsResult=`curl "${DEP_JOB_RELATEBUILDS_URL}" -H "Content-Type: application/json" -H "Accept: application/json" -d "${relateBuildsPostBody}"`
                 echo "Result of curl request: ${relateBuildsResult}"
             else

@@ -67,6 +67,18 @@ schema = {
                 'specs': {'$ref': '#/definitions/list_of_specs'},
             }
         },
+        'cdashsite': {
+            'type': 'object',
+            'additionalProperties': False,
+            'properties': {
+                'baseurl': {
+                    'type': 'string',
+                },
+                'project': {
+                    'type': 'string',
+                },
+            },
+        },
     },
     # this is the actual top level object
     'type': 'object',
@@ -80,14 +92,7 @@ schema = {
                 # top-level settings are keys and need to be unique
                 'include': {'$ref': '#/definitions/list_of_specs'},
                 'exclude': {'$ref': '#/definitions/list_of_specs'},
-                'cdash': {
-                    'oneOf': [
-                        {'type': 'string'},
-                        {'type': 'array',
-                         'items': {'type': 'string'}
-                        },
-                    ],
-                },
+                'cdash': {'$ref': '#/definitions/cdashsite'},
                 'project': {
                     'type': 'string',
                 },
@@ -102,6 +107,21 @@ schema = {
                             {'$ref': '#/definitions/packages'},
                             {'$ref': '#/definitions/compilers'},
                         ],
+                    },
+                },
+                'release-tag': {
+                    'type': 'string',
+                },
+                'ci-only': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'string',
+                    },
+                },
+                'ci-except': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'string',
                     },
                 },
             },

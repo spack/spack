@@ -2,15 +2,28 @@
 # This is the default spack release spec set.
 # -------------------------------------------------------------------------
 spec-set:
+    release-tag: 'test-release-v1.4'
+    ci-only:
+        - 'enhance-release-spec-set'
     include: []
     exclude: []
     matrix:
         - packages:
-            xsdk:
-                versions: [0.4.0]
+            libpng:
+                versions: [1.6.34]
+            ncurses:
+                versions: [6.1]
+            pkgconf:
+                versions: [1.4.2]
+            readline:
+                versions: [7.0]
+            zlib:
+                versions: [1.2.11]
         - compilers:
             gcc:
                 versions: [5.5.0]
             clang:
                 versions: [6.0.0, '6.0.0-1ubuntu2']
-    cdash: ["https://spack.io/cdash/submit.php?project=spack"]
+    cdash:
+        baseurl: "http://cdash"
+        project: "Spack Testing"
