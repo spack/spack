@@ -24,8 +24,6 @@ class Caliper(CMakePackage):
     version('1.9.0', tag='v1.9.0')
     version('1.8.0', tag='v1.8.0')
     version('1.7.0', tag='v1.7.0')
-    # version 1.6.0 is broken b/c it downloads the wrong gotcha version
-    version('1.6.0', tag='v1.6.0')
 
     is_linux = sys.platform.startswith('linux')
     variant('shared', default=True,
@@ -52,11 +50,11 @@ class Caliper(CMakePackage):
 
     depends_on('gotcha@1.0.2:1.0.99', when='@1.0:1.99+gotcha')
 
-    depends_on('dyninst@9.3.0:9.3.2', when='@1.0:1.99+dyninst')
+    depends_on('dyninst@9.3.0:9.999.999', when='@1.0:1.99+dyninst')
 
     depends_on('papi@5.3.0:5.6.0', when='@1.0:1.99+papi')
 
-    depends_on('libpfm4@4.8.0:4.10.1', when='@1.0:1.99+libpfm')
+    depends_on('libpfm4@4.8.0:4.999.999', when='@1.0:1.99+libpfm')
 
     depends_on('mpi', when='+mpi')
     depends_on('unwind@2018.10.12,1.3-rc1,1.2.1,1.1', when='@1.0:1.99+callpath')
@@ -70,7 +68,7 @@ class Caliper(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_TESTING=On',
+            '-DBUILD_TESTING=Off',
             '-DBUILD_DOCS=Off',
             '-DBUILD_SHARED_LIBS=%s' % ('On' if '+shared'  in spec else 'Off'),
             '-DWITH_DYNINST=%s'  % ('On' if '+dyninst'  in spec else 'Off'),
