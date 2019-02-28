@@ -13,7 +13,7 @@ class PyMorphio(PythonPackage):
     git      = "git@github.com:BlueBrain/MorphIO.git"
 
     version('develop', branch='master', submodules=True)
-    version('2.0.3', commit='b598701c8e7b0dc8380815a7b857995504f1c2e3', submodules=True, preferred=True)
+    version('2.0.5', commit='4275313b723d1207918a160896bf3ab6cfb9b7ce', submodules=True, preferred=True)
 
     depends_on('py-setuptools', type='build')
 
