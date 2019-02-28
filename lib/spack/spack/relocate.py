@@ -327,7 +327,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root, prefix):
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
                 old_dir != new_dir and
-                    strings_contains_installroot(path_name, prefix)):
+                    not file_is_relocatable(path_name, prefix)):
                 raise InstallRootStringException(path_name, prefix)
 
     elif platform.system() == 'Linux':
@@ -343,8 +343,8 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root, prefix):
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
                     old_dir != new_dir and
-                    strings_contains_installroot(path_name, old_dir)):
-                    raise InstallRootStringException(path_name, old_dir)
+                    not file_is_relocatable(path_name, prefix)):
+                    raise InstallRootStringException(path_name, prefix)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
@@ -376,7 +376,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
-                strings_contains_installroot(cur_path)):
+                not file_is_relocatable(cur_path, old_dir)):
                 raise InstallRootStringException(cur_path)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
@@ -386,7 +386,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
                                                  orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
             if (not allow_root and
-                    strings_contains_installroot(cur_path, old_dir)):
+                    not file_is_relocatable(cur_path, old_dir)):
                 raise InstallRootStringException(cur_path, old_dir)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
@@ -398,31 +398,14 @@ def make_binary_placeholder(cur_path_names, prefix, allow_root):
     """
     if platform.system() == 'Darwin':
         for cur_path in cur_path_names:
-            rpaths, deps, idpath = macho_get_paths(cur_path)
-            (new_rpaths,
-             new_deps,
-             new_idpath) = macho_make_paths_placeholder(rpaths, deps, idpath)
-            modify_macho_object(cur_path,
-                                rpaths, deps, idpath,
-                                new_rpaths, new_deps, new_idpath)
-            placeholder = set_placeholder(prefix)
-            relocate_text([cur_path], prefix, placeholder)
             if (not allow_root and
-                strings_contains_installroot(cur_path,
-                                             prefix)):
+                not file_is_relocatable(cur_path, prefix)):
                 raise InstallRootStringException(
                     cur_path, prefix)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
-            orig_rpaths = get_existing_elf_rpaths(cur_path)
-            if orig_rpaths:
-                new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
-                modify_elf_object(cur_path, new_rpaths)
-            placeholder = set_placeholder(prefix)
-            relocate_text([cur_path], prefix, placeholder)
             if (not allow_root and
-                strings_contains_installroot(
-                    cur_path, prefix)):
+                not file_is_relocatable(cur_path, prefix)):
                 raise InstallRootStringException(
                     cur_path, prefix)
     else:
