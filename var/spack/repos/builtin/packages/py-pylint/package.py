@@ -12,6 +12,7 @@ class PyPylint(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pylint"
     url      = "https://pypi.io/packages/source/p/pylint/pylint-1.6.5.tar.gz"
 
+    version('2.3.0', sha256='ee80c7af4f127b2a480d83010c9f0e97beb8eaa652b78c2837d3ed30b12e1182')
     # version('1.7.2', '27ee752cdcfacb05bf4940947e6b35c6') # see dependencies
     version('1.6.5', '31da2185bf59142479e4fa16d8a9e347')
     version('1.4.3', '5924c1c7ca5ca23647812f5971d0ea44')

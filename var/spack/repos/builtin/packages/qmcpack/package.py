@@ -102,7 +102,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('boost@1.61.0:', when='@3.6.0:')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
+
     # HDF5
     depends_on('hdf5+hl+fortran', when='+qe')
     depends_on('hdf5+hl+fortran+mpi', when='+qe+mpi')
@@ -132,11 +132,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Spack package
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
     patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
-    depends_on('quantum-espresso@6.3~elpa+mpi+hdf5',
+    depends_on('quantum-espresso@6.3~elpa+mpi hdf5=parallel',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                    when='+qe+mpi', type='run')
 
-    depends_on('quantum-espresso@6.3~elpa~scalapack~mpi+hdf5',
+    depends_on('quantum-espresso@6.3~elpa~scalapack~mpi hdf5=serial',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                    when='+qe~mpi', type='run')
 
@@ -216,9 +216,13 @@ class Qmcpack(CMakePackage, CudaPackage):
         if '+cuda' in spec:
             args.append('-DQMC_CUDA=1')
             cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch is not None:
+            if cuda_arch != 'none':
                 args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
             else:
+                # This is the default value set in QMCPACK's CMake
+                # Not possible to set default value for cuda_arch,
+                # thus this won't be stored in the spec, which is
+                # a problem.
                 args.append('-DCUDA_ARCH=sm_35')
         else:
             args.append('-DQMC_CUDA=0')
