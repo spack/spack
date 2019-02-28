@@ -38,14 +38,6 @@ def setup_parser(subparser):
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-
-def spack_transitive_include_path():
-    return ';'.join(
-        os.path.join(dep, 'include')
-        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
-    )
-
-
 def write_spconfig(package, dirty):
     # Set-up the environment
     spack.build_environment.setup_package(package, dirty)
@@ -57,7 +49,6 @@ def write_spconfig(package, dirty):
     paths = os.environ['PATH'].split(':')
     paths = [item for item in paths if 'spack/env' not in item]
     env['PATH'] = ':'.join(paths)
-    #env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
     env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
     env['CC'] = os.environ['SPACK_CC']
     env['CXX'] = os.environ['SPACK_CXX']
