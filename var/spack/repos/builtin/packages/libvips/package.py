@@ -12,7 +12,7 @@ class Libvips(AutotoolsPackage):
     homepage = "https://libvips.github.io/libvips/"
     git      = "https://github.com/libvips/libvips.git"
 
-    version('8.7,4', tag='v8.7.4')
+    version('8.7.4', tag='v8.7.4')
 
     depends_on('swig')
     depends_on('gobject-introspection')
