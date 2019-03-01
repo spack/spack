@@ -748,9 +748,9 @@ def _libs_default_handler(descriptor, spec, cls):
             if libs:
                     if len(libs) > 1:
                         # Some packages want to generate linker commands. The
-                        # default libs query is not usable for this purpose, and
-                        # must be overrided. See hdf5 package for an example.
-                        tty.debug("Multiple libraries were found. Please do not"
+                        # default libs query is not usable for this purpose,
+                        # and must be overrided. See e.g. the hdf5 package.
+                        tty.debug("Multiple libraries were found. Please don't"
                                   " use this library list to build a linker"
                                   " command, as it is not dependency-ordered.")
                     return libs
