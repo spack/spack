@@ -28,7 +28,7 @@ class Harfbuzz(AutotoolsPackage):
         # disable building of gtk-doc files following #9771
         args.append('--disable-gtk-doc-html')
         true = which('true')
-        args.append('CXXFLAGS=-std=c++11')
+        args.append('CXXFLAGS={0}'.format(self.compiler.cxx11_flag))
         args.append('GTKDOC_CHECK={0}'.format(true))
         args.append('GTKDOC_CHECK_PATH={0}'.format(true))
         args.append('GTKDOC_MKPDF={0}'.format(true))

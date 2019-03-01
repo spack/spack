@@ -22,7 +22,7 @@ class ArmForge(Package):
     license_comment = '#'
     license_files = ['licences/Licence']
     license_vars = ['ALLINEA_LICENSE_DIR', 'ALLINEA_LICENCE_DIR',
-                    'ALLINEA_LICENSE_FILE', 'ALLINEA_LICENCE_DIR']
+                    'ALLINEA_LICENSE_FILE', 'ALLINEA_LICENCE_FILE']
     license_url = 'http://www.allinea.com/user-guide/forge/Installation.html'
 
     def url_for_version(self, version):
