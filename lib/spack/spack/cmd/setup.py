@@ -38,6 +38,7 @@ def setup_parser(subparser):
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
+
 def write_spconfig(package, dirty):
     # Set-up the environment
     spack.build_environment.setup_package(package, dirty)
