@@ -12,9 +12,9 @@ import os
 import re
 import sys
 import os.path
-import subprocess
 
 import llnl.util.tty as tty
+import spack.util.executable as executable
 
 from llnl.util.lang import dedupe
 
@@ -531,27 +531,13 @@ class EnvironmentModifications(object):
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
         dump_environment = 'python -c "{0}"'.format(dump_cmd)
 
-        # Construct the command that will be executed
-        command = [
-            shell,
-            shell_options,
-            ' '.join([
-                source_file, suppress_output,
-                concatenate_on_success, dump_environment,
-            ]),
-        ]
-
         # Try to source the file
-        proc = subprocess.Popen(
-            command, stdout=subprocess.PIPE, env=os.environ)
-        proc.wait()
-
-        if proc.returncode != 0:
-            msg = 'Sourcing file {0} returned a non-zero exit code'.format(
-                filename)
-            raise RuntimeError(msg)
-
-        output = ''.join([line.decode('utf-8') for line in proc.stdout])
+        shell = executable.Executable(' '.join([shell, shell_options]))
+        source_file_arguments = ' '.join([
+            source_file, suppress_output,
+            concatenate_on_success, dump_environment,
+        ])
+        output = shell(source_file_arguments, output=str)
 
         # Construct dictionaries of the environment before and after
         # sourcing the file, so that we can diff them.
