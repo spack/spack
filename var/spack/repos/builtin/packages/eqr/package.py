@@ -15,7 +15,7 @@ class Eqr(AutotoolsPackage):
 
     git = "https://github.com/emews/EQ-R"
 
-    version('develop', branch = 'master')
+    version('develop', branch='master')
 
     configure_directory = 'src'
 
