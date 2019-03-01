@@ -872,8 +872,9 @@ def installation_dir_with_libs(tmpdir_factory):
     # |   |-- libbaz.a
     # |   |-- libsomething.a
     #
-    root.ensure('lib', 'libfoo.so')
-    root.ensure('lib', 'libbar.so')
+    shared_fmt = 'lib{0}.dylib' if sys.platform == 'darwin' else 'lib{0}.so'
+    root.ensure('lib', shared_fmt.format('foo'))
+    root.ensure('lib', shared_fmt.format('bar'))
     root.ensure('lib64', 'libbaz.a')
     root.ensure('lib64', 'libsomething.a')
 

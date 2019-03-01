@@ -263,10 +263,11 @@ def test_recursive_search_of_libraries_from_prefix(
     # Try to find shared libraries in <prefix>
     prefix = str(installation_dir_with_libs)
     libs_list = fs.find_all_libraries(prefix, shared=True)
+    sh_fmt = 'lib{0}.dylib' if sys.platform == 'darwin' else 'lib{0}.so'
 
     # Check that shared libraries are listed, and static libraries aren't
-    assert os.path.join(prefix, 'lib', 'libfoo.so') in libs_list
-    assert os.path.join(prefix, 'lib', 'libbar.so') in libs_list
+    assert os.path.join(prefix, 'lib', sh_fmt.format('foo')) in libs_list
+    assert os.path.join(prefix, 'lib', sh_fmt.format('bar')) in libs_list
     assert os.path.join(prefix, 'lib64', 'libbaz.a') not in libs_list
     assert os.path.join(prefix, 'lib64', 'libsomething.a') not in libs_list
 
@@ -278,8 +279,8 @@ def test_recursive_search_of_libraries_from_prefix(
 
     # Do the same test for static libraries
     libs_list = fs.find_all_libraries(prefix, shared=False)
-    assert os.path.join(prefix, 'lib', 'libfoo.so') not in libs_list
-    assert os.path.join(prefix, 'lib', 'libbar.so') not in libs_list
+    assert os.path.join(prefix, 'lib', sh_fmt.format('foo')) not in libs_list
+    assert os.path.join(prefix, 'lib', sh_fmt.format('bar')) not in libs_list
     assert os.path.join(prefix, 'lib64', 'libbaz.a') in libs_list
     assert os.path.join(prefix, 'lib64', 'libsomething.a') in libs_list
     libs_dirs = libs_list.directories
