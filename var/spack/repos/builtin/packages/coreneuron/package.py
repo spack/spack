@@ -36,7 +36,8 @@ class Coreneuron(CMakePackage):
     homepage = "https://github.com/BlueBrain/CoreNeuron"
     url      = "https://github.com/BlueBrain/CoreNeuron"
 
-    version('develop', git=url, submodules=True, preferred=True)
+    version('develop', git=url, submodules=True)
+    version('0.14', git=url, submodules=True, preferred=True)
 
     variant('debug', default=False, description='Build debug with O0')
     variant('gpu', default=False, description="Enable GPU build")
@@ -155,7 +156,7 @@ class Coreneuron(CMakePackage):
         spec = self.spec
         is_shared = spec.satisfies('+shared') and spec.satisfies('~gpu')
         for path, recursive in search_paths:
-            libs = find_libraries('libcoreneuron', root=path,
+            libs = find_libraries(['libcoreneuron', 'libcorenrnmech'], root=path,
                                   shared=is_shared, recursive=False)
             if libs:
                 return libs

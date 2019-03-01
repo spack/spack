@@ -31,6 +31,9 @@ modules:
       - functionalizer
       - 'neurodamus%intel'
       #- 'neuron+mpi%intel'
+      - neurodamus-hippocampus
+      - neurodamus-neocortex
+      - neurodamus-thalamus
       - parquet-converters
       - placement-algorithm
       - py-bluepymm

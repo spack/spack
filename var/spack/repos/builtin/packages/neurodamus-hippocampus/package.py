@@ -12,4 +12,4 @@ class NeurodamusHippocampus(NeurodamusModel):
     git      = "ssh://bbpcode.epfl.ch/sim/models/hippocampus"
 
     version('develop', git=git, branch='master', submodules=True)
-
+    version('0.1', git=git, tag='0.1', submodules=True, preferred=True)
