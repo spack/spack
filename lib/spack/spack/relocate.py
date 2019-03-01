@@ -36,12 +36,16 @@ def get_patchelf():
     # as we may need patchelf, find out where it is
     if platform.system() == 'Darwin':
         return None
-    patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-    patchelf = spack.repo.get(patchelf_spec)
-    if not patchelf.installed:
-        patchelf.do_install()
-    patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
-    return patchelf_executable
+    patchelf = spack.util.executable.which('patchelf')
+    if patchelf is None:
+        patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
+        patchelf = spack.repo.get(patchelf_spec)
+        if not patchelf.installed:
+            patchelf.do_install()
+        patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
+        return patchelf_executable
+    else:
+        return patchelf.path
 
 
 def get_existing_elf_rpaths(path_name):
@@ -266,31 +270,22 @@ def modify_elf_object(path_name, new_rpaths):
         tty.die('relocation not supported for this platform')
 
 
-def needs_binary_relocation(filetype, os_id=None):
+def needs_binary_relocation(m_type, m_subtype):
     """
     Check whether the given filetype is a binary that may need relocation.
     """
-    retval = False
-    if "relocatable" in filetype:
-        return False
-    if "link to" in filetype:
-        return False
-    if os_id == 'Darwin':
-        return ("Mach-O" in filetype)
-    elif os_id == 'Linux':
-        return ("ELF" in filetype)
-    else:
-        tty.die("Relocation not implemented for %s" % os_id)
-    return retval
+    if m_type == 'application':
+        if (m_subtype == 'x-executable' or m_subtype == 'x-sharedlib' or
+           m_subtype == 'x-mach-binary'):
+            return True
+    return False
 
 
-def needs_text_relocation(filetype):
+def needs_text_relocation(m_type, m_subtype):
     """
     Check whether the given filetype is text that may need relocation.
     """
-    if "link to" in filetype:
-        return False
-    return ("text" in filetype)
+    return (m_type == "text")
 
 
 def relocate_binary(path_names, old_dir, new_dir, allow_root):
@@ -302,51 +297,44 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
     if platform.system() == 'Darwin':
         for path_name in path_names:
             (rpaths, deps, idpath) = macho_get_paths(path_name)
-            # new style buildaches with placeholder in binaries
-            if (deps[0].startswith(placeholder) or
-                rpaths[0].startswith(placeholder) or
-                (idpath and idpath.startswith(placeholder))):
-                (new_rpaths,
-                 new_deps,
-                 new_idpath) = macho_replace_paths(placeholder,
-                                                   new_dir,
-                                                   rpaths,
-                                                   deps,
-                                                   idpath)
-            # old style buildcaches with original install root in binaries
-            else:
-                (new_rpaths,
-                 new_deps,
-                 new_idpath) = macho_replace_paths(old_dir,
-                                                   new_dir,
-                                                   rpaths,
-                                                   deps,
-                                                   idpath)
+            # one pass to replace placeholder
+            (n_rpaths,
+             n_deps,
+             n_idpath) = macho_replace_paths(placeholder,
+                                             new_dir,
+                                             rpaths,
+                                             deps,
+                                             idpath)
+            # another pass to replace old_dir
+            (new_rpaths,
+             new_deps,
+             new_idpath) = macho_replace_paths(old_dir,
+                                               new_dir,
+                                               n_rpaths,
+                                               n_deps,
+                                               n_idpath)
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
                 old_dir != new_dir and
-                strings_contains_installroot(path_name, old_dir)):
+                    not file_is_relocatable(path_name)):
                 raise InstallRootStringException(path_name, old_dir)
 
     elif platform.system() == 'Linux':
         for path_name in path_names:
             orig_rpaths = get_existing_elf_rpaths(path_name)
             if orig_rpaths:
-                if orig_rpaths[0].startswith(placeholder):
-                    # new style buildaches with placeholder in binaries
-                    new_rpaths = substitute_rpath(orig_rpaths,
-                                                  placeholder, new_dir)
-                else:
-                    # old style buildcaches with original install
-                    # root in binaries
-                    new_rpaths = substitute_rpath(orig_rpaths,
-                                                  old_dir, new_dir)
+                # one pass to replace placeholder
+                n_rpaths = substitute_rpath(orig_rpaths,
+                                            placeholder, new_dir)
+                # one pass to replace old_dir
+                new_rpaths = substitute_rpath(n_rpaths,
+                                              old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
                     old_dir != new_dir and
-                    strings_contains_installroot(path_name, old_dir)):
+                    not file_is_relocatable(path_name)):
                     raise InstallRootStringException(path_name, old_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
@@ -379,8 +367,8 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
-                strings_contains_installroot(cur_path)):
-                raise InstallRootStringException(cur_path)
+                not file_is_relocatable(cur_path, old_dir)):
+                raise InstallRootStringException(cur_path, old_dir)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -388,9 +376,9 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
                 new_rpaths = get_relative_rpaths(orig_path, old_dir,
                                                  orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
-                if (not allow_root and
-                    strings_contains_installroot(cur_path, old_dir)):
-                    raise InstallRootStringException(cur_path, old_dir)
+            if (not allow_root and
+                    not file_is_relocatable(cur_path, old_dir)):
+                raise InstallRootStringException(cur_path, old_dir)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
@@ -401,29 +389,16 @@ def make_binary_placeholder(cur_path_names, allow_root):
     """
     if platform.system() == 'Darwin':
         for cur_path in cur_path_names:
-            rpaths, deps, idpath = macho_get_paths(cur_path)
-            (new_rpaths,
-             new_deps,
-             new_idpath) = macho_make_paths_placeholder(rpaths, deps, idpath)
-            modify_macho_object(cur_path,
-                                rpaths, deps, idpath,
-                                new_rpaths, new_deps, new_idpath)
             if (not allow_root and
-                strings_contains_installroot(cur_path,
-                                             spack.store.layout.root)):
+                not file_is_relocatable(cur_path)):
                 raise InstallRootStringException(
                     cur_path, spack.store.layout.root)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
-            orig_rpaths = get_existing_elf_rpaths(cur_path)
-            if orig_rpaths:
-                new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
-                modify_elf_object(cur_path, new_rpaths)
-                if (not allow_root and
-                    strings_contains_installroot(
-                        cur_path, spack.store.layout.root)):
-                    raise InstallRootStringException(
-                        cur_path, spack.store.layout.root)
+            if (not allow_root and
+                not file_is_relocatable(cur_path)):
+                raise InstallRootStringException(
+                    cur_path, spack.store.layout.root)
     else:
         tty.die("Placeholder not implemented for %s" % platform.system())
 
@@ -498,6 +473,8 @@ def is_relocatable(spec):
         raise ValueError('spec is not installed [{0}]'.format(str(spec)))
 
     if spec.external or spec.virtual:
+        tty.warn('external or virtual package %s is not relocatable' %
+                 spec.name)
         return False
 
     # Explore the installation prefix of the spec
@@ -538,7 +515,7 @@ def file_is_relocatable(file):
         raise ValueError('{0} is not an absolute path'.format(file))
 
     strings = Executable('strings')
-    patchelf = Executable('patchelf')
+    patchelf = Executable(get_patchelf())
 
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
@@ -600,6 +577,6 @@ def mime_type(file):
         Tuple containing the MIME type and subtype
     """
     file_cmd = Executable('file')
-    output = file_cmd('-b', '--mime-type', file, output=str, error=str)
+    output = file_cmd('-b', '-h', '--mime-type', file, output=str, error=str)
     tty.debug('[MIME_TYPE] {0} -> {1}'.format(file, output.strip()))
     return tuple(output.strip().split('/'))

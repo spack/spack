@@ -157,7 +157,7 @@ echo $PATH"""
     else:
         # create build cache without signing
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-u', str(spec)])
+            ['create', '-d', mirror_path, '-f', '-u', str(spec)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
@@ -265,22 +265,16 @@ def test_relocate_links(tmpdir):
 
 
 def test_needs_relocation():
-    binary_type = (
-        'ELF 64-bit LSB executable, x86-64, version 1 (SYSV),'
-        ' dynamically linked (uses shared libs),'
-        ' for GNU/Linux x.y.z, stripped')
 
-    assert needs_binary_relocation(binary_type, os_id='Linux')
-    assert not needs_binary_relocation('relocatable',
-                                       os_id='Linux')
-    assert not needs_binary_relocation('symbolic link to `foo\'',
-                                       os_id='Linux')
+    assert needs_binary_relocation('application', 'x-sharedlib')
+    assert needs_binary_relocation('application', 'x-executable')
+    assert not needs_binary_relocation('application', 'x-octet-stream')
+    assert not needs_binary_relocation('text', 'x-')
 
-    assert needs_text_relocation('ASCII text')
-    assert not needs_text_relocation('symbolic link to `foo.text\'')
+    assert needs_text_relocation('text', 'x-')
+    assert not needs_text_relocation('symbolic link to', 'x-')
 
-    macho_type = 'Mach-O 64-bit executable x86_64'
-    assert needs_binary_relocation(macho_type, os_id='Darwin')
+    assert needs_binary_relocation('application', 'x-mach-binary')
 
 
 def test_macho_paths():
