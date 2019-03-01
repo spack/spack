@@ -7,9 +7,10 @@ from spack import *
 
 
 class Pal(AutotoolsPackage):
-    """The PAL library is a partial re-implementation of Pat Wallace's popular SLALIB library
-    written in C using a Gnu GPL license and layered
-    on top of the IAU's SOFA library (or the BSD-licensed ERFA) where appropriate."""
+    """The PAL library is a partial re-implementation of Pat Wallace's
+    popular SLALIB library written in C using a Gnu GPL license
+    and layered on top of the IAU's SOFA library (or the BSD-licensed ERFA)
+    where appropriate."""
 
     homepage = "https://github.com/Starlink/pal"
     url      = "https://github.com/Starlink/pal/releases/download/v0.9.8/pal-0.9.8.tar.gz"
