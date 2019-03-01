@@ -93,6 +93,7 @@ from six import iteritems
 from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs, memoized
+import llnl.util.tty as tty
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 import llnl.util.tty as tty
 
@@ -745,7 +746,14 @@ def _libs_default_handler(descriptor, spec, cls):
         for shared in search_shared:
             libs = find_libraries(name, spec.prefix, shared=shared, recursive=True)
             if libs:
-                return libs
+                    if len(libs) > 1:
+                        # Some packages want to generate linker commands. The
+                        # default libs query is not usable for this purpose, and
+                        # must be overrided. See hdf5 package for an example.
+                        tty.debug("Multiple libraries were found. Please do not"
+                                  " use this library list to build a linker"
+                                  " command, as it is not dependency-ordered.")
+                    return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
     raise NoLibrariesError(msg.format(spec.name, spec.prefix))
