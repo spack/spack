@@ -29,4 +29,3 @@ class RPillar(RPackage):
     depends_on('r-fansi', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'))
     depends_on('r-utf8', type=('build', 'run'))
-    
