@@ -10,13 +10,12 @@ import os
 class Eqr(AutotoolsPackage):
     """
     EMEWS Queues for R (EQ/R)
-    
     Installs EQ/R.
     """
 
     git = "https://github.com/emews/EQ-R"
 
-    version('develop', branch = "master")
+    version('develop', branch = 'master')
 
     configure_directory = 'src'
 
@@ -34,25 +33,22 @@ class Eqr(AutotoolsPackage):
     depends_on('r')
     depends_on('tcl')
     depends_on('swig')
-    
+
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
         spack_env.set('CC', spec['mpi'].mpicc)
         spack_env.set('CXX', spec['mpi'].mpicxx)
         spack_env.set('CXXLD', spec['mpi'].mpicxx)
 
-
     def configure_args(self):
         args = ['--with-tcl=' + self.spec['tcl'].prefix]
-        r_location = '{0}/rlib/R'.format(
-                        self.spec['r'].prefix)
+        r_location = '{0}/rlib/R'.format(self.spec['r'].prefix)
         if not os.path.exists(r_location):
             rscript = which('Rscript')
             if rscript is not None:
-                r_location = rscript('-e','cat(R.home())')
+                r_location = rscript('-e', 'cat(R.home())')
             else:
                 msg = 'couldn\'t locate Rscript on your PATH'
                 raise RuntimeError(msg)
         args.append('--with-r={0}'.format(r_location))
         return args
-
