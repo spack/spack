@@ -269,10 +269,10 @@ def test_needs_relocation():
     assert needs_binary_relocation('application', 'x-sharedlib')
     assert needs_binary_relocation('application', 'x-executable')
     assert not needs_binary_relocation('application', 'x-octet-stream')
-    assert not needs_binary_relocation('text', 'x-c++')
+    assert not needs_binary_relocation('text', 'x-')
 
     assert needs_text_relocation('text', 'x-')
-    assert not needs_text_relocation('symbolic link to','x-')
+    assert not needs_text_relocation('symbolic link to', 'x-')
 
     assert needs_binary_relocation('application', 'x-mach-binary')
 
