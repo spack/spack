@@ -723,37 +723,43 @@ def _libs_default_handler(descriptor, spec, cls):
     # depending on which one exists (there is a possibility, of course, to
     # get something like 'libabcXabc.so, but for now we consider this
     # unlikely).
-    spec_name = spec.name.replace('-', '?')
+    name = spec.name.replace('-', '?')
 
     # Avoid double 'lib' for packages whose names already start with lib
-    if not spec_name.startswith('lib'):
-        spec_name = 'lib' + spec_name
-
-    # Use a catch-all fallback in case the library name does not match the
-    # package name (as in Intel packages, X11 packages, gettext...). This is
-    # only safe for "internal" spack packages which each get their own prefix:
-    # with external packages, we could end up pulling all of /usr/lib(64)...
-    search_names = [spec_name]
-    if not spec.external:
-        search_names.append('lib*')
+    if not name.startswith('lib'):
+        name = 'lib' + name
 
     # If '+shared' search only for shared library; if '~shared' search only for
     # static library; otherwise, first search for shared and then for static.
     search_shared = [True] if ('+shared' in spec) else \
         ([False] if ('~shared' in spec) else [True, False])
 
-    for name in search_names:
-        for shared in search_shared:
-            libs = find_libraries(name, spec.prefix, shared=shared, recursive=True)
+    # Start searching for a library that matches the package name
+    for shared in search_shared:
+        for path, recursive in search_paths:
+            libs = find_libraries(
+                name, root=path, shared=shared, recursive=recursive
+            )
             if libs:
-                    if len(libs) > 1:
-                        # Some packages want to generate linker commands. The
-                        # default libs query is not usable for this purpose,
-                        # and must be overrided. See e.g. the hdf5 package.
-                        tty.debug("Multiple libraries were found. Please don't"
-                                  " use this library list to build a linker"
-                                  " command, as it is not dependency-ordered.")
-                    return libs
+                return libs
+
+    # Use a catch-all fallback in case the library name does not match the
+    # package name (as in Intel packages, X11 packages, gettext...). This is
+    # only safe for "internal" spack packages which each get their own prefix:
+    # with external packages, we could end up pulling all of /usr/lib(64)...
+    if not spec.external:
+        for shared in search_shared:
+            libs = find_all_libraries(spec.prefix, shared=shared)
+            if libs:
+                if len(libs) > 1:
+                    # Some packages want to generate linker commands. The
+                    # default libs query produces an unordered library list,
+                    # which is unfit for this purpose, and must be overriden.
+                    # See the hdf5 package for an example of how to do this.
+                    tty.debug("Multiple libraries were found. Please do not"
+                              " use the resulting library list to build a"
+                              " linker command, it is not dependency-ordered.")
+                return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
     raise NoLibrariesError(msg.format(spec.name, spec.prefix))

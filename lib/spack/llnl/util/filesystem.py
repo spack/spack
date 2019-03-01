@@ -38,6 +38,7 @@ __all__ = [
     'find_headers',
     'find_all_headers',
     'find_libraries',
+    'find_all_libraries',
     'find_system_libraries',
     'fix_darwin_install_name',
     'force_remove',
@@ -1487,6 +1488,19 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         found_libs = find(root, libraries, True)
 
     return LibraryList(found_libs)
+
+
+def find_all_libraries(root, shared=True):
+    """Convenience function that returns the list of all libraries found
+    in the directory passed as argument.
+
+    Args:
+        root (path): directory where to look recursively for libraries
+
+    Returns:
+        List of all libraries found in ``root`` and subdirectories.
+    """
+    return find_libraries('lib*', root=root, shared=shared, recursive=True)
 
 
 @memoized
