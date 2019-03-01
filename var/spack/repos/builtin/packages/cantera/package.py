@@ -22,7 +22,7 @@ class Cantera(SConsPackage):
     variant('matlab',     default=False,
             description='Build the Cantera Matlab toolbox')
     variant('sundials',   default=True,
-	    description='Build with Sundials')
+            description='Build with Sundials')
 
     # Required dependencies
     depends_on('fmt@3.0.0:3.0.2', when='@2.3.0:')
@@ -102,7 +102,7 @@ class Cantera(SConsPackage):
             ])
 
         # Sundials support
-	if '+sundials' in spec:
+        if '+sundials' in spec:
             if spec.satisfies('@2.3.0:'):
                 args.append('system_sundials=y')
             else:
