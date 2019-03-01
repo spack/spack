@@ -52,3 +52,6 @@ packages:
       - compiler
     specs:
       - boost
+      - gmsh
+      - hdf5~mpi
+      - highfive~mpi
