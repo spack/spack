@@ -43,3 +43,12 @@ packages:
     specs:
       - python@2.7.15
       - python@3.6.5
+
+  gnu-stable-serial:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - boost
