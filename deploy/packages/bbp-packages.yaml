@@ -35,6 +35,8 @@ packages:
     specs:
       - functionalizer@3.11.0
       - functionalizer@3.12.0
+      - parquet-converters@0.3
+      - synapsetool@0.4.1
       - touchdetector@4.4.1
 
   gnu-stable-parallel-python:
@@ -46,7 +48,6 @@ packages:
       - mpi
       #- python
     specs:
-      - parquet-converters@0.3
       - placement-algorithm@2.0.7
 
   #### sub-cellular ####
