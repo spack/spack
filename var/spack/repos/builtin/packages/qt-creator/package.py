@@ -26,7 +26,7 @@ class QtCreator(QMakePackage):
     # cause symbol conflict. Force Spack to build with the same version of
     # sqlite as the bundled copy.
     depends_on('sqlite@3.8.10.2', when='@:4.4.0')
-    depends_on('sqlite@3.8.10.3:')
+    depends_on('sqlite@3.8.10.3:', when='@4.8.0:')
 
     # Qt Creator 4.3.0+ requires a C++14 compiler
     conflicts('%gcc@:4.8', when='@4.3.0:')
