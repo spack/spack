@@ -14,8 +14,16 @@ class PyMdanalysis(PythonPackage):
     topology formats.)"""
 
     homepage = "http://www.mdanalysis.org"
-    url      = "https://pypi.io/packages/source/M/MDAnalysis/MDAnalysis-0.15.0.tar.gz"
+    url      = "https://pypi.io/packages/source/M/MDAnalysis/MDAnalysis-0.19.2.tar.gz"
 
+    version('0.19.2', sha256='c5395bbafa5efca2e1aee4715d26129844140c47cb8301da0293106cb969de7d')
+    version('0.19.1', sha256='ff1d694f8598c0833ec340de6a6adb3b5e62b92d0fa94ee6401718ba972db3cc')
+    version('0.19.0', sha256='248e3b37fc6150e31c609cc18a3927c32aee37b76d29cbfedf635e7e1aa982cf')
+    version('0.18.0', sha256='a08acea1755112411e7db55e3f282e164b47a59e15794b38744cce6c596f252a')
+    version('0.17.0', sha256='9bd61760334698cc7b8a57ad26456451e926e9c9e66722594ad8816561348cde')
+    version('0.16.2', sha256='407d9a9ff1ab8a5e47973714d06fabff220f8d08a28792dee93e88e70e995b0a')
+    version('0.16.1', sha256='3dc8f5d639ab3a0d152cbd7259ae9372ec8a9bac0f8cb7d3b80ce5adc1e3ee57')
+    version('0.16.0', sha256='c4824fa1fddd336daa39371436187ebb023366885fb250c2827ed7fce2546bd4')
     version('0.15.0', '19e5a8e6c2bfe85f6209d1d7a36e4f20')
 
     variant('analysis', default=True, 
