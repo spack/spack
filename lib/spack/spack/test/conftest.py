@@ -9,6 +9,7 @@ import inspect
 import os
 import os.path
 import shutil
+import sys
 import xml.etree.ElementTree
 
 import ordereddict_backport

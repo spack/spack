@@ -9,6 +9,7 @@ import llnl.util.filesystem as fs
 import os
 import stat
 import pytest
+import sys
 
 
 @pytest.fixture()
