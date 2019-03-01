@@ -855,6 +855,31 @@ def installation_dir_with_headers(tmpdir_factory):
     return root
 
 
+@pytest.fixture()
+def installation_dir_with_libs(tmpdir_factory):
+    """Mock installation tree with a few libraries. Shouldn't be modified by
+    tests as it is session scoped.
+    """
+    root = tmpdir_factory.mktemp('prefix')
+
+    # Create a few pseudo-libraries:
+    #
+    # <prefix>
+    # |-- lib
+    # |   |-- libfoo.so
+    # |   |-- libbar.so
+    # |-- lib64
+    # |   |-- libbaz.a
+    # |   |-- libsomething.a
+    #
+    root.ensure('lib', 'libfoo.so')
+    root.ensure('lib', 'libbar.so')
+    root.ensure('lib64', 'libbaz.a')
+    root.ensure('lib64', 'libsomething.a')
+
+    return root
+
+
 ##########
 # Mock packages
 ##########

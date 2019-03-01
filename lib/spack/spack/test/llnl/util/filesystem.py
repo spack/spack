@@ -256,6 +256,37 @@ def test_recursive_search_of_headers_from_prefix(
     assert os.path.join(prefix, 'path', 'to', 'subdir') in include_dirs
 
 
+@pytest.mark.regression('10617')
+def test_recursive_search_of_libraries_from_prefix(
+        installation_dir_with_libs
+):
+    # Try to find shared libraries in <prefix>
+    prefix = str(installation_dir_with_libs)
+    libs_list = fs.find_all_libraries(prefix, shared=True)
+
+    # Check that shared libraries are listed, and static libraries aren't
+    assert os.path.join(prefix, 'lib', 'libfoo.so') in libs_list
+    assert os.path.join(prefix, 'lib', 'libbar.so') in libs_list
+    assert os.path.join(prefix, 'lib64', 'libbaz.a') not in libs_list
+    assert os.path.join(prefix, 'lib64', 'libsomething.a') not in libs_list
+
+    # Check that directories which contain shared libraries are listed, and
+    # directories which contain static libraries aren't
+    libs_dirs = libs_list.directories
+    assert os.path.join(prefix, 'lib') in libs_dirs
+    assert os.path.join(prefix, 'lib64') not in libs_dirs
+
+    # Do the same test for static libraries
+    libs_list = fs.find_all_libraries(prefix, shared=False)
+    assert os.path.join(prefix, 'lib', 'libfoo.so') not in libs_list
+    assert os.path.join(prefix, 'lib', 'libbar.so') not in libs_list
+    assert os.path.join(prefix, 'lib64', 'libbaz.a') in libs_list
+    assert os.path.join(prefix, 'lib64', 'libsomething.a') in libs_list
+    libs_dirs = libs_list.directories
+    assert os.path.join(prefix, 'lib') not in libs_dirs
+    assert os.path.join(prefix, 'lib64') in libs_dirs
+
+
 @pytest.mark.parametrize('list_of_headers,expected_directories', [
     (['/pfx/include/foo.h', '/pfx/include/subdir/foo.h'], ['/pfx/include']),
     (['/pfx/include/foo.h', '/pfx/subdir/foo.h'],
