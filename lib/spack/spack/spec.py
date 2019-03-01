@@ -90,7 +90,8 @@ from six import StringIO
 from six import string_types
 from six import iteritems
 
-from llnl.util.filesystem import find_headers, find_libraries, is_exe
+from llnl.util.filesystem import find_headers, find_libraries
+from llnl.util.filesystem import find_all_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs, memoized
 import llnl.util.tty as tty
