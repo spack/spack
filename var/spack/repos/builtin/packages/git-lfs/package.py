@@ -23,7 +23,7 @@ class GitLfs(MakefilePackage):
     depends_on('go@1.5:', type='build')
     depends_on('git@1.8.2:', type='run')
 
-    patch('patches/issue-10702.patch', when='@2.7.0')
+    patch('patches/issue-10702.patch', when='@2.7.0:2.7.1')
 
     parallel = False
 
