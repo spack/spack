@@ -35,8 +35,8 @@ class Trilinos(CMakePackage):
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
-    version('12.14.0-rc1', commit='dbf41f3b26b0326a1377f219e6e07eab861d181e')  # branch trilinos-release-12-14-branch
-    version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7', preferred=True)
+    version('12.14.1', '52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
+    version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '9f37f683ee2b427b5540db8a20ed6b15')
     version('12.6.4', 'e11fff717d0e4565779f75a47feecbb2')

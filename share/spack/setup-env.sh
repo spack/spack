@@ -272,10 +272,16 @@ if [ "${need_module}" = "yes" ]; then
 
     # _sp_module_prefix is set by spack --print-sh-vars
     if [ "${_sp_module_prefix}" != "not_installed" ]; then
-        #activate it!
-        export MODULE_PREFIX=${_sp_module_prefix}
-        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        # activate it!
+        # environment-modules@4: has a bin directory inside its prefix
+        MODULE_PREFIX_BIN="${_sp_module_prefix}/bin"
+        if [ ! -d "${MODULE_PREFIX_BIN}" ]; then
+            # environment-modules@3 has a nested bin directory
+            MODULE_PREFIX_BIN="${_sp_module_prefix}/Modules/bin"
+        fi
+        export MODULE_PREFIX_BIN
+        _spack_pathadd PATH "${MODULE_PREFIX_BIN}"
+        module() { eval `${MODULE_PREFIX_BIN}/modulecmd ${SPACK_SHELL} $*`; }
     fi;
 else
     eval `spack --print-shell-vars sh`
