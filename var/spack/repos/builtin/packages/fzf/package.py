@@ -29,4 +29,4 @@ class Fzf(MakefilePackage):
         mkdir(prefix.bin)
 
         makefile = FileFilter('Makefile')
-        makefile.filter('bin/fzf', prefix.bin+"/fzf")
+        makefile.filter('bin/fzf', prefix.bin + "/fzf")
