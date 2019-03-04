@@ -13,6 +13,8 @@ import re
 import sys
 import os.path
 
+import six
+
 import llnl.util.tty as tty
 import spack.util.executable as executable
 
@@ -514,41 +516,15 @@ class EnvironmentModifications(object):
             msg = 'Trying to source non-existing file: {0}'.format(filename)
             raise RuntimeError(msg)
 
-        # Kwargs parsing and default values
-        shell                  = kwargs.get('shell', '/bin/bash')
-        shell_options          = kwargs.get('shell_options', '-c')
-        source_command         = kwargs.get('source_command', 'source')
-        suppress_output        = kwargs.get('suppress_output', '&> /dev/null')
-        concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
-        blacklist              = kwargs.get('blacklist', [])
-        whitelist              = kwargs.get('whitelist', [])
-        clean                  = kwargs.get('clean', False)
-
-        source_file = [source_command, filename]
-        source_file.extend(args)
-        source_file = ' '.join(source_file)
-
-        dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = 'python -c "{0}"'.format(dump_cmd)
-
-        # Try to source the file
-        shell = executable.Executable(' '.join([shell, shell_options]))
-        source_file_arguments = ' '.join([
-            source_file, suppress_output,
-            concatenate_on_success, dump_environment,
-        ])
-        output = shell(source_file_arguments, output=str)
-
-        # Construct dictionaries of the environment before and after
-        # sourcing the file, so that we can diff them.
         env_before = dict(os.environ)
-        env_after = json.loads(output)
+        env_after = environment_after_sourcing_files(
+            (filename,) + args, **kwargs
+        )
 
-        # If we're in python2, convert to str objects instead of unicode
-        # like json gives us.  We can't put unicode in os.environ anyway.
-        if sys.version_info[0] < 3:
-            env_after = dict((k.encode('utf-8'), v.encode('utf-8'))
-                             for k, v in env_after.items())
+        # Kwargs parsing and default values
+        blacklist = kwargs.get('blacklist', [])
+        whitelist = kwargs.get('whitelist', [])
+        clean = kwargs.get('clean', False)
 
         # Other variables unrelated to sourcing a file
         blacklist.extend([
@@ -835,3 +811,68 @@ def preserve_environment(*variables):
             msg += ' {0} was set to "{1}", will be unset'
             tty.debug(msg.format(var, os.environ[var]))
             del os.environ[var]
+
+
+def environment_after_sourcing_files(*files, **kwargs):
+    """Returns a dictionary with the environment that one would have
+    after sourcing the files passed as argument.
+
+    Args:
+        *files: each item can either be a string containing the path
+            of the file to be sourced or a sequence, where the first element
+            is the file to be sourced and the remaining are arguments to be
+            passed to the command line
+        **kwargs:
+            env (dict): the initial environment (default: current environment)
+            shell (str): the shell to use (default: ``/bin/bash``)
+            shell_options (str): options passed to the shell (default: ``-c``)
+            source_command (str): the command to run (default: ``source``)
+            suppress_output (str): redirect used to suppress output of command
+            (default: ``&> /dev/null``)
+            concatenate_on_success (str): operator used to execute a command
+            only when the previous command succeeds (default: ``&&``)
+    """
+    # Set the shell executable that will be used to source files
+    shell_cmd = kwargs.get('shell', '/bin/bash')
+    shell_options = kwargs.get('shell_options', '-c')
+    source_command = kwargs.get('source_command', 'source')
+    suppress_output = kwargs.get('suppress_output', '&> /dev/null')
+    concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
+
+    shell = executable.Executable(' '.join([shell_cmd, shell_options]))
+
+    def _source_single_file(file_and_args, environment):
+        source_file = [source_command]
+        source_file.extend(x for x in file_and_args)
+        source_file = ' '.join(source_file)
+
+        dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
+        dump_environment = 'python -c "{0}"'.format(dump_cmd)
+
+        # Try to source the file
+        source_file_arguments = ' '.join([
+            source_file, suppress_output,
+            concatenate_on_success, dump_environment,
+        ])
+        output = shell(source_file_arguments, output=str, env=environment)
+        environment = json.loads(output)
+
+        # If we're in python2, convert to str objects instead of unicode
+        # like json gives us.  We can't put unicode in os.environ anyway.
+        if sys.version_info[0] < 3:
+            environment = dict(
+                (k.encode('utf-8'), v.encode('utf-8'))
+                for k, v in environment.items()
+            )
+
+        return environment
+
+    kwargs.setdefault('env', dict(os.environ))
+    for f in files:
+        # Normalize the input to the helper function
+        if isinstance(f, six.string_types):
+            f = [f]
+
+        kwargs['env'] = _source_single_file(f, environment=kwargs['env'])
+
+    return kwargs['env']
