@@ -141,6 +141,17 @@ class AutotoolsPackage(PackageBase):
                 mod = os.stat(my_config_guess).st_mode & 0o777 | stat.S_IWUSR
                 os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
+
+                # Look for a config.sub in the same location
+                root, ext = os.path.splitext(config_guess)
+                config_sub = root + ".sub"
+                root, ext = os.path.splitext(my_config_guess)
+                my_config_sub = root + ".sub"
+                if os.path.exists(config_sub) and os.path.exists(my_config_sub):
+                    mod = os.stat(my_config_sub).st_mode & 0o777 | stat.S_IWUSR
+                    os.chmod(my_config_sub, mod)
+                    shutil.copyfile(config_sub, my_config_sub)
+
                 return
             except Exception:
                 pass
