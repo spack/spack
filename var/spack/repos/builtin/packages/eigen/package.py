@@ -46,3 +46,9 @@ class Eigen(CMakePackage):
     depends_on('gmp', when='+mpfr')
 
     patch('find-ptscotch.patch', when='@3.3.4')
+
+    @property
+    def headers(self):
+        headers = find_all_headers(self.prefix.include)
+        headers.directories = [self.prefix.include.eigen3]
+        return headers
