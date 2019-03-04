@@ -7,7 +7,6 @@ import os
 import re
 import tarfile
 import shutil
-import platform
 import tempfile
 import hashlib
 from contextlib import closing
@@ -17,7 +16,7 @@ import json
 from six.moves.urllib.error import URLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, install_tree, get_filetype
+from llnl.util.filesystem import mkdirp, install_tree
 
 import spack.cmd
 import spack.fetch_strategy as fs
@@ -38,6 +37,7 @@ class NoOverwriteException(Exception):
     """
     Raised when a file exists and must be overwritten.
     """
+
     def __init__(self, file_path):
         err_msg = "\n%s\nexists\n" % file_path
         err_msg += "Use -f option to overwrite."
@@ -62,6 +62,7 @@ class PickKeyException(spack.error.SpackError):
     """
     Raised when multiple keys can be used to sign.
     """
+
     def __init__(self, keys):
         err_msg = "Multi keys available for signing\n%s\n" % keys
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
@@ -133,13 +134,13 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     binary_to_relocate = []
     link_to_relocate = []
     blacklist = (".spack", "man")
-    os_id = platform.system()
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
+            m_type, m_subtype = relocate.mime_type(path_name)
             if os.path.islink(path_name):
                 link = os.readlink(path_name)
                 if os.path.isabs(link):
@@ -157,12 +158,12 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  This cuts down on the number of files added to the list
             #  of files potentially needing relocation
             elif relocate.strings_contains_installroot(
-                    path_name, spack.store.layout.root):
-                filetype = get_filetype(path_name)
-                if relocate.needs_binary_relocation(filetype, os_id):
+                    path_name,
+                    spack.store.layout.root):
+                if relocate.needs_binary_relocation(m_type, m_subtype):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     binary_to_relocate.append(rel_path_name)
-                elif relocate.needs_text_relocation(filetype):
+                elif relocate.needs_text_relocation(m_type, m_subtype):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     text_to_relocate.append(rel_path_name)
 
@@ -479,8 +480,7 @@ def relocate_package(workdir, allow_root):
         for filename in buildinfo['relocate_binaries']:
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
-        relocate.relocate_binary(path_names, old_path, new_path,
-                                 allow_root)
+        relocate.relocate_binary(path_names, old_path, new_path, allow_root)
         path_names = set()
         for filename in buildinfo.get('relocate_links', []):
             path_name = os.path.join(workdir, filename)
