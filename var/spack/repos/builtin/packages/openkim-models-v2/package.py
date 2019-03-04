@@ -27,7 +27,7 @@ class OpenkimModelsV2(CMakePackage):
     def cmake_args(self):
         args = []
         args.append('-DKIM_API_MODEL_INSTALL_PREFIX={0}/lib/kim-api-v2/models'
-        .format(prefix))
-        args.append(('-DKIM_API_MODEL_DRIVER_INSTALL_PREFIX={0}/lib/kim-api-v2/'
-        + 'model-drivers').format(prefix))
+                    .format(prefix))
+        args.append(('-DKIM_API_MODEL_DRIVER_INSTALL_PREFIX={0}'
+                     + '/lib/kim-api-v2/model-drivers').format(prefix))
         return args
