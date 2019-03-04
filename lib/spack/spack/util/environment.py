@@ -173,6 +173,11 @@ class NameModifier(object):
 
         self.args.update(kwargs)
 
+    def __eq__(self, other):
+        if not isinstance(other, NameModifier):
+            return False
+        return self.name == other.name
+
     def update_args(self, **kwargs):
         self.__dict__.update(kwargs)
         self.args.update(kwargs)
@@ -186,6 +191,13 @@ class NameValueModifier(object):
         self.separator = kwargs.get('separator', ':')
         self.args = {'name': name, 'value': value, 'separator': self.separator}
         self.args.update(kwargs)
+
+    def __eq__(self, other):
+        if not isinstance(other, NameValueModifier):
+            return False
+        return self.name == other.name and \
+            self.value == other.value and \
+            self.separator == other.separator
 
     def update_args(self, **kwargs):
         self.__dict__.update(kwargs)

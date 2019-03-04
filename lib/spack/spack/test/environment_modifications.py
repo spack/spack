@@ -397,3 +397,36 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
 
     assert all(x in after for x in expected)
     assert all(x not in after for x in deleted)
+
+
+@pytest.mark.parametrize('before,after,search_list', [
+    # Set environment variables
+    ({}, {'FOO': 'foo'}, [environment.SetEnv('FOO', 'foo')]),
+    # Unset environment variables
+    ({'FOO': 'foo'}, {}, [environment.UnsetEnv('FOO')]),
+    # Append paths to an environment variable
+    ({'FOO_PATH': '/a/path'}, {'FOO_PATH': '/a/path:/b/path'},
+     [environment.AppendPath('FOO_PATH', '/b/path')]),
+    ({}, {'FOO_PATH': '/a/path:/b/path'}, [
+        environment.AppendPath('FOO_PATH', '/a/path:/b/path')
+    ]),
+    ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/b/path'}, [
+        environment.RemovePath('FOO_PATH', '/a/path')
+    ]),
+    ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/a/path:/c/path'}, [
+        environment.RemovePath('FOO_PATH', '/b/path'),
+        environment.AppendPath('FOO_PATH', '/c/path')
+    ]),
+    ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/c/path:/a/path'}, [
+        environment.RemovePath('FOO_PATH', '/b/path'),
+        environment.PrependPath('FOO_PATH', '/c/path')
+    ])
+])
+def test_from_environment_diff(before, after, search_list):
+
+    mod = environment.EnvironmentModifications.from_environment_diff(
+        before, after
+    )
+
+    for item in search_list:
+        assert item in mod
