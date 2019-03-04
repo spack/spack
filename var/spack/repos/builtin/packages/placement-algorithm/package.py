@@ -30,4 +30,4 @@ class PlacementAlgorithm(PythonPackage):
     depends_on('py-tqdm@4.0:', type='run')
     depends_on('py-voxcell@2.5:', type='run')
 
-    depends_on('py-region-grower@0.1.0:', type='run')
+    depends_on('py-region-grower@0.1.1:', type='run')

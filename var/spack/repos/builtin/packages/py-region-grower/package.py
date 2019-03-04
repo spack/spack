@@ -19,5 +19,5 @@ class PyRegionGrower(PythonPackage):
 
     depends_on('py-click@7.0:', type='run')
     depends_on('py-tqdm@4.0:', type='run')
-    depends_on('py-tns@1.0.6:', type='run')
+    depends_on('py-tns@1.0.8:', type='run')
     depends_on('py-voxcell@2.5:', type='run')
