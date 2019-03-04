@@ -485,87 +485,84 @@ class EnvironmentModifications(object):
         return cmds
 
     @staticmethod
-    def from_sourcing_file(filename, *args, **kwargs):
-        """Returns modifications that would be made by sourcing a file.
+    def from_sourcing_file(filename, *arguments, **kwargs):
+        """Constructs an instance of a
+        :py:class:`spack.util.environment.EnvironmentModifications` object
+        that has the same effect as sourcing a file.
 
-        Parameters:
-            filename (str): The file to source
-            *args (list of str): Arguments to pass on the command line
+        Args:
+            filename (str): the file to be sourced
+            *arguments (list of str): arguments to pass on the command line
 
-        Keyword Arguments:
-            shell (str): The shell to use (default: ``bash``)
-            shell_options (str): Options passed to the shell (default: ``-c``)
-            source_command (str): The command to run (default: ``source``)
-            suppress_output (str): Redirect used to suppress output of command
+        Keyword Args:
+            shell (str): the shell to use (default: ``bash``)
+            shell_options (str): options passed to the shell (default: ``-c``)
+            source_command (str): the command to run (default: ``source``)
+            suppress_output (str): redirect used to suppress output of command
                 (default: ``&> /dev/null``)
-            concatenate_on_success (str): Operator used to execute a command
+            concatenate_on_success (str): operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
-            blacklist ([str or re]): Ignore any modifications of these
+            blacklist ([str or re]): ignore any modifications of these
                 variables (default: [])
-            whitelist ([str or re]): Always respect modifications of these
-                variables (default: []). Has precedence over blacklist.
-            clean (bool): In addition to removing empty entries,
+            whitelist ([str or re]): always respect modifications of these
+                variables (default: []). has precedence over blacklist.
+            clean (bool): in addition to removing empty entries,
                 also remove duplicate entries (default: False).
-
-        Returns:
-            EnvironmentModifications: an object that, if executed, has
-                the same effect on the environment as sourcing the file
         """
         # Check if the file actually exists
         if not os.path.isfile(filename):
             msg = 'Trying to source non-existing file: {0}'.format(filename)
             raise RuntimeError(msg)
 
-        env_before = dict(os.environ)
-        env_after = environment_after_sourcing_files(
-            (filename,) + args, **kwargs
-        )
-
-        # Kwargs parsing and default values
-        blacklist = kwargs.get('blacklist', [])
-        whitelist = kwargs.get('whitelist', [])
+        # Prepare a whitelist and a blacklist of environment variable names
+        bl = kwargs.get('blacklist', [])
+        wl = kwargs.get('whitelist', [])
         clean = kwargs.get('clean', False)
 
         # Other variables unrelated to sourcing a file
-        blacklist.extend([
+        bl.extend([
             # Bash internals
             'SHLVL', '_', 'PWD', 'OLDPWD', 'PS2', 'ENV',
             # Environment modules v4
-            'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()'
+            'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()', 'MODULEPATH',
+            'MODULES_(.*)', r'(\w*)_mod(quar|share)'
         ])
 
-        def set_intersection(fullset, *args):
-            # A set intersection using string literals and regexs
-            meta = '[' + re.escape('[$()*?[]^{|}') + ']'
-            subset = fullset & set(args)   # As literal
-            for name in args:
-                if re.search(meta, name):
-                    pattern = re.compile(name)
-                    for k in fullset:
-                        if re.match(pattern, k):
-                            subset.add(k)
-            return subset
+        # Compute the environments before and after sourcing
+        before = sanitize(dict(os.environ), blacklist=bl, whitelist=wl)
+        file_and_args = (filename,) + arguments
+        after = sanitize(
+            environment_after_sourcing_files(file_and_args, **kwargs),
+            blacklist=bl, whitelist=wl
+        )
 
-        for d in env_after, env_before:
-            # Retain (whitelist) has priority over prune (blacklist)
-            prune = set_intersection(set(d), *blacklist)
-            prune -= set_intersection(prune, *whitelist)
-            for k in prune:
-                d.pop(k, None)
+        # Delegate to the other factory
+        return EnvironmentModifications.from_environment_diff(
+            before, after, clean
+        )
 
+    @staticmethod
+    def from_environment_diff(before, after, clean=False):
+        """Constructs an instance of a
+        :py:class:`spack.util.environment.EnvironmentModifications` object
+        from the diff of two dictionaries.
+
+        Args:
+            before (dict): environment before the modifications are applied
+            after (dict): environment after the modifications are applied
+            clean (bool): in addition to removing empty entries, also remove
+                duplicate entries
+        """
         # Fill the EnvironmentModifications instance
         env = EnvironmentModifications()
-
         # New variables
-        new_variables = list(set(env_after) - set(env_before))
+        new_variables = list(set(after) - set(before))
         # Variables that have been unset
-        unset_variables = list(set(env_before) - set(env_after))
+        unset_variables = list(set(before) - set(after))
         # Variables that have been modified
-        common_variables = set(env_before).intersection(set(env_after))
-
+        common_variables = set(before).intersection(set(after))
         modified_variables = [x for x in common_variables
-                              if env_before[x] != env_after[x]]
-
+                              if before[x] != after[x]]
         # Consistent output order - looks nicer, easier comparison...
         new_variables.sort()
         unset_variables.sort()
@@ -583,21 +580,21 @@ class EnvironmentModifications(object):
         # Assume that variables with 'PATH' in the name or that contain
         # separators like ':' or ';' are more likely to be paths
         for x in new_variables:
-            sep = return_separator_if_any(env_after[x])
+            sep = return_separator_if_any(after[x])
             if sep:
-                env.prepend_path(x, env_after[x], separator=sep)
+                env.prepend_path(x, after[x], separator=sep)
             elif 'PATH' in x:
-                env.prepend_path(x, env_after[x])
+                env.prepend_path(x, after[x])
             else:
                 # We just need to set the variable to the new value
-                env.set(x, env_after[x])
+                env.set(x, after[x])
 
         for x in unset_variables:
             env.unset(x)
 
         for x in modified_variables:
-            before = env_before[x]
-            after = env_after[x]
+            before = before[x]
+            after = after[x]
             sep = return_separator_if_any(before, after)
             if sep:
                 before_list = before.split(sep)
@@ -822,14 +819,15 @@ def environment_after_sourcing_files(*files, **kwargs):
             of the file to be sourced or a sequence, where the first element
             is the file to be sourced and the remaining are arguments to be
             passed to the command line
-        **kwargs:
-            env (dict): the initial environment (default: current environment)
-            shell (str): the shell to use (default: ``/bin/bash``)
-            shell_options (str): options passed to the shell (default: ``-c``)
-            source_command (str): the command to run (default: ``source``)
-            suppress_output (str): redirect used to suppress output of command
+
+    Keyword Args:
+        env (dict): the initial environment (default: current environment)
+        shell (str): the shell to use (default: ``/bin/bash``)
+        shell_options (str): options passed to the shell (default: ``-c``)
+        source_command (str): the command to run (default: ``source``)
+        suppress_output (str): redirect used to suppress output of command
             (default: ``&> /dev/null``)
-            concatenate_on_success (str): operator used to execute a command
+        concatenate_on_success (str): operator used to execute a command
             only when the previous command succeeds (default: ``&&``)
     """
     # Set the shell executable that will be used to source files
@@ -876,3 +874,40 @@ def environment_after_sourcing_files(*files, **kwargs):
         kwargs['env'] = _source_single_file(f, environment=kwargs['env'])
 
     return kwargs['env']
+
+
+def sanitize(environment, blacklist, whitelist):
+    """Returns a copy of the input dictionary where all the keys that
+    match a blacklist pattern and don't match a whitelist pattern are
+    removed.
+
+    Args:
+        environment (dict): input dictionary
+        blacklist (list of str): literals or regex patterns to be
+            blacklisted
+        whitelist (list of str): literals or regex patterns to be
+            whitelisted
+    """
+
+    def set_intersection(fullset, *args):
+        # A set intersection using string literals and regexs
+        meta = '[' + re.escape('[$()*?[]^{|}') + ']'
+        subset = fullset & set(args)  # As literal
+        for name in args:
+            if re.search(meta, name):
+                pattern = re.compile(name)
+                for k in fullset:
+                    if re.match(pattern, k):
+                        subset.add(k)
+        return subset
+
+    # Don't modify input, make a copy instead
+    environment = dict(environment)
+
+    # Retain (whitelist) has priority over prune (blacklist)
+    prune = set_intersection(set(environment), *blacklist)
+    prune -= set_intersection(prune, *whitelist)
+    for k in prune:
+        environment.pop(k, None)
+
+    return environment

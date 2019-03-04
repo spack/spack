@@ -358,3 +358,42 @@ def test_clear(env):
     assert len(env) > 0
     env.clear()
     assert len(env) == 0
+
+
+@pytest.mark.parametrize('env,blacklist,whitelist', [
+    # Check we can blacklist a literal
+    ({'SHLVL': '1'}, ['SHLVL'], []),
+    # Check whitelist takes precedence
+    ({'SHLVL': '1'}, ['SHLVL'], ['SHLVL']),
+])
+def test_sanitize_literals(env, blacklist, whitelist):
+
+    after = environment.sanitize(env, blacklist, whitelist)
+
+    # Check that all the whitelisted variables are there
+    assert all(x in after for x in whitelist)
+
+    # Check that the blacklisted variables that are not
+    # whitelisted are there
+    blacklist = list(set(blacklist) - set(whitelist))
+    assert all(x not in after for x in blacklist)
+
+
+@pytest.mark.parametrize('env,blacklist,whitelist,expected,deleted', [
+    # Check we can blacklist using a regex
+    ({'SHLVL': '1'}, ['SH.*'], [], [], ['SHLVL']),
+    # Check we can whitelist using a regex
+    ({'SHLVL': '1'}, ['SH.*'], ['SH.*'], ['SHLVL'], []),
+    # Check regex to blacklist Modules v4 related vars
+    ({'MODULES_LMALTNAME': '1', 'MODULES_LMCONFLICT': '2'},
+     ['MODULES_(.*)'], [], [], ['MODULES_LMALTNAME', 'MODULES_LMCONFLICT']),
+    ({'A_modquar': '1', 'b_modquar': '2', 'C_modshare': '3'},
+     [r'(\w*)_mod(quar|share)'], [], [],
+     ['A_modquar', 'b_modquar', 'C_modshare']),
+])
+def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
+
+    after = environment.sanitize(env, blacklist, whitelist)
+
+    assert all(x in after for x in expected)
+    assert all(x not in after for x in deleted)
