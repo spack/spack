@@ -24,6 +24,7 @@ class Netcdf(AutotoolsPackage):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     git      = "https://github.com/Unidata/netcdf-c"
     url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.6.3.tar.gz"
+
     def url_for_version(self, version):
         if version >= Version('4.6.2'):
             url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-{0}.tar.gz"
