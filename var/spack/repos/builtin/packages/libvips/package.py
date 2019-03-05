@@ -13,6 +13,7 @@ class Libvips(AutotoolsPackage):
     url      = "https://github.com/libvips/libvips/archive/v8.7.4.tar.gz"
     git      = "https://github.com/libvips/libvips.git"
 
+    version('develop', branch='master')
     version('8.7.4', tag='v8.7.4')
 
     depends_on('glib')
