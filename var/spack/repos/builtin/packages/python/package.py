@@ -619,12 +619,14 @@ class Python(AutotoolsPackage):
     def headers(self):
         config_h = self.get_config_h_filename()
 
-        if os.path.exists(config_h):
-            return HeaderList(config_h)
-        else:
+        if not os.path.exists(config_h):
             includepy = self.get_config_var('INCLUDEPY')
             msg = 'Unable to locate {0} headers in {1}'
             raise RuntimeError(msg.format(self.name, includepy))
+
+        headers = HeaderList(config_h)
+        headers.directories = [os.path.dirname(config_h)]
+        return headers
 
     @property
     def python_lib_dir(self):
