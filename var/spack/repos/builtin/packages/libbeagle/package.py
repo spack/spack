@@ -11,9 +11,11 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
        ungenotyped markers, and identity-by-descent segment detection."""
 
     homepage = "https://github.com/beagle-dev/beagle-lib"
-    url      = "https://github.com/beagle-dev/beagle-lib/archive/beagle_release_2_1_2.tar.gz"
+    url      = "https://github.com/beagle-dev/beagle-lib/archive/v3.1.2.tar.gz"
 
-    version('2.1.2', '1107614e86f652f8ee45c1c92f2af3d4')
+    version('3.1.2', sha256='dd872b484a3a9f0bce369465e60ccf4e4c0cd7bd5ce41499415366019f236275')
+    version('2.1.2', '1107614e86f652f8ee45c1c92f2af3d4',
+            url='https://github.com/beagle-dev/beagle-lib/archive/beagle_release_2_1_2.tar.gz')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -50,10 +52,6 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
             args.append('--without-cuda')
 
         return args
-
-    def url_for_version(self, version):
-        url = "https://github.com/beagle-dev/beagle-lib/archive/beagle_release_{0}.tar.gz"
-        return url.format(version.underscored)
 
     def setup_environment(self, spack_env, run_env):
         prefix = self.prefix
