@@ -29,7 +29,7 @@ class Cantera(SConsPackage):
     depends_on('googletest',      when='@2.3.0:')
     depends_on('eigen',           when='@2.3.0:')
     depends_on('boost')
-    depends_on('sundials')  # must be compiled with -fPIC
+    depends_on('sundials', when='+sundials')  # must be compiled with -fPIC
     depends_on('blas')
     depends_on('lapack')
 
