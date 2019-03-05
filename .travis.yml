@@ -211,12 +211,10 @@ script:
 
 after_success:
   - ccache -s
-  - if [[ "$TEST_SUITE" == "unit" ]]; then
-        if [[ "$PYTHON_VERSION == "2.7" || "$PYTHON_VERSION" == "3.6" ]]; then
-            codecov --env PYTHON_VERSION
-                    --required
-                    --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
-        fi
+  - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
+        codecov --env PYTHON_VERSION
+                --required
+                --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
     fi
 
 #=============================================================================

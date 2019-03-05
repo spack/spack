@@ -320,39 +320,28 @@ class Concretizer(object):
             spec.compiler = other_compiler
             return True
 
-        if other_compiler:
+        if other_compiler:  # Another node has abstract compiler information
             compiler_list = spack.compilers.find_by_arch(other_compiler,
                                                          spec.architecture)
-            if not compiler_list and not self.check_for_compiler_existence:
-                # Concretize compiler spec versions as a package
-                cpkg_spec = spack.compilers.pkg_spec_for_compiler(
-                    other_compiler
-                )
-                self.concretize_version(cpkg_spec)
-                spec.compiler.versions = cpkg_spec.versions
-                return True
             if not compiler_list:
-                # No compiler with a satisfactory spec was found
-                raise UnavailableCompilerVersionError(other_compiler)
+                # We don't have a matching compiler installed
+                if not self.check_for_compiler_existence:
+                    # Concretize compiler spec versions as a package to build
+                    cpkg_spec = spack.compilers.pkg_spec_for_compiler(
+                        other_compiler
+                    )
+                    self.concretize_version(cpkg_spec)
+                    spec.compiler.versions = cpkg_spec.versions
+                    return True
+                else:
+                    # No compiler with a satisfactory spec was found
+                    raise UnavailableCompilerVersionError(other_compiler)
         else:
             # We have no hints to go by, grab any compiler
             compiler_list = spack.compilers.all_compiler_specs()
             if not compiler_list:
-                # Spack has no compilers. Build the most preferred compiler
-                pref = PackagePrefs.order_for_package(spec.name, 'compiler')
-                if not pref:
-                    # If no preferences, just error out
-                    raise spack.compilers.NoCompilersError()
-
-                # Concretize the compiler version as a package and add to spec
-                cpkg_spec = spack.compilers.pkg_spec_for_compiler(
-                    pref[0]
-                )
-                self.concretize_version(cpkg_spec)
-                spec.compiler = spack.spec.CompilerSpec(
-                    cpkg_spec.name, cpkg_spec.versions
-                )
-                return True
+                # Spack has no compilers.
+                raise spack.compilers.NoCompilersError()
 
         # By default, prefer later versions of compilers
         compiler_list = sorted(
