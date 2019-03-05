@@ -7,7 +7,7 @@ from spack import *
 
 
 class Regcm(AutotoolsPackage):
-    '''RegCM, ICTP Regional Climate Model (https://ictp.it).'''
+    """RegCM, ICTP Regional Climate Model (https://ictp.it)."""
 
     homepage = 'https://gforge.ictp.it/gf/project/regcm/'
 
@@ -23,13 +23,23 @@ class Regcm(AutotoolsPackage):
 
     # On Intel and PGI compilers, multiple archs can be built at the same time,
     # producing a so-called fat binary. Unfortunately, gcc builds only the last
-    # architecture provided (in the configure), so we allow a single arch on
-    # GCC. Only GCC and Intel are supported.
+    # architecture provided at the configure line.
+    # For this reason, we allow a single arch when using GCC (checks are
+    # performed below in the configure_args).
+    # Moreover, RegCM supports optimizations only for GCC and Intel compilers.
+    # To sum up:
+    # - intel: a user is able to build a single executables for all the
+    #   combinations of architectures (e.g. `--extension=knl,skl,bdw,nhl`);
+    # - gcc: a user is allowed to build an executable using a single
+    #   optimization/extension;
+    # - other compilers: no extensions/optimizations are supported.
+    #
+    # See also discussions: #974, #9934, #10797.
     extensions = ('knl', 'skl', 'bdw', 'nhl')
     variant('extension', values=any_combination_of(*extensions),
             description=('Build extensions for a specific architecture. Only '
-                         'available on GCC and Intel; moreover, GCC allows a '
-                         'single architecture optimization.')
+                         'available for GCC and Intel compilers; moreover, '
+                         'GCC builds only one architecture optimization.')
     )
 
     variant('pnetcdf', default=False,
@@ -41,6 +51,11 @@ class Regcm(AutotoolsPackage):
     depends_on('hdf5')
     depends_on('mpi')
     depends_on('netcdf +parallel-netcdf', when='+pnetcdf')
+
+    intel_msg = ('Intel compiler not working with this specific version of '
+                 'RegCM (generates a bug at runtime): please install a newer '
+                 'version of RegCM or use a different compiler.')
+    conflicts('%intel', when='@4.7.0', msg=intel_msg)
 
     # 'make' sometimes crashes when compiling with more than 10-12 cores.
     # Moreover, parallel compile time is ~ 1m 30s, while serial is ~ 50s.
@@ -63,12 +78,6 @@ class Regcm(AutotoolsPackage):
         return (None, None, flags)
 
     def configure_args(self):
-        if self.spec.satisfies(r'@4.7.0 %pgi'):
-            raise InstallError('Intel compiler not working with this specific '
-                               'version of RegCM (generates a bug at '
-                               'runtime): please install a newer RegCM '
-                               'version or use GCC.')
-
         args = ['--enable-shared']
 
         optimizations = self.spec.variants['extension'].value
@@ -88,11 +97,10 @@ class Regcm(AutotoolsPackage):
                 raise InstallError('The GCC compiler does not support '
                                    'multiple architecture optimizations.')
 
-            args += ('--enable-' + ext for ext in optimizations)
+        args += self.enable_or_disable('extension')
 
         for opt in ('debug', 'profile', 'singleprecision'):
-            if ('+' + opt) in self.spec:
-                args.append('--enable-' + opt)
+            args += self.enable_or_disable(opt)
 
         # RegCM SVN6916 introduced a specific flag to use some pnetcdf calls.
         if '+pnetcdf' in self.spec and '@4.7.0-SVN6916:' in self.spec:
