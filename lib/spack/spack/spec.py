@@ -927,6 +927,7 @@ class Spec(object):
         self.namespace = None
 
         self._hash = None
+        self._build_hash = None
         self._cmp_key_cache = None
         self._package = None
 
@@ -1285,22 +1286,35 @@ class Spec(object):
     def prefix(self, value):
         self._prefix = Prefix(value)
 
-    def dag_hash(self, length=None):
+    def dag_hash(self, length=None, all_deps=False):
         """Return a hash of the entire spec DAG, including connectivity."""
-        if self._hash:
-            return self._hash[:length]
-        else:
-            yaml_text = syaml.dump(
-                self.to_node_dict(), default_flow_style=True, width=maxint)
-            sha = hashlib.sha1(yaml_text.encode('utf-8'))
+        if not self.concrete:
+            h = self._dag_hash(all_deps=all_deps)
+            # An upper bound of None is equivalent to len(h). An upper bound of
+            # 0 produces the empty string
+            return h[:length]
 
-            b32_hash = base64.b32encode(sha.digest()).lower()
-            if sys.version_info[0] >= 3:
-                b32_hash = b32_hash.decode('utf-8')
+        if not self._hash:
+            self._hash = self._dag_hash(all_deps=False)
 
-            if self.concrete:
-                self._hash = b32_hash
-            return b32_hash[:length]
+        if not self._build_hash:
+            self._build_hash = self._dag_hash(all_deps=True)
+
+        h = self._build_hash if all_deps else self._hash
+        return h[:length]
+
+    def _dag_hash(self, all_deps=False):
+        yaml_text = syaml.dump(
+            self.to_node_dict(all_deps=all_deps),
+            default_flow_style=True,
+            width=maxint)
+        sha = hashlib.sha1(yaml_text.encode('utf-8'))
+
+        b32_hash = base64.b32encode(sha.digest()).lower()
+        if sys.version_info[0] >= 3:
+            b32_hash = b32_hash.decode('utf-8')
+
+        return b32_hash
 
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
@@ -1373,7 +1387,7 @@ class Spec(object):
         deps = self.dependencies_dict(deptype=deptypes)
         if deps:
             if hash_function is None:
-                hash_function = lambda s: s.dag_hash()
+                hash_function = lambda s: s.dag_hash(all_deps=all_deps)
             d['dependencies'] = syaml_dict([
                 (name,
                  syaml_dict([
@@ -1393,6 +1407,8 @@ class Spec(object):
         for s in self.traverse(order='pre', deptype=deptypes):
             node = s.to_node_dict(all_deps=all_deps)
             node[s.name]['hash'] = s.dag_hash()
+            if all_deps:
+                node[s.name]['build_hash'] = s.dag_hash(all_deps=True)
             node_list.append(node)
 
         return syaml_dict([('spec', node_list)])
@@ -1412,6 +1428,7 @@ class Spec(object):
         spec = Spec(name, full_hash=node.get('full_hash', None))
         spec.namespace = node.get('namespace', None)
         spec._hash = node.get('hash', None)
+        spec._build_hash = node.get('build_hash', None)
 
         if 'version' in node or 'versions' in node:
             spec.versions = VersionList.from_dict(node)
@@ -2812,11 +2829,13 @@ class Spec(object):
 
         if caches:
             self._hash = other._hash
+            self._build_hash = other._build_hash
             self._cmp_key_cache = other._cmp_key_cache
             self._normal = other._normal
             self._full_hash = other._full_hash
         else:
             self._hash = None
+            self._build_hash = None
             self._cmp_key_cache = None
             self._normal = False
             self._full_hash = None
