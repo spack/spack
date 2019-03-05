@@ -20,7 +20,8 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
-    version('18.10', sha256='4cc24b1c7c7a1e4b3a72f3dc3318367fe75502f93585997f2cdd0c8cc7616fd7')
+    version('19.1', sha256='3e05a6db2bf80b5d15f6ff83188f20cb89dc23e233417921e5c0822e7e57d34f')
+    version('18.10', sha256='4b3ff83d2a13de6001bed599246eff8e63ef711b8952d4a9ee12efd666b3e326')
     version('18.4',  'b55461f9f0986acbd51902c51c2074b9')
     version('17.10', '85ad6506e7ada610ab11ddb35d697efa')
     version('17.4',  'a311d2756ddda657860bad8e5725597b')
@@ -51,8 +52,12 @@ class Pgi(Package):
     license_url = 'http://www.pgroup.com/doc/pgiinstall.pdf'
 
     def url_for_version(self, version):
-        return "file://{0}/pgilinux-20{1}-{2}-x86_64.tar.gz".format(
-            os.getcwd(), version.up_to(1), version.joined)
+        if int(str(version.up_to(1))) <= 17:
+            return "file://{0}/pgilinux-20{1}-{2}-x86_64.tar.gz".format(
+                os.getcwd(), version.up_to(1), version.joined)
+        else:
+            return "file://{0}/pgilinux-20{1}-{2}-x86-64.tar.gz".format(
+                os.getcwd(), version.up_to(1), version.joined)
 
     def install(self, spec, prefix):
         # Enable the silent installation feature
