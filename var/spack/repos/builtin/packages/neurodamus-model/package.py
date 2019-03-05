@@ -157,13 +157,11 @@ class NeurodamusModel(Package):
                 prefix.bin.special)
 
         if spec.satisfies('+coreneuron'):
-            # move special-core to bin and libcorenrnmech* to lib
             outdir = spec.architecture.target
-            shutil.move(join_path(outdir, 'special-core'), prefix.bin)
-            for libname in find_libraries("libcorenrnmech*", outdir):
-                shutil.move(libname, prefix.lib)
+            install = which('nrnivmech_install.sh', path=".")
+            install(prefix)
             # Then modc
-            shutil.move(join_path(outdir, 'modc_core'), prefix.share)
+            shutil.move(join_path(outdir, 'core/mod2c'), prefix.share.modc_core)
 
         if spec.satisfies('+python'):
             py_src = spec['neurodamus-core'].prefix.python
