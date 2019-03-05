@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libusbmuxd(Package):
+class Libusbmuxd(AutotoolsPackage):
     """A client library to multiplex connections from and to iOS devices."""
 
     homepage = "https://www.libimobiledevice.org/"
@@ -23,15 +23,8 @@ class Libusbmuxd(Package):
     depends_on('pkg-config', type='build')
     depends_on('libplist')
 
-    phases = ['autogen', 'install']
-
-    def autogen(self, spec, prefix):
-        if self.spec.satisfies('@master'):
-            autogen = Executable('./autogen.sh')
-            autogen()
-
-    def install(self, spec, prefix):
-        configure('--disable-dependency-tracking',
-                  '--disable-silent-rules',
-                  '--prefix=%s' % self.spec.prefix)
-        make('install')
+    def configure_args(self):
+        return [
+            '--disable-dependency-tracking',
+            '--disable-silent-rules'
+        ]
