@@ -7,7 +7,7 @@ from spack import *
 
 
 class Regcm(AutotoolsPackage):
-    """RegCM ICTP Regional Climate Model."""
+    '''RegCM, ICTP Regional Climate Model (https://ictp.it).'''
 
     homepage = 'https://gforge.ictp.it/gf/project/regcm/'
 
@@ -23,17 +23,24 @@ class Regcm(AutotoolsPackage):
 
     # On Intel and PGI compilers, multiple archs can be built at the same time,
     # producing a so-called fat binary. Unfortunately, gcc builds only the last
-    # architecture provided (in the configure), so we allow a single arch.
+    # architecture provided (in the configure), so we allow a single arch on
+    # GCC. Only GCC and Intel are supported.
     extensions = ('knl', 'skl', 'bdw', 'nhl')
-    variant(
-        'extension', values=any_combination_of(extensions),
-        description='Build extensions for a specific Intel architecture.'
+    variant('extension', values=any_combination_of(*extensions),
+            description=('Build extensions for a specific architecture. Only '
+                         'available on GCC and Intel; moreover, GCC allows a '
+                         'single architecture optimization.')
     )
+
+    variant('pnetcdf', default=False,
+            description='Build NetCDF using the high performance parallel '
+                        'NetCDF implementation.')
 
     depends_on('netcdf')
     depends_on('netcdf-fortran')
     depends_on('hdf5')
     depends_on('mpi')
+    depends_on('netcdf +parallel-netcdf', when='+pnetcdf')
 
     # 'make' sometimes crashes when compiling with more than 10-12 cores.
     # Moreover, parallel compile time is ~ 1m 30s, while serial is ~ 50s.
@@ -56,20 +63,54 @@ class Regcm(AutotoolsPackage):
         return (None, None, flags)
 
     def configure_args(self):
+        if self.spec.satisfies(r'@4.7.0 %pgi'):
+            raise InstallError('Intel compiler not working with this specific '
+                               'version of RegCM (generates a bug at '
+                               'runtime): please install a newer RegCM '
+                               'version or use GCC.')
+
         args = ['--enable-shared']
 
+        optimizations = self.spec.variants['extension'].value
+        first_optim = optimizations[0]
+
+        if first_optim != 'none':
+            if not (self.spec.satisfies(r'%gcc')
+                    or self.spec.satisfies(r'%intel')):
+                # This means the user chose some optimizations on a different
+                # compiler from GCC and Intel, which are the only compiler
+                # supported by RegCM 4.7.x.
+                raise InstallError('Architecture optimizations are available '
+                                   'only for GCC and Intel compilers.')
+
+            if len(optimizations) > 1 and self.spec.satisfies(r'%gcc'):
+                # https://github.com/spack/spack/issues/974
+                raise InstallError('The GCC compiler does not support '
+                                   'multiple architecture optimizations.')
+
+            args += ('--enable-' + ext for ext in optimizations)
+
         for opt in ('debug', 'profile', 'singleprecision'):
-            if '+{0}'.format(opt) in self.spec:
+            if ('+' + opt) in self.spec:
                 args.append('--enable-' + opt)
 
-        for ext in self.extensions:
-            if 'extension={0}'.format(ext) in self.spec:
-                args.append('--enable-' + ext)
-                break
+        # RegCM SVN6916 introduced a specific flag to use some pnetcdf calls.
+        if '+pnetcdf' in self.spec and '@4.7.0-SVN6916:' in self.spec:
+            args.append('--enable-parallel-nc')
 
-        # RegCM complains when compiled with gfortran, and unfortunately FFLAGS
-        # is ignored by the configure, so we need to set the option in FCFLAGS.
+        # RegCM doesn't listen to the FFLAGS variable, so we have to route
+        # flags to FCFLAGS.
+        fcflags = list(self.spec.compiler_flags['fflags'])
+
+        # RegCM complains when compiled with gfortran.
         if self.compiler.fc.endswith('gfortran'):
-            args.append('FCFLAGS=-fno-range-check')
+            fcflags.append('-fno-range-check')
+
+        args.append('FCFLAGS=' + ' '.join(fcflags))
+
+        # The configure needs a hint on the MPI Fortran compiler, otherwise it
+        # doesn't find it and tries to compile MPI Fortran code with the system
+        # Fortran non-MPI compiler.
+        args.append('MPIFC=' + self.spec['mpi'].mpifc)
 
         return args
