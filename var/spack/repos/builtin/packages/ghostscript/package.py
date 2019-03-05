@@ -40,7 +40,11 @@ class Ghostscript(AutotoolsPackage):
         Note that this approach is also recommended by Linux from Scratch:
         http://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
         """
-        directories = ['freetype', 'jpeg', 'lcms2', 'libpng', 'zlib']
+        directories = ['freetype', 'jpeg', 'libpng', 'zlib']
+        if self.spec.satisfies('@:9.21'):
+            directories.append('lcms2')
+        else:
+            directories.append('lcms2mt')
         for directory in directories:
             shutil.rmtree(directory)
 
