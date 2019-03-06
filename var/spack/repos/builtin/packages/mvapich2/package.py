@@ -75,7 +75,7 @@ class Mvapich2(AutotoolsPackage):
         description='The fabric enabled for this build',
         default='psm',
         values=(
-            'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail', 
+            'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
             'nemesisibtcp', 'nemesistcpib', 'nemesisofi'
         )
     )
@@ -107,7 +107,7 @@ class Mvapich2(AutotoolsPackage):
     depends_on('rdma-core', when='fabrics=nemesisibtcp')
     depends_on('libfabric', when='fabrics=nemesisofi')
 
-    conflicts('fabrics=psm2', when='@:2.1') # psm2 support was added at version 2.2
+    conflicts('fabrics=psm2', when='@:2.1')  # psm2 support was added at version 2.2
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
