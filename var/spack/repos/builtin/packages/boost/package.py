@@ -160,6 +160,13 @@ class Boost(Package):
     # Fix the bootstrap/bjam build for Cray
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
 
+    # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
+    # 0134441 on http://github.com/boostorg/system.
+    patch('system-non-virtual-dtor-include.patch', when='@1.69.0',
+          level=2)
+    patch('system-non-virtual-dtor-test.patch', when='@1.69.0',
+          working_dir='libs/system', level=1)
+
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
             url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
