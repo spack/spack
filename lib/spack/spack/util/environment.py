@@ -353,7 +353,7 @@ class EnvironmentModifications(object):
         """
         Clears the current list of modifications
         """
-        del self.env_modifications[:]
+        self.env_modifications = []
 
     def apply_modifications(self):
         """Applies the modifications and clears the list."""
