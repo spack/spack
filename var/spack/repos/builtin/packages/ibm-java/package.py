@@ -55,11 +55,10 @@ class IbmJava(Package):
 
         # The properties file is how we avoid an interactive install.
         prop = 'properties'
-        fd = open(prop, 'w')
-        fd.write('INSTALLER_UI=silent\n')
-        fd.write('USER_INSTALL_DIR=%s\n' % prefix)
-        fd.write('LICENSE_ACCEPTED=TRUE\n')
-        fd.close()
+        with open(prop, 'w') as file:
+            file.write('INSTALLER_UI=silent\n')
+            file.write('USER_INSTALL_DIR=%s\n' % prefix)
+            file.write('LICENSE_ACCEPTED=TRUE\n')
 
         # Running the archive file installs everything.
         set_executable(archive)
