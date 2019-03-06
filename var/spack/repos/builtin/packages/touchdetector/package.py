@@ -32,7 +32,8 @@ class Touchdetector(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/building/TouchDetector"
 
     version('develop', git=url, submodules=True)
-    version('4.4.1', tag='4.4.1', git=url, submodules=True, preferred=True)
+    version('4.4.2', tag='4.4.2', git=url, submodules=True, preferred=True)
+    version('4.4.1', tag='4.4.1', git=url, submodules=True)
     version('4.3.3', tag='4.3.3', git=url, submodules=True)
 
     variant('openmp', default=False, description='Enables OpenMP support')
