@@ -1,0 +1,58 @@
+From 188f8e2d55fc7c8db2d8d5eec26caa892ee829be Mon Sep 17 00:00:00 2001
+From: Tristan Carel <tristan.carel@gmail.com>
+Date: Mon, 4 Mar 2019 09:54:48 +0100
+Subject: [PATCH] Fix libdir pkgconfig variable
+
+`CMAKE_INSTALL_LIBDIR` variable can be absolute, which can lead to an invalid
+`libdir` variable in `superlu_dist.pc`, for instance for CMake 3.13.0:
+
+```bash
+$ cat superlu_dist.pc
+prefix=/home/me/stow/spack/gcc-7.3.0/superlu-dist-6.1.0-7jy53y
+libdir=/home/me/stow/spack/gcc-7.3.0/superlu-dist-6.1.0-7jy53y//home/me/stow/spack/gcc-7.3.0/superlu-dist-6.1.0-7jy53y/lib
+includedir=/home/me/stow/spack/gcc-7.3.0/superlu-dist-6.1.0-7jy53y/include
+
+Name: SuperLU_DIST
+Description: Distributed-memory direct solution of sparse systems of linear equations
+Version: 6.1.0
+URL: http://crd-legacy.lbl.gov/~xiaoye/SuperLU/
+
+Libs: -L${libdir} -lsuperlu
+Libs.private: -L/home/me/stow/spack/gcc-7.3.0/openblas-0.3.5-esdvmj/lib -lopenblas -lm
+Cflags: -I${includedir}
+```
+---
+ CMakeLists.txt     | 5 +++++
+ superlu_dist.pc.in | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index eaf2c26..e2fcec2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -340,6 +340,11 @@ configure_file(${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h.in ${SuperLU
+ configure_file(${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h.in ${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h)
+ 
+ # Add pkg-config support
++if(IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
++  set(pkgconfig_libdir ${CMAKE_INSTALL_LIBDIR})
++else()
++  set(pkgconfig_libdir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
++endif()
+ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/superlu_dist.pc.in ${CMAKE_CURRENT_BINARY_DIR}/superlu_dist.pc @ONLY)
+ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/superlu_dist.pc
+ 	DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+diff --git a/superlu_dist.pc.in b/superlu_dist.pc.in
+index 2de05e0..0a98d31 100644
+--- a/superlu_dist.pc.in
++++ b/superlu_dist.pc.in
+@@ -1,5 +1,5 @@
+ prefix=@CMAKE_INSTALL_PREFIX@
+-libdir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@
++libdir=@pkgconfig_libdir@
+ includedir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@
+ 
+ Name: @CMAKE_PROJECT_NAME@
+-- 
+2.21.0
+

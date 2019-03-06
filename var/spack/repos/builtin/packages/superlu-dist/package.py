@@ -35,6 +35,8 @@ class SuperluDist(CMakePackage):
     depends_on('parmetis')
     depends_on('metis@5:')
 
+    patch('0001-Fix-libdir-pkgconfig-variable.patch')
+
     def cmake_args(self):
         spec = self.spec
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
