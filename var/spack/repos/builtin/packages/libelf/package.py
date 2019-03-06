@@ -14,7 +14,11 @@ class Libelf(AutotoolsPackage):
        maintained and packages that depend on libelf should migrate to
        elfutils."""
 
-    homepage = "http://www.mr511.de/software/english.html"
+    # The original homepage no longer exists, but the tar file is
+    # archived at fossies.org.
+    # homepage = "http://www.mr511.de/software/english.html"
+
+    homepage = "https://directory.fsf.org/wiki/Libelf"
     url      = "https://fossies.org/linux/misc/old/libelf-0.8.13.tar.gz"
 
     version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
