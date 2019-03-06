@@ -1373,7 +1373,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             restage (bool): Force spack to restage the package source.
             force (bool): Install again, even if already installed.
             use_cache (bool): Install from binary package, if available.
-            stop_at (InstallPhase): last installation phase to be executed 
+            stop_at (InstallPhase): last installation phase to be executed
                 (or None)
         """
         if not self.spec.concrete:
