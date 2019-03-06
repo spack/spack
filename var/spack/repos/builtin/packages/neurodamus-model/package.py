@@ -169,7 +169,7 @@ class NeurodamusModel(Package):
             # Link required paths, create a new lib link (to our lib)
             py_dst = prefix.lib.python
             mkdirp(py_dst)
-            force_symlink('../lib', py_dst.lib)
+            force_symlink('../../lib', py_dst.lib)
             for name in ('neurodamus', 'init.py', '_debug.py'):
                 force_symlink(py_src.join(name), py_dst.join(name))
 
@@ -178,12 +178,13 @@ class NeurodamusModel(Package):
         run_env.prepend_path('PATH', self.prefix.bin)
         run_env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
 
-        if os.path.isdir(self.prefix.python):
+        if self.spec.satisfies("+python"):
+            pylib = self.prefix.lib.python
             for m in spack_env.env_modifications:
                 if m.name == 'PYTHONPATH':
                     run_env.prepend_path('PYTHONPATH', m.value)
-            run_env.prepend_path('PYTHONPATH', self.prefix.python)
-            run_env.set('NEURODAMUS_PYTHON', self.prefix.python)
+            run_env.prepend_path('PYTHONPATH', pylib)
+            run_env.set('NEURODAMUS_PYTHON', pylib)
 
 
 @contextmanager
