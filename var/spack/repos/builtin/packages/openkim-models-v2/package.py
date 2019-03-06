@@ -11,13 +11,15 @@ class OpenkimModelsV2(CMakePackage):
        reliable, reproducible, and portable. Computer implementations of
        inter-atomic models are archived in OpenKIM, verified for coding
        integrity, and tested by computing their predictions for a variety
-       of material properties. Models conforming to the KIM application
+       of material properties.  Models conforming to the KIM application
        programming interface (API) work seamlessly with major simulation
        codes that have adopted the KIM API standard.
+
+       This package provides all models archived at openkim.org that are
+       compatible with the kim-api-v2 package.
     """
     homepage = "https://openkim.org/"
     url      = "https://s3.openkim.org/archives/collection/OpenKIM-Models-v2-2019-02-21.txz"
-    git      = "https://github.com/openkim/kim-api.git"
 
     extends('kim-api-v2')
 
