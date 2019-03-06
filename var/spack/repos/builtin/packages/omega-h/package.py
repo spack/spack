@@ -13,9 +13,9 @@ class OmegaH(CMakePackage):
     hardware including GPUs.
     """
 
-    homepage = "https://github.com/ibaned/omega_h"
-    url      = "https://github.com/ibaned/omega_h/archive/v9.22.1.tar.gz"
-    git      = "https://github.com/ibaned/omega_h.git"
+    homepage = "https://github.com/SNLComputation/omega_h"
+    url      = "https://github.com/SNLComputation/omega_h/archive/v9.22.1.tar.gz"
+    git      = "https://github.com/SNLComputation/omega_h.git"
 
     version('develop', branch='master')
     version('9.22.2', sha256='ab5636be9dc171a514a7015df472bd85ab86fa257806b41696170842eabea37d')
