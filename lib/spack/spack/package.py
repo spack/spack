@@ -1419,7 +1419,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             )
             if not compilers:
                 dep = spack.compilers.pkg_spec_for_compiler(self.spec.compiler)
-                dep.concretize()  # compiler specs don't have all info concrete
+                # concrete CompilerSpec has less info than concrete Spec
+                # concretize as Spec to add that information
+                dep.concretize()
                 dep.package.do_install(
                     install_deps=True,
                     explicit=False,
