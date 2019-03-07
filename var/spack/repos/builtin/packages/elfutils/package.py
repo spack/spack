@@ -42,6 +42,7 @@ class Elfutils(AutotoolsPackage):
     depends_on('xz',    type='link', when='+xz')
     depends_on('zlib',  type='link')
     depends_on('gettext', when='+nls')
+    depends_on('m4',    type='build')
 
     conflicts('%gcc@7.2.0:', when='@0.163')
 
