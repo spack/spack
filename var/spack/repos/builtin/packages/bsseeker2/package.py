@@ -10,9 +10,13 @@ class Bsseeker2(Package):
     """A versatile aligning pipeline for bisulfite sequencing data."""
 
     homepage = "http://pellegrini.mcdb.ucla.edu/BS_Seeker2"
-    url      = "https://github.com/BSSeeker/BSseeker2/archive/v2.1.2.tar.gz"
+    url      = "https://github.com/BSSeeker/BSseeker2/archive/BSseeker2-v2.1.8.tar.gz"
 
-    version('2.1.2',     '5f7f0ef4071711e56b59c5c16b7f34a7')
+    version('2.1.8', sha256='34ebedce36a0fca9e22405d4c2c20bc978439d4a34d1d543657fbc53ff847934')
+    version('2.1.5', sha256='ac90fb4ad8853ee920f1ffea2b1a8cfffcdb1508ff34be0091d5a9c90ac8c74a',
+            url='https://github.com/BSSeeker/BSseeker2/archive/v2.1.7.tar.gz')
+    version('2.1.2', '5f7f0ef4071711e56b59c5c16b7f34a7',
+            url='https://github.com/BSSeeker/BSseeker2/archive/v2.1.2.tar.gz')
 
     depends_on('python@2.6:2.999', type=('build', 'run'))
     depends_on('py-pysam', type=('build', 'run'))
