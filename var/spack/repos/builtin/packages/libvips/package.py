@@ -10,11 +10,11 @@ class Libvips(AutotoolsPackage):
     """A fast image processing library with low memory needs."""
 
     homepage = "https://libvips.github.io/libvips/"
-    url      = "https://github.com/libvips/libvips/archive/v8.7.4.tar.gz"
-    git      = "https://github.com/libvips/libvips.git"
+    url      = "https://github.com/libvips/libvips/releases/download/v8.7.4/vips-8.7.4.tar.gz"
+    #git      = "https://github.com/libvips/libvips.git"
 
-    version('develop', branch='master')
-    version('8.7.4', tag='v8.7.4')
+    #version('develop', branch='master')
+    version('8.7.4',sha256 = 'ce7518a8f31b1d29a09b3d7c88e9852a5a2dcb3ee1501524ab477e433383f205')
 
     depends_on('glib')
     depends_on('expat')
@@ -28,5 +28,5 @@ class Libvips(AutotoolsPackage):
     depends_on('libpng')
 
     def configure_args(self):
-        config_args = ['--enable-gtk-doc=no','--enable-gtk-doc-html=no','--enable-gtk-doc-pdf=no']
+        config_args = ['--enable-gtk-doc=no']
 
