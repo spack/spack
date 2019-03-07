@@ -34,7 +34,7 @@ class Vtkm(CMakePackage, CudaPackage):
     variant("doubleprecision", default=True,
             description='enable double precision')
     variant("logging", default=False, description="build logging support")
-    variant("mpi", default=True, description="build mpi support")
+    variant("mpi", default=False, description="build mpi support")
     variant("openmp", default=False, description="build openmp support")
     variant("rendering", default=True, description="build rendering support")
     variant("tbb", default=True, description="build TBB support")
