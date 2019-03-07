@@ -28,5 +28,7 @@ class Libvips(AutotoolsPackage):
     depends_on('libpng')
 
     def configure_args(self):
-        config_args = ['--enable-gtk-doc=no']
+        args = []
+        args.append('--enable-gtk-doc=no')
+        return args
 
