@@ -17,5 +17,4 @@ class Libxdmcp(AutotoolsPackage):
     depends_on('xproto', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
-    depends_on('libbsd', when='platform=linux')
-    depends_on('libbsd', when='platform=cray')
+    depends_on('libbsd')
