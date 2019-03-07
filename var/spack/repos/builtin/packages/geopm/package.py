@@ -24,6 +24,8 @@ class Geopm(AutotoolsPackage):
     # Add additional proper versions and checksums here. "spack checksum geopm"
     version('develop', branch='dev')
     version('master', branch='master')
+    version('1.0.0-rc2', sha256='c6637df54728ded31fd682f39a07dffee45883f350e6dbd13e1496dd50243ffd',
+            url='https://github.com/geopm/geopm/releases/download/v1.0.0%2Brc2/geopm-1.0.0+rc2.tar.gz')
     version('1.0.0-rc1', sha256='f8a2e5c384a15e9663f409de478b6372cd63e63a28d4701a33ac043fc27905e0', 
             url='https://github.com/geopm/geopm/releases/download/v1.0.0-rc1/geopm-1.0.0+rc1.tar.gz')
     version('0.6.1', sha256='0ca42853f90885bf213df190c3462b8675c143cc843aee0d8b8a0e30802b55a9')
