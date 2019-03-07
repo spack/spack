@@ -72,6 +72,7 @@ class Boost(Package):
                                 'chrono',
                                 'date_time',
                                 'exception',
+                                'fiber',
                                 'filesystem',
                                 'graph',
                                 'iostreams',
@@ -417,8 +418,8 @@ class Boost(Package):
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
-        for threadingOpt in threading_opts:
-            b2('install', 'threading=%s' % threadingOpt, *b2_options)
+        for threading_opt in threading_opts:
+            b2('install', 'threading=%s' % threading_opt, *b2_options)
 
         if '+multithreaded' in spec and '~taggedlayout' in spec:
             self.add_buildopt_symlinks(prefix)

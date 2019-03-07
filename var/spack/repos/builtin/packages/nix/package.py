@@ -10,7 +10,7 @@ class Nix(AutotoolsPackage):
     """Nix, the purely functional package manager"""
 
     homepage = "http://nixos.org/nix"
-    url      = "https://github.com/NixOS/nix/archive/2.0.4.zip"
+    url      = "https://github.com/NixOS/nix/archive/2.2.1.zip"
 
     version('2.2.1', sha256='b591664dd1b04a8f197407d445799ece41140a3117bcbdf8e3c5e94cd3f59854')
     version('2.1.3', sha256='80d0834f3e34b3e91bd20969733d8010b3e253517ea64bf12258c5f450f86425')
@@ -18,12 +18,12 @@ class Nix(AutotoolsPackage):
 
     patch('fix-doc-build.patch')
 
-    variant('storedir', values=str, default="none",
+    variant('storedir', values=str, default='none',
             description='path of the Nix store (defaults to /nix)')
-    variant('statedir', values=str, default="none",
+    variant('statedir', values=str, default='none',
             description='path to the locale state (defaults to /nix/var)')
     variant('doc', default=True,
-            description="Build and install documentation")
+            description='Build and install documentation')
     variant('sandboxing', default=True,
             description='Enable build isolation')
 
@@ -32,17 +32,21 @@ class Nix(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
-    depends_on('libxslt', when="+doc", type='build')
+    depends_on('libxslt', when='+doc', type='build')
+
+    depends_on('boost')
+    depends_on('brotli')
+    depends_on('editline')
     depends_on('m4', type='build')
 
     depends_on('bzip2')
     depends_on('curl')
-    depends_on('libseccomp', when="+sandboxing")
+    depends_on('libseccomp', when='+sandboxing')
     depends_on('sqlite')
     depends_on('xz')
 
     # gcc 4.9+ and higher supported with c++14
-    conflicts("%gcc@:4.8.99")
+    conflicts('%gcc@:4.8.99')
 
     def configure_args(self):
         args = []
@@ -51,9 +55,9 @@ class Nix(AutotoolsPackage):
         if '+doc' not in self.spec:
             args.append('--disable-doc-gen')
         storedir = self.spec.variants['storedir'].value
-        if storedir != "none":
+        if storedir != 'none':
             args.append('--with-store-dir=' + storedir)
         statedir = self.spec.variants['statedir'].value
-        if statedir != "none":
+        if statedir != 'none':
             args.append('--localstatedir=' + statedir)
         return args
