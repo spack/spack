@@ -47,6 +47,10 @@ class Eigen(CMakePackage):
 
     patch('find-ptscotch.patch', when='@3.3.4')
 
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('CPATH',
+                             join_path(self.prefix, 'include', 'eigen3'))
+
     @property
     def headers(self):
         headers = find_all_headers(self.prefix.include)
