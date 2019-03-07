@@ -29,6 +29,7 @@ class Samtools(Package):
     depends_on('htslib@1.8',   when='@1.8')
     depends_on('htslib@1.7',   when='@1.7')
     depends_on('htslib@1.6',   when='@1.6')
+    depends_on('htslib@1.5',   when='@1.5')
     depends_on('htslib@1.4',   when='@1.4')
     depends_on('htslib@1.3.1', when='@1.3.1')
     depends_on('zlib')
