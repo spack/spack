@@ -307,8 +307,9 @@ def test_preserve_environment(prepare_environment_for_tests):
     assert os.environ['UNSET_ME'] == 'foo'
     assert os.environ['PATH_LIST'] == '/path/second:/path/third'
 
+
 def test_clear(env):
-	env.set('A', 'dummy value')
-	assert len(env) > 0
-	env.clear()
-	assert len(env) == 0
+    env.set('A', 'dummy value')
+    assert len(env) > 0
+    env.clear()
+    assert len(env) == 0
