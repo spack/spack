@@ -11,13 +11,15 @@ class Libvips(AutotoolsPackage):
 
     homepage = "https://libvips.github.io/libvips/"
     url      = "https://github.com/libvips/libvips/releases/download/v8.7.4/vips-8.7.4.tar.gz"
-    #git      = "https://github.com/libvips/libvips.git"
+    git      = "https://github.com/libvips/libvips.git"
 
-    #version('develop', branch='master')
+    version('develop', branch='master')
     version('8.7.4',sha256 = 'ce7518a8f31b1d29a09b3d7c88e9852a5a2dcb3ee1501524ab477e433383f205')
 
     depends_on('glib')
+    depends_on('gobject-introspection')
     depends_on('expat')
+    depends_on('swig',when='@develop')
     depends_on('libjpeg')
     depends_on('giflib')
     depends_on('libtiff')
@@ -30,6 +32,6 @@ class Libvips(AutotoolsPackage):
     def configure_args(self):
         args = []
         args.append('--enable-gtk-doc=no')
-        args.append('--disable-introspection')
+        #args.append('--disable-introspection')
         return args
 
