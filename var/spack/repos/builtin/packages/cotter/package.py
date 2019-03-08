@@ -18,4 +18,3 @@ class Cotter(CMakePackage):
     depends_on('erfa')
     depends_on('pal')
     depends_on('aoflagger')
-
