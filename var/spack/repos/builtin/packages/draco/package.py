@@ -34,4 +34,3 @@ class Draco(CMakePackage):
     depends_on('python')
     depends_on('lapack', when='+lapack')
     depends_on('eospac', when='+eospac')
-
