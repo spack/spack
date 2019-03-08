@@ -30,5 +30,6 @@ class Libvips(AutotoolsPackage):
     def configure_args(self):
         args = []
         args.append('--enable-gtk-doc=no')
+        args.append('--disable-introspection')
         return args
 
