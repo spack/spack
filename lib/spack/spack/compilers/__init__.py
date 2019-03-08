@@ -215,7 +215,7 @@ def find(compiler_spec, scope=None, init_config=True):
 
 
 @_auto_compiler_spec
-def find_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
+def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
     """Return specs of available compilers that match the supplied
        compiler spec.  Return an empty list if nothing found."""
     return [c.spec for c in compilers_for_spec(compiler_spec,
