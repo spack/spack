@@ -12,7 +12,7 @@ class Star(Package):
     homepage = "https://github.com/alexdobin/STAR"
     url      = "https://github.com/alexdobin/STAR/archive/2.6.1b.tar.gz"
 
-    version('2.7.0e', sha256='99145f8ce3d54e8eae92cd0bdfad04a2d48499b5de35eef87c6aee09e988e1f9')
+    version('2.7.0e', sha256='2fc9d9103bd02811904d41e3a3d50e47c7de17cb55c3b4880ea5f39300a9ba0d')
     version('2.7.0d', sha256='7a757478868dc73fe7619bf6ea302dd642bd30e1c8c1fb4acdbe7fa151cf9fd1')
     version('2.6.1b', sha256='1bba5b26c1e6e9a7aca8473a99dbf37bad1dbdd0a589402448e278553bb6b3da')
     version('2.6.1a', sha256='dc87357211432c05123ce49966aae712dec590cbe27c1fd0193c3aeb8d4abe4b')
