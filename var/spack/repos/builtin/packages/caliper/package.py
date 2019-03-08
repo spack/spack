@@ -20,6 +20,7 @@ class Caliper(CMakePackage):
     git      = "https://github.com/LLNL/Caliper.git"
 
     version('master')
+    version('2.0.1', tag='v2.0.1')
     version('1.9.1', tag='v1.9.1')
     version('1.9.0', tag='v1.9.0')
     version('1.8.0', tag='v1.8.0')
@@ -48,21 +49,25 @@ class Caliper(CMakePackage):
     variant('sosflow', default=False,
             description='Enable SOSflow support')
 
-    depends_on('gotcha@1.0.2:1.0.99', when='@1.0:1.99+gotcha')
+    depends_on('gotcha@1.0.2:1.0.99', when='+gotcha')
 
-    depends_on('dyninst@9.3.0:9.999.999', when='@1.0:1.99+dyninst')
+    depends_on('dyninst@9.3.0:9.99', when='@:1.99 +dyninst')
+    depends_on('dyninst@10.0:10.99', when='@2: +dyninst')
 
-    depends_on('papi@5.3.0:5.6.0', when='@1.0:1.99+papi')
+    depends_on('papi@5.3:5.99', when='+papi')
 
-    depends_on('libpfm4@4.8.0:4.999.999', when='@1.0:1.99+libpfm')
+    depends_on('libpfm4@4.8:4.99', when='+libpfm')
 
     depends_on('mpi', when='+mpi')
-    depends_on('unwind@2018.10.12,1.3-rc1,1.2.1,1.1', when='@1.0:1.99+callpath')
+    depends_on('unwind@2018.10.12,1.2:1.99', when='+callpath')
 
-    depends_on('sosflow@spack', when='@1.0:2.99+sosflow')
+    depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
 
     depends_on('cmake', type='build')
     depends_on('python', type='build')
+
+    # sosflow support not yet in 2.0
+    conflicts('+sosflow', '@2.0.0:2.0.99')
 
     def cmake_args(self):
         spec = self.spec
@@ -78,8 +83,7 @@ class Caliper(CMakePackage):
             '-DWITH_LIBPFM=%s'   % ('On' if '+libpfm'   in spec else 'Off'),
             '-DWITH_SOSFLOW=%s'  % ('On' if '+sosflow'  in spec else 'Off'),
             '-DWITH_SAMPLER=%s'  % ('On' if '+sampler'  in spec else 'Off'),
-            '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off'),
-            '-DWITH_MPIT=%s' % ('On' if spec.satisfies('^mpi@3:') else 'Off')
+            '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off')
         ]
 
         if '+gotcha' in spec:
