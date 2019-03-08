@@ -255,7 +255,7 @@ def test_xl_r_flags():
     # macOS clang
     ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
      'Target: x86_64-apple-darwin15.2.0\n'
-     'Thread model: posix\n', '7.0.2'),
+     'Thread model: posix\n', '7.0.2-apple'),
     # Other platforms
     ('clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'  # noqa
      'Target: x86_64-pc-linux-gnu\n'

@@ -189,7 +189,8 @@ class Clang(Compiler):
                 output
             )
             if match:
-                ver = match.group(match.lastindex)
+                suffix = '-apple' if match.lastindex == 1 else ''
+                ver = match.group(match.lastindex) + suffix
 
             _version_cache[comp] = ver
 
