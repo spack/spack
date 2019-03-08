@@ -28,6 +28,7 @@ import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
+from spack.config import config
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
@@ -47,12 +48,20 @@ class Concretizer(object):
     def __init__(self):
         # controls whether we check that compiler versions actually exist
         # during concretization. Used for testing and for mirror creation
-        self.check_for_compiler_existence = True
+        self.check_for_compiler_existence = not config.get(
+            'config:install_missing_compilers', False)
 
     @contextmanager
     def disable_compiler_existence_check(self):
         saved = self.check_for_compiler_existence
         self.check_for_compiler_existence = False
+        yield
+        self.check_for_compiler_existence = saved
+
+    @contextmanager
+    def enable_compiler_existence_check(self):
+        saved = self.check_for_compiler_existence
+        self.check_for_compiler_existence = True
         yield
         self.check_for_compiler_existence = saved
 
@@ -303,36 +312,37 @@ class Concretizer(object):
         assert(other_spec)
 
         # Check if the compiler is already fully specified
-        if (other_compiler and other_compiler.concrete and
-                not self.check_for_compiler_existence):
-            spec.compiler = other_compiler.copy()
-            return True
-
-        all_compiler_specs = spack.compilers.all_compiler_specs()
-        if not all_compiler_specs:
-            # If compiler existence checking is disabled, then we would have
-            # exited by now if there were sufficient hints to form a full
-            # compiler spec. Therefore even if compiler existence checking is
-            # disabled, compilers must be available at this point because the
-            # available compilers are used to choose a compiler. If compiler
-            # existence checking is enabled then some compiler must exist in
-            # order to complete the spec.
-            raise spack.compilers.NoCompilersError()
-
-        if other_compiler in all_compiler_specs:
-            spec.compiler = other_compiler.copy()
-            if not _proper_compiler_style(spec.compiler, spec.architecture):
+        if other_compiler and other_compiler.concrete:
+            if (self.check_for_compiler_existence and not
+                    _proper_compiler_style(other_compiler, spec.architecture)):
                 _compiler_concretization_failure(
-                    spec.compiler, spec.architecture)
+                    other_compiler, spec.architecture)
+            spec.compiler = other_compiler
             return True
 
-        # Filter the compilers into a sorted list based on the compiler_order
-        # from spackconfig
-        compiler_list = all_compiler_specs if not other_compiler else \
-            spack.compilers.find(other_compiler)
-        if not compiler_list:
-            # No compiler with a satisfactory spec was found
-            raise UnavailableCompilerVersionError(other_compiler)
+        if other_compiler:  # Another node has abstract compiler information
+            compiler_list = spack.compilers.find_specs_by_arch(
+                other_compiler, spec.architecture
+            )
+            if not compiler_list:
+                # We don't have a matching compiler installed
+                if not self.check_for_compiler_existence:
+                    # Concretize compiler spec versions as a package to build
+                    cpkg_spec = spack.compilers.pkg_spec_for_compiler(
+                        other_compiler
+                    )
+                    self.concretize_version(cpkg_spec)
+                    spec.compiler.versions = cpkg_spec.versions
+                    return True
+                else:
+                    # No compiler with a satisfactory spec was found
+                    raise UnavailableCompilerVersionError(other_compiler)
+        else:
+            # We have no hints to go by, grab any compiler
+            compiler_list = spack.compilers.all_compiler_specs()
+            if not compiler_list:
+                # Spack has no compilers.
+                raise spack.compilers.NoCompilersError()
 
         # By default, prefer later versions of compilers
         compiler_list = sorted(
