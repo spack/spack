@@ -26,7 +26,8 @@ from spack import *
 
 
 class Aoflagger(CMakePackage):
-    """RFI detector and quality analysis for astronomical radio observations."""
+    """RFI detector and quality analysis 
+    for astronomical radio observations."""
 
     homepage = "https://sourceforge.net/projects/aoflagger/"
     url      = "https://downloads.sourceforge.net/project/aoflagger/aoflagger-2.10.0/aoflagger-2.10.0.tar.bz2"
