@@ -11,6 +11,8 @@ class IntelMpi(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
+    version('2019.3.199', '5304346c863f64de797250eeb14f51c5cfc8212ff20813b124f20e7666286990',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15260/l_mpi_2019.3.199.tgz')
     version('2019.1.144', 'dac86a5db6b86503313742b17535856a432955604f7103cb4549a9bfc256c3cd',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14879/l_mpi_2019.1.144.tgz')
     version('2019.0.117', '8572d5fa1f26a7de8edc8b64653b0955',
