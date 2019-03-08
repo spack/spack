@@ -83,7 +83,7 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2015.1', '542b78c86beff9d7b01076a7be9c6ddc', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Composer Edition (basic tier; excluded: MPI/..., Advisor/Inspector/Vtune)
-    version('composer.2019.3',    '15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
+    version('composer.2019.3',     '15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
     version('composer.2019.1',     'db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
     version('composer.2019.0',     'e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
     #
