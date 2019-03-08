@@ -8,6 +8,7 @@ import shutil
 import glob
 import tempfile
 import re
+from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
@@ -226,6 +227,12 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Gets full path to spec file"""
         _check_concrete(spec)
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
+
+    @contextmanager
+    def disable_upstream_check(self):
+        self.check_upstream = False
+        yield
+        self.check_upstream = True
 
     def metadata_path(self, spec):
         if self.check_upstream and spec.package.installed_upstream:

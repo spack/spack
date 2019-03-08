@@ -519,91 +519,94 @@ class Database(object):
                 )
                 self._error = None
 
-            # Read first the `spec.yaml` files in the prefixes. They should be
-            # considered authoritative with respect to DB reindexing, as
-            # entries in the DB may be corrupted in a way that still makes
-            # them readable. If we considered DB entries authoritative
-            # instead, we would perpetuate errors over a reindex.
-
             old_data = self._data
-            directory_layout.check_upstream = False
             try:
-                # Initialize data in the reconstructed DB
-                self._data = {}
-
-                # Start inspecting the installed prefixes
-                processed_specs = set()
-
-                for spec in directory_layout.all_specs():
-                    # Try to recover explicit value from old DB, but
-                    # default it to True if DB was corrupt. This is
-                    # just to be conservative in case a command like
-                    # "autoremove" is run by the user after a reindex.
-                    tty.debug(
-                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
-                    explicit = True
-                    inst_time = os.stat(spec.prefix).st_ctime
-                    if old_data is not None:
-                        old_info = old_data.get(spec.dag_hash())
-                        if old_info is not None:
-                            explicit = old_info.explicit
-                            inst_time = old_info.installation_time
-
-                    extra_args = {
-                        'explicit': explicit,
-                        'installation_time': inst_time
-                    }
-                    self._add(spec, directory_layout, **extra_args)
-
-                    processed_specs.add(spec)
-
-                for key, entry in old_data.items():
-                    # We already took care of this spec using
-                    # `spec.yaml` from its prefix.
-                    if entry.spec in processed_specs:
-                        msg = 'SKIPPING RECONSTRUCTION FROM OLD DB: {0}'
-                        msg += ' [already reconstructed from spec.yaml]'
-                        tty.debug(msg.format(entry.spec))
-                        continue
-
-                    # If we arrived here it very likely means that
-                    # we have external specs that are not dependencies
-                    # of other specs. This may be the case for externally
-                    # installed compilers or externally installed
-                    # applications.
-                    tty.debug(
-                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
-                    try:
-                        layout = spack.store.layout
-                        if entry.spec.external:
-                            layout = None
-                            install_check = True
-                        else:
-                            install_check = layout.check_installed(entry.spec)
-
-                        if install_check:
-                            kwargs = {
-                                'spec': entry.spec,
-                                'directory_layout': layout,
-                                'explicit': entry.explicit,
-                                'installation_time': entry.installation_time  # noqa: E501
-                            }
-                            self._add(**kwargs)
-                            processed_specs.add(entry.spec)
-                    except Exception as e:
-                        # Something went wrong, so the spec was not restored
-                        # from old data
-                        tty.debug(e.message)
-                        pass
-
-                self._check_ref_counts()
-
+                self._construct_from_directory_layout(
+                    directory_layout, old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
                 raise
             finally:
                 directory_layout.check_upstream = True
+
+    def _construct_from_directory_layout(self, directory_layout, old_data):
+        # Read first the `spec.yaml` files in the prefixes. They should be
+        # considered authoritative with respect to DB reindexing, as
+        # entries in the DB may be corrupted in a way that still makes
+        # them readable. If we considered DB entries authoritative
+        # instead, we would perpetuate errors over a reindex.
+
+        with directory_layout.disable_upstream_check():
+            # Initialize data in the reconstructed DB
+            self._data = {}
+
+            # Start inspecting the installed prefixes
+            processed_specs = set()
+
+            for spec in directory_layout.all_specs():
+                # Try to recover explicit value from old DB, but
+                # default it to True if DB was corrupt. This is
+                # just to be conservative in case a command like
+                # "autoremove" is run by the user after a reindex.
+                tty.debug(
+                    'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
+                explicit = True
+                inst_time = os.stat(spec.prefix).st_ctime
+                if old_data is not None:
+                    old_info = old_data.get(spec.dag_hash())
+                    if old_info is not None:
+                        explicit = old_info.explicit
+                        inst_time = old_info.installation_time
+
+                extra_args = {
+                    'explicit': explicit,
+                    'installation_time': inst_time
+                }
+                self._add(spec, directory_layout, **extra_args)
+
+                processed_specs.add(spec)
+
+            for key, entry in old_data.items():
+                # We already took care of this spec using
+                # `spec.yaml` from its prefix.
+                if entry.spec in processed_specs:
+                    msg = 'SKIPPING RECONSTRUCTION FROM OLD DB: {0}'
+                    msg += ' [already reconstructed from spec.yaml]'
+                    tty.debug(msg.format(entry.spec))
+                    continue
+
+                # If we arrived here it very likely means that
+                # we have external specs that are not dependencies
+                # of other specs. This may be the case for externally
+                # installed compilers or externally installed
+                # applications.
+                tty.debug(
+                    'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
+                try:
+                    layout = spack.store.layout
+                    if entry.spec.external:
+                        layout = None
+                        install_check = True
+                    else:
+                        install_check = layout.check_installed(entry.spec)
+
+                    if install_check:
+                        kwargs = {
+                            'spec': entry.spec,
+                            'directory_layout': layout,
+                            'explicit': entry.explicit,
+                            'installation_time': entry.installation_time  # noqa: E501
+                        }
+                        self._add(**kwargs)
+                        processed_specs.add(entry.spec)
+                except Exception as e:
+                    # Something went wrong, so the spec was not restored
+                    # from old data
+                    tty.debug(e.message)
+                    pass
+
+            self._check_ref_counts()
 
     def _check_ref_counts(self):
         """Ensure consistency of reference counts in the DB.
