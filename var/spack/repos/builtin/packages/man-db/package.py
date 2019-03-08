@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,6 @@ class ManDb(AutotoolsPackage):
     # man pages are typically compressed, include all available
     # compression libraries
     depends_on('bzip2', type=('build', 'link', 'run'))
-    depends_on('lzma',  type=('build', 'link', 'run'))
     depends_on('xz',    type=('build', 'link', 'run'))
 
     def configure_args(self):

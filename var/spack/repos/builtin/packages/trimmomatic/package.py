@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Trimmomatic(Package):
     version('0.36', '8549130d86b6f0382b1a71a2eb45de39')
     version('0.33', '924fc8eb38fdff71740a0e05d32d6a2b')
 
-    depends_on('java@8:', type='run')
+    depends_on('java@8', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

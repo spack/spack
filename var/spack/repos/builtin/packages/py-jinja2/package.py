@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class PyJinja2(PythonPackage):
 
     import_modules = ['jinja2']
 
+    version('2.10', '61ef1117f945486472850819b8d1eb3d')
     version('2.9.6', '6411537324b4dba0956aaa8109f3c77b')
     version('2.8',   'edb51693fe22c53cee5403775c71a99e')
     version('2.7.3', 'b9dffd2f3b43d673802fe857c8445b1a')

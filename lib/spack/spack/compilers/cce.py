@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,10 +26,10 @@ class Cce(Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'cce'
 
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
+    link_paths = {'cc': 'cce/cc',
+                  'cxx': 'cce/case-insensitive/CC',
+                  'f77': 'cce/ftn',
+                  'fc': 'cce/ftn'}
 
     @classmethod
     def default_version(cls, comp):

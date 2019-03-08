@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,8 @@ def forall_files(path, fn, args, dir_args=None):
     """Apply function to all files in directory, with file as first arg.
 
     Does not apply to the root dir. Does not apply to links"""
-    for root, dirs, files in os.walk(path):
+    # os.walk explicitly set not to follow links
+    for root, dirs, files in os.walk(path, followlinks=False):
         for d in dirs:
             if not os.path.islink(os.path.join(root, d)):
                 if dir_args:
@@ -23,7 +24,7 @@ def forall_files(path, fn, args, dir_args=None):
                 else:
                     fn(os.path.join(root, d), *args)
         for f in files:
-            if not os.path.islink(os.path.join(root, d)):
+            if not os.path.islink(os.path.join(root, f)):
                 fn(os.path.join(root, f), *args)
 
 

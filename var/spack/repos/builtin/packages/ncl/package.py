@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Ncl(Package):
 
     url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
 
+    version('6.6.2', 'cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e')
     version('6.5.0', '133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591')
     version('6.4.0', 'd891452cda7bb25afad9b6c876c73986')
 
@@ -40,7 +41,7 @@ class Ncl(Package):
     # Non-optional dependencies according to the manual:
     depends_on('jpeg')
     depends_on('netcdf')
-    depends_on('cairo+X')
+    depends_on('cairo+X+pdf')
 
     # Extra dependencies that may be missing from build system:
     depends_on('bison', type='build')

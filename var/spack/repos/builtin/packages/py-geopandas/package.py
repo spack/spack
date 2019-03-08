@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,6 @@ class PyGeopandas(PythonPackage):
     depends_on('py-descartes', type=('build', 'run'), when='+plotting')
     depends_on('py-matplotlib', type=('build', 'run'), when='+plotting')
     depends_on('py-fiona', type=('build', 'run'))
-    depends_on('py-proj', type=('build', 'run'))
+    depends_on('py-pyproj', type=('build', 'run'))
     depends_on('py-shapely', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))

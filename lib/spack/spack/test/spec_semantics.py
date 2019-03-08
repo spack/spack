@@ -1,9 +1,9 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.architecture
+import sys
 import pytest
 
 from spack.spec import Spec, UnsatisfiableSpecError
@@ -11,9 +11,13 @@ from spack.spec import substitute_abstract_variants, parse_anonymous_spec
 from spack.variant import InvalidVariantValueError
 from spack.variant import MultipleValuesInExclusiveVariantError
 
+import spack.architecture
+import spack.directives
+import spack.error
+
 
 def target_factory(spec_string, target_concrete):
-    spec = Spec(spec_string)
+    spec = Spec(spec_string) if spec_string else Spec()
 
     if target_concrete:
         spec._mark_concrete()
@@ -38,7 +42,8 @@ def check_satisfies(target_spec, argument_spec, target_concrete=False):
 
     # Satisfies is one-directional.
     assert left.satisfies(right)
-    assert left.satisfies(argument_spec)
+    if argument_spec:
+        assert left.satisfies(argument_spec)
 
     # If left satisfies right, then we should be able to constrain
     # right by left.  Reverse is not always true.
@@ -90,6 +95,34 @@ class TestSpecSematics(object):
     def test_satisfies(self):
         check_satisfies('libelf@0.8.13', '@0:1')
         check_satisfies('libdwarf^libelf@0.8.13', '^libelf@0:1')
+
+    def test_empty_satisfies(self):
+        # Basic satisfaction
+        check_satisfies('libelf', '')
+        check_satisfies('libdwarf', '')
+        check_satisfies('%intel', '')
+        check_satisfies('^mpi', '')
+        check_satisfies('+debug', '')
+        check_satisfies('@3:', '')
+
+        # Concrete (strict) satisfaction
+        check_satisfies('libelf', '', True)
+        check_satisfies('libdwarf', '', True)
+        check_satisfies('%intel', '', True)
+        check_satisfies('^mpi', '', True)
+        # TODO: Variants can't be called concrete while anonymous
+        # check_satisfies('+debug', '', True)
+        check_satisfies('@3:', '', True)
+
+        # Reverse (non-strict) satisfaction
+        check_satisfies('', 'libelf')
+        check_satisfies('', 'libdwarf')
+        check_satisfies('', '%intel')
+        check_satisfies('', '^mpi')
+        # TODO: Variant matching is auto-strict
+        # we should rethink this
+        # check_satisfies('', '+debug')
+        check_satisfies('', '@3:')
 
     def test_satisfies_namespace(self):
         check_satisfies('builtin.mpich', 'mpich')
@@ -743,3 +776,62 @@ class TestSpecSematics(object):
             expected = getattr(arch, prop, "")
             actual = spec.format(named_str)
             assert str(expected) == actual
+
+    @pytest.mark.regression('9908')
+    def test_spec_flags_maintain_order(self):
+        # Spack was assembling flags in a manner that could result in
+        # different orderings for repeated concretizations of the same
+        # spec and config
+        spec_str = 'libelf %gcc@4.7.2 os=redhat6'
+        for _ in range(25):
+            s = Spec(spec_str).concretized()
+            assert all(
+                s.compiler_flags[x] == ['-O0', '-g']
+                for x in ('cflags', 'cxxflags', 'fflags')
+            )
+
+    def test_any_combination_of(self):
+        # Test that using 'none' and another value raise during concretization
+        spec = Spec('multivalue_variant foo=none,bar')
+        with pytest.raises(spack.error.SpecError) as exc_info:
+            spec.concretize()
+
+        assert "is mutually exclusive with any of the" in str(exc_info.value)
+
+    @pytest.mark.skipif(
+        sys.version_info[0] == 2, reason='__wrapped__ requires python 3'
+    )
+    def test_errors_in_variant_directive(self):
+        variant = spack.directives.variant.__wrapped__
+
+        class Pkg(object):
+            name = 'PKG'
+
+        # We can't use names that are reserved by Spack
+        fn = variant('patches')
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "The name 'patches' is reserved" in str(exc_info.value)
+
+        # We can't have conflicting definitions for arguments
+        fn = variant(
+            'foo', values=spack.variant.any_combination_of('fee', 'foom'),
+            default='bar'
+        )
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert " it is handled by an attribute of the 'values' " \
+               "argument" in str(exc_info.value)
+
+        # We can't leave None as a default value
+        fn = variant('foo', default=None)
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "either a default was not explicitly set, or 'None' was used"\
+               in str(exc_info.value)
+
+        # We can't use an empty string as a default value
+        fn = variant('foo', default='')
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "the default cannot be an empty string" in str(exc_info.value)

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class IntelParallelStudio(IntelPackage):
     # in the 'intel' package.
 
     # Cluster Edition (top tier; all components included)
+    version('cluster.2019.2',      '8c526bdd95d1da454e5cada00f7a2353089b86d0c9df2088ca7f842fe3ff4cae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15088/parallel_studio_xe_2019_update2_cluster_edition.tgz')
     version('cluster.2019.1',      '3a1eb39f15615f7a2688426b9835e5e841e0c030f21dcfc899fe23e09bd2c645', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14850/parallel_studio_xe_2019_update1_cluster_edition.tgz')
     version('cluster.2019.0',      'd4c249c5438c1a55640291efcc96418d', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13589/parallel_studio_xe_2019_cluster_edition.tgz')
     #

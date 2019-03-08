@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,11 @@ class Lbann(CMakePackage):
     git      = "https://github.com/LLNL/lbann.git"
 
     version('develop', branch='develop')
+    version('0.98.1', sha256='9a2da8f41cd8bf17d1845edf9de6d60f781204ebd37bffba96d8872036c10c66')
+    version('0.98',   sha256='8d64b9ac0f1d60db553efa4e657f5ea87e790afe65336117267e9c7ae6f68239')
+    version('0.97.1', sha256='2f2756126ac8bb993202cf532d72c4d4044e877f4d52de9fdf70d0babd500ce4')
+    version('0.97',   sha256='9794a706fc7ac151926231efdf74564c39fbaa99edca4acb745ee7d20c32dae7')
+    version('0.96', sha256='97af78e9d3c405e963361d0db96ee5425ee0766fa52b43c75b8a5670d48e4b4a')
     version('0.95', sha256='d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2')
     version('0.94', sha256='567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf')
     version('0.93', '1913a25a53d4025fa04c16f14afdaa55')
@@ -36,6 +41,8 @@ class Lbann(CMakePackage):
             values=('Debug', 'Release'))
     variant('al', default=True, description='Builds with support for Aluminum Library')
     variant('conduit', default=False, description='Builds with support for Conduit Library')
+    variant('vtune', default=False, description='Builds with support for Intel VTune')
+    variant('docs', default=False, description='Builds with support for building documentation')
 
     # It seems that there is a need for one statement per version bounds
     depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90,0.95: ~al')
@@ -61,15 +68,14 @@ class Lbann(CMakePackage):
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
                when='build_type=Debug @0.91:0.94')
 
-    depends_on('aluminum@master', when='@:0.90,0.95: +al ~gpu')
-    depends_on('aluminum@master +gpu +mpi-cuda', when='@:0.90,0.95: +al +gpu ~nccl')
-    depends_on('aluminum@master +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
+    depends_on('aluminum', when='@:0.90,0.95: +al ~gpu')
+    depends_on('aluminum +gpu +mpi_cuda', when='@:0.90,0.95: +al +gpu ~nccl')
+    depends_on('aluminum +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
-    depends_on('mpi', when='~gpu')
-    depends_on('mpi +cuda', when='+gpu')
+    depends_on('mpi')
     depends_on('hwloc')
 
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
@@ -82,11 +88,19 @@ class Lbann(CMakePackage):
                '~pthreads_pf ~python ~qt ~stitching ~superres ~ts ~video'
                '~videostab ~videoio ~vtk', when='+opencv')
 
-    depends_on('protobuf@3.0.2:')
+    depends_on('protobuf@3.0.2: build_type=Release')
     depends_on('cnpy')
     depends_on('nccl', when='+gpu +nccl')
 
     depends_on('conduit@master +hdf5', when='+conduit')
+
+    depends_on('py-breathe', type='build', when='+docs')
+    depends_on('py-m2r', type='build', when='+docs')
+
+    depends_on('cereal')
+
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
 
     @property
     def common_config_args(self):
@@ -110,10 +124,16 @@ class Lbann(CMakePackage):
         args = self.common_config_args
         args.extend([
             '-DLBANN_WITH_TOPO_AWARE:BOOL=%s' % ('+gpu +nccl' in spec),
+            '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
+            '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
+            '-DLBANN_WITH_CUDA:BOOL=%s' % ('+gpu' in spec),
+            '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
+            '-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec),
+            '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' %
             ('+seq_init' in spec),
             '-DLBANN_WITH_TBINF=OFF',
-            '-DLBANN_WITH_VTUNE=OFF',
+            '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0'])
 
@@ -126,14 +146,15 @@ class Lbann(CMakePackage):
                 '-DElemental_DIR={0}/CMake/elemental'.format(
                     spec['elemental'].prefix)])
 
+        if '+vtune' in spec:
+            args.extend(['-DVTUNE_DIR={0}'.format(spec['vtune'].prefix)])
+
         if '+al' in spec:
-            args.extend(['-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
-                         '-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
+            args.extend(['-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
 
         if '+conduit' in spec:
-            args.extend(['-DLBANN_CONDUIT_DIR:BOOL=%s' % ('+conduit' in spec),
-                         '-DLBANN_CONDUIT_DIR={0}'.format(
-                             spec['conduit'].prefix)])
+            args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(
+                spec['conduit'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):
@@ -153,19 +174,15 @@ class Lbann(CMakePackage):
 
         if '+gpu' in spec:
             args.extend([
-                '-DLBANN_WITH_CUDA:BOOL=%s' % ('+gpu' in spec),
-                '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+gpu' in spec),
                 '-DCUDA_TOOLKIT_ROOT_DIR={0}'.format(
                     spec['cuda'].prefix)])
             args.extend([
-                '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
                 '-DcuDNN_DIR={0}'.format(
                     spec['cudnn'].prefix)])
             args.extend(['-DCUB_DIR={0}'.format(
                 spec['cub'].prefix)])
             if '+nccl' in spec:
                 args.extend([
-                    '-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec),
                     '-DNCCL_DIR={0}'.format(
                         spec['nccl'].prefix)])
 

@@ -13,6 +13,7 @@ ENV DOCKERFILE_BASE=$BASE                     \
     SPACK_ROOT=/spack                         \
     FORCE_UNSAFE_CONFIGURE=1                  \
     DEBIAN_FRONTEND=noninteractive            \
+    CURRENTLY_BUILDING_DOCKER_IMAGE=1         \
     container=docker
 
 COPY bin   $SPACK_ROOT/bin
@@ -24,29 +25,43 @@ RUN mkdir -p $SPACK_ROOT/opt/spack
 
 MASK PUSH
 MASK [[ $DISTRO == arch ]]
-RUN pacman -Sy --noconfirm                                     \
-        base-devel   ca-certificates curl   gcc                \
-        gcc-fortran  git             gnupg2 iproute2           \
-        make         openssh         python python-pip         \
-        sudo         tcl                                       \
+RUN pacman -Syu --noconfirm                                    \
+ && pacman -Sy --noconfirm                                     \
+        base-devel   ca-certificates curl    gcc               \
+        gcc-fortran  git             gnupg2  inetutils         \
+        iproute2     make            openssh procps-ng         \
+        python       python-pip      sudo    tcl               \
  && echo 'nobody ALL=(ALL) NOPASSWD: ALL' >                    \
         /etc/sudoers.d/nobody-sudo                             \
- && sudo -u nobody git clone --depth 1                         \
-        https://aur.archlinux.org/lua-posix.git /tmp/lua-posix \
- && sudo -u nobody git clone --depth 1                         \
-        https://aur.archlinux.org/lmod.git /tmp/lmod           \
+ && sudo -u nobody git clone                                   \
+        'https://aur.archlinux.org/lua-std-_debug.git'         \
+        '/tmp/lua-std-_debug'                                  \
+ && sudo -u nobody git clone                                   \
+        'https://aur.archlinux.org/lua-std-normalize.git'      \
+        '/tmp/lua-std-normalize'                               \
+ && sudo -u nobody git clone                                   \
+        'https://aur.archlinux.org/lua-posix.git'              \
+        '/tmp/lua-posix'                                       \
+ && (  cd /tmp/lua-std-_debug                                  \
+ &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
+ && (  cd /tmp/lua-std-normalize                               \
+ &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
  && (  cd /tmp/lua-posix                                       \
-    && sudo -u nobody makepkg -si --asdeps --noconfirm )       \
+ &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
+ && sudo -u nobody git clone                                   \
+        'https://aur.archlinux.org/lmod.git' '/tmp/lmod'       \
  && (  cd /tmp/lmod                                            \
-    && sudo -u nobody makepkg -si --noconfirm )                \
- && rm -rf /tmp/lua-posix /tmp/lmod /etc/sudoers.d/nobody-sudo
+ &&    sudo -u nobody makepkg -si --noconfirm )                \
+ && rm -rf /tmp/lua-std-_debug /tmp/lua-std-normalize          \
+           /tmp/lmod /etc/sudoers.d/nobody-sudo
 
 MASK [[ $DISTRO =~ (centos|rhel.*) ]]
 RUN yum update -y
 
   MASK PUSH
   MASK [[ $DISTRO =~ rhel.* ]]
-  RUN yum install -y yum-conf-repos.noarch \
+  RUN (  yum install -y yum-conf-repos.noarch                         \
+   ||    yum install -y yum-conf-epel.noarch yum-conf-elrepo.noarch ) \
    && yum update -y
   MASK POP
 
@@ -96,7 +111,7 @@ RUN apt-get -yqq update                                   \
         openssh-server  python          python-pip tcl
 
   MASK PUSH
-  MASK [[ $DISTRO_VERSION == bionic ]]
+  MASK [[ $DISTRO_VERSION == 18.04 ]]
   # [WORKAROUND]
   # https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
   RUN ln -s posix_c.so /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so
@@ -110,7 +125,10 @@ RUN rm -rf $SPACK_ROOT/.git                                          \
  && pip install boto3                                                \
  && (  echo ". /usr/share/lmod/lmod/init/bash"                       \
     && echo ". $SPACK_ROOT/share/spack/setup-env.sh"                 \
-    && echo ". $SPACK_ROOT/share/spack/spack-completion.bash" )      \
+    && echo "if [ \"\$CURRENTLY_BUILDING_DOCKER_IMAGE\" '!=' '1' ]"  \
+    && echo "then"                                                   \
+    && echo "  . $SPACK_ROOT/share/spack/spack-completion.bash"      \
+    && echo "fi"                                                   ) \
         >> /etc/profile.d/spack.sh                                   \
  && ln -s $SPACK_ROOT/share/spack/docker/handle-ssh.sh               \
         /etc/profile.d/handle-ssh.sh                                 \
@@ -126,7 +144,15 @@ MASK [[ $DISTRO_VERSION =~ (centos|fedora|opensuse|rhel.*) ]]
 RUN rm -f /run/nologin
 MASK POP
 
+# [WORKAROUND]
+# https://superuser.com/questions/1241548/
+#     xubuntu-16-04-ttyname-failed-inappropriate-ioctl-for-device#1253889
+RUN [ -f ~/.profile ]                                               \
+ && sed -i 's/mesg n/( tty -s \\&\\& mesg n || true )/g' ~/.profile \
+ || true
+
 WORKDIR /root
-ENTRYPOINT ["bash", "/spack/share/spack/docker/entrypoint.bash"]
+SHELL ["/bin/bash", "-l", "-c"]
+ENTRYPOINT ["/bin/bash", "/spack/share/spack/docker/entrypoint.bash"]
 CMD ["docker-shell"]
 

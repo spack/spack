@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,6 +135,13 @@ def remove_whatever_it_is(path):
         remove_linked_tree(path)
     else:
         shutil.rmtree(path)
+
+
+@pytest.fixture
+def working_env():
+    saved_env = os.environ.copy()
+    yield
+    os.environ = saved_env
 
 
 @pytest.fixture(scope='function', autouse=True)
@@ -703,9 +710,39 @@ def mock_svn_repository(tmpdir_factory):
 def mutable_mock_env_path(tmpdir_factory):
     """Fixture for mocking the internal spack environments directory."""
     saved_path = spack.environment.env_path
-    spack.environment.env_path = str(tmpdir_factory.mktemp('mock-env-path'))
-    yield spack.environment.env_path
+    mock_path = tmpdir_factory.mktemp('mock-env-path')
+    spack.environment.env_path = str(mock_path)
+    yield mock_path
     spack.environment.env_path = saved_path
+
+
+@pytest.fixture()
+def installation_dir_with_headers(tmpdir_factory):
+    """Mock installation tree with a few headers placed in different
+    subdirectories. Shouldn't be modified by tests as it is session
+    scoped.
+    """
+    root = tmpdir_factory.mktemp('prefix')
+
+    # Create a few header files:
+    #
+    # <prefix>
+    # |-- include
+    # |   |--boost
+    # |   |   |-- ex3.h
+    # |   |-- ex3.h
+    # |-- path
+    #     |-- to
+    #         |-- ex1.h
+    #         |-- subdir
+    #             |-- ex2.h
+    #
+    root.ensure('include', 'boost', 'ex3.h')
+    root.ensure('include', 'ex3.h')
+    root.ensure('path', 'to', 'ex1.h')
+    root.ensure('path', 'to', 'subdir', 'ex2.h')
+
+    return root
 
 
 ##########

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,10 +61,7 @@ class Adios(AutotoolsPackage):
     variant('netcdf', default=False, description='Enable netcdf support')
 
     variant(
-        'staging',
-        default=None,
-        values=('flexpath', 'dataspaces'),
-        multi=True,
+        'staging', values=any_combination_of('flexpath', 'dataspaces'),
         description='Enable dataspaces and/or flexpath staging transports'
     )
 

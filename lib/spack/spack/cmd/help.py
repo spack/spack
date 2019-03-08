@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,9 @@ spec expression syntax:
 
   package [constraints] [^dependency [constraints] ...]
 
-  package                           any package from 'spack list'
+  package                           any package from 'spack list', or
+  @K{/hash}                             unique prefix or full hash of
+                                    installed package
 
   constraints:
     versions:
@@ -51,6 +53,8 @@ spec expression syntax:
 
     dependencies:
       ^dependency [constraints]     specify constraints on dependencies
+      ^@K{/hash}                        build with a specific installed
+                                    dependency
 
   examples:
       hdf5                          any hdf5 configuration

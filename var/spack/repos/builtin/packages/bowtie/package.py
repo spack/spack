@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,38 @@ class Bowtie(MakefilePackage):
     for short DNA sequences (reads) from next-gen sequencers."""
 
     homepage = "https://sourceforge.net/projects/bowtie-bio/"
-    url      = "https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.2.0/bowtie-1.2-source.zip"
+    url      = "https://github.com/BenLangmead/bowtie/archive/v1.2.0.tar.gz"
 
-    version('1.2', '6d97f0ea1a65af11d17cc270cfac4af9')
+    # The bowtie project git tagged and GitHub released a v1.2.2,
+    # discovered/fixed a bug, git tagged a v1.2.2_p1 and moved the
+    # 1.2.2 release to use it rather than making a new `1.2.2_p1`
+    # release.
+    #
+    # We point both of the Spack versions at the same tarball so they
+    # build the binaries that are on the release page as v1.2.2
+    version('1.2.2_p1', sha256='e1b02b2e77a0d44a3dd411209fa1f44f0c4ee304ef5cc83f098275085740d5a1')
+    version('1.2.2', sha256='e1b02b2e77a0d44a3dd411209fa1f44f0c4ee304ef5cc83f098275085740d5a1', url="https://github.com/BenLangmead/bowtie/archive/v1.2.2_p1.tar.gz")
+    version('1.2.1.1', sha256='1b38408b88f61d18d7ff28b2470a8cfeefccb3fc59fd46e4cc62e23874e52c20')
+    version('1.2.1', sha256='b2a7c8c879cb08f00a82665bee43e1d4861de44a87912c54d168e44c90869728')
+    version('1.2.0', sha256='dc4e7951b8eca56ce7714c47fd4e84f72badd5312ee9546c912af1963570f894')
+    # Keeping the old 1.2 version around for reproducibility, it's not
+    # clearly identical to 1.2.0.
+    version('1.2', md5='6d97f0ea1a65af11d17cc270cfac4af9', url='https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.2.0/bowtie-1.2-source.zip')
+
+    # Feel free to tighten this.  I know that v1.2.2 (aka v1.2.2_p1)
+    # builds with %gcc@5.5.5 and fails to build with %gcc@8.2.0.  I'm
+    # not sure whether or not it works with other versions in the
+    # interval.
+    conflicts('%gcc@8:', when='@1.2.2:')
 
     variant('tbb', default=False, description='Use Intel thread building block')
 
     depends_on('tbb', when='+tbb')
+
+    # See: https://github.com/BenLangmead/bowtie/issues/87, a
+    # different fix is in the FreeBSD ports/package tree
+    # https://svnweb.freebsd.org/ports?view=revision&revision=483954
+    patch('issue-87.patch', when='%gcc@8.0.0:')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
