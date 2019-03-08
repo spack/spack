@@ -464,8 +464,7 @@ class Database(object):
                 # spec has its own copies of its dependency specs.
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
-                record = InstallRecord.from_dict(spec, rec)
-                data[hash_key] = record
+                data[hash_key] = InstallRecord.from_dict(spec, rec)
             except Exception as e:
                 invalid_record(hash_key, e)
 
