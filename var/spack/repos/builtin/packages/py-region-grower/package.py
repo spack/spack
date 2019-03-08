@@ -13,7 +13,7 @@ class PyRegionGrower(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/molecularsystems/region-grower"
 
     version('develop', branch='master')
-    version('0.1.1', tag='region-grower-v0.1.1', preferred=True)
+    version('0.1.2', tag='region-grower-v0.1.2', preferred=True)
 
     depends_on('py-setuptools', type='build')
 
