@@ -34,7 +34,7 @@ class Aoflagger(CMakePackage):
     version('2.10.0', 'f1df6f9cc3ea87a529a3a53da9bb3033')
 
     depends_on('casacore+python+fftw@1.9.99:')
-    depends_on('fftw@3.0:')
+    depends_on('fftw~mpi@3.0:')
     depends_on('boost+python@:1.66.99')
     depends_on('libxml2')
     depends_on('lapack')
