@@ -10,6 +10,7 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
+from spack.test.database import gen_mock_layout
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch):
@@ -126,14 +127,14 @@ def test_installed_dependency_request_conflicts(
 
 
 def test_installed_upstream_external(
-        tmpdir_factory, install_mockery, mock_fetch):
+        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
-    mock_layout = spack.test.database.MockLayout('/a/')
+    mock_layout = gen_mock_layout('/a/')
 
     dependency = spack.spec.Spec('externaltool')
     dependency.concretize()
@@ -160,14 +161,15 @@ def test_installed_upstream_external(
         spack.store.db = original_db
 
 
-def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch):
+def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
+                            gen_mock_layout):
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
-    mock_layout = spack.test.database.MockLayout('/a/')
+    mock_layout = gen_mock_layout('/a/')
 
     dependency = spack.spec.Spec('dependency-install')
     dependency.concretize()
