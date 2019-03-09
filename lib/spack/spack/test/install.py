@@ -134,11 +134,11 @@ def test_installed_upstream_external(
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
-    mock_layout = gen_mock_layout('/a/')
+    upstream_layout = gen_mock_layout('/a/')
 
     dependency = spack.spec.Spec('externaltool')
     dependency.concretize()
-    prepared_db.add(dependency, mock_layout)
+    prepared_db.add(dependency, upstream_layout)
 
     try:
         original_db = spack.store.db
@@ -169,11 +169,11 @@ def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
-    mock_layout = gen_mock_layout('/a/')
+    upstream_layout = gen_mock_layout('/a/')
 
     dependency = spack.spec.Spec('dependency-install')
     dependency.concretize()
-    prepared_db.add(dependency, mock_layout)
+    prepared_db.add(dependency, upstream_layout)
 
     try:
         original_db = spack.store.db
@@ -186,7 +186,8 @@ def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
 
         new_dependency = dependent['dependency-install']
         assert new_dependency.package.installed_upstream
-        assert new_dependency.prefix == mock_layout.path_for_spec(dependency)
+        assert (new_dependency.prefix ==
+                upstream_layout.path_for_spec(dependency))
 
         dependent.package.do_install()
 

@@ -75,14 +75,14 @@ def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
     w = MockPackage('w', [x, y], [default, default])
     mock_repo = MockPackageMultiRepo([w, x, y, z])
 
-    mock_layout = gen_mock_layout('/a/')
+    upstream_layout = gen_mock_layout('/a/')
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('w')
         spec.concretize()
 
         for dep in spec.traverse(root=False):
-            prepared_db.add(dep, mock_layout)
+            prepared_db.add(dep, upstream_layout)
 
         downstream_db_root = str(
             tmpdir_factory.mktemp('mock_downstream_db_root'))
@@ -99,7 +99,7 @@ def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
             upstream, record = downstream_db.query_by_spec_hash(
                 dep.dag_hash())
             assert upstream
-            assert record.path == mock_layout.path_for_spec(dep)
+            assert record.path == upstream_layout.path_for_spec(dep)
         upstream, record = downstream_db.query_by_spec_hash(
             new_spec.dag_hash())
         assert not upstream
@@ -123,13 +123,13 @@ def test_removed_upstream_dep(tmpdir_factory, test_store, gen_mock_layout):
     y = MockPackage('y', [z], [default])
     mock_repo = MockPackageMultiRepo([y, z])
 
-    mock_layout = gen_mock_layout('/a/')
+    upstream_layout = gen_mock_layout('/a/')
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('y')
         spec.concretize()
 
-        prepared_db.add(spec['z'], mock_layout)
+        prepared_db.add(spec['z'], upstream_layout)
 
         downstream_db_root = str(
             tmpdir_factory.mktemp('mock_downstream_db_root'))
