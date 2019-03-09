@@ -88,8 +88,7 @@ layout = llnl.util.lang.LazyReference(lambda: store.layout)
 
 
 def retrieve_upstream_dbs():
-    other_spack_instances = spack.config.get(
-        'upstreams') or {}
+    other_spack_instances = spack.config.get('upstreams', {})
 
     install_roots = []
     for install_properties in other_spack_instances.values():

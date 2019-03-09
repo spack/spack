@@ -38,6 +38,18 @@ class MockLayout(object):
 
 
 @pytest.fixture()
+def gen_mock_layout(tmpdir):
+    # Generate a MockLayout in a temporary directory. In general the prefixes
+    # specified by MockLayout should never be written to, but this ensures
+    # that even if they are, that it causes no harm
+    def create_layout(root):
+        subroot = tmpdir.mkdir(root)
+        return MockLayout(str(subroot))
+
+    yield create_layout
+
+
+@pytest.fixture()
 def test_store(tmpdir):
     real_store = spack.store.store
     spack.store.store = spack.store.Store(str(tmpdir.join('test_store')))
@@ -48,7 +60,7 @@ def test_store(tmpdir):
 
 
 @pytest.mark.usefixtures('config')
-def test_installed_upstream(tmpdir_factory, test_store):
+def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
@@ -63,7 +75,7 @@ def test_installed_upstream(tmpdir_factory, test_store):
     w = MockPackage('w', [x, y], [default, default])
     mock_repo = MockPackageMultiRepo([w, x, y, z])
 
-    mock_layout = MockLayout('/a/')
+    mock_layout = gen_mock_layout('/a/')
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('w')
@@ -76,7 +88,7 @@ def test_installed_upstream(tmpdir_factory, test_store):
             tmpdir_factory.mktemp('mock_downstream_db_root'))
         downstream_db = spack.database.Database(
             downstream_db_root, upstream_dbs=[prepared_db])
-        downstream_layout = MockLayout('/b/')
+        downstream_layout = gen_mock_layout('/b/')
         with open(downstream_db._index_path, 'w') as db_file:
             downstream_db._write_to_file(db_file)
 
@@ -98,7 +110,7 @@ def test_installed_upstream(tmpdir_factory, test_store):
 
 
 @pytest.mark.usefixtures('config')
-def test_removed_upstream_dep(tmpdir_factory, test_store):
+def test_removed_upstream_dep(tmpdir_factory, test_store, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
@@ -111,7 +123,7 @@ def test_removed_upstream_dep(tmpdir_factory, test_store):
     y = MockPackage('y', [z], [default])
     mock_repo = MockPackageMultiRepo([y, z])
 
-    mock_layout = MockLayout('/a/')
+    mock_layout = gen_mock_layout('/a/')
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('y')
@@ -123,7 +135,7 @@ def test_removed_upstream_dep(tmpdir_factory, test_store):
             tmpdir_factory.mktemp('mock_downstream_db_root'))
         downstream_db = spack.database.Database(
             downstream_db_root, upstream_dbs=[prepared_db])
-        downstream_layout = MockLayout('/b/')
+        downstream_layout = gen_mock_layout('/b/')
         with open(downstream_db._index_path, 'w') as db_file:
             downstream_db._write_to_file(db_file)
 
@@ -141,9 +153,9 @@ def test_removed_upstream_dep(tmpdir_factory, test_store):
 
 
 @pytest.mark.usefixtures('config')
-def test_recursive_upstream_dbs(tmpdir_factory, test_store):
+def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
-    layouts = [MockLayout(x) for x in ['/ra/', '/rb/', '/rc/']]
+    layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
 
     default = ('build', 'link')
     z = MockPackage('z', [], [])
