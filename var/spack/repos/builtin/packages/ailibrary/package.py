@@ -15,7 +15,7 @@ class Ailibrary(Package):
     homepage = "https://github.com/starobinskii/AiLibrary"
     url      = "https://github.com/starobinskii/AiLibrary/archive/v1.3.0.tar.gz"
 
-    version('1.3.0', '56f59bbacfc242f9b8b38d9f2b8133ec')
+    version('1.3.0', 'f8da497ab2a81667b86d480d451d767bdf38bacea1ff606e404e314b503fdf8f')
 
     sanity_check_is_file = ['include/ai.hh']
 
