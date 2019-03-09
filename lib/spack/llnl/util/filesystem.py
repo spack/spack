@@ -957,7 +957,9 @@ class HeaderList(FileList):
     commonly used compiler flags or names.
     """
 
-    include_regex = re.compile(r'(.*)(include)(.*)')
+    # Make sure to only match complete words, otherwise path components such
+    # as "xinclude" will cause false matches.
+    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
 
     def __init__(self, files):
         super(HeaderList, self).__init__(files)
@@ -1122,10 +1124,11 @@ def find_headers(headers, root, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the headers
-    suffix = 'h'
+    suffixes = ['h', 'hpp', 'mod']
 
     # List of headers we are searching with suffixes
-    headers = ['{0}.{1}'.format(header, suffix) for header in headers]
+    headers = ['{0}.{1}'.format(header, suffix) for header in headers
+               for suffix in suffixes]
 
     return HeaderList(find(root, headers, recursive))
 
