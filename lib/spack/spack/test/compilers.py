@@ -15,34 +15,6 @@ import spack.compilers.clang
 from spack.compiler import _get_versioned_tuple, Compiler
 
 
-@pytest.fixture()
-def set_compiler_exe_output(monkeypatch):
-    """This sets the output of every call to a compiler command to the
-    string passed as input during command creation.
-
-    For instance this means that:
-
-    >>> command = Executable('Hello World')
-    >>> output = command('any', 'argument')
-    >>> print(output)
-    'Hello World'
-
-    It's used in the tests below to test the version detection regexes in
-    compiler's ``default_version`` method. The output from the compiler that
-    needs to be tested will be passed as argument to the method.
-    """
-    def echo(string_to_echo):
-        def _impl(*args, **kwargs):
-            return string_to_echo
-        return _impl
-
-    monkeypatch.setattr(spack.compiler, 'Executable', echo)
-    for compiler_name in spack.compilers.supported_compilers():
-        module_name = '.'.join(['spack.compilers', compiler_name])
-        module = __import__(module_name, fromlist=[None])
-        monkeypatch.setattr(module, 'Executable', echo, raising=False)
-
-
 def test_get_compiler_duplicates(config):
     # In this case there is only one instance of the specified compiler in
     # the test configuration (so it is not actually a duplicate), but the
@@ -276,8 +248,6 @@ def test_xl_r_flags():
      'Target: x86_64-unknown-linux-gnu\n'
      'Thread model: posix\n', '3.1'),
 ])
-def test_clang_version_detection(
-        set_compiler_exe_output, version_str, expected_version
-):
-    version = spack.compilers.clang.Clang.default_version(version_str)
+def test_clang_version_detection(version_str, expected_version):
+    version = spack.compilers.clang.Clang.detect_version_from_str(version_str)
     assert version == expected_version
