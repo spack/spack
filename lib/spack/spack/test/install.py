@@ -10,7 +10,7 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
-from spack.test.database import gen_mock_layout
+from spack.test.database import gen_mock_layout  # NOQA: ignore=F401
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch):
@@ -127,7 +127,7 @@ def test_installed_dependency_request_conflicts(
 
 
 def test_installed_upstream_external(
-        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
+        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):  # NOQA: ignore=F811
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
@@ -162,7 +162,7 @@ def test_installed_upstream_external(
 
 
 def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
-                            gen_mock_layout):
+                            gen_mock_layout):  # NOQA: ignore=F811
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
