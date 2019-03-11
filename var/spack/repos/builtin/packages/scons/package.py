@@ -25,4 +25,4 @@ class Scons(PythonPackage):
     # setup.py, which it does not support.
     @when('@3.0.2:')
     def install_args(self, spec, prefix):
-        return ['--prefix={0}'.format(prefix), 'root=/']
+        return ['--prefix={0}'.format(prefix), '--root=/']
