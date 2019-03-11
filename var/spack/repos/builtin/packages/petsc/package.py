@@ -81,6 +81,8 @@ class Petsc(Package):
             description='Activates support for SuiteSparse')
     variant('patchmpi64', default=False,
             description='Patch of MPI support of int64')
+    variant('dmplex', default=False,
+            description='Enable DMPlex support')
 
     variant('X', default=False,
             description='Activate X support')
@@ -224,6 +226,14 @@ class Petsc(Package):
             options.append('--with-x=1')
         else:
             options.append('--with-x=0')
+
+        if '+dmplex' in spec:
+            options.append('--download-ctetgen')
+            if '^int64' in spec:
+                options.extend([
+                    '--download-chaco',
+                    '--download-triangle',
+                ])
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
