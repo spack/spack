@@ -24,5 +24,5 @@ class Scons(PythonPackage):
     # Prevent passing --single-version-externally-managed to
     # setup.py, which it does not support.
     @when('@3.0.2:')
-    def install_args(self, spec,prefix):
+    def install_args(self, spec, prefix):
        return []
