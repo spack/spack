@@ -673,10 +673,10 @@ compile line.
 Notice that the value of the compiler flags must be quoted if it
 contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
 ``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but
-``cppflags=-O3 -fPIC`` is not. Additionally, if they value of the
+``cppflags=-O3 -fPIC`` is not. Additionally, if the value of the
 compiler flags is not the last thing on the line, it must be followed
 by a space. The commmand ``spack install libelf cppflags="-O3"%intel``
-will be interpreted as an attempt to set `cppflags="-O3%intel"``.
+will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
 The six compiler flags are injected in the order of implicit make commands
 in GNU Autotools. If all flags are set, the order is
