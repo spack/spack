@@ -28,25 +28,23 @@ class Flex(AutotoolsPackage):
     depends_on('gettext@0.19:', type='build')
     depends_on('help2man',      type='build')
 
-    # Older tarballs don't come with a configure script
+    # Older tarballs don't come with a configure script and the patch for
+    # 2.6.4 touches configure
     depends_on('m4',       type='build')
-    depends_on('autoconf', type='build', when='@:2.6.0')
-    depends_on('autoconf', type='build', when='@2.6.4 %gcc@7')
-    depends_on('automake', type='build', when='@:2.6.0')
-    depends_on('automake', type='build', when='@2.6.4 %gcc@7')
-    depends_on('libtool',  type='build', when='@:2.6.0')
-    depends_on('libtool',  type='build', when='@2.6.4 %gcc@7')
+    depends_on('autoconf', type='build', when='@:2.6.0,2.6.4')
+    depends_on('automake', type='build', when='@:2.6.0,2.6.4')
+    depends_on('libtool',  type='build', when='@:2.6.0,2.6.4')
 
-    # 2.6.4 fails to compile with gcc@7, see:
+    # 2.6.4 fails to compile with newer versions of gcc/glibc, see:
     # - https://github.com/spack/spack/issues/8152
     # - https://github.com/spack/spack/issues/6942
     # - https://github.com/westes/flex/issues/241
-    patch('https://github.com/westes/flex/commit/24fd0551333e7eded87b64dd36062da3df2f6380.patch', sha256='09c22e5c6fef327d3e48eb23f0d610dcd3a35ab9207f12e0f875701c677978d3', when='@2.6.4 %gcc@7')
+    patch('https://github.com/westes/flex/commit/24fd0551333e7eded87b64dd36062da3df2f6380.patch', sha256='09c22e5c6fef327d3e48eb23f0d610dcd3a35ab9207f12e0f875701c677978d3', when='@2.6.4')
 
     @property
     def force_autoreconf(self):
         # The patch for 2.6.4 touches configure
-        return self.spec.satisfies('@2.6.4 %gcc@7')
+        return self.spec.satisfies('@2.6.4')
 
     def url_for_version(self, version):
         url = "https://github.com/westes/flex"
