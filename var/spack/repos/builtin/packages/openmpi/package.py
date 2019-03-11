@@ -485,7 +485,7 @@ class Openmpi(AutotoolsPackage):
                         self.prefix.bin.oshrun
                         ]
             for exe in exe_list:
-                 try:
-                     os.remove(exe)
-                 except OSError:
-                     tty.debug("File not present: " + exe)
+                try:
+                    os.remove(exe)
+                except OSError:
+                    tty.debug("File not present: " + exe)
