@@ -478,7 +478,11 @@ class Openmpi(AutotoolsPackage):
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
         if '@1.6: ~legacylaunchers schedulers=slurm' in self.spec:
-            os.remove(self.prefix.bin.mpirun)
-            os.remove(self.prefix.bin.mpiexec)
-            os.remove(self.prefix.bin.shmemrun)
-            os.remove(self.prefix.bin.oshrun)
+            try:
+                # OpenMPI 4.0 does not have shmemrun and oshrun
+                os.remove(self.prefix.bin.mpirun)
+                os.remove(self.prefix.bin.mpiexec)
+                os.remove(self.prefix.bin.shmemrun)
+                os.remove(self.prefix.bin.oshrun)
+            except OSError:
+                pass
