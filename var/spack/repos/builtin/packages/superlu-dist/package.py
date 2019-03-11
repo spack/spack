@@ -33,7 +33,8 @@ class SuperluDist(CMakePackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('parmetis')
-    depends_on('metis@5:')
+    depends_on('metis@5:~int64', when='~int64')
+    depends_on('metis@5:+int64', when='+int64')
 
     patch('0001-Fix-libdir-pkgconfig-variable.patch')
 
