@@ -368,10 +368,8 @@ def dedupe(sequence):
         stable de-duplication of the sequence
     """
     seen = set()
-    for x in sequence:
-        if x not in seen:
-            yield x
-            seen.add(x)
+    seen_add = seen.add
+    return [x for x in sequence if not (x in seen or seen_add(x))]
 
 
 def pretty_date(time, now=None):
