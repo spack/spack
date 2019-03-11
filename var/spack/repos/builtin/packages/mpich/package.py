@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import sys
 
 
 class Mpich(AutotoolsPackage):
@@ -57,6 +58,8 @@ spack package at this time.''',
         values=('tcp', 'mxm', 'ofi', 'ucx'),
         multi=False
     )
+    variant('pci', default=(sys.platform != 'darwin'),
+            description="Support analyzing devices on PCI bus")
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -76,7 +79,7 @@ spack package at this time.''',
 
     depends_on('libfabric', when='netmod=ofi')
 
-    depends_on('libpciaccess')
+    depends_on('libpciaccess', when="+pci")
     depends_on('libxml2')
 
     # Starting with version 3.3, Hydra can use libslurm for nodelist parsing
