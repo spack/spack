@@ -18,8 +18,10 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # See url_for_version() below.
-    version('2019.2', '1245aa394a92099e23ce2f60cdd50c90eb3ddcd61d86cae010ef2f1de61f32d9')
-    version('2019.1', 'a4875c6b6853213083e52ecd303546bdf424568ec67cfc7e51d132a7c037c66a')
+    version('2019.4', sha256='342a0a2cd583879850658284b86e9351ea019b4f3fcd731f4c18456f0ce9f900')
+    version('2019.3', sha256='b2244147bc8159cdd8f06a38afeb42f3237d3fc822555499d7ccfbd4b86f8ece')
+    version('2019.2', sha256='1245aa394a92099e23ce2f60cdd50c90eb3ddcd61d86cae010ef2f1de61f32d9')
+    version('2019.1', sha256='a4875c6b6853213083e52ecd303546bdf424568ec67cfc7e51d132a7c037c66a')
     version('2019',   '2119f1db2f905dc5b423482d7689b7d6')
     version('2018.6', '9a0f78db4f72356068b00f29f54ee6bc')
     version('2018.5', 'ff3ae09f8c23892fbc3008c39f78288f')
@@ -69,6 +71,8 @@ class IntelTbb(Package):
     patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=rhel6')
     patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=scientific6')
     patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=centos6')
+    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2018.99')
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019:')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
