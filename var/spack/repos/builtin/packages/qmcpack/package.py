@@ -215,9 +215,16 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         if '+cuda' in spec:
             args.append('-DQMC_CUDA=1')
-            cuda_arch = spec.variants['cuda_arch'].value
+            cuda_arch_list = spec.variants['cuda_arch'].value
+            cuda_arch = cuda_arch_list[0]
+            if len(cuda_arch_list) > 1:
+                raise InstallError(
+                    'QMCPACK only supports compilation for a single '
+                    'GPU architecture at a time'
+                )
+            cuda_arch = spec.variants['cuda_arch'].value[0]
             if cuda_arch != 'none':
-                args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
+                args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
             else:
                 # This is the default value set in QMCPACK's CMake
                 # Not possible to set default value for cuda_arch,
