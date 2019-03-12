@@ -66,6 +66,9 @@ class Jdk(Package):
     provides('java@8',  when='@1.8.0:1.8.999')
     provides('java@7',  when='@1.7.0:1.7.999')
 
+    conflicts('target=ppc64', msg='jdk is only available for x86_64')
+    conflicts('target=ppc64le', msg='jdk is only available for x86_64')
+
     # FIXME:
     # 1. `extends('java')` doesn't work, you need to use `extends('jdk')`
     # 2. Packages cannot extend multiple packages, see #987
