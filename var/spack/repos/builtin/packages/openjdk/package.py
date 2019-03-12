@@ -18,6 +18,9 @@ class Openjdk(Package):
     provides('java')
     provides('java@11', when='@11.0:11.99')
 
+    conflicts('target=ppc64', msg='openjdk is only available for x86_64')
+    conflicts('target=ppc64le', msg='openjdk is only available for x86_64')
+
     # FIXME:
     # 1. `extends('java')` doesn't work, you need to use `extends('openjdk')`
     # 2. Packages cannot extend multiple packages, see #987

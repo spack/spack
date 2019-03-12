@@ -27,7 +27,7 @@ packages:
       glu: [mesa-glu, openglu]
       golang: [gcc]
       ipp: [intel-ipp]
-      java: [jdk]
+      java: [jdk, openjdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas]
       mkl: [intel-mkl]
