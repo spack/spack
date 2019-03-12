@@ -33,7 +33,6 @@ modules:
       - highfive~mpi
       - neuron
       - 'python-dev'
-      - 'python%gcc'
     blacklist:
       - '%gcc'
       - '%intel'

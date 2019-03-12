@@ -403,7 +403,7 @@ class BaseConfiguration(object):
     @property
     def specs_to_load(self):
         """List of specs that should be loaded in the module file."""
-        return self._create_list_for('autoload')
+        return self._create_list_for('autoload', external=True)
 
     @property
     def literals_to_load(self):
@@ -420,11 +420,13 @@ class BaseConfiguration(object):
         """List of variables that should be left unmodified."""
         return self.conf.get('filter', {}).get('environment_blacklist', {})
 
-    def _create_list_for(self, what):
+    def _create_list_for(self, what, external=False):
         whitelist = []
         for item in self.conf[what]:
             conf = type(self)(item)
             if not conf.blacklisted:
+                whitelist.append(item)
+            elif external and item.external and item.external_module:
                 whitelist.append(item)
         return whitelist
 

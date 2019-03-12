@@ -28,6 +28,7 @@ modules:
     hash_length: 0
     whitelist:
       - cuda
+      - python
       - spark
     blacklist:
       - '%gcc'

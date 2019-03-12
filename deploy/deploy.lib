@@ -525,6 +525,15 @@ install_specs() {
     MODS_DIR_PATH="${location}/modules"
     export HOME SOFTS_DIR_PATH MODS_DIR_PATH
 
+    cat > "${HOME}/.profile" <<EOF
+. ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
+
+SOFTS_DIR_PATH="${location}"
+MODS_DIR_PATH="${location}/modules"
+
+export MODS_DIR_PATH SOFTS_DIR_PATH
+EOF
+
     copy_configuration "${what}"
     update_chain_config "${what}"
     update_module_path "${what}"
