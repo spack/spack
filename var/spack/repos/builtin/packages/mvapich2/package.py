@@ -75,8 +75,8 @@ class Mvapich2(AutotoolsPackage):
         description='The fabric enabled for this build',
         default='psm',
         values=(
-            'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
-            'nemesistcpib', 'nemesisofi'
+            'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
+            'nemesisibtcp', 'nemesistcpib', 'nemesisofi'
         )
     )
 
@@ -100,11 +100,14 @@ class Mvapich2(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
+    depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('rdma-core', when='fabrics=mrail')
     depends_on('rdma-core', when='fabrics=nemesisib')
     depends_on('rdma-core', when='fabrics=nemesistcpib')
     depends_on('rdma-core', when='fabrics=nemesisibtcp')
     depends_on('libfabric', when='fabrics=nemesisofi')
+
+    conflicts('fabrics=psm2', when='@:2.1')  # psm2 support was added at version 2.2
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -152,6 +155,11 @@ class Mvapich2(AutotoolsPackage):
             opts = [
                 "--with-device=ch3:psm",
                 "--with-psm={0}".format(self.spec['psm'].prefix)
+            ]
+        elif 'fabrics=psm2' in self.spec:
+            opts = [
+                "--with-device=ch3:psm",
+                "--with-psm2={0}".format(self.spec['opa-psm2'].prefix)
             ]
         elif 'fabrics=sock' in self.spec:
             opts = ["--with-device=ch3:sock"]
