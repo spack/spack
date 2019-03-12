@@ -21,7 +21,7 @@ class Libvips(AutotoolsPackage):
     depends_on('expat')
     depends_on('swig',when='@develop')
     depends_on('libjpeg')
-    depends_on('giflib')
+    #depends_on('giflib')
     depends_on('libtiff')
     depends_on('poppler')
     depends_on('libtiff')
