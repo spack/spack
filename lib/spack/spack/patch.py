@@ -351,7 +351,7 @@ class PatchCache(object):
 
         # Add patches from the class
         for cond, patch_list in pkg_class.patches.items():
-            for patch in patch_list:
+            for patch in sorted(patch_list):
                 patch_dict = patch.to_dict()
                 patch_dict.pop('sha256')  # save some space
                 index[patch.sha256] = {pkg_class.fullname: patch_dict}
@@ -360,7 +360,7 @@ class PatchCache(object):
         for name, conditions in pkg_class.dependencies.items():
             for cond, dependency in conditions.items():
                 for pcond, patch_list in dependency.patches.items():
-                    for patch in patch_list:
+                    for patch in sorted(patch_list):
                         dspec = spack.repo.get(dependency.spec.name)
                         patch_dict = patch.to_dict()
                         patch_dict.pop('sha256')  # save some space
