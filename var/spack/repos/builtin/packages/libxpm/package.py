@@ -27,5 +27,7 @@ class Libxpm(AutotoolsPackage):
     depends_on('util-macros', type='build')
 
     def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
-            self.spec['gettext'].prefix.lib))
+        # In case we're using gettext from the system.
+        if 'gettext' in self.spec:
+            spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+                self.spec['gettext'].prefix.lib))
