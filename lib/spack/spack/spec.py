@@ -94,6 +94,7 @@ from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs, memoized
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
+import llnl.util.tty as tty
 
 import spack.architecture
 import spack.compiler
@@ -1913,6 +1914,9 @@ class Spec(object):
             raise InvalidDependencyError(
                 self.name + " does not depend on " + comma_or(extra))
 
+        # This dictionary will store object IDs rather than Specs as keys
+        # since the Spec __hash__ will change as patches are added to them
+        spec_to_patches = {}
         for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
@@ -1933,14 +1937,9 @@ class Spec(object):
             for cond, patch_list in s.package_class.patches.items():
                 if s.satisfies(cond):
                     for patch in patch_list:
-                        patches.append(patch.sha256)
+                        patches.append(patch)
             if patches:
-                mvar = s.variants.setdefault(
-                    'patches', MultiValuedVariant('patches', ())
-                )
-                mvar.value = patches
-                # FIXME: Monkey patches mvar to store patches order
-                mvar._patches_in_order_of_appearance = patches
+                spec_to_patches[id(s)] = patches
 
         # Apply patches required on dependencies by depends_on(..., patch=...)
         for dspec in self.traverse_edges(deptype=all,
@@ -1958,16 +1957,29 @@ class Spec(object):
                     for pcond, patch_list in dependency.patches.items():
                         if dspec.spec.satisfies(pcond):
                             for patch in patch_list:
-                                patches.append(patch.sha256)
+                                patches.append(patch)
             if patches:
-                mvar = dspec.spec.variants.setdefault(
-                    'patches', MultiValuedVariant('patches', ())
-                )
-                mvar.value = mvar.value + tuple(patches)
-                # FIXME: Monkey patches mvar to store patches order
-                p = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = list(
-                    dedupe(p + patches))
+                all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
+                all_patches.extend(patches)
+
+        for spec in self.traverse():
+            if id(spec) not in spec_to_patches:
+                continue
+
+            patches = list(dedupe(spec_to_patches[id(spec)]))
+            mvar = spec.variants.setdefault(
+                'patches', MultiValuedVariant('patches', ())
+            )
+            mvar.value = tuple(p.sha256 for p in patches)
+            # FIXME: Monkey patches mvar to store patches order
+            full_order_keys = list(tuple(p.ordering_key) + (p.sha256,) for p
+                                   in patches)
+            ordered_hashes = sorted(full_order_keys)
+            tty.debug("Ordered hashes [{0}]: ".format(spec.name) +
+                      ', '.join('/'.join(str(e) for e in t)
+                                for t in ordered_hashes))
+            mvar._patches_in_order_of_appearance = list(
+                t[-1] for t in ordered_hashes)
 
         for s in self.traverse():
             if s.external_module and not s.external_path:
