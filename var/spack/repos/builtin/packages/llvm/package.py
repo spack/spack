@@ -30,8 +30,17 @@ class Llvm(CMakePackage):
 
     variant('clang', default=True,
             description="Build the LLVM C/C++/Objective-C compiler frontend")
-    variant('cuda', default=False,
-            description="Build the LLVM with CUDA features enabled")
+
+    # TODO: The current version of this package unconditionally disables CUDA.
+    #       Better would be to add a "cuda" variant that:
+    #        - Adds dependency on the "cuda" package when enabled
+    #        - Sets the necessary CMake flags when enabled
+    #        - Disables CUDA (as this current version does) only when the
+    #          variant is also disabled.
+
+    # variant('cuda', default=False,
+    #         description="Build the LLVM with CUDA features enabled")
+
     variant('lldb', default=True, description="Build the LLVM debugger")
     variant('lld', default=True, description="Build the LLVM linker")
     variant('internal_unwind', default=True,
@@ -590,12 +599,13 @@ class Llvm(CMakePackage):
             '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
         ]
 
-        if '+cuda' not in spec:
-            cmake_args.extend([
-                '-DCUDA_TOOLKIT_ROOT_DIR:PATH=IGNORE',
-                '-DCUDA_SDK_ROOT_DIR:PATH=IGNORE',
-                '-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE',
-                '-DLIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES:STRING=IGNORE'])
+        # TODO: Instead of unconditionally disabling CUDA, add a "cuda" variant
+        #       (see TODO above), and set the paths if enabled.
+        cmake_args.extend([
+            '-DCUDA_TOOLKIT_ROOT_DIR:PATH=IGNORE',
+            '-DCUDA_SDK_ROOT_DIR:PATH=IGNORE',
+            '-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE',
+            '-DLIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES:STRING=IGNORE'])
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
