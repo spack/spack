@@ -74,6 +74,13 @@ spack package at this time.''',
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
     patch('mpich32_clang.patch', when='@3.2:3.2.0%clang')
 
+    # Fix SLURM node list parsing
+    # See https://github.com/pmodels/mpich/issues/3572
+    # and https://github.com/pmodels/mpich/pull/3578
+    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch',
+          sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
+          when='@3.3')
+
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
 
