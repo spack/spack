@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Mcl(AutotoolsPackage):
 
     version('14-137', 'bc8740456cf51019d0a9ac5eba665bb5')
 
-    depends_on('perl')
+    depends_on('perl', type='run')
 
     def configure_args(self):
         return ['--enable-blast']
