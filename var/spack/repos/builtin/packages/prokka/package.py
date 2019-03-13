@@ -36,5 +36,5 @@ class Prokka(Package):
         install_tree('bin', prefix.bin)
         install_tree('db', prefix.db)
 
-        #Use bundled tbl2asn binary until PR#6875 is merged
+        # Use bundled tbl2asn binary until PR#6875 is merged
         install('binaries/linux/tbl2asn', prefix.bin)
