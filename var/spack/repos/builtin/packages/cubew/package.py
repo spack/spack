@@ -15,6 +15,7 @@ class Cubew(AutotoolsPackage):
     version('4.4.1', 'c09e3f5a3533ebedee2cc7dfaacd7bac4680c14c3fa540669466583a23f04b67')
     version('4.4',   'e9beb140719c2ad3d971e1efb99e0916')
 
+    depends_on('pkgconfig', type='build')
     depends_on('zlib')
 
     def url_for_version(self, version):

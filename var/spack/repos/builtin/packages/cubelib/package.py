@@ -15,6 +15,7 @@ class Cubelib(AutotoolsPackage):
     version('4.4.2', '843335c7d238493f1b4cb8e07555ccfe99a3fa521bf162e9d8eaa6733aa1f949')
     version('4.4',   'c903f3c44d3228ebefd00c831966988e')
 
+    depends_on('pkgconfig', type='build')
     depends_on('zlib')
 
     def url_for_version(self, version):
