@@ -222,7 +222,6 @@ class Qmcpack(CMakePackage, CudaPackage):
                     'QMCPACK only supports compilation for a single '
                     'GPU architecture at a time'
                 )
-            cuda_arch = spec.variants['cuda_arch'].value[0]
             if cuda_arch != 'none':
                 args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
             else:
