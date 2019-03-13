@@ -30,7 +30,7 @@ class Netgen(AutotoolsPackage):
     depends_on('metis', when='+metis')
 
     def url_for_version(self, version):
-        url = "http://gigenet.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/{0}/netgen-{1}.tar.gz"
+        url = "https://sourceforge.net/projects/netgen-mesher/files/netgen-mesher/{0}/netgen-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
     def configure_args(self):
