@@ -15,7 +15,7 @@ class Netgen(AutotoolsPackage):
        mesh refinement. """
 
     homepage = "https://ngsolve.org/"
-    url = "https://gigenet.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/5.3/netgen-5.3.1.tar.gz"
+    url = "https://sourceforge.net/projects/netgen-mesher/files/netgen-mesher/5.3/netgen-5.3.1.tar.gz"
 
     version('5.3.1', 'afd5a9b0b1296c242a9c554f06af6510')
 
