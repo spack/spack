@@ -20,7 +20,7 @@ class Libusbmuxd(AutotoolsPackage):
     depends_on('autoconf',   type='build', when='@master')
     depends_on('automake',   type='build', when='@master')
     depends_on('libtool',    type='build', when='@master')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig',  type='build')
     depends_on('libplist')
 
     def configure_args(self):
