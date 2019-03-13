@@ -594,7 +594,8 @@ class Llvm(CMakePackage):
             cmake_args.extend([
                 '-DCUDA_TOOLKIT_ROOT_DIR:PATH=IGNORE',
                 '-DCUDA_SDK_ROOT_DIR:PATH=IGNORE',
-                '-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE'])
+                '-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE',
+                '-DLIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES:STRING=IGNORE'])
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
