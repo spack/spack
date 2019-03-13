@@ -44,9 +44,12 @@ class Amrex(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
+    variant('sundials', default=False,
+            description='Build AMReX with SUNDIALS support')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
+    depends_on('sundials@3.2.1: +ARKODE +CVODE', when='@develop +sundials')
     depends_on('python@2.7:', type='build')
     depends_on('cmake@3.5:',  type='build')
     conflicts('%clang')
@@ -68,6 +71,7 @@ class Amrex(CMakePackage):
             '-DENABLE_LINEAR_SOLVERS:BOOL=%s' %
             self.cmake_is_on('+linear_solvers'),
             '-DENABLE_AMRDATA:BOOL=%s' % self.cmake_is_on('+amrdata'),
-            '-DENABLE_PARTICLES:BOOL=%s' % self.cmake_is_on('+particles')
+            '-DENABLE_PARTICLES:BOOL=%s' % self.cmake_is_on('+particles'),
+            '-DENABLE_SUNDIALS:BOOL=%s' % self.cmake_is_on('+sundials')
         ]
         return args
