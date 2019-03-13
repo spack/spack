@@ -26,5 +26,7 @@ class Mcl(AutotoolsPackage):
         with working_dir(prefix.bin):
             substitute = "#!{perl}".format(perl=self.spec['perl'].command.path)
             kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
-            filter_file('^#!/usr/bin/env perl', substitute, 'mclpipeline', **kwargs)
-            filter_file('^#!/usr/local/bin/perl -w', substitute, 'mcxdeblast', **kwargs)
+            filter_file('^#!/usr/bin/env perl',
+                        substitute, 'mclpipeline', **kwargs)
+            filter_file('^#!/usr/local/bin/perl -w',
+                        substitute, 'mcxdeblast', **kwargs)
