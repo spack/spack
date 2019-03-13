@@ -16,6 +16,8 @@ class OpenpmdApi(CMakePackage):
 
     version('develop', branch='dev')
 
+    variant('shared', default=True,
+            description='Build a shared version of the library')
     variant('mpi', default=True,
             description='Enable parallel I/O')
     variant('hdf5', default=True,
@@ -55,6 +57,8 @@ class OpenpmdApi(CMakePackage):
         spec = self.spec
 
         args = [
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
             # variants
             '-DopenPMD_USE_MPI:BOOL={0}'.format(
                 'ON' if '+mpi' in spec else 'OFF'),
