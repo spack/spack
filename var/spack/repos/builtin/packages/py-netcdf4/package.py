@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -23,3 +25,17 @@ class PyNetcdf4(PythonPackage):
 
     depends_on('netcdf')
     depends_on('hdf5@1.8.0:')
+
+    def setup_environment(self, spack_env, run_env):
+        """Ensure installed netcdf and hdf5 libraries are used"""
+        hdf5_include_dir = os.path.dirname(self.spec['hdf5'].headers[0])
+        hdf5_lib_dir = os.path.dirname(self.spec['hdf5'].libs[0])
+        netcdf_include_dir = os.path.dirname(self.spec['netcdf'].headers[0])
+        netcdf_lib_dir = os.path.dirname(self.spec['netcdf'].libs[0])
+        # Explicitly set these variables so setup.py won't erroneously pick up
+        # system versions
+        spack_env.set('USE_SETUPCFG', '0')
+        spack_env.set('HDF5_INCDIR', hdf5_include_dir)
+        spack_env.set('HDF5_LIBDIR', hdf5_lib_dir)
+        spack_env.set('NETCDF4_INCDIR', netcdf_include_dir)
+        spack_env.set('NETCDF4_LIBDIR', netcdf_lib_dir)
