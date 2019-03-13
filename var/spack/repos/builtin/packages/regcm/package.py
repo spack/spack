@@ -97,10 +97,13 @@ class Regcm(AutotoolsPackage):
                 raise InstallError('The GCC compiler does not support '
                                    'multiple architecture optimizations.')
 
-        args += self.enable_or_disable('extension')
+            # RegCM configure script treats --disable-X as --enable-X, so we
+            # cannot use enable_or_disable; enable only the flags requested.
+            args += ('--enable-' + ext for ext in optimizations)
 
         for opt in ('debug', 'profile', 'singleprecision'):
-            args += self.enable_or_disable(opt)
+            if ('+' + opt) in self.spec:
+                args.append('--enable-' + opt)
 
         # RegCM SVN6916 introduced a specific flag to use some pnetcdf calls.
         if '+pnetcdf' in self.spec and '@4.7.0-SVN6916:' in self.spec:
