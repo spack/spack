@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Prokka(Package):
     url      = "https://github.com/tseemann/prokka/archive/v1.13.tar.gz"
 
     version('1.13.4', sha256='19a699effe3fd38b3b50007473634161a1749eb7af00d1a67c42afa20446e5e3')
+    version('1.13', '168193a4c61263759784564581523640')
+    version('1.12', '658c4c203ddded3623e68a36f94cabec')
 
     depends_on('aragorn', type='run')
     depends_on('blast-plus', type='run')
