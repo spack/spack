@@ -22,3 +22,23 @@ class Libyogrt(AutotoolsPackage):
     version('1.20-4', '092bea10de22c505ce92aa07001decbb')
     version('1.20-3', 'd0507717009a5f8e2009e3b63594738f')
     version('1.20-2', '780bda03268324f6b5f72631fff6e6cb')
+
+    variant('scheduler', default='slurm',
+            description="Select scheduler integration",
+            values=['slurm', 'moab', 'lcrm', 'lsf'], multi=False)
+
+    conflicts('scheduler=lsf', when='@:1.22')
+
+    def configure_args(self):
+        args = []
+
+        if '+slurm' in self.spec:
+            args.append('--with-slurm=yes')
+        if '+moab' in self.spec:
+            args.append('--with-moab=yes')
+        if '+lcrm' in self.spec:
+            args.append('--with-lcrm=yes')
+        if '+lsf' in self.spec:
+            args.append('--with-lsf=yes')
+
+        return args
