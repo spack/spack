@@ -20,7 +20,7 @@ class PyPybigwig(PythonPackage):
 
     patch('python3_curl.patch', when='@:0.3.12 ^python@3:')
 
-    depends_on('curl', type=('build', 'run'))
+    depends_on('curl', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
 
     depends_on('py-numpy', type=('build', 'run'), when='+numpy')
