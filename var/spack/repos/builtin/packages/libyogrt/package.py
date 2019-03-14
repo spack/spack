@@ -32,13 +32,14 @@ class Libyogrt(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if '+slurm' in self.spec:
+        sched = list(self.spec.variants['scheduler'].value)
+        if 'slurm' in sched:
             args.append('--with-slurm=yes')
-        if '+moab' in self.spec:
+        if 'moab' in sched:
             args.append('--with-moab=yes')
-        if '+lcrm' in self.spec:
+        if 'lcrm' in sched:
             args.append('--with-lcrm=yes')
-        if '+lsf' in self.spec:
+        if 'lsf' in sched:
             args.append('--with-lsf=yes')
 
         return args
