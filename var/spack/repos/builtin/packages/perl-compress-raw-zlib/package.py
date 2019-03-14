@@ -7,7 +7,7 @@ from spack import *
 
 
 class PerlCompressRawZlib(PerlPackage):
-    "A low-Level Interface to zlib compression library"
+    """A low-Level Interface to zlib compression library."""
 
     homepage = "http://search.cpan.org/~pmqs/Compress-Raw-Zlib-2.081/lib/Compress/Raw/Zlib.pm"
     url      = "https://cpan.metacpan.org/authors/id/P/PM/PMQS/Compress-Raw-Zlib-2.081.tar.gz"
