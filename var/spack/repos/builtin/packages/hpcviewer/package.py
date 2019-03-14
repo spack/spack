@@ -6,6 +6,7 @@
 from spack import *
 import platform
 
+
 # The viewer and trace viewer tar files and sha256sum depend on the
 # version and machine type.
 def viewer_url(ver, mach):
@@ -13,6 +14,7 @@ def viewer_url(ver, mach):
         'http://hpctoolkit.org/download/hpcviewer/{0}/'
         'hpcviewer-linux.gtk.{1}.tgz'
     ).format(ver, mach)
+
 
 def trace_url(ver, mach):
     return (
