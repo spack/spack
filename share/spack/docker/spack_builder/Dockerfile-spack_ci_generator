@@ -1,0 +1,8 @@
+from python:3.7.2-alpine
+
+RUN apk add --no-cache git bash
+
+RUN pip install requests ruamel.yaml
+
+ENTRYPOINT ["/usr/bin/env"]
+CMD ["bash"]

@@ -1,0 +1,10 @@
+generate ci jobs:
+  script:
+    - "./bin/generate-gitlab-ci-yml.sh"
+  tags:
+    - "spack-k8s"
+  image: "scottwittenburg/spack_ci_generator_alpine"
+  artifacts:
+    paths:
+      - ci-generation
+    when: always
