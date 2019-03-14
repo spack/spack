@@ -9,9 +9,9 @@ import yaml
 # see : http://code.activestate.com/recipes/577613-yaml-include-support/
 def yaml_include(loader, node):
     with open(node.value) as inputfile:
-        return yaml.load(inputfile)
+        return yaml.safe_load(inputfile)
 
-yaml.add_constructor("!include", yaml_include)
+yaml.SafeLoader.add_constructor("!include", yaml_include)
 
 
 class ProductionEnvironment(object):
@@ -128,7 +128,7 @@ def spackd(ctx, input):
     """This command helps with common tasks needed to deploy software stack
     with Spack in continuous integration pipeline"""
     ctx.input = input
-    ctx.configuration = yaml.load(input)
+    ctx.configuration = yaml.safe_load(input)
 
 
 @spackd.command()
