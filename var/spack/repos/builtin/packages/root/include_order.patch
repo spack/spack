@@ -1,0 +1,11 @@
+--- a/graf2d/asimage/CMakeLists.txt	2019-03-14 08:56:17.968902323 -0500
++++ b/graf2d/asimage/CMakeLists.txt	2019-03-14 08:34:20.738975026 -0500
+@@ -8,7 +8,7 @@
+ endif()
+ 
+ #---Build ASImage/ASImageGui libraries---------------------------------------
+-include_directories(SYSTEM ${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
++include_directories(${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} SYSTEM ${X11_INCLUDE_DIR})
+ 
+ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
+                               NO_INSTALL_HEADERS

@@ -44,6 +44,7 @@ class Root(CMakePackage):
     if sys.platform == 'darwin':
         patch('math_uint.patch', when='@6.06.02')
         patch('root6-60606-mathmore.patch', when='@6.06.06')
+    patch('include_order.patch', when='@6.13.02:')
 
     # ###################### Variants ##########################
 
@@ -232,7 +233,7 @@ class Root(CMakePackage):
     depends_on('unuran',    when='+unuran')
     depends_on('vc',        when='+vc')
     depends_on('veccore',   when='+veccore')
-    depends_on('vdt',       when='+vdt')
+    depends_on('vdt@0.4:',       when='+vdt')
     depends_on('libxml2',   when='+xml')
     depends_on('xrootd',    when='+xrootd')
     # depends_on('hdfs') - supported (TODO)
