@@ -56,7 +56,7 @@ class Hpcviewer(Package):
     # Both hpcviewer and trace viewer have an install script.
     def install(self, spec, prefix):
         args = [
-            '--java', spec['java'].prefix,
+            '--java', spec['java'].home,
             prefix
         ]
 
