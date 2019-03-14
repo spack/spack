@@ -19,9 +19,20 @@ class NetcdfCxx(AutotoolsPackage):
 
     depends_on('netcdf')
 
+    variant(
+        'netcdf4', default=True, description='Compile with netCDF4 support')
+
     @property
     def libs(self):
         shared = True
         return find_libraries(
             'libnetcdf_c++', root=self.prefix, shared=shared, recursive=True
         )
+
+    def flag_handler(self, name, flags):
+        # Add netCDF4 support via the USE_NETCDF4 macro
+        if name == 'cflags' and '+netcdf4' in self.spec:
+            flags.append('-DUSE_NETCDF4')
+        if name == 'cppflags' and '+netcdf4' in self.spec:
+            flags.append('-DUSE_NETCDF4')
+        return (None, None, flags)
