@@ -40,11 +40,6 @@ def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
     return _version_cache[key]
 
 
-def dumpversion(compiler_path):
-    """Simple default dumpversion method -- this is what gcc does."""
-    return get_compiler_version(compiler_path, '-dumpversion')
-
-
 def tokenize_flags(flags_str):
     """Given a compiler flag specification as a string, this returns a list
        where the entries are the flags. For compiler options which set values
@@ -204,7 +199,7 @@ class Compiler(object):
     @classmethod
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
-        return dumpversion(cc)
+        return get_compiler_version(cc, '-dumpversion')
 
     @classmethod
     def cc_version(cls, cc):
