@@ -18,6 +18,7 @@ class PyEspressopp(CMakePackage):
     git      = "https://github.com/espressopp/espressopp.git"
 
     version('develop', branch='master')
+    version('2.0.2', sha256='8cf4525bca06426379f5b9fbb8cc2603f559d28a2e74d1d7694df963b8f3dc6c')
     version('1.9.5',   '13a93c30b07132b5e5fa0d828aa17d79')
     version('1.9.4.1', '0da74a6d4e1bfa6a2a24fca354245a4f')
     version('1.9.4',   'f2a27993a83547ad014335006eea74ea')
