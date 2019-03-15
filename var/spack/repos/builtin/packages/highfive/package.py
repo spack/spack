@@ -11,12 +11,12 @@ class Highfive(CMakePackage):
     """HighFive - Header only C++ HDF5 interface"""
 
     homepage = "https://github.com/BlueBrain/HighFive"
-    url      = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
+    url      = "https://github.com/BlueBrain/HighFive/archive/v2.0.tar.gz"
     giturl   = "https://github.com/BlueBrain/HighFive.git"
 
     version('develop', git=giturl)
     # todo : waiting for author to release new version
-    version('1.6', git=giturl, commit='5c4e54707879f04ce5')
+    version('2.0', 'deee33d7f578e33dccb5d04771f4e01b89a980dd9a3ff449dd79156901ee8d25')
     version('1.5', '5e631c91d2ea7f3677e99d6bb6db8167')
     version('1.2', '030728d53519c7e13b5a522d34240301')
     version('1.1', '986f0bd18c5264709688a536c02d2b2a')
@@ -29,10 +29,17 @@ class Highfive(CMakePackage):
     depends_on('hdf5 ~mpi', when='~mpi')
     depends_on('hdf5 +mpi', when='+mpi')
 
-    def cmake_args(self):
-        args = [
+    def common_cmake_args(self):
+        return [
             '-DUSE_BOOST:Bool={0}'.format('+boost' in self.spec),
             '-DHIGHFIVE_PARALLEL_HDF5:Bool={0}'.format('+mpi' in self.spec),
-            '-DUNIT_TESTS:Bool=false',
             '-DHIGHFIVE_EXAMPLES:Bool=false']
-        return args
+
+    def cmake_args(self):
+        return self.common_cmake_args() + [
+            '-DUNIT_TESTS:Bool=false']
+
+    @when('@develop')
+    def cmake_args(self):
+        return self.common_cmake_args() + [
+            '-DHIGHFIVE_UNIT_TESTS:Bool=false']
