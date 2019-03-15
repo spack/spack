@@ -35,4 +35,4 @@ class Mysql(CMakePackage):
     depends_on('openssl')
     depends_on('perl', type='test')
     depends_on('bison@2.1:', type='build', when='@develop')
-    depends_on('m4', type='build', when='@develop')
+    depends_on('m4', type='build', when='@develop platform=solaris')
