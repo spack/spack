@@ -15,7 +15,8 @@ class PyPytouchreader(PythonPackage):
     url      = "ssh://bbpcode.epfl.ch/hpc/PyModules"
 
     version('develop', git=url, clean=False)
-    version('1.3.0', tag='v1.3.0', git=url, clean=False, preferred=True)
+    version('1.4.0', tag='v1.4.0', git=url, clean=False, preferred=True)
+    version('1.3.0', tag='v1.3.0', git=url, clean=False)
     version('1.2.0', tag='v1.2.0', git=url, clean=False)
 
     depends_on('py-setuptools', type=('build', 'run'))
@@ -33,4 +34,5 @@ class PyPytouchreader(PythonPackage):
         Needed for `setuptools_scm` to work.
         """
         with working_dir(self.build_directory):
-            os.symlink('../.git', '.git')
+            if not os.path.exists('.git'):
+                os.symlink('../.git', '.git')

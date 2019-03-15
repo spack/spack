@@ -23,7 +23,7 @@ packages:
     specs:
       - brainbuilder@0.10.2
       - spykfunc@0.13.0
-      - py-pytouchreader@1.3.0
+      - py-pytouchreader@1.4.0
 
   gnu-stable-parallel:
     target_matrix:
