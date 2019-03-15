@@ -7,6 +7,7 @@ import os
 import re
 import itertools
 
+import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.multiproc as mp
 
@@ -25,19 +26,12 @@ def _verify_executables(*paths):
             raise CompilerAccessError(path)
 
 
-_version_cache = {}
-
-
+@llnl.util.lang.memoized
 def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
-    key = (compiler_path, version_arg, regex)
-    if key not in _version_cache:
-        compiler = Executable(compiler_path)
-        output = compiler(version_arg, output=str, error=str)
-
-        match = re.search(regex, output)
-        _version_cache[key] = match.group(1) if match else 'unknown'
-
-    return _version_cache[key]
+    compiler = Executable(compiler_path)
+    output = compiler(version_arg, output=str, error=str)
+    match = re.search(regex, output)
+    return match.group(1) if match else 'unknown'
 
 
 def tokenize_flags(flags_str):
