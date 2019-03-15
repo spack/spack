@@ -7,8 +7,8 @@ from spack import *
 
 
 class Elk(MakefilePackage):
-    '''An all-electron full-potential linearised augmented-plane wave
-    (FP-LAPW) code with many advanced features.'''
+    """An all-electron full-potential linearised augmented-plane wave
+    (FP-LAPW) code with many advanced features."""
 
     homepage = 'http://elk.sourceforge.net/'
     url      = 'https://sourceforge.net/projects/elk/files/elk-3.3.17.tgz'

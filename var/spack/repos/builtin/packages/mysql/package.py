@@ -6,6 +6,8 @@ from spack import *
 
 
 class Mysql(CMakePackage):
+    """MySQL is an open source relational database management system."""
+
     homepage = "http://dev.mysql.com"
     url      = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.11.tar.gz"
 

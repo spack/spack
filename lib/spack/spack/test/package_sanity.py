@@ -87,3 +87,11 @@ def test_no_fixme():
                         (filename, i, line.strip())
                     )
             assert [] == errors
+
+
+def test_docstring():
+    """Ensure that every package has a docstring."""
+
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.get(name)
+        assert pkg.__doc__
