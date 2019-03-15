@@ -24,15 +24,13 @@ def trace_url(ver, mach):
 
 
 class Hpcviewer(Package):
-    """Binary distribution of hpcviewer and hpctraceviewer for the
-    Rice HPCToolkit (Linux only).  Note: hpctoolkit databases are
-    platform independent, so you don't need to install hpctoolkit to
-    run the viewers and it's common to run hpcrun and hpcviewer on
-    different machines."""
+    """Binary distribution of hpcviewer and hpctraceviewer for the Rice
+    HPCToolkit (Linux x86_64, ppc64 and ppc64le).  Note: hpctoolkit
+    databases are platform independent, so you don't need to install
+    hpctoolkit to run the viewers and it's common to run hpcrun and
+    hpcviewer on different machines."""
 
     homepage = "http://hpctoolkit.org"
-
-    mach = platform.machine()
 
     viewer_sha = {
         ('2019.02', 'x86_64'):  'e24368a3ec27b82736a781971a8371abfe7744b2a4f68b7b41d76f84af306b83',
@@ -47,10 +45,12 @@ class Hpcviewer(Package):
     }
 
     for ver in ['2019.02']:
-        version(ver, url=viewer_url(ver, mach), sha256=viewer_sha[(ver, mach)])
+        key = (ver, platform.machine())
+        if key in viewer_sha and key in trace_sha:
+            version(ver, url=viewer_url(*key), sha256=viewer_sha[key])
 
-        resource(name='hpctraceviewer', url=trace_url(ver, mach),
-                 sha256=trace_sha[(ver, mach)], destination='TRACE')
+            resource(name='hpctraceviewer', url=trace_url(*key),
+                     sha256=trace_sha[key], destination='TRACE')
 
     depends_on('java@8', type=('build', 'run'))
 
