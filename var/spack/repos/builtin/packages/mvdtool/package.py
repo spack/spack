@@ -57,10 +57,9 @@ class Mvdtool(CMakePackage):
             args.extend([
                 '-DCMAKE_C_COMPILER:STRING={}'.format(self.spec['mpi'].mpicc),
                 '-DCMAKE_CXX_COMPILER:STRING={}'.format(self.spec['mpi'].mpicxx),
-                '-DSYNTOOL_WITH_MPI:BOOL=ON',
             ])
         if self.spec.satisfies('+python'):
             args.extend([
-                '-DCMAKE_PYTHON_BINDINGS:BOOL=ON'
+                '-DBUILD_PYTHON_BINDINGS:BOOL=ON'
             ])
         return args
