@@ -171,9 +171,10 @@ class YamlDirectoryLayout(DirectoryLayout):
        arguments hash_len and path_scheme.
     """
 
+    metadata_dir = '.spack'
+
     def __init__(self, root, **kwargs):
         super(YamlDirectoryLayout, self).__init__(root)
-        self.metadata_dir   = kwargs.get('metadata_dir', '.spack')
         self.hash_len       = kwargs.get('hash_len')
         self.path_scheme    = kwargs.get('path_scheme') or (
             "${ARCHITECTURE}/"
@@ -194,7 +195,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     @property
     def hidden_file_paths(self):
-        return (self.metadata_dir,)
+        return (YamlDirectoryLayout.metadata_dir,)
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
@@ -236,14 +237,10 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def metadata_path(self, spec):
         if self.check_upstream and spec.package.installed_upstream:
-            # TODO: This assumes that older spack versions use the same
-            # relative metadata directory as the current Spack, which is
-            # generally reasonable (since this is not user-configurable).
-            # If changes to this path are accompanied by a DB version
-            # increment, then there will never by an issue with this.
-            return os.path.join(spec.prefix, self.metadata_dir)
+            return os.path.join(spec.prefix, YamlDirectoryLayout.metadata_dir)
         else:
-            return os.path.join(self.path_for_spec(spec), self.metadata_dir)
+            return os.path.join(
+                self.path_for_spec(spec), YamlDirectoryLayout.metadata_dir)
 
     def build_log_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.build_log_name)
@@ -311,7 +308,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             return []
 
         path_elems = ["*"] * len(self.path_scheme.split(os.sep))
-        path_elems += [self.metadata_dir, self.spec_file_name]
+        path_elems += [YamlDirectoryLayout.metadata_dir, self.spec_file_name]
         pattern = os.path.join(self.root, *path_elems)
         spec_files = glob.glob(pattern)
         return [self.read_spec(s) for s in spec_files]
@@ -377,11 +374,11 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
             # For backwards compatibility, when the view is the extended
             # package's installation directory, do not include the spec name
             # as a subdirectory.
-            components = [view_prefix, self.layout.metadata_dir,
+            components = [view_prefix, YamlDirectoryLayout.metadata_dir,
                           self.extension_file_name]
         else:
-            components = [view_prefix, self.layout.metadata_dir, spec.name,
-                          self.extension_file_name]
+            components = [view_prefix, YamlDirectoryLayout.metadata_dir,
+                          spec.name, self.extension_file_name]
 
         return os.path.join(*components)
 
