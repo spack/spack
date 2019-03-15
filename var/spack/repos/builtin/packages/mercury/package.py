@@ -34,8 +34,8 @@ class Mercury(CMakePackage):
             description='Enable udreg on supported Cray platforms')
 
     depends_on('cmake@2.8.12.2:', type='build')
-    depends_on('bmi', when='+bmi')
-    depends_on('cci@master', when='+cci')
+    # depends_on('bmi', when='+bmi')  # TODO: add BMI package
+    # depends_on('cci', when='+cci')  # TODO: add CCI package
     depends_on('mpi', when='+mpi')
     depends_on('libfabric@1.5:', when='+ofi')
     depends_on('openpa@1.0.3:', when='+opa')
@@ -73,6 +73,9 @@ class Mercury(CMakePackage):
 
         if '+ofi' in spec:
             args.append('-DNA_USE_OFI=ON')
+            if self.run_tests:
+                args.append('-DNA_OFI_TESTING_PROTOCOL={0}'.format(';'.join(
+                    spec['libfabric'].variants['fabrics'].value)))
         else:
             args.append('-DNA_USE_OFI=OFF')
 
