@@ -14,6 +14,7 @@ import spack.cmd
 import spack.environment
 import spack.paths
 import spack.repo
+from spack.spec import Spec
 
 description = "print out locations of packages and spack directories"
 section = "basic"
@@ -55,6 +56,9 @@ def setup_parser(subparser):
         help="location of an environment managed by spack")
 
     subparser.add_argument(
+        '-f', '--spec-file', default=None,
+        help="Read spec from yaml file rather that command line")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="spec of package to fetch directory for")
 
@@ -79,7 +83,11 @@ def location(parser, args):
         print(spack.paths.stage_path)
 
     else:
-        specs = spack.cmd.parse_specs(args.spec)
+        if args.spec_file:
+            with open(args.spec_file, 'r') as fd:
+                specs = [Spec.from_yaml(fd)]
+        else:
+            specs = spack.cmd.parse_specs(args.spec)
         if not specs:
             tty.die("You must supply a spec.")
         if len(specs) != 1:
