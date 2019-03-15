@@ -107,3 +107,9 @@ class Mercury(CMakePackage):
             args.append('-DMERCURY_ENABLE_PARALLEL_TESTING=OFF')
 
         return args
+
+    def check(self):
+        """Unit tests fail when run in parallel."""
+
+        with working_dir(self.build_directory):
+            make('test', parallel=False)
