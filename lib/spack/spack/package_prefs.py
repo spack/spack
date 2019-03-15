@@ -210,9 +210,10 @@ def spec_externals(spec):
         if not path and not module:
             # skip entries without paths (avoid creating extra Specs)
             continue
-
+        if path:
+            path = canonicalize_path(path)
         external_spec = spack.spec.Spec(external_spec,
-                                        external_path=canonicalize_path(path),
+                                        external_path=path,
                                         external_module=module)
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
