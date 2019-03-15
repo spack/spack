@@ -153,6 +153,56 @@ def test_removed_upstream_dep(tmpdir_factory, test_store, gen_mock_layout):
 
 
 @pytest.mark.usefixtures('config')
+def test_add_to_upstream_after_downstream(
+    tmpdir_factory, test_store, gen_mock_layout):
+    """An upstream DB can add a package after it is installed in the downstream
+    DB. When a package is recorded as installed in both, the results should
+    refer to the downstream DB.
+    """
+
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    upstream_db = spack.database.Database(mock_db_root)
+    # Generate initial DB file to avoid reindex
+    with open(upstream_db._index_path, 'w') as db_file:
+        upstream_db._write_to_file(db_file)
+    upstream_layout = gen_mock_layout('/a/')
+
+    downstream_db_root = str(
+        tmpdir_factory.mktemp('mock_downstream_db_root'))
+    downstream_db = spack.database.Database(
+        downstream_db_root, upstream_dbs=[upstream_db])
+    with open(downstream_db._index_path, 'w') as db_file:
+        downstream_db._write_to_file(db_file)
+    downstream_layout = gen_mock_layout('/b/')
+
+    x = MockPackage('x', [], [])
+    mock_repo = MockPackageMultiRepo([x])
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('x')
+        spec.concretize()
+
+        downstream_db.add(spec, downstream_layout)
+
+        upstream_db.add(spec, upstream_layout)
+
+        upstream, record = downstream_db.query_by_spec_hash(spec.dag_hash())
+        # Even though the package is recorded as installed in the upstream DB,
+        # we prefer the locally-installed instance
+        assert not upstream
+
+        qresults = downstream_db.query('x')
+        assert len(qresults) == 1
+        queried_spec, = qresults
+        try:
+            orig_db = spack.store.db
+            spack.store.db = downstream_db
+            assert queried_spec.prefix == downstream_layout.path_for_spec(spec)
+        finally:
+            spack.store.db = orig_db
+
+
+@pytest.mark.usefixtures('config')
 def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
