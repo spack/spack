@@ -135,6 +135,7 @@ class Boost(Package):
     depends_on('zlib', when='+iostreams')
     depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
+    conflicts('cxxstd=17', when='@:1.62.99')
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
 
@@ -244,26 +245,6 @@ class Boost(Package):
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
 
-    def cxxstd_to_flag(self, std):
-        flag = ''
-        if self.spec.variants['cxxstd'].value == '98':
-            flag = self.compiler.cxx98_flag
-        elif self.spec.variants['cxxstd'].value == '11':
-            flag = self.compiler.cxx11_flag
-        elif self.spec.variants['cxxstd'].value == '14':
-            flag = self.compiler.cxx14_flag
-        elif self.spec.variants['cxxstd'].value == '17':
-            flag = self.compiler.cxx17_flag
-        elif self.spec.variants['cxxstd'].value == 'default':
-            # Let the compiler do what it usually does.
-            pass
-        else:
-            # The user has selected a (new?) legal value that we've
-            # forgotten to deal with here.
-            tty.die("INTERNAL ERROR: cannot accommodate unexpected variant ",
-                    "cxxstd={0}".format(spec.variants['cxxstd'].value))
-        return flag
-
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
             options.append('variant=debug')
@@ -322,7 +303,9 @@ class Boost(Package):
                 options.append('cxxstd={0}'.format(
                     spec.variants['cxxstd'].value))
         else:  # Add to cxxflags for older Boost.
-            flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
+            cxxstd = spec.variants['cxxstd'].value
+            flag = '' if cxxstd == 'default' else \
+                   getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
             if flag:
                 cxxflags.append(flag)
 
@@ -391,6 +374,8 @@ class Boost(Package):
             with_libs.remove('random')
         if not spec.satisfies('@1.39.0:'):
             with_libs.remove('exception')
+        if not spec.satisfies('@1.62.0:'):
+            with_libs.remove('fiber')
         if '+graph' in spec and '+mpi' in spec:
             with_libs.append('graph_parallel')
 
