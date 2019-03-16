@@ -52,6 +52,11 @@ class Libfabric(AutotoolsPackage):
     depends_on('automake', when='@develop', type='build')
     depends_on('libtool', when='@develop', type='build')
 
+    resource(name='fabtests',
+             url='https://github.com/ofiwg/libfabric/releases/download/v1.7.0/fabtests-1.7.0.tar.gz',
+             sha256='ebb4129dc69dc0e1f48310ce1abb96673d8ddb18166bc595312ebcb96e803de9',
+             destination='fabtests')
+
     @when('@develop')
     def autoreconf(self, spec, prefix):
         bash = which('bash')
@@ -65,3 +70,17 @@ class Libfabric(AutotoolsPackage):
                      for f in self.fabrics])
 
         return args
+
+    def check(self):
+        make('test')
+
+        # Build and run more extensive tests
+        with working_dir('fabtests'):
+            configure('--prefix={0}'.format(self.prefix),
+                      '--with-libfabric={0}'.format(self.prefix))
+            make()
+            make('test')
+
+    def installcheck(self):
+        fi_info = Executable(self.prefix.bin.fi_info)
+        fi_info()
