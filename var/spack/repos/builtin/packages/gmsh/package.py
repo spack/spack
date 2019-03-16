@@ -39,7 +39,7 @@ class Gmsh(CMakePackage):
     variant('petsc',       default=False, description='Build with PETSc')
     variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
     variant('tetgen',      default=False, description='Build with Tetgen')
-    variant('metis',       default=True,  description='Build with Metis')
+    variant('metis',       default=False,  description='Build with Metis')
 
     depends_on('blas')
     depends_on('lapack')
