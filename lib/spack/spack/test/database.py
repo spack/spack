@@ -59,14 +59,30 @@ def test_store(tmpdir):
     spack.store.store = real_store
 
 
-@pytest.mark.usefixtures('config')
-def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
+@pytest.fixture()
+def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     upstream_db = spack.database.Database(mock_db_root)
-
     # Generate initial DB file to avoid reindex
     with open(upstream_db._index_path, 'w') as db_file:
         upstream_db._write_to_file(db_file)
+    upstream_layout = gen_mock_layout('/a/')
+
+    downstream_db_root = str(
+        tmpdir_factory.mktemp('mock_downstream_db_root'))
+    downstream_db = spack.database.Database(
+        downstream_db_root, upstream_dbs=[upstream_db])
+    with open(downstream_db._index_path, 'w') as db_file:
+        downstream_db._write_to_file(db_file)
+    downstream_layout = gen_mock_layout('/b/')
+
+    yield upstream_db, upstream_layout, downstream_db, downstream_layout
+
+
+@pytest.mark.usefixtures('config')
+def test_installed_upstream(upstream_and_downstream_db):
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
 
     default = ('build', 'link')
     x = MockPackage('x', [], [])
@@ -75,22 +91,12 @@ def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
     w = MockPackage('w', [x, y], [default, default])
     mock_repo = MockPackageMultiRepo([w, x, y, z])
 
-    upstream_layout = gen_mock_layout('/a/')
-
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('w')
         spec.concretize()
 
         for dep in spec.traverse(root=False):
             upstream_db.add(dep, upstream_layout)
-
-        downstream_db_root = str(
-            tmpdir_factory.mktemp('mock_downstream_db_root'))
-        downstream_db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[upstream_db])
-        downstream_layout = gen_mock_layout('/b/')
-        with open(downstream_db._index_path, 'w') as db_file:
-            downstream_db._write_to_file(db_file)
 
         new_spec = spack.spec.Spec('w')
         new_spec.concretize()
@@ -110,34 +116,20 @@ def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
 
 
 @pytest.mark.usefixtures('config')
-def test_removed_upstream_dep(tmpdir_factory, test_store, gen_mock_layout):
-    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    upstream_db = spack.database.Database(mock_db_root)
-
-    # Generate initial DB file to avoid reindex
-    with open(upstream_db._index_path, 'w') as db_file:
-        upstream_db._write_to_file(db_file)
+def test_removed_upstream_dep(upstream_and_downstream_db):
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
 
     default = ('build', 'link')
     z = MockPackage('z', [], [])
     y = MockPackage('y', [z], [default])
     mock_repo = MockPackageMultiRepo([y, z])
 
-    upstream_layout = gen_mock_layout('/a/')
-
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('y')
         spec.concretize()
 
         upstream_db.add(spec['z'], upstream_layout)
-
-        downstream_db_root = str(
-            tmpdir_factory.mktemp('mock_downstream_db_root'))
-        downstream_db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[upstream_db])
-        downstream_layout = gen_mock_layout('/b/')
-        with open(downstream_db._index_path, 'w') as db_file:
-            downstream_db._write_to_file(db_file)
 
         new_spec = spack.spec.Spec('y')
         new_spec.concretize()
@@ -146,34 +138,20 @@ def test_removed_upstream_dep(tmpdir_factory, test_store, gen_mock_layout):
         upstream_db.remove(new_spec['z'])
 
         new_downstream = spack.database.Database(
-            downstream_db_root, upstream_dbs=[upstream_db])
+            downstream_db.root, upstream_dbs=[upstream_db])
         new_downstream._fail_when_missing_deps = True
         with pytest.raises(spack.database.MissingDependenciesError):
             new_downstream._read()
 
 
 @pytest.mark.usefixtures('config')
-def test_add_to_upstream_after_downstream(
-    tmpdir_factory, test_store, gen_mock_layout):
+def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
     """An upstream DB can add a package after it is installed in the downstream
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
-
-    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    upstream_db = spack.database.Database(mock_db_root)
-    # Generate initial DB file to avoid reindex
-    with open(upstream_db._index_path, 'w') as db_file:
-        upstream_db._write_to_file(db_file)
-    upstream_layout = gen_mock_layout('/a/')
-
-    downstream_db_root = str(
-        tmpdir_factory.mktemp('mock_downstream_db_root'))
-    downstream_db = spack.database.Database(
-        downstream_db_root, upstream_dbs=[upstream_db])
-    with open(downstream_db._index_path, 'w') as db_file:
-        downstream_db._write_to_file(db_file)
-    downstream_layout = gen_mock_layout('/b/')
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
 
     x = MockPackage('x', [], [])
     mock_repo = MockPackageMultiRepo([x])
