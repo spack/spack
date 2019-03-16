@@ -371,10 +371,10 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
             # For backwards compatibility, when the view is the extended
             # package's installation directory, do not include the spec name
             # as a subdirectory.
-            components = [view_prefix, self.metadata_dir,
+            components = [view_prefix, self.layout.metadata_dir,
                           self.extension_file_name]
         else:
-            components = [view_prefix, self.metadata_dir, spec.name,
+            components = [view_prefix, self.layout.metadata_dir, spec.name,
                           self.extension_file_name]
 
         return os.path.join(*components)
