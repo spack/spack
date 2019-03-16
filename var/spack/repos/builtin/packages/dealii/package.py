@@ -41,6 +41,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
+    variant('ginkgo',   default=False, description='Compile wit Ginkgo')
     variant('gmsh',     default=True,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
@@ -61,6 +62,8 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Sundials')
     variant('slepc',    default=True,
             description='Compile with Slepc (only with Petsc and MPI)')
+    variant('symengine', default=False,
+            description='Compile with SymEngine')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
     variant('python',   default=False,
@@ -115,16 +118,17 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
+    depends_on('ginkgo',           when='@9.1:+ginkgo')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     # FIXME: next line fixes concretization with petsc
     depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
     depends_on('hdf5+mpi+hl', when='+hdf5+mpi~petsc')
     depends_on('cuda@8:',          when='+cuda')
-    depends_on('cmake@3.9:',       when='+cuda')
+    depends_on('cmake@3.9:',       when='+cuda', type='build')
     # older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99',    when='@:8.99')
+    depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on('metis@5:+int64',   when='+metis+int64')
@@ -144,6 +148,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('symengine@0.3:', when='@9.1:+symengine')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
@@ -169,6 +174,13 @@ class Dealii(CMakePackage, CudaPackage):
               'adol-c']:
         conflicts('+{0}'.format(p), when='@:8.5.1',
                   msg='The interface to {0} is supported from version 9.0.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    # interfaces added in 9.1.0:
+    for p in ['ginkgo', 'symengine']:
+        conflicts('+{0}'.format(p), when='@:9.0',
+                  msg='The interface to {0} is supported from version 9.1.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
@@ -310,7 +322,8 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser'):
+                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
+                'symengine', 'ginkgo'):
             if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
