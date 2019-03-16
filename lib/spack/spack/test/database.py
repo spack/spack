@@ -62,11 +62,11 @@ def test_store(tmpdir):
 @pytest.mark.usefixtures('config')
 def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    prepared_db = spack.database.Database(mock_db_root)
+    upstream_db = spack.database.Database(mock_db_root)
 
     # Generate initial DB file to avoid reindex
-    with open(prepared_db._index_path, 'w') as db_file:
-        prepared_db._write_to_file(db_file)
+    with open(upstream_db._index_path, 'w') as db_file:
+        upstream_db._write_to_file(db_file)
 
     default = ('build', 'link')
     x = MockPackage('x', [], [])
@@ -82,12 +82,12 @@ def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
         spec.concretize()
 
         for dep in spec.traverse(root=False):
-            prepared_db.add(dep, upstream_layout)
+            upstream_db.add(dep, upstream_layout)
 
         downstream_db_root = str(
             tmpdir_factory.mktemp('mock_downstream_db_root'))
         downstream_db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
+            downstream_db_root, upstream_dbs=[upstream_db])
         downstream_layout = gen_mock_layout('/b/')
         with open(downstream_db._index_path, 'w') as db_file:
             downstream_db._write_to_file(db_file)
@@ -105,18 +105,18 @@ def test_installed_upstream(tmpdir_factory, test_store, gen_mock_layout):
         assert not upstream
         assert record.installed
 
-        prepared_db._check_ref_counts()
+        upstream_db._check_ref_counts()
         downstream_db._check_ref_counts()
 
 
 @pytest.mark.usefixtures('config')
 def test_removed_upstream_dep(tmpdir_factory, test_store, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    prepared_db = spack.database.Database(mock_db_root)
+    upstream_db = spack.database.Database(mock_db_root)
 
     # Generate initial DB file to avoid reindex
-    with open(prepared_db._index_path, 'w') as db_file:
-        prepared_db._write_to_file(db_file)
+    with open(upstream_db._index_path, 'w') as db_file:
+        upstream_db._write_to_file(db_file)
 
     default = ('build', 'link')
     z = MockPackage('z', [], [])
@@ -129,12 +129,12 @@ def test_removed_upstream_dep(tmpdir_factory, test_store, gen_mock_layout):
         spec = spack.spec.Spec('y')
         spec.concretize()
 
-        prepared_db.add(spec['z'], upstream_layout)
+        upstream_db.add(spec['z'], upstream_layout)
 
         downstream_db_root = str(
             tmpdir_factory.mktemp('mock_downstream_db_root'))
         downstream_db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
+            downstream_db_root, upstream_dbs=[upstream_db])
         downstream_layout = gen_mock_layout('/b/')
         with open(downstream_db._index_path, 'w') as db_file:
             downstream_db._write_to_file(db_file)
@@ -143,10 +143,10 @@ def test_removed_upstream_dep(tmpdir_factory, test_store, gen_mock_layout):
         new_spec.concretize()
         downstream_db.add(new_spec, downstream_layout)
 
-        prepared_db.remove(new_spec['z'])
+        upstream_db.remove(new_spec['z'])
 
         new_downstream = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
+            downstream_db_root, upstream_dbs=[upstream_db])
         new_downstream._fail_when_missing_deps = True
         with pytest.raises(spack.database.MissingDependenciesError):
             new_downstream._read()
