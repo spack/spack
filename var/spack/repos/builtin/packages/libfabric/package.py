@@ -77,20 +77,27 @@ class Libfabric(AutotoolsPackage):
              sha256='3b78d0ca1b223ff21b7f5b3627e67e358e3c18b700f86b017e2233fee7e88c2e',
              placement='fabtests', when='@1.5.0')
 
+    def setup_environment(self, spack_env, run_env):
+        if self.run_tests:
+            spack_env.prepend_path('PATH', self.prefix.bin)
+
     @when('@develop')
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
 
-        with working_dir('fabtests'):
-            bash('./autogen.sh')
+        if self.run_tests:
+            with working_dir('fabtests'):
+                bash('./autogen.sh')
 
     def configure_args(self):
         args = []
 
-        args.extend(['--enable-%s=%s' %
-                     (f, 'yes' if 'fabrics=%s' % f in self.spec else 'no')
-                     for f in self.fabrics])
+        for fabric in self.fabrics:
+            if 'fabric=' + fabric in self.spec:
+                args.append('--enable-{0}=yes'.format(fabric))
+            else:
+                args.append('--enable-{0}=no'.format(fabric))
 
         return args
 
