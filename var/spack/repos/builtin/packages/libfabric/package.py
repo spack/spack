@@ -94,7 +94,7 @@ class Libfabric(AutotoolsPackage):
         args = []
 
         for fabric in self.fabrics:
-            if 'fabric=' + fabric in self.spec:
+            if 'fabrics=' + fabric in self.spec:
                 args.append('--enable-{0}=yes'.format(fabric))
             else:
                 args.append('--enable-{0}=no'.format(fabric))
