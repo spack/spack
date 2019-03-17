@@ -30,7 +30,7 @@ class Gmsh(CMakePackage):
 
     variant('shared',      default=True,  description='Enables the build of shared libraries')
     variant('mpi',         default=True,  description='Builds MPI support for parser and solver')
-    variant('openmp',      default=True,  description='Enable OpenMP support')
+    variant('openmp',      default=False,  description='Enable OpenMP support')
     variant('fltk',        default=False, description='Enables the build of the FLTK GUI')
     variant('hdf5',        default=False, description='Enables HDF5 support')
     variant('compression', default=True,  description='Enables IO compression through zlib')
