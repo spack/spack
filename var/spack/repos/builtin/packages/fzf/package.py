@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import inspect
+
 from spack import *
+
 
 class Fzf(MakefilePackage):
     """fzf is a general-purpose command-line fuzzy finder."""
