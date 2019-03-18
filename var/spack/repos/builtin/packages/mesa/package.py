@@ -5,6 +5,8 @@
 
 from spack import *
 
+import sys
+
 
 class Mesa(MesonPackage):
     """Mesa is an open-source implementation of the OpenGL specification
@@ -40,7 +42,9 @@ class Mesa(MesonPackage):
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
-    variant('glx', default=True, description="Enable the GLX frontend.")
+
+    is_linux = sys.platform.startswith('linux')
+    variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
     # TODO: effectively deal with EGL.  The implications of this have not been
     # worked through yet
