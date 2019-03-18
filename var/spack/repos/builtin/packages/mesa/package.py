@@ -18,9 +18,9 @@ class Mesa(MesonPackage):
     # whatever version of LLVM you're using.
     git      = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    version('18.3.2', tag='mesa-18.3.2')
+    version('19.0.0', tag='mesa-19.0.0')
 
-    version('18.3.develop', branch='18.3')
+    version('19.0.develop', branch='19.0')
     version('develop',      branch='master')
 
     depends_on('meson@0.45:', type='build')
