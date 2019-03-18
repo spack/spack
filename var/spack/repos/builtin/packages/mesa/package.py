@@ -34,9 +34,7 @@ class Mesa(MesonPackage):
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
-    variant('swr',
-            default='auto',
-            values=auto_or_any_combination_of('avx', 'avx2', 'knl', 'skx'),
+    variant('swr', values=any_combination_of('avx', 'avx2', 'knl', 'skx'),
             description="Enable the SWR driver.")
     # conflicts('~llvm', when='~swr=none')
 
@@ -130,17 +128,14 @@ class Mesa(MesonPackage):
         else:
             args.append('-Dllvm=false')
 
-        auto = ('swr=auto' in spec) and (
-                'x86' in spec.architecture.target.lower())
-
         args_swr_arches = []
-        if 'swr=avx' in spec or auto:
+        if 'swr=avx' in spec:
             args_swr_arches.append('avx')
-        if 'swr=avx2' in spec or auto:
+        if 'swr=avx2' in spec:
             args_swr_arches.append('avx2')
-        if 'swr=knl' in spec or auto:
+        if 'swr=knl' in spec:
             args_swr_arches.append('knl')
-        if 'swr=skx' in spec or auto:
+        if 'swr=skx' in spec:
             args_swr_arches.append('skx')
         if args_swr_arches:
             if '+llvm' not in spec:
