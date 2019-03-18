@@ -14,8 +14,9 @@ class Doxygen(CMakePackage):
     extent D.."""
 
     homepage = "http://www.stack.nl/~dimitri/doxygen/"
-    url      = "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.10.src.tar.gz"
+    url      = "http://doxygen.nl/files/doxygen-1.8.15.src.tar.gz"
 
+    version('1.8.15', sha256='bd9c0ec462b6a9b5b41ede97bede5458e0d7bb40d4cfa27f6f622eb33c59245d')
     version('1.8.14', '41d8821133e8d8104280030553e2b42b')
     version('1.8.12', '08e0f7850c4d22cb5188da226b209a96')
     version('1.8.11', 'f4697a444feaed739cfa2f0644abc19b')
