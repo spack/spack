@@ -33,9 +33,13 @@ class Rocksdb(MakefilePackage):
     git      = 'https://github.com/facebook/rocksdb.git'
 
     version('develop', git=git, branch='master', submodules=True)
+    version('5.18.3',  sha256='7fb6738263d3f2b360d7468cf2ebe333f3109f3ba1ff80115abd145d75287254')
     version('5.17.2',  sha256='101f05858650a810c90e4872338222a1a3bf3b24de7b7d74466814e6a95c2d28')
     version('5.16.6',  sha256='f0739edce1707568bdfb36a77638fd5bae287ca21763ce3e56cf0bfae8fff033')
     version('5.15.10', sha256='26d5d4259fa352ae1604b5b4d275f947cacc006f4f7d2ef0b815056601b807c0')
+    version('5.14.3',  sha256='c7019a645fc23df0adfe97ef08e793a36149bff2f57ef3b6174cbb0c8c9867b1')
+    version('5.13.4',  sha256='a1e1df858124961d9211134c98925cd478fd1c1863d38685fd74f42c44b656c2')
+    version('5.12.5',  sha256='97ee9a0162bca38c0d303f7d4f3965337155eb74efd6270224a1d13e267dd7c8')
 
     variant('bz2', default=False, description='Enable bz2 compression support')
     variant('lz4', default=True, description='Enable lz4 compression support')
