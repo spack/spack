@@ -19,6 +19,7 @@ class Cabana(CMakePackage):
 
     variant('serial', default=True, description="enable Serial backend (default)")
     variant('openmp', default=False, description="enable OpenMP backend")
+    variant('cuda', default=False, description="enable Cuda backend")
 
     depends_on("cmake@3.9:", type='build')
     depends_on("kokkos+serial", when="+serial")
