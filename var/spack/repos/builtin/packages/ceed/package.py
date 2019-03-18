@@ -63,10 +63,10 @@ class Ceed(Package):
     # Nek5000, GSLIB, Nekbone, and NekCEM
     # ceed-2.0
     # TODO: upate the versions of nek5000, gslib, nekbone, and nekcem
-    depends_on('nek5000@develop', when='@2.0.0+nek')
+    depends_on('nek5000@17.0', when='@2.0.0+nek')
     depends_on('gslib@1.0.2', when='@2.0.0+nek')
-    depends_on('nekbone@develop', when='@2.0.0+nek')
-    depends_on('nekcem@develop', when='@2.0.0+nek')
+    depends_on('nekbone@17.0', when='@2.0.0+nek')
+    depends_on('nekcem@7332619', when='@2.0.0+nek')
     # ceed-1.0
     depends_on('nek5000@17.0', when='@1.0.0+nek')
     depends_on('gslib@1.0.2', when='@1.0.0+nek')
