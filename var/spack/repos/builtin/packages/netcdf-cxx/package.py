@@ -29,8 +29,10 @@ class NetcdfCxx(AutotoolsPackage):
             'libnetcdf_c++', root=self.prefix, shared=shared, recursive=True
         )
 
-    def setup_environment(self, spack_env, run_env):
+    def configure_args(self):
+        args = []
         if '+netcdf4' in self.spec:
             # There is no clear way to set this via configure, so set the flag
             # explicitly
-            spack_env.set('CPPFLAGS', '-DUSE_NETCDF4')
+            args.append('CPPFLAGS=-DUSE_NETCDF4')
+        return args
