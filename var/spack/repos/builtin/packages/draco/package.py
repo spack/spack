@@ -31,14 +31,14 @@ class Draco(CMakePackage):
     variant('qt',       default=False, description='Enable Qt Support')
     variant('superlu_dist', default=False, description='Enable SuperLU-DIST Support')
 
-    depends_on('mpi@3:',    type=('build','run'))
+    depends_on('mpi@3:',    type=('build', 'run'))
     depends_on('random123', type='build')
     depends_on('gsl',       type='build')
-    depends_on('python',    type=('build','run'))
+    depends_on('python',    type=('build', 'run'))
     depends_on('numdiff',   type='run')
 
     depends_on('lapack',   when='+lapack', type='build')
     depends_on('eospac',   when='+eospac', type='build')
     depends_on('parmetis', when='+parmetis', type='build')
-    depends_on('qt', when='+qt', type=('build','run'))
+    depends_on('qt', when='+qt', type=('build', 'run'))
     depends_on('superlu-dist@:5.99', when='+superlu_dist', type='build')
