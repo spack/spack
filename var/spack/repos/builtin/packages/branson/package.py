@@ -19,7 +19,8 @@ class Branson(CMakePackage):
 
     version('develop', branch='develop')
     # Version 1.01 is actually deprecated and older than any of the 0.8 series.
-    # However, its entry is left here to reflect older versions of this spackage.
+    # However, its entry is left here to reflect older versions of this
+    # spackage.
     version('1.01', 'cf7095a887a8dd7d417267615bd0452a')
     version('0.82', '7d83d41d0c7ab9c1c906a902165af31182da4604dd0b69aec28d709fe4d7a6ec',
             preferred=True)
