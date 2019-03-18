@@ -106,6 +106,8 @@ packages:
       - neurodamus@plasticity+coreneuron^coreneuron+knl
       - neurodamus@master~coreneuron
       - neurodamus@hippocampus~coreneuron
+      - neurodamus+coreneuron^coreneuron+knl
       - neurodamus-hippocampus
       - neurodamus-neocortex
       - neurodamus-thalamus
+      - neurodamus-thalamus+coreneuron^coreneuron+knl
