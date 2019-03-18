@@ -27,7 +27,9 @@ packages:
       - py-babel
       - py-bb5
       - py-beautifulsoup4
+      - py-breathe
       # - py-bokeh
+      - py-cached-property
       - py-cffi
       - py-click
       - py-clustershell
@@ -42,6 +44,7 @@ packages:
       - py-docopt
       # - py-elasticsearch
       # - py-elephant
+      - py-exhale
       # - py-fastaindex
       # - py-flake8
       - py-funcsigs
@@ -50,6 +53,7 @@ packages:
       # - py-gcovr
       - py-h5py~mpi
       - py-hdfs
+      - py-humanize
       - py-ipykernel
       - py-ipyparallel
       - py-ipython
@@ -99,9 +103,9 @@ packages:
       - py-six
       # - py-slurm-pipeline
       - py-sparkmanager
-      # - py-sphinx
+      - py-sphinx
       # - py-sphinx-bootstrap-theme
-      # - py-sphinx-rtd-theme
+      - py-sphinx-rtd-theme
       # - py-sqlalchemy
       # - py-symengine
       - py-sympy

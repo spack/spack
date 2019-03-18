@@ -55,3 +55,4 @@ packages:
       - gmsh
       - hdf5~mpi
       - highfive~mpi
+      - rocksdb~static

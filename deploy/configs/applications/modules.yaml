@@ -36,6 +36,7 @@ modules:
       - neurodamus-thalamus
       - parquet-converters
       - placement-algorithm
+      - py-basalt
       - py-bluepymm
       - py-bluepyopt
       - py-efel
