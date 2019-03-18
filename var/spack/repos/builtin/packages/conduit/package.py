@@ -61,7 +61,7 @@ class Conduit(Package):
     variant("mpi", default=True, description="Build Conduit MPI Support")
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
     variant("hdf5_compat", default=True,
-            description="Build Conduit with HDF5 1.8.x support (compatibility mode)")
+            description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
 
