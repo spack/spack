@@ -1,0 +1,13 @@
+diff --git a/setup.py b/setup.py
+index f78db54..c657754 100644
+--- a/setup.py
++++ b/setup.py
+@@ -36,7 +36,7 @@ try:
+     long_desc    = []
+     inside_long  = False
+     inside_raw   = False
+-    with open(readme_path) as readme:
++    with open(readme_path, encoding="utf-8") as readme:
+         for line in readme:
+             # See if we are at a being / end marker
+             if line.startswith(b_desc_begin):
