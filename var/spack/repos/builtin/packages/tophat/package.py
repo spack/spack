@@ -26,22 +26,19 @@ from spack import *
 
 
 class Tophat(AutotoolsPackage):
-    """Spliced read mapper for RNA-Seq."""
+    """TopHat is a fast splice junction mapper for RNA-Seq reads.
 
-    homepage = "http://ccb.jhu.edu/software/tophat/index.shtml"
-    url      = "https://github.com/infphilo/tophat/archive/v2.1.1.tar.gz"
+     It aligns RNA-Seq reads to mammalian-sized genomes using the ultra
+     high-throughput short read aligner Bowtie, and then analyzes the
+     the mapping results to identify splice junctions between exons."""
 
-    version('2.1.1', 'ffd18de2f893a95eb7e9d0c5283d241f')
+    homepage = "https://ccb.jhu.edu/software/tophat/index.shtml"
+    url      = "https://ccb.jhu.edu/software/tophat/downloads/tophat-2.1.1.tar.gz"
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    version('2.1.1', '4b2391de46457ba6b2b7268a9da593e4')
 
-    depends_on('boost@1.47:')
-    depends_on('bowtie2', type='run')
-
-    parallel = False
+    depends_on('boost')
 
     def configure_args(self):
-        return ["--with-boost={0}".format(self.spec['boost'].prefix)]
+        args = ['--with-boost=%s' % self.spec['boost'].prefix]
+        return args
