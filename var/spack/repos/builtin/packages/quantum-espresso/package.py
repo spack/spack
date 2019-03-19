@@ -55,7 +55,7 @@ class QuantumEspresso(Package):
     # Versions of HDF5 prior to 1.8.16 lead to QE runtime errors
     depends_on('hdf5@1.8.16:+fortran', when='+hdf5')
 
-    # KISS for now and only build the mpi version
+    # TODO: enable building EPW when ~mpi
     depends_on('mpi', when='+epw')
 
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
@@ -106,7 +106,7 @@ class QuantumEspresso(Package):
     # Constraints may be relaxed as successful reports
     # of different compiler+mpi combinations arrive
 
-    # KISS for now and only build the mpi version
+    # TODO: enable building EPW when ~mpi
     conflicts('+epw', when='~mpi', msg='EPW needs MPI')
 
     # EPW doesn't gets along well with OpenMPI 2.x.x
