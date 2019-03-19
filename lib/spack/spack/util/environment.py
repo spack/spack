@@ -401,21 +401,7 @@ class EnvironmentModifications(object):
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
         dump_environment = 'python -c "{0}"'.format(dump_cmd)
 
-        def grab_environment(command):
-            # Try to source the file
-            proc = subprocess.Popen(
-                command, stdout=subprocess.PIPE, env=os.environ)
-            proc.wait()
-
-            if proc.returncode != 0:
-                msg = 'Sourcing file {0} returned a non-zero exit code'.format(
-                    filename)
-                raise RuntimeError(msg)
-
-            return ''.join([line.decode('utf-8') for line in proc.stdout])
-
         # Construct the command that will be executed
-        reference = [shell, shell_options, dump_environment]
         command = [
             shell,
             shell_options,
@@ -425,10 +411,22 @@ class EnvironmentModifications(object):
             ]),
         ]
 
+        # Try to source the file
+        proc = subprocess.Popen(
+            command, stdout=subprocess.PIPE, env=os.environ)
+        proc.wait()
+
+        if proc.returncode != 0:
+            msg = 'Sourcing file {0} returned a non-zero exit code'.format(
+                filename)
+            raise RuntimeError(msg)
+
+        output = ''.join([line.decode('utf-8') for line in proc.stdout])
+
         # Construct dictionaries of the environment before and after
         # sourcing the file, so that we can diff them.
-        env_before = json.loads(grab_environment(reference))
-        env_after = json.loads(grab_environment(command))
+        env_before = dict(os.environ)
+        env_after = json.loads(output)
 
         # If we're in python2, convert to str objects instead of unicode
         # like json gives us.  We can't put unicode in os.environ anyway.
@@ -437,7 +435,7 @@ class EnvironmentModifications(object):
                              for k, v in env_after.items())
 
         # Other variables unrelated to sourcing a file
-        blacklist.extend(['SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'])
+        blacklist.extend(['SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2'])
 
         def set_intersection(fullset, *args):
             # A set intersection using string literals and regexs
