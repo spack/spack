@@ -211,6 +211,7 @@ class Compiler(object):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
+        """Extracts the version from compiler's output."""
         match = re.search(cls.version_regex, output)
         return match.group(1) if match else 'unknown'
 
