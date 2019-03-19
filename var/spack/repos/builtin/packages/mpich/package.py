@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import sys
 
 
 class Mpich(AutotoolsPackage):
@@ -29,9 +30,16 @@ class Mpich(AutotoolsPackage):
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
     variant('hydra', default=True,  description='Build the hydra process manager')
-    variant('pmi',   default=True,  description='Build with PMI support')
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+    variant('slurm', default=False, description='Enable SLURM support')
+    variant(
+        'pmi',
+        default='pmi',
+        description='''PMI interface.''',
+        values=('off', 'pmi', 'pmi2', 'pmix'),
+        multi=False
+    )
     variant(
         'device',
         default='ch3',
@@ -50,6 +58,8 @@ spack package at this time.''',
         values=('tcp', 'mxm', 'ofi', 'ucx'),
         multi=False
     )
+    variant('pci', default=(sys.platform != 'darwin'),
+            description="Support analyzing devices on PCI bus")
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -64,9 +74,25 @@ spack package at this time.''',
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
     patch('mpich32_clang.patch', when='@3.2:3.2.0%clang')
 
+    # Fix SLURM node list parsing
+    # See https://github.com/pmodels/mpich/issues/3572
+    # and https://github.com/pmodels/mpich/pull/3578
+    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch',
+          sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
+          when='@3.3')
+
     depends_on('findutils', type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('libfabric', when='netmod=ofi')
+
+    depends_on('libpciaccess', when="+pci")
+    depends_on('libxml2')
+
+    # Starting with version 3.3, Hydra can use libslurm for nodelist parsing
+    depends_on('slurm', when='+slurm')
+
+    depends_on('pmix', when='pmi=pmix')
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
@@ -74,6 +100,13 @@ spack package at this time.''',
     conflicts('netmod=mxm', when='device=ch4')
     conflicts('netmod=mxm', when='@:3.1.3')
     conflicts('netmod=tcp', when='device=ch4')
+    conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
+    conflicts('pmi=pmix', when='device=ch3')
+
+    def setup_environment(self, spack_env, run_env):
+        # mpich configure fails when F90 and F90FLAGS are set
+        spack_env.unset('F90')
+        spack_env.unset('F90FLAGS')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
@@ -135,10 +168,18 @@ spack package at this time.''',
         config_args = [
             '--enable-shared',
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
-            '--with-pmi={0}'.format('yes' if '+pmi' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
         ]
+
+        if 'pmi=off' in spec:
+            config_args.append('--with-pmi=no')
+        elif 'pmi=pmi' in spec:
+            config_args.append('--with-pmi=simple')
+        elif 'pmi=pmi2' in spec:
+            config_args.append('--with-pmi=pmi2/simple')
+        elif 'pmi=pmix' in spec:
+            config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
 
         # setup device configuration
         device_config = ''
@@ -157,5 +198,11 @@ spack package at this time.''',
             device_config += 'tcp'
 
         config_args.append(device_config)
+
+        # Specify libfabric's path explicitly, otherwise configure might fall
+        # back to an embedded version of libfabric.
+        if 'netmod=ofi' in spec:
+            config_args.append('--with-libfabric={0}'.format(
+                spec['libfabric'].prefix))
 
         return config_args

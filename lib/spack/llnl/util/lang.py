@@ -324,7 +324,7 @@ def check_kwargs(kwargs, fun):
     if kwargs:
         raise TypeError(
             "'%s' is an invalid keyword argument for function %s()."
-            % (next(kwargs.iterkeys()), fun.__name__))
+            % (next(iter(kwargs)), fun.__name__))
 
 
 def match_predicate(*args):
@@ -448,7 +448,8 @@ def pretty_string_to_date(date_str, now=None):
 
     Args:
         date_str (str): string representing a date. This string might be
-            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``)
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``,
+            ``YYYY-MM-DD HH:MM``, ``YYYY-MM-DD HH:MM:SS``)
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
     Returns:
@@ -467,6 +468,10 @@ def pretty_string_to_date(date_str, now=None):
     pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m-%d'
     )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M')
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
 
     pretty_regex = re.compile(
         r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')

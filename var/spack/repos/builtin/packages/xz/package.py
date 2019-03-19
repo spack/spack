@@ -22,8 +22,12 @@ class Xz(AutotoolsPackage):
     version('5.2.0', '867cc8611760240ebf3440bd6e170bb9')
 
     variant("shared", default=True, description="Enable shared libs")
-    
+
     def configure_args(self):
         if "~shared" in self.spec:
             return ["--disable-shared"]
         return []
+
+    @property
+    def libs(self):
+        return find_libraries(['liblzma'], root=self.prefix, recursive=True)

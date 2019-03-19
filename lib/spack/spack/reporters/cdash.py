@@ -59,7 +59,15 @@ class CDash(Reporter):
         Reporter.__init__(self, args)
         self.template_dir = os.path.join('reports', 'cdash')
         self.cdash_upload_url = args.cdash_upload_url
-        self.install_command = ' '.join(args.package)
+        if args.package:
+            packages = args.package
+        else:
+            packages = []
+            for file in args.specfiles:
+                with open(file, 'r') as f:
+                    s = spack.spec.Spec.from_yaml(f)
+                    packages.append(s.format())
+        self.install_command = ' '.join(packages)
         self.buildname = args.cdash_build or self.install_command
         self.site = args.cdash_site or socket.gethostname()
         self.osname = platform.system()

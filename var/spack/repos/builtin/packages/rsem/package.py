@@ -13,6 +13,7 @@ class Rsem(MakefilePackage):
     homepage = "http://deweylab.github.io/RSEM/"
     url      = "https://github.com/deweylab/RSEM/archive/v1.3.0.tar.gz"
 
+    version('1.3.1', sha256='93c749a03ac16e94b1aab94d032d4fd5687d3261316ce943ecb89d3ae3ec2e11')
     version('1.3.0', '273fd755e23d349cc38a079b81bb03b6')
 
     depends_on('r', type=('build', 'run'))

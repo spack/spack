@@ -236,7 +236,18 @@ export SPACK_ROOT=${_sp_prefix}
 # Determine which shell is being used
 #
 function _spack_determine_shell() {
-	PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+    # This logic is derived from the cea-hpc/modules profile.sh example at
+    # https://github.com/cea-hpc/modules/blob/master/init/profile.sh.in
+    #
+    # The objective is to correctly detect the shell type even when setup-env
+    # is sourced within a script itself rather than a login terminal.
+    if [ -n "${BASH:-}" ]; then
+        echo ${BASH##*/}
+    elif [ -n "${ZSH_NAME:-}" ]; then
+        echo $ZSH_NAME
+    else
+        PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+    fi
 }
 export SPACK_SHELL=$(_spack_determine_shell)
 
@@ -261,10 +272,16 @@ if [ "${need_module}" = "yes" ]; then
 
     # _sp_module_prefix is set by spack --print-sh-vars
     if [ "${_sp_module_prefix}" != "not_installed" ]; then
-        #activate it!
-        export MODULE_PREFIX=${_sp_module_prefix}
-        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        # activate it!
+        # environment-modules@4: has a bin directory inside its prefix
+        MODULE_PREFIX_BIN="${_sp_module_prefix}/bin"
+        if [ ! -d "${MODULE_PREFIX_BIN}" ]; then
+            # environment-modules@3 has a nested bin directory
+            MODULE_PREFIX_BIN="${_sp_module_prefix}/Modules/bin"
+        fi
+        export MODULE_PREFIX_BIN
+        _spack_pathadd PATH "${MODULE_PREFIX_BIN}"
+        module() { eval `${MODULE_PREFIX_BIN}/modulecmd ${SPACK_SHELL} $*`; }
     fi;
 else
     eval `spack --print-shell-vars sh`

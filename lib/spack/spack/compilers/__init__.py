@@ -28,6 +28,17 @@ _cache_config_file = []
 #: cache of compilers constructed from config data, keyed by config entry id.
 _compiler_cache = {}
 
+_compiler_to_pkg = {
+    'clang': 'llvm+clang'
+}
+
+
+def pkg_spec_for_compiler(cspec):
+    """Return the spec of the package that provides the compiler."""
+    spec_str = '%s@%s' % (_compiler_to_pkg.get(cspec.name, cspec.name),
+                          cspec.versions)
+    return spack.spec.Spec(spec_str)
+
 
 def _auto_compiler_spec(function):
     def converter(cspec_like, *args, **kwargs):
@@ -201,6 +212,17 @@ def find(compiler_spec, scope=None, init_config=True):
        compiler spec.  Return an empty list if nothing found."""
     return [c for c in all_compiler_specs(scope, init_config)
             if c.satisfies(compiler_spec)]
+
+
+@_auto_compiler_spec
+def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
+    """Return specs of available compilers that match the supplied
+       compiler spec.  Return an empty list if nothing found."""
+    return [c.spec for c in compilers_for_spec(compiler_spec,
+                                               arch_spec,
+                                               scope,
+                                               True,
+                                               init_config)]
 
 
 def all_compilers(scope=None):

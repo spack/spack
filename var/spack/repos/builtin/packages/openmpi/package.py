@@ -6,6 +6,7 @@
 
 import os
 import sys
+import llnl.util.tty as tty
 
 
 def _verbs_dir():
@@ -478,7 +479,13 @@ class Openmpi(AutotoolsPackage):
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
         if '@1.6: ~legacylaunchers schedulers=slurm' in self.spec:
-            os.remove(self.prefix.bin.mpirun)
-            os.remove(self.prefix.bin.mpiexec)
-            os.remove(self.prefix.bin.shmemrun)
-            os.remove(self.prefix.bin.oshrun)
+            exe_list = [self.prefix.bin.mpirun,
+                        self.prefix.bin.mpiexec,
+                        self.prefix.bin.shmemrun,
+                        self.prefix.bin.oshrun
+                        ]
+            for exe in exe_list:
+                try:
+                    os.remove(exe)
+                except OSError:
+                    tty.debug("File not present: " + exe)

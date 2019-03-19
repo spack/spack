@@ -12,6 +12,8 @@ class PyNetworkx(PythonPackage):
     homepage = "http://networkx.github.io/"
     url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
 
+    version('2.2', sha256='45e56f7ab6fe81652fb4bc9f44faddb0e9025f469f602df14e3b2551c2ea5c8b',
+            url='https://pypi.io/packages/source/n/networkx/networkx-2.2.zip')
     version('2.1', sha256='64272ca418972b70a196cb15d9c85a5a6041f09a2f32e0d30c0255f25d458bb1',
             url='https://pypi.io/packages/source/n/networkx/networkx-2.1.zip')
     version('1.11', md5='6ef584a879e9163013e9a762e1cf7cd1')

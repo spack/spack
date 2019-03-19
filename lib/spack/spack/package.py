@@ -61,6 +61,7 @@ from spack.util.package_hash import package_hash
 from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
+
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
@@ -1139,7 +1140,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             bool: True if 'target' is found, else False
         """
-        make = inspect.getmodule(self).make
+        # Prevent altering LC_ALL for 'make' outside this function
+        make = copy.deepcopy(inspect.getmodule(self).make)
+
+        # Use English locale for missing target message comparison
+        make.add_default_env('LC_ALL', 'C')
 
         # Check if we have a Makefile
         for makefile in ['GNUmakefile', 'Makefile', 'makefile']:
@@ -1320,19 +1325,29 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             self.spec, spack.store.layout, explicit=explicit)
         return True
 
-    def do_install(self,
-                   keep_prefix=False,
-                   keep_stage=False,
-                   install_source=False,
-                   install_deps=True,
-                   skip_patch=False,
-                   verbose=False,
-                   make_jobs=None,
-                   fake=False,
-                   explicit=False,
-                   tests=False,
-                   dirty=None,
-                   **kwargs):
+    def bootstrap_compiler(self, **kwargs):
+        """Called by do_install to setup ensure Spack has the right compiler.
+
+        Checks Spack's compiler configuration for a compiler that
+        matches the package spec. If none are configured, installs and
+        adds to the compiler configuration the compiler matching the
+        CompilerSpec object."""
+        compilers = spack.compilers.compilers_for_spec(
+            self.spec.compiler,
+            arch_spec=self.spec.architecture
+        )
+        if not compilers:
+            dep = spack.compilers.pkg_spec_for_compiler(self.spec.compiler)
+            # concrete CompilerSpec has less info than concrete Spec
+            # concretize as Spec to add that information
+            dep.concretize()
+            dep.package.do_install(**kwargs)
+            spack.compilers.add_compilers_to_config(
+                spack.compilers.find_compilers(dep.prefix)
+            )
+
+    def do_install(self, **kwargs):
+
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -1359,18 +1374,34 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             tests (bool or list or set): False to run no tests, True to test
                 all packages, or a list of package names to run tests for some
             dirty (bool): Don't clean the build environment before installing.
+            restage (bool): Force spack to restage the package source.
             force (bool): Install again, even if already installed.
+            use_cache (bool): Install from binary package, if available.
+            stop_at (InstallPhase): last installation phase to be executed
+                (or None)
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
                              % self.spec.name)
+
+        keep_prefix = kwargs.get('keep_prefix', False)
+        keep_stage = kwargs.get('keep_stage', False)
+        install_source = kwargs.get('install_source', False)
+        install_deps = kwargs.get('install_deps', True)
+        skip_patch = kwargs.get('skip_patch', False)
+        verbose = kwargs.get('verbose', False)
+        make_jobs = kwargs.get('make_jobs', None)
+        fake = kwargs.get('fake', False)
+        explicit = kwargs.get('explicit', False)
+        tests = kwargs.get('tests', False)
+        dirty = kwargs.get('dirty', False)
+        restage = kwargs.get('restage', False)
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
         if self.spec.external:
             return self._process_external_package(explicit)
 
-        restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
 
         # Ensure package is not already installed
@@ -1395,21 +1426,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # First, install dependencies recursively.
         if install_deps:
             tty.debug('Installing {0} dependencies'.format(self.name))
+            dep_kwargs = kwargs.copy()
+            dep_kwargs['explicit'] = False
+            dep_kwargs['install_deps'] = False
             for dep in self.spec.traverse(order='post', root=False):
-                dep.package.do_install(
-                    install_deps=False,
-                    explicit=False,
-                    keep_prefix=keep_prefix,
-                    keep_stage=keep_stage,
-                    install_source=install_source,
-                    fake=fake,
-                    skip_patch=skip_patch,
-                    verbose=verbose,
-                    make_jobs=make_jobs,
-                    tests=tests,
-                    dirty=dirty,
-                    **kwargs)
+                dep.package.do_install(**dep_kwargs)
 
+        # Then, install the compiler if it is not already installed.
+        if install_deps:
+            tty.debug('Boostrapping {0} compiler for {1}'.format(
+                self.spec.compiler, self.name
+            ))
+            comp_kwargs = kwargs.copy()
+            comp_kwargs['explicit'] = False
+            self.bootstrap_compiler(**comp_kwargs)
+
+        # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
         if kwargs.get('use_cache', True):
@@ -1476,6 +1508,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         # Save the build environment in a file before building.
                         dump_environment(self.env_path)
 
+                        # cache debug settings
+                        debug_enabled = tty.is_debug()
+
                         # Spawn a daemon that reads from a pipe and redirects
                         # everything to log_path
                         with log_output(self.log_path, echo, True) as logger:
@@ -1483,8 +1518,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                     self.phases, self._InstallPhase_phases):
 
                                 with logger.force_echo():
+                                    inner_debug = tty.is_debug()
+                                    tty.set_debug(debug_enabled)
                                     tty.msg(
                                         "Executing phase: '%s'" % phase_name)
+                                    tty.set_debug(inner_debug)
 
                                 # Redirect stdout and stderr to daemon pipe
                                 phase = getattr(self, phase_attr)

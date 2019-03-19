@@ -72,6 +72,7 @@ class Boost(Package):
                                 'chrono',
                                 'date_time',
                                 'exception',
+                                'fiber',
                                 'filesystem',
                                 'graph',
                                 'iostreams',
@@ -158,6 +159,13 @@ class Boost(Package):
 
     # Fix the bootstrap/bjam build for Cray
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
+
+    # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
+    # 0134441 on http://github.com/boostorg/system.
+    patch('system-non-virtual-dtor-include.patch', when='@1.69.0',
+          level=2)
+    patch('system-non-virtual-dtor-test.patch', when='@1.69.0',
+          working_dir='libs/system', level=1)
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
@@ -419,8 +427,8 @@ class Boost(Package):
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
-        for threadingOpt in threading_opts:
-            b2('install', 'threading=%s' % threadingOpt, *b2_options)
+        for threading_opt in threading_opts:
+            b2('install', 'threading=%s' % threading_opt, *b2_options)
 
         if '+multithreaded' in spec and '~taggedlayout' in spec:
             self.add_buildopt_symlinks(prefix)
