@@ -144,7 +144,7 @@ class Abinit(AutotoolsPackage):
             hdf5 = spec['hdf5:hl']
             netcdff = spec['netcdf-fortran:shared']
             options.extend([
-                '--with-netcdf-incs=-I{0}'.format(netcdff.prefix.include),
+                '--with-netcdf-incs={0}'.format(netcdff.headers.cpp_flags),
                 '--with-netcdf-libs={0}'.format(
                     netcdff.libs.ld_flags + ' ' + hdf5.libs.ld_flags
                 ),
