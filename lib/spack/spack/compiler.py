@@ -17,7 +17,7 @@ import spack.architecture
 from spack.util.executable import Executable, ProcessError
 from spack.util.environment import get_path
 
-__all__ = ['Compiler', 'get_compiler_version']
+__all__ = ['Compiler']
 
 
 def _verify_executables(*paths):
@@ -27,11 +27,17 @@ def _verify_executables(*paths):
 
 
 @llnl.util.lang.memoized
-def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
+def invoke_compiler(compiler_path, version_arg):
+    """Invokes the compiler at a given path passing a single
+    version argument and returns the output.
+
+    Args:
+        compiler_path (path): path of the compiler to be invoked
+        version_arg (str): the argument used to extract version information
+    """
     compiler = Executable(compiler_path)
     output = compiler(version_arg, output=str, error=str)
-    match = re.search(regex, output)
-    return match.group(1) if match else 'unknown'
+    return output
 
 
 def tokenize_flags(flags_str):
@@ -81,6 +87,12 @@ class Compiler(object):
     # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
     # version suffix for gcc.
     suffixes = [r'-.*']
+
+    #: Compiler argument that produces version information
+    version_argument = '-dumpversion'
+
+    #: Regex used to extract version from compiler's output
+    version_regex = '(.*)'
 
     # Default flags used by a compiler to set an rpath
     @property
@@ -193,7 +205,14 @@ class Compiler(object):
     @classmethod
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
-        return get_compiler_version(cc, '-dumpversion')
+        output = invoke_compiler(cc, cls.version_argument)
+        return cls.extract_version_from_output(output)
+
+    @classmethod
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
+        match = re.search(cls.version_regex, output)
+        return match.group(1) if match else 'unknown'
 
     @classmethod
     def cc_version(cls, cc):
