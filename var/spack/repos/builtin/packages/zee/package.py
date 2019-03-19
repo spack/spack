@@ -47,6 +47,7 @@ class Zee(CMakePackage):
             else:
                 yield '-D' + cmake_var + ':BOOL=FALSE'
         yield '-DZee_USE_PETSc:BOOL=' + ('TRUE' if '+petsc' in self.spec else 'FALSE')
+        yield '-DPYTHON_EXECUTABLE:FILEPATH=' + python.path
 
     def cmake_args(self):
         return list(self._bob_options())
