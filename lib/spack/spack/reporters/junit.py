@@ -23,7 +23,8 @@ class JUnit(Reporter):
 
     def build_report(self, filename, report_data):
         # Write the report
-        with open(filename, 'w') as f:
+        with open(filename, 'wb') as fd:
             env = spack.tengine.make_environment()
-            t = env.get_template(self.template_file)
-            f.write(t.render(report_data))
+            template = env.get_template(self.template_file)
+            formatted = template.render(report_data)
+            fd.write(formatted.encode('utf-8'))
