@@ -78,6 +78,11 @@ packages:
         paths:
             openssl@1.0.2k: /usr
         version: [1.0.2k]
+    opengl:
+        paths:
+            opengl@4.5: /usr
+        buildable: False
+        version: [4.5]
     pango:
         paths:
             pango@1.40.4: /usr
