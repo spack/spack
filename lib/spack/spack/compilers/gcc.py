@@ -114,7 +114,7 @@ class Gcc(Compiler):
         if spack.compilers.clang.Clang.default_version(cc) != 'unknown':
             return 'unknown'
 
-        version = cls.default_version(cc)
+        version = super(Gcc, cls).default_version(cc)
         if ver(version) >= ver('7'):
             output = spack.compiler.invoke_compiler(cc, '-dumpfullversion')
             version = cls.extract_version_from_output(output)
