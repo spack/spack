@@ -153,13 +153,14 @@ class Openblas(MakefilePackage):
                 'NUM_THREADS=64',  # OpenBLAS stores present no of CPUs as max
             ]
 
-        if self.spec.variants['cpu_target'].value != 'auto':
+        if self.spec.variants['cpu_target'].value == 'DYNAMIC':
+            make_defs += ['DYNAMIC_ARCH=1']
+        elif self.spec.variants['cpu_target'].value != 'auto':
             make_defs += [
                 'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
             ]
-        elif self.spec.variants['cpu_target'].value == 'DYNAMIC':
-            make_defs += ['DYNAMIC_ARCH=1']
-        # invoke make with the correct TARGET for aarch64
+
+            # invoke make with the correct TARGET for aarch64
         elif 'aarch64' in spack.architecture.sys_type():
             make_defs += [
                 'TARGET=PILEDRIVER',
