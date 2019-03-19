@@ -110,4 +110,5 @@ packages:
       - neurodamus-hippocampus
       - neurodamus-neocortex
       - neurodamus-thalamus
+      - neurodamus-neocortex+coreneuron^coreneuron+knl
       - neurodamus-thalamus+coreneuron^coreneuron+knl
