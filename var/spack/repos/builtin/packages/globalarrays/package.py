@@ -24,6 +24,7 @@ class Globalarrays(AutotoolsPackage):
     version('5.6.1', '674c0ea9bf413840b1ff1e669de73fca')
     version('5.6',   '49d7e997daed094eeb9565423879ba36')
 
+    variant('shared', default=False, description='Enable building shared libraries too')
     variant('int64', default=False, description='Compile with 64 bit indices support')
     variant('blas', default=False, description='Enable BLAS')
     variant('lapack', default=False, description='Enable LAPACK')
@@ -42,6 +43,9 @@ class Globalarrays(AutotoolsPackage):
 
     def configure_args(self):
         args = ['--with-mpi']
+
+        if '+shared' in self.spec:
+            args.append('--enable-shared')
 
         if '+blas' in self.spec:
             if '+int64' in self.spec:
