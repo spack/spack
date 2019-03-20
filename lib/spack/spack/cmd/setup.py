@@ -37,6 +37,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install. must contain package AND version")
+    subparser.add_argument(
+        '--shebang', action='store', dest='shebang',
+        help="Command used to execute the script. "
+        "If set to special string \"env\", "
+        "then the python interpreter found in PATH is used. "
+        "Default value is the python interpreter used by spack", default=None)
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -49,7 +55,7 @@ def spack_transitive_include_path():
     )
 
 
-def write_spconfig(package, dirty):
+def write_spconfig(package, dirty, shebang):
     # Set-up the environment
     spack.build_environment.setup_package(package, dirty)
 
@@ -79,7 +85,7 @@ import subprocess
 def cmdlist(str):
     return list(x.strip().replace("'",'') for x in str.split('\n') if x)
 env = dict(os.environ)
-""" % sys.executable)
+""" % shebang)
 
         env_vars = sorted(list(env.keys()))
         for name in env_vars:
@@ -158,7 +164,13 @@ def setup(self, args):
             'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
         )
         dirty = args.dirty
-        write_spconfig(package, dirty)
+        if args.shebang is None:
+            shebang = sys.executable
+        elif args.shebang == 'env':
+            shebang = '/usr/bin/env python'
+        else:
+            shebang = args.shebang
+        write_spconfig(package, dirty, shebang)
 
         # Install this package to register it in the DB and permit
         # module file regeneration
