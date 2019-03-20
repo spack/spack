@@ -20,13 +20,20 @@ class NinjaFortran(Package):
     version('1.8.2.g81279', '0e29d0c441dcbd9b9ee9291c3a8dfbdd')
     version('1.8.2.g3bbbe', 'de6257118f2e3ac7fa1abca1e7c70afa')
     version('1.8.2.g972a7', '8ace90ad0c5657022d10ba063783a652')
+    version('1.7.2.gaad58', 'eb51b042b9dbaf8ecd79a6fb24de1320')
+    version('1.7.2.gcc0ea', '3982f508c415c0abaca34cb5e92e711a')
+    version('1.7.1.g7ca7f', '187a8d15c1e20e5e9b00c5c3f227ca8a')
 
     depends_on('python', type=('build', 'run'))
 
     phases = ['configure', 'install']
 
     def url_for_version(self, version):
-        url = 'https://github.com/Kitware/ninja/archive/v{0}.kitware.dyndep-1.jobserver-1.tar.gz'
+        old_url_versions = ['1.7.1.g7ca7f', '1.7.2.gcc0ea', '1.7.2.gaad58', '1.8.2.g972a7']
+        if version.string in old_url_versions:
+            url = 'https://github.com/Kitware/ninja/archive/v{0}.kitware.dyndep-1.tar.gz'
+        else:
+            url = 'https://github.com/Kitware/ninja/archive/v{0}.kitware.dyndep-1.jobserver-1.tar.gz'
         return url.format(version)
 
     def configure(self, spec, prefix):
