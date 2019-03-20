@@ -87,6 +87,8 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_GPU:BOOL=ON')
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
                            self.spec['cuda'].prefix)
+        else:
+            options.append('-DGMX_GPU:BOOL=OFF')
 
         simd_value = self.spec.variants['simd'].value
         if simd_value == 'auto':
