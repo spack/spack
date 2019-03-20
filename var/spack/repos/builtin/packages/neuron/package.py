@@ -244,7 +244,6 @@ class Neuron(Package):
         filter_file(env['CXX'], self.compiler.cxx, nrnmakefile, **kwargs)
 
     def setup_environment(self, spack_env, run_env):
-        spack_env.unset('LC_ALL')
         neuron_archdir = self.get_neuron_archdir()
         run_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
         run_env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
