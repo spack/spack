@@ -85,6 +85,9 @@ spack package at this time.''',
     depends_on('pkgconfig', type='build')
 
     depends_on('libfabric', when='netmod=ofi')
+    # The ch3 ofi netmod results in crashes with libfabric 1.7
+    # See https://github.com/pmodels/mpich/issues/3665
+    depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
     depends_on('libpciaccess', when="+pci")
     depends_on('libxml2')
