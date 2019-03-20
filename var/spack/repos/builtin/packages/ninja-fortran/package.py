@@ -29,7 +29,7 @@ class NinjaFortran(Package):
     phases = ['configure', 'install']
 
     def url_for_version(self, version):
-        old_url_versions = ['1.7.1.g7ca7f', '1.7.2.gcc0ea', \
+        old_url_versions = ['1.7.1.g7ca7f', '1.7.2.gcc0ea',
                             '1.7.2.gaad58', '1.8.2.g972a7']
         if version.string in old_url_versions:
             url = 'https://github.com/Kitware/ninja/archive/v{0}.kitware.dyndep-1.tar.gz'
