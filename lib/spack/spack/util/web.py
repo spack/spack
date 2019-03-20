@@ -86,6 +86,58 @@ else:
             super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
+def _read_from_url(url, accept_content_type=None):
+    context = None
+    verify_ssl = spack.config.get('config:verify_ssl')
+    pyver = sys.version_info
+    if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
+        if verify_ssl:
+            tty.warn("Spack will not check SSL certificates. You need to "
+                     "update your Python to enable certificate "
+                     "verification.")
+    elif verify_ssl:
+        # without a defined context, urlopen will not verify the ssl cert for
+        # python 3.x
+        context = ssl.create_default_context()
+    else:
+        context = ssl._create_unverified_context()
+
+    req = Request(url)
+
+    if accept_content_type:
+        # Make a HEAD request first to check the content type.  This lets
+        # us ignore tarballs and gigantic files.
+        # It would be nice to do this with the HTTP Accept header to avoid
+        # one round-trip.  However, most servers seem to ignore the header
+        # if you ask for a tarball with Accept: text/html.
+        req.get_method = lambda: "HEAD"
+        resp = _urlopen(req, timeout=_timeout, context=context)
+
+        if "Content-type" not in resp.headers:
+            tty.debug("ignoring page " + url)
+            return None, None
+
+        if not resp.headers["Content-type"].startswith(accept_content_type):
+            tty.debug("ignoring page " + url + " with content type " +
+                      resp.headers["Content-type"])
+            return None, None
+
+    # Do the real GET request when we know it's just HTML.
+    req.get_method = lambda: "GET"
+    response = _urlopen(req, timeout=_timeout, context=context)
+    response_url = response.geturl()
+
+    # Read the page and and stick it in the map we'll return
+    page = response.read().decode('utf-8')
+
+    return response_url, page
+
+
+def read_from_url(url, accept_content_type=None):
+    resp_url, contents = _read_from_url(url, accept_content_type)
+    return contents
+
+
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
     """Fetches URL and any pages it links to up to max_depth.
 
@@ -107,46 +159,11 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         root = re.sub('/index.html$', '', root)
 
     try:
-        context = None
-        verify_ssl = spack.config.get('config:verify_ssl')
-        pyver = sys.version_info
-        if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
-            if verify_ssl:
-                tty.warn("Spack will not check SSL certificates. You need to "
-                         "update your Python to enable certificate "
-                         "verification.")
-        elif verify_ssl:
-            # We explicitly create default context to avoid error described in
-            # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
-            context = ssl.create_default_context()
-        else:
-            context = ssl._create_unverified_context()
+        response_url, page = _read_from_url(url, 'text/html')
 
-        # Make a HEAD request first to check the content type.  This lets
-        # us ignore tarballs and gigantic files.
-        # It would be nice to do this with the HTTP Accept header to avoid
-        # one round-trip.  However, most servers seem to ignore the header
-        # if you ask for a tarball with Accept: text/html.
-        req = Request(url)
-        req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=_timeout, context=context)
-
-        if "Content-type" not in resp.headers:
-            tty.debug("ignoring page " + url)
+        if not response_url or not page:
             return pages, links
 
-        if not resp.headers["Content-type"].startswith('text/html'):
-            tty.debug("ignoring page " + url + " with content type " +
-                      resp.headers["Content-type"])
-            return pages, links
-
-        # Do the real GET request when we know it's just HTML.
-        req.get_method = lambda: "GET"
-        response = _urlopen(req, timeout=_timeout, context=context)
-        response_url = response.geturl()
-
-        # Read the page and and stick it in the map we'll return
-        page = response.read().decode('utf-8')
         pages[response_url] = page
 
         # Parse out the links in the page
@@ -287,8 +304,9 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     list_urls.update(additional_list_urls)
 
     # Grab some web pages to scrape.
+    # Start with any links already given.
     pages = {}
-    links = set()
+    links = set(archive_urls)
     for lurl in list_urls:
         pg, lnk = spider(lurl, depth=list_depth)
         pages.update(pg)

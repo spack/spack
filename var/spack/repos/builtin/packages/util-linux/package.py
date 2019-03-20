@@ -19,16 +19,11 @@ class UtilLinux(AutotoolsPackage):
     version('2.25',   'f6d7fc6952ec69c4dc62c8d7c59c1d57')
 
     depends_on('python@2.7:')
+    depends_on('pkgconfig')
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
     def configure_args(self):
-        spec = self.spec
-
-        return [
-            'PKG_CONFIG_PATH={0}'.format(
-                join_path(spec['python'].prefix.lib, 'pkgconfig')),
-            '--disable-use-tty-group',
-        ]
+        return ['--disable-use-tty-group']

@@ -17,6 +17,7 @@ class Qt(Package):
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
+    version('5.11.3', '859417642713cee2493ee3646a7fee782c9f1db39e41d7bb1322bba0c5f0ff4d')
     version('5.11.2', 'c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81')
     version('5.10.0', 'c5e275ab0ed7ee61d0f4b82cd471770d')
     version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
@@ -78,6 +79,14 @@ class Qt(Package):
     # https://github.com/spack/spack/issues/9209
     patch('qt4-gcc-and-webkit.patch', when='@4')
 
+    # Fix build failure with newer versions of GCC
+    # https://bugreports.qt.io/browse/QTBUG-74196
+    patch('https://github.com/qt/qtscript/commit/97ec1d1882a83c23c91f0f7daea48e05858d8c32.patch',
+          sha256='ae88481a3ff63ab058cf9da6f5ae4397a983903109d907fb2ce4fcf91f9ca5e6',
+          working_dir='qtscript',
+          when='@5.0:5.12 %gcc@8.3:')
+
+    depends_on("pkgconfig", type='build')
     # Use system openssl for security.
     depends_on("openssl@:1.0", when='@:5.9')
     depends_on("openssl")
@@ -94,6 +103,11 @@ class Qt(Package):
     depends_on("icu4c")
     depends_on("fontconfig", when=(sys.platform != 'darwin'))  # (Unix only)
     depends_on("freetype")
+    depends_on("sqlite")
+    depends_on("pcre+multibyte", when='@5.0:5.8')
+    depends_on("pcre2+multibyte", when='@5.9:')
+    depends_on("double-conversion", when='@5.7:')
+    depends_on("harfbuzz", when='@5:')
 
     # Core options:
     # -doubleconversion  [system/qt/no]
@@ -116,7 +130,14 @@ class Qt(Package):
 
     # OpenGL hardware acceleration
     depends_on("gl@3.2:", when='@4:+opengl')
+    # xcb is Linux-specific
     depends_on("libxcb", when=sys.platform != 'darwin')
+    depends_on("xcb-util-image", when=sys.platform != 'darwin')
+    depends_on("xcb-util-keysyms", when=sys.platform != 'darwin')
+    depends_on("xcb-util-wm", when=sys.platform != 'darwin')
+    depends_on("xcb-util-renderutil", when=sys.platform != 'darwin')
+    depends_on("libxkbcommon", when=sys.platform != 'darwin')
+    depends_on("inputproto", when='@:5.8')
     depends_on("libx11", when=sys.platform != 'darwin')
 
     if sys.platform != 'darwin':
@@ -235,8 +256,16 @@ class Qt(Package):
             '-optimized-qmake',
             '-system-freetype',
             '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include),
-            '-no-pch'
+            '-no-pch',
+            '-system-sqlite'
         ]
+
+        if self.spec.satisfies('@5:'):
+            config_args.append('-system-harfbuzz')
+            config_args.append('-system-pcre')
+
+        if self.spec.satisfies('@5.7:'):
+            config_args.append('-system-doubleconversion')
 
         if sys.platform != 'darwin':
             config_args.append('-fontconfig')
@@ -353,7 +382,7 @@ class Qt(Package):
 
         if not sys.platform == 'darwin':
             config_args.extend([
-                '-qt-xcb',
+                '-system-xcb',
             ])
 
         if '~webkit' in self.spec:
@@ -371,6 +400,9 @@ class Qt(Package):
             # https://wayland.freedesktop.org/ubuntu16.04.html
             # https://wiki.qt.io/QtWayland
             config_args.extend(['-skip', 'wayland'])
+
+        if self.spec.satisfies('@5.7'):
+            config_args.extend(['-skip', 'virtualkeyboard'])
 
         configure('-no-eglfs',
                   '-no-directfb',

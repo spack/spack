@@ -3,11 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pytest
+
 from copy import copy
 from six import iteritems
 
 import spack.spec
+import spack.compiler
 import spack.compilers as compilers
+import spack.compilers.clang
 from spack.compiler import _get_versioned_tuple, Compiler
 
 
@@ -227,3 +231,23 @@ def test_xl_r_flags():
     unsupported_flag_test("cxx11_flag", "xl_r@13.0")
     supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl_r@13.1")
     supported_flag_test("pic_flag", "-qpic", "xl_r@1.0")
+
+
+@pytest.mark.regression('10191')
+@pytest.mark.parametrize('version_str,expected_version', [
+    # macOS clang
+    ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
+     'Target: x86_64-apple-darwin15.2.0\n'
+     'Thread model: posix\n', '7.0.2-apple'),
+    # Other platforms
+    ('clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'  # noqa
+     'Target: x86_64-pc-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '6.0.1'),
+    ('clang version 3.1 (trunk 149096)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '3.1'),
+])
+def test_clang_version_detection(version_str, expected_version):
+    version = spack.compilers.clang.Clang.detect_version_from_str(version_str)
+    assert version == expected_version

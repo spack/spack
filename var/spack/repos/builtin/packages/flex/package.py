@@ -14,10 +14,7 @@ class Flex(AutotoolsPackage):
     url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
 
     version('2.6.4', '2882e3179748cc9f9c23ec593d6adc8d')
-    # 2.6.4 fails to compile with gcc@7.2:
-    # see https://github.com/spack/spack/issues/8152 and
-    # https://github.com/spack/spack/issues/6942
-    version('2.6.3', 'a5f65570cd9107ec8a8ec88f17b31bb1', preferred=True)
+    version('2.6.3', 'a5f65570cd9107ec8a8ec88f17b31bb1')
     # Avoid flex '2.6.2' (major bug)
     # See issue #2554; https://github.com/westes/flex/issues/113
     version('2.6.1', '05bcd8fb629e0ae130311e8a6106fa82')
@@ -31,15 +28,23 @@ class Flex(AutotoolsPackage):
     depends_on('gettext@0.19:', type='build')
     depends_on('help2man',      type='build')
 
-    # Older tarballs don't come with a configure script
+    # Older tarballs don't come with a configure script and the patch for
+    # 2.6.4 touches configure
     depends_on('m4',       type='build')
-    depends_on('autoconf', type='build', when='@:2.6.0')
-    depends_on('automake', type='build', when='@:2.6.0')
-    depends_on('libtool',  type='build', when='@:2.6.0')
+    depends_on('autoconf', type='build', when='@:2.6.0,2.6.4')
+    depends_on('automake', type='build', when='@:2.6.0,2.6.4')
+    depends_on('libtool',  type='build', when='@:2.6.0,2.6.4')
 
-    # Build issue for v2.6.4 when gcc@7.2.0: is used
-    # See issue #219; https://github.com/westes/flex/issues/219
-    conflicts('%gcc@7.2.0:', when='@2.6.4')
+    # 2.6.4 fails to compile with newer versions of gcc/glibc, see:
+    # - https://github.com/spack/spack/issues/8152
+    # - https://github.com/spack/spack/issues/6942
+    # - https://github.com/westes/flex/issues/241
+    patch('https://github.com/westes/flex/commit/24fd0551333e7eded87b64dd36062da3df2f6380.patch', sha256='09c22e5c6fef327d3e48eb23f0d610dcd3a35ab9207f12e0f875701c677978d3', when='@2.6.4')
+
+    @property
+    def force_autoreconf(self):
+        # The patch for 2.6.4 touches configure
+        return self.spec.satisfies('@2.6.4')
 
     def url_for_version(self, version):
         url = "https://github.com/westes/flex"

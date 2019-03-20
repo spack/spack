@@ -24,6 +24,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.10.4', '6c836df84caa9ae683ae401d3f94eb9471353156fec6db602bf2e857e4ec339f')
     version('3.10.3', 'cd106babbae091604fee40c258737c84dec048949be779eaef5a745df3dc8de4')
     version('3.10.2', '63ed950653ae9b8d19daea47e24c0338')
     version('3.10.1', '2d0d5a9bd8112a4147a2a23f7f62a906')
@@ -80,7 +81,8 @@ class Petsc(Package):
             multi=False)
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
-
+    variant('knl', default=False,
+            description='Build for KNL')
     variant('X', default=False,
             description='Activate X support')
 
@@ -224,6 +226,9 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
+        if '+knl' in spec:
+            options.append('--with-avx-512-kernels')
+            options.append('--with-memalign=64')
         if '+X' in spec:
             options.append('--with-x=1')
         else:

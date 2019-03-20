@@ -716,6 +716,35 @@ def mutable_mock_env_path(tmpdir_factory):
     spack.environment.env_path = saved_path
 
 
+@pytest.fixture()
+def installation_dir_with_headers(tmpdir_factory):
+    """Mock installation tree with a few headers placed in different
+    subdirectories. Shouldn't be modified by tests as it is session
+    scoped.
+    """
+    root = tmpdir_factory.mktemp('prefix')
+
+    # Create a few header files:
+    #
+    # <prefix>
+    # |-- include
+    # |   |--boost
+    # |   |   |-- ex3.h
+    # |   |-- ex3.h
+    # |-- path
+    #     |-- to
+    #         |-- ex1.h
+    #         |-- subdir
+    #             |-- ex2.h
+    #
+    root.ensure('include', 'boost', 'ex3.h')
+    root.ensure('include', 'ex3.h')
+    root.ensure('path', 'to', 'ex1.h')
+    root.ensure('path', 'to', 'subdir', 'ex2.h')
+
+    return root
+
+
 ##########
 # Mock packages
 ##########

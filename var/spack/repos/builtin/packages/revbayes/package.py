@@ -11,9 +11,11 @@ class Revbayes(CMakePackage):
        and an interpreted language."""
 
     homepage = "https://revbayes.github.io"
-    url      = "https://github.com/revbayes/revbayes/archive/v1.0.4-release.tar.gz"
+    url      = "https://github.com/revbayes/revbayes/archive/v1.0.10.tar.gz"
 
-    version('1.0.4', '5d6de96bcb3b2686b270856de3555a58')
+    version('1.0.10', sha256='95e9affe8ca8d62880cf46778b6ec9dd8726e62a185670ebcbadf2eb2bb79f93')
+    version('1.0.4', '5d6de96bcb3b2686b270856de3555a58',
+            url='https://github.com/revbayes/revbayes/archive/v1.0.4-release.tar.gz')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
 

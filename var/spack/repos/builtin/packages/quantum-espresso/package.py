@@ -37,7 +37,10 @@ class QuantumEspresso(Package):
 
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
-    variant('hdf5', default=False, description='Builds with HDF5 support')
+    variant(
+        'hdf5', default='none', description='Builds with HDF5 support',
+        values=('parallel', 'serial', 'none'), multi=False
+    )
 
     # Dependencies
     depends_on('blas')
@@ -48,7 +51,8 @@ class QuantumEspresso(Package):
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
     # Versions of HDF5 prior to 1.8.16 lead to QE runtime errors
-    depends_on('hdf5@1.8.16:+fortran', when='+hdf5')
+    depends_on('hdf5@1.8.16:+fortran+hl+mpi', when='hdf5=parallel')
+    depends_on('hdf5@1.8.16:+fortran+hl~mpi', when='hdf5=serial')
 
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
@@ -73,13 +77,21 @@ class QuantumEspresso(Package):
         msg='elpa is a parallel library and needs MPI support'
     )
 
-    # HDF5 support introduced in 6.1 but requires MPI, develop
-    # branch and future releases will support serial HDF5
-    conflicts('+hdf5', when='@:6.0.0')
+    # HDF5 support introduced in 6.1
+    hdf5_warning = 'HDF5 support only in QE 6.1 and later'
+    conflicts('hdf5=parallel', when='@:6.0', msg=hdf5_warning)
+    conflicts('hdf5=serial', when='@:6.0', msg=hdf5_warning)
+
     conflicts(
-        '+hdf5',
-        when='~mpi@6.1.0:6.3',
-        msg='HDF5 support only available with MPI for QE 6.1:6.3'
+        'hdf5=parallel',
+        when='~mpi',
+        msg='parallel HDF5 requires MPI support'
+    )
+
+    conflicts(
+        'hdf5=serial',
+        when='~mpi @6.1:6.3',
+        msg='serial HDF5 in serial QE only works in develop version'
     )
 
     # Elpa is formally supported by @:5.4.0, but QE configure searches
@@ -188,26 +200,35 @@ class QuantumEspresso(Package):
                 '--with-elpa-lib={0}'.format(elpa.libs[0])
             ])
 
-        if '+hdf5' in spec:
+        if spec.variants['hdf5'].value != 'none':
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
 
         configure(*options)
 
-        # Apparently the build system of QE is so broken that:
+        # Apparently the build system of QE is so broken that
+        # make_inc needs to be modified manually:
         #
         # 1. The variable reported on stdout as HDF5_LIBS is actually
         #    called HDF5_LIB (singular)
         # 2. The link flags omit a few `-L` from the line, and this
         #    causes the linker to break
+        # 3. Serial HDF5 case is supported both with and without MPI.
         #
         # Below we try to match the entire HDF5_LIB line and substitute
         # with the list of libraries that needs to be linked.
-        if '+hdf5' in spec:
+        if spec.variants['hdf5'].value != 'none':
             make_inc = join_path(self.stage.source_path, 'make.inc')
             hdf5_libs = ' '.join(spec['hdf5:hl,fortran'].libs)
             filter_file(r'HDF5_LIB([\s]*)=([\s\w\-\/.,]*)',
                         'HDF5_LIB = {0}'.format(hdf5_libs),
                         make_inc)
+            if spec.variants['hdf5'].value == 'serial':
+                # Note that there is a benign side effect with this filter
+                # file statement. It replaces an instance of MANUAL_DFLAGS
+                # that is a comment in make.inc.
+                filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)',
+                            'MANUAL_DFLAGS = -D__HDF5_SERIAL',
+                            make_inc)
 
         make('all')
 

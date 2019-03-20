@@ -21,6 +21,7 @@ class PySphinx(PythonPackage):
         'sphinx.environment.collectors', 'sphinx.environment.adapters'
     ]
 
+    version('1.8.4',   sha256='c1c00fc4f6e8b101a0d037065043460dffc2d507257f2f11acaed71fd2b0c83c')
     version('1.8.2',   sha256='120732cbddb1b2364471c3d9f8bfd4b0c5b550862f99a65736c77f970b142aea')
     version('1.7.4', '95f3b83f521314600e5b09e99cf32c46')
     version('1.6.3', 'c5ad61f4e0974375ca2c2b58ef8d5411')

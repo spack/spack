@@ -14,7 +14,7 @@ from spack.util.executable import Executable
 from spack.util.spack_yaml import syaml_dict, syaml_str
 from spack.util.environment import EnvironmentModifications
 
-from llnl.util.filesystem import LibraryList, HeaderList
+from llnl.util.filesystem import LibraryList
 
 
 @pytest.fixture
@@ -221,7 +221,9 @@ def test_package_inheritance_module_setup(config, mock_packages):
 
 
 def test_set_build_environment_variables(
-        config, mock_packages, working_env, monkeypatch, tmpdir_factory):
+        config, mock_packages, working_env, monkeypatch,
+        installation_dir_with_headers
+):
     """Check that build_environment supplies the needed library/include
     directories via the SPACK_LINK_DIRS and SPACK_INCLUDE_DIRS environment
     variables.
@@ -238,16 +240,10 @@ def test_set_build_environment_variables(
     dep_lib_dirs = ['/test/path/to', '/test/path/to/subdir']
     dep_libs = LibraryList(dep_lib_paths)
 
-    dep2_prefix = tmpdir_factory.mktemp('prefix')
-    dep2_include = dep2_prefix.ensure('include', dir=True)
     dep2_pkg = root['dt-diamond-right'].package
-    dep2_pkg.spec.prefix = str(dep2_prefix)
-    dep2_inc_paths = ['/test2/path/to/ex1.h', '/test2/path/to/subdir/ex2.h']
-    dep2_inc_dirs = ['/test2/path/to', '/test2/path/to/subdir']
-    dep2_includes = HeaderList(dep2_inc_paths)
+    dep2_pkg.spec.prefix = str(installation_dir_with_headers)
 
     setattr(dep_pkg, 'libs', dep_libs)
-    setattr(dep2_pkg, 'headers', dep2_includes)
     try:
         pkg = root.package
         env_mods = EnvironmentModifications()
@@ -272,11 +268,16 @@ def test_set_build_environment_variables(
             normpaths(root_libdirs + dep_lib_dirs))
 
         header_dir_var = os.environ['SPACK_INCLUDE_DIRS']
-        # As long as a dependency package has an 'include' prefix, it is added
-        # (regardless of whether it contains any header files)
-        assert (
-            normpaths(header_dir_var.split(':')) ==
-            normpaths(dep2_inc_dirs + [str(dep2_include)]))
+
+        # The default implementation looks for header files only
+        # in <prefix>/include and subdirectories
+        prefix = str(installation_dir_with_headers)
+        include_dirs = normpaths(header_dir_var.split(':'))
+
+        assert os.path.join(prefix, 'include') in include_dirs
+        assert os.path.join(prefix, 'include', 'boost') not in include_dirs
+        assert os.path.join(prefix, 'path', 'to') not in include_dirs
+        assert os.path.join(prefix, 'path', 'to', 'subdir') not in include_dirs
+
     finally:
         delattr(dep_pkg, 'libs')
-        delattr(dep2_pkg, 'headers')

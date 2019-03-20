@@ -20,7 +20,7 @@ class Root(CMakePackage):
     version('master', git="https://github.com/root-project/root.git",
         branch='master')
 
-    # Development versions
+    # Development version
     version('6.15.02', sha256='2236fe4935139459239c935b2f93b3aa6bbfe92765ae9d9db9dd0b947bf19071')
 
     # Production version

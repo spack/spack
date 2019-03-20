@@ -92,7 +92,7 @@ class Openspeedshop(CMakePackage):
     depends_on("dyninst@10:", when='@2.3.1.3:9999')
 
     depends_on("python", when='@develop', type=('build', 'run'))
-    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999', type=('build', 'run'))
+    depends_on("python@2.7.14:2.7.99", when='@2.3.1.3:9999', type=('build', 'run'))
 
     depends_on("libxml2")
 

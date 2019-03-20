@@ -3251,7 +3251,7 @@ class Spec(object):
         ret = self.format() + self.dep_string()
         return ret.strip()
 
-    def _install_status(self):
+    def install_status(self):
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return None
@@ -3278,7 +3278,7 @@ class Spec(object):
         depth = kwargs.pop('depth', False)
         hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)
-        install_status = kwargs.pop('install_status', False)
+        status_fn = kwargs.pop('status_fn', False)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
@@ -3300,8 +3300,8 @@ class Spec(object):
             if depth:
                 out += "%-4d" % d
 
-            if install_status:
-                status = node._install_status()
+            if status_fn:
+                status = status_fn(node)
                 if status is None:
                     out += colorize("@K{ - }  ", color=color)  # not installed
                 elif status:
@@ -3695,6 +3695,33 @@ def parse_anonymous_spec(spec_like, pkg_name):
     return anon_spec
 
 
+def save_dependency_spec_yamls(
+        root_spec_as_yaml, output_directory, dependencies=None):
+    """Given a root spec (represented as a yaml object), index it with a subset
+       of its dependencies, and write each dependency to a separate yaml file
+       in the output directory.  By default, all dependencies will be written
+       out.  To choose a smaller subset of dependencies to be written, pass a
+       list of package names in the dependencies parameter.  In case of any
+       kind of error, SaveSpecDependenciesError is raised with a specific
+       message about what went wrong."""
+    root_spec = Spec.from_yaml(root_spec_as_yaml)
+
+    dep_list = dependencies
+    if not dep_list:
+        dep_list = [dep.name for dep in root_spec.traverse()]
+
+    for dep_name in dep_list:
+        if dep_name not in root_spec:
+            msg = 'Dependency {0} does not exist in root spec {1}'.format(
+                dep_name, root_spec.name)
+            raise SpecDependencyNotFoundError(msg)
+        dep_spec = root_spec[dep_name]
+        yaml_path = os.path.join(output_directory, '{0}.yaml'.format(dep_name))
+
+        with open(yaml_path, 'w') as fd:
+            fd.write(dep_spec.to_yaml(all_deps=True))
+
+
 def base32_prefix_bits(hash_string, bits):
     """Return the first <bits> bits of a base32 string as an integer."""
     if bits > len(hash_string) * 5:
@@ -3880,3 +3907,8 @@ class ConflictsInSpecError(SpecError, RuntimeError):
                 long_message += match_fmt_custom.format(idx + 1, c, w, msg)
 
         super(ConflictsInSpecError, self).__init__(message, long_message)
+
+
+class SpecDependencyNotFoundError(SpecError):
+    """Raised when a failure is encountered writing the dependencies of
+    a spec."""
