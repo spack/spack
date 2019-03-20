@@ -132,6 +132,7 @@ class Python(AutotoolsPackage):
         # the easy solution is to only depend on Spack's libuuid when *not* on
         # a Mac.
         depends_on('libuuid', when='+uuid')
+    depends_on('gettext')
 
     patch('tkinter.patch', when='@:2.8,3.3: platform=darwin')
 
