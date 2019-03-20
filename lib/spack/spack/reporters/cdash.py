@@ -10,6 +10,7 @@ import os.path
 import platform
 import re
 import socket
+import sys
 import time
 import xml.sax.saxutils
 from six import text_type
@@ -244,7 +245,14 @@ class CDash(Reporter):
             # By default, urllib2 only support GET and POST.
             # CDash needs expects this file to be uploaded via PUT.
             request.get_method = lambda: 'PUT'
+            sys.stderr.write('CDash reporter making request:\n')
+            sys.stderr.write('  url: {0}\n'.format(request.get_full_url()))
+            sys.stderr.write('  headers: {0}\n'.format(request.headers))
+            sys.stderr.write('  data: {0}\n'.format(request.get_data()))
+            sys.stderr.flush()
             response = opener.open(request)
+            sys.stderr.write('CDash reporter finished making request\n')
+            sys.stderr.flush()
             if not self.buildId:
                 match = buildid_regexp.search(response.read())
                 if match:
