@@ -46,7 +46,7 @@ packages:
       - lapack
     specs:
       - hypre@2.14.0
-      - omega-h+trilinos@9.22.2
+      - omega-h+trilinos@9.26.3
       - superlu-dist@5.4.0
       - trilinos@xsdk-0.4.0-rc1
 
