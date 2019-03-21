@@ -10,7 +10,7 @@ ARG DISTRO_VERSION
 ENV DOCKERFILE_BASE=$BASE                     \
     DOCKERFILE_DISTRO=$DISTRO                 \
     DOCKERFILE_DISTRO_VERSION=$DISTRO_VERSION \
-    SPACK_ROOT=/usr                           \
+    SPACK_ROOT=/opt/spack                     \
     FORCE_UNSAFE_CONFIGURE=1                  \
     DEBIAN_FRONTEND=noninteractive            \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1         \
@@ -169,6 +169,6 @@ SHELL ["/bin/bash", "-l", "-c"]
 # TODO: add a command to Spack that (re)creates the package cache
 RUN spack spec hdf5+mpi
 
-ENTRYPOINT ["/bin/bash", "/usr/share/spack/docker/entrypoint.bash"]
+ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
 CMD ["docker-shell"]
 
