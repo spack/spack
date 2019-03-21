@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 import argparse
-import sys
 
 import llnl.util.tty as tty
 
@@ -16,12 +15,12 @@ from hpccm.primitives import baseimage, comment, copy, environment, shell
 
 import spack
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.spec
 
 description = "generate a container specification file"
 section = "build"
 level = "short"
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -36,7 +35,8 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--distro', action='store', type=str, default='',
         choices=['centos', 'rhel', 'ubuntu', 'ubuntu16', 'ubuntu18'],
-        help='Linux distribution type of the base image (default: try to determine automatically from the base image name)')
+        help='Linux distribution type of the base image '
+        '(default: try to determine automatically from the base image name)')
     subparser.add_argument(
         '--format', action='store', type=str, default='docker',
         choices=['docker', 'singularity'],
@@ -54,6 +54,7 @@ def setup_parser(subparser):
         '--spack-branch', '--branch', action='store', type=str,
         default='master',
         help='branch of Spack to deploy (default: master)')
+
 
 def container(parser, args):
     if not args.specs:
@@ -136,8 +137,8 @@ def container(parser, args):
         spack_rt += comment('Spack')
         spack_rt += copy(_from='0', src='/opt/spack', dest='/opt/spack')
         spack_rt += shell(commands=[
-        'ln -s /opt/spack/share/spack/setup-env.sh /etc/profile.d/spack.sh',
-        'ln -s /opt/spack/share/spack/spack-completion.bash /etc/profile.d'])
+            'ln -s /opt/spack/share/spack/setup-env.sh /etc/profile.d/spack.sh',
+            'ln -s /opt/spack/share/spack/spack-completion.bash /etc/profile.d'])
         spack_rt += environment(variables={'PATH': '/opt/spack/bin:$PATH'})
         runtime += spack_rt
 
