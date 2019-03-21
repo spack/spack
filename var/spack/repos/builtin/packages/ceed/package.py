@@ -124,8 +124,9 @@ class Ceed(Package):
     # decides that mfem requires 'hypre+internal-superlu' even though the mfem
     # package lists simply 'hypre' as dependency. This is only an issue because
     # petsc explicitly requires 'hypre~internal-superlu' which for the
-    # concretizer is a conflict.
-    depends_on('hypre~internal-superlu', when='@2.0.0+mfem')
+    # concretizer is a conflict. The version hypre@develop is needed due to
+    # petsc@develop requiring hypre@develop.
+    depends_on('hypre@develop~internal-superlu', when='@2.0.0+mfem')
 
     # If using gcc version <= 4.8 build suite-sparse version <= 5.1.0
     depends_on('suite-sparse@:5.1.0', when='@2.0.0%gcc@:4.8+mfem+petsc')
