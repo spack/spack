@@ -43,6 +43,7 @@ class ParquetConverters(CMakePackage):
     depends_on('snappy~shared')
     depends_on('synapsetool+mpi')
     depends_on('mpi')
+    depends_on('range-v3', when='@0.4:')
 
     def cmake_args(self):
         return [
