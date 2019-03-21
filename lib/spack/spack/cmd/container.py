@@ -9,9 +9,12 @@ import argparse
 
 import llnl.util.tty as tty
 
-import hpccm
-from hpccm.building_blocks.base import bb_base
-from hpccm.primitives import baseimage, comment, copy, environment, shell
+try:
+    import hpccm
+    from hpccm.building_blocks.base import bb_base
+    from hpccm.primitives import baseimage, comment, copy, environment, shell
+except ImportError:
+    tty.die("spack container requires HPCCM")
 
 import spack
 import spack.cmd
