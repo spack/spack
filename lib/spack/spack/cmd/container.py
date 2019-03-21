@@ -137,8 +137,10 @@ def container(parser, args):
         spack_rt += comment('Spack')
         spack_rt += copy(_from='0', src='/opt/spack', dest='/opt/spack')
         spack_rt += shell(commands=[
-            'ln -s /opt/spack/share/spack/setup-env.sh /etc/profile.d/spack.sh',
-            'ln -s /opt/spack/share/spack/spack-completion.bash /etc/profile.d'])
+            'ln -s /opt/spack/share/spack/setup-env.sh'
+            ' /etc/profile.d/spack.sh',
+            'ln -s /opt/spack/share/spack/spack-completion.bash'
+            ' /etc/profile.d'])
         spack_rt += environment(variables={'PATH': '/opt/spack/bin:$PATH'})
         runtime += spack_rt
 
