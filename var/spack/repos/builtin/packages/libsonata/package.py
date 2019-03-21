@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -26,6 +28,8 @@ class Libsonata(CMakePackage):
     depends_on('highfive+mpi', when='+mpi')
     depends_on('highfive~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
+
+    depends_on('python', type=('build', 'run'), when='+python')
     depends_on('py-pybind11@2.0:', type='build', when='+python')
 
     def cmake_args(self):
@@ -33,9 +37,11 @@ class Libsonata(CMakePackage):
             '-DEXTLIB_FROM_SUBMODULES=OFF',
         ]
         if self.spec.satisfies('+python'):
+            pyspec = self.spec['python']
             result.extend([
                 '-DSONATA_PYTHON=ON',
-                '-DPYTHON_EXECUTABLE:FILEPATH={}'.format(self.spec['python'].command.path),
+                '-DPYTHON_INSTALL_SUFFIX={}'.format(pyspec.package.site_packages_dir),
+                '-DPYTHON_EXECUTABLE:FILEPATH={}'.format(pyspec.command.path),
             ])
         if self.spec.satisfies('+mpi'):
             result.extend([
@@ -43,3 +49,11 @@ class Libsonata(CMakePackage):
                 '-DCMAKE_CXX_COMPILER:STRING={}'.format(self.spec['mpi'].mpicxx),
             ])
         return result
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        if self.spec.satisfies("+python"):
+            pyspec = self.spec['python']
+            run_env.prepend_path(
+                'PYTHONPATH',
+                os.path.join(self.prefix, pyspec.package.site_packages_dir)
+            )
