@@ -35,6 +35,7 @@ class ActsCore(CMakePackage):
     version('develop', branch='master')
     version('0.8.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9')  # Used by acts-framework
     version('0.8.1', commit='289bdcc320f0b3ff1d792e29e462ec2d3ea15df6')
+    version('0.8.2', commit='c5d7568714e69e7344582b93b8d24e45d6b81bf9')
 
     # Variants that affect the core ACTS library
     variant('legacy', default=False, description='Build the Legacy package')
