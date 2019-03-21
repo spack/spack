@@ -22,6 +22,7 @@ class Nekcem(Package):
     # We only have a development version
     version('develop')
     version('0b8bedd', commit='0b8beddfdcca646bfcc866dfda1c5f893338399b')
+    version('7332619', commit='7332619b73d03868a256614b61794dce2d95b360')
 
     # dependencies
     depends_on('mpi', when='+mpi')
