@@ -38,6 +38,7 @@ packages:
       - parquet-converters@0.3
       - synapsetool@0.4.1
       - touchdetector@4.4.2
+      - brayns@0.8.0 +opendeck +brion ^brion+python
 
   gnu-stable-parallel-python:
     target_matrix:
