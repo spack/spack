@@ -24,7 +24,7 @@ packages:
       - brainbuilder@0.10.2
       - spykfunc@0.13.1
       - py-pytouchreader@1.4.0
-      - py-basalt@0.2.2
+      - py-basalt@0.2.3
 
   gnu-stable-parallel:
     target_matrix:
