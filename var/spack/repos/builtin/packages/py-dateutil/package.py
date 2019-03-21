@@ -11,6 +11,7 @@ class PyDateutil(PythonPackage):
     homepage = "https://pypi.python.org/pypi/dateutil"
     url      = "https://pypi.io/packages/source/p/python-dateutil/python-dateutil-2.4.0.tar.gz"
 
+    version('2.7.5', sha256='88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02')
     version('2.2',   'c1f654d0ff7e33999380a8ba9783fd5c')
     version('2.4.0', '75714163bb96bedd07685cdb2071b8bc')
     version('2.4.2', '4ef68e1c485b09e9f034e10473e5add2')
