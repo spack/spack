@@ -15,6 +15,7 @@ class PyPyarrow(PythonPackage):
     homepage = "http://arrow.apache.org"
     url      = "https://pypi.org/packages/source/p/pyarrow/pyarrow-0.9.0.tar.gz"
 
+    version('0.12.1', sha256='10db6e486c918c3af999d0114a22d92770687e3a6607ea3f14e6748854824c2a')
     version('0.11.0', sha256='07a6fd71c5d7440f2c42383dd2c5daa12d7f0a012f1e88288ed08a247032aead')
     version('0.9.0', sha256='7db8ce2f0eff5a00d6da918ce9f9cfec265e13f8a119b4adb1595e5b19fd6242')
 
