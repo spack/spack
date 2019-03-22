@@ -259,7 +259,7 @@ def set_build_environment_variables(pkg, env, dirty):
     build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
     link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
     build_link_deps = build_deps | link_deps
-    rpath_deps      = get_rpath_deps(pkg)
+    rpath_deps      = pkg.rpath_deps
 
     link_dirs = []
     include_dirs = []
@@ -577,22 +577,10 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
     return compiler(*compiler_args, output=compiler_output)
 
 
-def get_rpath_deps(pkg):
-    """Return immediate or transitive RPATHs depending on the package."""
-    if pkg.transitive_rpaths:
-        return [d for d in pkg.spec.traverse(root=False, deptype=('link'))]
-    else:
-        return pkg.spec.dependencies(deptype='link')
-
-
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
-    rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    deps = get_rpath_deps(pkg)
-    rpaths.extend(d.prefix.lib for d in deps
-                  if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in deps
-                  if os.path.isdir(d.prefix.lib64))
+    rpaths = pkg.rpath
+
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:

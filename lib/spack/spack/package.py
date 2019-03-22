@@ -2185,10 +2185,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     e.message)
 
     @property
+    def rpath_deps(self):
+        """Return immediate or transitive RPATHs depending on the package."""
+        if self.transitive_rpaths:
+            return [d for d in self.spec.traverse(root=False,
+                                                  deptype=('link'))]
+        else:
+            return self.spec.dependencies(deptype='link')
+
+    @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
         rpaths = [self.prefix.lib, self.prefix.lib64]
-        deps = self.spec.dependencies(deptype='link')
+        deps = self.rpath_deps
         rpaths.extend(d.prefix.lib for d in deps
                       if os.path.isdir(d.prefix.lib))
         rpaths.extend(d.prefix.lib64 for d in deps
