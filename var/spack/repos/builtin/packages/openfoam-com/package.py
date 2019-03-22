@@ -307,7 +307,7 @@ class OpenfoamCom(Package):
     depends_on('cgal')
     # The flex restriction is ONLY to deal with a spec resolution clash
     # introduced by the restriction within scotch!
-    depends_on('flex@:2.6.1,2.6.4:', type='build')
+    depends_on('flex@:2.6.1,2.6.4:')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
