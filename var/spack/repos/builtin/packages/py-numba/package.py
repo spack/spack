@@ -23,8 +23,8 @@ class PyNumba(PythonPackage):
     # That's why it was chosen as an upper bound in the following depends_on
     # calls.  If newer versions maintain backwards compatibility, the calls
     # can be updated accordingly.
-    depends_on('py-llvmlite@0.25:', type=('build', 'run'), when='@0.40.1:')
-    depends_on('py-llvmlite@0.20:0.25', type=('build', 'run'), when='@0.35.1')
+    depends_on('py-llvmlite@0.27.1', type=('build', 'run'), when='@0.40.1:')
+    depends_on('py-llvmlite@0.20:0.27.1', type=('build', 'run'), when='@0.35.1')
 
     depends_on('py-argparse', type=('build', 'run'))
     depends_on('py-funcsigs', type=('build', 'run'), when='^python@:3.3.99')
