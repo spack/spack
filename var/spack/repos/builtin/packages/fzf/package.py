@@ -35,8 +35,8 @@ class Fzf(MakefilePackage):
         if '+github_mirrors' in spec:
             makefile = FileFilter('Makefile')
 
-            makefile.filter(
-                'go get -u github.com/Masterminds/glide && \$\(GOPATH\)/bin/glide install && touch \$@',
+            makefile.filter('go get -u github.com/Masterminds/glide && ' +
+                                '\$\(GOPATH\)/bin/glide install && touch \$@',
                 'go get -u github.com/Masterminds/glide\n' +
                 '\t$(GOPATH)/bin/glide mirror set https://golang.org/x/crypto https://github.com/golang/crypto --vcs git\n' +
                 '\t$(GOPATH)/bin/glide mirror set https://golang.org/x/text https://github.com/golang/text --vcs git\n' +
