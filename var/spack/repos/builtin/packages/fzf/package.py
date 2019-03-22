@@ -29,14 +29,14 @@ class Fzf(MakefilePackage):
 
     variant('vim', default=False, description='Install vim plugins for fzf')
 
-    variant('github_mirrors', default=False,
-        description='pull GO dependencies from github.com instead of specified mirror')
+    variant('github_mirrors', default=False, description='pull GO dependencies from github.com instead of specified mirror')
 
     def edit(self, spec, prefix):
         if '+github_mirrors' in spec:
             makefile = FileFilter('Makefile')
 
-            makefile.filter('go get -u github.com/Masterminds/glide && \$\(GOPATH\)/bin/glide install && touch \$@',
+            makefile.filter(
+                'go get -u github.com/Masterminds/glide && \$\(GOPATH\)/bin/glide install && touch \$@',
                 'go get -u github.com/Masterminds/glide\n' +
                 '\t$(GOPATH)/bin/glide mirror set https://golang.org/x/crypto https://github.com/golang/crypto --vcs git\n' +
                 '\t$(GOPATH)/bin/glide mirror set https://golang.org/x/text https://github.com/golang/text --vcs git\n' +
