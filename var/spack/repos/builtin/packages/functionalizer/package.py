@@ -29,23 +29,16 @@ class Functionalizer(CMakePackage):
     """Apply several steps of filtering on touches
     """
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/Functionalizer"
-    url      = "ssh://bbpcode.epfl.ch/building/Functionalizer"
+    git      = "ssh://bbpcode.epfl.ch/building/Functionalizer"
 
-    version('develop',
-            git=url,
-            submodules=True)
-    version('3.12.0',
-            tag='v3.12.0',
-            git=url,
-            preferred=True,
-            submodules=True)
+    version('develop', submodules=True)
+    version('3.12.1', tag='v3.12.1', submodules=True, preferred=True)
+    version('3.12.0', tag='v3.12.0', submodules=True)
     version('3.11.0',
             commit='50c83265c100cec66a27eea9311b58a9b652cb5f',
-            git=url,
             submodules=True)
     version('gap-junctions',
             commit='6095a851119d8125a81f2858c7a0de2ff6f012d6',
-            git=url,
             submodules=True)
 
     depends_on('boost@1.50:')
