@@ -373,6 +373,8 @@ populate_build_cache() {
 
 populate_mirror() {
     what=$1
+    shift
+    spec_list="$*"
 
     if [[ "${what}" = "compilers" ]]; then
         log "populating mirror with proprietary compilers"
@@ -387,9 +389,6 @@ populate_mirror() {
     fi
 
     log "populating mirror for ${what}"
-
-    specfile="$(install_dir ${what})/data/specs.txt"
-    spec_list=$(spack filter --not-installed $(cat ${specfile}))
 
     if [[ -z "${spec_list}" ]]; then
         log "...found no new packages"
@@ -578,42 +577,47 @@ EOF
     log "gathering specs"
     spec_list=$(spack filter --not-installed $(< ${HOME}/specs.txt))
 
-    setup_mirror "${what}"
-    populate_mirror "${what}"
-
-    # SPEC CHECK
+    # Only perform installation for actionable items
     if [[ -n "${spec_list}" ]]; then
         log "found the following uninstalled specs"
         echo "${spec_list}"
         log "checking specs"
         spack spec -Il ${spec_list}
+
+        setup_mirror "${what}"
+        populate_mirror "${what}" "${spec_list}"
+
+        # todo : patchelf recursion issue
+        log "installing patchelf for buildcache"
+        spack install --no-cache -y patchelf %gcc
+
+        # INSTALL
+        #
+        # use all specs to get the right unit test setup
+        install_start=$(date "+%Y-%m-%d %H:%M:%S")
+        log "running installation for all specs"
+        spack install -y --log-format=junit --log-file="${HOME}/stack.xml" ${spec_list}
+
+        # BUILD CACHE
+        populate_build_cache "${install_start}"
+
+        # Do not activate any packages for now. Maybe with lmod…
+        # if [[ "${what}" = "serial-libraries" ]]; then
+        #     log "running activation for python"
+        #     while read spec; do
+        #         if [[ "${spec}" = py-* ]]; then
+        #             spack activate $spec || true
+        #         fi
+        #     done < "${HOME}/specs.txt"
+        # fi
     else
         log "no specs to install?"
+        cat > "${HOME}/stack.xml" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+</testsuites>
+EOF
     fi
-
-    # todo : patchelf recursion issue
-    log "installing patchelf for buildcache"
-    spack install --no-cache -y patchelf %gcc
-
-    # INSTALL
-    #
-    # use all specs to get the right unit test setup
-    install_start=$(date "+%Y-%m-%d %H:%M:%S")
-    log "running installation for all specs"
-    spack install -y --log-format=junit --log-file="${HOME}/stack.xml" $(< "${HOME}/specs.txt")
-
-    # BUILD CACHE
-    populate_build_cache "${install_start}"
-
-    # Do not activate any packages for now. Maybe with lmod…
-    # if [[ "${what}" = "serial-libraries" ]]; then
-    #     log "running activation for python"
-    #     while read spec; do
-    #         if [[ "${spec}" = py-* ]]; then
-    #             spack activate $spec || true
-    #         fi
-    #     done < "${HOME}/specs.txt"
-    # fi
 
     mkdir -p "${WORKSPACE:-.}/stacks"
     cp "${HOME}/stack.xml" "${WORKSPACE:-.}/stacks/${what}.xml"
