@@ -29,6 +29,8 @@ class Zoltan(Package):
     version('3.6', '9cce794f7241ecd8dbea36c3d7a880f9')
     version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
 
+    patch('notparallel.patch', when='@3.8')
+
     variant('debug', default=False, description='Builds a debug version of the library.')
     variant('shared', default=True, description='Builds a shared version of the library.')
 
