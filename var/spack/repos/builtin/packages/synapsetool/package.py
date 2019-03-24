@@ -50,6 +50,7 @@ class Synapsetool(CMakePackage):
     depends_on('highfive~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('python', when='+python')
+    depends_on('libsonata', when='+sonata')
 
     @property
     def libs(self):

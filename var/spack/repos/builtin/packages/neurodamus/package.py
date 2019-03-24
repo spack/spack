@@ -53,10 +53,12 @@ class Neurodamus(NeurodamusBase):
 
     depends_on('coreneuron+profile', when='+coreneuron+profile')
     depends_on('coreneuron@master',  when='@master+coreneuron')
+    depends_on('coreneuron@mousify', when='@mousify')
     depends_on('coreneuron@plasticity',  when='@plasticity+coreneuron')
     depends_on('coreneuron@hippocampus', when='@hippocampus+coreneuron')
 
     depends_on('neurodamus-base@master', when='@master')
+    depends_on('neurodamus-base@mousify', when='@mousify')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
     depends_on('neurodamus-base@plasticity', when='@plasticity')
 

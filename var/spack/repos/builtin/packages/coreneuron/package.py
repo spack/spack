@@ -59,9 +59,11 @@ class Coreneuron(CMakePackage):
 
     # Old versions. Required by previous neurodamus package.
     version('master',      git=url, submodules=True)
+    version('mousify',     git=url, submodules=True)
     version('hippocampus', git=url, submodules=True)
     version('plasticity',  git=url, submodules=True)
     depends_on('neurodamus-base@master', when='@master')
+    depends_on('neurodamus-base@mousify', when='@mousify')
     depends_on('neurodamus-base@plasticity', when='@plasticity')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
 
