@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Chapel(AutotoolsPackage):
     """Chapel is a modern programming language that is parallel, productive,
        portable, scalable and open-source."""
