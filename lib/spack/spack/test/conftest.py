@@ -435,6 +435,29 @@ def mock_fetch(mock_archive):
     PackageBase.fetcher = orig_fn
 
 
+class MockLayout(object):
+    def __init__(self, root):
+        self.root = root
+
+    def path_for_spec(self, spec):
+        return '/'.join([self.root, spec.name])
+
+    def check_installed(self, spec):
+        return True
+
+
+@pytest.fixture()
+def gen_mock_layout(tmpdir):
+    # Generate a MockLayout in a temporary directory. In general the prefixes
+    # specified by MockLayout should never be written to, but this ensures
+    # that even if they are, that it causes no harm
+    def create_layout(root):
+        subroot = tmpdir.mkdir(root)
+        return MockLayout(str(subroot))
+
+    yield create_layout
+
+
 @pytest.fixture()
 def module_configuration(monkeypatch, request):
     """Reads the module configuration file from the mock ones prepared
