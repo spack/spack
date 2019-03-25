@@ -40,6 +40,7 @@ class ParquetConverters(CMakePackage):
     depends_on('hdf5+mpi')
     depends_on('highfive+mpi')
     depends_on('arrow+parquet')
+    depends_on('arrow+parquet@0.12:', when='@0.4:')
     depends_on('snappy~shared')
     depends_on('synapsetool+mpi')
     depends_on('mpi')
