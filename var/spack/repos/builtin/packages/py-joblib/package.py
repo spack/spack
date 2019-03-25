@@ -12,6 +12,7 @@ class PyJoblib(PythonPackage):
     homepage = "http://packages.python.org/joblib/"
     url      = "https://pypi.io/packages/source/j/joblib/joblib-0.10.3.tar.gz"
 
+    version('0.13.2', 'e448e22afc52e075b991ecd1ba2126e2')
     version('0.10.3', '455401ccfaf399538d8e5333086df2d3')
     version('0.10.2', 'ebb42af4342c2445b175f86bd478d869')
     version('0.10.0', '61e40322c4fed5c22905f67d7d1aa557')

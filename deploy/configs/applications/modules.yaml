@@ -29,6 +29,7 @@ modules:
     whitelist:
       - brainbuilder
       - brayns
+      - connectome-tools
       - functionalizer
       - 'neurodamus%intel'
       #- 'neuron+mpi%intel'
@@ -37,6 +38,7 @@ modules:
       - neurodamus-thalamus
       - parquet-converters
       - placement-algorithm
+      - psp-validation
       - py-basalt
       - py-bluepymm
       - py-bluepyopt
