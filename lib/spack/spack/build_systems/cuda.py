@@ -51,6 +51,8 @@ class CudaPackage(PackageBase):
     # 1. Linux x86_64
     # 2. Linux ppc64le
     # 3. Mac OS X
+    # CUDA-compiler conflicts are version-to-version specific and are
+    # difficult to express with the current Spack conflict syntax
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
