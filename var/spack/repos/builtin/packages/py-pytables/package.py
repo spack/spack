@@ -12,11 +12,12 @@ class PyPytables(PythonPackage):
     homepage = "http://www.pytables.org/"
     url      = "https://github.com/PyTables/PyTables/archive/v3.4.0.tar.gz"
 
+    version('3.5.1', sha256='fda2e5071ce064ae1e808623e4c6166e6ab5f0f6152043991c5151d4e2622f2e')
     version('3.4.0', 'a2ecd9727ecfb14d7722b78e014e28ea')
     version('3.3.0', '056c161ae0fd2d6e585b766adacf3b0b')
     version('3.2.2', '7cbb0972e4d6580f629996a5bed92441', url="https://github.com/PyTables/PyTables/archive/v.3.2.2.tar.gz")
 
-    depends_on('hdf5@1.8.0:1.8.999')
+    depends_on('hdf5@1.8.0:')
     depends_on('py-numpy@1.8.0:', type=('build', 'run'))
     depends_on('py-numexpr@2.5.2:', type=('build', 'run'))
     depends_on('py-cython', type=('build', 'run'))
