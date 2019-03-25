@@ -255,6 +255,9 @@ class Neuron(Package):
         neuron_archdir = self.get_neuron_archdir()
         spack_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
         spack_env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+        if self.spec.satisfies('+python'):
+            run_env.prepend_path('PYTHONPATH', self.spec.prefix.lib64.python)
+            run_env.prepend_path('PYTHONPATH', self.spec.prefix.lib.python)
 
     def setup_dependent_package(self, module, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()
