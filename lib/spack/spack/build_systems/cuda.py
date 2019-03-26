@@ -51,6 +51,8 @@ class CudaPackage(PackageBase):
     # 1. Linux x86_64
     # 2. Linux ppc64le
     # 3. Mac OS X
+    # CUDA-compiler conflicts are version-to-version specific and are
+    # difficult to express with the current Spack conflict syntax
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
@@ -93,12 +95,17 @@ class CudaPackage(PackageBase):
     conflicts('%clang@7:', when='+cuda ^cuda@10.0.130' + arch_platform)
 
     # Intel is mostly relevant for x86_64 Linux, even though it also
-    # exists for Mac OS X.
-    conflicts('%intel@:14,16:', when='+cuda ^cuda@7.5')
-    conflicts('%intel@:14,17:', when='+cuda ^cuda@8.0.44')
-    conflicts('%intel@:14,18:', when='+cuda ^cuda@8.0.61:9.1')
-    conflicts('%intel@17:18', when='+cuda ^cuda@9.2:')
-    conflicts('%intel@19:', when='+cuda')
+    # exists for Mac OS X. No information prior to CUDA 3.2 or Intel 11.1
+    conflicts('%intel@:11.0', when='+cuda ^cuda@:3.1')
+    conflicts('%intel@:12.0', when='+cuda ^cuda@5.5:')
+    conflicts('%intel@:13.0', when='+cuda ^cuda@6.0:')
+    conflicts('%intel@:13.2', when='+cuda ^cuda@6.5:')
+    conflicts('%intel@:14.9', when='+cuda ^cuda@7:')
+    # Intel 15.x is compatible with CUDA 7 thru current CUDA
+    conflicts('%intel@16.0:', when='+cuda ^cuda@:8.0.43')
+    conflicts('%intel@17.0:', when='+cuda ^cuda@:8.0.60')
+    conflicts('%intel@18.0:', when='+cuda ^cuda@:9.9')
+    conflicts('%intel@19.0:', when='+cuda ^cuda@:10.0')
 
     # XL is mostly relevant for ppc64le Linux
     conflicts('%xl@:12,14:', when='+cuda ^cuda@:9.1')
