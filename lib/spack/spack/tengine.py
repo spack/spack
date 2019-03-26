@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
-import os
 import textwrap
 
 import jinja2
@@ -74,8 +73,7 @@ def make_environment(dirs=None):
     if dirs is None:
         # Default directories where to search for templates
         builtins = spack.config.get('config:template_dirs')
-        extension_dirs = spack.config.get('config:extensions') or []
-        extensions = [os.path.join(x, 'templates') for x in extension_dirs]
+        extensions = spack.extensions.get_template_dirs()
         dirs = [canonicalize_path(d)
                 for d in itertools.chain(builtins, extensions)]
 

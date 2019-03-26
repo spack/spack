@@ -114,3 +114,12 @@ def get_module(cmd_name):
             return module
     else:
         return None
+
+
+def get_template_dirs():
+    """Returns the list of directories where to search for templates
+    in extensions.
+    """
+    extension_dirs = spack.config.get('config:extensions') or []
+    extensions = [os.path.join(x, 'templates') for x in extension_dirs]
+    return extensions
