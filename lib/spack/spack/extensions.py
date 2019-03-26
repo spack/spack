@@ -11,6 +11,9 @@ import re
 import llnl.util.lang
 import llnl.util.tty as tty
 
+import spack.config
+
+
 extension_regexp = re.compile(r'spack-([\w]*)')
 
 
@@ -92,3 +95,22 @@ def path_for_extension(target_name, *paths):
             return path
     else:
         raise IOError('extension "{0}" not found'.format(target_name))
+
+
+def get_module(cmd_name):
+    """Imports the extension module for a particular command name
+    and returns it.
+
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+    """
+    # If built-in failed the import search the extension
+    # directories in order
+    extensions = spack.config.get('config:extensions') or []
+    for folder in extensions:
+        module = load_command_extension(cmd_name, folder)
+        if module:
+            return module
+    else:
+        return None

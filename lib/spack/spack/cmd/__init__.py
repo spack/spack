@@ -101,14 +101,8 @@ def get_module(cmd_name):
                             level=0)
         tty.debug('Imported {0} from built-in commands'.format(pname))
     except ImportError:
-        # If built-in failed the import search the extension
-        # directories in order
-        extensions = spack.config.get('config:extensions') or []
-        for folder in extensions:
-            module = spack.extensions.load_command_extension(cmd_name, folder)
-            if module:
-                break
-        else:
+        module = spack.extensions.get_module(cmd_name)
+        if not module:
             raise
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
