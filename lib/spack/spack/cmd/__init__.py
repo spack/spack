@@ -69,7 +69,8 @@ def all_commands():
                 if file.endswith(".py") and not re.search(ignore_files, file):
                     cmd = re.sub(r'.py$', '', file)
                     _all_commands.append(cmd_name(cmd))
-            _all_commands.sort()
+
+        _all_commands.sort()
 
     return _all_commands
 
