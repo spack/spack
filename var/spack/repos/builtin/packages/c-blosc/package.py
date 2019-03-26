@@ -14,6 +14,7 @@ class CBlosc(CMakePackage):
     homepage = "http://www.blosc.org"
     url      = "https://github.com/Blosc/c-blosc/archive/v1.11.1.tar.gz"
 
+    version('1.16.3', sha256='bec56cb0956725beb93d50478e918aca09f489f1bfe543dbd3087827a7344396')
     version('1.15.0', sha256='dbbb01f9fedcdf2c2ff73296353a9253f44ce9de89c081cbd8146170dce2ba8f')
     version('1.12.1', sha256='e04535e816bb942bedc9a0ba209944d1eb34e26e2d9cca37f114e8ee292cb3c8')
     version('1.11.1', sha256='d15937961d37b0780b8fb0641483eb9f6d4c379f88ac7ee84ff5dd06c2b72360')
