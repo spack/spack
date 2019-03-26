@@ -47,8 +47,8 @@ class Libyogrt(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if self.spec.variants['scheduler'].value != "system":
-            sched = self.spec.variants['scheduler'].value
+        sched = self.spec.variants['scheduler'].value
+        if sched != "system":
             args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
 
         return args
