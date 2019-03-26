@@ -527,8 +527,6 @@ class Database(object):
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
                 raise
-            finally:
-                directory_layout.check_upstream = True
 
     def _construct_from_directory_layout(self, directory_layout, old_data):
         # Read first the `spec.yaml` files in the prefixes. They should be
