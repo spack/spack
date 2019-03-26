@@ -20,6 +20,7 @@ class PyNetcdf4(PythonPackage):
     depends_on('py-cython@0.19:', type='build')
 
     depends_on('py-numpy@1.7:', type=('build', 'run'))
+    depends_on('py-cftime', type=('build', 'run'))
 
     depends_on('netcdf')
     depends_on('hdf5@1.8.0:')
