@@ -34,7 +34,7 @@ packages:
       mkl: [intel-mkl]
       mpe: [mpe2]
       mpi: [openmpi, mpich]
-      mysql-client: [mariadb-c-client]
+      mysql-client: [mysql, mariadb-c-client]
       opencl: [pocl]
       openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]
