@@ -15,6 +15,7 @@ class PyXopen(PythonPackage):
     homepage = "https://github.com/marcelm/xopen"
     url      = "https://pypi.io/packages/source/x/xopen/xopen-0.1.1.tar.gz"
 
+    version('0.5.0', sha256='b097cd25e8afec42b6e1780c1f6315016171b5b6936100cdf307d121e2cbab9f')
     version('0.1.1', '4e0e955546ee6bee4ea736b54623a671')
 
     depends_on('py-setuptools', type='build')
