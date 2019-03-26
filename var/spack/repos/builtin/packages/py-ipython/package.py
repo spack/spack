@@ -20,16 +20,21 @@ class PyIpython(PythonPackage):
     version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
 
     depends_on('python@2.7:2.8,3.3:')
+    depends_on('python@3.3:', when='@6.0:')
 
     depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")
     depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
-    depends_on('py-pygments',                   type=('build', 'run'))
-    depends_on('py-pickleshare',                type=('build', 'run'))
-    depends_on('py-simplegeneric@0.8:',         type=('build', 'run'))
-    depends_on('py-prompt-toolkit@1.0.4:1.999', type=('build', 'run'))
-    depends_on('py-traitlets@4.2:',             type=('build', 'run'))
-    depends_on('py-decorator',                  type=('build', 'run'))
-    depends_on('py-pexpect',                    type=('build', 'run'))
+    depends_on('py-pygments',                     type=('build', 'run'))
+    depends_on('py-pickleshare',                  type=('build', 'run'))
+    depends_on('py-simplegeneric@0.8:',           type=('build', 'run'))
+    depends_on('py-prompt-toolkit@1.0.4:1.999',   type=('build', 'run'),
+               when='@:5.1.0')
+    depends_on('py-prompt-toolkit@2.0.0:2.0.999', type=('build', 'run'),
+               when='@7.3.0:')
+    depends_on('py-traitlets@4.2:',               type=('build', 'run'))
+    depends_on('py-decorator',                    type=('build', 'run'))
+    depends_on('py-pexpect',                      type=('build', 'run'))
+    depends_on('py-backcall',                     type=('build', 'run'))
 
     depends_on('py-appnope', type=('build', 'run'),
                     when=sys.platform == 'darwin' and
