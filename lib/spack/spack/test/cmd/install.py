@@ -414,7 +414,7 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
         spack.store.layout.metadata_path(s), 'archived-files'
     )
     config_log = os.path.join(archive_dir,
-                              mock_archive.repo_name,
+                              mock_archive.expanded_archive_basedir,
                               'config.log')
     assert os.path.exists(config_log)
 
