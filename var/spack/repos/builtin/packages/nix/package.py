@@ -29,12 +29,13 @@ class Nix(AutotoolsPackage):
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
-    depends_on('bison', type='build')
-    depends_on('flex', type='build')
+    depends_on('bison@2.6.0:', type='build')
+    depends_on('flex@2.5.35:', type='build')
     depends_on('libtool', type='build')
     depends_on('libxslt', when='+doc', type='build')
 
-    depends_on('boost')
+    depends_on('boost@1.66.0:+coroutine+context cxxstd=14', when='@2.2.0:')
+    depends_on('boost@1.61.0:+coroutine+context cxxstd=14', when='@2.0.0:')
     depends_on('brotli')
     depends_on('editline')
     depends_on('m4', type='build')
@@ -42,7 +43,8 @@ class Nix(AutotoolsPackage):
     depends_on('bzip2')
     depends_on('curl')
     depends_on('libseccomp', when='+sandboxing')
-    depends_on('sqlite')
+    depends_on('openssl')
+    depends_on('sqlite@3.6.19:')
     depends_on('xz')
 
     # gcc 4.9+ and higher supported with c++14
