@@ -10,7 +10,7 @@ class Libyogrt(AutotoolsPackage):
     """Your One Get Remaining Time Library."""
 
     homepage = "https://github.com/LLNL/libyogrt"
-    url      = "https://github.com/LLNL/libyogrt/archive/1.20-6.tar.gz"
+    url      = "https://github.com/LLNL/libyogrt/releases/download/1.21/libyogrt-1.21.tar.gz"
 
     version('1.24',   sha256='36695030e72b24b1f22bfcfe42bfd1d3c87f9c0eea5e94ce0120782581ea522f')
     version('1.23',   sha256='c95e7a6be29c0d1ac1b673b0ba1d4e5781981722f93d0da99ae62ff3b5f35b5f')
@@ -29,17 +29,15 @@ class Libyogrt(AutotoolsPackage):
 
     conflicts('scheduler=lsf', when='@:1.22')
 
+    def url_for_version(self, version):
+        if version < Version(1.21):
+            return "https://github.com/LLNL/libyogrt/archive/%s.tar.gz" % version
+        else:
+            return "https://github.com/LLNL/libyogrt/releases/download/{0}/libyogrt-{0}.tar.gz".format(version)
+
     def configure_args(self):
         args = []
 
-        sched = list(self.spec.variants['scheduler'].value)
-        if 'slurm' in sched:
-            args.append('--with-slurm=yes')
-        if 'moab' in sched:
-            args.append('--with-moab=yes')
-        if 'lcrm' in sched:
-            args.append('--with-lcrm=yes')
-        if 'lsf' in sched:
-            args.append('--with-lsf=yes')
+        args.append('--with-%s=yes' % self.spec.variants['scheduler'].value)
 
         return args
