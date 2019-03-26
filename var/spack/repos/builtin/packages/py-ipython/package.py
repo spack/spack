@@ -26,10 +26,12 @@ class PyIpython(PythonPackage):
     depends_on('py-pygments',                   type=('build', 'run'))
     depends_on('py-pickleshare',                type=('build', 'run'))
     depends_on('py-simplegeneric@0.8:',         type=('build', 'run'))
-    depends_on('py-prompt-toolkit@1.0.4:1.999', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@1.0.4:1.999', when='@:7.0.0', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@2.0.0:2.999', when='@7.0.0:', type=('build', 'run'))
     depends_on('py-traitlets@4.2:',             type=('build', 'run'))
     depends_on('py-decorator',                  type=('build', 'run'))
     depends_on('py-pexpect',                    type=('build', 'run'))
+    depends_on('py-backcall',                   type=('build', 'run'), when="^python@3.3:")
 
     depends_on('py-appnope', type=('build', 'run'),
                     when=sys.platform == 'darwin' and
