@@ -39,8 +39,8 @@ class Mysql(CMakePackage):
     variant('client_only', default=False,
             description='Build and install client only.')
     variant('cxxstd',
-            default='default',
-            values=('default', '98', '11', '14', '17'),
+            default='98',
+            values=('98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
 
@@ -64,25 +64,21 @@ class Mysql(CMakePackage):
     # Each version of MySQL requires a specific version of boost
     # See BOOST_PACKAGE_NAME in cmake/boost.cmake
     # 8.0.14+
-    depends_on('boost@1.68.0 cxxstd=default', type='build', when='@8.0.14: cxxstd=default')
     depends_on('boost@1.68.0 cxxstd=98', type='build', when='@8.0.14: cxxstd=98')
     depends_on('boost@1.68.0 cxxstd=11', type='build', when='@8.0.14: cxxstd=11')
     depends_on('boost@1.68.0 cxxstd=14', type='build', when='@8.0.14: cxxstd=14')
     depends_on('boost@1.68.0 cxxstd=17', type='build', when='@8.0.14: cxxstd=17')
     # 8.0.12--8.0.13
-    depends_on('boost@1.67.0 cxxstd=default', type='build', when='@8.0.12:8.0.13 cxxstd=default')
     depends_on('boost@1.67.0 cxxstd=98', type='build', when='@8.0.12:8.0.13 cxxstd=98')
     depends_on('boost@1.67.0 cxxstd=11', type='build', when='@8.0.12:8.0.13 cxxstd=11')
     depends_on('boost@1.67.0 cxxstd=14', type='build', when='@8.0.12:8.0.13 cxxstd=14')
     depends_on('boost@1.67.0 cxxstd=17', type='build', when='@8.0.12:8.0.13 cxxstd=17')
     # 8.0.11
-    depends_on('boost@1.66.0 cxxstd=default', type='build', when='@8.0.11 cxxstd=default')
     depends_on('boost@1.66.0 cxxstd=98', type='build', when='@8.0.11 cxxstd=98')
     depends_on('boost@1.66.0 cxxstd=11', type='build', when='@8.0.11 cxxstd=11')
     depends_on('boost@1.66.0 cxxstd=14', type='build', when='@8.0.11 cxxstd=14')
     depends_on('boost@1.66.0 cxxstd=17', type='build', when='@8.0.11 cxxstd=17')
     # 5.7.X
-    depends_on('boost@1.59.0 cxxstd=default', type='build', when='@5.7.0:5.7.999 cxxstd=default')
     depends_on('boost@1.59.0 cxxstd=98', type='build', when='@5.7.0:5.7.999 cxxstd=98')
     depends_on('boost@1.59.0 cxxstd=11', type='build', when='@5.7.0:5.7.999 cxxstd=11')
     depends_on('boost@1.59.0 cxxstd=14', type='build', when='@5.7.0:5.7.999 cxxstd=14')
@@ -111,7 +107,6 @@ class Mysql(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         cxxstd = self.spec.variants['cxxstd'].value
-        flag = '' if cxxstd == 'default' else \
-               getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
+        flag = getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
         if flag:
             spack_env.append_flags('CXXFLAGS', flag)
