@@ -23,9 +23,18 @@ class Libyogrt(AutotoolsPackage):
     version('1.20-3', 'd0507717009a5f8e2009e3b63594738f')
     version('1.20-2', '780bda03268324f6b5f72631fff6e6cb')
 
-    variant('scheduler', default='slurm',
+    # libyogrt supports the following schedulers:
+    #     lcrm, lsf, moab, slurm, AIX+slurm
+
+    # however, only slurm exists in spack
+    # libyogrt's build system is smart enough to detect the system scheduler
+    # the slurm option here connects to a spack-installed slurm
+    # if/when other schedulers have spack packages, they can be added
+
+    variant('scheduler', default='system',
             description="Select scheduler integration",
-            values=['slurm', 'moab', 'lcrm', 'lsf'], multi=False)
+            values=['system', 'slurm'], multi=False)
+    depends_on('slurm', when='scheduler=slurm')
 
     conflicts('scheduler=lsf', when='@:1.22')
 
@@ -38,6 +47,8 @@ class Libyogrt(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        args.append('--with-%s=yes' % self.spec.variants['scheduler'].value)
+        if self.spec.variants['scheduler'].value != "system":
+            sched = self.spec.variants['scheduler'].value
+            args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
 
         return args
