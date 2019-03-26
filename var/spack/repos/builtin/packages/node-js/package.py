@@ -36,6 +36,7 @@ class NodeJs(Package):
     depends_on('icu4c', when='+icu4c')
     depends_on('openssl@1.0.2d:1.0.99', when='@:9+openssl')
     depends_on('openssl@1.1:', when='@10:+openssl')
+    depends_on('zlib', when='+zlib')
 
     def install(self, spec, prefix):
         options = []
