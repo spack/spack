@@ -179,17 +179,11 @@ class Clang(Compiler):
         """
         compiler = Executable(comp)
         output = compiler('--version', output=str, error=str)
-        return cls.detect_version_from_str(output)
+        return cls.extract_version_from_output(output)
 
     @classmethod
-    def detect_version_from_str(cls, output):
-        """Returns the version that has been detected from the string
-        passed as input. If no detection is possible returns the
-        string 'unknown'.
-
-        Args:
-            output (str): string used to detect a compiler version
-        """
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
         ver = 'unknown'
         match = re.search(
             # Apple's LLVM compiler has its own versions, so suffix them.

@@ -258,7 +258,7 @@ def test_xl_r_flags():
      'Thread model: posix\n', '3.1'),
 ])
 def test_clang_version_detection(version_str, expected_version):
-    version = spack.compilers.clang.Clang.detect_version_from_str(version_str)
+    version = compilers.clang.Clang.extract_version_from_output(version_str)
     assert version == expected_version
 
 
