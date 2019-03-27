@@ -8,6 +8,7 @@ import shutil
 import glob
 import tempfile
 import re
+from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
@@ -33,6 +34,7 @@ class DirectoryLayout(object):
 
     def __init__(self, root):
         self.root = root
+        self.check_upstream = True
 
     @property
     def hidden_file_paths(self):
@@ -73,6 +75,13 @@ class DirectoryLayout(object):
     def path_for_spec(self, spec):
         """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
+
+        if spec.external:
+            return spec.external_path
+        if self.check_upstream and spec.package.installed_upstream:
+            raise SpackError(
+                "Internal error: attempted to call path_for_spec on"
+                " upstream-installed package.")
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
@@ -164,7 +173,6 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def __init__(self, root, **kwargs):
         super(YamlDirectoryLayout, self).__init__(root)
-        self.metadata_dir   = kwargs.get('metadata_dir', '.spack')
         self.hash_len       = kwargs.get('hash_len')
         self.path_scheme    = kwargs.get('path_scheme') or (
             "${ARCHITECTURE}/"
@@ -177,6 +185,9 @@ class YamlDirectoryLayout(DirectoryLayout):
             self.path_scheme = self.path_scheme.replace(
                 "${HASH}", "${HASH:%d}" % self.hash_len)
 
+        # If any of these paths change, downstream databases may not be able to
+        # locate files in older upstream databases
+        self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
         self.build_log_name      = 'build.out'  # build log.
@@ -189,9 +200,6 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
-
-        if spec.external:
-            return spec.external_path
 
         path = spec.format(self.path_scheme)
         return path
@@ -222,20 +230,23 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
+    @contextmanager
+    def disable_upstream_check(self):
+        self.check_upstream = False
+        yield
+        self.check_upstream = True
+
     def metadata_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir)
+        return os.path.join(spec.prefix, self.metadata_dir)
 
     def build_log_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.build_log_name)
+        return os.path.join(self.metadata_path(spec), self.build_log_name)
 
     def build_env_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.build_env_name)
+        return os.path.join(self.metadata_path(spec), self.build_env_name)
 
     def build_packages_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.packages_dir)
+        return os.path.join(self.metadata_path(spec), self.packages_dir)
 
     def create_install_directory(self, spec):
         _check_concrete(spec)

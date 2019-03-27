@@ -125,6 +125,77 @@ def test_installed_dependency_request_conflicts(
         dependent.concretize()
 
 
+def test_installed_upstream_external(
+        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
+    """Check that when a dependency package is recorded as installed in
+       an upstream database that it is not reinstalled.
+    """
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    upstream_layout = gen_mock_layout('/a/')
+
+    dependency = spack.spec.Spec('externaltool')
+    dependency.concretize()
+    prepared_db.add(dependency, upstream_layout)
+
+    try:
+        original_db = spack.store.db
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        spack.store.db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        dependent = spack.spec.Spec('externaltest')
+        dependent.concretize()
+
+        new_dependency = dependent['externaltool']
+        assert new_dependency.external
+        assert new_dependency.prefix == '/path/to/external_tool'
+
+        dependent.package.do_install()
+
+        assert not os.path.exists(new_dependency.prefix)
+        assert os.path.exists(dependent.prefix)
+    finally:
+        spack.store.db = original_db
+
+
+def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
+                            gen_mock_layout):
+    """Check that when a dependency package is recorded as installed in
+       an upstream database that it is not reinstalled.
+    """
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    upstream_layout = gen_mock_layout('/a/')
+
+    dependency = spack.spec.Spec('dependency-install')
+    dependency.concretize()
+    prepared_db.add(dependency, upstream_layout)
+
+    try:
+        original_db = spack.store.db
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        spack.store.db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        dependent = spack.spec.Spec('dependent-install')
+        dependent.concretize()
+
+        new_dependency = dependent['dependency-install']
+        assert new_dependency.package.installed_upstream
+        assert (new_dependency.prefix ==
+                upstream_layout.path_for_spec(dependency))
+
+        dependent.package.do_install()
+
+        assert not os.path.exists(new_dependency.prefix)
+        assert os.path.exists(dependent.prefix)
+    finally:
+        spack.store.db = original_db
+
+
 @pytest.mark.disable_clean_stage_check
 def test_partial_install_keep_prefix(install_mockery, mock_fetch):
     spec = Spec('canfail').concretized()

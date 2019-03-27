@@ -32,6 +32,11 @@ def setup_parser(subparser):
         help='delete the module file tree before refresh',
         action='store_true'
     )
+    refresh_parser.add_argument(
+        '--upstream-modules',
+        help='generate modules for packages installed upstream',
+        action='store_true'
+    )
     arguments.add_common_arguments(
         refresh_parser, ['constraint', 'yes_to_all']
     )
@@ -125,10 +130,14 @@ def loads(module_type, specs, args, out=sys.stdout):
             )
 
     module_cls = spack.modules.module_types[module_type]
-    modules = [
-        (spec, module_cls(spec).layout.use_name)
-        for spec in specs if os.path.exists(module_cls(spec).layout.filename)
-    ]
+    modules = list()
+    for spec in specs:
+        if os.path.exists(module_cls(spec).layout.filename):
+            modules.append((spec, module_cls(spec).layout.use_name))
+        elif spec.package.installed_upstream:
+            tty.debug("Using upstream module for {0}".format(spec))
+            module = spack.modules.common.upstream_module(spec, module_type)
+            modules.append((spec, module.use_name))
 
     module_commands = {
         'tcl': 'module load ',
@@ -158,6 +167,12 @@ def find(module_type, specs, args):
     """
 
     spec = one_spec_or_raise(specs)
+
+    if spec.package.installed_upstream:
+        module = spack.modules.common.upstream_module(spec, module_type)
+        if module:
+            print(module.path)
+        return
 
     # Check if the module file is present
     def module_exists(spec):
@@ -232,6 +247,9 @@ def refresh(module_type, specs, args):
         tty.msg('No package matches your query')
         return
 
+    if not args.upstream_modules:
+        specs = list(s for s in specs if not s.package.installed_upstream)
+
     if not args.yes_to_all:
         msg = 'You are about to regenerate {types} module files for:\n'
         tty.msg(msg.format(types=module_type))
@@ -276,6 +294,7 @@ def refresh(module_type, specs, args):
 
     # If we arrived here we have at least one writer
     module_type_root = writers[0].layout.dirname()
+    spack.modules.common.generate_module_index(module_type_root, writers)
     # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=module_type))
     if os.path.isdir(module_type_root) and args.delete_tree:
