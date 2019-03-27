@@ -1,22 +1,141 @@
-# -------------------------------------------------------------------------
-# This is the default configuration for Spack's module file generation.
-#
-# Settings here are versioned with Spack and are intended to provide
-# sensible defaults out of the box. Spack maintainers should edit this
-# file to keep it current.
-#
-# Users can override these settings by editing the following files.
-#
-# Per-spack-instance settings (overrides defaults):
-#   $SPACK_ROOT/etc/spack/modules.yaml
-#
-# Per-user settings (overrides default and site settings):
-#   ~/.spack/modules.yaml
-# -------------------------------------------------------------------------
 modules:
   enable:
     - tcl
     - dotkit
+  tcl:
+    hash_length: 0
+    naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+    all:
+      suffixes:
+        ^openmpi@3.1.2:  'openmpi@3.1.2'
+        ^openmpi@3.1.1:  'openmpi@3.1.1'
+        ^openmpi@3.1.0:  'openmpi@3.1.0'
+          #
+        ^openmpi@3.0.2:  'openmpi@3.0.2'
+        ^openmpi@3.0.1:  'openmpi@3.0.1'
+        ^openmpi@3.0.0:  'openmpi@3.0.0'
+          #
+        ^openmpi@2.1.2:  'openmpi@2.1.2'
+        ^openmpi@2.1.1:  'openmpi@2.1.1'
+        ^openmpi@2.1.0:  'openmpi@2.1.0'
+          #
+        ^openmpi@1.10.7: 'openmpi@1.10.7'
+        ^openmpi@1.10.5: 'openmpi@1.10.5'
+            #
+        ^python@2.7.14:  'python@2.7.14'
+        ^python@3.6.2:   'python@3.6.2'
+            #
+        #^intel-mkl@2018.0.128: 'intel-mkl@2018.0.128'
+            #
+        #^openblas@0.2.20: 'openblas@0.2.20'
+    blacklist:
+      # redundant installs
+      - python@2.7.14%gcc@6.4.0
+      - python@2.7.14%gcc@7.1.0
+      # tpls
+      - autoconf
+      - automake
+      - binutils
+      - bison
+      - bzip2
+      - cairo
+      - curl
+      - expat
+      - flex
+      - font-util
+      - fontconfig
+      - freetype
+      - gdbm
+      - gettext
+      - git
+      - glib
+      - glm
+      - gobject-introspection
+      - gmp
+      - gperf
+      - harfbuzz
+      - help2man
+      - icu4c
+      - inputproto
+      - isl
+      - kbproto
+      - lcms
+      - libbsd
+      - libedit
+      - libelf
+      - libffi
+      - libgcrypt
+      - libgpg-error
+      - libiconv
+      - libjpeg-turbo
+      - libmng
+      - libpciaccess
+      - libpng
+      - libpthread-stubs
+      - libsigsegv
+      - libtiff
+      - libtool
+      - libx11
+      - libxau
+      - libxcb
+      - libxdmcp
+      - libxml2
+      - libxslt
+      - m4
+      - mpc
+      - mpfr
+      - nasm
+      - ncurses
+      - nghttp2
+      - openssl
+      - pango
+      - pcre
+      - perl
+      - pkg-config
+      - py-appdirs
+      - py-configparser
+      - py-cycler
+      - py-cython
+      - py-dateutil
+      - py-enum34
+      - py-flake8
+      - py-functools32
+      - py-git-review
+      - py-gnuplot
+      - py-lit
+      - py-matplotlib
+      - py-mccabe
+      - py-mpmath
+      - py-numpy
+      - py-packaging
+      - py-pbr
+      - py-pillow
+      - py-pycodestyle
+      - py-pyflakes
+      - py-pyparsing
+      - py-pytz
+      - py-requests
+      - py-setuptools
+      - py-six
+      - py-subprocess32
+      - py-sympy
+      - qhull
+      - readline
+      - sqlite
+      - swig
+      - tar
+      - tcl
+      - tk
+      - util-macros
+      - xcb-proto
+      - xextproto
+      - xproto
+      - xtrans
+      - xz
+      - zip
+      - zlib
+      - '%clang'
+      - '%gcc@7.3.0'
   prefix_inspections:
     bin:
       - PATH
@@ -28,8 +147,10 @@ modules:
       - ACLOCAL_PATH
     lib:
       - LIBRARY_PATH
+      - LD_LIBRARY_PATH
     lib64:
       - LIBRARY_PATH
+      - LD_LIBRARY_PATH
     include:
       - CPATH
     lib/pkgconfig:
@@ -42,3 +163,4 @@ modules:
   lmod:
     hierarchy:
       - mpi
+
