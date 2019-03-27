@@ -58,6 +58,11 @@ for stage in $stages; do
     last="$stage"
 done
 
+if [[ "x${TERM:-}" == "x" ]]; then
+    echo "No TERM environment variable set! Defaulting to: vt100"
+    export TERM="vt100"
+fi
+
 log() {
     date="$(tput smul)$(date +%H:%M:%S)$(tput rmul)"
     echo "$(tput bold)### ${date} $@$(tput sgr0)" >&2
