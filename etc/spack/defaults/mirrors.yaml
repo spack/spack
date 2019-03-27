@@ -1,4 +1,0 @@
-mirrors:
-  # local_filesystem: file:///scratch/vendors/spack.mirror
-  local_filesystem: file:///usr/projects/draco/vendors/spack.mirror
-
