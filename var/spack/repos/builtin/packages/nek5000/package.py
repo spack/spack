@@ -114,10 +114,18 @@ class Nek5000(Package):
                 raise RuntimeError('X11/Intrinsic.h not found in %s' %
                                    spec['libxt'].prefix.include)
             cflags += ['-I%s' % os.path.dirname(libxt_h.directories[0])]
+
         if self.compiler.name in ['xl', 'xl_r']:
             # Use '-qextname' to add underscores.
             # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
             fflags += ['-qextname', '-WF,-qnotrigraph']
+        if 'gfortran' in fc:
+            # Get the version directly (works for clang+gfortran too)
+            f77_ver = spack.compiler.get_compiler_version(fc, '-dumpversion')
+            if ver(f77_ver) >= ver(8):
+                # Use '-std=legacy' to suppress an error that used to be a
+                # warning in previous versions of gfortran.
+                fflags += ['-std=legacy']
         fflags = ' '.join(fflags)
         cflags = ' '.join(cflags)
 
