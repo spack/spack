@@ -58,14 +58,21 @@ for stage in $stages; do
     last="$stage"
 done
 
-if [[ "x${TERM:-}" == "x" ]]; then
-    echo "No TERM environment variable set! Defaulting to: vt100"
-    export TERM="vt100"
+if [[ "x${TERM:-dumb}" == "xdumb" ]]; then
+    UL_START=
+    UL_END=
+    B_START=
+    B_END=
+else
+    UL_START=$(tput smul)
+    UL_END=$(tput rmul)
+    B_START=$(tput bold)
+    B_END=$(tput sgr0)
 fi
 
 log() {
-    date="$(tput smul)$(date +%H:%M:%S)$(tput rmul)"
-    echo "$(tput bold)### ${date} $@$(tput sgr0)" >&2
+    date="${UL_START}$(date +%H:%M:%S)${UL_END}"
+    echo "${B_START}### ${date} $@${B_END}" >&2
 }
 
 install_dir_raw() {
