@@ -1,0 +1,33 @@
+Wed Mar 27 11:20:03 MDT 2019 [1m/home/dantopa/.mybash(B[m
+Wed Mar 27 11:20:03 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/platforms.sh(B[m
+attempting to mkdir /scratch/users/dantopa/repos/gitlab/node-queries/darwin/power9-cn2022/dir-configuration
+directory of core scripts = ${core} = /scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts
+Wed Mar 27 11:20:03 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/master.sh(B[m
+Wed Mar 27 11:20:03 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-proc.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/slurm.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-git.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/gcc.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-slurm.sh(B[m
+/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-git.sh: line 5: gonode: command not found
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/slurm.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/git.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/ssh.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/vim.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/bash.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/finds.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/cmake.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/fortran.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/copy-configuration.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/bookmarks.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/bookmarks-bitbucket.sh(B[m
+/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-slurm.sh: line 33: sinfo_s: command not found
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/bookmarks-github.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/bookmarks-gitlab.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/disk.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-proc.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/slurm.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-slurm.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-git.sh(B[m
+/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-git.sh: line 5: gonode: command not found
