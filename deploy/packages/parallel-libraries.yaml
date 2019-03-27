@@ -21,7 +21,7 @@ packages:
     specs:
       - py-mpi4py@3.0.0
       - hdf5+mpi@1.10.4
-      - highfive+mpi@1.6
+      - highfive+mpi@2.0
       - parmetis@4.0.3
 
   gnu-stable-python-parallel:
@@ -71,7 +71,7 @@ packages:
       - mpi
     specs:
       - hdf5+mpi@1.10.4
-      - highfive+mpi@1.6
+      - highfive+mpi@2.0
 
   intel-stable-parallel-python:
     target_matrix:
