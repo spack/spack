@@ -15,10 +15,10 @@ class Libsonata(CMakePackage):
     See also:
     https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md
     """
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/common/libsonata"
-    url      = "ssh://bbpcode.epfl.ch/common/libsonata"
+    homepage = "https://github.com/BlueBrain/libsonata"
+    git = "https://github.com/BlueBrain/libsonata.git"
 
-    version('develop', git=url, submodules=False)
+    version('develop', git=git, submodules=False)
 
     variant('mpi', default=False, description="Enable MPI backend")
     variant('python', default=False, description="Enable Python bindings")
