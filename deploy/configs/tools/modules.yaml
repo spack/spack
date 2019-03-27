@@ -37,6 +37,7 @@ modules:
       - ior
       - imb
       - intel-mpi
+      - ispc
       - likwid
       - lmod
       - mvapich2

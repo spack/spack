@@ -35,6 +35,7 @@ packages:
       - hpe-mpi@2.16
       - intel-mpi@2018.1.163
       - isl@0.18
+      - ispc@1.10.0
       - libx11@1.6.5
       - m4@1.4.18
       - mpc@1.1.0
