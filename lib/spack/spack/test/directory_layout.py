@@ -22,7 +22,11 @@ max_packages = 10
 @pytest.fixture()
 def layout_and_dir(tmpdir):
     """Returns a directory layout and the corresponding directory."""
-    yield YamlDirectoryLayout(str(tmpdir)), str(tmpdir)
+    layout = YamlDirectoryLayout(str(tmpdir))
+    old_layout = spack.store.layout
+    spack.store.layout = layout
+    yield layout, str(tmpdir)
+    spack.store.layout = old_layout
 
 
 def test_yaml_directory_layout_parameters(
