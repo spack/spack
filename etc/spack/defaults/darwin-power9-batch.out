@@ -31,3 +31,116 @@ Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scrip
 Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-slurm.sh(B[m
 Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-git.sh(B[m
 /scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-git.sh: line 5: gonode: command not found
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/slurm.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/uname.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/spack.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/modules.sh(B[m
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/alias.sh(B[m
+fatal: Unable to create '/scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/.git/index.lock': File exists.
+
+If no other git process is currently running, this probably means a
+git process crashed in this repository earlier. Make sure no other git
+process is running and remove the file manually to continue.
+Wed Mar 27 11:20:04 MDT 2019, [1m/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/environment.sh(B[m
+/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/environment.sh: line 11: myprompt: command not found
+/scratch/users/dantopa/repos/gitlab/bash-scripts/core-scripts/info-slurm.sh: line 33: sinfo_s: command not found
+[develop 438ee28] darwin-power9-cn2022 Wed Mar 27 11:20:04 MDT 2019
+ 2 files changed, 137 insertions(+)
+ create mode 100644 etc/spack/defaults/darwin-power9-batch.out
+Wed Mar 27 11:20:07 MDT 2019 /tmp/slurmd/job5128671/slurm_script
+==> Removing all temporary build stages
+==> Removing cached downloads
+==> Removing cached information on repositories
+==> Removing python cache files
+spack install openmpi@4.0.1 % gcc@4.8.5 arch=linux-rhel7-ppc64le
+==> libtool@2.4.6 : externally installed in /usr
+==> libtool@2.4.6 : generating module file
+==> libtool@2.4.6 : registering into DB
+==> pkg-config@0.29.2 : externally installed in /usr
+==> pkg-config@0.29.2 : generating module file
+==> pkg-config@0.29.2 : registering into DB
+==> Installing util-macros
+==> Searching for binary cache of util-macros
+==> Finding buildcaches in /usr/projects/draco/vendors/spack.mirror/build_cache
+==> No binary for util-macros found: installing from source
+==> Fetching file:///usr/projects/draco/vendors/spack.mirror/util-macros/util-macros-1.19.1.tar.bz2
+==> Staging archive: /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/var/spack/stage/util-macros-1.19.1-bgjmgbpsppmylrvzzup2sniygreyyjik/util-macros-1.19.1.tar.bz2
+==> Created stage in /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/var/spack/stage/util-macros-1.19.1-bgjmgbpsppmylrvzzup2sniygreyyjik
+==> No patches needed for util-macros
+==> Building util-macros [AutotoolsPackage]
+==> Executing phase: 'autoreconf'
+==> Executing phase: 'configure'
+==> Executing phase: 'build'
+==> Executing phase: 'install'
+==> Successfully installed util-macros
+  Fetch: 0.10s.  Build: 1.56s.  Total: 1.66s.
+[+] /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/opt/spack/linux-rhel7-ppc64le/gcc-4.8.5/util-macros-1.19.1-bgjmgbpsppmylrvzzup2sniygreyyjik
+==> Installing libpciaccess
+==> Searching for binary cache of libpciaccess
+==> Finding buildcaches in /usr/projects/draco/vendors/spack.mirror/build_cache
+==> No binary for libpciaccess found: installing from source
+==> Fetching file:///usr/projects/draco/vendors/spack.mirror/libpciaccess/libpciaccess-0.13.5.tar.gz
+==> Staging archive: /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/var/spack/stage/libpciaccess-0.13.5-uzm3xdvyt3yjt3rgvnwuok5rlqvxeuho/libpciaccess-0.13.5.tar.gz
+==> Created stage in /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/var/spack/stage/libpciaccess-0.13.5-uzm3xdvyt3yjt3rgvnwuok5rlqvxeuho
+==> No patches needed for libpciaccess
+==> Building libpciaccess [AutotoolsPackage]
+==> Executing phase: 'autoreconf'
+==> Executing phase: 'configure'
+==> Executing phase: 'build'
+==> Executing phase: 'install'
+==> Successfully installed libpciaccess
+  Fetch: 0.05s.  Build: 7.86s.  Total: 7.91s.
+[+] /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/opt/spack/linux-rhel7-ppc64le/gcc-4.8.5/libpciaccess-0.13.5-uzm3xdvyt3yjt3rgvnwuok5rlqvxeuho
+==> libxml2@2.9.8 : externally installed in /usr
+==> libxml2@2.9.8 : generating module file
+==> libxml2@2.9.8 : registering into DB
+==> numactl@2.0.12 : externally installed in /usr
+==> numactl@2.0.12 : generating module file
+==> numactl@2.0.12 : registering into DB
+==> Installing hwloc
+==> Searching for binary cache of hwloc
+==> Finding buildcaches in /usr/projects/draco/vendors/spack.mirror/build_cache
+==> No binary for hwloc found: installing from source
+==> Fetching file:///usr/projects/draco/vendors/spack.mirror/hwloc/hwloc-1.11.11.tar.gz
+==> Staging archive: /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/var/spack/stage/hwloc-1.11.11-r6cylpu5w4cpe73wc6febasafsb4e3l3/hwloc-1.11.11.tar.gz
+==> Created stage in /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/var/spack/stage/hwloc-1.11.11-r6cylpu5w4cpe73wc6febasafsb4e3l3
+==> No patches needed for hwloc
+==> Building hwloc [AutotoolsPackage]
+==> Executing phase: 'autoreconf'
+==> Executing phase: 'configure'
+==> Executing phase: 'build'
+==> Executing phase: 'install'
+==> Successfully installed hwloc
+  Fetch: 0.06s.  Build: 25.96s.  Total: 26.01s.
+[+] /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/opt/spack/linux-rhel7-ppc64le/gcc-4.8.5/hwloc-1.11.11-r6cylpu5w4cpe73wc6febasafsb4e3l3
+==> Installing zlib
+==> Searching for binary cache of zlib
+==> Finding buildcaches in /usr/projects/draco/vendors/spack.mirror/build_cache
+==> No binary for zlib found: installing from source
+==> Fetching file:///usr/projects/draco/vendors/spack.mirror/zlib/zlib-1.2.11.tar.gz
+==> Staging archive: /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/var/spack/stage/zlib-1.2.11-4v3ticyykh2xcgw5fzltjrfuxkx7ipqh/zlib-1.2.11.tar.gz
+==> Created stage in /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/var/spack/stage/zlib-1.2.11-4v3ticyykh2xcgw5fzltjrfuxkx7ipqh
+==> No patches needed for zlib
+==> Building zlib [Package]
+==> Executing phase: 'install'
+==> Successfully installed zlib
+  Fetch: 0.04s.  Build: 17.20s.  Total: 17.24s.
+[+] /scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/opt/spack/linux-rhel7-ppc64le/gcc-4.8.5/zlib-1.2.11-4v3ticyykh2xcgw5fzltjrfuxkx7ipqh
+==> Installing openmpi
+==> Searching for binary cache of openmpi
+==> Finding buildcaches in /usr/projects/draco/vendors/spack.mirror/build_cache
+==> No binary for openmpi found: installing from source
+==> Warning: There is no checksum on file to fetch openmpi@4.0.1 safely.
+==> Error: FetchError: Will not fetch openmpi@4.0.1
+    Add a checksum or use --no-checksum to skip this check.
+
+/scratch/users/dantopa/new-spack/pr-openmpi-4.0.1.spack/lib/spack/spack/package.py:953, in do_fetch:
+        950                    tty.msg("Fetching with no checksum.", ck_msg)
+        951
+        952            if not ignore_checksum:
+  >>    953                raise FetchError("Will not fetch %s" %
+        954                                 self.spec.format('$_$@'), ck_msg)
+        955
+        956        self.stage.create()
+
+
