@@ -13,4 +13,11 @@ class Pugixml(CMakePackage):
     homepage = "http://pugixml.org/"
     url      = "http://github.com/zeux/pugixml/tarball/v1.8.1"
 
+    version('1.9', 'cac3d11a62e391f834caa239e8b18b4e9ebc46c8c144403473665584044f1666')
     version('1.8.1', 'bff935f82fa45bee4d31257d948bcba2')
+
+    def cmake_args(self):
+        args = [
+            '-DBUILD_SHARED_LIBS:BOOL=ON'
+        ]
+        return args
