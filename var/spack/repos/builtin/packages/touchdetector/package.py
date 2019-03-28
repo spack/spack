@@ -46,6 +46,7 @@ class Touchdetector(CMakePackage):
     depends_on('libxml2')
     depends_on('mpi')
     depends_on('zlib')
+    depends_on('pugixml', when='@4.5:')
 
     def cmake_args(self):
         args = [
