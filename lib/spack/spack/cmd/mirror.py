@@ -18,6 +18,7 @@ import spack.mirror
 import spack.repo
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+import spack.util.path
 from spack.spec import Spec
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
@@ -96,9 +97,7 @@ def setup_parser(subparser):
 
 def mirror_add(args):
     """Add a mirror to Spack."""
-    url = args.url
-    if url.startswith('/'):
-        url = 'file://' + url
+    url = spack.mirror.mirror_url_format(args.url)
 
     mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
@@ -146,9 +145,7 @@ def mirror_remove(args):
 
 def mirror_set_url(args):
     """Change the URL of a mirror."""
-    url = args.url
-    if url.startswith('/'):
-        url = 'file://' + url
+    url = spack.mirror.mirror_url_format(args.url)
 
     mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
@@ -168,13 +165,13 @@ def mirror_set_url(args):
     changes_made = False
 
     if args.push:
-        changes_made = changes_made or push_url != args.url
-        push_url = args.url
+        changes_made = changes_made or push_url != url
+        push_url = url
     else:
         changes_made = (
-                changes_made or fetch_url != push_url or push_url != args.url)
+                changes_made or fetch_url != push_url or push_url != url)
 
-        fetch_url, push_url = args.url, args.url
+        fetch_url, push_url = url, url
 
     items = [(
             (n, u)
@@ -284,8 +281,8 @@ def mirror_create(args):
         # Default name for directory is spack-mirror-<DATESTAMP>
         directory = args.directory
         if not directory:
-            timestamp = datetime.now().strftime("%Y-%m-%d")
-            directory = 'spack-mirror-' + timestamp
+            directory = spack.util.path.canonicalize_path(
+                    spack.config.get('config:source_cache'))
 
         # Make sure nothing is in the way.
         existed = os.path.isdir(directory)

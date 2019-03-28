@@ -11,8 +11,16 @@ the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
+import re
 import sys
 import os
+import os.path
+
+try:
+    from urllib.parse import urlparse, ParseResult
+except ImportError:
+    from urlparse import urlparse, ParseResult
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
@@ -227,6 +235,135 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
                 e.message)
         categories['error'].append(spec)
+
+
+def _missing_s3_bucket(path):
+    return MirrorError(
+            "Missing bucket name in S3 mirror URL path: '{0}'".format(path))
+
+def _bad_url_scheme(scheme):
+    return MirrorError(
+            "Unrecognized or unsupported mirror URL scheme: '{0}'".format(
+                scheme))
+
+def mirror_url_parse(url):
+    """Parse a mirror url."""
+    (scheme, netloc, path, params, query, _) = urlparse(
+            url, scheme='file', allow_fragments=False)
+
+    scheme = scheme.lower()
+    extra_attrs = {}
+
+    if scheme == 'file':
+        path = spack.util.path.canonicalize_path(path)
+    elif scheme in ('http', 'https'):
+        pass # no further processing needed
+    elif scheme == 's3':
+        if not os.path.isabs(path):
+            raise _missing_s3_bucket(path)
+
+        path_tokens = os.path.split(path)
+        if len(path_tokens) < 2:
+            raise _missing_s3_bucket(path)
+
+        bucket_name = path_tokens[1]
+        path = os.path.join('', *path_tokens[2:])
+
+        extra_attrs["s3_bucket"] = bucket_name
+
+        credentials, netloc = (netloc.split('@', 1) + [None])[:2]
+        if netloc is None:
+            netloc, credentials = credentials, netloc
+
+        if credentials:
+            key_id, key_secret = (credentials.split(':', 1) + [None])[:2]
+
+            if key_secret is None:
+                extra_attrs["s3_profile"] = key_id
+            else:
+                extra_attrs["s3_access_key_id"] = key_id
+                extra_attrs["s3_secret_access_key"] = key_secret
+    else:
+        raise _bad_url_scheme(scheme)
+
+    result = ParseResult(scheme=scheme,
+                         netloc=netloc,
+                         path=path,
+                         params=params,
+                         query=query,
+                         fragment=None)
+
+    for key, val in extra_attrs.items():
+        setattr(result, key, val)
+
+    return result
+
+
+def mirror_url_format(parsed_url):
+    if isinstance(parsed_url, basestring):
+        parsed_url = mirror_url_parse(parsed_url)
+
+    (scheme, netloc, path, params, query, _) = parsed_url
+
+    scheme = scheme.lower()
+
+    if scheme in ('file', 'http', 'https'):
+        pass # no further processing needed
+    elif scheme == 's3':
+        path = os.path.join(
+                *[x for x in ('/', parsed_url.s3_bucket, path) if x])
+
+        credentials = None
+
+        try:
+            credentials = parsed_url.s3_profile
+        except AttributeError:
+            pass
+
+        try:
+            if not credentials:
+                credentials = ':'.join((
+                    parsed_url.s3_access_key_id,
+                    parsed_url.s3_secret_access_key))
+        except AttributeError:
+            pass
+
+        if credentials:
+            netloc = '@'.join((credentials, netloc))
+    else:
+        raise _bad_url_scheme(scheme)
+
+    # Workaround a quirk of urlparse where the double-slash after the [scheme]
+    # is left out in the case of no [netloc] and a [scheme] that is not natively
+    # recognized (e.g.: s3).  S3 URLs will usually specify no [netloc], instead
+    # defaulting to AWS and using other mechanisms, like environment variables,
+    # to provide access credentials.
+    #
+    # The point of this workaround is to manipulate these URLs so that instead
+    # of being formatted like so:
+    #
+    #  s3:/my-bucket
+    #
+    # ... they would be (correctly) formatted like so:
+    #
+    #  s3:///my-bucket
+    #
+    if not netloc and scheme not in ('http', 'https', 'file'):
+        if not path:
+            path = '//'
+        else:
+            path_tokens = os.path.split(path)
+            netloc = os.path.join(*path_tokens[:2])
+            path = os.path.join('/', *path_tokens[2:])
+            if path == '/':
+                path = ''
+
+    return ParseResult(scheme=scheme,
+                       netloc=netloc,
+                       path=path,
+                       params=params,
+                       query=query,
+                       fragment=None).geturl()
 
 
 class MirrorError(spack.error.SpackError):
