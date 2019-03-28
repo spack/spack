@@ -191,7 +191,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         if spec.external:
-            return spec.external_path
+            return spec.external_path or ''
 
         path = spec.format(self.path_scheme)
         return path
