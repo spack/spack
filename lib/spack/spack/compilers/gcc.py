@@ -116,7 +116,9 @@ class Gcc(Compiler):
 
         version = super(Gcc, cls).default_version(cc)
         if ver(version) >= ver('7'):
-            output = spack.compiler.invoke_compiler(cc, '-dumpfullversion')
+            output = spack.compiler.get_compiler_version_output(
+                cc, '-dumpfullversion'
+            )
             version = cls.extract_version_from_output(output)
         return version
 
@@ -142,11 +144,13 @@ class Gcc(Compiler):
 
             7.2.0
         """
-        output = spack.compiler.invoke_compiler(fc, '-dumpversion')
+        output = spack.compiler.get_compiler_version_output(fc, '-dumpversion')
         match = re.search(r'(?:GNU Fortran \(GCC\) )?([\d.]+)', output)
         version = match.group(match.lastindex) if match else 'unknown'
         if ver(version) >= ver('7'):
-            output = spack.compiler.invoke_compiler(fc, '-dumpfullversion')
+            output = spack.compiler.get_compiler_version_output(
+                fc, '-dumpfullversion'
+            )
             version = cls.extract_version_from_output(output)
         return version
 

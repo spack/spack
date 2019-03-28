@@ -27,7 +27,7 @@ def _verify_executables(*paths):
 
 
 @llnl.util.lang.memoized
-def invoke_compiler(compiler_path, version_arg):
+def get_compiler_version_output(compiler_path, version_arg):
     """Invokes the compiler at a given path passing a single
     version argument and returns the output.
 
@@ -205,7 +205,7 @@ class Compiler(object):
     @classmethod
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
-        output = invoke_compiler(cc, cls.version_argument)
+        output = get_compiler_version_output(cc, cls.version_argument)
         return cls.extract_version_from_output(output)
 
     @classmethod
