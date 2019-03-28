@@ -1941,7 +1941,8 @@ class Spec(object):
             if patches:
                 spec_to_patches[id(s)] = patches
 
-        # Apply patches required on dependencies by depends_on(..., patch=...)
+        # Also record all patches required on dependencies by
+        # depends_on(..., patch=...)
         for dspec in self.traverse_edges(deptype=all,
                                          cover='edges', root=False):
             pkg_deps = dspec.parent.package_class.dependencies
