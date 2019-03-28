@@ -17,11 +17,186 @@ from llnl.util.tty.colify import colify
 
 import spack.repo
 import spack.store
-from spack.test.conftest import MockPackageMultiRepo
+import spack.database
+import spack.spec
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 from spack.util.executable import Executable
 
 
 pytestmark = pytest.mark.db
+
+
+@pytest.fixture()
+def test_store(tmpdir):
+    real_store = spack.store.store
+    spack.store.store = spack.store.Store(str(tmpdir.join('test_store')))
+
+    yield
+
+    spack.store.store = real_store
+
+
+@pytest.fixture()
+def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    upstream_db = spack.database.Database(mock_db_root)
+    # Generate initial DB file to avoid reindex
+    with open(upstream_db._index_path, 'w') as db_file:
+        upstream_db._write_to_file(db_file)
+    upstream_layout = gen_mock_layout('/a/')
+
+    downstream_db_root = str(
+        tmpdir_factory.mktemp('mock_downstream_db_root'))
+    downstream_db = spack.database.Database(
+        downstream_db_root, upstream_dbs=[upstream_db])
+    with open(downstream_db._index_path, 'w') as db_file:
+        downstream_db._write_to_file(db_file)
+    downstream_layout = gen_mock_layout('/b/')
+
+    yield upstream_db, upstream_layout, downstream_db, downstream_layout
+
+
+@pytest.mark.usefixtures('config')
+def test_installed_upstream(upstream_and_downstream_db):
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
+
+    default = ('build', 'link')
+    x = MockPackage('x', [], [])
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [default])
+    w = MockPackage('w', [x, y], [default, default])
+    mock_repo = MockPackageMultiRepo([w, x, y, z])
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('w')
+        spec.concretize()
+
+        for dep in spec.traverse(root=False):
+            upstream_db.add(dep, upstream_layout)
+
+        new_spec = spack.spec.Spec('w')
+        new_spec.concretize()
+        downstream_db.add(new_spec, downstream_layout)
+        for dep in new_spec.traverse(root=False):
+            upstream, record = downstream_db.query_by_spec_hash(
+                dep.dag_hash())
+            assert upstream
+            assert record.path == upstream_layout.path_for_spec(dep)
+        upstream, record = downstream_db.query_by_spec_hash(
+            new_spec.dag_hash())
+        assert not upstream
+        assert record.installed
+
+        upstream_db._check_ref_counts()
+        downstream_db._check_ref_counts()
+
+
+@pytest.mark.usefixtures('config')
+def test_removed_upstream_dep(upstream_and_downstream_db):
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
+
+    default = ('build', 'link')
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [default])
+    mock_repo = MockPackageMultiRepo([y, z])
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('y')
+        spec.concretize()
+
+        upstream_db.add(spec['z'], upstream_layout)
+
+        new_spec = spack.spec.Spec('y')
+        new_spec.concretize()
+        downstream_db.add(new_spec, downstream_layout)
+
+        upstream_db.remove(new_spec['z'])
+
+        new_downstream = spack.database.Database(
+            downstream_db.root, upstream_dbs=[upstream_db])
+        new_downstream._fail_when_missing_deps = True
+        with pytest.raises(spack.database.MissingDependenciesError):
+            new_downstream._read()
+
+
+@pytest.mark.usefixtures('config')
+def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
+    """An upstream DB can add a package after it is installed in the downstream
+    DB. When a package is recorded as installed in both, the results should
+    refer to the downstream DB.
+    """
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
+
+    x = MockPackage('x', [], [])
+    mock_repo = MockPackageMultiRepo([x])
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('x')
+        spec.concretize()
+
+        downstream_db.add(spec, downstream_layout)
+
+        upstream_db.add(spec, upstream_layout)
+
+        upstream, record = downstream_db.query_by_spec_hash(spec.dag_hash())
+        # Even though the package is recorded as installed in the upstream DB,
+        # we prefer the locally-installed instance
+        assert not upstream
+
+        qresults = downstream_db.query('x')
+        assert len(qresults) == 1
+        queried_spec, = qresults
+        try:
+            orig_db = spack.store.db
+            spack.store.db = downstream_db
+            assert queried_spec.prefix == downstream_layout.path_for_spec(spec)
+        finally:
+            spack.store.db = orig_db
+
+
+@pytest.mark.usefixtures('config')
+def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
+    roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
+    layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
+
+    default = ('build', 'link')
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [default])
+    x = MockPackage('x', [y], [default])
+
+    mock_repo = MockPackageMultiRepo([x, y, z])
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('x')
+        spec.concretize()
+        db_c = spack.database.Database(roots[2])
+        db_c.add(spec['z'], layouts[2])
+
+        db_b = spack.database.Database(roots[1], upstream_dbs=[db_c])
+        db_b.add(spec['y'], layouts[1])
+
+        db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c])
+        db_a.add(spec['x'], layouts[0])
+
+        dbs = spack.store._construct_upstream_dbs_from_install_roots(
+            roots, _test=True)
+
+        assert dbs[0].db_for_spec_hash(spec.dag_hash()) == dbs[0]
+        assert dbs[0].db_for_spec_hash(spec['y'].dag_hash()) == dbs[1]
+        assert dbs[0].db_for_spec_hash(spec['z'].dag_hash()) == dbs[2]
+
+        dbs[0]._check_ref_counts()
+        dbs[1]._check_ref_counts()
+        dbs[2]._check_ref_counts()
+
+        assert (dbs[0].installed_relatives(spec) ==
+                set(spec.traverse(root=False)))
+        assert (dbs[0].installed_relatives(spec['z'], direction='parents') ==
+                set([spec, spec['y']]))
+        assert not dbs[2].installed_relatives(spec['z'], direction='parents')
 
 
 @pytest.fixture()
