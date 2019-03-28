@@ -64,19 +64,17 @@ def load_command_extension(command, path):
     return module
 
 
-def command_paths(*paths):
-    """Generator that yields paths where to search for command files.
+def get_command_paths():
+    """Return the list of paths where to search for command files."""
+    command_paths = []
+    extension_paths = spack.config.get('config:extensions') or []
 
-    Args:
-        *paths: paths where the extensions reside
-
-    Returns:
-        Paths where to search for command files.
-    """
-    for path in paths:
+    for path in extension_paths:
         extension = extension_name(path)
         if extension:
-            yield os.path.join(path, extension, 'cmd')
+            command_paths.append(os.path.join(path, extension, 'cmd'))
+
+    return command_paths
 
 
 def path_for_extension(target_name, *paths):

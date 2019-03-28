@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import itertools
 import os
 import re
 import sys
@@ -59,11 +58,8 @@ def all_commands():
     global _all_commands
     if _all_commands is None:
         _all_commands = []
-        extensions = spack.config.get('config:extensions') or []
-        command_paths = itertools.chain(
-            [spack.paths.command_path],
-            spack.extensions.command_paths(*extensions)
-        )
+        command_paths = [spack.paths.command_path]  # Built-in commands
+        command_paths += spack.extensions.get_command_paths()  # Extensions
         for path in command_paths:
             for file in os.listdir(path):
                 if file.endswith(".py") and not re.search(ignore_files, file):
