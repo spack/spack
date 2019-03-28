@@ -388,6 +388,12 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('@3.0.0:', strict=True):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
 
+        # some scientific packages ignore deprecated/remove symbols. Re-enable
+        # them for now, for discussion see
+        # https://github.com/open-mpi/ompi/issues/6114#issuecomment-446279495
+        if spec.satisfies('@4.0.1:'):
+            config_args.append('--enable-mpi1-compatibility')
+
         # Fabrics
         config_args.extend(self.with_or_without('fabrics'))
         # Schedulers
