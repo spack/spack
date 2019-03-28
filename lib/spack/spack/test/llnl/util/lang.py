@@ -5,6 +5,7 @@
 
 import pytest
 
+import os.path
 from datetime import datetime, timedelta
 
 import llnl.util.lang
@@ -14,6 +15,19 @@ from llnl.util.lang import pretty_date, match_predicate
 @pytest.fixture()
 def now():
     return datetime.now()
+
+
+@pytest.fixture()
+def module_path(tmpdir):
+    m = tmpdir.join('foo.py')
+    content = """
+import os.path
+
+value = 1
+path = os.path.join('/usr', 'bin')
+"""
+    m.write(content)
+    return str(m)
 
 
 def test_pretty_date():
@@ -110,3 +124,9 @@ def test_match_predicate():
     with pytest.raises(ValueError):
         matcher = match_predicate(object())
         matcher('foo')
+
+
+def test_load_modules_from_file(module_path):
+    foo = llnl.util.lang.load_module_from_file('foo', module_path)
+    assert foo.value == 1
+    assert foo.path == os.path.join('/usr', 'bin')
