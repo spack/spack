@@ -7,7 +7,7 @@ from spack import *
 
 
 class DepDiamondPatchMid2(Package):
-    """Package that requires a patch on a dependency
+    r"""Package that requires a patch on a dependency
 
   W
  / \
@@ -26,7 +26,7 @@ X   Y
     # single patch file in repo
     depends_on('patch', patches=[
         patch('http://example.com/urlpatch.patch',
-              sha256='mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'),
+              sha256='mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'),  # noqa: E501
     ])
 
     def install(self, spec, prefix):

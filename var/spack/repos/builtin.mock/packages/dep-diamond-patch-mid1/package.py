@@ -7,7 +7,7 @@ from spack import *
 
 
 class DepDiamondPatchMid1(Package):
-    """Package that requires a patch on a dependency
+    r"""Package that requires a patch on a dependency
 
   W
  / \
