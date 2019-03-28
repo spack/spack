@@ -65,7 +65,7 @@ packages:
       - mpi
       - python
     specs:
-      - steps@3.3.0+petsc
+      - steps@3.4.1+petsc
 
   gnu-stable-lapack-parallel:
     target_matrix:
