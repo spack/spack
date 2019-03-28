@@ -52,7 +52,8 @@ class Hypre(Package):
     # Patch to build shared libraries on Darwin
     patch('darwin-shared-libs-for-hypre-2.13.0.patch', when='+shared@2.13.0 platform=darwin')
     patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0 platform=darwin')
-    patch('superlu-dist-link.patch')
+    patch('superlu-dist-link-2.15.0.patch', when='+superlu-dist @2.15:')
+    patch('superlu-dist-link-2.14.0.patch', when='+superlu-dist @:2.14.0')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")
