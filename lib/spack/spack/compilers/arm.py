@@ -25,6 +25,15 @@ class Arm(spack.compiler.Compiler):
                   'f77': 'arm/armflang',
                   'fc': 'arm/armflang'}
 
+    # The ``--version`` option seems to be the most consistent one for
+    # arm compilers. Output looks like this:
+    #
+    # $ arm<c/f>lang --version
+    # Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2) # NOQA
+    # Target: aarch64--linux-gnu
+    # Thread model: posix
+    # InstalledDir:
+    # /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
     version_argument = '--version'
     version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)'
 
