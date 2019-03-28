@@ -12,9 +12,10 @@ class Steps(CMakePackage):
     homepage = "https://groups.oist.jp/cnu/software"
     git      = "git@github.com:CNS-OIST/HBP_STEPS.git"
 
+    version("develop", branch="master", submodules=True)
+    version("3.4.1", submodules=True)
     version("3.3.0", submodules=True)
     version("3.2.0", submodules=True)
-    version("develop", branch="master", submodules=True)
 
     variant("native", default=True, description="Generate non-portable arch-specific code")
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
