@@ -24,6 +24,7 @@ import spack.caches
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.package_prefs
 import spack.paths
 import spack.platforms.test
 import spack.repo
@@ -118,7 +119,7 @@ def mock_stage(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def _ignore_stage_files():
+def ignore_stage_files():
     """Session-scoped helper for check_for_leftover_stage_files.
 
     Used to track which leftover files in the stage have been seen.
@@ -145,7 +146,7 @@ def working_env():
 
 
 @pytest.fixture(scope='function', autouse=True)
-def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
+def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
     """Ensure that each test leaves a clean stage when done.
 
     This can be disabled for tests that are expected to dirty the stage
@@ -160,7 +161,7 @@ def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
     files_in_stage = set()
     if os.path.exists(spack.paths.stage_path):
         files_in_stage = set(
-            os.listdir(spack.paths.stage_path)) - _ignore_stage_files
+            os.listdir(spack.paths.stage_path)) - ignore_stage_files
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
@@ -168,7 +169,7 @@ def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
             path = os.path.join(spack.paths.stage_path, f)
             remove_whatever_it_is(path)
     else:
-        _ignore_stage_files |= files_in_stage
+        ignore_stage_files |= files_in_stage
         assert not files_in_stage
 
 
