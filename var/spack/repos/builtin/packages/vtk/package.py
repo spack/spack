@@ -80,7 +80,7 @@ class Vtk(CMakePackage):
     depends_on('freetype')
     depends_on('glew')
     depends_on('hdf5')
-    depends_on('libjpeg')
+    depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')
     depends_on('lz4')

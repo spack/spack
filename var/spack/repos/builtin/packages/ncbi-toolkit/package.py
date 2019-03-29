@@ -16,7 +16,7 @@ class NcbiToolkit(AutotoolsPackage):
 
     depends_on('boost@1.35.0:')
     depends_on('bzip2')
-    depends_on('libjpeg')
+    depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('libxml2')
