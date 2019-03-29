@@ -68,8 +68,8 @@ class Nektools(Package):
         tools_dir   = 'tools'
         bin_dir     = 'bin'
 
-        FC = env['FC']
-        CC = env['CC']
+        fc = env['FC']
+        cc = env['CC']
 
         fflags = spec.compiler_flags['fflags']
         cflags = spec.compiler_flags['cflags']
@@ -99,7 +99,7 @@ class Nektools(Package):
             # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
             fflags += ['-qextname', '-WF,-qnotrigraph']
 
-        cmd = ["{}".format(FC), "this-is-so-dumb.f"]
+        cmd = ["{}".format(fc), "this-is-so-dumb.f"]
         p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         error = stderr.decode('utf-8')
@@ -116,8 +116,8 @@ class Nektools(Package):
         # We will then install Nek5000/bin under prefix after that.
         with working_dir(tools_dir):
             # Update the maketools script to use correct compilers
-            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'maketools')
-            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'maketools')
+            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(fc), 'maketools')
+            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(cc), 'maketools')
             if fflags:
                 filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
                             'maketools')
