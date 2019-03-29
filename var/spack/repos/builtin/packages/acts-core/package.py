@@ -60,14 +60,12 @@ class ActsCore(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        cxxstd = spec['root'].variants['cxxstd'].value
 
         def cmake_variant(cmake_label, spack_variant):
             enabled = spec.satisfies('+' + spack_variant)
             return "-DACTS_BUILD_{0}={1}".format(cmake_label, enabled)
 
         args = [
-            "-DCMAKE_CXX_STANDARD={0}".format(cxxstd),
             cmake_variant("LEGACY", "legacy"),
             cmake_variant("EXAMPLES", "examples"),
             cmake_variant("TESTS", "tests"),
@@ -79,4 +77,9 @@ class ActsCore(CMakePackage):
             cmake_variant("MATERIAL_PLUGIN", "material"),
             cmake_variant("TGEO_PLUGIN", "tgeo")
         ]
+
+        if spec.satisfies('+tgeo'):
+            cxxstd = spec['root'].variants['cxxstd'].value
+            args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
+
         return args
