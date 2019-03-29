@@ -69,8 +69,8 @@ class Nek5000(Package):
         cmd = ["{}".format(fc), "this-is-so-dumb.f"]
         p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
-        error = stderr.decode('utf-8').split()
-        
+        error = stderr.decode('utf-8')
+
         if 'gfortran' in error or 'GNU' in error:
             # Use '-std=legacy' to suppress an error that used to be a
             # warning in previous versions of gfortran.
