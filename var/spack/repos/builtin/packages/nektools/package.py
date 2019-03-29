@@ -9,7 +9,6 @@ import numbers
 import os
 
 import subprocess
-from subprocess import PIPE, STDOUT
 
 
 def is_integral(x):
@@ -104,7 +103,7 @@ class Nektools(Package):
         p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         error = stderr.decode('utf-8')
-        
+
         if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
             # Use '-std=legacy' to suppress an error that used to be a
             # warning in previous versions of gfortran.

@@ -8,7 +8,6 @@ import os
 import json
 
 import subprocess
-from subprocess import PIPE, STDOUT
 
 
 class Nekcem(Package):

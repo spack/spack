@@ -6,7 +6,7 @@
 from spack import *
 
 import subprocess
-from subprocess import PIPE, STDOUT
+from subprocess import PIPE
 
 
 class Nekbone(Package):
@@ -59,8 +59,8 @@ class Nekbone(Package):
         p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         error = stderr.decode('utf-8')
-        
-        fflags = '' 
+
+        fflags = ''
         if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
             # Use '-std=legacy' to suppress an error that used to be a
             # warning in previous versions of gfortran.
@@ -70,7 +70,8 @@ class Nekbone(Package):
             filter_file(r'^SOURCE_ROOT\s*=.*', 'SOURCE_ROOT=\"' +
                         prefix.bin.Nekbone + '/src\"', 'makenek')
             filter_file(r'^CC\s*=.*', 'CC=\"' + cc + '\"', 'makenek')
-            filter_file(r'^F77\s*=.*', 'F77=\"' + fc + fflags + '\"', 'makenek')
+            filter_file(r'^F77\s*=.*', 'F77=\"' + fc + fflags + '\"',
+                        'makenek')
 
             if '+mpi' not in spec:
                 filter_file(r'^#IFMPI=\"false\"', 'IFMPI=\"false\"', 'makenek')
