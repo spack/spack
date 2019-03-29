@@ -8,6 +8,9 @@ from spack import *
 import numbers
 import os
 
+import subprocess
+from subprocess import PIPE, STDOUT
+
 
 class Nek5000(Package):
     """A fast and scalable high-order solver for computational fluid
@@ -63,13 +66,17 @@ class Nek5000(Package):
             # Use '-qextname' to add underscores.
             # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
             fflags += ['-qextname', '-WF,-qnotrigraph']
-        if 'gfortran' in fc:
-            # Get the version directly (works for clang+gfortran too)
-            f77_ver = spack.compiler.get_compiler_version(fc, '-dumpversion')
-            if ver(f77_ver) >= ver(8):
-                # Use '-std=legacy' to suppress an error that used to be a
-                # warning in previous versions of gfortran.
-                fflags += ['-std=legacy']
+
+        cmd = ["{}".format(fc), "this-is-so-dumb.f"]
+        p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        error = stderr.decode('utf-8').split()
+        
+        if 'gfortran' in error or 'GNU' in error:
+            # Use '-std=legacy' to suppress an error that used to be a
+            # warning in previous versions of gfortran.
+            fflags += ['-std=legacy']
+
         fflags = ' '.join(fflags)
         cflags = ' '.join(cflags)
 
