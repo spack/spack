@@ -508,6 +508,8 @@ EOF
     done
     echo "export MODULEPATH" >> ${target}/modules.sh
 
+    ./modules.rb > "${target}/modules.yaml"
+
     cat << EOF > "${target}/config.yaml"
 config:
   install_tree: \$SPACK_INSTALL_PREFIX/install
