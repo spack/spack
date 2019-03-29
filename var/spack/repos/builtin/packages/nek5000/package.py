@@ -5,7 +5,6 @@
 
 from spack import *
 
-import numbers
 import os
 
 import subprocess
