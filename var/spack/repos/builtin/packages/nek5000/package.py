@@ -8,6 +8,7 @@ from spack import *
 import os
 
 import subprocess
+from subprocess import PIPE
 
 
 class Nek5000(Package):

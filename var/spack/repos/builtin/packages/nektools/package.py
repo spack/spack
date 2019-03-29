@@ -9,6 +9,7 @@ import numbers
 import os
 
 import subprocess
+from subprocess import PIPE
 
 
 def is_integral(x):
