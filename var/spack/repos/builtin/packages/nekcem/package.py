@@ -82,14 +82,15 @@ class Nekcem(Package):
                 fflags += ['-r8']
                 cflags += ['-DUNDERSCORE']
 
-            if 'gfortran' in self.compiler.f77:
-                # Get the version directly (works for clang+gfortran too)
-                f77_ver = spack.compiler.get_compiler_version(
-                    self.compiler.f77, '-dumpversion')
-                if ver(f77_ver) >= ver(8):
-                    # Use '-std=legacy' to suppress an error that used to be a
-                    # warning in previous versions of gfortran.
-                    fflags += ['-std=legacy']
+            cmd = ["{}".format(fc), "this-is-so-dumb.f"]
+            p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = p.communicate()
+            error = stderr.decode('utf-8')
+
+            if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
+                # Use '-std=legacy' to suppress an error that used to be a
+                # warning in previous versions of gfortran.
+                fflags += ['-std=legacy']
 
             if '+mpi' in spec:
                 fflags += ['-DMPI', '-DMPIIO']

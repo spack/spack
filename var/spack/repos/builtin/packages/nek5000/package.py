@@ -70,8 +70,8 @@ class Nek5000(Package):
         p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         error = stderr.decode('utf-8')
-
-        if 'gfortran' in error or 'GNU' in error:
+        
+        if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
             # Use '-std=legacy' to suppress an error that used to be a
             # warning in previous versions of gfortran.
             fflags += ['-std=legacy']

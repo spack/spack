@@ -96,13 +96,17 @@ class Nektools(Package):
             # Use '-qextname' to add underscores.
             # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
             fflags += ['-qextname', '-WF,-qnotrigraph']
-        if 'gfortran' in FC:
-            # Get the version directly (works for clang+gfortran too)
-            f77_ver = spack.compiler.get_compiler_version(FC, '-dumpversion')
-            if ver(f77_ver) >= ver(8):
-                # Use '-std=legacy' to suppress an error that used to be a
-                # warning in previous versions of gfortran.
-                fflags += ['-std=legacy']
+
+        cmd = ["{}".format(fc), "this-is-so-dumb.f"]
+        p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        error = stderr.decode('utf-8')
+        
+        if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
+            # Use '-std=legacy' to suppress an error that used to be a
+            # warning in previous versions of gfortran.
+            fflags += ['-std=legacy']
+
         fflags = ' '.join(fflags)
         cflags = ' '.join(cflags)
 
