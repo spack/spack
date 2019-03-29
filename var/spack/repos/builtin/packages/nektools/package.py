@@ -41,7 +41,6 @@ class Nektools(Package):
 
     # Variants for Nek tools
     variant('genbox',   default=True, description='Build genbox tool.')
-    variant('int_tp',   default=True, description='Build int_tp tool.')
     variant('n2to3',    default=True, description='Build n2to3 tool.')
     variant('postnek',  default=True, description='Build postnek tool.')
     variant('reatore2', default=True, description='Build reatore2 tool.')
@@ -67,10 +66,8 @@ class Nektools(Package):
         tools_dir   = 'tools'
         bin_dir     = 'bin'
 
-        # Do not use the Spack compiler wrappers.
-        # Use directly the compilers:
-        fc  = self.compiler.f77
-        cc  = self.compiler.cc
+        FC = env['FC']
+        CC = env['CC']
 
         fflags = spec.compiler_flags['fflags']
         cflags = spec.compiler_flags['cflags']
@@ -99,9 +96,9 @@ class Nektools(Package):
             # Use '-qextname' to add underscores.
             # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
             fflags += ['-qextname', '-WF,-qnotrigraph']
-        if 'gfortran' in fc:
+        if 'gfortran' in FC:
             # Get the version directly (works for clang+gfortran too)
-            f77_ver = spack.compiler.get_compiler_version(fc, '-dumpversion')
+            f77_ver = spack.compiler.get_compiler_version(FC, '-dumpversion')
             if ver(f77_ver) >= ver(8):
                 # Use '-std=legacy' to suppress an error that used to be a
                 # warning in previous versions of gfortran.
@@ -113,8 +110,8 @@ class Nektools(Package):
         # We will then install Nek5000/bin under prefix after that.
         with working_dir(tools_dir):
             # Update the maketools script to use correct compilers
-            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(fc), 'maketools')
-            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(cc), 'maketools')
+            filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'maketools')
+            filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'maketools')
             if fflags:
                 filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
                             'maketools')
@@ -161,9 +158,6 @@ class Nektools(Package):
             # Build the tools
             if '+genbox' in spec:
                 maketools('genbox')
-            # "ERROR: int_tp does not exist!"
-            # if '+int_tp' in spec:
-            #     maketools('int_tp')
             if '+n2to3' in spec:
                 maketools('n2to3')
             if '+postnek' in spec:
