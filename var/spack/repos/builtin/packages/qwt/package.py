@@ -19,7 +19,13 @@ class Qwt(QMakePackage):
     version('6.1.3', '19d1f5fa5e22054d22ee3accc37c54ba')
     version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
 
+    variant('designer', default=False,
+            description="Build extensions to QT designer")
+
+    patch('no-designer.patch', when='~designer')
+
     depends_on('qt+opengl')
+    depends_on('qt+tools', when='+designer')
     # Qwt 6.1.1 and older use a constant that was removed in Qt 5.4
     # https://bugs.launchpad.net/ubuntu/+source/qwt-qt5/+bug/1485213
     depends_on('qt@:5.3', when='@:6.1.1')
