@@ -27,7 +27,7 @@ class Visit(CMakePackage):
 
     depends_on('cmake@3.0:', type='build')
     depends_on('vtk@6.1.0~opengl2~mpi')
-    depends_on('qt@4.8.6', when='+gui')
+    depends_on('qt@4.8.6:4.999', when='+gui')
     depends_on('qwt', when='+gui')
     depends_on('python', when='+python')
     depends_on('silo+shared', when='+silo')
