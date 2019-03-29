@@ -33,9 +33,6 @@ class Fzf(MakefilePackage):
 
     patch("github_mirrors.patch", when="+github_mirrors")
 
-    # def edit(self, spec, prefix):
-    #     if '+github_mirrors' in spec:
-
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
