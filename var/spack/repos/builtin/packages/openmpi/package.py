@@ -484,8 +484,12 @@ class Openmpi(AutotoolsPackage):
                         self.prefix.bin.shmemrun,
                         self.prefix.bin.oshrun
                         ]
+            script_stub = join_path(os.path.dirname(__file__),
+                                    "nolegacylaunchers.sh")
             for exe in exe_list:
                 try:
                     os.remove(exe)
                 except OSError:
                     tty.debug("File not present: " + exe)
+                else:
+                    copy(script_stub, exe)
