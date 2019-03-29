@@ -7,6 +7,9 @@ from spack import *
 import os
 import json
 
+import subprocess
+from subprocess import PIPE, STDOUT
+
 
 class Nekcem(Package):
     """Spectral-element solver for Maxwell's equations, drift-diffusion

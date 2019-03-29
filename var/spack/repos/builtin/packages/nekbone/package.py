@@ -5,6 +5,9 @@
 
 from spack import *
 
+import subprocess
+from subprocess import PIPE, STDOUT
+
 
 class Nekbone(Package):
     """NEK5000 emulation software called NEKbone. Nekbone captures the basic
