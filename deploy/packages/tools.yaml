@@ -25,6 +25,7 @@ packages:
       - doxygen@1.8.15
       - emacs@26.1
       - environment-modules@3.2.10
+      - ffmpeg@3.2.4
       - flex@2.6.3
       - gdb~python@8.2
       - gdbm@1.14.1

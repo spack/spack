@@ -32,6 +32,7 @@ modules:
       - cuda
       - doxygen
       - emacs
+      - ffmpeg
       - hpctoolkit
       - hpe-mpi
       - ior
