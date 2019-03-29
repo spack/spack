@@ -10,7 +10,7 @@ import glob
 import tempfile
 import re
 import inspect
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ElementTree
 import llnl.util.tty as tty
 
 from llnl.util.filesystem import \
@@ -227,7 +227,7 @@ class IntelPackage(PackageBase):
         #
         # https://software.intel.com/en-us/articles/configuration-file-format
         #
-        xmltree = ET.parse('pset/mediaconfig.xml')
+        xmltree = ElementTree.parse('pset/mediaconfig.xml')
         for entry in xmltree.getroot().findall('.//Abbr'):  # XPath expression
             name_present = entry.text
             for name_requested in requested:
@@ -790,7 +790,8 @@ class IntelPackage(PackageBase):
             blacs_lib = 'libmkl_blacs'
         elif ('^mpich@2:' in spec_root or
               '^mvapich2' in spec_root or
-              '^intel-mpi' in spec_root):
+              '^intel-mpi' in spec_root or
+              '^intel-parallel-studio' in spec_root):
             blacs_lib = 'libmkl_blacs_intelmpi'
         elif '^mpt' in spec_root:
             blacs_lib = 'libmkl_blacs_sgimpt'
