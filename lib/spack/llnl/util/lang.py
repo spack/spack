@@ -168,30 +168,24 @@ def union_dicts(*dicts):
     return result
 
 
-class memoized(object):
-    """Decorator that caches the results of a function, storing them
-       in an attribute of that function."""
+def memoized(func):
+    """Decorator that caches the results of a function, storing them in
+    an attribute of that function.
+    """
+    func.cache = {}
 
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
-
-    def __call__(self, *args):
+    @functools.wraps(func)
+    def _memoized_function(*args):
         if not isinstance(args, collections.Hashable):
             # Not hashable, so just call the function.
-            return self.func(*args)
+            return func(*args)
 
-        if args not in self.cache:
-            self.cache[args] = self.func(*args)
-        return self.cache[args]
+        if args not in func.cache:
+            func.cache[args] = func(*args)
 
-    def __get__(self, obj, objtype):
-        """Support instance methods."""
-        return functools.partial(self.__call__, obj)
+        return func.cache[args]
 
-    def clear(self):
-        """Expunge cache so that self.func will be called again."""
-        self.cache.clear()
+    return _memoized_function
 
 
 def list_modules(directory, **kwargs):
