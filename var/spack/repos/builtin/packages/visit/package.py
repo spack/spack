@@ -29,7 +29,7 @@ class Visit(CMakePackage):
     depends_on('vtk@6.1.0~opengl2~mpi')
     depends_on('qt@4.8.6:4.999', when='+gui')
     depends_on('qwt', when='+gui')
-    depends_on('python', when='+python')
+    depends_on('python@2.6:2.8', when='+python')
     depends_on('silo+shared', when='+silo')
     depends_on('hdf5', when='+hdf5')
     depends_on('mpi', when='+mpi')
