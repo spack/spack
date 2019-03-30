@@ -40,11 +40,10 @@ class Ceed(Package):
 
     # LibCEED
     # ceed-2.0
-    # TODO: update the libceed version
-    depends_on('libceed@develop~cuda', when='@2.0.0~cuda')
-    depends_on('libceed@develop+cuda', when='@2.0.0+cuda')
-    depends_on('libceed@develop+occa', when='@2.0.0+occa')
-    depends_on('libceed@develop~occa', when='@2.0.0~occa')
+    depends_on('libceed@0.4~cuda', when='@2.0.0~cuda')
+    depends_on('libceed@0.4+cuda', when='@2.0.0+cuda')
+    depends_on('libceed@0.4+occa', when='@2.0.0+occa')
+    depends_on('libceed@0.4~occa', when='@2.0.0~occa')
     # ceed-1.0
     depends_on('libceed@0.2~cuda', when='@1.0.0~cuda')
     depends_on('libceed@0.2+cuda', when='@1.0.0+cuda')
@@ -53,16 +52,14 @@ class Ceed(Package):
 
     # OCCA
     # ceed-2.0
-    # TODO: update the occa version
-    depends_on('occa@develop~cuda', when='@2.0.0+occa~cuda')
-    depends_on('occa@develop+cuda', when='@2.0.0+occa+cuda')
+    depends_on('occa@1.0.8~cuda', when='@2.0.0+occa~cuda')
+    depends_on('occa@1.0.8+cuda', when='@2.0.0+occa+cuda')
     # ceed-1.0
-    depends_on('occa@v1.0.0-alpha.5~cuda', when='@1.0.0+occa~cuda')
-    depends_on('occa@v1.0.0-alpha.5+cuda', when='@1.0.0+occa+cuda')
+    depends_on('occa@1.0.0-alpha.5~cuda', when='@1.0.0+occa~cuda')
+    depends_on('occa@1.0.0-alpha.5+cuda', when='@1.0.0+occa+cuda')
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     # ceed-2.0
-    # TODO: upate the versions of nek5000, gslib, nekbone, and nekcem
     depends_on('nek5000@17.0', when='@2.0.0+nek')
     depends_on('nektools@17.0%gcc', when='@2.0.0+nek')
     depends_on('gslib@1.0.2', when='@2.0.0+nek')
@@ -104,14 +101,12 @@ class Ceed(Package):
 
     # MAGMA
     # ceed-2.0
-    # TODO: upate the version of magma
     depends_on('magma@2.5.0', when='@2.0.0+cuda')
     # ceed-1.0
     depends_on('magma@2.3.0', when='@1.0.0+cuda')
 
     # PUMI
     # ceed-2.0
-    # TODO: upate the version of pumi
     depends_on('pumi@2.2.0', when='@2.0.0+pumi')
     # ceed-1.0
     depends_on('pumi@2.1.0', when='@1.0.0+pumi')
@@ -121,6 +116,7 @@ class Ceed(Package):
     depends_on('mfem@3.4.0+mpi+examples+miniapps', when='@2.0.0+mfem~petsc')
     depends_on('mfem@3.4.0+mpi+petsc+examples+miniapps',
                when='@2.0.0+mfem+petsc')
+    depends_on('mfem@3.4.0+pumi', when='@2.0.0+mfem+pumi')
     depends_on('laghos@2.0', when='@2.0.0+mfem')
     # The next line seems to be necessary because the concretizer somehow
     # decides that mfem requires 'hypre+internal-superlu' even though the mfem
