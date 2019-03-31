@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import inspect
 
 from spack import *
@@ -29,9 +30,14 @@ class Fzf(MakefilePackage):
 
     variant('vim', default=False, description='Install vim plugins for fzf')
 
-    variant('github_mirrors', default=False, description='pull GO dependencies from github.com instead of specified mirror')
+    patch("github_mirrors.patch")
 
-    patch("github_mirrors.patch", when="+github_mirrors")
+    def edit(self, spec, prefix):
+        # the ${HOME}/.glide directory must exist on some systems
+        home = os.path.expanduser('~')
+        directory = os.path.join(home, '.glide')
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
