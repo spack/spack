@@ -71,27 +71,27 @@ class Libceed(Package):
                 if compiler.version.string.endswith('-apple'):
                     if compiler.version >= ver(10):
                         opt += ' -fopenmp-simd'
-                else: # not apple clang
+                else:  # not apple clang
                     if compiler.version >= ver(6):
                         opt += ' -fopenmp-simd'
             elif compiler.name in ['xl', 'xl_r']:
                 opt = '-O -g -qsimd=auto'
             else:
                 opt = '-O -g'
-            makeopts += ['OPT=%s'%opt]
+            makeopts += ['OPT=%s' % opt]
 
             if '+cuda' in spec:
-                makeopts += ['CUDA_DIR=%s'%spec['cuda'].prefix]
-                nvccflags = ['-ccbin %s -Xcompiler "%s" -Xcompiler %s'%
-                             (compiler.cxx,opt,compiler.pic_flag)]
+                makeopts += ['CUDA_DIR=%s' % spec['cuda'].prefix]
+                nvccflags = ['-ccbin %s -Xcompiler "%s" -Xcompiler %s' %
+                             (compiler.cxx, opt, compiler.pic_flag)]
                 nvccflags = ' '.join(nvccflags)
-                makeopts += ['NVCCFLAGS=%s'%nvccflags]
+                makeopts += ['NVCCFLAGS=%s' % nvccflags]
             else:
                 # Disable CUDA auto-detection:
                 makeopts += ['CUDA_DIR=/disable-cuda']
 
             if '+libxsmm' in spec:
-                makeopts += ['XSMM_DIR=%s'%spec['libxsmm'].prefix]
+                makeopts += ['XSMM_DIR=%s' % spec['libxsmm'].prefix]
 
         return makeopts
 

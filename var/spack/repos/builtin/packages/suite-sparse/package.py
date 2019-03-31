@@ -119,8 +119,8 @@ class SuiteSparse(Package):
             # Mongoose directory finds libsuitesparseconfig.so in system
             # directories like /usr/lib.
             make_args += [
-                'CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s'%prefix +
-                ' -DCMAKE_LIBRARY_PATH=%s'%prefix.lib]
+                'CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s' % prefix +
+                ' -DCMAKE_LIBRARY_PATH=%s' % prefix.lib]
 
         make('install', *make_args)
 
