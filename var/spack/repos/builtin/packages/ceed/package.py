@@ -84,8 +84,7 @@ class Ceed(Package):
     # and +mumps:
     depends_on('petsc@3.11.0+mpi+hypre+suite-sparse+mumps+double~int64',
                when='@2.0.0+petsc+mfem')
-    # TODO: upate the version hpgmg
-    depends_on('hpgmg@develop+fe', when='@2.0.0+petsc')
+    depends_on('hpgmg@0.4+fe', when='@2.0.0+petsc')
     # ceed-1.0
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
     # Ideally, these can be turned into recommendations to Spack for
