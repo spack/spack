@@ -7,9 +7,6 @@ from spack import *
 
 import os
 
-import subprocess
-from subprocess import PIPE
-
 
 class Nek5000(Package):
     """A fast and scalable high-order solver for computational fluid
@@ -66,10 +63,8 @@ class Nek5000(Package):
             # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
             fflags += ['-qextname', '-WF,-qnotrigraph']
 
-        cmd = ["{}".format(fc), "this-is-so-dumb.f"]
-        p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        error = stderr.decode('utf-8')
+        error = Executable(fc)('this-is-so-dumb.f', output=str, error=str,
+                               fail_on_error=False)
 
         if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
             # Use '-std=legacy' to suppress an error that used to be a

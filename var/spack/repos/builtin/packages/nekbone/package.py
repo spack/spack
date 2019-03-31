@@ -5,9 +5,6 @@
 
 from spack import *
 
-import subprocess
-from subprocess import PIPE
-
 
 class Nekbone(Package):
     """NEK5000 emulation software called NEKbone. Nekbone captures the basic
@@ -55,10 +52,8 @@ class Nekbone(Package):
         install(makenek, prefix.bin)
         install(nekpmpi, prefix.bin)
 
-        cmd = ["{}".format(fc), "this-is-so-dumb.f"]
-        p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        error = stderr.decode('utf-8')
+        error = Executable(fc)('this-is-so-dumb.f', output=str, error=str,
+                               fail_on_error=False)
 
         fflags = ''
         if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
