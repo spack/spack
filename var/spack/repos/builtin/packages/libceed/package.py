@@ -82,6 +82,10 @@ class Libceed(Package):
 
             if '+cuda' in spec:
                 makeopts += ['CUDA_DIR=%s'%spec['cuda'].prefix]
+                nvccflags = ['-ccbin %s -Xcompiler "%s" -Xcompiler %s'%
+                             (compiler.cxx,opt,compiler.pic_flag)]
+                nvccflags = ' '.join(nvccflags)
+                makeopts += ['NVCCFLAGS=%s'%nvccflags]
             else:
                 # Disable CUDA auto-detection:
                 makeopts += ['CUDA_DIR=/disable-cuda']
@@ -93,6 +97,7 @@ class Libceed(Package):
 
     def build(self, spec, prefix):
         makeopts = self.common_make_opts
+        make('info', *makeopts)
         make(*makeopts)
 
         if self.run_tests:
