@@ -290,8 +290,17 @@ fi;
 #
 # set module system roots
 #
-_spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+_sp_multi_pathadd() {
+    local IFS=':'
+    if  [[ -n "${ZSH_VERSION:-}" ]]; then
+        setopt sh_word_split
+    fi
+    for pth in "$2"; do
+        _spack_pathadd "$1" "${pth}/${_sp_sys_type}"
+    done
+}
+_sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+_sp_multi_pathadd DK_NODE "$_sp_dotkit_roots"
 
 # Add programmable tab completion for Bash
 #

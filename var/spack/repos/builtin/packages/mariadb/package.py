@@ -25,6 +25,8 @@ class Mariadb(CMakePackage):
     variant('nonblocking', default=True, description='Allow non blocking '
             'operations in the mariadb client library.')
 
+    provides('mariadb-client')
+
     depends_on('boost')
     depends_on('cmake@2.6:', type='build')
     depends_on('jemalloc')

@@ -12,6 +12,8 @@ import collections
 import inspect
 from datetime import datetime, timedelta
 from six import string_types
+import sys
+
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
@@ -166,30 +168,24 @@ def union_dicts(*dicts):
     return result
 
 
-class memoized(object):
-    """Decorator that caches the results of a function, storing them
-       in an attribute of that function."""
+def memoized(func):
+    """Decorator that caches the results of a function, storing them in
+    an attribute of that function.
+    """
+    func.cache = {}
 
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
-
-    def __call__(self, *args):
+    @functools.wraps(func)
+    def _memoized_function(*args):
         if not isinstance(args, collections.Hashable):
             # Not hashable, so just call the function.
-            return self.func(*args)
+            return func(*args)
 
-        if args not in self.cache:
-            self.cache[args] = self.func(*args)
-        return self.cache[args]
+        if args not in func.cache:
+            func.cache[args] = func(*args)
 
-    def __get__(self, obj, objtype):
-        """Support instance methods."""
-        return functools.partial(self.__call__, obj)
+        return func.cache[args]
 
-    def clear(self):
-        """Expunge cache so that self.func will be called again."""
-        self.cache.clear()
+    return _memoized_function
 
 
 def list_modules(directory, **kwargs):
@@ -597,3 +593,33 @@ class LazyReference(object):
 
     def __repr__(self):
         return repr(self.ref_function())
+
+
+def load_module_from_file(module_name, module_path):
+    """Loads a python module from the path of the corresponding file.
+
+    Args:
+        module_name (str): namespace where the python module will be loaded,
+            e.g. ``foo.bar``
+        module_path (str): path of the python file containing the module
+
+    Returns:
+        A valid module object
+
+    Raises:
+        ImportError: when the module can't be loaded
+        FileNotFoundError: when module_path doesn't exist
+    """
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(module_name, module_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
+        import importlib.machinery
+        loader = importlib.machinery.SourceFileLoader(module_name, module_path)
+        module = loader.load_module()
+    elif sys.version_info[0] == 2:
+        import imp
+        module = imp.load_source(module_name, module_path)
+    return module

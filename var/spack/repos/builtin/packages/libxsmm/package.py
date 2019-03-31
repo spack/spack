@@ -9,9 +9,9 @@ from glob import glob
 
 
 class Libxsmm(MakefilePackage):
-    '''Library targeting Intel Architecture
+    """Library targeting Intel Architecture
     for small, dense or sparse matrix multiplications,
-    and small convolutions.'''
+    and small convolutions."""
 
     homepage = 'https://github.com/hfp/libxsmm'
     url      = 'https://github.com/hfp/libxsmm/archive/1.10.tar.gz'

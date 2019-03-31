@@ -16,9 +16,10 @@ class Lz4(Package):
     homepage = "http://lz4.github.io/lz4/"
     url      = "https://github.com/lz4/lz4/archive/v1.7.5.tar.gz"
 
+    version('1.8.3',   '33af5936ac06536805f9745e0b6d61da606a1f8b4cc5c04dd3cbaca3b9b4fc43')
     version('1.8.1.2', '343538e69ba752a386c669b1a28111e2')
-    version('1.7.5', 'c9610c5ce97eb431dddddf0073d919b9')
-    version('1.3.1', '42b09fab42331da9d3fb33bd5c560de9')
+    version('1.7.5',   'c9610c5ce97eb431dddddf0073d919b9')
+    version('1.3.1',   '42b09fab42331da9d3fb33bd5c560de9')
 
     depends_on('valgrind', type='test')
 

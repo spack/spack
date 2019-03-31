@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.build_systems.intel import debug_print
 
 
 class IntelParallelStudio(IntelPackage):
@@ -195,3 +196,16 @@ class IntelParallelStudio(IntelPackage):
             'F90':  spack_fc,
             'FC':   spack_fc,
         })
+
+    @property
+    def libs(self):
+        libs = LibraryList([])
+        if self.provides('blas'):
+            libs = self.blas_libs
+        if self.provides('lapack'):
+            libs = self.lapack_libs + libs
+        if self.provides('scalapack'):
+            libs = self.scalapack_libs + libs
+
+        debug_print(libs)
+        return libs

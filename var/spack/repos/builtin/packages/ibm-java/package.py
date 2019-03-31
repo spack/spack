@@ -40,8 +40,22 @@ class IbmJava(Package):
 
         return url
 
+    @property
+    def home(self):
+        return self.prefix
+
+    @property
+    def libs(self):
+        return find_libraries(['libjvm'], root=self.home, recursive=True)
+
     def setup_environment(self, spack_env, run_env):
-        run_env.set('JAVA_HOME', self.prefix)
+        run_env.set('JAVA_HOME', self.home)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('JAVA_HOME', self.home)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        self.spec.home = self.home
 
     def install(self, spec, prefix):
         archive = os.path.basename(self.stage.archive_file)

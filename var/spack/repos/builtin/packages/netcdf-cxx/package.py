@@ -19,9 +19,20 @@ class NetcdfCxx(AutotoolsPackage):
 
     depends_on('netcdf')
 
+    variant(
+        'netcdf4', default=True, description='Compile with netCDF4 support')
+
     @property
     def libs(self):
         shared = True
         return find_libraries(
             'libnetcdf_c++', root=self.prefix, shared=shared, recursive=True
         )
+
+    def configure_args(self):
+        args = []
+        if '+netcdf4' in self.spec:
+            # There is no clear way to set this via configure, so set the flag
+            # explicitly
+            args.append('CPPFLAGS=-DUSE_NETCDF4')
+        return args
