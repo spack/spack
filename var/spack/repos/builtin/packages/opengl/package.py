@@ -40,17 +40,17 @@ class Opengl(Package):
         include/GL/       (opengl headers, including "gl.h")
         lib               (opengl libraries, including "libGL.so")
 
-        On Apple Darwin (e.g., OS X, macOS) systems, this package is
-        normally installed as part of the XCode Command Line Tools in
-        /usr/X11R6, so a working packages.yaml would be
+        On some older Apple Darwin (e.g., OS X, macOS) systems, OpenGL is
+        installed as part of the XCode Command Line Tools in /usr/X11R6 or
+        in newer systems as part of XQuartz in /opt/X11:
 
         packages:
           opengl:
             paths:
-              opengl@4.1: /usr/X11R6
+              opengl@4.1: /opt/X11
             buildable: False
 
-        In that case, /usr/X11R6 should contain
+        In this case, /opt/X11 should contain
 
         include/GL/      (OpenGL headers, including "gl.h")
         lib              (OpenGL libraries, including "libGL.dylib")

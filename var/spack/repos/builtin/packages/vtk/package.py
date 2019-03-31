@@ -218,12 +218,8 @@ class Vtk(CMakePackage):
             ])
         else:
             prefix = spec['opengl'].prefix
-
             opengl_include_dir = prefix.include
-            opengl_library = os.path.join(prefix.lib, 'libGL.so')
-            if 'darwin' in spec.architecture:
-                opengl_include_dir = prefix
-                opengl_library = prefix
+            opengl_library = spec['opengl'].libs.joined()
 
             cmake_args.extend([
                 '-DOPENGL_INCLUDE_DIR:PATH={0}'.format(opengl_include_dir),
