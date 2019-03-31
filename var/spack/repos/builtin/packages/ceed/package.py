@@ -119,6 +119,8 @@ class Ceed(Package):
     depends_on('laghos@2.0', when='@2.0.0+mfem')
     # Help the spack concretizer find a suitable version of hypre:
     depends_on('hypre~internal-superlu', when='@2.0.0+mfem')
+    depends_on('hypre~internal-superlu~superlu-dist',
+               when='@2.0.0+mfem+quickbuild')
 
     # If using gcc version <= 4.8 build suite-sparse version <= 5.1.0
     depends_on('suite-sparse@:5.1.0', when='@2.0.0%gcc@:4.8+mfem+petsc')
