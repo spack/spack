@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 class Squashfs(MakefilePackage):
     """Squashfs - read only compressed filesystem"""
