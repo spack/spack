@@ -288,14 +288,16 @@ def set_build_environment_variables(pkg, env, dirty):
             if os.path.isdir(default_lib_prefix):
                 dep_link_dirs.append(default_lib_prefix)
 
-        link_dirs.extend(dep_link_dirs)
-        if dep in rpath_deps:
+        if 'libdir' in dep.wrapper_items:
+            link_dirs.extend(dep_link_dirs)
+        if 'rpath' in dep.wrapper_items and dep in rpath_deps:
             rpath_dirs.extend(dep_link_dirs)
 
-        try:
-            include_dirs.extend(query.headers.directories)
-        except spack.spec.NoHeadersError:
-            tty.debug("No headers found for {0}".format(dep.name))
+        if 'incdir' in dep.wrapper_items:
+            try:
+                include_dirs.extend(query.headers.directories)
+            except spack.spec.NoHeadersError:
+                tty.debug("No headers found for {0}".format(dep.name))
 
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))

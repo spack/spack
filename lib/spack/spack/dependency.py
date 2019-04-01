@@ -16,6 +16,13 @@ all_deptypes = ('build', 'link', 'run', 'test')
 #: Default dependency type if none is specified
 default_deptype = ('build', 'link')
 
+#: The different aspects of the dependency that can be added to the
+#  compiler wrapper
+all_wrapper_items = ('incdir', 'libdir', 'rpath')
+
+#: Default wrapper_items if none is specified.
+default_wrapper_items = ('incdir', 'libdir', 'rpath')
+
 
 def canonical_deptype(deptype):
     """Convert deptype to a canonical sorted tuple, or raise ValueError.
@@ -47,6 +54,37 @@ def canonical_deptype(deptype):
     return deptype
 
 
+def canonical_wrapper_items(wrapper_items):
+    """Convert wrapper_items to a canonical sorted tuple, or raise ValueError.
+
+    Args:
+        wrapper_items (str or list or tuple): string representing
+            wrapper item, or a list/tuple of such strings.  Can
+            also be the builtin function ``all`` or the string 'all',
+            which result in a tuple of all wrapper items known to
+            Spack.
+    """
+    if wrapper_items in ('all', all):
+        return all_wrapper_items
+
+    elif isinstance(wrapper_items, string_types):
+        if wrapper_items not in all_wrapper_items:
+            raise ValueError('Invalid wrapper item: %s' % wrapper_items)
+        return (wrapper_items,)
+
+    elif isinstance(wrapper_items, (tuple, list)):
+        bad = [d for d in wrapper_items if d not in all_wrapper_items]
+        if bad:
+            raise ValueError(
+                'Invalid wrapper items: %s' % ','.join(str(t) for t in bad))
+        return tuple(sorted(wrapper_items))
+
+    elif wrapper_items is None:
+        return ()
+
+    return wrapper_items
+
+
 class Dependency(object):
     """Class representing metadata for a dependency on a package.
 
@@ -73,13 +111,16 @@ class Dependency(object):
     the dependency package can coexist with the patched version.
 
     """
-    def __init__(self, pkg, spec, type=default_deptype):
+    def __init__(self, pkg, spec, type=default_deptype,
+                 wrapper_items=None):
         """Create a new Dependency.
 
         Args:
             pkg (type): Package that has this dependency
             spec (Spec): Spec indicating dependency requirements
             type (sequence): strings describing dependency relationship
+            wrapper_items (sequence): strings describing items
+              prepended to CFLAGS, etc., by the compiler wrapper
         """
         assert isinstance(spec, spack.spec.Spec)
 
@@ -95,6 +136,11 @@ class Dependency(object):
         else:
             self.type = set(type)
 
+        if wrapper_items is None:
+            self.wrapper_items = set()
+        else:
+            self.wrapper_items = set(wrapper_items)
+
     @property
     def name(self):
         """Get the name of the dependency package."""
@@ -104,6 +150,7 @@ class Dependency(object):
         """Merge constraints, deptypes, and patches of other into self."""
         self.spec.constrain(other.spec)
         self.type |= other.type
+        self.wrapper_items |= other.wrapper_items
 
         # concatenate patch lists, or just copy them in
         for cond, p in other.patches.items():

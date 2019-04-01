@@ -41,7 +41,8 @@ import spack.patch
 import spack.spec
 import spack.url
 import spack.variant
-from spack.dependency import Dependency, default_deptype, canonical_deptype
+from spack.dependency import Dependency, default_deptype, canonical_deptype, \
+    default_wrapper_items, canonical_wrapper_items
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version
@@ -240,7 +241,8 @@ def version(ver, checksum=None, **kwargs):
     return _execute_version
 
 
-def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
+def _depends_on(pkg, spec, when=None, type=default_deptype,
+                wrapper_items=None, patches=None):
     # If when is False do nothing
     if when is False:
         return
@@ -255,6 +257,10 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
             "Package '%s' cannot depend on itself." % pkg.name)
 
     type = canonical_deptype(type)
+    if wrapper_items is None:
+        wrapper_items\
+            = getattr(pkg, '_default_wrapper_items', default_wrapper_items)
+    wrapper_items = canonical_wrapper_items(wrapper_items)
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
 
     # call this patches here for clarity -- we want patch to be a list,
@@ -275,12 +281,14 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
 
     # this is where we actually add the dependency to this package
     if when_spec not in conditions:
-        dependency = Dependency(pkg, dep_spec, type=type)
+        dependency = Dependency(pkg, dep_spec, type=type,
+                                wrapper_items=wrapper_items)
         conditions[when_spec] = dependency
     else:
         dependency = conditions[when_spec]
         dependency.spec.constrain(dep_spec, deps=False)
         dependency.type |= set(type)
+        dependency.wrapper_items |= set(wrapper_items)
 
     # apply patches to the dependency
     for execute_patch in patches:
@@ -318,8 +326,28 @@ def conflicts(conflict_spec, when=None, msg=None):
     return _execute_conflicts
 
 
+@directive(())  # _default_wrapper_items does not have to exist.
+def default_wrapper_item(*directives):
+    """Allows the package-level specification of wrapper items for use by
+    depends_on() as a default set, overriding the global defaults of
+    spack.dependencies.default_wrapper_items. For valid values see
+    spack.dependencies.all_wrapper_items. A call to
+    default_wrapper_items() without arguments will reset the list.
+    """
+    def _execute_default_wrapper_item(pkg):
+        if not hasattr(pkg, '_default_wrapper_items'):
+            pkg._default_wrapper_items = {d: True for d in directives}
+        elif not directives:
+            pkg._default_wrapper_items.clear()
+        else:
+            pkg._default_wrapper_items.update({d: True for d in directives})
+    return _execute_default_wrapper_item
+
+
 @directive(('dependencies'))
-def depends_on(spec, when=None, type=default_deptype, patches=None):
+def depends_on(spec, when=None, type=default_deptype,
+               wrapper_items=None,
+               patches=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:
@@ -327,6 +355,9 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
         when (Spec or str): when the dependent satisfies this, it has
             the dependency represented by ``spec``
         type (str or tuple of str): str or tuple of legal Spack deptypes
+        wrapper_items (str or tuple of str): str or tuple of legal Spack
+            wrapper items (signifying what should be prepended to
+            compiler flags by the compiler wrapper)
         patches (obj or list): single result of ``patch()`` directive, a
             ``str`` to be passed to ``patch``, or a list of these
 
@@ -336,7 +367,9 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
     """
     def _execute_depends_on(pkg):
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
+        _depends_on(pkg, spec, when=when, type=type,
+                    wrapper_items=wrapper_items,
+                    patches=patches)
     return _execute_depends_on
 
 
