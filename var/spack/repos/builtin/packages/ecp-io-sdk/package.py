@@ -16,11 +16,11 @@ class EcpIoSdk(CMakePackage):
 
     version('1.0', branch='master')
 
-    variant('hdf5', default=False, description="Enable HDF5")
-    variant('adios2', default=False, description="Enable ADIOS2")
-    variant('pnetcdf', default=False, description="Enable PNetCDF")
-    variant('darshan', default=False, description="Enable Darshan")
-    variant('mercury', default=False, description="Enable Mercury")
+    variant('hdf5', default=True, description="Enable HDF5")
+    variant('adios2', default=True, description="Enable ADIOS2")
+    variant('pnetcdf', default=True, description="Enable PNetCDF")
+    variant('darshan', default=True, description="Enable Darshan")
+    variant('mercury', default=True, description="Enable Mercury")
 
     # Broken dependency: boost
     #variant('veloc', default=False, description="Enable VeloC")
