@@ -6,8 +6,8 @@
 from spack import *
 
 
-class EcpVisSdk(CMakePackage):
-    """ECP Vis & Analysis SDK"""
+class EcpVizSdk(CMakePackage):
+    """ECP Viz & Analysis SDK"""
 
     homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
     git      = "https://github.com/chuckatkins/ecp-data-viz-sdk.git"
@@ -41,4 +41,4 @@ class EcpVisSdk(CMakePackage):
     depends_on('sz', when='+sz')
 
     def cmake_args(self):
-        return [ '-DVIS=ON' ]
+        return [ '-DVIZ=ON' ]
