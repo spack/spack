@@ -65,7 +65,14 @@ class Hpgmg(Package):
         if '+debug' in self.spec:
             cflags.append('-g')
         elif any(map(self.spec.satisfies, ['%gcc', '%clang', '%intel'])):
-            cflags += ['-O3', '-march=native']
+            cflags.append('-O3')
+            if self.compiler.target in ['x86_64']:
+                cflags.append('-march=native')
+            else:
+                cflags.append('-mcpu=native')
+                cflags.append('-mtune=native')
+        else:
+            cflags.append('-O3')
 
         args.append('--CFLAGS=' + ' '.join(cflags))
 
@@ -76,7 +83,7 @@ class Hpgmg(Package):
         return args
 
     def configure(self, spec, prefix):
-        configure(*self.configure_args())
+        python('configure', *self.configure_args())
 
     def build(self, spec, prefix):
         make('-C', 'build')
