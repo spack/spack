@@ -15,19 +15,26 @@ class EcpVisSdk(CMakePackage):
     version('1.0', branch='master')
 
     variant('paraview', default=False, description="Enable ParaView")
-    variant('catalyst', default=False, description="Enable Catalyst")
-    variant('cinema', default=False, description="Enable Cinema")
-    variant('vtk-m', default=False, description="Enable VTK-m")
-    variant('ascent', default=False, description="Enable Ascent")
-    variant('visit', default=False, description="Enable VisIt")
+    variant('vtkm', default=False, description="Enable VTK-m")
     variant('zfp', default=False, description="Enable ZFP")
     variant('sz', default=False, description="Enable SZ")
+
+    # TODO: fix +osmesa~rendering conflict
+    variant('catalyst', default=False, description="Enable Catalyst")
+
+    # Unsatisfiable dependencies: hdf5 and netcdf
+    # variant('visit', default=False, description="Enable VisIt")
+
+    # Broken dependency: vtk-h
+    # variant('ascent', default=False, description="Enable Ascent")
+
+    # Missing spack package
+    #variant('cinema', default=False, description="Enable Cinema")
     #variant('rover', default=False, description="Enable ROVER")
 
     depends_on('paraview', when='+paraview')
     depends_on('catalyst', when='+catalyst')
-    depends_on('cinema', when='+cinema')
-    depends_on('vtk-m', when='+vtk-m')
+    depends_on('vtkm', when='+vtkm')
     depends_on('ascent', when='+ascent')
     depends_on('visit', when='+visit')
     depends_on('zfp', when='+zfp')

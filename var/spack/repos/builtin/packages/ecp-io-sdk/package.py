@@ -17,10 +17,16 @@ class EcpIoSdk(CMakePackage):
     variant('hdf5', default=False, description="Enable HDF5")
     variant('adios2', default=False, description="Enable ADIOS2")
     variant('pnetcdf', default=False, description="Enable PNetCDF")
-    variant('veloc', default=False, description="Enable VeloC")
-    variant('unifycr', default=False, description="Enable UnifyCR")
     variant('darshan', default=False, description="Enable Darshan")
     variant('mercury', default=False, description="Enable Mercury")
+
+    # Broken dependency: boost
+    #variant('veloc', default=False, description="Enable VeloC")
+
+    # Missing dependency: margo
+    #variant('unifycr', default=False, description="Enable UnifyCR")
+
+    # Currently no spack packages
     #variant('romio', default=False, description="Enable ROMIO")
     #variant('faodel', default=False, description="Enable FAODEL")
 
