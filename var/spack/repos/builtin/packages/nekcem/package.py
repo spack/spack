@@ -28,6 +28,7 @@ class Nekcem(Package):
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('python@2.7:', type='build')
 
     @run_before('install')
     def fortran_check(self):
