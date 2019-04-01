@@ -31,8 +31,8 @@ class EcpVizSdk(CMakePackage):
     # variant('ascent', default=False, description="Enable Ascent")
 
     # Missing spack package
-    #variant('cinema', default=False, description="Enable Cinema")
-    #variant('rover', default=False, description="Enable ROVER")
+    # variant('cinema', default=False, description="Enable Cinema")
+    # variant('rover', default=False, description="Enable ROVER")
 
     depends_on('paraview', when='+paraview')
     depends_on('catalyst', when='+catalyst')
@@ -43,4 +43,4 @@ class EcpVizSdk(CMakePackage):
     depends_on('sz', when='+sz')
 
     def cmake_args(self):
-        return [ '-DVIZ=ON' ]
+        return ['-DVIZ=ON']

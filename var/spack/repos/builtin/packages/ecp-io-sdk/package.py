@@ -23,14 +23,14 @@ class EcpIoSdk(CMakePackage):
     variant('mercury', default=True, description="Enable Mercury")
 
     # Broken dependency: boost
-    #variant('veloc', default=False, description="Enable VeloC")
+    # variant('veloc', default=False, description="Enable VeloC")
 
     # Missing dependency: margo
-    #variant('unifycr', default=False, description="Enable UnifyCR")
+    # variant('unifycr', default=False, description="Enable UnifyCR")
 
     # Currently no spack packages
-    #variant('romio', default=False, description="Enable ROMIO")
-    #variant('faodel', default=False, description="Enable FAODEL")
+    # variant('romio', default=False, description="Enable ROMIO")
+    # variant('faodel', default=False, description="Enable FAODEL")
 
     depends_on('hdf5', when='+hdf5')
     depends_on('adios2', when='+adios2')
@@ -42,4 +42,4 @@ class EcpIoSdk(CMakePackage):
     depends_on('mercury', when='+mercury')
 
     def cmake_args(self):
-        return [ '-DIO=ON' ]
+        return ['-DIO=ON']
