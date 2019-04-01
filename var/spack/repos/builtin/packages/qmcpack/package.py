@@ -277,6 +277,7 @@ class Qmcpack(CMakePackage, CudaPackage):
             args.append('-DENABLE_MKL=1')
             args.append('-DMKL_ROOT=%s' % env['MKLROOT'])
         else:
+            args.append('-DENABLE_MKL=0')
             lapack_dir = ':'.join((
                 spec['lapack'].prefix.include,
                 spec['blas'].prefix.include
