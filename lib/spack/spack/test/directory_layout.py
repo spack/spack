@@ -73,7 +73,7 @@ def test_yaml_directory_layout_parameters(
     # Test separation of namespace
     ns_scheme_package = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
     layout_ns_package = YamlDirectoryLayout(str(tmpdir),
-                                              path_scheme=ns_scheme_package)
+                                            path_scheme=ns_scheme_package)
     ns_path_package = layout_ns_package.relative_path_for_spec(spec)
     assert(ns_path_package == spec.format(ns_scheme_package))
 
