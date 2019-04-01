@@ -14,8 +14,24 @@ class EcpIoSdk(CMakePackage):
 
     version('1.0', branch='master')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    variant('hdf5', default=False, description="Enable HDF5")
+    variant('adios2', default=False, description="Enable ADIOS2")
+    variant('pnetcdf', default=False, description="Enable PNetCDF")
+    variant('veloc', default=False, description="Enable VeloC")
+    variant('unifycr', default=False, description="Enable UnifyCR")
+    variant('darshan', default=False, description="Enable Darshan")
+    variant('mercury', default=False, description="Enable Mercury")
+    #variant('romio', default=False, description="Enable ROMIO")
+    #variant('faodel', default=False, description="Enable FAODEL")
+
+    depends_on('hdf5', when='+hdf5')
+    depends_on('adios2', when='+adios2')
+    depends_on('parallel-netcdf', when='+pnetcdf')
+    depends_on('veloc', when='+veloc')
+    depends_on('unifycr', when='+unifycr')
+    depends_on('darshan-runtime', when='+darshan')
+    depends_on('darshan-util', when='+darshan')
+    depends_on('mercury', when='+mercury')
 
     def cmake_args(self):
         return [ '-DIO=ON' ]

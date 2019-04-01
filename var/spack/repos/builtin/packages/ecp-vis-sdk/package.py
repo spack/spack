@@ -14,8 +14,24 @@ class EcpVisSdk(CMakePackage):
 
     version('1.0', branch='master')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    variant('paraview', default=False, description="Enable ParaView")
+    variant('catalyst', default=False, description="Enable Catalyst")
+    variant('cinema', default=False, description="Enable Cinema")
+    variant('vtk-m', default=False, description="Enable VTK-m")
+    variant('ascent', default=False, description="Enable Ascent")
+    variant('visit', default=False, description="Enable VisIt")
+    variant('zfp', default=False, description="Enable ZFP")
+    variant('sz', default=False, description="Enable SZ")
+    #variant('rover', default=False, description="Enable ROVER")
+
+    depends_on('paraview', when='+paraview')
+    depends_on('catalyst', when='+catalyst')
+    depends_on('cinema', when='+cinema')
+    depends_on('vtk-m', when='+vtk-m')
+    depends_on('ascent', when='+ascent')
+    depends_on('visit', when='+visit')
+    depends_on('zfp', when='+zfp')
+    depends_on('sz', when='+sz')
 
     def cmake_args(self):
         return [ '-DVIS=ON' ]
