@@ -12,6 +12,8 @@ class EcpIoSdk(CMakePackage):
     homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
     git      = "https://github.com/chuckatkins/ecp-data-viz-sdk.git"
 
+    maintainers = ['chuckatkins']
+
     version('1.0', branch='master')
 
     variant('hdf5', default=False, description="Enable HDF5")

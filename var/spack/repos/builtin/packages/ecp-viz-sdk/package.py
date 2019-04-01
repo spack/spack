@@ -12,6 +12,8 @@ class EcpVizSdk(CMakePackage):
     homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
     git      = "https://github.com/chuckatkins/ecp-data-viz-sdk.git"
 
+    maintainers = ['chuckatkins']
+
     version('1.0', branch='master')
 
     variant('paraview', default=False, description="Enable ParaView")
