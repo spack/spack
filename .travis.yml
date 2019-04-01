@@ -218,11 +218,6 @@ before_script:
         cp share/spack/qa/configuration/*.yaml etc/spack/;
     fi
 
-  # Set up environment modules
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then
-        source /usr/share/modules/init/bash;
-    fi
-
 #=============================================================================
 # Building
 #=============================================================================
