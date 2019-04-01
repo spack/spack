@@ -42,6 +42,10 @@ class Binutils(AutotoolsPackage):
     depends_on('m4', type='build', when='@:2.29.99 +gold')
     depends_on('bison', type='build', when='@:2.29.99 +gold')
 
+    def setup_environment(self, spack_env, run_env):
+        if self.spec.satisfies('%clang@7:'):
+            spack_env.append_flags('CXXFLAGS', '-std=gnu++98')
+
     def configure_args(self):
         spec = self.spec
 
