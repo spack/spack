@@ -5,7 +5,6 @@
 
 import pytest
 import os
-import tempfile
 import spack
 
 from spack.util.module_cmd import (
