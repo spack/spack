@@ -19,15 +19,22 @@ import llnl.util.tty as tty
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
 py_cmd = "$'import os\nimport json\nprint(json.dumps(dict(os.environ)))'"
 
+# This is just to enable testing. I hate it but we can't find a better way
+_test_mode = False
 
 def module(*args):
+    module_cmd = 'module ' + ' '.join(args) + ' 2>&1'
+    if _test_mode:
+        tty.warn('module function operating in test mode')
+        module_cmd = ". %s 2>&1" % args[1]
     if args[0] in module_change_commands:
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
-        module_p  = subprocess.Popen('module ' + ' '.join(args) + ' 2>&1' +
-                                     ' >/dev/null; python -c %s' % py_cmd,
+        module_cmd += ' >/dev/null; python -c %s' % py_cmd
+        module_p  = subprocess.Popen(module_cmd,
                                      stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT, shell=True)
+                                     stderr=subprocess.STDOUT,
+                                     shell=True)
 
         # Cray modules spit out warnings that we cannot supress.
         # This hack skips to the last output (the environment)
@@ -40,9 +47,10 @@ def module(*args):
         os.environ.update(env_dict)
     else:
         # Simply execute commands that don't change state and return output
-        module_p = subprocess.Popen('module ' + ' '.join(args) + ' 2>&1',
+        module_p = subprocess.Popen(module_cmd,
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, shell=True)
+                                    stderr=subprocess.STDOUT,
+                                    shell=True)
         # Decode and str to return a string object in both python 2 and 3
         return str(module_p.communicate()[0].decode())
 

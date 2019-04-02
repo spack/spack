@@ -7,6 +7,7 @@ import pytest
 import subprocess
 import os
 import tempfile
+import spack
 
 from spack.util.module_cmd import (
     module,
@@ -15,22 +16,21 @@ from spack.util.module_cmd import (
     get_path_from_module_contents
 )
 
-env = os.environ.copy()
-env['LC_ALL'] = 'C'
-typeset_func = subprocess.Popen('module avail',
-                                env=env,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                shell=True)
-typeset_func.wait()
-typeset = typeset_func.stderr.read()
-MODULE_DEFINED = b'not found' not in typeset
-
 test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
                      'setenv MOD_DIR /path/to',
                      'setenv LDFLAGS -Wl,-rpath/path/to/lib',
                      'setenv LDFLAGS -L/path/to/lib',
                      'prepend-path PATH /path/to/bin']
+
+
+@pytest.fixture
+def module_function_test_mode():
+    old_mode = spack.util.module_cmd._test_mode
+    spack.util.module_cmd._test_mode = True
+
+    yield
+
+    spack.util.module_cmd._test_mode = old_mode
 
 
 @pytest.fixture
@@ -56,16 +56,21 @@ def tmp_module():
     os.rmdir(module_dir)
 
 
-@pytest.mark.skipif(not MODULE_DEFINED, reason='Requires module() function')
-def test_get_path_from_module(tmp_module):
-    for line in test_module_lines:
-        with open(tmp_module, 'w') as f:
-            f.truncate()
-            f.write('#%Module1.0\n')
-            f.write(line)
+def test_module_function(tmpdir, module_function_test_mode):
+    os.environ['NOT_AFFECTED'] = "NOT_AFFECTED"
 
-        path = get_path_from_module(os.path.basename(tmp_module))
-        assert path == '/path/to'
+    src_file = str(tmpdir.join('src_me'))
+    with open(src_file, 'w') as f:
+        f.write('export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n')
+
+    old_env = os.environ.copy()
+
+    module('load', src_file)
+
+    assert os.environ['TEST_MODULE_ENV_VAR'] == 'TEST_SUCCESS'
+    assert os.environ['NOT_AFFECTED'] == "NOT_AFFECTED"
+
+    os.environ = old_env
 
 
 def test_get_path_from_module_faked(save_module_func):
