@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, get_compiler_version
+import spack.compiler
 
 
-class Pgi(Compiler):
+class Pgi(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['pgcc']
 
@@ -28,6 +28,9 @@ class Pgi(Compiler):
     PrgEnv = 'PrgEnv-pgi'
     PrgEnv_compiler = 'pgi'
 
+    version_argument = '-V'
+    version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ [^ ]+ target on '
+
     @property
     def openmp_flag(self):
         return "-mp"
@@ -39,23 +42,3 @@ class Pgi(Compiler):
     @property
     def pic_flag(self):
         return "-fpic"
-
-    @classmethod
-    def default_version(cls, comp):
-        """The ``-V`` option works for all the PGI compilers.
-        Output looks like this::
-
-            pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge
-            The Portland Group - PGI Compilers and Tools
-            Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.
-
-        on x86-64, and::
-
-            pgcc 17.4-0 linuxpower target on Linuxpower
-            PGI Compilers and Tools
-            Copyright (c) 2017, NVIDIA CORPORATION.  All rights reserved.
-
-        on PowerPC.
-        """
-        return get_compiler_version(
-            comp, '-V', r'pg[^ ]* ([0-9.]+)-[0-9]+ [^ ]+ target on ')
