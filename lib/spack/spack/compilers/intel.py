@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import \
-    Compiler, get_compiler_version, UnsupportedCompilerFlag
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -29,6 +28,9 @@ class Intel(Compiler):
 
     PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'
+
+    version_argument = '--version'
+    version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
 
     @property
     def openmp_flag(self):
@@ -66,22 +68,6 @@ class Intel(Compiler):
     @property
     def pic_flag(self):
         return "-fPIC"
-
-    @classmethod
-    def default_version(cls, comp):
-        """The ``--version`` option seems to be the most consistent one
-        for intel compilers.  Output looks like this::
-
-            icpc (ICC) 12.1.5 20120612
-            Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
-
-        or::
-
-            ifort (IFORT) 12.1.5 20120612
-            Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
-        """
-        return get_compiler_version(
-            comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
 
     @property
     def stdcxx_libs(self):

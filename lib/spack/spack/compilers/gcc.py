@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 import spack.compilers.clang
-from spack.compiler import \
-    Compiler, get_compiler_version, UnsupportedCompilerFlag
+
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -114,7 +116,10 @@ class Gcc(Compiler):
 
         version = super(Gcc, cls).default_version(cc)
         if ver(version) >= ver('7'):
-            version = get_compiler_version(cc, '-dumpfullversion')
+            output = spack.compiler.get_compiler_version_output(
+                cc, '-dumpfullversion'
+            )
+            version = cls.extract_version_from_output(output)
         return version
 
     @classmethod
@@ -139,11 +144,14 @@ class Gcc(Compiler):
 
             7.2.0
         """
-        version = get_compiler_version(
-            fc, '-dumpversion',
-            r'(?:GNU Fortran \(GCC\) )?([\d.]+)')
+        output = spack.compiler.get_compiler_version_output(fc, '-dumpversion')
+        match = re.search(r'(?:GNU Fortran \(GCC\) )?([\d.]+)', output)
+        version = match.group(match.lastindex) if match else 'unknown'
         if ver(version) >= ver('7'):
-            version = get_compiler_version(fc, '-dumpfullversion')
+            output = spack.compiler.get_compiler_version_output(
+                fc, '-dumpfullversion'
+            )
+            version = cls.extract_version_from_output(output)
         return version
 
     @classmethod

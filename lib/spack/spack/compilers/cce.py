@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, get_compiler_version
+import spack.compiler
 
 
-class Cce(Compiler):
+class Cce(spack.compiler.Compiler):
     """Cray compiler environment compiler."""
     # Subclasses use possible names of C compiler
     cc_names = ['cc']
@@ -31,9 +31,8 @@ class Cce(Compiler):
                   'f77': 'cce/ftn',
                   'fc': 'cce/ftn'}
 
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
+    version_argument = '-V'
+    version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
 
     @property
     def openmp_flag(self):

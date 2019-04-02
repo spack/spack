@@ -8,10 +8,11 @@ import os
 import sys
 from shutil import copytree, ignore_patterns
 
+import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.paths
-from spack.compiler import Compiler, _version_cache, UnsupportedCompilerFlag
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
 
@@ -161,6 +162,7 @@ class Clang(Compiler):
         return "-fPIC"
 
     @classmethod
+    @llnl.util.lang.memoized
     def default_version(cls, comp):
         """The ``--version`` option works for clang compilers.
         On most platforms, output looks like this::
@@ -175,22 +177,13 @@ class Clang(Compiler):
             Target: x86_64-apple-darwin15.2.0
             Thread model: posix
         """
-        if comp not in _version_cache:
-            compiler = Executable(comp)
-            output = compiler('--version', output=str, error=str)
-            _version_cache[comp] = cls.detect_version_from_str(output)
-
-        return _version_cache[comp]
+        compiler = Executable(comp)
+        output = compiler('--version', output=str, error=str)
+        return cls.extract_version_from_output(output)
 
     @classmethod
-    def detect_version_from_str(cls, output):
-        """Returns the version that has been detected from the string
-        passed as input. If no detection is possible returns the
-        string 'unknown'.
-
-        Args:
-            output (str): string used to detect a compiler version
-        """
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
         ver = 'unknown'
         match = re.search(
             # Apple's LLVM compiler has its own versions, so suffix them.
