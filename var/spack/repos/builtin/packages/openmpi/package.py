@@ -391,7 +391,7 @@ class Openmpi(AutotoolsPackage):
         # Some scientific packages ignore deprecated/removed symbols.
         # Re-enable them for now. See discussion at
         # https://github.com/open-mpi/ompi/issues/6114#issuecomment-446279495
-        if spec.satisfies('@4.0.1:'):
+        if spec.satisfies('@4.0:'):
             config_args.append('--enable-mpi1-compatibility')
 
         # Fabrics
