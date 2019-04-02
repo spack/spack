@@ -1,0 +1,577 @@
+diff -r 89706c0efbdb .hgtags
+--- a/.hgtags	Wed Jan 02 14:17:26 2019 -0500
++++ b/.hgtags	Tue Apr 02 15:43:13 2019 -0700
+@@ -1,3 +1,4 @@
+ 9c7e7cffa7d0e2decd23cde36a4830dfb55bea13 v2.2.0
+ b2b2e21c22a59a79eefbf1e5cff8e7d539a52c0c v2.3.0
+ 04d08aaa27dc8a551513d268c68fc299e81b6780 v2.4.0
++89706c0efbdbfd48bf8a2c20cc0d73e53c3f387e v2.5.0
+diff -r 89706c0efbdb control/get_nb.cpp
+--- a/control/get_nb.cpp	Wed Jan 02 14:17:26 2019 -0500
++++ b/control/get_nb.cpp	Tue Apr 02 15:43:13 2019 -0700
+@@ -502,6 +502,7 @@
+ {
+     magma_int_t nb;
+     magma_int_t minmn = min( m, n );
++    return 256;
+     //magma_int_t arch = magma_getdevice_arch();
+ #if 0
+     if (minmn <=  5248) nb = 128;
+diff -r 89706c0efbdb include/magma_types.h
+--- a/include/magma_types.h	Wed Jan 02 14:17:26 2019 -0500
++++ b/include/magma_types.h	Tue Apr 02 15:43:13 2019 -0700
+@@ -77,7 +77,7 @@
+     typedef magma_int_t    magma_device_t;
+ 
+     // Half precision in CUDA 
+-    #if defined(__cplusplus) && CUDA_VERSION > 7500
++    #if defined(__cplusplus) && CUDA_VERSION >= 7500
+     #include <cuda_fp16.h>
+     typedef __half           magmaHalf;
+     #else
+diff -r 89706c0efbdb sparse/blas/magma_zsampleselect.cu
+--- a/sparse/blas/magma_zsampleselect.cu	Wed Jan 02 14:17:26 2019 -0500
++++ b/sparse/blas/magma_zsampleselect.cu	Tue Apr 02 15:43:13 2019 -0700
+@@ -15,6 +15,8 @@
+ 
+ #define PRECISION_z
+ 
++#if (CUDA_ARCH >= 350)
++
+ namespace magma_sampleselect {
+ 
+ __global__ void compute_abs(const magmaDoubleComplex* __restrict__ in, double* __restrict__ out, int32_t size) {
+@@ -110,6 +112,8 @@
+     return info;
+ }
+ 
++#endif
++
+ /**
+     Purpose
+     -------
+@@ -164,6 +168,10 @@
+     magma_queue_t queue )
+ {
+     magma_int_t info = 0;
++    
++    magma_int_t arch = magma_getdevice_arch();
++    
++#if (arch >= 350)
+ 
+     auto num_blocks = magma_ceildiv(total_size, block_size);
+     auto local_work = (total_size + num_threads - 1) / num_threads;
+@@ -194,6 +202,11 @@
+     magma_getvector(1, sizeof(uint32_t), gpubucketidx, 1, &bucketidx, 1, queue);
+     magma_dgetvector(1, gputree + searchtree_width - 1 + bucketidx, 1, thrs, 1, queue);
+     *thrs = std::sqrt(*thrs);
++    
++#else
++    printf("error: this functionality needs CUDA architecture >= 3.5\n");
++    inf = ERR_NOT_SUPPORTED;
++#endif
+ 
+ cleanup:
+     return info;
+diff -r 89706c0efbdb src/xhsgetrf_gpu.cpp
+--- a/src/xhsgetrf_gpu.cpp	Wed Jan 02 14:17:26 2019 -0500
++++ b/src/xhsgetrf_gpu.cpp	Tue Apr 02 15:43:13 2019 -0700
+@@ -16,6 +16,131 @@
+ #include <cuda_fp16.h>
+ #endif
+ 
++#if CUDA_VERSION < 9020
++// conversion float to half are not defined for host in CUDA version <9.2
++// thus uses the conversion below when CUDA VERSION is < 9.2.
++#include <string.h>
++//
++// Copyright (c) 1993-2016, NVIDIA CORPORATION. All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions
++// are met:
++//  * Redistributions of source code must retain the above copyright
++//    notice, this list of conditions and the following disclaimer.
++//  * Redistributions in binary form must reproduce the above copyright
++//    notice, this list of conditions and the following disclaimer in the
++//    documentation and/or other materials provided with the distribution.
++//  * Neither the name of NVIDIA CORPORATION nor the names of its
++//    contributors may be used to endorse or promote products derived
++//    from this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
++// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
++// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
++// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++// This code modified from the public domain code here: 
++// https://gist.github.com/rygorous/2156668
++// The URL above includes more robust conversion routines
++// that handle Inf and NaN correctly. 
++// 
++// It is recommended to use the more robust versions in production code.
++
++typedef unsigned uint;
++
++union FP32
++{
++    uint u;
++    float f;
++    struct
++    {
++        uint Mantissa : 23;
++        uint Exponent : 8;
++        uint Sign : 1;
++    };
++};
++
++union FP16
++{
++    unsigned short u;
++    struct
++    {
++        uint Mantissa : 10;
++        uint Exponent : 5;
++        uint Sign : 1;
++    };
++};
++
++// Approximate solution. This is faster but converts some sNaNs to
++// infinity and doesn't round correctly. Handle with care.
++// Approximate solution. This is faster but converts some sNaNs to
++// infinity and doesn't round correctly. Handle with care.
++static half approx_float_to_half(float fl)
++{
++    FP32 f32infty = { 255 << 23 };
++    FP32 f16max = { (127 + 16) << 23 };
++    FP32 magic = { 15 << 23 };
++    FP32 expinf = { (255 ^ 31) << 23 };
++    uint sign_mask = 0x80000000u;
++    FP16 o = { 0 };
++
++    FP32 f = *((FP32*)&fl);
++
++    uint sign = f.u & sign_mask;
++    f.u ^= sign;
++
++    if (!(f.f < f32infty.u)) // Inf or NaN
++        o.u = f.u ^ expinf.u;
++    else
++    {
++        if (f.f > f16max.f) f.f = f16max.f;
++        f.f *= magic.f;
++    }
++
++    o.u = f.u >> 13; // Take the mantissa bits
++    o.u |= sign >> 16;
++    half tmp;
++    memcpy(&tmp, &o, sizeof(half));
++    //return *((half*)&o);
++    return tmp;
++}
++
++// from half->float code - just for verification.
++static float half_to_float(half hf)
++{
++    FP16 h;
++    memcpy(&h, &hf, sizeof(half));
++
++    static const FP32 magic = { 113 << 23 };
++    static const uint shifted_exp = 0x7c00 << 13; // exponent mask after shift
++    FP32 o;
++
++    o.u = (h.u & 0x7fff) << 13;     // exponent/mantissa bits
++    uint exp = shifted_exp & o.u;   // just the exponent
++    o.u += (127 - 15) << 23;        // exponent adjust
++
++    // handle exponent special cases
++    if (exp == shifted_exp) // Inf/NaN?
++        o.u += (128 - 16) << 23;    // extra exp adjust
++    else if (exp == 0) // Zero/Denormal?
++    {
++        o.u += 1 << 23;             // extra exp adjust
++        o.f -= magic.f;             // renormalize
++    }
++
++    o.u |= (h.u & 0x8000) << 16;    // sign bit
++    return o.f;
++}
++#endif
++
+ #include "magma_internal.h"
+ //#include "nvToolsExt.h"
+ 
+@@ -106,10 +231,13 @@
+     float c_one     = MAGMA_S_ONE;
+     float c_neg_one = MAGMA_S_NEG_ONE;
+     #if 1
++    #if CUDA_VERSION >= 9020
+     const magmaHalf h_one     = (magmaHalf) 1.0;
+     const magmaHalf h_neg_one = (magmaHalf)-1.0;
+-    //const magmaHalf h_one = approx_float_to_half(1.0);
+-    //const magmaHalf h_neg_one = approx_float_to_half(-1.0);
++    #else
++    const magmaHalf h_one = approx_float_to_half(1.0);
++    const magmaHalf h_neg_one = approx_float_to_half(-1.0);
++    #endif
+     #else
+     FP32 float_one    = *((FP32*)&c_one);
+     FP16 half_one     = float_to_half_full(float_one);
+diff -r 89706c0efbdb src/xshgetrf_gpu.cpp
+--- a/src/xshgetrf_gpu.cpp	Wed Jan 02 14:17:26 2019 -0500
++++ b/src/xshgetrf_gpu.cpp	Tue Apr 02 15:43:13 2019 -0700
+@@ -92,7 +92,7 @@
+     magma_mp_type_t enable_tc,
+     magma_mp_type_t mp_algo_type )
+ {
+-#if CUDA_VERSION >= 7500
++#if CUDA_VERSION >= 9000
+     #ifdef HAVE_clBLAS
+     #define  dA(i_, j_) dA,  (dA_offset  + (i_)       + (j_)*ldda)
+     #define dAT(i_, j_) dAT, (dAT_offset + (i_)*lddat + (j_))
+diff -r 89706c0efbdb src/zgeqrf_gpu.cpp
+--- a/src/zgeqrf_gpu.cpp	Wed Jan 02 14:17:26 2019 -0500
++++ b/src/zgeqrf_gpu.cpp	Tue Apr 02 15:43:13 2019 -0700
+@@ -11,6 +11,7 @@
+        @precisions normal z -> s d c
+ */
+ #include "magma_internal.h"
++#include "nvToolsExt.h"
+ 
+ /***************************************************************************//**
+     Auxiliary function: "A" is pointer to the current panel holding the
+@@ -226,12 +227,16 @@
+             }
+             
+             magma_queue_sync( queues[1] );  // wait to get work(i)
++            nvtxRangeId_t id1 = nvtxRangeStartA("dgeqrf-cpu");            
+             lapackf77_zgeqrf( &rows, &ib, work, &ldwork, &tau[i], hwork, &lhwork, info );
++            nvtxRangeEnd(id1);
+             // Form the triangular factor of the block reflector in hwork
+             // H = H(i) H(i+1) . . . H(i+ib-1)
++            nvtxRangeId_t id2 = nvtxRangeStartA("dlarft-cpu");            
+             lapackf77_zlarft( MagmaForwardStr, MagmaColumnwiseStr,
+                               &rows, &ib,
+                               work, &ldwork, &tau[i], hwork, &ib );
++            nvtxRangeEnd(id2);
+             
+             // wait for previous trailing matrix update (above) to finish with R
+             magma_queue_sync( queues[0] );
+diff -r 89706c0efbdb testing/Makefile.src
+--- a/testing/Makefile.src	Wed Jan 02 14:17:26 2019 -0500
++++ b/testing/Makefile.src	Tue Apr 02 15:43:13 2019 -0700
+@@ -96,6 +96,8 @@
+ testing_src += \
+ 	$(cdir)/testing_zcgesv_gpu.cpp	\
+ 	$(cdir)/testing_dxgesv_gpu.cpp	\
++	$(cdir)/testing_dsgesv_gmres_gpu.cpp	\
++	$(cdir)/testing_dsgesv_gmres_gpu_alltester.cpp	\
+ 	\
+ 	$(cdir)/testing_zgesv_gpu.cpp	\
+ 	$(cdir)/testing_zgetrf_gpu.cpp	\
+diff -r 89706c0efbdb testing/testing_zgeqrf_gpu.cpp
+--- a/testing/testing_zgeqrf_gpu.cpp	Wed Jan 02 14:17:26 2019 -0500
++++ b/testing/testing_zgeqrf_gpu.cpp	Tue Apr 02 15:43:13 2019 -0700
+@@ -12,13 +12,23 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <math.h>
+-
++#include <cuda_runtime_api.h>
+ // includes, project
+ #include "flops.h"
+ #include "magma_v2.h"
+ #include "magma_lapack.h"
+ #include "testings.h"
++#include <cusolverDn.h>
+ 
++extern "C" magma_int_t
++magma_zgeqrf_expert_gpu(
++    magma_mode_t mode, magma_int_t cleanV, 
++    magma_int_t m, magma_int_t n,
++    magmaDoubleComplex *dA, magma_int_t ldda,
++    magmaDoubleComplex *dtau, 
++    magmaDoubleComplex *dTT,
++    magmaDoubleComplex *dRR,
++    magma_int_t *info);
+ /* ////////////////////////////////////////////////////////////////////////////
+    -- Testing zgeqrf
+ */
+@@ -37,7 +47,7 @@
+     real_Double_t    gflops, gpu_perf, gpu_time, cpu_perf=0, cpu_time=0;
+     double           Anorm, error=0, error2=0;
+     magmaDoubleComplex *h_A, *h_R, *tau, *h_work, tmp[1], unused[1];
+-    magmaDoubleComplex_ptr d_A, dT;
++    magmaDoubleComplex_ptr d_A, dT, dtau;
+     magma_int_t M, N, n2, lda, ldda, lwork, info, min_mn, nb, size;
+     magma_int_t ISEED[4] = {0,0,0,1};
+     
+@@ -82,6 +92,7 @@
+             lapackf77_zgeqrf( &M, &N, unused, &M, unused, tmp, &lwork, &info );
+             lwork = (magma_int_t)MAGMA_Z_REAL( tmp[0] );
+             
++            TESTING_CHECK( magma_zmalloc( &dtau,    min_mn ));
+             TESTING_CHECK( magma_zmalloc_cpu( &tau,    min_mn ));
+             TESTING_CHECK( magma_zmalloc_cpu( &h_A,    n2     ));
+             TESTING_CHECK( magma_zmalloc_cpu( &h_work, lwork  ));
+@@ -90,17 +101,40 @@
+             
+             TESTING_CHECK( magma_zmalloc( &d_A,    ldda*N ));
+             
+-            if ( opts.version == 1 || opts.version == 3 ) {
++            //if ( opts.version == 1 || opts.version == 3 ) {
+                 size = (2*min(M, N) + magma_roundup( N, 32 ) )*nb;
+                 TESTING_CHECK( magma_zmalloc( &dT, size ));
+                 magmablas_zlaset( MagmaFull, size, 1, c_zero, c_zero, dT, size, opts.queue );
+-            }
++            //}
+             
+             /* Initialize the matrix */
+             magma_generate_matrix( opts, M, N, h_A, lda );
+             lapackf77_zlacpy( MagmaFullStr, &M, &N, h_A, &lda, h_R, &lda );
+             magma_zsetmatrix( M, N, h_R, lda, d_A, ldda, opts.queue );
+             
++
++            magmaDoubleComplex *h_B, *d_B;
++            magma_int_t nrhs = opts.nrhs;
++            magma_int_t ldb    = max(M, N);
++            magma_int_t lddb   = magma_roundup( max(M, N), opts.align );  // multiple of 32 by default
++            
++            size = M*nrhs;
++            TESTING_CHECK( magma_zmalloc_cpu( &h_B,    ldb*nrhs  ));
++            TESTING_CHECK( magma_zmalloc( &d_B,    lddb*nrhs ));
++            lapackf77_zlarnv( &ione, ISEED, &size, h_B );
++            magma_zsetmatrix( M, nrhs, h_B, ldb, d_B, lddb, opts.queue );
++            
++#ifdef use_cusolver
++    cusolverDnHandle_t cusolverH;
++    cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
++    cusolver_status = cusolverDnCreate(&cusolverH);
++    int lwork_geqrf;
++    cusolver_status = cusolverDnDgeqrf_bufferSize(cusolverH, M, N, d_A, ldda, &lwork_geqrf);
++    magmaDoubleComplex *dwork;
++    int *devinfo;
++    TESTING_CHECK( magma_zmalloc( &dwork,    lwork_geqrf ));
++    TESTING_CHECK( magma_malloc( (void**)&devinfo,    sizeof(int) ));
++#endif
+             /* ====================================================================
+                Performs operation using MAGMA
+                =================================================================== */
+@@ -113,7 +147,14 @@
+             }
+             else if ( opts.version == 2 ) {
+                 // LAPACK complaint arguments
+-                magma_zgeqrf2_gpu( M, N, d_A, ldda, tau, &info );
++                #ifndef use_cusolver
++                //magma_zgeqrf2_gpu( M, N, d_A, ldda, tau, &info );
++                magmaDoubleComplex *dR = dT+min(M, N)*nb;
++                magma_zgeqrf_expert_gpu( MagmaNative, 0, M, N, d_A, ldda, dtau, dT, dR, &info );
++                #else
++                cusolver_status = cusolverDnDgeqrf(cusolverH, M, N, d_A, ldda, dtau, dwork, lwork_geqrf, devinfo);
++                cudaDeviceSynchronize();
++                #endif
+             }
+             #ifdef HAVE_CUBLAS
+             else if ( opts.version == 3 ) {
+@@ -121,6 +162,11 @@
+                 magma_zgeqrf3_gpu( M, N, d_A, ldda, tau, dT, &info );
+             }
+             #endif
++            else if ( opts.version == 4 ) {
++                // stores dT, V blocks have zeros, R blocks stored in dT
++                magmaDoubleComplex *dR = dT+min(M, N)*nb;
++                magma_zgeqrf_expert_gpu( MagmaNative, 1, M, N, d_A, ldda, dtau, dT, dR, &info );
++            }
+             else {
+                 printf( "Unknown version %lld\n", (long long) opts.version );
+                 return -1;
+@@ -131,6 +177,33 @@
+                 printf("magma_zgeqrf returned error %lld: %s.\n",
+                        (long long) info, magma_strerror( info ));
+             }
++
++            printf("voici time facto  = %8.5f ms\n", gpu_time*1000);
++            magma_zgetmatrix( min_mn, 1, dtau, min_mn, tau, min_mn, opts.queue );
++
++            magma_int_t nlp=10;
++            gpu_time = magma_wtime();
++            if ( info == 0 ) {
++                for(magma_int_t r=0; r<nlp; r++){
++                if ( opts.version == 1 ) {
++                    magma_zgeqrs3_gpu( M, N, nrhs,
++                            d_A, ldda, tau, dT,
++                            d_B, lddb, h_work, lwork, &info );
++                }
++                else if ( opts.version == 3 ) {
++                    magma_zgeqrs3_gpu( M, N, nrhs,
++                            d_A, ldda, tau, dT,
++                            d_B, lddb, h_work, lwork, &info );
++                }
++                }
++            }
++            gpu_time = magma_wtime() - gpu_time;
++            printf("voici time solve for %lld RHS = %8.5f ms\n",(long long) nrhs, gpu_time*1000.0/double(nlp));
++            magma_free_cpu(h_B);
++            magma_free(d_B);
++
++
++            
+             
+             if ( opts.check == 1 && (opts.version == 2 || opts.version == 3) ) {
+                 if ( opts.version == 3 ) {
+diff -r 89706c0efbdb testing/testing_zheevd.cpp
+--- a/testing/testing_zheevd.cpp	Wed Jan 02 14:17:26 2019 -0500
++++ b/testing/testing_zheevd.cpp	Tue Apr 02 15:43:13 2019 -0700
+@@ -18,6 +18,12 @@
+ #include <string.h>
+ #include <math.h>
+ 
++//#define MAGMA_USE_CUSOLVER
++#ifdef MAGMA_USE_CUSOLVER
++#include <cuda.h>
++#include <cuda_runtime.h>
++#include <cusolverDn.h>
++#endif
+ // includes, project
+ #include "magma_v2.h"
+ #include "magma_lapack.h"
+@@ -25,7 +31,6 @@
+ #include "testings.h"
+ 
+ #define COMPLEX
+-
+ /* ////////////////////////////////////////////////////////////////////////////
+    -- Testing zheevd
+ */
+@@ -40,7 +45,7 @@
+     const magma_int_t ione  = 1;
+     
+     /* Local variables */
+-    real_Double_t   gpu_time, cpu_time;
++    real_Double_t   gpu_time, cpu_time, cpy_time, start;
+     magmaDoubleComplex *h_A, *h_R, *h_Z, *h_work, aux_work[1], unused[1];
+     #ifdef COMPLEX
+     double *rwork, aux_rwork[1];
+@@ -167,6 +172,26 @@
+             /* Initialize the matrix */
+             magma_generate_matrix( opts, N, N, h_A, lda );
+             lapackf77_zlacpy( MagmaFullStr, &N, &N, h_A, &lda, h_R, &lda );
++
++            #ifdef MAGMA_USE_CUSOLVER
++            magmaDoubleComplex *dwork, *d_A;
++            double *d_W;
++
++            magma_int_t ldda   = magma_roundup( N, opts.align );  // multiple of 32 by default
++            TESTING_CHECK( magma_zmalloc( &d_A,    N*ldda  ));
++            TESTING_CHECK( magma_dmalloc( &d_W,    N       ));
++
++            cusolverDnHandle_t cusolverH;
++            cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
++            cusolver_status = cusolverDnCreate(&cusolverH);
++            int lwork_syevd;
++            cusolver_status = cusolverDnZheevd_bufferSize(
++                    cusolverH, CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_LOWER,
++                    N, d_A, ldda, NULL, &lwork_syevd);
++            int *devinfo;
++            TESTING_CHECK( magma_zmalloc( &dwork,    lwork_syevd ));
++            TESTING_CHECK( magma_malloc( (void**)&devinfo,    sizeof(int) ));
++            #endif
+             
+             /* ====================================================================
+                Performs operation using MAGMA
+@@ -174,6 +199,22 @@
+             gpu_time = magma_wtime();
+             if (opts.version == 1) {
+                 if (opts.ngpu == 1) {
++                    #ifdef MAGMA_USE_CUSOLVER
++                    printf("\n\n\n\n\n\n\n\n\n\n start cusolverDnZheevd with size %lld \n\n\n\n\n\n\n\n\n\n", (long long) N);
++                    start = magma_wtime();
++                    magma_zsetmatrix( N, N, h_R, lda, d_A, ldda, opts.queue );
++                    cudaDeviceSynchronize();
++                    cpy_time = magma_wtime() - start;
++                    cusolver_status = cusolverDnZheevd(
++                             cusolverH, CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_LOWER,
++                             N, d_A, ldda, d_W, dwork, lwork_syevd, devinfo);
++                    cudaDeviceSynchronize();
++                    start = magma_wtime();
++                    magma_zgetmatrix( N, N, d_A, ldda, h_R, lda, opts.queue );
++                    magma_zgetmatrix( N, 1, d_W, N, w1, N, opts.queue );
++                    cpy_time += magma_wtime() - start;
++                    #else
++                    printf("\n\n\n\n\n\n\n\n\n\n start magma_zheevd with size %lld \n\n\n\n\n\n\n\n\n\n", (long long) N);
+                     magma_zheevd( opts.jobz, opts.uplo,
+                                   N, h_R, lda, w1,
+                                   h_work, lwork,
+@@ -182,6 +223,7 @@
+                                   #endif
+                                   iwork, liwork,
+                                   &info );
++                    #endif
+                 }
+                 else {
+                     //printf( "magma_zheevd_m, ngpu %lld (%lld)\n", (long long) opts.ngpu, (long long) abs_ngpu );
+@@ -383,12 +425,22 @@
+                 result[3] = diff / (N*maxw);
+                 
+                 okay = okay && (result[3] < tolulp);
++                #ifdef MAGMA_USE_CUSOLVER
++                printf("%5lld   %9.4f        %9.4f        %9.4f         %8.2e  ",
++                       (long long) N, cpu_time, gpu_time, cpy_time, result[3] );
++                #else
+                 printf("%5lld   %9.4f        %9.4f         %8.2e  ",
+                        (long long) N, cpu_time, gpu_time, result[3] );
++                #endif
+             }
+             else {
++                #ifdef MAGMA_USE_CUSOLVER
++                printf("%5lld      ---           %9.4f        %9.4f           ---     ",
++                       (long long) N, gpu_time, cpy_time);
++                #else
+                 printf("%5lld      ---           %9.4f           ---     ",
+                        (long long) N, gpu_time);
++                #endif
+             }
+             
+             // print error checks
+@@ -402,6 +454,12 @@
+             printf("   %s\n", (okay ? "ok" : "failed"));
+             status += ! okay;
+             
++            #ifdef MAGMA_USE_CUSOLVER
++            magma_free( d_A   );
++            magma_free( d_W   );
++            magma_free( dwork   );
++            #endif
++            
+             magma_free_cpu( h_A   );
+             magma_free_cpu( w1    );
+             magma_free_cpu( w2    );
+diff -r 89706c0efbdb testing/testings.h
+--- a/testing/testings.h	Wed Jan 02 14:17:26 2019 -0500
++++ b/testing/testings.h	Tue Apr 02 15:43:13 2019 -0700
+@@ -227,6 +227,7 @@
+     std::vector< magma_vec_t > jobv;
+ 
+     // LAPACK test matrix generation
++    char *fname;
+     std::string matrix;
+     double      cond;
+     double      condD;
+diff -r 89706c0efbdb tools/magmasubs.py
+--- a/tools/magmasubs.py	Wed Jan 02 14:17:26 2019 -0500
++++ b/tools/magmasubs.py	Tue Apr 02 15:43:13 2019 -0700
+@@ -443,6 +443,7 @@
+     ('#undef SINGLE',        '#undef DOUBLE',        '#undef SINGLE',         '#undef DOUBLE'        ),  # deprecated
+     ('#define MAGMA_SINGLE', '#define MAGMA_DOUBLE', '#define MAGMA_SINGLE',  '#define MAGMA_DOUBLE' ),
+     ('#undef MAGMA_SINGLE',  '#undef MAGMA_DOUBLE',  '#undef MAGMA_SINGLE',   '#undef MAGMA_DOUBLE'  ),
++    ('cusolverDnSsyevd',         'cusolverDnDsyevd',         'cusolverDnCheevd',         'cusolverDnZheevd'          ),
+ 
+     # ----- Text
+     ('symmetric',      'symmetric',      'hermitian',      'hermitian'       ),
