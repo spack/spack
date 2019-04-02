@@ -6,6 +6,7 @@
 import sys
 
 from spack import *
+from spack.build_systems.intel import debug_print
 
 
 class IntelMkl(IntelPackage):
@@ -64,3 +65,16 @@ class IntelMkl(IntelPackage):
     if sys.platform == 'darwin':
         # there is no libmkl_gnu_thread on macOS
         conflicts('threads=openmp', when='%gcc')
+
+    @property
+    def libs(self):
+        libs = LibraryList([])
+        if self.provides('blas'):
+            libs = self.blas_libs
+        if self.provides('lapack'):
+            libs = self.lapack_libs + libs
+        if self.provides('scalapack'):
+            libs = self.scalapack_libs + libs
+
+        debug_print(libs)
+        return libs
