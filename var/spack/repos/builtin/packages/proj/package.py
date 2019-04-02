@@ -15,6 +15,11 @@ class Proj(AutotoolsPackage):
     homepage = "https://proj4.org/"
     url      = "http://download.osgeo.org/proj/proj-5.0.1.tar.gz"
 
+    # Version 6.0.0 deprecates the older API, and things which do
+    # not know this will fail to build. So, I recommend that we
+    # do not put in 6.x until you are ready to put in selective
+    # dependencies in all packages which depend on proj. I have
+    # done libgeotiff, but there are lots of others.
     version('5.2.0', 'ad285c7d03cbb138d9246e10e1f3191c')
     version('5.1.0', '68c46f6da7e4cd5708f83fe47af80db6')
     version('5.0.1', '15c8d7d6a8cb945c7878d0ff322a232c')
