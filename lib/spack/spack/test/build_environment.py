@@ -205,7 +205,7 @@ def test_spack_paths_before_module_paths(
     assert paths.index(spack_path) < paths.index(module_path)
 
 
-def test_package_inheritance_module_setup(config, mock_packages):
+def test_package_inheritance_module_setup(config, mock_packages, working_env):
     s = spack.spec.Spec('multimodule-inheritance')
     s.concretize()
     pkg = s.package
@@ -216,8 +216,6 @@ def test_package_inheritance_module_setup(config, mock_packages):
 
     assert pkg.use_module_variable() == 'test_module_variable'
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
-
-    os.environ.pop('TEST_MODULE_VAR')
 
 
 def test_set_build_environment_variables(

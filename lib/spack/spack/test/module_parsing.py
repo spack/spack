@@ -41,35 +41,16 @@ def save_module_func():
     spack.util.module_cmd.module = old_func
 
 
-@pytest.fixture
-def tmp_module():
-    module_dir = tempfile.mkdtemp()
-    module_file = os.path.join(module_dir, 'mod')
-
-    module('use', module_dir)
-
-    yield module_file
-
-    module('unuse', module_dir)
-    os.remove(module_file)
-    os.rmdir(module_dir)
-
-
-def test_module_function(tmpdir, module_function_test_mode):
-    os.environ['NOT_AFFECTED'] = "NOT_AFFECTED"
-
+def test_module_function(tmpdir, working_env, module_function_test_mode):
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:
         f.write('export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n')
 
-    old_env = os.environ.copy()
-
+    os.environ['NOT_AFFECTED'] = "NOT_AFFECTED"
     module('load', src_file)
 
     assert os.environ['TEST_MODULE_ENV_VAR'] == 'TEST_SUCCESS'
     assert os.environ['NOT_AFFECTED'] == "NOT_AFFECTED"
-
-    os.environ = old_env
 
 
 def test_get_path_from_module_faked(save_module_func):
