@@ -222,6 +222,8 @@ class Dealii(CMakePackage, CudaPackage):
             '-DLAPACK_FOUND=true',
             '-DLAPACK_INCLUDE_DIRS=%s' % ';'.join(
                 lapack_blas_headers.directories),
+            '-DLAPACK_USER_INCLUDE_DIRS=%s' % ';'.join(
+                lapack_blas_headers.directories),
             '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
