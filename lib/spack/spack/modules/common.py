@@ -547,7 +547,7 @@ class BaseContext(tengine.Context):
             try:
                 configure_args = getattr(pkg, attr)()
                 return ' '.join(configure_args)
-            except (AttributeError, IOError, KeyError):
+            except (AttributeError, IOError, KeyError, NameError):
                 # The method doesn't exist in the current spec,
                 # or it's not usable
                 pass
