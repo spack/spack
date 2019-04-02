@@ -312,6 +312,26 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
     assert install.returncode == error_code
 
 
+@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.parametrize('spec', [
+    (Spec('mpi')),
+    (Spec('mpi')),
+    (Spec('boost')),
+    (Spec('boost'))
+])
+def test_install_clispec_as_yaml_path(spec, tmpdir):
+    spec.concretize()
+
+    specfile = tmpdir.join('spec.yaml')
+
+    with specfile.open('w') as f:
+        spec.to_yaml(f)
+
+    # Test that we can install passing absolute path to spec yaml
+    install(str(specfile), fail_on_error=False)
+    assert install.returncode == 0
+
+
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.usefixtures(
     'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'

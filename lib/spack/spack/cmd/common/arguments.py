@@ -183,4 +183,7 @@ _arguments['no_checksum'] = Args(
 _arguments['specs'] = Args(
     'specs',
     nargs=argparse.REMAINDER,
-    help='specs of the target packages')
+    help='specs of the target packages, which can be either abstract '
+    'clispecs or else paths to spec.yaml files, but cannot be mixed. '
+    'prefix relative paths with "./" to avoid ambiguity with '
+    'namespaced packages)')

@@ -125,10 +125,17 @@ def get_command(cmd_name):
 def parse_specs(args, **kwargs):
     """Convenience function for parsing arguments from specs.  Handles common
        exceptions and dies if there are errors.
+
+    Args:
+        args (list): either a list of abstract specs, or else a list of file
+            paths pointing to spec.yaml files.  Passing a mixed list (both
+            abstract spec strings and file paths) is not supported.
     """
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
     tests = kwargs.get('tests', False)
+
+    err_msg = None
 
     try:
         specs = spack.spec.parse(args)
@@ -143,15 +150,34 @@ def parse_specs(args, **kwargs):
     except spack.spec.SpecParseError as e:
         msg = e.message + "\n" + str(e.string) + "\n"
         msg += (e.pos + 2) * " " + "^"
-        raise SpackError(msg)
+        err_msg = msg
 
     except spack.spec.SpecError as e:
-
         msg = e.message
         if e.long_message:
             msg += e.long_message
+        err_msg = msg
 
-        raise SpackError(msg)
+    if err_msg:
+        try:
+            specs = []
+            for arg in args:
+                with open(arg, 'r') as fd:
+                    specs.append(spack.spec.Spec.from_yaml(fd))
+            return specs
+        except EnvironmentError:
+            # If we were unable to find, open, read file, etc probably just
+            # means the string wasn't a file path to begin with.  Any other
+            # exception at this point would indicate the spec *was* provided
+            # as a file path, and we should fail through so the user can see
+            # the underlying issue.
+            pass
+        except spack.spec.SpecParseError as e:
+            msg = e.message + "\n" + str(e.string) + "\n"
+            msg += (e.pos + 2) * " " + "^"
+            raise SpackError(msg)
+
+        raise SpackError(err_msg)
 
 
 def elide_list(line_list, max_num=10):
