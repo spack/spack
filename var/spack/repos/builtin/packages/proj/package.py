@@ -15,7 +15,6 @@ class Proj(AutotoolsPackage):
     homepage = "https://proj4.org/"
     url      = "http://download.osgeo.org/proj/proj-5.0.1.tar.gz"
 
-    version('6.0.0', '08cd21c95e530cd01c5cf58e9f32483a')
     version('5.2.0', 'ad285c7d03cbb138d9246e10e1f3191c')
     version('5.1.0', '68c46f6da7e4cd5708f83fe47af80db6')
     version('5.0.1', '15c8d7d6a8cb945c7878d0ff322a232c')
