@@ -31,5 +31,5 @@ class Miniqmc(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-        install_tree(join_path('spack-build', 'bin'), prefix.bin)
-        install_tree(join_path('spack-build', 'lib'), prefix.lib)
+        install_tree(join_path('../spack-build', 'bin'), prefix.bin)
+        install_tree(join_path('../spack-build', 'lib'), prefix.lib)
