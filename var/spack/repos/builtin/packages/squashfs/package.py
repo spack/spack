@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Squashfs(MakefilePackage):
     """Squashfs - read only compressed filesystem"""
 
