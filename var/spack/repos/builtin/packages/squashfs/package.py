@@ -11,11 +11,11 @@ class Squashfs(MakefilePackage):
     homepage = 'http://squashfs.sourceforge.net'
     url      = 'https://downloads.sourceforge.net/project/squashfs/squashfs/squashfs4.3/squashfs4.3.tar.gz'
 
-    # version      md5sum
-    version('4.3', 'd92ab59aabf5173f2a59089531e30dbf')
-    version('4.2', '1b7a781fb4cf8938842279bd3e8ee852')
-    version('4.1', '8e1b2b96f5d5f3fe48fef226ae8cd341')
-    version('4.0', 'a3c23391da4ebab0ac4a75021ddabf96')
+    # version      sha1
+    version('4.3', 'a615979db9cee82e4a934a1455577f597d290b41')
+    version('4.2', 'e0944471ff68e215d3fecd464f30ea6ceb635fd7')
+    version('4.1', '7f9b1f9839b3638882f636fd170fd817d650f856')
+    version('4.0', '3efe764ac27c507ee4a549fc6507bc86ea0660dd')
 
     depends_on('m4',       type='build')
     depends_on('autoconf', type='build')
