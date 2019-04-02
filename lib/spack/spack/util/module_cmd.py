@@ -22,6 +22,7 @@ py_cmd = "$'import os\nimport json\nprint(json.dumps(dict(os.environ)))'"
 # This is just to enable testing. I hate it but we can't find a better way
 _test_mode = False
 
+
 def module(*args):
     module_cmd = 'module ' + ' '.join(args) + ' 2>&1'
     if _test_mode:
