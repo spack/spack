@@ -42,7 +42,7 @@ class Singularity(Package):
         if os.path.exists(tmpgo):
             shutil.rmtree(tmpgo)
 
-        shutil.move(os.getcwd(), tmpgo) 
+        shutil.move(os.getcwd(), tmpgo)
 
         with working_dir(tmpgo):
             configure = Executable('./mconfig --prefix=%s' % prefix)
@@ -55,15 +55,15 @@ class Singularity(Package):
 
         # The package needs to be in GOPATH in order for it to be found
         with working_dir(tmpgo):
-            make('-C', 'builddir', parallel=False) 
+            make('-C', 'builddir', parallel=False)
 
     def install(self, spec, prefix):
         with working_dir(prepare_gopath()):
-            make('install', '-C', 'builddir', parallel=False)    
+            make('install', '-C', 'builddir', parallel=False)
 
 
 def prepare_gopath():
-    '''The repository needed to be cloned into 
+    '''The repository needed to be cloned into
           $GOPATH/src/github.com/sylabs/singularity to begin with. To
        mimic this, we create the structure in a temporary directory and
        work from there. If we don't do that, when we cd into the builddir
@@ -73,7 +73,7 @@ def prepare_gopath():
        present working directory, we also risk losing the vendor folder.
     '''
     gopath = os.path.join(tempfile.gettempdir(), 'go')
-    tmpgo = os.path.join(gopath, 'src', 'github.com' ,'sylabs', 'singularity')
+    tmpgo = os.path.join(gopath, 'src', 'github.com', 'sylabs', 'singularity')
     os.environ['GOPATH'] = gopath + ':' + os.environ['GOPATH']
 
     # Create gopath
