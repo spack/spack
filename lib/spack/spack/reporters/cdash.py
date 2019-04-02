@@ -72,9 +72,12 @@ class CDash(Reporter):
         self.site = args.cdash_site or socket.gethostname()
         self.osname = platform.system()
         self.endtime = int(time.time())
-        buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
-        self.buildstamp = time.strftime(buildstamp_format,
-                                        time.localtime(self.endtime))
+        if args.cdash_buildstamp:
+            self.buildstamp = args.cdash_buildstamp
+        else:
+            buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
+            self.buildstamp = time.strftime(buildstamp_format,
+                                            time.localtime(self.endtime))
         self.buildId = None
         self.revision = ''
         git = which('git')
