@@ -15,6 +15,8 @@ class Libgeotiff(AutotoolsPackage):
     homepage = "https://trac.osgeo.org/geotiff/"
     url      = "http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.4.2.tar.gz"
 
+    version('1.5.1', '6d0fa650c206791bc7d5e60ef625ea77')
+    version('1.4.3', '234bd119b1f2334d44a0ceb0a8e66496')
     version('1.4.2', '96ab80e0d4eff7820579957245d844f8')
 
     variant('zlib', default=True, description='Include zlib support')
@@ -24,7 +26,8 @@ class Libgeotiff(AutotoolsPackage):
     depends_on('zlib', when='+zlib')
     depends_on('jpeg', when='+jpeg')
     depends_on('libtiff')
-    depends_on('proj', when='+proj')
+    depends_on('proj@:5.99', when='@:1.4.99 +proj')
+    depends_on('proj@6:', when='@1.5: +proj')
 
     def configure_args(self):
         spec = self.spec
