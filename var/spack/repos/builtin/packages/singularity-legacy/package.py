@@ -14,8 +14,8 @@ class SingularityLegacy(AutotoolsPackage):
     """
 
     homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/singularityware/singularity/releases/download/2.5.2/singularity-2.5.2.tar.gz"
-    git      = "https://github.com/singularityware/singularity.git"
+    url      = "https://github.com/sylabs/singularity/releases/download/2.5.2/singularity-2.5.2.tar.gz"
+    git      = "https://github.com/sylabs/singularity.git"
 
     # Versions before 2.5.2 suffer from a serious security problem.
     # https://nvd.nist.gov/vuln/detail/CVE-2018-12021
