@@ -34,6 +34,8 @@ class Libceed(Package):
 
     depends_on('libxsmm', when='+libxsmm')
 
+    patch('pkgconfig-version-0.4.diff', when='@0.4')
+
     # occa: do not occaFree kernels
     # Repeated creation and freeing of kernels appears to expose a caching
     # bug in Occa.
