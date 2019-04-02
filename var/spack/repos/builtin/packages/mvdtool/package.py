@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
 from spack import *
 
 
@@ -63,3 +65,11 @@ class Mvdtool(CMakePackage):
                 '-DBUILD_PYTHON_BINDINGS:BOOL=ON'
             ])
         return args
+
+    @when('+python')
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        site_dir = self.spec['python'].package.site_packages_dir.split(os.sep)[1:]
+        for target in (self.prefix.lib, self.prefix.lib64):
+            pathname = os.path.join(target, *site_dir)
+            if os.path.isdir(pathname):
+                run_env.prepend_path('PYTHONPATH', pathname)
