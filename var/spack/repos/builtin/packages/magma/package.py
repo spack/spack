@@ -37,6 +37,7 @@ class Magma(CMakePackage):
     patch('ibm-xl.patch', when='@2.2:%xl_r')
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
     patch('magma-2.5.0.patch', when='@2.5.0')
+    patch('magma-2.5.0-add-cmake-sparse-opt.patch', when='@2.5.0')
 
     def cmake_args(self):
         spec = self.spec
@@ -70,6 +71,9 @@ class Magma(CMakePackage):
                 options.extend(['-DGPU_TARGET=sm30'])
             else:
                 options.extend(['-DGPU_TARGET=sm_30'])
+
+        if '@2.5.0' in spec:
+            options.extend(['-DMAGMA_SPARSE=OFF'])
 
         return options
 
