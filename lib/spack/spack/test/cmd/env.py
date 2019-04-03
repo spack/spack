@@ -846,12 +846,12 @@ env:
             remove('-f', '-l', 'packages', 'mpileaks')
             find_output = find('-c')
 
-        print find_output
-        assert False
-        test = ev.read('test')
+        assert 'mpileaks' not in find_output
 
-        assert Spec('mpileaks') not in test.user_specs
-        assert Spec('callpath') in test.user_specs
+        test = ev.read('test')
+        assert len(test.user_specs) == 2
+        assert Spec('callpath ^zmpi') in test.user_specs
+        assert Spec('callpath ^mpich') in test.user_specs
 
 
 def test_stack_yaml_attempt_remove_from_matrix(tmpdir):

@@ -680,6 +680,8 @@ class Environment(object):
             list_to_change.add(str(spec))
             index = list(self.read_specs.keys()).index(list_name)
 
+            # read_specs is an OrderedDict, all list entries after the modified
+            # list may refer to the modified list. Update stale references
             for i, (name, speclist) in enumerate(
                     list(self.read_specs.items())[index + 1:], index + 1):
                 new_reference = dict((n, self.read_specs[n])
@@ -711,10 +713,24 @@ class Environment(object):
             raise SpackEnvironmentError(
                 "Not found: {0}".format(query_spec))
 
+        old_specs = set(self.user_specs)
         for spec in matches:
             if spec in list_to_change:
                 list_to_change.remove(spec)
 
+        # read_specs is an OrderedDict, all list entries after the modified
+        # list may refer to the modified list. Update stale references
+        index = list(self.read_specs.keys()).index(list_name)
+        for i, (name, speclist) in enumerate(
+                list(self.read_specs.items())[index + 1:], index + 1):
+            new_reference = dict((n, self.read_specs[n])
+                                 for n in list(self.read_specs.keys())[:i])
+            speclist.update_reference(new_reference)
+
+        # If force, update stale concretized specs
+        # Only check specs removed by this operation
+        new_specs = set(self.user_specs)
+        for spec in old_specs - new_specs:
             if force and spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
                 del self.concretized_user_specs[i]
@@ -722,13 +738,6 @@ class Environment(object):
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
-
-        index = list(self.read_specs.keys()).index(list_name)
-        for i, (name, speclist) in enumerate(
-                list(self.read_specs.items())[index + 1:], index + 1):
-            new_reference = dict((n, self.read_specs[n])
-                                 for n in list(self.read_specs.keys())[:i])
-            speclist.update_reference(new_reference)
 
     def concretize(self, force=False):
         """Concretize user_specs in this environment.
