@@ -40,7 +40,8 @@ def save_module_func():
     spack.util.module_cmd.module = old_func
 
 
-def test_module_function_change_env(tmpdir, working_env, module_function_test_mode):
+def test_module_function_change_env(tmpdir, working_env,
+                                    module_function_test_mode):
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:
         f.write('export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n')
