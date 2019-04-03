@@ -26,7 +26,7 @@ packages:
       - spykfunc@0.13.2
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.0
-      - py-basalt@0.2.3
+      - py-basalt@0.2.4
 
   gnu-stable-parallel:
     target_matrix:
