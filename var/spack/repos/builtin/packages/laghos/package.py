@@ -28,6 +28,9 @@ class Laghos(MakefilePackage):
     depends_on('mfem@develop+mpi+metis', when='@develop+metis')
     depends_on('mfem@develop+mpi~metis', when='@develop~metis')
 
+    depends_on('mfem@laghos-v2.0,3.4.0:+mpi+metis', when='@2.0:+metis')
+    depends_on('mfem@laghos-v2.0,3.4.0:+mpi~metis', when='@2.0:~metis')
+
     depends_on('mfem@laghos-v1.0,3.3.2:+mpi+metis', when='@1.0:+metis')
     depends_on('mfem@laghos-v1.0,3.3.2:+mpi~metis', when='@1.0:~metis')
 
