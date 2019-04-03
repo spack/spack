@@ -38,7 +38,7 @@ class Hypre(Package):
     # SuperluDist have conflicting headers with those in Hypre
     variant('internal-superlu', default=True,
             description="Use internal Superlu routines")
-    variant('superlu-dist', default=True,
+    variant('superlu-dist', default=False,
             description='Activates support for SuperluDist')
     variant('int64', default=False,
             description="Use 64bit integers")
