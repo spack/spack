@@ -14,6 +14,7 @@ class Miniamr(MakefilePackage):
 
     homepage = "https://mantevo.org"
     git      = "https://github.com/Mantevo/miniAMR.git"
+    url      = "https://github.com/Mantevo/miniAMR/archive/v1.4.0.tar.gz"
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
