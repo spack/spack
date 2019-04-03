@@ -13,7 +13,7 @@ class Miniamr(MakefilePackage):
     """
 
     homepage = "https://mantevo.org"
-    url      = "https://github.com/Mantevo/miniAMR/archive/v1.4.0.tar.gz"
+    git      = "https://github.com/Mantevo/miniAMR.git"
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
