@@ -3237,7 +3237,7 @@ class Spec(object):
                         hashlen = None
                     out.write(fmt % (self.dag_hash(hashlen)))
                 elif named_str == 'NAMESPACE':
-                    out.write(fmt % transform(self.namespace))
+                    out.write(fmt % transform(self, self.namespace))
                 elif named_str.startswith('DEP:'):
                     _, dep_name, dep_option = named_str.lower().split(':', 2)
                     dep_spec = self[dep_name]
