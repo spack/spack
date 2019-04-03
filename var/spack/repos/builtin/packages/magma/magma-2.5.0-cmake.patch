@@ -1,7 +1,15 @@
 diff -ru magma-2.5.0-orig/CMakeLists.txt magma-2.5.0/CMakeLists.txt
 --- magma-2.5.0-orig/CMakeLists.txt	2019-01-02 11:18:39.000000000 -0800
-+++ magma-2.5.0/CMakeLists.txt	2019-04-02 19:43:43.000000000 -0700
-@@ -440,18 +440,20 @@
++++ magma-2.5.0/CMakeLists.txt	2019-04-02 21:41:34.248149379 -0700
+@@ -405,6 +405,7 @@
+ 		${CUDA_CUDART_LIBRARY}
+ 		${CUDA_CUBLAS_LIBRARIES}
+ 		${CUDA_cusparse_LIBRARY}
++		-L${CUDA_TOOLKIT_ROOT_DIR}/lib64 -lnvToolsExt
+ 	)
+ endif()
+ 
+@@ -440,18 +441,20 @@
  # compile MAGMA sparse library
  
  # sparse doesn't have Fortran at the moment, so no need for above shenanigans
@@ -30,7 +38,7 @@ diff -ru magma-2.5.0-orig/CMakeLists.txt magma-2.5.0/CMakeLists.txt
  
  
  # ----------------------------------------
-@@ -480,23 +482,31 @@
+@@ -480,23 +483,31 @@
  
  # ----------------------------------------
  # compile each sparse tester
@@ -67,7 +75,7 @@ diff -ru magma-2.5.0-orig/CMakeLists.txt magma-2.5.0/CMakeLists.txt
  install( FILES ${headers}
           DESTINATION include )
  
-@@ -509,4 +519,6 @@
+@@ -509,4 +520,6 @@
  message( STATUS "    NFLAGS       ${CUDA_NVCC_FLAGS}" )
  message( STATUS "    FFLAGS       ${CMAKE_Fortran_FLAGS}" )
  message( STATUS "    LIBS         ${LIBS}" )

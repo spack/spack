@@ -37,7 +37,7 @@ class Magma(CMakePackage):
     patch('ibm-xl.patch', when='@2.2:%xl_r')
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
     patch('magma-2.5.0.patch', when='@2.5.0')
-    patch('magma-2.5.0-add-cmake-sparse-opt.patch', when='@2.5.0')
+    patch('magma-2.5.0-cmake.patch', when='@2.5.0')
 
     def cmake_args(self):
         spec = self.spec
