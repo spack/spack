@@ -49,5 +49,4 @@ class PyBasemap(PythonPackage):
             for filename in files:
                 if (filename == '__init__.py' and
                     os.path.basename(root) == 'mpl_toolkits'):
-                    os.rename(os.path.join(root, filename),
-                              os.path.join(root, filename + '.bak'))
+                    os.remove(os.path.join(root, filename))
