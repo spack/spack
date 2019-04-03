@@ -695,6 +695,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
         check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         check_constrain_changed('libelf^foo', 'libelf^foo~debug')
+        check_constrain_changed('libelf', '^foo')
 
         platform = spack.architecture.platform()
         default_target = platform.target('default_target').name
