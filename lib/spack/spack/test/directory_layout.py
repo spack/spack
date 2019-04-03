@@ -70,6 +70,13 @@ def test_yaml_directory_layout_parameters(
     arch_path_package = layout_arch_package.relative_path_for_spec(spec)
     assert(arch_path_package == spec.format(arch_scheme_package))
 
+    # Test separation of namespace
+    ns_scheme_package = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
+    layout_ns_package = YamlDirectoryLayout(str(tmpdir),
+                                            path_scheme=ns_scheme_package)
+    ns_path_package = layout_ns_package.relative_path_for_spec(spec)
+    assert(ns_path_package == spec.format(ns_scheme_package))
+
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):
         YamlDirectoryLayout(str(tmpdir),
