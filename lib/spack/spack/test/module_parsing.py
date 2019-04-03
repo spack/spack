@@ -61,7 +61,7 @@ def test_module_function_no_change(tmpdir, module_function_test_mode):
     old_env = os.environ.copy()
     text = module('show', src_file)
 
-    assert text == 'TEST_MOUDLE_FUNCTION_PRINT'
+    assert text == 'TEST_MODULE_FUNCTION_PRINT\n'
     assert os.environ == old_env
 
 
