@@ -136,7 +136,7 @@ class SpecList(object):
                         return ret
                     else:
                         msg = 'SpecList %s refers to ' % self.name
-                        msg = 'named list %s ' % name
+                        msg += 'named list %s ' % name
                         msg += 'which does not appear in its reference dict'
                         raise UndefinedReferenceError(msg)
             # No references in this
