@@ -6,7 +6,7 @@
 from spack import *
 
 
-class KimApiV2(CMakePackage):
+class KimApi(CMakePackage):
     """OpenKIM is an online framework for making molecular simulations
        reliable, reproducible, and portable. Computer implementations of
        inter-atomic models are archived in OpenKIM, verified for coding
@@ -15,17 +15,17 @@ class KimApiV2(CMakePackage):
        programming interface (API) work seamlessly with major simulation
        codes that have adopted the KIM API standard.
 
-       This package provides the kim-api-v2 library and supporting
+       This package provides the kim-api library and supporting
        utilities.  It also provides a small set of example models.
 
        To obtain all models archived at https://openkim.org that are
-       compatible with the kim-api-v2 package, install and activate the
-       openkim-models-v2 pacakge too.
+       compatible with the kim-api package, install and activate the
+       openkim-models pacakge too.
     """
     extendable = True
     homepage = "https://openkim.org/"
-    url      = "https://s3.openkim.org/kim-api/kim-api-v2-2.0.1.txz"
+    url      = "https://s3.openkim.org/kim-api/kim-api-2.0.2.txz"
     git      = "https://github.com/openkim/kim-api.git"
 
     version('develop', branch='devel')
-    version('2.0.1', sha256="6b54a9c4bc34c669b8ef00b9be4bbdce6fca2bb813dc1fe7697d618f267860d0", extension='txz', url='https://s3.openkim.org/kim-api/kim-api-v2-2.0.1.txz')
+    version('2.0.2', sha256="26e7cf91066692f316b8ba1548ccb7152bf56aad75902bce2338cff53e74e63d", extension='txz', url='https://s3.openkim.org/kim-api/kim-api-2.0.2.txz')
