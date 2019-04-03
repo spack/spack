@@ -16,9 +16,11 @@ class Fio(AutotoolsPackage):
 
     variant('gui', default=False, description='Enable building of gtk gfio')
     variant('doc', default=False, description='Generate documentation')
+    variant('libaio', default=False, description='Enable libaio engine')
 
     depends_on('gtkplus@2.18:', when='+gui')
     depends_on('cairo',         when='+gui')
+    depends_on('libaio',        when='+libaio')
 
     depends_on('py-sphinx', type='build', when='+doc')
 
