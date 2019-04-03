@@ -424,16 +424,18 @@ class Mfem(Package):
                 copy(str(self.config_mk), 'config.mk')
                 shutil.copystat('config.mk.orig', 'config.mk')
 
+        prefix_share = join_path(prefix, 'share', 'mfem')
+
         if '+examples' in spec:
             make('examples')
-            install_tree('examples', join_path(prefix, 'examples'))
+            install_tree('examples', join_path(prefix_share, 'examples'))
 
         if '+miniapps' in spec:
             make('miniapps')
-            install_tree('miniapps', join_path(prefix, 'miniapps'))
+            install_tree('miniapps', join_path(prefix_share, 'miniapps'))
 
         if install_em:
-            install_tree('data', join_path(prefix, 'data'))
+            install_tree('data', join_path(prefix_share, 'data'))
 
     @property
     def suitesparse_components(self):
