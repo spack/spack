@@ -17,6 +17,7 @@ class Amg(MakefilePackage):
     git      = "https://github.com/LLNL/AMG.git"
 
     version('develop', branch='master')
+    version('1.2', tag='1.2')
     version('1.1', tag='1.1')
     version('1.0', tag='1.0')
 
