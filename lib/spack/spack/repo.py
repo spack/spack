@@ -720,7 +720,7 @@ class Repo(object):
 
         self.packages_path = os.path.join(self.root, packages_dir_name)
         check(os.path.isdir(self.packages_path),
-              "No directory '%s' found in '%s'" % (repo_config_name, root))
+              "No directory '%s' found in '%s'" % (packages_dir_name, root))
 
         # Read configuration and validate namespace
         config = self._read_config()
