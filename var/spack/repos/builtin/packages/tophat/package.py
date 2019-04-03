@@ -37,7 +37,11 @@ class Tophat(AutotoolsPackage):
 
     version('2.1.1', '4b2391de46457ba6b2b7268a9da593e4')
 
-    depends_on('boost')
+    depends_on('boost@1.47:')
+    depends_on('ncurses')
+    depends_on('bowtie2', type='run')
+
+    parallel = False
 
     def configure_args(self):
         args = ['--with-boost=%s' % self.spec['boost'].prefix]
