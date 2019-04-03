@@ -40,7 +40,7 @@ def save_module_func():
     spack.util.module_cmd.module = old_func
 
 
-def test_module_function(tmpdir, working_env, module_function_test_mode):
+def test_module_function_change_env(tmpdir, working_env, module_function_test_mode):
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:
         f.write('export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n')
@@ -50,6 +50,18 @@ def test_module_function(tmpdir, working_env, module_function_test_mode):
 
     assert os.environ['TEST_MODULE_ENV_VAR'] == 'TEST_SUCCESS'
     assert os.environ['NOT_AFFECTED'] == "NOT_AFFECTED"
+
+
+def test_module_function_no_change(tmpdir, module_function_test_mode):
+    src_file = str(tmpdir.join('src_me'))
+    with open(src_file, 'w') as f:
+        f.write('echo TEST_MODULE_FUNCTION_PRINT')
+
+    old_env = os.environ.copy()
+    text = module('show', src_file)
+
+    assert text == 'TEST_MOUDLE_FUNCTION_PRINT'
+    assert os.environ == old_env
 
 
 def test_get_path_from_module_faked(save_module_func):
