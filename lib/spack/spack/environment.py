@@ -674,73 +674,61 @@ class Environment(object):
             elif not spack.repo.path.exists(spec.name):
                 raise SpackEnvironmentError('no such package: %s' % spec.name)
 
-        added = False
-        existing = False
-        for i, (name, speclist) in enumerate(self.read_specs.items()):
-            # Iterate over all named lists from an OrderedDict()
-            if name == list_name:
-                # We need to modify this list
-                # TODO: Add conditional which reimplements name-level checking
-                existing = str(spec) in speclist.yaml_list
-                if not existing:
-                    speclist.add(str(spec))
-                    added = True
-            elif added:
-                # We've already modified a list, so all later lists need to
-                # have their references updated.
+        list_to_change = self.read_specs[list_name]
+        existing = str(spec) in list_to_change.yaml_list
+        if not existing:
+            list_to_change.add(str(spec))
+            index = list(self.read_specs.keys()).index(list_name)
+
+            for i, (name, speclist) in enumerate(
+                    list(self.read_specs.items())[index + 1:], index + 1):
                 new_reference = dict((n, self.read_specs[n])
                                      for n in list(self.read_specs.keys())[:i])
                 speclist.update_reference(new_reference)
+
         return bool(not existing)
 
     def remove(self, query_spec, list_name='specs', force=False):
         """Remove specs from an environment that match a query_spec"""
         query_spec = Spec(query_spec)
 
-        removed = False
-        for i, (name, speclist) in enumerate(self.read_specs.items()):
-            # Iterate over all named lists from an OrderedDict()
-            if name == list_name:
-                # We need to modify this list
-                # try abstract specs first
-                matches = []
+        list_to_change = self.read_specs[list_name]
+        matches = []
 
-                if not query_spec.concrete:
-                    matches = [s for s in speclist if s.satisfies(query_spec)]
+        if not query_spec.concrete:
+            matches = [s for s in list_to_change if s.satisfies(query_spec)]
 
-                if not matches:
-                    # concrete specs match against concrete specs in the env
-                    specs_hashes = zip(
-                        self.concretized_user_specs, self.concretized_order)
-                    matches = [
-                        s for s, h in specs_hashes
-                        if query_spec.dag_hash() == h
-                    ]
+        if not matches:
+            # concrete specs match against concrete specs in the env
+            specs_hashes = zip(
+                self.concretized_user_specs, self.concretized_order)
+            matches = [
+                s for s, h in specs_hashes
+                if query_spec.dag_hash() == h
+            ]
 
-                if not matches:
-                    raise SpackEnvironmentError(
-                        "Not found: {0}".format(query_spec))
+        if not matches:
+            raise SpackEnvironmentError(
+                "Not found: {0}".format(query_spec))
 
-                for spec in matches:
-                    if spec in speclist:
-                        speclist.remove(spec)
-                        removed = True
+        for spec in matches:
+            if spec in list_to_change:
+                list_to_change.remove(spec)
 
-                    if force and spec in self.concretized_user_specs:
-                        i = self.concretized_user_specs.index(spec)
-                        del self.concretized_user_specs[i]
+            if force and spec in self.concretized_user_specs:
+                i = self.concretized_user_specs.index(spec)
+                del self.concretized_user_specs[i]
 
-                        dag_hash = self.concretized_order[i]
-                        del self.concretized_order[i]
-                        del self.specs_by_hash[dag_hash]
-                        removed = True
+                dag_hash = self.concretized_order[i]
+                del self.concretized_order[i]
+                del self.specs_by_hash[dag_hash]
 
-            elif removed:
-                # We've already modified one list, so all later lists need
-                # their references updated.
-                new_reference = dict((n, self.read_specs[n])
-                                     for n in list(self.read_specs.keys())[:i])
-                speclist.update_reference(new_reference)
+        index = list(self.read_specs.keys()).index(list_name)
+        for i, (name, speclist) in enumerate(
+                list(self.read_specs.items())[index + 1:], index + 1):
+            new_reference = dict((n, self.read_specs[n])
+                                 for n in list(self.read_specs.keys())[:i])
+            speclist.update_reference(new_reference)
 
     def concretize(self, force=False):
         """Concretize user_specs in this environment.

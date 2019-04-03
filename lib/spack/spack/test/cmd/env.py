@@ -827,6 +827,33 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+def test_stack_yaml_remove_from_list_force(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+  specs:
+    - matrix:
+        - [$packages]
+        - [^mpich, ^zmpi]
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            concretize()
+            remove('-f', '-l', 'packages', 'mpileaks')
+            find_output = find('-c')
+
+        print find_output
+        assert False
+        test = ev.read('test')
+
+        assert Spec('mpileaks') not in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
 def test_stack_yaml_attempt_remove_from_matrix(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
