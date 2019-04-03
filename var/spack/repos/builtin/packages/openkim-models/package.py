@@ -6,7 +6,7 @@
 from spack import *
 
 
-class OpenkimModelsV2(CMakePackage):
+class OpenkimModels(CMakePackage):
     """OpenKIM is an online framework for making molecular simulations
        reliable, reproducible, and portable. Computer implementations of
        inter-atomic models are archived in OpenKIM, verified for coding
@@ -16,19 +16,26 @@ class OpenkimModelsV2(CMakePackage):
        codes that have adopted the KIM API standard.
 
        This package provides all models archived at openkim.org that are
-       compatible with the kim-api-v2 package.
+       compatible with the kim-api package.
     """
     homepage = "https://openkim.org/"
-    url      = "https://s3.openkim.org/archives/collection/OpenKIM-Models-v2-2019-02-21.txz"
+    url      = "https://s3.openkim.org/archives/collection/openkim-models-2019-03-29.txz"
 
-    extends('kim-api-v2')
+    extends('kim-api')
 
-    version('2019-02-21', sha256='3bd30b0cf2bab314755a66eed621a77c72d3f990818d08366874149be39f208e', extension='txz', url='https://s3.openkim.org/archives/collection/OpenKIM-Models-v2-2019-02-21.txz')
+    version(
+       '2019-03-29',
+       sha256='053dda2023fe4bb6d7c1d66530c758c4e633bbf1f1be17b6b075b276fe8874f6',
+       extension='txz',
+       url='https://s3.openkim.org/archives/collection/openkim-models-2019-03-29.txz')
 
     def cmake_args(self):
         args = []
-        args.append('-DKIM_API_MODEL_INSTALL_PREFIX={0}/lib/kim-api-v2/models'
-                    .format(prefix))
         args.append(('-DKIM_API_MODEL_DRIVER_INSTALL_PREFIX={0}'
-                     + '/lib/kim-api-v2/model-drivers').format(prefix))
+                     + '/lib/kim-api/model-drivers').format(prefix))
+        args.append('-DKIM_API_MODEL_INSTALL_PREFIX={0}/lib/kim-api/models'
+                    .format(prefix))
+        args.append('-DKIM_API_SIMULATOR_MODEL_INSTALL_PREFIX={0}/lib/'
+                    'kim-api/simulator-models'
+                    .format(prefix))
         return args
