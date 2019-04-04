@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,16 @@ class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
     homepage = 'https://www.cmake.org'
-    url      = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
-    list_url = 'https://cmake.org/files/'
-    list_depth = 1
+    url      = 'https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz'
+    maintainers = ['chuckatkins']
 
+    version('3.14.1', sha256='7321be640406338fc12590609c42b0fae7ea12980855c1be363d25dcd76bb25f')
+    version('3.14.0', sha256='aa76ba67b3c2af1946701f847073f4652af5cbd9f141f221c97af99127e75502')
+    version('3.13.4',   'fdd928fee35f472920071d1c7f1a6a2b72c9b25e04f7a37b409349aef3f20e9b') 
+    version('3.13.3',   '665f905036b1f731a2a16f83fb298b1fb9d0f98c382625d023097151ad016b25')
+    version('3.13.2',   'c925e7d2c5ba511a69f43543ed7b4182a7d446c274c7480d0e42cd933076ae25')
+    version('3.13.1',   'befe1ce6d672f2881350e94d4e3cc809697dd2c09e5b708b76c1dae74e1b2210')
+    version('3.13.0',   '4058b2f1a53c026564e8936698d56c3b352d90df067b195cb749a97a3d273c90')
     version('3.12.4',   '5255584bfd043eb717562cff8942d472f1c0e4679c4941d84baadaa9b28e3194')
     version('3.12.3',   'acbf13af31a741794106b76e5d22448b004a66485fc99f6d7df4d22e99da164a')
     version('3.12.2',   '6e7c550cfa1c2e216b35903dc70d80af')
@@ -48,7 +54,11 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
+    # Fix linker error when using external libs on darwin.
+    # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
+    patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
+
+    variant('ownlibs', default=False,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
@@ -61,7 +71,9 @@ class Cmake(Package):
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
     depends_on('libarchive',     when='~ownlibs')
-    depends_on('libuv@1.0.0:',   when='~ownlibs')
+    depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
+    depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
+    depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
     depends_on('rhash',          when='@3.8.0:~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
@@ -83,11 +95,6 @@ class Cmake(Package):
     conflicts('%intel', when='@3.11.0:3.11.4')
 
     phases = ['bootstrap', 'build', 'install']
-
-    def url_for_version(self, version):
-        """Handle CMake's version-based custom URLs."""
-        url = 'https://cmake.org/files/v{0}/cmake-{1}.tar.gz'
-        return url.format(version.up_to(2), version)
 
     def bootstrap_args(self):
         spec = self.spec

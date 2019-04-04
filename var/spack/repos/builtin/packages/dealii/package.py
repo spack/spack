@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,6 +41,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
+    variant('ginkgo',   default=False, description='Compile wit Ginkgo')
     variant('gmsh',     default=True,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
@@ -61,6 +62,8 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Sundials')
     variant('slepc',    default=True,
             description='Compile with Slepc (only with Petsc and MPI)')
+    variant('symengine', default=False,
+            description='Compile with SymEngine')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
     variant('python',   default=False,
@@ -115,18 +118,21 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
+    depends_on('ginkgo',           when='@9.1:+ginkgo')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
-    depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
+    # FIXME: next line fixes concretization with petsc
+    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
+    depends_on('hdf5+mpi+hl', when='+hdf5+mpi~petsc')
     depends_on('cuda@8:',          when='+cuda')
-    depends_on('cmake@3.9:',       when='+cuda')
+    depends_on('cmake@3.9:',       when='+cuda', type='build')
     # older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99',    when='@:8.99')
+    depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
-    depends_on('metis@5:+int64+real64',   when='+metis+int64')
-    depends_on('metis@5:~int64+real64',   when='+metis~int64')
+    depends_on('metis@5:+int64',   when='+metis+int64')
+    depends_on('metis@5:~int64',   when='+metis~int64')
     depends_on('muparser', when='+muparser')
     depends_on('nanoflann',        when='@9.0:+nanoflann')
     depends_on('netcdf+mpi',       when='+netcdf+mpi')
@@ -141,7 +147,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc',            when='+slepc+petsc+mpi')
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
-    depends_on('sundials~pthread', when='@9.0:+sundials')
+    depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('symengine@0.3:', when='@9.1:+symengine')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
@@ -149,6 +156,12 @@ class Dealii(CMakePackage, CudaPackage):
     # namespace "Kokkos::Impl" has no member "cuda_abort"
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
+
+    # Explicitly provide a destructor in BlockVector,
+    # otherwise deal.II may fail to build with Intel compilers.
+    patch('https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch',
+          sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
+          when='@9.0.1')
 
     # check that the combination of variants makes sense
     # 64-bit BLAS:
@@ -161,6 +174,13 @@ class Dealii(CMakePackage, CudaPackage):
               'adol-c']:
         conflicts('+{0}'.format(p), when='@:8.5.1',
                   msg='The interface to {0} is supported from version 9.0.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    # interfaces added in 9.1.0:
+    for p in ['ginkgo', 'symengine']:
+        conflicts('+{0}'.format(p), when='@:9.0',
+                  msg='The interface to {0} is supported from version 9.1.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
@@ -190,7 +210,8 @@ class Dealii(CMakePackage, CudaPackage):
         # debug and release flags
         cxx_flags = []
 
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas_libs = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
@@ -199,9 +220,9 @@ class Dealii(CMakePackage, CudaPackage):
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                spec['lapack'].prefix.include, spec['blas'].prefix.include),
-            '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';'),
+            '-DLAPACK_INCLUDE_DIRS=%s' % ';'.join(
+                lapack_blas_headers.directories),
+            '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
@@ -267,7 +288,7 @@ class Dealii(CMakePackage, CudaPackage):
             if not spec.satisfies('^cuda@9:'):
                 options.append('-DDEAL_II_WITH_CXX14=OFF')
             cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch is not None and cuda_arch[0] is not '':
+            if cuda_arch != 'none':
                 if len(cuda_arch) > 1:
                     raise InstallError(
                         'deal.II only supports compilation for a single GPU!'
@@ -301,7 +322,8 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser'):
+                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
+                'symengine', 'ginkgo'):
             if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),

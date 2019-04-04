@@ -1,0 +1,17 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e5fae68..807a7dc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -109,9 +109,9 @@ if(GINKGO_DEVEL_TOOLS)
+ endif()
+ 
+ # Generate the global `ginkgo/ginkgo.hpp` header with every call of make
+-add_custom_target(generate_ginkgo_header ALL
+-        COMMAND ${Ginkgo_SOURCE_DIR}/dev_tools/scripts/update_ginkgo_header.sh
+-        WORKING_DIRECTORY ${Ginkgo_SOURCE_DIR})
++# add_custom_target(generate_ginkgo_header ALL
++#         COMMAND ${Ginkgo_SOURCE_DIR}/dev_tools/scripts/update_ginkgo_header.sh
++#         WORKING_DIRECTORY ${Ginkgo_SOURCE_DIR})
+ 
+ if(GINKGO_BUILD_DOC)
+     add_subdirectory(doc)

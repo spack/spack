@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,7 +64,7 @@ def _get_scope_and_section(args):
 
     # w/no args and an active environment, point to env manifest
     if not args.section:
-        env = ev.get_env(args, 'config edit', required=False)
+        env = ev.get_env(args, 'config edit')
         if env:
             scope = env.env_file_config_scope_name()
 

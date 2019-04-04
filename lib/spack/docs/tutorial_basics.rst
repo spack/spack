@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1635,7 +1635,7 @@ added to the configuration.
 
 .. code-block:: console
 
-  $ spack install gcc
+  $ spack install gcc @7.2.0
   ==> libsigsegv is already installed in /home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/libsigsegv-2.11-fypapcprssrj3nstp6njprskeyynsgaz
   ==> m4 is already installed in /home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/m4-1.4.18-suf5jtcfehivwfesrc5hjy72r4nukyel
   ==> pkgconf is already installed in /home/spack1/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/pkgconf-1.4.2-fovrh7alpft646n6mhis5mml6k6e5f4v

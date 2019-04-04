@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,9 @@ class NetlibScalapack(CMakePackage):
     depends_on('lapack')
     depends_on('blas')
     depends_on('cmake', when='@2.0.0:', type='build')
+
+    # See: https://github.com/Reference-ScaLAPACK/scalapack/issues/9
+    patch("cmake_fortran_mangle.patch", when='@2.0.2:')
 
     @property
     def libs(self):

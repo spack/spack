@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,5 +16,5 @@ class PyFuture(PythonPackage):
     version('0.15.2', 'a68eb3c90b3b76714c5ceb8c09ea3a06')
 
     depends_on('py-setuptools', type='build')
-    # depends_on('py-importlib', type=('build', 'run'), when='^python@2.6')
-    # depends_on('py-argparse', type=('build', 'run'), when='^python@2.6')
+    depends_on('py-importlib', type=('build', 'run'), when='^python@:2.6')
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')

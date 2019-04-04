@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,8 @@ class Zoltan(Package):
     version('3.8', '9d8fba8a990896881b85351d4327c4a9')
     version('3.6', '9cce794f7241ecd8dbea36c3d7a880f9')
     version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
+
+    patch('notparallel.patch', when='@3.8')
 
     variant('debug', default=False, description='Builds a debug version of the library.')
     variant('shared', default=True, description='Builds a shared version of the library.')
@@ -79,6 +81,10 @@ class Zoltan(Package):
                                .format(spec['metis'].prefix.include))
             config_args.append('--with-ldflags=-L{0}'
                                .format(spec['metis'].prefix.lib))
+            if '+int64' in spec['metis']:
+                config_args.append('--with-id-type=ulong')
+            else:
+                config_args.append('--with-id-type=uint')
 
         if '+mpi' in spec:
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))
@@ -87,16 +93,11 @@ class Zoltan(Package):
 
             config_args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
 
-            mpi_libs = self.get_mpi_libs()
-
-            # NOTE: Some external mpi installations may have empty lib
-            # directory (e.g. bg-q). In this case we need to explicitly
-            # pass empty library name.
-            if mpi_libs:
-                mpi_libs = ' -l'.join(mpi_libs)
-                config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
-            else:
-                config_args.append('--with-mpi-libs= ')
+            # NOTE: Zoltan assumes that it's linking against an MPI library
+            # that can be found with '-lmpi' which isn't the case for many
+            # MPI packages. We rely on the MPI-wrappers to automatically add
+            # what is required for linking and thus pass an empty list of libs
+            config_args.append('--with-mpi-libs= ')
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
@@ -135,18 +136,3 @@ class Zoltan(Package):
     def get_config_flag(self, flag_name, flag_variant):
         flag_pre = 'en' if '+{0}'.format(flag_variant) in self.spec else 'dis'
         return '--{0}able-{1}'.format(flag_pre, flag_name)
-
-    # NOTE: Zoltan assumes that it's linking against an MPI library that can
-    # be found with '-lmpi,' which isn't the case for many MPI packages.  This
-    # function finds the names of the actual libraries for Zoltan's MPI dep.
-    def get_mpi_libs(self):
-        mpi_libs = set()
-
-        for lib_path in glob.glob(join_path(self.spec['mpi'].prefix.lib, '*')):
-            mpi_lib_match = re.match(
-                r'^(lib)((\w*)mpi(\w*))\.((a)|({0}))$'.format(dso_suffix),
-                os.path.basename(lib_path))
-            if mpi_lib_match:
-                mpi_libs.add(mpi_lib_match.group(2))
-
-        return list(mpi_libs)

@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,11 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-1. Python 2 (2.6 or 2.7) or 3 (3.4 - 3.7)
-2. A C/C++ compiler
-3. The ``git`` and ``curl`` commands.
-4. If using the ``gpg`` subcommand, ``gnupg2`` is required.
+#. Python 2 (2.6 or 2.7) or 3 (3.4 - 3.7) to run Spack
+#. A C/C++ compiler for building
+#. The ``make`` executable for building
+#. The ``git`` and ``curl`` commands for fetching
+#. If using the ``gpg`` subcommand, ``gnupg2`` is required
 
 These requirements can be easily installed on most modern Linux systems;
 on Macintosh, XCode is required.  Spack is designed to run on HPC

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -87,3 +87,11 @@ def test_no_fixme():
                         (filename, i, line.strip())
                     )
             assert [] == errors
+
+
+def test_docstring():
+    """Ensure that every package has a docstring."""
+
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.get(name)
+        assert pkg.__doc__

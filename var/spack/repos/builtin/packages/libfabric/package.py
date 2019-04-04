@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libfabric(AutotoolsPackage):
     git = "https://github.com/ofiwg/libfabric.git"
 
     version('develop', branch='master')
+    version('1.7.0', sha256='9d7059e2ef48341f967f2a20ee215bc50f9079b32aad485f654098f83040e4be')
+    version('1.6.2', sha256='b1a9cf8c47189a1c918f8b5710d05cb50df6b47a1c9b2ba51d927e97503b4df0')
     version('1.6.1', 'ff78dc9fcbf273a119c737a4e1df46d1')
     version('1.6.0', '91d63ab3c0b9724a4db660019f928cab')
     version('1.5.3', '1fe07e972fe487c6a3e44c0fb68b49a2')

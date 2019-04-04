@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Serf(SConsPackage):
     depends_on('apr-util')
     depends_on('openssl')
     depends_on('zlib')
+
+    patch('py3syntax.patch')
 
     def build_args(self, spec, prefix):
         args = [

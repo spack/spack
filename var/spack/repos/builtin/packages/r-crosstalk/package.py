@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,6 @@ class RCrosstalk(RPackage):
 
     version('1.0.0', 'c13c21b81af2154be3f08870fd3a7077')
 
-    depends_on('r@3.4.0:3.4.9')
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-lazyeval', type=('build', 'run'))

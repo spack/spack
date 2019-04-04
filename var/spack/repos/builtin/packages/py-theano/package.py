@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class PyTheano(PythonPackage):
     git      = "https://github.com/Theano/Theano.git"
 
     version('master', branch='master')
+    version('1.0.4', sha256='35c9bbef56b61ffa299265a42a4e8f8cb5a07b2997dabaef0f8830b397086913')
     version('1.0.2', 'fcae24dfa76babe15f5f3c556d67c9f2')
     version('1.0.1', 'a38b36c0fdc3126c574163db0a253e69')
     version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')

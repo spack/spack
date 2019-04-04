@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,3 +47,6 @@ from spack.util.executable import *
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
     DependencyConflictError, InstallError, ExternalPackageError
+
+from spack.variant import any_combination_of, auto_or_any_combination_of
+from spack.variant import disjoint_sets

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,12 +25,14 @@ class Gtkplus(AutotoolsPackage):
     # Hardcode X11 support (former +X variant),
     # see #6940 for rationale:
     depends_on('pango+X')
+    depends_on('cairo+X+pdf')
     depends_on('gobject-introspection')
     depends_on('libepoxy', when='@3:')
     depends_on('libxi', when='@3:')
     depends_on('inputproto', when='@3:')
     depends_on('fixesproto', when='@3:')
     depends_on('at-spi2-atk', when='@3:')
+    depends_on('gettext', when='@3:')
 
     patch('no-demos.patch', when='@2:2.99')
 
@@ -48,3 +50,14 @@ class Gtkplus(AutotoolsPackage):
                                self.prefix.share)
         run_env.prepend_path("XDG_DATA_DIRS",
                              self.prefix.share)
+
+    def configure_args(self):
+        args = []
+        # disable building of gtk-doc files following #9771
+        args.append('--disable-gtk-doc-html')
+        true = which('true')
+        args.append('GTKDOC_CHECK={0}'.format(true))
+        args.append('GTKDOC_CHECK_PATH={0}'.format(true))
+        args.append('GTKDOC_MKPDF={0}'.format(true))
+        args.append('GTKDOC_REBASE={0}'.format(true))
+        return args

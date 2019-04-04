@@ -48,7 +48,6 @@ config:
   # The build stage can be purged with `spack clean --stage`.
   build_stage:
     - $tempdir
-    - /nfs/tmp2/$user
     - $spack/var/spack/stage
 
 
@@ -65,6 +64,12 @@ config:
   # If this is false, tools like curl that use SSL will not verify
   # certifiates. (e.g., curl will use use the -k option)
   verify_ssl: true
+
+
+  # If set to true, Spack will attempt to build any compiler on the spec
+  # that is not already available. If set to False, Spack will only use
+  # compilers already configured in compilers.yaml
+  install_missing_compilers: False
 
 
   # If set to true, Spack will always check checksums after downloading

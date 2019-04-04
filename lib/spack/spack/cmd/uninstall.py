@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -80,7 +80,7 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     specs_from_cli = []
     has_errors = False
     for spec in specs:
-        matching = spack.store.db.query(spec, hashes=hashes)
+        matching = spack.store.db.query_local(spec, hashes=hashes)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -301,7 +301,7 @@ def get_uninstall_list(args, specs, env):
 
 
 def uninstall_specs(args, specs):
-    env = ev.get_env(args, 'uninstall', required=False)
+    env = ev.get_env(args, 'uninstall')
 
     uninstall_list, remove_list = get_uninstall_list(args, specs, env)
     anything_to_do = set(uninstall_list).union(set(remove_list))

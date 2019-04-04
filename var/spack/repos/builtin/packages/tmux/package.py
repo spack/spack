@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Tmux(AutotoolsPackage):
     homepage = "http://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
+    version('2.8', sha256='7f6bf335634fafecff878d78de389562ea7f73a7367f268b66d37ea13617a2ba')
     version('2.7', 'bcdfcf910c94c3e02ce6b1c035880306')
     version('2.6', 'd541ff392249f94c4f3635793556f827')
     version('2.5', '4a5d73d96d8f11b0bdf9b6f15ab76d15')

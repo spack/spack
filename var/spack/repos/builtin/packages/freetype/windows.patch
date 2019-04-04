@@ -1,0 +1,27 @@
+https://github.com/spack/spack/issues/9729
+https://savannah.nongnu.org/bugs/index.php?54967
+http://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=3b6e65f7bf674601b9419d02ce0aa633e2e882fb
+--- a/builds/unix/configure     2018-12-14 22:08:30.000000000 -0600
++++ b/builds/unix/configure     2018-12-14 22:07:56.000000000 -0600
+@@ -11853,7 +11853,9 @@
+ # Only expand once:
+ 
+ 
+-if test -n "$ac_tool_prefix"; then
++ac_fn_c_check_header_mongrel "$LINENO" "windows.h" "ac_cv_header_windows_h" "$ac_includes_default"
++if test "x$ac_cv_header_windows_h" = xyes; then :
++  if test -n "$ac_tool_prefix"; then
+   # Extract the first word of "${ac_tool_prefix}windres", so it can be a program name with args.
+ set dummy ${ac_tool_prefix}windres; ac_word=$2
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+@@ -12022,6 +12024,9 @@
+ CC=$lt_save_CC
+ CFLAGS=$lt_save_CFLAGS
+ 
++fi
++
++
+ 
+ 
+ # checks for native programs to generate building tool
+

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -306,3 +306,10 @@ def test_preserve_environment(prepare_environment_for_tests):
     assert 'NOT_SET' not in os.environ
     assert os.environ['UNSET_ME'] == 'foo'
     assert os.environ['PATH_LIST'] == '/path/second:/path/third'
+
+
+def test_clear(env):
+    env.set('A', 'dummy value')
+    assert len(env) > 0
+    env.clear()
+    assert len(env) == 0

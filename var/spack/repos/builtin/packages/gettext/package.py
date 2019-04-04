@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,7 @@ class Gettext(AutotoolsPackage):
     depends_on('tar',      when='+tar')
     # depends_on('gzip',     when='+gzip')
     depends_on('bzip2',    when='+bzip2')
-    depends_on('xz',       when='+xz')
+    depends_on('xz',       when='+xz', type=('build', 'link', 'run'))
 
     # Optional dependencies
     # depends_on('glib')  # circular dependency?

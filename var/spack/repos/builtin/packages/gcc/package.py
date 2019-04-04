@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,23 +18,32 @@ class Gcc(AutotoolsPackage):
 
     homepage = 'https://gcc.gnu.org'
     url      = 'https://ftpmirror.gnu.org/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
+    svn      = 'svn://gcc.gnu.org/svn/gcc/'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
+    version('develop', svn=svn + 'trunk')
+    version('8.3.0', '1811337ae3add9680cec64968a2509d085b6dc5b6783fc1e8c295e3e47416196fd1a3ad8dfe7e10be2276b4f62c357659ce2902f239f60a8648548231b4b5802')
     version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
     version('8.1.0', '65f7c65818dc540b3437605026d329fc')
+
+    version('7.4.0', 'eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51')
     version('7.3.0', 'be2da21680f27624f3a87055c4ba5af2')
     version('7.2.0', 'ff370482573133a7fcdd96cd2f552292')
     version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
+
+    version('6.5.0', '7ef1796ce497e89479183702635b14bb7a46b53249209a5e0f999bebf4740945')
     version('6.4.0', '11ba51a0cfb8471927f387c8895fe232')
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
+
     version('5.5.0', '0f70424213b4a1113c04ba66ddda0c1f')
     version('5.4.0', '4c626ac2a83ef30dfb9260e6f59c2b30')
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
     version('5.1.0', 'd5525b1127d07d215960e6051c5da35e')
+
     version('4.9.4', '87c24a4090c1577ba817ec6882602491')
     version('4.9.3', '6f831b4d251872736e8e9cc09746f327')
     version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43')
@@ -68,6 +77,9 @@ class Gcc(AutotoolsPackage):
     variant('strip',
             default=False,
             description='Strip executables to reduce installation size')
+    variant('nvptx',
+            default=False,
+            description='Target nvptx offloading to NVIDIA GPUs')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
@@ -86,6 +98,25 @@ class Gcc(AutotoolsPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
+    depends_on('cuda', when='+nvptx')
+
+    resource(
+             name='newlib',
+             url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
+             sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
+             destination='newlibsource',
+             when='+nvptx'
+            )
+
+    # nvptx-tools does not seem to work as a dependency,
+    # but does fine when the source is inside the gcc build directory
+    # nvptx-tools doesn't have any releases, so grabbing the last commit
+    resource(
+             name='nvptx-tools',
+             git='https://github.com/MentorEmbedded/nvptx-tools',
+             commit='5f6f343a302d620b0868edab376c00b15741e39e',
+             when='+nvptx'
+    )
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -142,6 +173,16 @@ class Gcc(AutotoolsPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
 
+    # NVPTX offloading supported in 7 and later by limited languages
+    conflicts('+nvptx', when='@:6', msg='NVPTX only supported in gcc 7 and above')
+    conflicts('languages=ada', when='+nvptx')
+    conflicts('languages=brig', when='+nvptx')
+    conflicts('languages=go', when='+nvptx')
+    conflicts('languages=java', when='+nvptx')
+    conflicts('languages=jit', when='+nvptx')
+    conflicts('languages=objc', when='+nvptx')
+    conflicts('languages=obj-c++', when='+nvptx')
+
     if sys.platform == 'darwin':
         # Fix parallel build on APFS filesystem
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
@@ -168,11 +209,14 @@ class Gcc(AutotoolsPackage):
     patch('stack_t.patch', when='@5.1:5.4,6.1:6.4,7.1')
     # https://bugs.busybox.net/show_bug.cgi?id=10061
     patch('signal.patch', when='@4.9,5.1:5.4')
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85835
+    patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
+    patch('sys_ustat-4.9.patch', when='@4.9')
 
     build_directory = 'spack-build'
 
     def url_for_version(self, version):
-        url = 'http://ftp.gnu.org/gnu/gcc/gcc-{0}/gcc-{0}.tar.{1}'
+        url = 'https://ftpmirror.gnu.org/gcc/gcc-{0}/gcc-{0}.tar.{1}'
         suffix = 'xz'
 
         if version < Version('6.4.0') or version == Version('7.1.0'):
@@ -258,7 +302,76 @@ class Gcc(AutotoolsPackage):
         if sys.platform == 'darwin':
             options.append('--with-build-config=bootstrap-debug')
 
+        # nvptx-none offloading for host compiler
+        if spec.satisfies('+nvptx'):
+            options.extend(['--enable-offload-targets=nvptx-none',
+                            '--with-cuda-driver-include={0}'.format(
+                                spec['cuda'].prefix.include),
+                            '--with-cuda-driver-lib={0}'.format(
+                                spec['cuda'].libs.directories[0]),
+                            '--disable-bootstrap',
+                            '--disable-multilib'])
+
         return options
+
+    # run configure/make/make(install) for the nvptx-none target
+    # before running the host compiler phases
+    @run_before('configure')
+    def nvptx_install(self):
+        spec = self.spec
+        prefix = self.prefix
+
+        if not spec.satisfies('+nvptx'):
+            return
+
+        # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
+        guess = Executable('./config.guess')
+        targetguess = guess(output=str).rstrip('\n')
+
+        options = getattr(self, 'configure_flag_args', [])
+        options += ['--prefix={0}'.format(prefix)]
+
+        options += [
+            '--with-cuda-driver-include={0}'.format(
+                spec['cuda'].prefix.include),
+            '--with-cuda-driver-lib={0}'.format(
+                spec['cuda'].libs.directories[0]),
+        ]
+
+        with working_dir('nvptx-tools'):
+            configure = Executable("./configure")
+            configure(*options)
+            make()
+            make('install')
+
+        pattern = join_path(self.stage.source_path, 'newlibsource', '*')
+        files = glob.glob(pattern)
+
+        if files:
+            symlink(join_path(files[0], 'newlib'), 'newlib')
+
+        # self.build_directory = 'spack-build-nvptx'
+        with working_dir('spack-build-nvptx', create=True):
+
+            options = ['--prefix={0}'.format(prefix),
+                       '--enable-languages={0}'.format(
+                       ','.join(spec.variants['languages'].value)),
+                       '--with-mpfr={0}'.format(spec['mpfr'].prefix),
+                       '--with-gmp={0}'.format(spec['gmp'].prefix),
+                       '--target=nvptx-none',
+                       '--with-build-time-tools={0}'.format(
+                           join_path(prefix,
+                                     'nvptx-none', 'bin')),
+                       '--enable-as-accelerator-for={0}'.format(
+                           targetguess),
+                       '--disable-sjlj-exceptions',
+                       '--enable-newlib-io-long-long',
+                       ]
+
+            configure = Executable("../configure")
+            configure(*options)
+            make()
+            make('install')
 
     @property
     def build_targets(self):

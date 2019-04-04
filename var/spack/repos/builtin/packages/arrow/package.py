@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,13 +15,14 @@ class Arrow(CMakePackage):
     homepage = "http://arrow.apache.org"
     url      = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
 
+    version('0.12.1', 'aae68622edc3dcadaa16b2d25ae3f00290d5233100321993427b03bcf5b1dd3b')
     version('0.11.0', '0ac629a7775d86108e403eb66d9f1a3d3bdd6b3a497a86228aa4e8143364b7cc')
     version('0.9.0', 'ebbd36c362b9e1d398ca612f6d2531ec')
     version('0.8.0', '56436f6f61ccc68686b7e0ea30bf4d09')
 
     depends_on('boost@1.60:')
     depends_on('cmake@3.2.0:', type='build')
-    depends_on('flatbuffers@1.8.0 build_type=Release')  # only Release contains flatc
+    depends_on('flatbuffers build_type=Release')  # only Release contains flatc
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python')
     depends_on('rapidjson')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,8 +37,8 @@ class Nut(CMakePackage):
         install('README.md', prefix)
         mkdirp(prefix.bin)
         mkdirp(prefix.lib)
-        install('spack-build/test/nut_unittests', prefix.bin)
-        install('spack-build/apps/bh-3', prefix.bin)
-        install('spack-build/lib/libnut.a', prefix.lib)
+        install('../spack-build/test/nut_unittests', prefix.bin)
+        install('../spack-build/apps/bh-3', prefix.bin)
+        install('../spack-build/lib/libnut.a', prefix.lib)
         install_tree('test/data', prefix.data)
         install_tree('lib', prefix.include)

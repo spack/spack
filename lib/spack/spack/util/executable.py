@@ -1,13 +1,13 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import re
+import shlex
 import subprocess
-from six import string_types
-import sys
+from six import string_types, text_type
 
 import llnl.util.tty as tty
 
@@ -20,7 +20,7 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        self.exe = name.split(' ')
+        self.exe = shlex.split(name)
         self.default_env = {}
         self.returncode = None
 
@@ -171,9 +171,9 @@ class Executable(object):
             if output is str or error is str:
                 result = ''
                 if output is str:
-                    result += to_str(out)
+                    result += text_type(out.decode('utf-8'))
                 if error is str:
-                    result += to_str(err)
+                    result += text_type(err.decode('utf-8'))
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
@@ -222,20 +222,6 @@ class Executable(object):
 
     def __str__(self):
         return ' '.join(self.exe)
-
-
-def to_str(content):
-    """Produce a str type from the content of a process stream obtained with
-       Popen.communicate.
-    """
-    # Prior to python3, Popen.communicate returns a str type. For python3 it
-    # returns a bytes type. In the case of python3 we decode the
-    # byte string to produce a str type. This will generate junk if the
-    # encoding is not UTF-8 (which includes ASCII).
-    if sys.version_info < (3, 0, 0):
-        return content
-    else:
-        return content.decode('utf-8')
 
 
 def which(*args, **kwargs):

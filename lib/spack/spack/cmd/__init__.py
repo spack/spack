@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import re
 import sys
+import argparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault, index_by
@@ -16,6 +17,7 @@ from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
 import spack.config
+import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
@@ -30,9 +32,6 @@ ignore_files = r'^\.|^__init__.py$|^#'
 
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
-
-#: Names of all commands
-all_commands = []
 
 
 def python_name(cmd_name):
@@ -59,11 +58,16 @@ def all_commands():
     global _all_commands
     if _all_commands is None:
         _all_commands = []
-        for file in os.listdir(spack.paths.command_path):
-            if file.endswith(".py") and not re.search(ignore_files, file):
-                cmd = re.sub(r'.py$', '', file)
-                _all_commands.append(cmd_name(cmd))
+        command_paths = [spack.paths.command_path]  # Built-in commands
+        command_paths += spack.extensions.get_command_paths()  # Extensions
+        for path in command_paths:
+            for file in os.listdir(path):
+                if file.endswith(".py") and not re.search(ignore_files, file):
+                    cmd = re.sub(r'.py$', '', file)
+                    _all_commands.append(cmd_name(cmd))
+
         _all_commands.sort()
+
     return _all_commands
 
 
@@ -84,10 +88,18 @@ def get_module(cmd_name):
             (contains ``-``, not ``_``).
     """
     pname = python_name(cmd_name)
-    module_name = "%s.%s" % (__name__, pname)
-    module = __import__(module_name,
-                        fromlist=[pname, SETUP_PARSER, DESCRIPTION],
-                        level=0)
+
+    try:
+        # Try to import the command from the built-in directory
+        module_name = "%s.%s" % (__name__, pname)
+        module = __import__(module_name,
+                            fromlist=[pname, SETUP_PARSER, DESCRIPTION],
+                            level=0)
+        tty.debug('Imported {0} from built-in commands'.format(pname))
+    except ImportError:
+        module = spack.extensions.get_module(cmd_name)
+        if not module:
+            raise
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
@@ -158,8 +170,16 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec):
-    matching_specs = spack.store.db.query(spec)
+def disambiguate_spec(spec, env):
+    """Given a spec, figure out which installed package it refers to.
+
+    Arguments:
+        spec (spack.spec.Spec): a spec to disambiguate
+        env (spack.environment.Environment): a spack environment,
+            if one is active, or None if no environment is active
+    """
+    hashes = env.all_hashes() if env else None
+    matching_specs = spack.store.db.query(spec, hashes=hashes)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
@@ -334,3 +354,15 @@ def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
     with working_dir(spack.paths.prefix):
         return os.path.isdir('.git')
+
+
+########################################
+# argparse types for argument validation
+########################################
+def extant_file(f):
+    """
+    Argparse type for files that exist.
+    """
+    if not os.path.isfile(f):
+        raise argparse.ArgumentTypeError('%s does not exist' % f)
+    return f

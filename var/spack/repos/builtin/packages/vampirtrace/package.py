@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,12 @@ class Vampirtrace(AutotoolsPackage):
     depends_on('otf')
     depends_on('papi')
     depends_on('zlib')
+
+    # VampirTrace fails to build with newer versions of MPICH due to
+    # https://github.com/pmodels/mpich/commit/c3dbc09ae20a503ac4b870893e3e330d52ea5a3b
+    patch('mpi3-const.patch', when='^mpich@3.3:')
+    # VampirTrace fails to build with OpenMPI for the same reason
+    patch('mpi3-const.patch', when='^openmpi')
 
     def patch(self):
         path = 'tools/vtwrapper/vt{0}-wrapper-data.txt.in'

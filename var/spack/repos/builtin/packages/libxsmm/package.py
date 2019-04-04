@@ -1,16 +1,17 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 from glob import glob
 
 
 class Libxsmm(MakefilePackage):
-    '''Library targeting Intel Architecture
+    """Library targeting Intel Architecture
     for small, dense or sparse matrix multiplications,
-    and small convolutions.'''
+    and small convolutions."""
 
     homepage = 'https://github.com/hfp/libxsmm'
     url      = 'https://github.com/hfp/libxsmm/archive/1.10.tar.gz'
@@ -72,7 +73,7 @@ class Libxsmm(MakefilePackage):
 
     def build(self, spec, prefix):
         # include symbols by default
-        make_args = ['SYM=1']
+        make_args = ['SYM=1', 'PREFIX=%s' % prefix]
 
         if '+header-only' in spec:
             make_args += ['header-only']
@@ -89,6 +90,13 @@ class Libxsmm(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree('include', prefix.include)
+
+        # move pkg-config files to their right place
+        mkdirp('lib/pkgconfig')
+        for pcfile in glob('lib/*.pc'):
+            os.rename(pcfile, os.path.join('lib/pkgconfig',
+                                           os.path.basename(pcfile)))
+
         if '+header-only' in spec:
             install_tree('src', prefix.src)
         else:

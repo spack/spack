@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class XcbUtilWm(AutotoolsPackage):
     url      = "https://xcb.freedesktop.org/dist/xcb-util-wm-0.4.1.tar.gz"
 
     version('0.4.1', '0831399918359bf82930124fa9fd6a9b')
+
+    depends_on('m4',       type='build')
 
     depends_on('libxcb@1.4:')
 

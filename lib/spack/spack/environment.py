@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,6 @@ import re
 import sys
 import shutil
 
-import jsonschema
 import ruamel.yaml
 
 import llnl.util.filesystem as fs
@@ -66,9 +65,6 @@ lockfile_format_version = 1
 
 #: legal first keys in the spack.yaml manifest file
 env_schema_keys = ('spack', 'env')
-
-#: jsonschema validator for environments
-_validator = None
 
 
 def valid_env_name(name):
@@ -184,7 +180,7 @@ def find_environment(args):
     raise SpackEnvironmentError('no environment in %s' % env)
 
 
-def get_env(args, cmd_name, required=True):
+def get_env(args, cmd_name, required=False):
     """Used by commands to get the active environment.
 
     This first checks for an ``env`` argument, then looks at the
@@ -202,8 +198,8 @@ def get_env(args, cmd_name, required=True):
     Arguments:
         args (Namespace): argparse namespace wtih command arguments
         cmd_name (str): name of calling command
-        required (bool): if ``False``, return ``None`` if no environment
-            is found instead of raising an exception.
+        required (bool): if ``True``, raise an exception when no environment
+            is found; if ``False``, just return ``None``
 
     Returns:
         (Environment): if there is an arg or active environment
@@ -232,10 +228,15 @@ def get_env(args, cmd_name, required=True):
             '    spack -e ENV %s ...' % cmd_name)
 
 
+def _root(name):
+    """Non-validating version of root(), to be used internally."""
+    return os.path.join(env_path, name)
+
+
 def root(name):
     """Get the root directory for an environment by name."""
     validate_env_name(name)
-    return os.path.join(env_path, name)
+    return _root(name)
 
 
 def exists(name):
@@ -288,7 +289,7 @@ def all_environment_names():
     candidates = sorted(os.listdir(env_path))
     names = []
     for candidate in candidates:
-        yaml_path = os.path.join(root(candidate), manifest_name)
+        yaml_path = os.path.join(_root(candidate), manifest_name)
         if valid_env_name(candidate) and os.path.exists(yaml_path):
             names.append(candidate)
     return names
@@ -301,11 +302,9 @@ def all_environments():
 
 
 def validate(data, filename=None):
-    global _validator
-    if _validator is None:
-        _validator = jsonschema.Draft4Validator(spack.schema.env.schema)
+    import jsonschema
     try:
-        _validator.validate(data)
+        spack.schema.Validator(spack.schema.env.schema).validate(data)
     except jsonschema.ValidationError as e:
         raise spack.config.ConfigFormatError(
             e, data, filename, e.instance.lc.line + 1)
@@ -596,8 +595,10 @@ class Environment(object):
 
                 # Display concretized spec to the user
                 sys.stdout.write(concrete.tree(
-                    recurse_dependencies=True, install_status=True,
-                    hashlen=7, hashes=True))
+                    recurse_dependencies=True,
+                    status_fn=spack.spec.Spec.install_status,
+                    hashlen=7, hashes=True)
+                )
 
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
@@ -664,6 +665,7 @@ class Environment(object):
             with fs.working_dir(self.path):
                 spec.package.do_install(**kwargs)
 
+            if not spec.external:
                 # Link the resulting log file into logs dir
                 build_log_link = os.path.join(
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))

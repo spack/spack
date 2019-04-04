@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -618,7 +618,21 @@ activated using ``spack activate``:
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.
+``direct`` or ``all``.  The default is ``none``.
+
+.. tip::
+  Building external software
+     Setting ``autoload`` to ``direct`` for all packages can be useful
+     when building software outside of a Spack installation that depends on
+     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
+     as appropriate):
+
+  .. code-block:: yaml
+
+     modules:
+       lmod:
+         all:
+           autoload: 'direct'
 
 .. note::
   TCL prerequisites

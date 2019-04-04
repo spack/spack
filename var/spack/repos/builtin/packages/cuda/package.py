@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,9 @@ class Cuda(Package):
             url="http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run")
     version('6.5.14', '90b1b8f77313600cc294d9271741f4da', expand=False,
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('CUDA_HOME', self.prefix)
 
     def install(self, spec, prefix):
         runfile = glob(join_path(self.stage.path, 'cuda*_linux*'))[0]
