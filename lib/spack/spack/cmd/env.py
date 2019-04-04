@@ -57,11 +57,11 @@ def env_activate_setup_parser(subparser):
     view_options.add_argument(
         '-v', '--with-view', action='store_const', dest='with_view',
         const=True, default=True,
-        help="Update PATH etc. with associated view")
+        help="update PATH etc. with associated view")
     view_options.add_argument(
         '-V', '--without-view', action='store_const', dest='with_view',
         const=False, default=True,
-        help="Do not update PATH etc. with associated view")
+        help="do not update PATH etc. with associated view")
 
     subparser.add_argument(
         '-d', '--dir', action='store_true', default=False,
