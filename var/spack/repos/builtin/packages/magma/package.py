@@ -74,6 +74,8 @@ class Magma(CMakePackage):
 
         if '@2.5.0' in spec:
             options.extend(['-DMAGMA_SPARSE=OFF'])
+            if spec.compiler.name in ['xl', 'xl_r']:
+                options.extend(['-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=TRUE'])
 
         return options
 
