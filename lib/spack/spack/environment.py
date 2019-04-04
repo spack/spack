@@ -695,13 +695,13 @@ class Environment(object):
         self._install(concrete, **install_args)
 
     def _install(self, spec, **install_args):
+        spec.package.do_install(**install_args)
+
         # Make sure log directory exists
         log_path = self.log_path
         fs.mkdirp(log_path)
 
         with fs.working_dir(self.path):
-            spec.package.do_install(**install_args)
-
             # Link the resulting log file into logs dir
             build_log_link = os.path.join(
                 log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
