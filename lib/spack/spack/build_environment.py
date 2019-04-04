@@ -682,17 +682,9 @@ def setup_package(pkg, dirty):
     set_build_environment_variables(pkg, build_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, build_env)
 
-    # traverse in postorder so package can use vars from its dependencies
-    spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False,
-                                   deptype=('build', 'test')):
-        spkg = dspec.package
-        set_module_variables_for_package(spkg)
-
-        # Allow dependencies to modify the module
-        dpkg = dspec.package
-        dpkg.setup_dependent_package(pkg.module, spec)
-        dpkg.setup_dependent_build_environment(build_env, spec)
+    build_env.extend(
+        environment_modifications_from_dependencies(pkg.spec, context='build')
+    )
 
     if (not dirty) and (not build_env.is_unset('CPATH')):
         tty.debug("A dependency has updated CPATH, this may lead pkg-config"
@@ -728,6 +720,35 @@ def setup_package(pkg, dirty):
     # Make sure nothing's strange about the Spack environment.
     validate(build_env, tty.warn)
     build_env.apply_modifications()
+
+
+def environment_modifications_from_dependencies(spec, context):
+    """Returns the environment modifications that are required by
+    the dependencies of a spec.
+
+    Args:
+        spec (Spec): spec for which we want the modifications
+        context (str): either 'build' for build-time modifications or 'run'
+            for run-time modifications
+    """
+    env = EnvironmentModifications()
+    pkg = spec.package
+
+    # Maps the context to deptype and method to be called
+    deptype_and_method = {
+        'build': (('build', 'test'), 'setup_dependent_build_environment'),
+        'run': (('link', 'run'), 'setup_dependent_run_environment')
+    }
+    deptype, method = deptype_and_method[context]
+
+    for dspec in spec.traverse(order='post', root=False, deptype=deptype):
+        dpkg = dspec.package
+        set_module_variables_for_package(dpkg)
+        # Allow dependencies to modify the module
+        dpkg.setup_dependent_package(pkg.module, spec)
+        getattr(dpkg, method)(env, spec)
+
+    return env
 
 
 def fork(pkg, function, dirty, fake):

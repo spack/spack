@@ -634,19 +634,13 @@ class BaseContext(tengine.Context):
             exclude=spack.util.environment.is_system_path
         )
 
-        # Modifications that are coded at package level
-        # TODO : the code down below is quite similar to
-        # TODO : build_environment.setup_package and needs to be factored out
-        # TODO : to a single place
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
-        for item in dependencies(self.spec, 'all'):
-            package = self.spec[item.name].package
-            build_environment.set_module_variables_for_package(package)
-            package.setup_dependent_package(
-                self.spec.package.module, self.spec
+        env.extend(
+            build_environment.environment_modifications_from_dependencies(
+                self.spec, context='run'
             )
-            package.setup_dependent_run_environment(env, self.spec)
+        )
         # Package specific modifications
         build_environment.set_module_variables_for_package(self.spec.package)
         self.spec.package.setup_run_environment(env)
