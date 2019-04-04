@@ -15,5 +15,11 @@ class PyPycurl(PythonPackage):
 
     version('7.43.0', 'c94bdba01da6004fa38325e9bd6b9760')
 
-    depends_on('python@2.6:')
+    depends_on('python@2.6:', type=('build', 'run'))
     depends_on('curl@7.19.0:')
+
+    def build_args(self, spec, prefix):
+        args = ['--curl-config={0}/{1}'.format(spec['curl'].prefix.bin,
+                                               'curl-config')]
+
+        return args

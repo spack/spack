@@ -57,7 +57,12 @@ class Curl(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = ['--with-zlib={0}'.format(spec['zlib'].prefix)]
+        args = ['--without-libidn2',
+                '--without-libpsl',
+                '--without-libmetalink',
+                '--without-librtmp',
+                '--without-brotli',
+                '--with-zlib={0}'.format(spec['zlib'].prefix)]
         if spec.satisfies('+darwinssl'):
             args.append('--with-darwinssl')
         else:
