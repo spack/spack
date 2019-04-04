@@ -181,6 +181,9 @@ def env_create(args):
     elif args.without_view:
         with_view = False
     else:
+        # Note that 'None' means unspecified, in which case the Environment
+        # object could choose to enable a view by default. False means that
+        # the environment should not include a view.
         with_view = None
     if args.envfile:
         with open(args.envfile) as f:
