@@ -2927,8 +2927,7 @@ as arguments.
 
 Here are the definitions of the three built-in flag handlers:
 
-   def build_system_flags(self, name, flags):
-       return (None, None, flags)
+.. code-block:: python
 
    def inject_flags(pkg, name, flags):
        return (flags, None, None)
