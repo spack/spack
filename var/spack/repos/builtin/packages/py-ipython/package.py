@@ -19,7 +19,9 @@ class PyIpython(PythonPackage):
     version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
     version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
 
-    depends_on('python@2.7:2.8,3.3:')
+    depends_on('python@3.5:', when='@7.0.0:')
+    depends_on('python@3.3:', when='@6.0.0:6.9.9')
+    depends_on('python@2.7:2.8,3.3:', when='@:5.9.9')
 
     depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")
     depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
