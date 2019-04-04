@@ -405,20 +405,18 @@ class Environment(object):
         if init_file:
             with fs.open_if_filename(init_file) as f:
                 if hasattr(f, 'name') and f.name.endswith('.lock'):
-                    self._read_manifest(default_manifest_yaml, init=True)
+                    self._read_manifest(default_manifest_yaml)
                     self._read_lockfile(f)
                     self._set_user_specs_from_lockfile()
                 else:
-                    self._read_manifest(f, init=True)
+                    self._read_manifest(f)
         else:
-            init = not any(os.path.exists(x)
-                           for x in (self.lock_path, self.manifest_path))
             default_manifest = not os.path.exists(self.manifest_path)
             if default_manifest:
-                self._read_manifest(default_manifest_yaml, init=init)
+                self._read_manifest(default_manifest_yaml)
             else:
                 with open(self.manifest_path) as f:
-                    self._read_manifest(f, init=init)
+                    self._read_manifest(f)
 
             if os.path.exists(self.lock_path):
                 with open(self.lock_path) as f:
@@ -433,7 +431,7 @@ class Environment(object):
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
-    def _read_manifest(self, f, init=False):
+    def _read_manifest(self, f):
         """Read manifest file and set up user specs."""
         self.yaml = _read_yaml(f)
         spec_list = config_dict(self.yaml).get('specs')
@@ -443,12 +441,12 @@ class Environment(object):
         enable_view = config_dict(self.yaml).get('view')
         # enable_view can be true/false, a string, or None (if the manifest did
         # not specify it)
-        if enable_view is True or (enable_view is None and init):
+        if enable_view is True or enable_view is None:
             self._view_path = self.default_view_path
         elif isinstance(enable_view, six.string_types):
             self._view_path = enable_view
         else:
-            # enable_view is False, or (enable_view, init) == (None, False)
+            # enable_view is False
             self._view_path = None
 
     def _set_user_specs_from_lockfile(self):
