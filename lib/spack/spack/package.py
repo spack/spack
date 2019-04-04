@@ -44,6 +44,7 @@ import spack.mirror
 import spack.mixins
 import spack.repo
 import spack.url
+import spack.util.environment
 import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
@@ -1948,68 +1949,115 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return (None, None, flags)
 
-    def setup_environment(self, spack_env, run_env):
-        """Set up the compile and runtime environments for a package.
+    def setup_build_environment(self, env):
+        """Sets up the build environment for a package.
 
-        ``spack_env`` and ``run_env`` are ``EnvironmentModifications``
-        objects. Package authors can call methods on them to alter
-        the environment within Spack and at runtime.
-
-        Both ``spack_env`` and ``run_env`` are applied within the build
-        process, before this package's ``install()`` method is called.
-
-        Modifications in ``run_env`` will *also* be added to the
-        generated environment modules for this package.
-
-        Default implementation does nothing, but this can be
-        overridden if the package needs a particular environment.
-
-        Example:
-
-        1. Qt extensions need ``QTDIR`` set.
+        This method will be called before the current package prefix exists in
+        Spack's store.
 
         Args:
-            spack_env (EnvironmentModifications): List of environment
-                modifications to be applied when this package is built
-                within Spack.
-            run_env (EnvironmentModifications): List of environment
-                modifications to be applied when this package is run outside
-                of Spack. These are added to the resulting module file.
+            env (EnvironmentModifications): environment modifications to be
+                applied when the package is built. Package authors can call
+                methods on it to alter the build environment.
         """
-        pass
+        legacy_fn = getattr(self, 'setup_environment', None)
+        if legacy_fn:
+            msg = '[DEPRECATED METHOD]\n"{0}" ' \
+                  'still defines the deprecated method "setup_environment" ' \
+                  '[should be split into "setup_build_environment" and ' \
+                  '"setup_run_environment"]'
+            tty.warn(msg.format(self.name))
+            _ = spack.util.environment.EnvironmentModifications()
+            legacy_fn(env, _)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Set up the environment of packages that depend on this one.
-
-        This is similar to ``setup_environment``, but it is used to
-        modify the compile and runtime environments of packages that
-        *depend* on this one. This gives packages like Python and
-        others that follow the extension model a way to implement
-        common environment or compile-time settings for dependencies.
-
-        This is useful if there are some common steps to installing
-        all extensions for a certain package.
-
-        Example:
-
-        1. Installing python modules generally requires ``PYTHONPATH`` to point
-           to the ``lib/pythonX.Y/site-packages`` directory in the module's
-           install prefix. This method could be used to set that variable.
+    def setup_run_environment(self, env):
+        """Sets up the run environment for a package.
 
         Args:
-            spack_env (EnvironmentModifications): List of environment
-                modifications to be applied when the dependent package is
-                built within Spack.
-            run_env (EnvironmentModifications): List of environment
-                modifications to be applied when the dependent package is
-                run outside of Spack. These are added to the resulting
-                module file.
-            dependent_spec (Spec): The spec of the dependent package
+            env (EnvironmentModifications): environment modifications to be
+                applied when the package is run. Package authors can call
+                methods on it to alter the run environment.
+        """
+        legacy_fn = getattr(self, 'setup_environment', None)
+        if legacy_fn:
+            msg = '[DEPRECATED METHOD]\n"{0}" ' \
+                  'still defines the deprecated method "setup_environment" ' \
+                  '[should be split into "setup_build_environment" and ' \
+                  '"setup_run_environment"]'
+            tty.warn(msg.format(self.name))
+            _ = spack.util.environment.EnvironmentModifications()
+            legacy_fn(_, env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        """Sets up the build environment of packages that depend on this one.
+
+        This is similar to ``setup_build_environment``, but it is used to
+        modify the build environments of packages that *depend* on this one.
+
+        This gives packages like Python and others that follow the extension
+        model a way to implement common environment or compile-time settings
+        for dependencies.
+
+        This method will be called before the dependent package prefix exists
+        in Spack's store.
+
+        Examples:
+            1. Installing python modules generally requires ``PYTHONPATH``
+            to point to the ``lib/pythonX.Y/site-packages`` directory in the
+            module's install prefix. This method could be used to set that
+            variable.
+
+        Args:
+            env (EnvironmentModifications): environment modifications to be
+                applied when the dependent package is built. Package authors
+                can call methods on it to alter the build environment.
+
+            dependent_spec (Spec): the spec of the dependent package
                 about to be built. This allows the extendee (self) to query
                 the dependent's state. Note that *this* package's spec is
-                available as ``self.spec``.
+                available as ``self.spec``
         """
-        pass
+        legacy_fn = getattr(self, 'setup_dependent_environment', None)
+        if legacy_fn:
+            msg = '[DEPRECATED METHOD]\n"{0}" ' \
+                  'still defines the deprecated method ' \
+                  '"setup_dependent_environment" ' \
+                  '[should be split into "setup_dependent_build_environment"' \
+                  ' and "setup_dependent_run_environment"]'
+            tty.warn(msg.format(self.name))
+            _ = spack.util.environment.EnvironmentModifications()
+            legacy_fn(env, _, dependent_spec)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Sets up the run environment of packages that depend on this one.
+
+        This is similar to ``setup_run_environment``, but it is used to
+        modify the run environments of packages that *depend* on this one.
+
+        This gives packages like Python and others that follow the extension
+        model a way to implement common environment or run-time settings
+        for dependencies.
+
+        Args:
+            env (EnvironmentModifications): environment modifications to be
+                applied when the dependent package is run. Package authors
+                can call methods on it to alter the build environment.
+
+            dependent_spec (Spec): The spec of the dependent package
+                about to be run. This allows the extendee (self) to query
+                the dependent's state. Note that *this* package's spec is
+                available as ``self.spec``
+        """
+        legacy_fn = getattr(self, 'setup_dependent_environment', None)
+        if legacy_fn:
+            msg = '[DEPRECATED METHOD]\n"{0}" ' \
+                  'still defines the deprecated method ' \
+                  '"setup_dependent_environment" ' \
+                  '[should be split into "setup_dependent_build_environment"' \
+                  ' and "setup_dependent_run_environment"]'
+            tty.warn(msg.format(self.name))
+            _ = spack.util.environment.EnvironmentModifications()
+            legacy_fn(_, env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.

@@ -635,7 +635,6 @@ class BaseContext(tengine.Context):
         )
 
         # Modifications that are coded at package level
-        _ = spack.util.environment.EnvironmentModifications()
         # TODO : the code down below is quite similar to
         # TODO : build_environment.setup_package and needs to be factored out
         # TODO : to a single place
@@ -647,10 +646,10 @@ class BaseContext(tengine.Context):
             package.setup_dependent_package(
                 self.spec.package.module, self.spec
             )
-            package.setup_dependent_environment(_, env, self.spec)
+            package.setup_dependent_run_environment(env, self.spec)
         # Package specific modifications
         build_environment.set_module_variables_for_package(self.spec.package)
-        self.spec.package.setup_environment(_, env)
+        self.spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
