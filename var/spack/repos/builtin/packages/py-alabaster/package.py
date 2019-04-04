@@ -15,6 +15,7 @@ class PyAlabaster(PythonPackage):
 
     import_modules = ['alabaster']
 
+    version('0.7.12', sha256='a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02')
     version('0.7.10', '7934dccf38801faa105f6e7b4784f493')
     version('0.7.9',  'b29646a8bbe7aa52830375b7d17b5d7a')
 

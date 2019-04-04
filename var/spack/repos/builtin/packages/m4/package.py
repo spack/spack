@@ -35,7 +35,10 @@ class M4(AutotoolsPackage):
         args = ['--enable-c++']
 
         if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
-            args.append('CFLAGS=-rtlib=compiler-rt')
+            args.append('LDFLAGS=-rtlib=compiler-rt')
+
+        if spec.satisfies('%arm') and not spec.satisfies('platform=darwin'):
+            args.append('LDFLAGS=-rtlib=compiler-rt')
 
         if spec.satisfies('%intel'):
             args.append('CFLAGS=-no-gcc')

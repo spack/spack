@@ -11,6 +11,7 @@ class PyCython(PythonPackage):
     homepage = "https://pypi.python.org/pypi/cython"
     url      = "https://pypi.io/packages/source/c/cython/Cython-0.25.2.tar.gz"
 
+    version('0.29.5', sha256='9d5290d749099a8e446422adfb0aa2142c711284800fb1eb70f595101e32cbf1')
     version('0.29', sha256='94916d1ede67682638d3cc0feb10648ff14dc51fb7a7f147f4fedce78eaaea97')
     version('0.28.6', '3c3fb47806a4476f8e9429943439cc60')
     version('0.28.3', '586f0eb70ba1fcc34334e9e10c5e68c0')

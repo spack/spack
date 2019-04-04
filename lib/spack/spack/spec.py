@@ -94,6 +94,7 @@ from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs, memoized
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
+import llnl.util.tty as tty
 
 import spack.architecture
 import spack.compiler
@@ -107,7 +108,7 @@ import spack.util.spack_yaml as syaml
 
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.util.module_cmd import get_path_from_module, load_module
-from spack.error import SpecError, UnsatisfiableSpecError
+from spack.error import SpackError, SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
@@ -669,7 +670,7 @@ def _headers_default_handler(descriptor, spec, cls):
         HeaderList: The headers in ``prefix.include``
 
     Raises:
-        RuntimeError: If no headers are found
+        NoHeadersError: If no headers are found
     """
     headers = find_headers('*', root=spec.prefix.include, recursive=True)
 
@@ -677,7 +678,7 @@ def _headers_default_handler(descriptor, spec, cls):
         return headers
     else:
         msg = 'Unable to locate {0} headers in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix.include))
+        raise NoHeadersError(msg.format(spec.name, spec.prefix.include))
 
 
 def _libs_default_handler(descriptor, spec, cls):
@@ -697,7 +698,7 @@ def _libs_default_handler(descriptor, spec, cls):
         LibraryList: The libraries found
 
     Raises:
-        RuntimeError: If no libraries are found
+        NoLibrariesError: If no libraries are found
     """
 
     # Variable 'name' is passed to function 'find_libraries', which supports
@@ -737,7 +738,7 @@ def _libs_default_handler(descriptor, spec, cls):
                 return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
-    raise RuntimeError(msg.format(spec.name, prefix))
+    raise NoLibrariesError(msg.format(spec.name, prefix))
 
 
 class ForwardQueryToPackage(object):
@@ -1267,7 +1268,12 @@ class Spec(object):
     @property
     def prefix(self):
         if self._prefix is None:
-            self.prefix = spack.store.layout.path_for_spec(self)
+            upstream, record = spack.store.db.query_by_spec_hash(
+                self.dag_hash())
+            if record and record.path:
+                self.prefix = record.path
+            else:
+                self.prefix = spack.store.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
@@ -1913,6 +1919,9 @@ class Spec(object):
             raise InvalidDependencyError(
                 self.name + " does not depend on " + comma_or(extra))
 
+        # This dictionary will store object IDs rather than Specs as keys
+        # since the Spec __hash__ will change as patches are added to them
+        spec_to_patches = {}
         for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
@@ -1933,16 +1942,12 @@ class Spec(object):
             for cond, patch_list in s.package_class.patches.items():
                 if s.satisfies(cond):
                     for patch in patch_list:
-                        patches.append(patch.sha256)
+                        patches.append(patch)
             if patches:
-                mvar = s.variants.setdefault(
-                    'patches', MultiValuedVariant('patches', ())
-                )
-                mvar.value = patches
-                # FIXME: Monkey patches mvar to store patches order
-                mvar._patches_in_order_of_appearance = patches
+                spec_to_patches[id(s)] = patches
 
-        # Apply patches required on dependencies by depends_on(..., patch=...)
+        # Also record all patches required on dependencies by
+        # depends_on(..., patch=...)
         for dspec in self.traverse_edges(deptype=all,
                                          cover='edges', root=False):
             pkg_deps = dspec.parent.package_class.dependencies
@@ -1958,16 +1963,29 @@ class Spec(object):
                     for pcond, patch_list in dependency.patches.items():
                         if dspec.spec.satisfies(pcond):
                             for patch in patch_list:
-                                patches.append(patch.sha256)
+                                patches.append(patch)
             if patches:
-                mvar = dspec.spec.variants.setdefault(
-                    'patches', MultiValuedVariant('patches', ())
-                )
-                mvar.value = mvar.value + tuple(patches)
-                # FIXME: Monkey patches mvar to store patches order
-                p = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = list(
-                    dedupe(p + patches))
+                all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
+                all_patches.extend(patches)
+
+        for spec in self.traverse():
+            if id(spec) not in spec_to_patches:
+                continue
+
+            patches = list(dedupe(spec_to_patches[id(spec)]))
+            mvar = spec.variants.setdefault(
+                'patches', MultiValuedVariant('patches', ())
+            )
+            mvar.value = tuple(p.sha256 for p in patches)
+            # FIXME: Monkey patches mvar to store patches order
+            full_order_keys = list(tuple(p.ordering_key) + (p.sha256,) for p
+                                   in patches)
+            ordered_hashes = sorted(full_order_keys)
+            tty.debug("Ordered hashes [{0}]: ".format(spec.name) +
+                      ', '.join('/'.join(str(e) for e in t)
+                                for t in ordered_hashes))
+            mvar._patches_in_order_of_appearance = list(
+                t[-1] for t in ordered_hashes)
 
         for s in self.traverse():
             if s.external_module and not s.external_path:
@@ -3025,6 +3043,8 @@ class Spec(object):
             ${SHA1}          Dependencies 8-char sha1 prefix
             ${HASH:len}      DAG hash with optional length specifier
 
+            ${DEP:name:OPTION} Evaluates as OPTION would for self['name']
+
             ${SPACK_ROOT}    The spack root directory
             ${SPACK_INSTALL} The default spack install directory,
                              ${SPACK_PREFIX}/opt
@@ -3217,7 +3237,11 @@ class Spec(object):
                         hashlen = None
                     out.write(fmt % (self.dag_hash(hashlen)))
                 elif named_str == 'NAMESPACE':
-                    out.write(fmt % transform(self.namespace))
+                    out.write(fmt % transform(self, self.namespace))
+                elif named_str.startswith('DEP:'):
+                    _, dep_name, dep_option = named_str.lower().split(':', 2)
+                    dep_spec = self[dep_name]
+                    out.write(fmt % (dep_spec.format('${%s}' % dep_option)))
 
                 named = False
 
@@ -3245,7 +3269,7 @@ class Spec(object):
         ret = self.format() + self.dep_string()
         return ret.strip()
 
-    def _install_status(self):
+    def install_status(self):
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return None
@@ -3272,7 +3296,7 @@ class Spec(object):
         depth = kwargs.pop('depth', False)
         hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)
-        install_status = kwargs.pop('install_status', False)
+        status_fn = kwargs.pop('status_fn', False)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
@@ -3294,9 +3318,11 @@ class Spec(object):
             if depth:
                 out += "%-4d" % d
 
-            if install_status:
-                status = node._install_status()
-                if status is None:
+            if status_fn:
+                status = status_fn(node)
+                if node.package.installed_upstream:
+                    out += colorize("@g{[^]}  ", color=color)
+                elif status is None:
                     out += colorize("@K{ - }  ", color=color)  # not installed
                 elif status:
                     out += colorize("@g{[+]}  ", color=color)  # installed
@@ -3689,6 +3715,33 @@ def parse_anonymous_spec(spec_like, pkg_name):
     return anon_spec
 
 
+def save_dependency_spec_yamls(
+        root_spec_as_yaml, output_directory, dependencies=None):
+    """Given a root spec (represented as a yaml object), index it with a subset
+       of its dependencies, and write each dependency to a separate yaml file
+       in the output directory.  By default, all dependencies will be written
+       out.  To choose a smaller subset of dependencies to be written, pass a
+       list of package names in the dependencies parameter.  In case of any
+       kind of error, SaveSpecDependenciesError is raised with a specific
+       message about what went wrong."""
+    root_spec = Spec.from_yaml(root_spec_as_yaml)
+
+    dep_list = dependencies
+    if not dep_list:
+        dep_list = [dep.name for dep in root_spec.traverse()]
+
+    for dep_name in dep_list:
+        if dep_name not in root_spec:
+            msg = 'Dependency {0} does not exist in root spec {1}'.format(
+                dep_name, root_spec.name)
+            raise SpecDependencyNotFoundError(msg)
+        dep_spec = root_spec[dep_name]
+        yaml_path = os.path.join(output_directory, '{0}.yaml'.format(dep_name))
+
+        with open(yaml_path, 'w') as fd:
+            fd.write(dep_spec.to_yaml(all_deps=True))
+
+
 def base32_prefix_bits(hash_string, bits):
     """Return the first <bits> bits of a base32 string as an integer."""
     if bits > len(hash_string) * 5:
@@ -3713,6 +3766,14 @@ class DuplicateDependencyError(SpecError):
 
 class DuplicateCompilerSpecError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
+
+
+class NoLibrariesError(SpackError):
+    """Raised when package libraries are requested but cannot be found"""
+
+
+class NoHeadersError(SpackError):
+    """Raised when package headers are requested but cannot be found"""
 
 
 class UnsupportedCompilerError(SpecError):
@@ -3866,3 +3927,8 @@ class ConflictsInSpecError(SpecError, RuntimeError):
                 long_message += match_fmt_custom.format(idx + 1, c, w, msg)
 
         super(ConflictsInSpecError, self).__init__(message, long_message)
+
+
+class SpecDependencyNotFoundError(SpecError):
+    """Raised when a failure is encountered writing the dependencies of
+    a spec."""

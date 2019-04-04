@@ -25,7 +25,7 @@ from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import strings_contains_installroot
-from spack.relocate import get_patchelf, relocate_text
+from spack.relocate import get_patchelf, relocate_text, relocate_links
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -85,9 +85,12 @@ echo $PATH"""
     with open(filename, "w") as script:
         script.write(spec.prefix)
 
+    # Create an absolute symlink
+    linkname = os.path.join(spec.prefix, "link_to_dummy.txt")
+    os.symlink(filename, linkname)
+
     # Create the build cache  and
     # put it directly into the mirror
-
     mirror_path = os.path.join(str(tmpdir), 'test-mirror')
     spack.mirror.create(
         mirror_path, specs=[], no_checksum=True
@@ -100,6 +103,7 @@ echo $PATH"""
     stage = spack.stage.Stage(
         mirrors['spack-mirror-test'], name="build_cache", keep=True)
     stage.create()
+
     # setup argument parser
     parser = argparse.ArgumentParser()
     buildcache.setup_parser(parser)
@@ -120,6 +124,13 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+
         # create build cache with relative path and signing
         args = parser.parse_args(
             ['create', '-d', mirror_path, '-f', '-r', str(spec)])
@@ -136,10 +147,17 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+
     else:
         # create build cache without signing
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-u', str(spec)])
+            ['create', '-d', mirror_path, '-f', '-u', str(spec)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
@@ -148,6 +166,13 @@ echo $PATH"""
         # install build cache without verification
         args = parser.parse_args(['install', '-u', str(spec)])
         buildcache.install_tarball(spec, args)
+
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
         # test overwrite install without verification
         args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
@@ -169,9 +194,17 @@ echo $PATH"""
         args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
         buildcache.buildcache(parser, args)
 
+        files = os.listdir(spec.prefix)
+        assert 'link_to_dummy.txt' in files
+        assert 'dummy.txt' in files
+        assert os.path.realpath(
+            os.path.join(spec.prefix, 'link_to_dummy.txt')
+        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
     assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
+    assert(buildinfo['relocate_links'] == ['link_to_dummy.txt'])
 
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
@@ -219,23 +252,29 @@ def test_relocate_text(tmpdir):
         assert(strings_contains_installroot(filename, old_dir) is False)
 
 
+def test_relocate_links(tmpdir):
+    with tmpdir.as_cwd():
+        old_dir = '/home/spack/opt/spack'
+        filename = 'link.ln'
+        old_src = os.path.join(old_dir, filename)
+        os.symlink(old_src, filename)
+        filenames = [filename]
+        new_dir = '/opt/rh/devtoolset/'
+        relocate_links(filenames, old_dir, new_dir)
+        assert os.path.realpath(filename) == os.path.join(new_dir, filename)
+
+
 def test_needs_relocation():
-    binary_type = (
-        'ELF 64-bit LSB executable, x86-64, version 1 (SYSV),'
-        ' dynamically linked (uses shared libs),'
-        ' for GNU/Linux x.y.z, stripped')
 
-    assert needs_binary_relocation(binary_type, os_id='Linux')
-    assert not needs_binary_relocation('relocatable',
-                                       os_id='Linux')
-    assert not needs_binary_relocation('symbolic link to `foo\'',
-                                       os_id='Linux')
+    assert needs_binary_relocation('application', 'x-sharedlib')
+    assert needs_binary_relocation('application', 'x-executable')
+    assert not needs_binary_relocation('application', 'x-octet-stream')
+    assert not needs_binary_relocation('text', 'x-')
 
-    assert needs_text_relocation('ASCII text')
-    assert not needs_text_relocation('symbolic link to `foo.text\'')
+    assert needs_text_relocation('text', 'x-')
+    assert not needs_text_relocation('symbolic link to', 'x-')
 
-    macho_type = 'Mach-O 64-bit executable x86_64'
-    assert needs_binary_relocation(macho_type, os_id='Darwin')
+    assert needs_binary_relocation('application', 'x-mach-binary')
 
 
 def test_macho_paths():

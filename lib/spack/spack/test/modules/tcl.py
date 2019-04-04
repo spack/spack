@@ -192,6 +192,23 @@ class TestTcl(object):
         with pytest.raises(SystemExit):
             modulefile_content('mpileaks')
 
+    def test_module_index(
+            self, module_configuration, factory, tmpdir_factory):
+
+        module_configuration('suffix')
+
+        w1, s1 = factory('mpileaks')
+        w2, s2 = factory('callpath')
+
+        test_root = str(tmpdir_factory.mktemp('module-root'))
+
+        spack.modules.common.generate_module_index(test_root, [w1, w2])
+
+        index = spack.modules.common.read_module_index(test_root)
+
+        assert index[s1.dag_hash()].use_name == w1.layout.use_name
+        assert index[s2.dag_hash()].path == w2.layout.filename
+
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""
         module_configuration('suffix')

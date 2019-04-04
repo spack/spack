@@ -28,3 +28,5 @@ class Usearch(Package):
         mkdirp(prefix.bin)
         install('usearch{0}_i86linux32'.format(self.version),
                 prefix.bin.usearch)
+        chmod = which('chmod')
+        chmod('+x', prefix.bin.usearch)

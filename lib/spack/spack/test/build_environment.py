@@ -12,10 +12,13 @@ from spack.paths import build_env_path
 from spack.build_environment import dso_suffix, _static_to_shared_library
 from spack.util.executable import Executable
 from spack.util.spack_yaml import syaml_dict, syaml_str
+from spack.util.environment import EnvironmentModifications
+
+from llnl.util.filesystem import LibraryList
 
 
 @pytest.fixture
-def build_environment():
+def build_environment(working_env):
     cc = Executable(os.path.join(build_env_path, "cc"))
     cxx = Executable(os.path.join(build_env_path, "c++"))
     fc = Executable(os.path.join(build_env_path, "fc"))
@@ -47,25 +50,15 @@ def build_environment():
 
     yield {'cc': cc, 'cxx': cxx, 'fc': fc}
 
-    for name in ('SPACK_CC', 'SPACK_CXX', 'SPACK_FC', 'SPACK_PREFIX',
-                 'SPACK_ENV_PATH', 'SPACK_DEBUG_LOG_DIR',
-                 'SPACK_COMPILER_SPEC', 'SPACK_SHORT_SPEC',
-                 'SPACK_CC_RPATH_ARG', 'SPACK_CXX_RPATH_ARG',
-                 'SPACK_F77_RPATH_ARG', 'SPACK_FC_RPATH_ARG',
-                 'SPACK_SYSTEM_DIRS'):
-        del os.environ[name]
-
 
 def test_static_to_shared_library(build_environment):
     os.environ['SPACK_TEST_COMMAND'] = 'dump-args'
 
     expected = {
-        'linux': ('/bin/mycc -Wl,-rpath,/spack-test-prefix/lib'
-                  ' -Wl,-rpath,/spack-test-prefix/lib64 -shared'
+        'linux': ('/bin/mycc -shared'
                   ' -Wl,-soname,{2} -Wl,--whole-archive {0}'
                   ' -Wl,--no-whole-archive -o {1}'),
-        'darwin': ('/bin/mycc -Wl,-rpath,/spack-test-prefix/lib'
-                   ' -Wl,-rpath,/spack-test-prefix/lib64 -dynamiclib'
+        'darwin': ('/bin/mycc -dynamiclib'
                    ' -install_name {1} -Wl,-force_load,{0} -o {1}')
     }
 
@@ -87,7 +80,7 @@ def test_static_to_shared_library(build_environment):
 
 @pytest.mark.regression('8345')
 @pytest.mark.usefixtures('config', 'mock_packages')
-def test_cc_not_changed_by_modules(monkeypatch):
+def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
     s = spack.spec.Spec('cmake')
     s.concretize()
@@ -111,7 +104,7 @@ def test_cc_not_changed_by_modules(monkeypatch):
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
-def test_compiler_config_modifications(monkeypatch):
+def test_compiler_config_modifications(monkeypatch, working_env):
     s = spack.spec.Spec('cmake')
     s.concretize()
     pkg = s.package
@@ -184,15 +177,10 @@ def test_compiler_config_modifications(monkeypatch):
     expected = '/path/first:/path/last'
     assert os.environ['NEW_PATH_LIST'] == expected
 
-    os.environ.pop('SOME_VAR_STR', None)
-    os.environ.pop('SOME_VAR_NUM', None)
-    os.environ.pop('PATH_LIST', None)
-    os.environ.pop('EMPTY_PATH_LIST', None)
-    os.environ.pop('NEW_PATH_LIST', None)
-
 
 @pytest.mark.regression('9107')
-def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch):
+def test_spack_paths_before_module_paths(
+        config, mock_packages, monkeypatch, working_env):
     s = spack.spec.Spec('cmake')
     s.concretize()
     pkg = s.package
@@ -230,3 +218,66 @@ def test_package_inheritance_module_setup(config, mock_packages):
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
 
     os.environ.pop('TEST_MODULE_VAR')
+
+
+def test_set_build_environment_variables(
+        config, mock_packages, working_env, monkeypatch,
+        installation_dir_with_headers
+):
+    """Check that build_environment supplies the needed library/include
+    directories via the SPACK_LINK_DIRS and SPACK_INCLUDE_DIRS environment
+    variables.
+    """
+
+    root = spack.spec.Spec('dt-diamond')
+    root.concretize()
+
+    for s in root.traverse():
+        s.prefix = '/{0}-prefix/'.format(s.name)
+
+    dep_pkg = root['dt-diamond-left'].package
+    dep_lib_paths = ['/test/path/to/ex1.so', '/test/path/to/subdir/ex2.so']
+    dep_lib_dirs = ['/test/path/to', '/test/path/to/subdir']
+    dep_libs = LibraryList(dep_lib_paths)
+
+    dep2_pkg = root['dt-diamond-right'].package
+    dep2_pkg.spec.prefix = str(installation_dir_with_headers)
+
+    setattr(dep_pkg, 'libs', dep_libs)
+    try:
+        pkg = root.package
+        env_mods = EnvironmentModifications()
+        spack.build_environment.set_build_environment_variables(
+            pkg, env_mods, dirty=False)
+
+        env_mods.apply_modifications()
+
+        def normpaths(paths):
+            return list(os.path.normpath(p) for p in paths)
+
+        link_dir_var = os.environ['SPACK_LINK_DIRS']
+        assert (
+            normpaths(link_dir_var.split(':')) == normpaths(dep_lib_dirs))
+
+        root_libdirs = ['/dt-diamond-prefix/lib', '/dt-diamond-prefix/lib64']
+        rpath_dir_var = os.environ['SPACK_RPATH_DIRS']
+        # The 'lib' and 'lib64' subdirectories of the root package prefix
+        # should always be rpathed and should be the first rpaths
+        assert (
+            normpaths(rpath_dir_var.split(':')) ==
+            normpaths(root_libdirs + dep_lib_dirs))
+
+        header_dir_var = os.environ['SPACK_INCLUDE_DIRS']
+
+        # The default implementation looks for header files only
+        # in <prefix>/include and subdirectories
+        prefix = str(installation_dir_with_headers)
+        include_dirs = normpaths(header_dir_var.split(':'))
+
+        assert os.path.join(prefix, 'include') in include_dirs
+        assert os.path.join(prefix, 'include', 'boost') not in include_dirs
+        assert os.path.join(prefix, 'path', 'to') not in include_dirs
+        assert os.path.join(prefix, 'path', 'to', 'subdir') not in include_dirs
+
+    finally:
+        delattr(dep_pkg, 'libs')

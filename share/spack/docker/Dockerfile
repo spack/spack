@@ -25,11 +25,13 @@ RUN mkdir -p $SPACK_ROOT/opt/spack
 
 MASK PUSH
 MASK [[ $DISTRO == arch ]]
-RUN pacman -Sy --noconfirm                                     \
-        base-devel   ca-certificates curl   gcc                \
-        gcc-fortran  git             gnupg2 iproute2           \
-        make         openssh         python python-pip         \
-        sudo         tcl                                       \
+RUN pacman -Syu --noconfirm                                    \
+ && pacman -Sy --noconfirm                                     \
+        base-devel   ca-certificates curl    gcc               \
+        gcc-fortran  git             gnupg2  inetutils         \
+        iproute2     make            openssh procps-ng         \
+        python       python-pip      sudo    tcl               \
+        unzip                                                  \
  && echo 'nobody ALL=(ALL) NOPASSWD: ALL' >                    \
         /etc/sudoers.d/nobody-sudo                             \
  && sudo -u nobody git clone                                   \
@@ -59,7 +61,8 @@ RUN yum update -y
 
   MASK PUSH
   MASK [[ $DISTRO =~ rhel.* ]]
-  RUN yum install -y yum-conf-repos.noarch \
+  RUN (  yum install -y yum-conf-repos.noarch                         \
+   ||    yum install -y yum-conf-epel.noarch yum-conf-elrepo.noarch ) \
    && yum update -y
   MASK POP
 
@@ -67,10 +70,11 @@ RUN yum install -y epel-release                               \
  && yum update -y                                             \
  && yum --enablerepo epel groupinstall -y "Development Tools" \
  && yum --enablerepo epel install -y                          \
-         curl           findutils gcc-c++    gcc              \
-         gcc-gfortran   git       gnupg2     hostname         \
-         iproute        Lmod      make       patch            \
-         openssh-server python    python-pip tcl              \
+        curl           findutils gcc-c++    gcc               \
+        gcc-gfortran   git       gnupg2     hostname          \
+        iproute        Lmod      make       patch             \
+        openssh-server python    python-pip tcl               \
+        unzip                                                 \
  && rm -rf /var/cache/yum                                     \
  && yum clean all
 
@@ -82,7 +86,7 @@ RUN dnf update -y                                            \
         curl            findutils    gcc-c++     gcc         \
         gcc-gfortran    git          gnupg2      hostname    \
         iproute         Lmod         make        patch       \
-        openssh-server  python       tcl                     \
+        openssh-server  python       tcl         unzip       \
  && dnf clean all
 
 MASK [[ $DISTRO == opensuse ]]
@@ -96,7 +100,7 @@ RUN zypper -n ref                                              \
         gcc-fortran git             glibc-locale    gpg2       \
         hostname    iproute         lua-lmod        make       \
         patch       openssh         python          python-pip \
-        python-xml  tcl                                        \
+        python-xml  tcl             unzip                      \
  && zypper clean                                               \
  && rm -rf /var/cache/zypp/*
 
@@ -106,10 +110,11 @@ RUN apt-get -yqq update                                   \
         build-essential ca-certificates curl       g++    \
         gcc             gfortran        git        gnupg2 \
         iproute2        lmod            lua-posix  make   \
-        openssh-server  python          python-pip tcl
+        openssh-server  python          python-pip tcl    \
+        unzip
 
   MASK PUSH
-  MASK [[ $DISTRO_VERSION == bionic ]]
+  MASK [[ $DISTRO_VERSION == 18.04 ]]
   # [WORKAROUND]
   # https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
   RUN ln -s posix_c.so /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so

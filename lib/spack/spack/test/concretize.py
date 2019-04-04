@@ -130,9 +130,11 @@ class TestConcretize(object):
         concrete = check_concretize('mpileaks   ^mpich2@1.3.1:1.4')
         assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
-    def test_concretize_disable_compiler_existence_check(self):
-        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            check_concretize('dttop %gcc@100.100')
+    def test_concretize_enable_disable_compiler_existence_check(self):
+        with spack.concretize.concretizer.enable_compiler_existence_check():
+            with pytest.raises(
+                    spack.concretize.UnavailableCompilerVersionError):
+                check_concretize('dttop %gcc@100.100')
 
         with spack.concretize.concretizer.disable_compiler_existence_check():
             spec = check_concretize('dttop %gcc@100.100')
@@ -224,6 +226,17 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
 
+    @pytest.mark.parametrize("spec,version", [
+        ('dealii', 'develop'),
+        ('xsdk', '0.4.0'),
+    ])
+    def concretize_difficult_packages(self, a, b):
+        """Test a couple of large packages that are often broken due
+        to current limitations in the concretizer"""
+        s = Spec(a + '@' + b)
+        s.concretize()
+        assert s[a].version == ver(b)
+
     def test_concretize_two_virtuals(self):
 
         """Test a package with multiple virtual dependencies."""
@@ -256,10 +269,13 @@ class TestConcretize(object):
         with pytest.raises(spack.spec.MultipleProviderError):
             s.concretize()
 
-    def test_no_matching_compiler_specs(self):
-        s = Spec('a %gcc@0.0.0')
-        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            s.concretize()
+    def test_no_matching_compiler_specs(self, mock_config):
+        # only relevant when not building compilers as needed
+        with spack.concretize.concretizer.enable_compiler_existence_check():
+            s = Spec('a %gcc@0.0.0')
+            with pytest.raises(
+                    spack.concretize.UnavailableCompilerVersionError):
+                s.concretize()
 
     def test_no_compilers_for_arch(self):
         s = Spec('a arch=linux-rhel0-x86_64')

@@ -18,7 +18,7 @@ import spack.tengine as tengine
 from .common import BaseConfiguration, BaseFileLayout
 from .common import BaseContext, BaseModuleFileWriter
 
-#: TCL specific part of the configuration
+#: lmod specific part of the configuration
 configuration = spack.config.get('modules:lmod', {})
 
 #: Caches the configuration {spec_hash: configuration}
