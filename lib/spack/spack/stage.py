@@ -12,7 +12,6 @@ import tempfile
 import getpass
 from six import string_types
 from six import iteritems
-from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
@@ -27,6 +26,10 @@ import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
 import spack.util.path as sup
 from spack.util.crypto import prefix_bits, bit_length
+from spack.util.url import join as urljoin
+
+# TODO(opadron): get rid of this once s3_fetch_strategy is merged into FS.py
+from spack import s3_fetch_strategy
 
 
 # The well-known stage source subdirectory name.
@@ -399,14 +402,9 @@ class Stage(object):
         if self.mirror_path:
             mirrors = spack.config.get('mirrors')
 
-            # Join URLs of mirror roots with mirror paths. Because
-            # urljoin() will strip everything past the final '/' in
-            # the root, so we add a '/' if it is not present.
-            mir_roots = [
-                sup.substitute_path_variables(root) if root.endswith(os.sep)
-                else sup.substitute_path_variables(root) + os.sep
-                for root in mirrors.values()]
-            urls = [urljoin(root, self.mirror_path) for root in mir_roots]
+            urls = [
+                urljoin(getattr(mirror, 'fetch', mirror), self.mirror_path)
+                for mirror in mirrors.values()]
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -426,8 +424,13 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(
-                    0, fs.URLFetchStrategy(
+                    0, fs.from_url_scheme(
                         url, digest, expand=expand, extension=extension))
+                # fetchers.insert(
+                #     0, fs.URLFetchStrategy(
+                #         url, digest, expand=expand, extension=extension))
+
+
             if self.default_fetcher.cachable:
                 fetchers.insert(
                     0, spack.caches.fetch_cache.fetcher(
