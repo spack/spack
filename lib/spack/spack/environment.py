@@ -719,7 +719,7 @@ class Environment(object):
                       " maintain a view")
             return
 
-        specs_for_view = list()
+        specs_for_view = []
         for spec in self._get_environment_specs():
             # The view does not store build deps, so if we want it to
             # recognize environment specs (which do store build deps), then
