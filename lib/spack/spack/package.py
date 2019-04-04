@@ -1949,6 +1949,17 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return (None, None, flags)
 
+    def _get_legacy_environment_method(self, method_name):
+        legacy_fn = getattr(self, method_name, None)
+        name_prefix = method_name.split('_environment')[0]
+        if legacy_fn:
+            msg = '[DEPRECATED METHOD]\n"{0}" ' \
+                  'still defines the deprecated method "{1}" ' \
+                  '[should be split into "{2}_build_environment" and ' \
+                  '"{2}_run_environment"]'
+            tty.debug(msg.format(self.name, method_name, name_prefix))
+        return legacy_fn
+
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
 
@@ -1960,13 +1971,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 applied when the package is built. Package authors can call
                 methods on it to alter the build environment.
         """
-        legacy_fn = getattr(self, 'setup_environment', None)
+        legacy_fn = self._get_legacy_environment_method('setup_environment')
         if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method "setup_environment" ' \
-                  '[should be split into "setup_build_environment" and ' \
-                  '"setup_run_environment"]'
-            tty.warn(msg.format(self.name))
             _ = spack.util.environment.EnvironmentModifications()
             legacy_fn(env, _)
 
@@ -1978,13 +1984,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 applied when the package is run. Package authors can call
                 methods on it to alter the run environment.
         """
-        legacy_fn = getattr(self, 'setup_environment', None)
+        legacy_fn = self._get_legacy_environment_method('setup_environment')
         if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method "setup_environment" ' \
-                  '[should be split into "setup_build_environment" and ' \
-                  '"setup_run_environment"]'
-            tty.warn(msg.format(self.name))
             _ = spack.util.environment.EnvironmentModifications()
             legacy_fn(_, env)
 
@@ -2017,14 +2018,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = getattr(self, 'setup_dependent_environment', None)
+        legacy_fn = self._get_legacy_environment_method(
+            'setup_dependent_environment'
+        )
         if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method ' \
-                  '"setup_dependent_environment" ' \
-                  '[should be split into "setup_dependent_build_environment"' \
-                  ' and "setup_dependent_run_environment"]'
-            tty.warn(msg.format(self.name))
             _ = spack.util.environment.EnvironmentModifications()
             legacy_fn(env, _, dependent_spec)
 
@@ -2048,14 +2045,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = getattr(self, 'setup_dependent_environment', None)
+        legacy_fn = self._get_legacy_environment_method(
+            'setup_dependent_environment'
+        )
         if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method ' \
-                  '"setup_dependent_environment" ' \
-                  '[should be split into "setup_dependent_build_environment"' \
-                  ' and "setup_dependent_run_environment"]'
-            tty.warn(msg.format(self.name))
             _ = spack.util.environment.EnvironmentModifications()
             legacy_fn(_, env, dependent_spec)
 
