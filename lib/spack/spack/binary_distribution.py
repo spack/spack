@@ -269,9 +269,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
-    # set symlinks=False here to avoid broken symlinks when archiving and
-    # moving the package
-    install_tree(spec.prefix, workdir, symlinks=False)
+    install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
@@ -398,8 +396,6 @@ def relocate_package(workdir, allow_root):
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     rel = buildinfo.get('relative_rpaths', False)
-    if rel:
-        return
 
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
