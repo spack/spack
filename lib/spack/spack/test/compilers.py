@@ -11,7 +11,16 @@ from six import iteritems
 import spack.spec
 import spack.compiler
 import spack.compilers as compilers
+
+import spack.compilers.arm
 import spack.compilers.clang
+import spack.compilers.gcc
+import spack.compilers.intel
+import spack.compilers.nag
+import spack.compilers.pgi
+import spack.compilers.xl
+import spack.compilers.xl_r
+
 from spack.compiler import _get_versioned_tuple, Compiler
 
 
@@ -249,5 +258,84 @@ def test_xl_r_flags():
      'Thread model: posix\n', '3.1'),
 ])
 def test_clang_version_detection(version_str, expected_version):
-    version = spack.compilers.clang.Clang.detect_version_from_str(version_str)
+    version = compilers.clang.Clang.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    ('Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2)\n' # NOQA
+     'Target: aarch64--linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir:\n'
+     '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n', # NOQA
+     '19.0')
+])
+def test_arm_version_detection(version_str, expected_version):
+    version = spack.compilers.arm.Arm.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # Output of -dumpversion changed to return only major from GCC 7
+    ('4.4.7\n', '4.4.7'),
+    ('7\n', '7')
+])
+def test_gcc_version_detection(version_str, expected_version):
+    version = spack.compilers.gcc.Gcc.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    ('icpc (ICC) 12.1.5 20120612\n'
+     'Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.\n',
+     '12.1.5'),
+    ('ifort (IFORT) 12.1.5 20120612\n'
+     'Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.\n',
+     '12.1.5')
+])
+def test_intel_version_detection(version_str, expected_version):
+    version = compilers.intel.Intel.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    ('NAG Fortran Compiler Release 6.0(Hibiya) Build 1037\n'
+     'Product NPL6A60NA for x86-64 Linux\n', '6.0')
+])
+def test_nag_version_detection(version_str, expected_version):
+    version = spack.compilers.nag.Nag.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # Output on x86-64
+    ('pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge\n'
+     'The Portland Group - PGI Compilers and Tools\n'
+     'Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.\n',
+     '15.10'),
+    # Output on PowerPC
+    ('pgcc 17.4-0 linuxpower target on Linuxpower\n'
+     'PGI Compilers and Tools\n'
+     'Copyright (c) 2017, NVIDIA CORPORATION.  All rights reserved.\n', '17.4')
+])
+def test_pgi_version_detection(version_str, expected_version):
+    version = spack.compilers.pgi.Pgi.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    ('IBM XL C/C++ for Linux, V11.1 (5724-X14)\n'
+     'Version: 11.01.0000.0000\n', '11.1'),
+    ('IBM XL Fortran for Linux, V13.1 (5724-X16)\n'
+     'Version: 13.01.0000.0000\n', '13.1'),
+    ('IBM XL C/C++ for AIX, V11.1 (5724-X13)\n'
+     'Version: 11.01.0000.0009\n', '11.1'),
+    ('IBM XL C/C++ Advanced Edition for Blue Gene/P, V9.0\n'
+     'Version: 09.00.0000.0017\n', '9.0')
+])
+def test_xl_version_detection(version_str, expected_version):
+    version = spack.compilers.xl.Xl.extract_version_from_output(version_str)
+    assert version == expected_version
+
+    version = spack.compilers.xl_r.XlR.extract_version_from_output(version_str)
     assert version == expected_version

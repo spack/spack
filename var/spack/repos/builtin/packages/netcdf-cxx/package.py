@@ -35,4 +35,11 @@ class NetcdfCxx(AutotoolsPackage):
             # There is no clear way to set this via configure, so set the flag
             # explicitly
             args.append('CPPFLAGS=-DUSE_NETCDF4')
+        # Add these to LDFLAGS explicitly, so the linker doesn't accidentally
+        # use system versions
+        ldflags = [
+            self.spec['netcdf'].libs.search_flags,
+            self.spec['hdf5'].libs.search_flags,
+        ]
+        args.append('LDFLAGS=' + ' '.join(ldflags))
         return args
