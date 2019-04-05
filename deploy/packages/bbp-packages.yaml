@@ -21,7 +21,7 @@ packages:
       - compiler
       - python
     specs:
-      - brainbuilder@0.10.2
+      - brainbuilder@0.10.4
       - connectome-tools@0.3.0
       - spykfunc@0.13.2
       - psp-validation@0.1.12
