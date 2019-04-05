@@ -65,8 +65,8 @@ class CDash(Reporter):
             self.buildid_regexp = re.compile("<buildId>([0-9]+)</buildId>")
         self.phase_regexp = re.compile(r"Executing phase: '(.*)'")
 
-        if args.package:
-            packages = args.package
+        if args.specs:
+            packages = args.specs
         else:
             packages = []
             for file in args.specfiles:

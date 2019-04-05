@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import os
 import sys
 
@@ -59,9 +58,8 @@ def setup_parser(subparser):
                                             "building package(s)")
     create.add_argument('-y', '--spec-yaml', default=None,
                         help='Create buildcache entry for spec from yaml file')
-    create.add_argument(
-        'packages', nargs=argparse.REMAINDER,
-        help="specs of packages to create buildcache for")
+
+    arguments.add_common_arguments(create, ['specs'])
     create.set_defaults(func=createtarball)
 
     install = subparsers.add_parser('install', help=installtarball.__doc__)
@@ -75,9 +73,8 @@ def setup_parser(subparser):
     install.add_argument('-u', '--unsigned', action='store_true',
                          help="install unsigned buildcache" +
                               " tarballs for testing")
-    install.add_argument(
-        'packages', nargs=argparse.REMAINDER,
-        help="specs of packages to install buildcache for")
+
+    arguments.add_common_arguments(install, ['specs'])
     install.set_defaults(func=installtarball)
 
     listcache = subparsers.add_parser('list', help=listspecs.__doc__)
@@ -88,9 +85,8 @@ def setup_parser(subparser):
                            help='show variants in output (can be long)')
     listcache.add_argument('-f', '--force', action='store_true',
                            help="force new download of specs")
-    listcache.add_argument(
-        'packages', nargs=argparse.REMAINDER,
-        help="specs of packages to search for")
+
+    arguments.add_common_arguments(listcache, ['specs'])
     listcache.set_defaults(func=listspecs)
 
     dlkeys = subparsers.add_parser('keys', help=getkeys.__doc__)
@@ -109,9 +105,7 @@ def setup_parser(subparser):
         help='analyzes an installed spec and reports whether '
              'executables and libraries are relocatable'
     )
-    preview_parser.add_argument(
-        'packages', nargs='+', help='list of installed packages'
-    )
+    arguments.add_common_arguments(preview_parser, ['specs'])
     preview_parser.set_defaults(func=preview)
     # Check if binaries need to be rebuilt on remote mirror
     check = subparsers.add_parser('check', help=check_binaries.__doc__)
@@ -287,8 +281,8 @@ def createtarball(args):
             tty.debug(yaml_text)
             s = Spec.from_yaml(yaml_text)
             packages.add('/{0}'.format(s.dag_hash()))
-    elif args.packages:
-        packages = args.packages
+    elif args.specs:
+        packages = args.specs
     else:
         tty.die("build cache file creation requires at least one" +
                 " installed package argument or else path to a" +
@@ -340,10 +334,10 @@ def createtarball(args):
 
 def installtarball(args):
     """install from a binary package"""
-    if not args.packages:
+    if not args.specs:
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
-    pkgs = set(args.packages)
+    pkgs = set(args.specs)
     matches = match_downloaded_specs(pkgs, args.multiple, args.force)
 
     for match in matches:
@@ -377,8 +371,8 @@ def install_tarball(spec, args):
 def listspecs(args):
     """list binary packages available from mirrors"""
     specs = bindist.get_specs(args.force)
-    if args.packages:
-        pkgs = set(args.packages)
+    if args.specs:
+        pkgs = set(args.specs)
         specs = [s for s in specs for p in pkgs if s.satisfies(p)]
         display_specs(specs, args, all_headers=True)
     else:
@@ -397,7 +391,7 @@ def preview(args):
     Args:
         args: command line arguments
     """
-    specs = find_matching_specs(args.packages, allow_multiple_matches=True)
+    specs = find_matching_specs(args.specs, allow_multiple_matches=True)
 
     # Cycle over the specs that match
     for spec in specs:

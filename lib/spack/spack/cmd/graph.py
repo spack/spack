@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import argparse
 import llnl.util.tty as tty
 
 import spack.cmd
@@ -40,9 +39,7 @@ def setup_parser(subparser):
 
     arguments.add_common_arguments(subparser, ['deptype'])
 
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help="specs of packages to graph")
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def graph(parser, args):

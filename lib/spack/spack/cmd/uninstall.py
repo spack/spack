@@ -5,8 +5,6 @@
 
 from __future__ import print_function
 
-import argparse
-
 import spack.cmd
 import spack.environment as ev
 import spack.package
@@ -41,7 +39,7 @@ def add_common_arguments(subparser):
         help="remove regardless of whether other packages or environments "
         "depend on this one")
     arguments.add_common_arguments(
-        subparser, ['recurse_dependents', 'yes_to_all'])
+        subparser, ['recurse_dependents', 'yes_to_all', 'specs'])
 
 
 def setup_parser(subparser):
@@ -54,11 +52,6 @@ def setup_parser(subparser):
         "supplied, all installed packages will be uninstalled. "
         "If used in an environment, all packages in the environment "
         "will be uninstalled.")
-
-    subparser.add_argument(
-        'packages',
-        nargs=argparse.REMAINDER,
-        help="specs of packages to uninstall")
 
 
 def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
@@ -327,10 +320,10 @@ def uninstall_specs(args, specs):
 
 
 def uninstall(parser, args):
-    if not args.packages and not args.all:
+    if not args.specs and not args.all:
         tty.die('uninstall requires at least one package argument.',
                 '  Use `spack uninstall --all` to uninstall ALL packages.')
 
     # [any] here handles the --all case by forcing all specs to be returned
     uninstall_specs(
-        args, spack.cmd.parse_specs(args.packages) if args.packages else [any])
+        args, spack.cmd.parse_specs(args.specs) if args.specs else [any])

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -12,6 +10,7 @@ import spack.environment as ev
 import spack.repo
 import spack.store
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 
 description = "show packages that depend on another"
 section = "basic"
@@ -26,8 +25,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-t', '--transitive', action='store_true', default=False,
         help="Show all transitive dependents.")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="spec or package name")
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def inverted_dependencies():
@@ -77,7 +75,7 @@ def get_dependents(pkg_name, ideps, transitive=False, dependents=None):
 
 
 def dependents(parser, args):
-    specs = spack.cmd.parse_specs(args.spec)
+    specs = spack.cmd.parse_specs(args.specs)
     if len(specs) != 1:
         tty.die("spack dependents takes only one spec.")
 

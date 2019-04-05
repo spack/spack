@@ -6,11 +6,11 @@
 from __future__ import print_function
 
 import os
-import argparse
 import llnl.util.tty as tty
 
 import spack.environment as ev
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment
 import spack.paths
 import spack.repo
@@ -54,9 +54,7 @@ def setup_parser(subparser):
         '-e', '--env', action='store',
         help="location of an environment managed by spack")
 
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="spec of package to fetch directory for")
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def location(parser, args):
@@ -79,7 +77,7 @@ def location(parser, args):
         print(spack.paths.stage_path)
 
     else:
-        specs = spack.cmd.parse_specs(args.spec)
+        specs = spack.cmd.parse_specs(args.specs)
         if not specs:
             tty.die("You must supply a spec.")
         if len(specs) != 1:
@@ -110,5 +108,5 @@ def location(parser, args):
                     if not pkg.stage.expanded:
                         tty.die("Build directory does not exist yet. "
                                 "Run this to create it:",
-                                "spack stage " + " ".join(args.spec))
+                                "spack stage " + " ".join(args.specs))
                     print(pkg.stage.source_path)

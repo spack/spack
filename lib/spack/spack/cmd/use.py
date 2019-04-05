@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 from spack.cmd.common import print_module_placeholder_help, arguments
 
 description = "add package to environment using dotkit"
@@ -14,10 +13,8 @@ level = "long"
 def setup_parser(subparser):
     """Parser is only constructed so that this prints a nice help
        message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help='spec of package to use with dotkit')
-    arguments.add_common_arguments(subparser, ['recurse_dependencies'])
+    arguments.add_common_arguments(
+        subparser, ['recurse_dependencies', 'specs'])
 
 
 def use(parser, args):

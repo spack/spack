@@ -3,11 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 from spack.filesystem_view import YamlFilesystemView
 
@@ -23,13 +22,11 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--view', metavar='VIEW', type=str,
         help="the view to operate on")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="spec of package extension to activate")
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def activate(parser, args):
-    specs = spack.cmd.parse_specs(args.spec)
+    specs = spack.cmd.parse_specs(args.specs)
     if len(specs) != 1:
         tty.die("activate requires one spec.  %d given." % len(specs))
 

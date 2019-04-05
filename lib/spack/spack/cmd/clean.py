@@ -11,12 +11,14 @@ import llnl.util.tty as tty
 
 import spack.caches
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
 from spack.paths import lib_path, var_path
 
 
-description = "remove temporary build files and/or downloaded archives"
+description = """remove temporary build files and/or downloaded archives
+for specs"""
 section = "build"
 level = "long"
 
@@ -43,11 +45,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-a', '--all', action=AllClean, help="equivalent to -sdmp", nargs=0
     )
-    subparser.add_argument(
-        'specs',
-        nargs=argparse.REMAINDER,
-        help="removes the build stages and tarballs for specs"
-    )
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def clean(parser, args):

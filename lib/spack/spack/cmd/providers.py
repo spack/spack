@@ -9,6 +9,7 @@ import sys
 import llnl.util.tty.colify as colify
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.repo
 
 description = "list packages that provide a particular virtual package"
@@ -19,11 +20,7 @@ level = "long"
 def setup_parser(subparser):
     subparser.epilog = 'If called without argument returns ' \
                        'the list of all valid virtual packages'
-    subparser.add_argument(
-        'virtual_package',
-        nargs='*',
-        help='find packages that provide this virtual package'
-    )
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def providers(parser, args):
@@ -37,12 +34,12 @@ def providers(parser, args):
     valid_virtuals_str = buffer.getvalue()
 
     # If called without arguments, list all the virtual packages
-    if not args.virtual_package:
+    if not args.specs:
         print(valid_virtuals_str)
         return
 
     # Otherwise, parse the specs from command line
-    specs = spack.cmd.parse_specs(args.virtual_package)
+    specs = spack.cmd.parse_specs(args.specs)
 
     # Check prerequisites
     non_virtual = [

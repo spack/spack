@@ -3,11 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 
 
@@ -23,8 +22,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true',
         help="remove concretized spec (if any) immediately")
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs to be removed")
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def remove(parser, args):

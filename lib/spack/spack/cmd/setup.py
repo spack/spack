@@ -34,9 +34,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install. must contain package AND version")
+    arguments.add_common_arguments(subparser, ['specs'])
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -108,10 +106,10 @@ env = dict(os.environ)
 
 
 def setup(self, args):
-    if not args.spec:
+    if not args.specs:
         tty.die("spack setup requires a package spec argument.")
 
-    specs = spack.cmd.parse_specs(args.spec)
+    specs = spack.cmd.parse_specs(args.specs)
     if len(specs) > 1:
         tty.die("spack setup only takes one spec.")
 
@@ -148,7 +146,7 @@ def setup(self, args):
             install.setup_parser(parser)
             inst_args = copy.deepcopy(args)
             inst_args = parser.parse_args(
-                ['--only=dependencies'] + args.spec,
+                ['--only=dependencies'] + args.specs,
                 namespace=inst_args
             )
             install.install(parser, inst_args)
@@ -164,7 +162,7 @@ def setup(self, args):
         # module file regeneration
         inst_args = copy.deepcopy(args)
         inst_args = parser.parse_args(
-            ['--only=package', '--fake'] + args.spec,
+            ['--only=package', '--fake'] + args.specs,
             namespace=inst_args
         )
         install.install(parser, inst_args)

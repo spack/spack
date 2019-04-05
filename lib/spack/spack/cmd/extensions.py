@@ -3,13 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.environment as ev
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.cmd.find
 import spack.repo
 import spack.store
@@ -39,13 +38,11 @@ def setup_parser(subparser):
         '-v', '--view', metavar='VIEW', type=str,
         help="the view to operate on")
 
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help='spec of package to list extensions for')
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def extensions(parser, args):
-    if not args.spec:
+    if not args.specs:
         tty.die("extensions requires a package spec.")
 
     show_packages = False
@@ -69,7 +66,7 @@ def extensions(parser, args):
     #
     # Checks
     #
-    spec = spack.cmd.parse_specs(args.spec)
+    spec = spack.cmd.parse_specs(args.specs)
     if len(spec) > 1:
         tty.die("Can only list extensions for one package.")
 

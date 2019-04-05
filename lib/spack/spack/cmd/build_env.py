@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import argparse
 import os
 
 import llnl.util.tty as tty
@@ -21,7 +20,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['clean', 'dirty'])
+    arguments.add_common_arguments(subparser, ['clean', 'dirty', 'specs'])
     subparser.add_argument(
         '--dump', metavar="FILE",
         help="dump a source-able environment to FILE"
@@ -30,10 +29,6 @@ def setup_parser(subparser):
         '--pickle', metavar="FILE",
         help="dump a pickled source-able environment to FILE"
     )
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        metavar='spec [--] [cmd]...',
-        help="specs of package environment to emulate")
     subparser.epilog\
         = 'If a command is not specified, the environment will be printed ' \
         'to standard output (cf /usr/bin/env) unless --dump and/or --pickle ' \
@@ -42,7 +37,7 @@ def setup_parser(subparser):
 
 
 def build_env(parser, args):
-    if not args.spec:
+    if not args.specs:
         tty.die("spack build-env requires a spec.")
 
     # Specs may have spaces in them, so if they do, require that the
@@ -50,13 +45,13 @@ def build_env(parser, args):
     # executed.  If there is no '--', assume that the spec is the
     # first argument.
     sep = '--'
-    if sep in args.spec:
-        s = args.spec.index(sep)
-        spec = args.spec[:s]
-        cmd = args.spec[s + 1:]
+    if sep in args.specs:
+        s = args.specs.index(sep)
+        spec = args.specs[:s]
+        cmd = args.specs[s + 1:]
     else:
-        spec = args.spec[0]
-        cmd = args.spec[1:]
+        spec = args.specs[0]
+        cmd = args.specs[1:]
 
     specs = spack.cmd.parse_specs(spec, concretize=True)
     if len(specs) > 1:

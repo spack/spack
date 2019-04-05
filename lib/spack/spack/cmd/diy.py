@@ -5,7 +5,6 @@
 
 import sys
 import os
-import argparse
 
 import llnl.util.tty as tty
 
@@ -28,7 +27,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'specs'])
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="do not remove the install prefix if installation fails")
@@ -38,19 +37,16 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-q', '--quiet', action='store_true', dest='quiet',
         help="do not display verbose build output while installing")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install. must contain package AND version")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
 
 def diy(self, args):
-    if not args.spec:
+    if not args.specs:
         tty.die("spack diy requires a package spec argument.")
 
-    specs = spack.cmd.parse_specs(args.spec)
+    specs = spack.cmd.parse_specs(args.specs)
     if len(specs) > 1:
         tty.die("spack diy only takes one spec.")
 

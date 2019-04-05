@@ -7,6 +7,8 @@ import argparse
 
 import llnl.util.tty as tty
 import spack.cmd
+import spack.cmd.common.arguments as arguments
+
 import spack.cmd.install as inst
 
 from spack.build_systems.autotools import AutotoolsPackage
@@ -34,11 +36,7 @@ build_system_to_phase = {
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        'package',
-        nargs=argparse.REMAINDER,
-        help="spec of the package to install"
-    )
+    arguments.add_common_arguments(subparser, ['specs'])
     subparser.add_argument(
         '-v', '--verbose',
         action='store_true',
@@ -47,11 +45,11 @@ def setup_parser(subparser):
 
 
 def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
-    if not args.package:
+    if not args.specs:
         tty.die("configure requires at least one package argument")
 
     # TODO: to be refactored with code in install
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    specs = spack.cmd.parse_specs(args.specs, concretize=True)
     if len(specs) != 1:
         tty.error('only one spec can be installed at a time.')
     spec = specs.pop()
@@ -62,15 +60,15 @@ def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
         # Install package dependencies if needed
         parser = argparse.ArgumentParser()
         inst.setup_parser(parser)
-        tty.msg('Checking dependencies for {0}'.format(args.package[0]))
+        tty.msg('Checking dependencies for {0}'.format(args.specs[0]))
         cli_args = ['-v'] if args.verbose else []
         install_args = parser.parse_args(cli_args + ['--only=dependencies'])
-        install_args.package = args.package
+        install_args.package = args.specs
         inst.install(parser, install_args)
         # Install package and stop at the given phase
         cli_args = ['-v'] if args.verbose else []
         install_args = parser.parse_args(cli_args + ['--only=package'])
-        install_args.package = args.package
+        install_args.package = args.specs
         inst.install(parser, install_args, stop_at=phase)
     except IndexError:
         tty.error(

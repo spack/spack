@@ -7,7 +7,6 @@ import sys
 import os
 from datetime import datetime
 
-import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -36,9 +35,7 @@ def setup_parser(subparser):
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
     create_parser.add_argument('-d', '--directory', default=None,
                                help="directory in which to create mirror")
-    create_parser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help="specs of packages to put in mirror")
+    arguments.add_common_arguments(subparser, ['specs'])
     create_parser.add_argument(
         '-f', '--file', help="file with specs of packages to put in mirror")
     create_parser.add_argument(

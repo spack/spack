@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import argparse
 import sys
 
 import llnl.util.tty as tty
@@ -22,7 +21,7 @@ level = "short"
 
 def setup_parser(subparser):
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status'])
+        subparser, ['long', 'very_long', 'install_status', 'specs'])
     subparser.add_argument(
         '-y', '--yaml', action='store_true', default=False,
         help='print concrete spec as YAML')
@@ -37,8 +36,6 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
 def spec(parser, args):

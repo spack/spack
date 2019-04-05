@@ -3,11 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 
 
@@ -17,8 +16,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages to add")
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def add(parser, args):

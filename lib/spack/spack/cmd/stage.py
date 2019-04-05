@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-
 import llnl.util.tty as tty
 
 import spack.environment as ev
@@ -18,13 +16,10 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'specs'])
     subparser.add_argument(
         '-p', '--path', dest='path',
         help="path to stage package, does not add to spack tree")
-
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")
 
 
 def stage(parser, args):

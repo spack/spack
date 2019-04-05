@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import os
 import shutil
 import sys
@@ -106,11 +105,8 @@ the dependencies"""
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-    subparser.add_argument(
-        'package',
-        nargs=argparse.REMAINDER,
-        help="spec of the package to install"
-    )
+    arguments.add_common_arguments(subparser, ['specs'])
+
     testing = subparser.add_mutually_exclusive_group()
     testing.add_argument(
         '--test', default=None,
@@ -217,7 +213,7 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
 
 def install(parser, args, **kwargs):
-    if not args.package and not args.specfiles:
+    if not args.specs and not args.specfiles:
         # if there are no args but an active environment or spack.yaml file
         # then install the packages from it.
         env = ev.get_env(args, 'install')
@@ -250,7 +246,7 @@ def install(parser, args, **kwargs):
     if args.log_file:
         reporter.filename = args.log_file
 
-    abstract_specs = spack.cmd.parse_specs(args.package)
+    abstract_specs = spack.cmd.parse_specs(args.specs)
     tests = False
     if args.test == 'all' or args.run_tests:
         tests = True
@@ -260,7 +256,7 @@ def install(parser, args, **kwargs):
 
     try:
         specs = spack.cmd.parse_specs(
-            args.package, concretize=True, tests=tests)
+            args.specs, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
