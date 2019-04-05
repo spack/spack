@@ -6,7 +6,7 @@
 import sys
 import pytest
 
-from spack.spec import Spec, UnsatisfiableSpecError
+from spack.spec import Spec, UnsatisfiableSpecError, SpecError
 from spack.spec import substitute_abstract_variants, parse_anonymous_spec
 from spack.variant import InvalidVariantValueError
 from spack.variant import MultipleValuesInExclusiveVariantError
@@ -835,3 +835,9 @@ class TestSpecSematics(object):
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert "the default cannot be an empty string" in str(exc_info.value)
+
+    def test_abstract_spec_prefix_error(self):
+        spec = Spec('libelf')
+
+        with pytest.raises(SpecError):
+            spec.prefix

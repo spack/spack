@@ -12,6 +12,7 @@ import functools
 import multiprocessing
 import os
 import pytest
+import json
 
 from llnl.util.tty.colify import colify
 
@@ -625,3 +626,23 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # Now install the external package and check again the `installed` property
     s.package.do_install(fake=True)
     assert s.package.installed
+
+
+@pytest.mark.regression('11118')
+def test_old_external_entries_prefix(mutable_database):
+    with open(spack.store.db._index_path, 'r') as f:
+        db_obj = json.loads(f.read())
+
+    s = spack.spec.Spec('externaltool')
+    s.concretize()
+
+    db_obj['database']['installs'][s.dag_hash()]['path'] = 'None'
+
+    with open(spack.store.db._index_path, 'w') as f:
+        f.write(json.dumps(db_obj))
+
+    record = spack.store.db.get_record(s)
+
+    assert record.path is None
+    assert record.spec._prefix is None
+    assert record.spec.prefix == record.spec.external_path
