@@ -88,10 +88,12 @@ class Libxsmm(MakefilePackage):
             make_args += ['DBG=1']
             make_args += ['TRACE=1']
 
+        make(*make_args)
+
         if '+generator' in spec:
             make_args += ['generator']
+            make(*make_args)
 
-        make(*make_args)
 
     def install(self, spec, prefix):
         install_tree('include', prefix.include)
