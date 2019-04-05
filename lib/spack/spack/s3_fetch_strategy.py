@@ -16,6 +16,7 @@ from shutil import copyfileobj
 from llnl.util.filesystem import working_dir
 from llnl.util import tty
 
+import spack
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.url import parse as urlparse
 

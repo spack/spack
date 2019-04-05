@@ -143,6 +143,13 @@ def join(base_url, path):
     extra_attrs = {}
 
     if scheme == 's3':
+        try:
+            extra_attrs["s3_profile"] = base_url.s3_profile
+        except AttributeError:
+            extra_attrs["s3_access_key_id"] = base_url.s3_access_key_id
+            extra_attrs["s3_secret_access_key"] = base_url.s3_secret_access_key
+
+
         path_tokens = [part for part in _split_all(path)
                 if part and part != '/']
 
