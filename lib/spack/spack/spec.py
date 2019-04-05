@@ -1267,7 +1267,9 @@ class Spec(object):
 
     @property
     def prefix(self):
-        assert self._concrete
+        if not self._concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+
         if self._prefix is None:
             upstream, record = spack.store.db.query_by_spec_hash(
                 self.dag_hash())
