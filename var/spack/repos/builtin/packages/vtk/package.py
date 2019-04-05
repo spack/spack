@@ -254,6 +254,6 @@ class Vtk(CMakePackage):
             if (self.spec.satisfies('%clang') and
                 self.compiler.is_apple and
                 self.compiler.version >= Version('5.1.0')):
-                cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
+                cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS='])
 
         return cmake_args
