@@ -15,7 +15,10 @@ from spack.util.module_cmd import (
     ModuleError)
 
 
+env = os.environ.copy()
+env['LC_ALL'] = 'C'
 typeset_func = subprocess.Popen('module avail',
+                                env=env,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 shell=True)
