@@ -644,5 +644,5 @@ def test_old_external_entries_prefix(mutable_database):
     record = spack.store.db.get_record(s)
 
     assert record.path == 'None'
-    assert record.spec._prefix == None
+    assert record.spec._prefix is None
     assert record.spec.prefix == record.spec.external_path
