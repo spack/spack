@@ -1271,9 +1271,9 @@ class Spec(object):
             upstream, record = spack.store.db.query_by_spec_hash(
                 self.dag_hash())
             if record and record.path:
-                self.prefix = record.path
+                self._prefix = record.path
             else:
-                self.prefix = spack.store.layout.path_for_spec(self)
+                self._prefix = spack.store.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
