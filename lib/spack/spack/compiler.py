@@ -32,7 +32,7 @@ def get_compiler_version_output(compiler_path, version_arg):
         compiler_path (path): path of the compiler to be invoked
         version_arg (str): the argument used to extract version information
     """
-    compiler = Executable(compiler_path)
+    compiler = spack.util.executable.Executable(compiler_path)
     output = compiler(version_arg, output=str, error=str)
     return output
 
