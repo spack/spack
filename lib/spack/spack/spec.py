@@ -1272,12 +1272,7 @@ class Spec(object):
             upstream, record = spack.store.db.query_by_spec_hash(
                 self.dag_hash())
             if record and record.path:
-                # Old databases may have 'None' (the string not the value)
-                # for paths for externals. Use external_path for the prefix.
-                if record.path != 'None':
-                    self.prefix = record.path
-                else:
-                    self.prefix = record.spec.external_path
+                self.prefix = record.path
             else:
                 self.prefix = spack.store.layout.path_for_spec(self)
         return self._prefix
