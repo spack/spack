@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shutil
 import inspect
 
 from spack import *
@@ -32,12 +33,12 @@ class Fzf(MakefilePackage):
 
     patch("github_mirrors.patch")
 
-    def edit(self, spec, prefix):
-        # the ${HOME}/.glide directory must exist on some systems
-        home = os.path.expanduser('~')
-        directory = os.path.join(home, '.glide')
-        if not os.path.isdir(directory):
-            os.mkdir(directory)
+    def build(self, spec, prefix):
+        glide_home = os.path.join(self.build_directory, 'glide_home')
+        os.environ['GLIDE_HOME'] = glide_home
+        shutil.rmtree(glide_home, ignore_errors=True)
+        os.mkdir(glide_home)
+        super(Fzf, self).build(spec, prefix)
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
