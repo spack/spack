@@ -153,11 +153,20 @@ Defaults to spec of the package to install."""
         help="""The site name that will be reported to CDash.
 Defaults to current system hostname."""
     )
-    subparser.add_argument(
+    cdash_subgroup = subparser.add_mutually_exclusive_group()
+    cdash_subgroup.add_argument(
         '--cdash-track',
         default='Experimental',
         help="""Results will be reported to this group on CDash.
 Defaults to Experimental."""
+    )
+    cdash_subgroup.add_argument(
+        '--cdash-buildstamp',
+        default=None,
+        help="""Instead of letting the CDash reporter prepare the
+buildstamp which, when combined with build name, site and project,
+uniquely identifies the build, provide this argument to identify
+the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
     )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 

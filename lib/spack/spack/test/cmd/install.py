@@ -8,6 +8,7 @@ import os
 import filecmp
 import re
 from six.moves import builtins
+import time
 
 import pytest
 
@@ -503,6 +504,33 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
             assert 'Site BuildName="my_custom_build"' in content
             assert 'Name="my_custom_site"' in content
             assert '-my_custom_track' in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            cdash_track = 'some_mocked_track'
+            buildstamp_format = "%Y%m%d-%H%M-{0}".format(cdash_track)
+            buildstamp = time.strftime(buildstamp_format,
+                                       time.localtime(int(time.time())))
+            with pytest.raises((HTTPError, URLError)):
+                install(
+                    '--log-file=cdash_reports',
+                    '--cdash-build=my_custom_build',
+                    '--cdash-site=my_custom_site',
+                    '--cdash-buildstamp={0}'.format(buildstamp),
+                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
+                    'a')
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Build.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert 'Site BuildName="my_custom_build"' in content
+            assert 'Name="my_custom_site"' in content
+            assert buildstamp in content
 
 
 @pytest.mark.disable_clean_stage_check
