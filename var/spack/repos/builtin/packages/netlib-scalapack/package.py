@@ -41,6 +41,8 @@ class NetlibScalapack(CMakePackage):
 
     # See: https://github.com/Reference-ScaLAPACK/scalapack/issues/9
     patch("cmake_fortran_mangle.patch", when='@2.0.2:')
+    # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/10
+    patch("mpi2-compatibility.patch", when='@2.0.2:')
 
     @property
     def libs(self):
