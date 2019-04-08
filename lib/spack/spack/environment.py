@@ -738,8 +738,7 @@ class Environment(object):
                                        if s.package.installed)
 
         view = self.view()
-        view.purge_broken_links()
-        view.purge_empty_directories()
+        view.clean()
         specs_in_view = set(view.get_all_specs())
         tty.msg("Updating view at {0}".format(self._view_path))
 

@@ -702,10 +702,12 @@ def set_executable(path):
     os.chmod(path, mode)
 
 
-def purge_empty_directories(root):
-    """
-        Ascend up from the leaves accessible from `root`
-        and remove empty directories.
+def remove_empty_directories(root):
+    """Ascend up from the leaves accessible from `root` and remove empty
+    directories.
+
+    Parameters:
+        root (str): path where to search for empty directories
     """
     for dirpath, subdirs, files in os.walk(root, topdown=False):
         for sd in subdirs:
