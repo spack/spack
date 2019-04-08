@@ -1130,14 +1130,31 @@ class Environment(object):
         # invalidate _repo cache
         self._repo = None
 
-        # put any changes in the definitions in the YAML
-        named_speclists = list(self.read_specs.items())
-        for i, (name, speclist) in enumerate(named_speclists[:-1]):
+        # put any chagnes in the definitions in the YAML
+        for name, speclist in list(self.read_specs.items())[:-1]:
             conf = config_dict(self.yaml)
-            yaml_list = conf.get('definitions', [])[i].setdefault(name, [])
-            yaml_list[:] = speclist.yaml_list
+            active_yaml_lists = [l for l in conf.get('definitions', [])
+                                 if name in l and
+                                 _eval_conditional(l.get('when', 'True'))]
 
-        # put the new user specs in the YAML
+            # Remove any specs in yaml that are not in internal representation
+            for ayl in active_yaml_lists:
+                # If it's not a string, it's a matrix. Those can't have changed
+                ayl[name][:] = [s for s in ayl.setdefault(name, [])
+                                if not isinstance(s, str) or
+                                Spec(s) in speclist.specs]
+
+            # Put the new specs into the first active list from the yaml
+            new_specs = [entry for entry in speclist.yaml_list
+                         if isinstance(entry, str) and
+                         not any(entry in ayl[name]
+                                 for ayl in active_yaml_lists)]
+            list_for_new_specs = active_yaml_lists[0].setdefault(name, [])
+            list_for_new_specs[:] = list_for_new_specs + new_specs
+
+        # put the new user specs in the YAML.
+        # This can be done directly because there can't be multiple definitions
+        # nor when clauses for `specs` list.
         yaml_spec_list = config_dict(self.yaml).setdefault('specs', [])
         yaml_spec_list[:] = self.user_specs.yaml_list
 
