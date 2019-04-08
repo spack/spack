@@ -177,7 +177,8 @@ def deactivate(shell='sh'):
         cmds += 'unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
         cmds += 'fi;\n'
 
-    cmds += _active_environment.rm_view_from_shell(shell)
+    if _active_environment._view_path:
+        cmds += _active_environment.rm_view_from_shell(shell)
 
     tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
     _active_environment = None
