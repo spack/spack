@@ -97,6 +97,7 @@ class Libxsmm(MakefilePackage):
             os.rename(pcfile, os.path.join('lib/pkgconfig',
                                            os.path.basename(pcfile)))
 
+        install_tree('bin', prefix.bin)
         if '+header-only' in spec:
             install_tree('src', prefix.src)
         else:
