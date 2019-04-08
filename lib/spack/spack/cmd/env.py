@@ -299,6 +299,10 @@ def env_view_setup_parser(subparser):
     subparser.add_argument(
         'action', choices=ViewAction.actions(),
         help="action to take for the environment's view")
+    subparser.add_argument(
+        'view_path', nargs='?',
+        help="when enabling a view, optionally set the path manually"
+    )
 
 
 def env_view(args):
@@ -308,7 +312,10 @@ def env_view(args):
         if args.action == ViewAction.regenerate:
             env.regenerate_view()
         elif args.action == ViewAction.enable:
-            env._view_path = env.default_view_path
+            if args.view_path:
+                env._view_path = args.view_path
+            else:
+                env._view_path = env.default_view_path
             env.write()
         elif args.action == ViewAction.disable:
             env._view_path = None
