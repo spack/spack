@@ -194,14 +194,15 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # there cannot be extensions.
         if dependent_spec.package.is_extension:
 
-        # perl extension builds can have a global perl executable function
+            # perl extension builds can have a global perl
+            # executable function
             module.perl = self.spec['perl'].command
 
-        # Add variables for library directory
+            # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
-        # Make the site packages directory for extensions,
-        # if it does not exist already.
+            # Make the site packages directory for extensions,
+            # if it does not exist already.
             mkdirp(module.perl_lib_dir)
 
     @run_after('install')
