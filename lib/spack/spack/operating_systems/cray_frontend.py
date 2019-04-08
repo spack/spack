@@ -52,18 +52,14 @@ class CrayFrontend(LinuxDistro):
     It acts as a regular Linux without Cray-specific modules and compiler
     wrappers."""
 
-    def arguments_to_detect_version_fn(self, paths):
-        """Calls the default function but prevents it from detecting Cray
-        compiler wrappers to avoid possible false detections.
+    @property
+    def compiler_search_paths(self):
+        """Calls the default function but unloads Cray's programming
+        environments first.
 
-        The detected compilers come into play only if a user decides to
-        work with the Cray's frontend OS as if it was a regular Linux
-        environment.
+        This prevents from detecting Cray compiler wrappers and avoids
+        possible false detections.
         """
-        import spack.compilers
         with unload_programming_environment():
             search_paths = fs.search_paths_for_executables(*get_path('PATH'))
-            args = spack.compilers.arguments_to_detect_version_fn(
-                self, search_paths, override=False
-            )
-        return args
+        return search_paths

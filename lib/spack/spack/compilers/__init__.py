@@ -198,14 +198,15 @@ def find_compilers(*path_hints):
     """
     # Turn the path hints into real paths that are to be searched
     path_hints = path_hints or get_path('PATH')
-    paths = fs.search_paths_for_executables(*path_hints)
+    default_paths = fs.search_paths_for_executables(*path_hints)
 
     # To detect the version of the compilers, we dispatch a certain number
     # of function calls to different workers. Here we construct the list
     # of arguments for each call.
     arguments = []
     for o in all_os_classes():
-        arguments.extend(arguments_to_detect_version_fn(o, paths))
+        search_paths = getattr(o, 'compiler_search_paths', default_paths)
+        arguments.extend(arguments_to_detect_version_fn(o, search_paths))
 
     # Here we map the function arguments to the corresponding calls
     tp = multiprocessing.pool.ThreadPool()
@@ -462,7 +463,7 @@ DetectVersionArgs = collections.namedtuple(
 )
 
 
-def arguments_to_detect_version_fn(operating_system, paths, override=True):
+def arguments_to_detect_version_fn(operating_system, paths):
     """Returns a list of DetectVersionArgs tuples to be used in a
     corresponding function to detect compiler versions.
 
@@ -473,8 +474,6 @@ def arguments_to_detect_version_fn(operating_system, paths, override=True):
         operating_system (OperatingSystem): the operating system on which
             we are looking for compilers
         paths: paths to search for compilers
-        override (bool): whether we should search for an override to this
-            function in the operating system class
 
     Returns:
         List of DetectVersionArgs tuples. Each item in the list will be later
@@ -511,11 +510,9 @@ def arguments_to_detect_version_fn(operating_system, paths, override=True):
         # does not spoil the intended precedence.
         return reversed(command_arguments)
 
-    fn = _default
-    if override:
-        fn = getattr(
-            operating_system, 'arguments_to_detect_version_fn', _default
-        )
+    fn = getattr(
+        operating_system, 'arguments_to_detect_version_fn', _default
+    )
     return fn(paths)
 
 
