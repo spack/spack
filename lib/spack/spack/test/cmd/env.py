@@ -1059,3 +1059,32 @@ env:
     with tmpdir.as_cwd():
         with pytest.raises(NameError):
             env('create', 'test', './spack.yaml')
+
+
+def test_stack_definition_conditional_add_write(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - packages: [callpath]
+      when: platform == 'test'
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            add('-l', 'packages', 'zmpi')
+
+        test = ev.read('test')
+
+        packages_lists = list(filter(lambda x: 'packages' in x,
+                                     test.yaml['env']['definitions']))
+
+        assert len(packages_lists) == 2
+        assert 'callpath' not in packages_lists[0]['packages']
+        assert 'callpath' in packages_lists[1]['packages']
+        assert 'zmpi' in packages_lists[0]['packages']
+        assert 'zmpi' not in packages_lists[1]['packages']
