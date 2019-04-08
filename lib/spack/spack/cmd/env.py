@@ -313,12 +313,13 @@ def env_view(args):
             env.regenerate_view()
         elif args.action == ViewAction.enable:
             if args.view_path:
-                env._view_path = args.view_path
+                view_path = args.view_path
             else:
-                env._view_path = env.default_view_path
+                view_path = env.default_view_path
+            env.update_view(view_path)
             env.write()
         elif args.action == ViewAction.disable:
-            env._view_path = None
+            env.update_view(None)
             env.write()
     else:
         tty.msg("No active environment")

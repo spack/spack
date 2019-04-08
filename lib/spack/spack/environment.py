@@ -714,6 +714,12 @@ class Environment(object):
         return YamlFilesystemView(
             self._view_path, spack.store.layout, ignore_conflicts=True)
 
+    def update_view(self, view_path):
+        if self._view_path and self._view_path != view_path:
+            shutil.rmtree(self._view_path)
+
+        self._view_path = view_path
+
     def regenerate_view(self):
         if not self._view_path:
             tty.debug("Skip view update, this environment does not"
