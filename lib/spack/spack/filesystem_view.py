@@ -15,6 +15,7 @@ from llnl.util import tty
 from llnl.util.lang import match_predicate, index_by
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import mkdirp
+import llnl.util.filesystem
 
 import spack.util.spack_yaml as s_yaml
 
@@ -576,28 +577,10 @@ class YamlFilesystemView(FilesystemView):
             tty.warn(self._croot + "No packages found.")
 
     def purge_empty_directories(self):
-        """
-            Ascend up from the leaves accessible from `path`
-            and remove empty directories.
-        """
-        for dirpath, subdirs, files in os.walk(self._root, topdown=False):
-            for sd in subdirs:
-                sdp = os.path.join(dirpath, sd)
-                try:
-                    os.rmdir(sdp)
-                except OSError:
-                    pass
+        llnl.util.filesystem.purge_empty_directories(self._root)
 
     def purge_broken_links(self):
-        """
-            Ascend up from the leaves accessible from `path`
-            and remove broken links (uninstalled packages).
-        """
-        for dirpath, subdirs, files in os.walk(self._root, topdown=False):
-            for f in files:
-                filename = os.path.join(dirpath, f)
-                if not os.path.exists(filename):  # filename is broken link
-                    os.unlink(filename)
+        llnl.util.filesystem.remove_dead_links(self._root)
 
     def unlink_meta_folder(self, spec):
         path = self.get_path_meta_folder(spec)
