@@ -189,8 +189,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
            In most cases, extensions will only need to have one line:
            perl('Makefile.PL','INSTALL_BASE=%s' % self.prefix)
         """
-        
-        # If system perl is used through packages.yaml there cannot be extensions.
+
+        # If system perl is used through packages.yaml
+        # there cannot be extensions.
         if dependent_spec.package.is_extension:
 
         # perl extension builds can have a global perl executable function
