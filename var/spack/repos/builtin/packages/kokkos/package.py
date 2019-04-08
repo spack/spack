@@ -123,10 +123,9 @@ class Kokkos(Package):
     # conflicts on kokkos version and cuda enabled
     # see kokkos issue #1296
     # https://github.com/kokkos/kokkos/issues/1296
-    conflicts('+cuda', when='@2.5.00:develop',
-        msg='Kokkos build system has issue when CUDA enabled'
-        ' in version 2.5.00 through 2.7.00, and develop until '
-        'issue #1296 is resolved.')
+    conflicts('+cuda', when='@2.5.00:2.7.00',
+        msg='Kokkos build system has issue (#1296) when CUDA enabled'
+        ' in version 2.5.00 through 2.7.00.')
 
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')
