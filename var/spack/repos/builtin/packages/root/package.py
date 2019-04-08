@@ -463,6 +463,7 @@ class Root(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PYTHONPATH', self.prefix.lib)
+        spack_env.set('SPACK_INCLUDE_DIRS', '')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('ROOTSYS', self.prefix)
