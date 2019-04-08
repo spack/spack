@@ -281,34 +281,37 @@ def env_list(args):
     colify(color_names, indent=4)
 
 
+class ViewAction(object):
+    regenerate = 'regenerate'
+    enable = 'enable'
+    disable = 'disable'
+
+    @staticmethod
+    def actions():
+        return [ViewAction.regenerate, ViewAction.enable, ViewAction.disable]
+
+
 #
 # env view
 #
 def env_view_setup_parser(subparser):
     """manage a view associated with the environment"""
-    views = subparser.add_mutually_exclusive_group()
-    views.add_argument(
-        '--regenerate', action='store_true',
-        help="regenerate the view for the environment")
-    views.add_argument(
-        '--enable', action='store_true',
-        help="enable a view for the environment")
-    views.add_argument(
-        '--disable', action='store_true',
-        help="disable view for the environment")
+    subparser.add_argument(
+        'action', choices=ViewAction.actions(),
+        help="action to take for the environment's view")
 
 
 def env_view(args):
     env = ev.get_env(args, 'env view')
 
     if env:
-        if args.regenerate:
+        if args.action == ViewAction.regenerate:
             env.regenerate_view()
-        elif args.enable:
-            env._view_path = True
+        elif args.action == ViewAction.enable:
+            env._view_path = env.default_view_path
             env.write()
-        elif args.disable:
-            env._view_path = False
+        elif args.action == ViewAction.disable:
+            env._view_path = None
             env.write()
     else:
         tty.msg("No active environment")
