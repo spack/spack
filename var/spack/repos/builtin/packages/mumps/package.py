@@ -15,6 +15,7 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
+    version('5.1.2', 'eb345cda145da9aea01b851d17e54e7eef08e16bfa148100ac1f7f046cd42ae9')
     version('5.1.1', 'f15c6b5dd8c71b1241004cd19818259d')
     version('5.0.2', '591bcb2c205dcb0283872608cdf04927')
     # Alternate location if main server is down.
@@ -51,6 +52,7 @@ class Mumps(Package):
     depends_on('mpi', when='+mpi')
 
     patch('examples.patch', when='@5.1.1%clang^spectrum-mpi')
+    patch('gfortran8.patch', when='@5.1.2')
 
     # this function is not a patch function because in case scalapack
     # is needed it uses self.spec['scalapack'].fc_link set by the
