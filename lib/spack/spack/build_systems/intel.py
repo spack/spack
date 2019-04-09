@@ -941,6 +941,12 @@ class IntelPackage(PackageBase):
                 ['mkl_cblas', 'mkl_lapacke'],
                 root=self.component_include_dir('mkl'),
                 recursive=False)
+        if '+tbb' in self.spec or self.provides('tbb'):
+            # Note: TBB is included as
+            # #include <tbb/task_scheduler_init.h>
+            result += HeaderList([
+                self.component_include_dir('tbb') + '/dummy.h'])
+
         debug_print(result)
         return result
 
