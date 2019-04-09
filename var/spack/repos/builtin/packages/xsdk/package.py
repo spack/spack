@@ -15,10 +15,9 @@ class Xsdk(Package):
     """
 
     homepage = "http://xsdk.info"
-
-    # Dummy url since Spack complains if I don't list something, will be
-    # removed when metapackage is available
     url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
+
+    maintainers = ['balay', 'luszczek']
 
     version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
     version('0.4.0', 'a52dc710c744afa0b71429b8ec9425bc')

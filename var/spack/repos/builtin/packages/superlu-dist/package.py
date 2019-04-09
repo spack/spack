@@ -14,6 +14,8 @@ class SuperluDist(CMakePackage):
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
+    maintainers = ['xiaoye', 'gchavez2', 'balay']
+
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('6.1.1', '35d25cff592c724439870444ed45e1d1d15ca2c65f02ccd4b83a6d3c9d220bd1')
