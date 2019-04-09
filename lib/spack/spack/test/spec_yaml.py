@@ -8,12 +8,16 @@
 YAML format preserves DAG information in the spec.
 
 """
+import os
+
 from collections import Iterable, Mapping
 
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.spec import Spec
+from spack import repo
+from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.spack_yaml import syaml_dict
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 
 def check_yaml_round_trip(spec):
@@ -198,3 +202,38 @@ def reverse_all_dicts(data):
         return type(data)(reverse_all_dicts(elt) for elt in data)
     else:
         return data
+
+
+def check_specs_equal(original_spec, spec_yaml_path):
+    with open(spec_yaml_path, 'r') as fd:
+        spec_yaml = fd.read()
+        spec_from_yaml = Spec.from_yaml(spec_yaml)
+        return original_spec.eq_dag(spec_from_yaml)
+
+
+def test_save_dependency_spec_yamls_subset(tmpdir, config):
+    output_path = str(tmpdir.mkdir('spec_yamls'))
+
+    default = ('build', 'link')
+
+    g = MockPackage('g', [], [])
+    f = MockPackage('f', [], [])
+    e = MockPackage('e', [], [])
+    d = MockPackage('d', [f, g], [default, default])
+    c = MockPackage('c', [], [])
+    b = MockPackage('b', [d, e], [default, default])
+    a = MockPackage('a', [b, c], [default, default])
+
+    mock_repo = MockPackageMultiRepo([a, b, c, d, e, f, g])
+
+    with repo.swap(mock_repo):
+        spec_a = Spec('a')
+        spec_a.concretize()
+        b_spec = spec_a['b']
+        c_spec = spec_a['c']
+        spec_a_yaml = spec_a.to_yaml(all_deps=True)
+
+        save_dependency_spec_yamls(spec_a_yaml, output_path, ['b', 'c'])
+
+        assert check_specs_equal(b_spec, os.path.join(output_path, 'b.yaml'))
+        assert check_specs_equal(c_spec, os.path.join(output_path, 'c.yaml'))

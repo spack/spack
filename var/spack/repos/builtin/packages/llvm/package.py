@@ -30,6 +30,17 @@ class Llvm(CMakePackage):
 
     variant('clang', default=True,
             description="Build the LLVM C/C++/Objective-C compiler frontend")
+
+    # TODO: The current version of this package unconditionally disables CUDA.
+    #       Better would be to add a "cuda" variant that:
+    #        - Adds dependency on the "cuda" package when enabled
+    #        - Sets the necessary CMake flags when enabled
+    #        - Disables CUDA (as this current version does) only when the
+    #          variant is also disabled.
+
+    # variant('cuda', default=False,
+    #         description="Build the LLVM with CUDA features enabled")
+
     variant('lldb', default=True, description="Build the LLVM debugger")
     variant('lld', default=True, description="Build the LLVM linker")
     variant('internal_unwind', default=True,
@@ -65,6 +76,9 @@ class Llvm(CMakePackage):
     depends_on('python@2.7:2.8', when='@:4.999')
     depends_on('python')
     depends_on('py-lit', type=('build', 'run'))
+
+    # openmp dependencies
+    depends_on('perl-data-dumper', type=('build'))
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
@@ -161,6 +175,22 @@ class Llvm(CMakePackage):
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
                 'lld': 'http://llvm.org/svn/llvm-project/lld/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            }
+        },
+        {
+            'version': '7.0.1',
+            'md5': '79f1256f97d52a054da8660706deb5f6',
+            'resources': {
+                'compiler-rt': '697b70141ae7cc854e4fbde1a07b7287',
+                'openmp': 'd7d05ac0109df51a47099cba08cb43ec',
+                'polly': '287d7391438b5285265fede3b08e1e29',
+                'libcxx': 'aa9202ebb2aef2078fccfa24b3b1eed1',
+                'libcxxabi': 'c82a187e95744d15c040108bc2b8868f',
+                'cfe': '8583c9fb2af0ce61a7154fd9125363c1',
+                'clang-tools-extra': 'f0a94f63cc3d717f8f6662e0bf9c7330',
+                'lldb': '9ea3dc5cb9a1d9e390652d42ef1ccf41',
+                'lld': '9162cde32887cd33facead766645ef1f',
+                'libunwind': 'fe8c801dd79e087a6fa8d039390a47d0'
             }
         },
         {
@@ -563,9 +593,19 @@ class Llvm(CMakePackage):
 
         cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
+            '-DLLVM_ENABLE_RTTI:BOOL=ON',
+            '-DLLVM_ENABLE_EH:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
             '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
         ]
+
+        # TODO: Instead of unconditionally disabling CUDA, add a "cuda" variant
+        #       (see TODO above), and set the paths if enabled.
+        cmake_args.extend([
+            '-DCUDA_TOOLKIT_ROOT_DIR:PATH=IGNORE',
+            '-DCUDA_SDK_ROOT_DIR:PATH=IGNORE',
+            '-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE',
+            '-DLIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES:STRING=IGNORE'])
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +

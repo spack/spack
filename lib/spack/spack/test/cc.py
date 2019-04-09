@@ -61,19 +61,6 @@ test_args_without_paths = [
 #: The prefix of the package being mock installed
 pkg_prefix = '/spack-test-prefix'
 
-#
-# Expected RPATHs for the package itself.  The package is expected to
-# have only one of /lib or /lib64, but we add both b/c we can't know
-# before installing.
-#
-pkg_wl_rpaths = [
-    '-Wl,-rpath,' + pkg_prefix + '/lib',
-    '-Wl,-rpath,' + pkg_prefix + '/lib64']
-
-pkg_rpaths = [
-    '-rpath', '/spack-test-prefix/lib',
-    '-rpath', '/spack-test-prefix/lib64']
-
 # Compilers to use during tests
 cc = Executable(os.path.join(build_env_path, "cc"))
 ld = Executable(os.path.join(build_env_path, "ld"))
@@ -110,7 +97,9 @@ def wrapper_environment():
             SPACK_CXX_RPATH_ARG='-Wl,-rpath,',
             SPACK_F77_RPATH_ARG='-Wl,-rpath,',
             SPACK_FC_RPATH_ARG='-Wl,-rpath,',
-            SPACK_DEPENDENCIES=None):
+            SPACK_LINK_DIRS=None,
+            SPACK_INCLUDE_DIRS=None,
+            SPACK_RPATH_DIRS=None):
         yield
 
 
@@ -126,36 +115,6 @@ def wrapper_flags():
         yield
 
 
-@pytest.fixture(scope='session')
-def dep1(tmpdir_factory):
-    path = tmpdir_factory.mktemp('cc-dep1')
-    path.mkdir('include')
-    path.mkdir('lib')
-    yield str(path)
-
-
-@pytest.fixture(scope='session')
-def dep2(tmpdir_factory):
-    path = tmpdir_factory.mktemp('cc-dep2')
-    path.mkdir('lib64')
-    yield str(path)
-
-
-@pytest.fixture(scope='session')
-def dep3(tmpdir_factory):
-    path = tmpdir_factory.mktemp('cc-dep3')
-    path.mkdir('include')
-    path.mkdir('lib64')
-    yield str(path)
-
-
-@pytest.fixture(scope='session')
-def dep4(tmpdir_factory):
-    path = tmpdir_factory.mktemp('cc-dep4')
-    path.mkdir('include')
-    yield str(path)
-
-
 pytestmark = pytest.mark.usefixtures('wrapper_environment')
 
 
@@ -167,7 +126,8 @@ def check_args(cc, args, expected):
     contain spaces are parsed correctly.
     """
     with set_env(SPACK_TEST_COMMAND='dump-args'):
-        assert expected == cc(*args, output=str).strip().split('\n')
+        cc_modified_args = cc(*args, output=str).strip().split('\n')
+        assert expected == cc_modified_args
 
 
 def dump_mode(cc, args):
@@ -217,7 +177,6 @@ def test_ld_flags(wrapper_flags):
         test_include_paths +
         test_library_paths +
         test_rpaths +
-        pkg_rpaths +
         test_args_without_paths +
         spack_ldlibs)
 
@@ -242,7 +201,6 @@ def test_cc_flags(wrapper_flags):
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths +
         spack_ldlibs)
 
@@ -257,7 +215,6 @@ def test_cxx_flags(wrapper_flags):
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths +
         spack_ldlibs)
 
@@ -272,7 +229,6 @@ def test_fc_flags(wrapper_flags):
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths +
         spack_ldlibs)
 
@@ -285,122 +241,108 @@ def test_dep_rpath():
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths)
 
 
-def test_dep_include(dep4):
+def test_dep_include():
     """Ensure a single dependency include directory is added."""
-    with set_env(SPACK_DEPENDENCIES=dep4,
-                 SPACK_RPATH_DEPS=dep4,
-                 SPACK_LINK_DEPS=dep4):
+    with set_env(SPACK_INCLUDE_DIRS='x'):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
-            ['-I' + dep4 + '/include'] +
+            ['-Ix'] +
             test_library_paths +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             test_args_without_paths)
 
 
-def test_dep_lib(dep2):
+def test_dep_lib():
     """Ensure a single dependency RPATH is added."""
-    with set_env(SPACK_DEPENDENCIES=dep2,
-                 SPACK_RPATH_DEPS=dep2,
-                 SPACK_LINK_DEPS=dep2):
+    with set_env(SPACK_LINK_DIRS='x',
+                 SPACK_RPATH_DIRS='x'):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
             test_library_paths +
-            ['-L' + dep2 + '/lib64'] +
+            ['-Lx'] +
             test_wl_rpaths +
-            pkg_wl_rpaths +
-            ['-Wl,-rpath,' + dep2 + '/lib64'] +
+            ['-Wl,-rpath,x'] +
             test_args_without_paths)
 
 
-def test_dep_lib_no_rpath(dep2):
+def test_dep_lib_no_rpath():
     """Ensure a single dependency link flag is added with no dep RPATH."""
-    with set_env(SPACK_DEPENDENCIES=dep2,
-                 SPACK_LINK_DEPS=dep2):
+    with set_env(SPACK_LINK_DIRS='x'):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
             test_library_paths +
-            ['-L' + dep2 + '/lib64'] +
+            ['-Lx'] +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             test_args_without_paths)
 
 
-def test_dep_lib_no_lib(dep2):
+def test_dep_lib_no_lib():
     """Ensure a single dependency RPATH is added with no -L."""
-    with set_env(SPACK_DEPENDENCIES=dep2,
-                 SPACK_RPATH_DEPS=dep2):
+    with set_env(SPACK_RPATH_DIRS='x'):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
             test_library_paths +
             test_wl_rpaths +
-            pkg_wl_rpaths +
-            ['-Wl,-rpath,' + dep2 + '/lib64'] +
+            ['-Wl,-rpath,x'] +
             test_args_without_paths)
 
 
-def test_ccld_deps(dep1, dep2, dep3, dep4):
+def test_ccld_deps():
     """Ensure all flags are added in ccld mode."""
-    deps = ':'.join((dep1, dep2, dep3, dep4))
-    with set_env(SPACK_DEPENDENCIES=deps,
-                 SPACK_RPATH_DEPS=deps,
-                 SPACK_LINK_DEPS=deps):
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
         check_args(
             cc, test_args,
             [real_cc] +
             test_include_paths +
-            ['-I' + dep1 + '/include',
-             '-I' + dep3 + '/include',
-             '-I' + dep4 + '/include'] +
+            ['-Ixinc',
+             '-Iyinc',
+             '-Izinc'] +
             test_library_paths +
-            ['-L' + dep1 + '/lib',
-             '-L' + dep2 + '/lib64',
-             '-L' + dep3 + '/lib64'] +
+            ['-Lxlib',
+             '-Lylib',
+             '-Lzlib'] +
             test_wl_rpaths +
-            pkg_wl_rpaths +
-            ['-Wl,-rpath,' + dep1 + '/lib',
-             '-Wl,-rpath,' + dep2 + '/lib64',
-             '-Wl,-rpath,' + dep3 + '/lib64'] +
+            ['-Wl,-rpath,xlib',
+             '-Wl,-rpath,ylib',
+             '-Wl,-rpath,zlib'] +
             test_args_without_paths)
 
 
-def test_cc_deps(dep1, dep2, dep3, dep4):
+def test_cc_deps():
     """Ensure -L and RPATHs are not added in cc mode."""
-    deps = ':'.join((dep1, dep2, dep3, dep4))
-    with set_env(SPACK_DEPENDENCIES=deps,
-                 SPACK_RPATH_DEPS=deps,
-                 SPACK_LINK_DEPS=deps):
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
         check_args(
             cc, ['-c'] + test_args,
             [real_cc] +
             test_include_paths +
-            ['-I' + dep1 + '/include',
-             '-I' + dep3 + '/include',
-             '-I' + dep4 + '/include'] +
+            ['-Ixinc',
+             '-Iyinc',
+             '-Izinc'] +
             test_library_paths +
             ['-c'] +
             test_args_without_paths)
 
 
-def test_ccld_with_system_dirs(dep1, dep2, dep3, dep4):
+def test_ccld_with_system_dirs():
     """Ensure all flags are added in ccld mode."""
-    deps = ':'.join((dep1, dep2, dep3, dep4))
-    with set_env(SPACK_DEPENDENCIES=deps,
-                 SPACK_RPATH_DEPS=deps,
-                 SPACK_LINK_DEPS=deps):
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
 
         sys_path_args = ['-I/usr/include',
                          '-L/usr/local/lib',
@@ -411,91 +353,84 @@ def test_ccld_with_system_dirs(dep1, dep2, dep3, dep4):
             cc, sys_path_args + test_args,
             [real_cc] +
             test_include_paths +
-            ['-I' + dep1 + '/include',
-             '-I' + dep3 + '/include',
-             '-I' + dep4 + '/include'] +
+            ['-Ixinc',
+             '-Iyinc',
+             '-Izinc'] +
             ['-I/usr/include',
              '-I/usr/local/include'] +
             test_library_paths +
-            ['-L' + dep1 + '/lib',
-             '-L' + dep2 + '/lib64',
-             '-L' + dep3 + '/lib64'] +
+            ['-Lxlib',
+             '-Lylib',
+             '-Lzlib'] +
             ['-L/usr/local/lib',
              '-L/lib64/'] +
             test_wl_rpaths +
-            pkg_wl_rpaths +
-            ['-Wl,-rpath,' + dep1 + '/lib',
-             '-Wl,-rpath,' + dep2 + '/lib64',
-             '-Wl,-rpath,' + dep3 + '/lib64'] +
+            ['-Wl,-rpath,xlib',
+             '-Wl,-rpath,ylib',
+             '-Wl,-rpath,zlib'] +
             ['-Wl,-rpath,/usr/lib64'] +
             test_args_without_paths)
 
 
-def test_ld_deps(dep1, dep2, dep3, dep4):
+def test_ld_deps():
     """Ensure no (extra) -I args or -Wl, are passed in ld mode."""
-    deps = ':'.join((dep1, dep2, dep3, dep4))
-    with set_env(SPACK_DEPENDENCIES=deps,
-                 SPACK_RPATH_DEPS=deps,
-                 SPACK_LINK_DEPS=deps):
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
         check_args(
             ld, test_args,
             ['ld'] +
             test_include_paths +
             test_library_paths +
-            ['-L' + dep1 + '/lib',
-             '-L' + dep2 + '/lib64',
-             '-L' + dep3 + '/lib64'] +
+            ['-Lxlib',
+             '-Lylib',
+             '-Lzlib'] +
             test_rpaths +
-            pkg_rpaths +
-            ['-rpath', dep1 + '/lib',
-             '-rpath', dep2 + '/lib64',
-             '-rpath', dep3 + '/lib64'] +
+            ['-rpath', 'xlib',
+             '-rpath', 'ylib',
+             '-rpath', 'zlib'] +
             test_args_without_paths)
 
 
-def test_ld_deps_no_rpath(dep1, dep2, dep3, dep4):
+def test_ld_deps_no_rpath():
     """Ensure SPACK_LINK_DEPS controls -L for ld."""
-    deps = ':'.join((dep1, dep2, dep3, dep4))
-    with set_env(SPACK_DEPENDENCIES=deps,
-                 SPACK_LINK_DEPS=deps):
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
         check_args(
             ld, test_args,
             ['ld'] +
             test_include_paths +
             test_library_paths +
-            ['-L' + dep1 + '/lib',
-             '-L' + dep2 + '/lib64',
-             '-L' + dep3 + '/lib64'] +
+            ['-Lxlib',
+             '-Lylib',
+             '-Lzlib'] +
             test_rpaths +
-            pkg_rpaths +
             test_args_without_paths)
 
 
-def test_ld_deps_no_link(dep1, dep2, dep3, dep4):
+def test_ld_deps_no_link():
     """Ensure SPACK_RPATH_DEPS controls -rpath for ld."""
-    deps = ':'.join((dep1, dep2, dep3, dep4))
-    with set_env(SPACK_DEPENDENCIES=deps,
-                 SPACK_RPATH_DEPS=deps):
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib'):
         check_args(
             ld, test_args,
             ['ld'] +
             test_include_paths +
             test_library_paths +
             test_rpaths +
-            pkg_rpaths +
-            ['-rpath', dep1 + '/lib',
-             '-rpath', dep2 + '/lib64',
-             '-rpath', dep3 + '/lib64'] +
+            ['-rpath', 'xlib',
+             '-rpath', 'ylib',
+             '-rpath', 'zlib'] +
             test_args_without_paths)
 
 
-def test_ld_deps_partial(dep1):
+def test_ld_deps_partial():
     """Make sure ld -r (partial link) is handled correctly on OS's where it
        doesn't accept rpaths.
     """
-    with set_env(SPACK_DEPENDENCIES=dep1,
-                 SPACK_RPATH_DEPS=dep1,
-                 SPACK_LINK_DEPS=dep1):
+    with set_env(SPACK_INCLUDE_DIRS='xinc',
+                 SPACK_RPATH_DIRS='xlib',
+                 SPACK_LINK_DIRS='xlib'):
         # TODO: do we need to add RPATHs on other platforms like Linux?
         # TODO: Can't we treat them the same?
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
@@ -504,10 +439,9 @@ def test_ld_deps_partial(dep1):
             ['ld'] +
             test_include_paths +
             test_library_paths +
-            ['-L' + dep1 + '/lib'] +
+            ['-Lxlib'] +
             test_rpaths +
-            pkg_rpaths +
-            ['-rpath', dep1 + '/lib'] +
+            ['-rpath', 'xlib'] +
             ['-r'] +
             test_args_without_paths)
 
@@ -519,7 +453,7 @@ def test_ld_deps_partial(dep1):
             ['ld'] +
             test_include_paths +
             test_library_paths +
-            ['-L' + dep1 + '/lib'] +
+            ['-Lxlib'] +
             test_rpaths +
             ['-r'] +
             test_args_without_paths)
@@ -534,7 +468,6 @@ def test_ccache_prepend_for_cc():
             test_include_paths +
             test_library_paths +
             test_wl_rpaths +
-            pkg_wl_rpaths +
             test_args_without_paths)
 
 
@@ -546,5 +479,4 @@ def test_no_ccache_prepend_for_fc():
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +
-        pkg_wl_rpaths +
         test_args_without_paths)

@@ -24,12 +24,17 @@ from spack import *
 class Python(AutotoolsPackage):
     """The Python programming language."""
 
-    homepage = "http://www.python.org"
-    url = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
+    homepage = "https://www.python.org/"
+    url      = "https://www.python.org/ftp/python/3.7.2/Python-3.7.2.tgz"
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
-    version('3.7.0', '41b6595deb4147a1ed517a7d9a580271')
+    version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
+    version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
+    version('3.7.0',  '41b6595deb4147a1ed517a7d9a580271')
+    version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
+    version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
+    version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
     version('3.6.5', 'ab25d24b1f8cc4990ade979f6dc37883')
     version('3.6.4', '9de6494314ea199e3633211696735f65')
     version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
@@ -43,7 +48,8 @@ class Python(AutotoolsPackage):
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
     version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.15', '045fb3440219a1f6923fefdabde63342', preferred=True)
+    version('2.7.16', 'f1a2ace631068444831d01485466ece0', preferred=True)
+    version('2.7.15', '045fb3440219a1f6923fefdabde63342')
     version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724')
     version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700')
     version('2.7.12', '88d61f82e3616a4be952828b3694109d')
@@ -58,9 +64,6 @@ class Python(AutotoolsPackage):
     # See http://bugs.python.org/issue29846
     variant('shared', default=sys.platform != 'darwin',
             description='Enable shared libraries')
-    variant('tk', default=False, description='Provide support for Tkinter')
-    variant('ucs4', default=False,
-            description='Enable UCS4 (wide) unicode strings')
     # From https://docs.python.org/2/c-api/unicode.html: Python's default
     # builds use a 16-bit type for Py_UNICODE and store Unicode values
     # internally as UCS2. It is also possible to build a UCS4 version of Python
@@ -68,10 +71,10 @@ class Python(AutotoolsPackage):
     # builds then use a 32-bit type for Py_UNICODE and store Unicode data
     # internally as UCS4. Note that UCS2 and UCS4 Python builds are not binary
     # compatible.
+    variant('ucs4', default=False,
+            description='Enable UCS4 (wide) unicode strings')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
-
-    variant('dbm', default=True, description='Provide support for dbm')
     variant(
         'optimizations',
         default=False,
@@ -82,31 +85,49 @@ class Python(AutotoolsPackage):
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
-    depends_on("pkgconfig", type="build")
-    depends_on("openssl")
-    depends_on("bzip2")
-    depends_on("readline")
-    depends_on("ncurses")
-    depends_on("sqlite")
-    depends_on("zlib")
-    depends_on("tk", when="+tk")
-    depends_on("tcl", when="+tk")
-    depends_on("gdbm", when='+dbm')
+    # Optional Python modules
+    variant('readline', default=True,  description='Build readline module')
+    variant('ssl',      default=True,  description='Build ssl module')
+    variant('sqlite3',  default=True,  description='Build sqlite3 module')
+    variant('dbm',      default=True,  description='Build dbm module')
+    variant('nis',      default=False, description='Build nis module')
+    variant('zlib',     default=True,  description='Build zlib module')
+    variant('bz2',      default=True,  description='Build bz2 module')
+    variant('lzma',     default=True,  description='Build lzma module')
+    variant('pyexpat',  default=True,  description='Build pyexpat module')
+    variant('ctypes',   default=True,  description='Build ctypes module')
+    variant('tkinter',  default=False, description='Build tkinter module')
+    variant('uuid',     default=False, description='Build uuid module')
 
-    # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-    depends_on("libffi", when="@3.7:")
-    depends_on("openssl@1.0.2:", when="@3.7:")
+    depends_on('pkgconfig@0.9.0:', type='build')
 
-    # Patch does not work for Python 3.1
-    patch('ncurses.patch', when='@:2.8,3.2:')
+    # Optional dependencies
+    # See detect_modules() in setup.py for details
+    depends_on('readline', when='+readline')
+    depends_on('ncurses', when='+readline')
+    depends_on('openssl', when='+ssl')
+    depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+    depends_on('sqlite@3.0.8:', when='+sqlite3')
+    depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
+    depends_on('libnsl', when='+nis')
+    depends_on('zlib@1.1.3:', when='+zlib')
+    depends_on('bzip2', when='+bz2')
+    depends_on('xz', when='@3.3:+lzma')
+    depends_on('expat', when='+pyexpat')
+    depends_on('libffi', when='+ctypes')
+    depends_on('tk', when='+tkinter')
+    depends_on('tcl', when='+tkinter')
+    depends_on('libuuid', when='+uuid')
+
+    patch('tkinter.patch', when='@:2.8,3.3: platform=darwin')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
-    patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
-    patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
+    patch('cray-rpath-2.3.patch', when='@2.3:3.0.1 platform=cray')
+    patch('cray-rpath-3.1.patch', when='@3.1:3.99  platform=cray')
 
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
-    patch('gcc-8-2.7.14.patch', when="@2.7.14 %gcc@8:")
+    patch('gcc-8-2.7.14.patch', when='@2.7.14 %gcc@8:')
 
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
@@ -151,36 +172,32 @@ class Python(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
+        config_args = []
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
         link_deps = spec.dependencies('link')
 
-        # Header files are often included assuming they reside in a
-        # subdirectory of prefix.include, e.g. #include <openssl/ssl.h>,
-        # which is why we don't use HeaderList here. The header files of
-        # libffi reside in prefix.lib but the configure script of Python
-        # finds them using pkg-config.
-        cppflags = '-I' + ' -I'.join(dep.prefix.include
-                                     for dep in link_deps
-                                     if dep.name != 'libffi')
+        if link_deps:
+            # Header files are often included assuming they reside in a
+            # subdirectory of prefix.include, e.g. #include <openssl/ssl.h>,
+            # which is why we don't use HeaderList here. The header files of
+            # libffi reside in prefix.lib but the configure script of Python
+            # finds them using pkg-config.
+            cppflags = ' '.join('-I' + spec[dep.name].prefix.include
+                                for dep in link_deps)
 
-        # Currently, the only way to get SpecBuildInterface wrappers of the
-        # dependencies (which we need to get their 'libs') is to get them
-        # using spec.__getitem__.
-        ldflags = ' '.join(spec[dep.name].libs.search_flags
-                           for dep in link_deps)
+            # Currently, the only way to get SpecBuildInterface wrappers of the
+            # dependencies (which we need to get their 'libs') is to get them
+            # using spec.__getitem__.
+            ldflags = ' '.join(spec[dep.name].libs.search_flags
+                               for dep in link_deps)
 
-        config_args = ['CPPFLAGS=' + cppflags, 'LDFLAGS=' + ldflags]
+            config_args.extend(['CPPFLAGS=' + cppflags, 'LDFLAGS=' + ldflags])
 
         # https://docs.python.org/3/whatsnew/3.7.html#build-changes
         if spec.satisfies('@:3.6'):
             config_args.append('--with-threads')
-
-        if '^libffi' in spec:
-            config_args.append('--with-system-ffi')
-        else:
-            config_args.append('--without-system-ffi')
 
         if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
                 and '+optimizations' in spec:
@@ -204,7 +221,7 @@ class Python(AutotoolsPackage):
             elif spec.satisfies('@3.0:3.2'):
                 config_args.append('--with-wide-unicode')
             elif spec.satisfies('@3.3:'):
-                # https://docs.python.org/3.3/whatsnew/3.3.html
+                # https://docs.python.org/3.3/whatsnew/3.3.html#functionality
                 raise ValueError(
                     '+ucs4 variant not compatible with Python 3.3 and beyond')
 
@@ -213,6 +230,35 @@ class Python(AutotoolsPackage):
 
         if '+pic' in spec:
             config_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
+
+        if spec.satisfies('@3.7:'):
+            if '+ssl' in spec:
+                config_args.append('--with-openssl={0}'.format(
+                    spec['openssl'].prefix))
+
+        if '+dbm' in spec:
+            # Default order is ndbm:gdbm:bdb
+            config_args.append('--with-dbmliborder=gdbm:bdb:ndbm')
+        else:
+            config_args.append('--with-dbmliborder=')
+
+        if '+pyexpat' in spec:
+            config_args.append('--with-system-expat')
+        else:
+            config_args.append('--without-system-expat')
+
+        if '+ctypes' in spec:
+            config_args.append('--with-system-ffi')
+        else:
+            config_args.append('--without-system-ffi')
+
+        if '+tkinter' in spec:
+            config_args.extend([
+                '--with-tcltk-includes=-I{0} -I{1}'.format(
+                    spec['tcl'].prefix.include, spec['tk'].prefix.include),
+                '--with-tcltk-libs={0} {1}'.format(
+                    spec['tcl'].libs.ld_flags, spec['tk'].libs.ld_flags)
+            ])
 
         return config_args
 
@@ -255,26 +301,75 @@ class Python(AutotoolsPackage):
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
                        os.path.join(prefix.bin, 'python-config'))
 
-    # TODO: Once better testing support is integrated, add the following tests
-    # https://wiki.python.org/moin/TkInter
-    #
-    # Note: Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
-    #
-    #    if '+tk' in spec:
-    #        env['TK_LIBRARY']  = join_path(spec['tk'].prefix.lib,
-    #            'tk{0}'.format(spec['tk'].version.up_to(2)))
-    #        env['TCL_LIBRARY'] = join_path(spec['tcl'].prefix.lib,
-    #            'tcl{0}'.format(spec['tcl'].version.up_to(2)))
-    #
-    #        $ python
-    #        >>> import _tkinter
-    #
-    #        if spec.satisfies('@3:')
-    #            >>> import tkinter
-    #            >>> tkinter._test()
-    #        else:
-    #            >>> import Tkinter
-    #            >>> Tkinter._test()
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def import_tests(self):
+        """Test that basic Python functionality works."""
+
+        spec = self.spec
+
+        with working_dir('spack-test', create=True):
+            # Ensure that readline module works
+            if '+readline' in spec:
+                self.command('-c', 'import readline')
+
+            # Ensure that ssl module works
+            if '+ssl' in spec:
+                self.command('-c', 'import ssl')
+                self.command('-c', 'import hashlib')
+
+            # Ensure that sqlite3 module works
+            if '+sqlite3' in spec:
+                self.command('-c', 'import sqlite3')
+
+            # Ensure that dbm module works
+            if '+dbm' in spec:
+                self.command('-c', 'import dbm')
+
+            # Ensure that nis module works
+            if '+nis' in spec:
+                self.command('-c', 'import nis')
+
+            # Ensure that zlib module works
+            if '+zlib' in spec:
+                self.command('-c', 'import zlib')
+
+            # Ensure that bz2 module works
+            if '+bz2' in spec:
+                self.command('-c', 'import bz2')
+
+            # Ensure that lzma module works
+            if spec.satisfies('@3.3:'):
+                if '+lzma' in spec:
+                    self.command('-c', 'import lzma')
+
+            # Ensure that pyexpat module works
+            if '+pyexpat' in spec:
+                self.command('-c', 'import xml.parsers.expat')
+                self.command('-c', 'import xml.etree.ElementTree')
+
+            # Ensure that ctypes module works
+            if '+ctypes' in spec:
+                self.command('-c', 'import ctypes')
+
+            # Ensure that tkinter module works
+            # https://wiki.python.org/moin/TkInter
+            if '+tkinter' in spec:
+                # Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
+                if 'DISPLAY' in env:
+                    if spec.satisfies('@3:'):
+                        self.command('-c', 'import tkinter; tkinter._test()')
+                    else:
+                        self.command('-c', 'import Tkinter; Tkinter._test()')
+                else:
+                    if spec.satisfies('@3:'):
+                        self.command('-c', 'import tkinter')
+                    else:
+                        self.command('-c', 'import Tkinter')
+
+            # Ensure that uuid module works
+            if '+uuid' in spec:
+                self.command('-c', 'import uuid')
 
     def _save_distutil_vars(self, prefix):
         """
@@ -525,12 +620,14 @@ class Python(AutotoolsPackage):
     def headers(self):
         config_h = self.get_config_h_filename()
 
-        if os.path.exists(config_h):
-            return HeaderList(config_h)
-        else:
+        if not os.path.exists(config_h):
             includepy = self.get_config_var('INCLUDEPY')
             msg = 'Unable to locate {0} headers in {1}'
             raise RuntimeError(msg.format(self.name, includepy))
+
+        headers = HeaderList(config_h)
+        headers.directories = [os.path.dirname(config_h)]
+        return headers
 
     @property
     def python_lib_dir(self):

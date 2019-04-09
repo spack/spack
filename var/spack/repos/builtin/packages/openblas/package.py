@@ -158,7 +158,6 @@ class Openblas(MakefilePackage):
         # invoke make with the correct TARGET for aarch64
         elif 'aarch64' in spack.architecture.sys_type():
             make_defs += [
-                'TARGET=PILEDRIVER',
                 'TARGET=ARMV8'
             ]
         if self.spec.satisfies('%gcc@:4.8.4'):

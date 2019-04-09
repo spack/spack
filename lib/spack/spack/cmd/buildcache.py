@@ -4,16 +4,27 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import os
+import sys
 
 import llnl.util.tty as tty
-
+import spack.binary_distribution as bindist
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+import spack.relocate
+import spack.repo
+import spack.spec
+import spack.store
+
+from spack.error import SpecError
+import spack.config
 import spack.repo
 import spack.store
-import spack.spec
-import spack.binary_distribution as bindist
-import spack.cmd.common.arguments as arguments
+from spack.paths import etc_path
+from spack.spec import Spec, save_dependency_spec_yamls
+from spack.spec_set import CombinatorialSpecSet
+
 from spack.cmd import display_specs
 
 description = "create, download and install binary packages"
@@ -43,6 +54,11 @@ def setup_parser(subparser):
     create.add_argument('-d', '--directory', metavar='directory',
                         type=str, default='.',
                         help="directory in which to save the tarballs.")
+    create.add_argument('--no-rebuild-index', action='store_true',
+                        default=False, help="skip rebuilding index after " +
+                                            "building package(s)")
+    create.add_argument('-y', '--spec-yaml', default=None,
+                        help='Create buildcache entry for spec from yaml file')
     create.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to create buildcache for")
@@ -88,9 +104,92 @@ def setup_parser(subparser):
                         help="force new download of keys")
     dlkeys.set_defaults(func=getkeys)
 
+    preview_parser = subparsers.add_parser(
+        'preview',
+        help='analyzes an installed spec and reports whether '
+             'executables and libraries are relocatable'
+    )
+    preview_parser.add_argument(
+        'packages', nargs='+', help='list of installed packages'
+    )
+    preview_parser.set_defaults(func=preview)
+    # Check if binaries need to be rebuilt on remote mirror
+    check = subparsers.add_parser('check', help=check_binaries.__doc__)
+    check.add_argument(
+        '-m', '--mirror-url', default=None,
+        help='Override any configured mirrors with this mirror url')
 
-def find_matching_specs(
-        pkgs, allow_multiple_matches=False, force=False, env=None):
+    check.add_argument(
+        '-o', '--output-file', default=None,
+        help='File where rebuild info should be written')
+
+    # used to construct scope arguments below
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+
+    check.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope(),
+        help="configuration scope containing mirrors to check")
+
+    check.add_argument(
+        '-s', '--spec', default=None,
+        help='Check single spec instead of release specs file')
+
+    check.add_argument(
+        '-y', '--spec-yaml', default=None,
+        help='Check single spec from yaml file instead of release specs file')
+
+    check.add_argument(
+        '--rebuild-on-error', default=False, action='store_true',
+        help="Default to rebuilding packages if errors are encountered " +
+             "during the process of checking whether rebuilding is needed")
+
+    check.set_defaults(func=check_binaries)
+
+    # Download tarball and spec.yaml
+    dltarball = subparsers.add_parser('download', help=get_tarball.__doc__)
+    dltarball.add_argument(
+        '-s', '--spec', default=None,
+        help="Download built tarball for spec from mirror")
+    dltarball.add_argument(
+        '-y', '--spec-yaml', default=None,
+        help="Download built tarball for spec (from yaml file) from mirror")
+    dltarball.add_argument(
+        '-p', '--path', default=None,
+        help="Path to directory where tarball should be downloaded")
+    dltarball.add_argument(
+        '-c', '--require-cdashid', action='store_true', default=False,
+        help="Require .cdashid file to be downloaded with buildcache entry")
+    dltarball.set_defaults(func=get_tarball)
+
+    # Get buildcache name
+    getbuildcachename = subparsers.add_parser('get-buildcache-name',
+                                              help=get_buildcache_name.__doc__)
+    getbuildcachename.add_argument(
+        '-s', '--spec', default=None,
+        help='Spec string for which buildcache name is desired')
+    getbuildcachename.add_argument(
+        '-y', '--spec-yaml', default=None,
+        help='Path to spec yaml file for which buildcache name is desired')
+    getbuildcachename.set_defaults(func=get_buildcache_name)
+
+    # Given the root spec, save the yaml of the dependent spec to a file
+    saveyaml = subparsers.add_parser('save-yaml',
+                                     help=save_spec_yamls.__doc__)
+    saveyaml.add_argument(
+        '-r', '--root-spec', default=None,
+        help='Root spec of dependent spec')
+    saveyaml.add_argument(
+        '-s', '--specs', default=None,
+        help='List of dependent specs for which saved yaml is desired')
+    saveyaml.add_argument(
+        '-y', '--yaml-dir', default=None,
+        help='Path to directory where spec yamls should be saved')
+    saveyaml.set_defaults(func=save_spec_yamls)
+
+
+def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -106,6 +205,7 @@ def find_matching_specs(
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
+    tty.debug('find_matching_specs: about to parse specs for {0}'.format(pkgs))
     specs = spack.cmd.parse_specs(pkgs)
     for spec in specs:
         matching = spack.store.db.query(spec, hashes=hashes)
@@ -178,10 +278,22 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
 
 def createtarball(args):
     """create a binary package from an existing install"""
-    if not args.packages:
+    if args.spec_yaml:
+        packages = set()
+        tty.msg('createtarball, reading spec from {0}'.format(args.spec_yaml))
+        with open(args.spec_yaml, 'r') as fd:
+            yaml_text = fd.read()
+            tty.debug('createtarball read spec yaml:')
+            tty.debug(yaml_text)
+            s = Spec.from_yaml(yaml_text)
+            packages.add('/{0}'.format(s.dag_hash()))
+    elif args.packages:
+        packages = args.packages
+    else:
         tty.die("build cache file creation requires at least one" +
-                " installed package argument")
-    pkgs = set(args.packages)
+                " installed package argument or else path to a" +
+                " yaml file containing a spec to install")
+    pkgs = set(packages)
     specs = set()
     outdir = '.'
     if args.directory:
@@ -193,8 +305,13 @@ def createtarball(args):
     # restrict matching to current environment if one is active
     env = ev.get_env(args, 'buildcache create')
 
-    matches = find_matching_specs(pkgs, False, False, env=env)
+    matches = find_matching_specs(pkgs, env=env)
+
+    if matches:
+        tty.msg('Found at least one matching spec')
+
     for match in matches:
+        tty.msg('examining match {0}'.format(match.format()))
         if match.external or match.virtual:
             tty.msg('skipping external or virtual spec %s' %
                     match.format())
@@ -217,7 +334,8 @@ def createtarball(args):
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
         bindist.build_tarball(spec, outdir, args.force, args.rel,
-                              args.unsigned, args.allow_root, signkey)
+                              args.unsigned, args.allow_root, signkey,
+                              not args.no_rebuild_index)
 
 
 def installtarball(args):
@@ -233,7 +351,7 @@ def installtarball(args):
 
 
 def install_tarball(spec, args):
-    s = spack.spec.Spec(spec)
+    s = Spec(spec)
     if s.external or s.virtual:
         tty.warn("Skipping external or virtual package %s" % spec.format())
         return
@@ -270,6 +388,167 @@ def listspecs(args):
 def getkeys(args):
     """get public keys available on mirrors"""
     bindist.get_keys(args.install, args.trust, args.force)
+
+
+def preview(args):
+    """Print a status tree of the selected specs that shows which nodes are
+    relocatable and which might not be.
+
+    Args:
+        args: command line arguments
+    """
+    specs = find_matching_specs(args.packages, allow_multiple_matches=True)
+
+    # Cycle over the specs that match
+    for spec in specs:
+        print("Relocatable nodes")
+        print("--------------------------------")
+        print(spec.tree(status_fn=spack.relocate.is_relocatable))
+
+
+def check_binaries(args):
+    """Check specs (either a single spec from --spec, or else the full set
+    of release specs) against remote binary mirror(s) to see if any need
+    to be rebuilt.  This command uses the process exit code to indicate
+    its result, specifically, if the exit code is non-zero, then at least
+    one of the indicated specs needs to be rebuilt.
+    """
+    if args.spec or args.spec_yaml:
+        specs = [get_concrete_spec(args)]
+    else:
+        release_specs_path = os.path.join(
+            etc_path, 'spack', 'defaults', 'release.yaml')
+        spec_set = CombinatorialSpecSet.from_file(release_specs_path)
+        specs = [spec for spec in spec_set]
+
+    if not specs:
+        tty.msg('No specs provided, exiting.')
+        sys.exit(0)
+
+    for spec in specs:
+        spec.concretize()
+
+    # Next see if there are any configured binary mirrors
+    configured_mirrors = spack.config.get('mirrors', scope=args.scope)
+
+    if args.mirror_url:
+        configured_mirrors = {'additionalMirrorUrl': args.mirror_url}
+
+    if not configured_mirrors:
+        tty.msg('No mirrors provided, exiting.')
+        sys.exit(0)
+
+    sys.exit(bindist.check_specs_against_mirrors(
+        configured_mirrors, specs, args.output_file, args.rebuild_on_error))
+
+
+def get_tarball(args):
+    """Download buildcache entry from a remote mirror to local folder.  This
+    command uses the process exit code to indicate its result, specifically,
+    a non-zero exit code indicates that the command failed to download at
+    least one of the required buildcache components.  Normally, just the
+    tarball and .spec.yaml files are required, but if the --require-cdashid
+    argument was provided, then a .cdashid file is also required."""
+    if not args.spec and not args.spec_yaml:
+        tty.msg('No specs provided, exiting.')
+        sys.exit(0)
+
+    if not args.path:
+        tty.msg('No download path provided, exiting')
+        sys.exit(0)
+
+    spec = get_concrete_spec(args)
+
+    tarfile_name = bindist.tarball_name(spec, '.spack')
+    tarball_dir_name = bindist.tarball_directory_name(spec)
+    tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
+    local_tarball_path = os.path.join(args.path, tarball_dir_name)
+
+    files_to_fetch = [
+        {
+            'url': tarball_path_name,
+            'path': local_tarball_path,
+            'required': True,
+        }, {
+            'url': bindist.tarball_name(spec, '.spec.yaml'),
+            'path': args.path,
+            'required': True,
+        }, {
+            'url': bindist.tarball_name(spec, '.cdashid'),
+            'path': args.path,
+            'required': args.require_cdashid,
+        },
+    ]
+
+    result = bindist.download_buildcache_entry(files_to_fetch)
+
+    if result:
+        sys.exit(0)
+
+    sys.exit(1)
+
+
+def get_concrete_spec(args):
+    spec_str = args.spec
+    spec_yaml_path = args.spec_yaml
+
+    if not spec_str and not spec_yaml_path:
+        tty.msg('Must provide either spec string or path to ' +
+                'yaml to concretize spec')
+        sys.exit(1)
+
+    if spec_str:
+        try:
+            spec = Spec(spec_str)
+            spec.concretize()
+        except SpecError as spec_error:
+            tty.error('Unable to concrectize spec {0}'.format(args.spec))
+            tty.debug(spec_error)
+            sys.exit(1)
+
+        return spec
+
+    with open(spec_yaml_path, 'r') as fd:
+        return Spec.from_yaml(fd.read())
+
+
+def get_buildcache_name(args):
+    """Get name (prefix) of buildcache entries for this spec"""
+    spec = get_concrete_spec(args)
+    buildcache_name = bindist.tarball_name(spec, '')
+
+    print('{0}'.format(buildcache_name))
+
+    sys.exit(0)
+
+
+def save_spec_yamls(args):
+    """Get full spec for dependencies, relative to root spec, and write them
+    to files in the specified output directory.  Uses exit code to signal
+    success or failure.  An exit code of zero means the command was likely
+    successful.  If any errors or exceptions are encountered, or if expected
+    command-line arguments are not provided, then the exit code will be
+    non-zero."""
+    if not args.root_spec:
+        tty.msg('No root spec provided, exiting.')
+        sys.exit(1)
+
+    if not args.specs:
+        tty.msg('No dependent specs provided, exiting.')
+        sys.exit(1)
+
+    if not args.yaml_dir:
+        tty.msg('No yaml directory provided, exiting.')
+        sys.exit(1)
+
+    root_spec = Spec(args.root_spec)
+    root_spec.concretize()
+    root_spec_as_yaml = root_spec.to_yaml(all_deps=True)
+
+    save_dependency_spec_yamls(
+        root_spec_as_yaml, args.yaml_dir, args.specs.split())
+
+    sys.exit(0)
 
 
 def buildcache(parser, args):

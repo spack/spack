@@ -92,7 +92,8 @@ class Boost(Package):
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
     # possible (and it would be difficult to choose sensible defaults)
-    default_noinstall_libs = set(['mpi', 'python'])
+    default_noinstall_libs\
+        = set(['context', 'coroutine', 'fiber', 'mpi', 'python'])
 
     all_libs = default_install_libs | default_noinstall_libs
 
@@ -101,8 +102,8 @@ class Boost(Package):
                 description="Compile with {0} library".format(lib))
 
     variant('cxxstd',
-            default='default',
-            values=('default', '98', '11', '14', '17'),
+            default='98',
+            values=('98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('debug', default=False,
@@ -134,6 +135,18 @@ class Boost(Package):
     depends_on('zlib', when='+iostreams')
     depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
+    # Coroutine, Context, Fiber, etc., are not straightforward.
+    conflicts('+context', when='@:1.50.99')  # Context since 1.51.0.
+    conflicts('cxxstd=98', when='+context')  # Context requires >=C++11.
+    conflicts('+coroutine', when='@:1.52.99')  # Context since 1.53.0.
+    conflicts('~context', when='+coroutine')  # Coroutine requires Context.
+    conflicts('+fiber', when='@:1.61.99')  # Fiber since 1.62.0.
+    conflicts('cxxstd=98', when='+fiber')  # Fiber requires >=C++11.
+    conflicts('~context', when='+fiber')  # Fiber requires Context.
+
+    # C++17 is not supported by Boost<1.63.0.
+    conflicts('cxxstd=17', when='@:1.62.99')
+
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
 
@@ -158,6 +171,13 @@ class Boost(Package):
 
     # Fix the bootstrap/bjam build for Cray
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
+
+    # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
+    # 0134441 on http://github.com/boostorg/system.
+    patch('system-non-virtual-dtor-include.patch', when='@1.69.0',
+          level=2)
+    patch('system-non-virtual-dtor-test.patch', when='@1.69.0',
+          working_dir='libs/system', level=1)
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
@@ -236,26 +256,6 @@ class Boost(Package):
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
 
-    def cxxstd_to_flag(self, std):
-        flag = ''
-        if self.spec.variants['cxxstd'].value == '98':
-            flag = self.compiler.cxx98_flag
-        elif self.spec.variants['cxxstd'].value == '11':
-            flag = self.compiler.cxx11_flag
-        elif self.spec.variants['cxxstd'].value == '14':
-            flag = self.compiler.cxx14_flag
-        elif self.spec.variants['cxxstd'].value == '17':
-            flag = self.compiler.cxx17_flag
-        elif self.spec.variants['cxxstd'].value == 'default':
-            # Let the compiler do what it usually does.
-            pass
-        else:
-            # The user has selected a (new?) legal value that we've
-            # forgotten to deal with here.
-            tty.die("INTERNAL ERROR: cannot accommodate unexpected variant ",
-                    "cxxstd={0}".format(spec.variants['cxxstd'].value))
-        return flag
-
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
             options.append('variant=debug')
@@ -310,11 +310,10 @@ class Boost(Package):
 
         # Deal with C++ standard.
         if spec.satisfies('@1.66:'):
-            if spec.variants['cxxstd'].value != 'default':
-                options.append('cxxstd={0}'.format(
-                    spec.variants['cxxstd'].value))
+            options.append('cxxstd={0}'.format(spec.variants['cxxstd'].value))
         else:  # Add to cxxflags for older Boost.
-            flag = self.cxxstd_to_flag(spec.variants['cxxstd'].value)
+            cxxstd = spec.variants['cxxstd'].value
+            flag = getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
             if flag:
                 cxxflags.append(flag)
 
@@ -417,8 +416,8 @@ class Boost(Package):
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
-        for threadingOpt in threading_opts:
-            b2('install', 'threading=%s' % threadingOpt, *b2_options)
+        for threading_opt in threading_opts:
+            b2('install', 'threading=%s' % threading_opt, *b2_options)
 
         if '+multithreaded' in spec and '~taggedlayout' in spec:
             self.add_buildopt_symlinks(prefix)

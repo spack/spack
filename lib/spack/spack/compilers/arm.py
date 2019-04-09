@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, get_compiler_version
+import spack.compiler
 
 
-class Arm(Compiler):
+class Arm(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['armclang']
 
@@ -24,6 +24,18 @@ class Arm(Compiler):
                   'cxx': 'arm/armclang++',
                   'f77': 'arm/armflang',
                   'fc': 'arm/armflang'}
+
+    # The ``--version`` option seems to be the most consistent one for
+    # arm compilers. Output looks like this:
+    #
+    # $ arm<c/f>lang --version
+    # Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2) # NOQA
+    # Target: aarch64--linux-gnu
+    # Thread model: posix
+    # InstalledDir:
+    # /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
+    version_argument = '--version'
+    version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)'
 
     @property
     def openmp_flag(self):
@@ -44,22 +56,6 @@ class Arm(Compiler):
     @property
     def pic_flag(self):
         return "-fPIC"
-
-    @classmethod
-    def default_version(cls, comp):
-        """The ``--version`` option seems to be the most consistent one
-        for arm compilers.  Output looks like this::
-
-            $ arm<c/f>lang --version
-            Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2) # NOQA
-            Target: aarch64--linux-gnu
-            Thread model: posix
-            InstalledDir:
-            /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin # NOQA
-        """
-        return get_compiler_version(
-            comp, '--version',
-            r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)')
 
     @classmethod
     def fc_version(cls, fc):

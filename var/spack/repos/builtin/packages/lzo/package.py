@@ -12,6 +12,7 @@ class Lzo(AutotoolsPackage):
     homepage = 'https://www.oberhumer.com/opensource/lzo/'
     url = 'http://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz'
 
+    version('2.10', sha256='c0f892943208266f9b6543b3ae308fab6284c5c90e627931446fb49b4221a072')
     version('2.09', 'c7ffc9a103afe2d1bba0b015e7aa887f')
     version('2.08', 'fcec64c26a0f4f4901468f360029678f')
     version('2.07', '4011935e95171e78ad4894f7335c982a')

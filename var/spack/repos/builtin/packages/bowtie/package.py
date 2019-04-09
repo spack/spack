@@ -38,6 +38,7 @@ class Bowtie(MakefilePackage):
     variant('tbb', default=False, description='Use Intel thread building block')
 
     depends_on('tbb', when='+tbb')
+    depends_on('zlib')
 
     # See: https://github.com/BenLangmead/bowtie/issues/87, a
     # different fix is in the FreeBSD ports/package tree

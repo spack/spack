@@ -21,7 +21,7 @@ DATA_PATH = os.path.join(spack.paths.test_path, 'data')
     'directory',
     glob.iglob(os.path.join(DATA_PATH, 'make', 'affirmative', '*'))
 )
-def test_affirmative_make_check(directory, config, mock_packages):
+def test_affirmative_make_check(directory, config, mock_packages, working_env):
     """Tests that Spack correctly detects targets in a Makefile."""
 
     # Get a fake package
@@ -41,7 +41,7 @@ def test_affirmative_make_check(directory, config, mock_packages):
     glob.iglob(os.path.join(DATA_PATH, 'make', 'negative', '*'))
 )
 @pytest.mark.regression('9067')
-def test_negative_make_check(directory, config, mock_packages):
+def test_negative_make_check(directory, config, mock_packages, working_env):
     """Tests that Spack correctly ignores false positives in a Makefile."""
 
     # Get a fake package
@@ -61,7 +61,8 @@ def test_negative_make_check(directory, config, mock_packages):
     'directory',
     glob.iglob(os.path.join(DATA_PATH, 'ninja', 'affirmative', '*'))
 )
-def test_affirmative_ninja_check(directory, config, mock_packages):
+def test_affirmative_ninja_check(
+        directory, config, mock_packages, working_env):
     """Tests that Spack correctly detects targets in a Ninja build script."""
 
     # Get a fake package
@@ -85,7 +86,7 @@ def test_affirmative_ninja_check(directory, config, mock_packages):
     'directory',
     glob.iglob(os.path.join(DATA_PATH, 'ninja', 'negative', '*'))
 )
-def test_negative_ninja_check(directory, config, mock_packages):
+def test_negative_ninja_check(directory, config, mock_packages, working_env):
     """Tests that Spack correctly ignores false positives in a Ninja
     build script."""
 
@@ -112,6 +113,23 @@ def test_cmake_std_args(config, mock_packages):
     s = Spec('mpich')
     s.concretize()
     pkg = spack.repo.get(s)
+    assert get_std_cmake_args(pkg)
+
+
+def test_cmake_bad_generator(config, mock_packages):
+    s = Spec('cmake-client')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.generator = 'Yellow Sticky Notes'
+    with pytest.raises(spack.package.InstallError):
+        get_std_cmake_args(pkg)
+
+
+def test_cmake_secondary_generator(config, mock_packages):
+    s = Spec('cmake-client')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.generator = 'CodeBlocks - Unix Makefiles'
     assert get_std_cmake_args(pkg)
 
 

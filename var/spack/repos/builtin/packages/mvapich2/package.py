@@ -14,12 +14,12 @@ class Mvapich2(AutotoolsPackage):
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
+    # Prefer the latest stable release
+    version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf', preferred=True)
+    version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd')
     version('2.3rc2', '6fcf22fe2a16023b462ef57614daa357')
     version('2.3rc1', '386d79ae36b2136d203826465ad8b6cc')
     version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
-
-    # Prefer the latest stable release
-    version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd', preferred=True)
     version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e')
     version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
     version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
@@ -75,8 +75,8 @@ class Mvapich2(AutotoolsPackage):
         description='The fabric enabled for this build',
         default='psm',
         values=(
-            'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
-            'nemesistcpib'
+            'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
+            'nemesisibtcp', 'nemesistcpib', 'nemesisofi'
         )
     )
 
@@ -94,14 +94,20 @@ class Mvapich2(AutotoolsPackage):
 
     depends_on('findutils', type='build')
     depends_on('bison', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('zlib')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
+    depends_on('libxml2')
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
+    depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('rdma-core', when='fabrics=mrail')
     depends_on('rdma-core', when='fabrics=nemesisib')
     depends_on('rdma-core', when='fabrics=nemesistcpib')
     depends_on('rdma-core', when='fabrics=nemesisibtcp')
+    depends_on('libfabric', when='fabrics=nemesisofi')
+
+    conflicts('fabrics=psm2', when='@:2.1')  # psm2 support was added at version 2.2
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -150,6 +156,11 @@ class Mvapich2(AutotoolsPackage):
                 "--with-device=ch3:psm",
                 "--with-psm={0}".format(self.spec['psm'].prefix)
             ]
+        elif 'fabrics=psm2' in self.spec:
+            opts = [
+                "--with-device=ch3:psm",
+                "--with-psm2={0}".format(self.spec['opa-psm2'].prefix)
+            ]
         elif 'fabrics=sock' in self.spec:
             opts = ["--with-device=ch3:sock"]
         elif 'fabrics=nemesistcpib' in self.spec:
@@ -163,6 +174,9 @@ class Mvapich2(AutotoolsPackage):
         elif 'fabrics=mrail' in self.spec:
             opts = ["--with-device=ch3:mrail", "--with-rdma=gen2",
                     "--disable-mcast"]
+        elif 'fabrics=nemesisofi' in self.spec:
+            opts = ["--with-device=ch3:nemesis:ofi",
+                    "--with-ofi={0}".format(self.spec['libfabric'].prefix)]
         return opts
 
     @property

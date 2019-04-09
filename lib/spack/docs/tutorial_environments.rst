@@ -535,11 +535,11 @@ all of its specs.  We can run it here:
    [+]  rymw7im      ^automake@1.16.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
    [+]  o2pfwjf      ^libtool@2.4.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
 
-Now, all the specs in the environemnt are concrete and ready to be
-installed wiht ``mpich`` as the MPI immplementation.
+Now, all the specs in the environment are concrete and ready to be
+installed with ``mpich`` as the MPI implementation.
 
 Normally, we could just run ``spack config edit``, edit the environment
-configuration, ``spack add`` some specs, and ``install``.
+configuration, ``spack add`` some specs, and ``spack install``.
 
 But, when we already have installed packages in the environment, we have
 to force everything in the environment to be re-concretized using ``spack

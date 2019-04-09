@@ -595,8 +595,10 @@ class Environment(object):
 
                 # Display concretized spec to the user
                 sys.stdout.write(concrete.tree(
-                    recurse_dependencies=True, install_status=True,
-                    hashlen=7, hashes=True))
+                    recurse_dependencies=True,
+                    status_fn=spack.spec.Spec.install_status,
+                    hashlen=7, hashes=True)
+                )
 
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
@@ -663,6 +665,7 @@ class Environment(object):
             with fs.working_dir(self.path):
                 spec.package.do_install(**kwargs)
 
+            if not spec.external:
                 # Link the resulting log file into logs dir
                 build_log_link = os.path.join(
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))

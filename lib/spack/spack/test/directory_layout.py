@@ -22,7 +22,11 @@ max_packages = 10
 @pytest.fixture()
 def layout_and_dir(tmpdir):
     """Returns a directory layout and the corresponding directory."""
-    yield YamlDirectoryLayout(str(tmpdir)), str(tmpdir)
+    layout = YamlDirectoryLayout(str(tmpdir))
+    old_layout = spack.store.layout
+    spack.store.layout = layout
+    yield layout, str(tmpdir)
+    spack.store.layout = old_layout
 
 
 def test_yaml_directory_layout_parameters(
@@ -65,6 +69,13 @@ def test_yaml_directory_layout_parameters(
                                               path_scheme=arch_scheme_package)
     arch_path_package = layout_arch_package.relative_path_for_spec(spec)
     assert(arch_path_package == spec.format(arch_scheme_package))
+
+    # Test separation of namespace
+    ns_scheme_package = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
+    layout_ns_package = YamlDirectoryLayout(str(tmpdir),
+                                            path_scheme=ns_scheme_package)
+    ns_path_package = layout_ns_package.relative_path_for_spec(spec)
+    assert(ns_path_package == spec.format(ns_scheme_package))
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):

@@ -59,14 +59,25 @@ class CDash(Reporter):
         Reporter.__init__(self, args)
         self.template_dir = os.path.join('reports', 'cdash')
         self.cdash_upload_url = args.cdash_upload_url
-        self.install_command = ' '.join(args.package)
+        if args.package:
+            packages = args.package
+        else:
+            packages = []
+            for file in args.specfiles:
+                with open(file, 'r') as f:
+                    s = spack.spec.Spec.from_yaml(f)
+                    packages.append(s.format())
+        self.install_command = ' '.join(packages)
         self.buildname = args.cdash_build or self.install_command
         self.site = args.cdash_site or socket.gethostname()
         self.osname = platform.system()
         self.endtime = int(time.time())
-        buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
-        self.buildstamp = time.strftime(buildstamp_format,
-                                        time.localtime(self.endtime))
+        if args.cdash_buildstamp:
+            self.buildstamp = args.cdash_buildstamp
+        else:
+            buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
+            self.buildstamp = time.strftime(buildstamp_format,
+                                            time.localtime(self.endtime))
         self.buildId = None
         self.revision = ''
         git = which('git')

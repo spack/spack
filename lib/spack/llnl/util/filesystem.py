@@ -36,6 +36,7 @@ __all__ = [
     'filter_file',
     'find',
     'find_headers',
+    'find_all_headers',
     'find_libraries',
     'find_system_libraries',
     'fix_darwin_install_name',
@@ -956,10 +957,46 @@ class HeaderList(FileList):
     commonly used compiler flags or names.
     """
 
+    # Make sure to only match complete words, otherwise path components such
+    # as "xinclude" will cause false matches.
+    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
+
     def __init__(self, files):
         super(HeaderList, self).__init__(files)
 
         self._macro_definitions = []
+        self._directories = None
+
+    @property
+    def directories(self):
+        """Directories to be searched for header files."""
+        values = self._directories
+        if values is None:
+            values = self._default_directories()
+        return list(dedupe(values))
+
+    @directories.setter
+    def directories(self, value):
+        value = value or []
+        # Accept a single directory as input
+        if isinstance(value, six.string_types):
+            value = [value]
+
+        self._directories = [os.path.normpath(x) for x in value]
+
+    def _default_directories(self):
+        """Default computation of directories based on the list of
+        header files.
+        """
+        dir_list = super(HeaderList, self).directories
+        values = []
+        for d in dir_list:
+            # If the path contains a subdirectory named 'include' then stop
+            # there and don't add anything else to the path.
+            m = self.include_regex.match(d)
+            value = os.path.join(*m.group(1, 2)) if m else d
+            values.append(value)
+        return values
 
     @property
     def headers(self):
@@ -1087,12 +1124,26 @@ def find_headers(headers, root, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the headers
-    suffix = 'h'
+    suffixes = ['h', 'hpp', 'mod']
 
     # List of headers we are searching with suffixes
-    headers = ['{0}.{1}'.format(header, suffix) for header in headers]
+    headers = ['{0}.{1}'.format(header, suffix) for header in headers
+               for suffix in suffixes]
 
     return HeaderList(find(root, headers, recursive))
+
+
+def find_all_headers(root):
+    """Convenience function that returns the list of all headers found
+    in the directory passed as argument.
+
+    Args:
+        root (path): directory where to look recursively for header files
+
+    Returns:
+        List of all headers found in ``root`` and subdirectories.
+    """
+    return find_headers('*', root=root, recursive=True)
 
 
 class LibraryList(FileList):

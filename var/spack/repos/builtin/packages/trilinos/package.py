@@ -35,8 +35,8 @@ class Trilinos(CMakePackage):
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
-    version('12.14.0-rc1', commit='dbf41f3b26b0326a1377f219e6e07eab861d181e')  # branch trilinos-release-12-14-branch
-    version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7', preferred=True)
+    version('12.14.1', '52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
+    version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '9f37f683ee2b427b5540db8a20ed6b15')
     version('12.6.4', 'e11fff717d0e4565779f75a47feecbb2')
@@ -71,6 +71,8 @@ class Trilinos(CMakePackage):
             description='Enable OpenMP')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
+    variant('debug',       default=False,
+            description='Enable runtime safety and debug checks')
     variant('xsdkflags',    default=False,
             description='Compile using the default xSDK configuration')
 
@@ -178,7 +180,12 @@ class Trilinos(CMakePackage):
              git='https://github.com/ornl-cees/DataTransferKit.git',
              commit='4fe4d9d56cfd4f8a61f392b81d8efd0e389ee764',  # branch dtk-3.0
              placement='DataTransferKit',
-             when='+dtk')
+             when='+dtk @12.14.0:12.14.99')
+    resource(name='dtk',
+             git='https://github.com/ornl-cees/DataTransferKit.git',
+             branch='master',
+             placement='DataTransferKit',
+             when='+dtk @develop')
     resource(name='fortrilinos',
              git='https://github.com/trilinos/ForTrilinos.git',
              tag='develop',
@@ -237,8 +244,8 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~kokkos')
     conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
-    # Only allow DTK-3.0 with Trilinos 12.14
-    conflicts('+dtk', when='@0:12.12.99,12.16.0:99,master,develop')
+    # Only allow DTK with Trilinos 12.14 and develop
+    conflicts('+dtk', when='@0:12.12.99,12.16.0:99,master')
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
     conflicts('+fortrilinos', when='@master')
@@ -293,7 +300,7 @@ class Trilinos(CMakePackage):
     depends_on('mumps@5.0:+mpi+shared', when='+mumps')
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist', when='+superlu-dist')
-    depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
+    depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
@@ -336,6 +343,8 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_DEBUG:BOOL=%s' % (
+                'ON' if '+debug' in spec else 'OFF'),
 
             # The following can cause problems on systems that don't have
             # static libraries available for things like dl and pthreads
@@ -692,6 +701,7 @@ class Trilinos(CMakePackage):
             options.extend([
                 '-DTpetra_INST_DOUBLE:BOOL=ON',
                 '-DTpetra_INST_INT_LONG:BOOL=ON',
+                '-DTpetra_INST_INT_LONG_LONG:BOOL=ON',
                 '-DTpetra_INST_COMPLEX_DOUBLE=%s' % complex_s,
                 '-DTpetra_INST_COMPLEX_FLOAT=%s' % complex_float_s,
                 '-DTpetra_INST_FLOAT=%s' % float_s,

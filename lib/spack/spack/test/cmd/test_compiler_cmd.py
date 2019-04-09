@@ -15,7 +15,7 @@ import spack.spec
 import spack.util.pattern
 from spack.version import Version
 
-test_version = '4.5-spacktest'
+test_version = '4.5.3'
 
 
 @pytest.fixture()

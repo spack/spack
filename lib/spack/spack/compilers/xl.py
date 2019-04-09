@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import \
-    Compiler, get_compiler_version, UnsupportedCompilerFlag
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -26,6 +25,9 @@ class Xl(Compiler):
                   'cxx': 'xl/xlc++',
                   'f77': 'xl/xlf',
                   'fc': 'xl/xlf90'}
+
+    version_argument = '-qversion'
+    version_regex = r'([0-9]?[0-9]\.[0-9])'
 
     @property
     def openmp_flag(self):
@@ -54,57 +56,28 @@ class Xl(Compiler):
         return "-qzerosize"
 
     @classmethod
-    def default_version(cls, comp):
-        """The '-qversion' is the standard option fo XL compilers.
-           Output looks like this::
-
-              IBM XL C/C++ for Linux, V11.1 (5724-X14)
-              Version: 11.01.0000.0000
-
-           or::
-
-              IBM XL Fortran for Linux, V13.1 (5724-X16)
-              Version: 13.01.0000.0000
-
-           or::
-
-              IBM XL C/C++ for AIX, V11.1 (5724-X13)
-              Version: 11.01.0000.0009
-
-           or::
-
-              IBM XL C/C++ Advanced Edition for Blue Gene/P, V9.0
-              Version: 09.00.0000.0017
-        """
-
-        return get_compiler_version(
-            comp, '-qversion', r'([0-9]?[0-9]\.[0-9])')
-
-    @classmethod
     def fc_version(cls, fc):
-        """The fortran and C/C++ versions of the XL compiler are always
-           two units apart.  By this we mean that the fortran release that
-           goes with XL C/C++ 11.1 is 13.1.  Having such a difference in
-           version number is confusing spack quite a lot.  Most notably
-           if you keep the versions as is the default xl compiler will
-           only have fortran and no C/C++.  So we associate the Fortran
-           compiler with the version associated to the C/C++ compiler.
-           One last stumble. Version numbers over 10 have at least a .1
-           those under 10 a .0. There is no xlf 9.x or under currently
-           available. BG/P and BG/L can such a compiler mix and possibly
-           older version of AIX and linux on power.
-        """
-        fver = get_compiler_version(fc, '-qversion', r'([0-9]?[0-9]\.[0-9])')
-        if fver >= 16:
-            """Starting with version 16.1, the XL C and Fortran compilers
-               have the same version.  So no need to downgrade the Fortran
-               compiler version to match that of the C compiler version.
-            """
-            return str(fver)
-        cver = float(fver) - 2
-        if cver < 10:
-            cver = cver - 0.1
-        return str(cver)
+        # The fortran and C/C++ versions of the XL compiler are always
+        # two units apart.  By this we mean that the fortran release that
+        # goes with XL C/C++ 11.1 is 13.1.  Having such a difference in
+        # version number is confusing spack quite a lot.  Most notably
+        # if you keep the versions as is the default xl compiler will
+        # only have fortran and no C/C++.  So we associate the Fortran
+        # compiler with the version associated to the C/C++ compiler.
+        # One last stumble. Version numbers over 10 have at least a .1
+        # those under 10 a .0. There is no xlf 9.x or under currently
+        # available. BG/P and BG/L can such a compiler mix and possibly
+        # older version of AIX and linux on power.
+        fortran_version = cls.default_version(fc)
+        if fortran_version >= 16:
+            # Starting with version 16.1, the XL C and Fortran compilers
+            # have the same version.  So no need to downgrade the Fortran
+            # compiler version to match that of the C compiler version.
+            return str(fortran_version)
+        c_version = float(fortran_version) - 2
+        if c_version < 10:
+            c_version = c_version - 0.1
+        return str(c_version)
 
     @classmethod
     def f77_version(cls, f77):

@@ -13,6 +13,7 @@ class PyPeriodictable(PythonPackage):
     homepage = "https://pypi.python.org/pypi/periodictable"
     url      = "https://pypi.io/packages/source/p/periodictable/periodictable-1.4.1.tar.gz"
 
+    version('1.5.0', sha256='b020c04c6765d21903e4604a76ca33cda98677003fe6eb48ed3690cfb03253b2')
     version('1.4.1', '7246b63cc0b6b1be6e86b6616f9e866e')
 
     depends_on('py-setuptools', type='build')
