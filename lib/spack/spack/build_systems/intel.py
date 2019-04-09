@@ -955,7 +955,6 @@ class IntelPackage(PackageBase):
         if '+mkl' in self.spec or self.provides('scalapack'):
             libs = self.scalapack_libs + libs
 
-
         debug_print(result)
         return result
 
