@@ -214,14 +214,11 @@ fi
 # Figure out where this file is.  Below code needs to be portable to
 # bash and zsh.
 #
-_sp_source_file="${BASH_SOURCE[0]}"  # Bash's location of last sourced file.
-if [ -z "$_sp_source_file" ]; then
-    _sp_source_file="$0:A"           # zsh way to do it
-    if [[ "$_sp_source_file" == *":A" ]]; then
-        # Not zsh either... bail out with plain old $0,
-        # which WILL NOT work if this is sourced indirectly.
-        _sp_source_file="$0"
-    fi
+_sp_source_file=${${BASH_SOURCE[0]:-${(%):-%N}}:-""} # Bash/Zsh's location of last sourced file
+if [ -z "$_sp_source_file"  ]; then
+    # Not bash or zsh... bail out with plain old $0,
+    # which WILL NOT work if this is sourced indirectly
+    _sp_source_file="$0"
 fi
 
 #
