@@ -935,18 +935,25 @@ class IntelPackage(PackageBase):
     @property
     def libs(self):
         result = LibraryList([])
+        if '+tbb' in self.spec or self.provides('tbb'):
+            result = self.tbb_libs + result
+        if '+mkl' in self.spec or self.provides('blas'):
+            result = self.blas_libs + result
+        if '+mkl' in self.spec or self.provides('lapack'):
+            result = self.lapack_libs + result
         if '+mpi' in self.spec or self.provides('mpi'):
             # If prefix is too general, recursive searches may get files from
             # supported but inappropriate sub-architectures like 'mic'.
             libnames = ['libmpifort', 'libmpi']
             if 'cxx' in self.spec.last_query.extra_parameters:
                 libnames = ['libmpicxx'] + libnames
-            result += find_libraries(
+            result = find_libraries(
                 libnames,
                 root=self.component_lib_dir('mpi'),
-                shared=True, recursive=True)
+                shared=True, recursive=True) + result
 
-        # NB: MKL uses domain-specifics: blas_libs/lapack_libs/scalapack_libs
+        if '+mkl' in self.spec or self.provides('scalapack'):
+            result = self.scalapack_libs + result
 
         debug_print(result)
         return result
