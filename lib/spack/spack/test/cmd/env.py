@@ -642,6 +642,28 @@ def test_env_without_view_install(
     assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
     assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
 
+
+def test_env_config_view_default(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    # This config doesn't mention whether a view is enabled
+    test_config = """\
+env:
+  specs:
+  - mpileaks
+"""
+
+    _env_create('test', StringIO(test_config))
+
+    with ev.read('test'):
+        install('--fake')
+
+    e = ev.read('test')
+    # Try retrieving the view object
+    view = e.view()
+    assert view.get_spec('mpileaks')
+
+
 def test_env_updates_view_install_package(
     tmpdir, mock_stage, mock_fetch, install_mockery
 ):
