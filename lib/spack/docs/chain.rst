@@ -25,6 +25,11 @@ you can add it as an entry to ``config.yaml``:
 ``install_tree`` must point to the ``opt/spack`` directory inside of the
 Spack base directory.
 
+Once the upstream Spack instance has been added, ``spack find`` will
+automatically check the upstream instance when querying installed packages,
+and new package installations for the local Spack install will use any
+dependencies that are installed in the upstream instance.
+
 This other instance of Spack has no knowledge of the local Spack instance
 and may not have the same permissions or ownership as the local Spack instance.
 This has the following consequences:
@@ -36,6 +41,19 @@ This has the following consequences:
 #. Users should not uninstall packages from the upstream instance. Since the
    upstream instance doesn't know about the local instance, it cannot prevent
    the installation of packages which the local instance depends on.
+
+Other details about upstream installations:
+
+#. If a package is installed both locally and upstream, the local installation
+   will always be used as a dependency. This can occur if the local Spack
+   installs a package which is not present in the upstream, but later on the
+   upstream Spack instance also installs that package.
+
+#. If an upstream Spack instance registers and installs an external package,
+   the local Spack instance will treat this the same as a Spack-installed
+   package. This feature will only work if the upstream Spack instance
+   includes the upstream functionality (i.e. if its commit is after March
+   27, 2019)
 
 ---------------------------------------
 Using Multiple Upstream Spack Instances
