@@ -71,6 +71,6 @@ corresponding command for the type of module they intend to use)
 
 .. note::
 
-   Spack can generate modules that refer to and `automatically
-   load <autoloading-dependencies>`_ the modules of dependency packages.
-   Spack cannot currently do this for modules in upstream packages.
+   Spack can generate modules that :ref:`automatically load
+   <autoloading-dependencies>` the modules of dependency packages. Spack cannot
+   currently do this for modules in upstream packages.
