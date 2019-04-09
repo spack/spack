@@ -229,7 +229,7 @@ class Dealii(CMakePackage, CudaPackage):
         ])
 
         if (spec.satisfies('^intel-parallel-studio+tbb')):
-            # deal.II will have hard timepicking up TBB from Intel
+            # deal.II/cmake will have hard time picking up TBB from Intel.
             tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
             options.extend([
                 '-DTBB_FOUND=true',
