@@ -131,7 +131,7 @@ case "$command" in
         mode=ld
         ;;
     *)
-        die "Unkown compiler: $command"
+        die "Unknown compiler: $command"
         ;;
 esac
 
