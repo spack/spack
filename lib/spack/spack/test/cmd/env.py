@@ -619,6 +619,29 @@ def test_env_updates_view_install(
     assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
 
 
+def test_env_without_view_install(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    # Test enabling a view after installing specs
+    env('create', '--without-view', 'test')
+
+    test_env = ev.read('test')
+    with pytest.raises(spack.environment.SpackEnvironmentError):
+        test_env.view()
+
+    view_dir = tmpdir.mkdir('view')
+
+    with ev.read('test'):
+        add('mpileaks')
+        install('--fake')
+
+        env('view', 'enable', str(view_dir))
+
+    # After enabling the view, the specs should be linked into the environment
+    # view dir
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
 def test_env_updates_view_install_package(
     tmpdir, mock_stage, mock_fetch, install_mockery
 ):

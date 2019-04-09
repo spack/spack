@@ -711,6 +711,10 @@ class Environment(object):
             os.symlink(spec.package.build_log_path, build_log_link)
 
     def view(self):
+        if not self._view_path:
+            raise SpackEnvironmentError(
+                "{0} does not have a view enabled".format(self.name))
+
         return YamlFilesystemView(
             self._view_path, spack.store.layout, ignore_conflicts=True)
 
