@@ -304,6 +304,7 @@ class Openmpi(AutotoolsPackage):
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        self.spec.mpiexec = join_path(self.prefix.bin, 'mpiexec')
         self.spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, 'libmpi_cxx.{0}'.format(dso_suffix)),
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))

@@ -312,6 +312,7 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
                 '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+                '-DMPIEXEC_EXECUTABLE=%s' % spec['mpi'].mpiexec
             ])
         else:
             options.extend([
