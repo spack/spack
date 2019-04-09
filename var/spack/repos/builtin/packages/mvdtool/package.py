@@ -34,7 +34,8 @@ class Mvdtool(CMakePackage):
     url      = "https://github.com/BlueBrain/MVDTool.git"
 
     version('develop', git=url)
-    version('1.5', git=url, tag='v1.5', preferred=True)
+    version('1.5.1', git=url, tag='v1.5.1', preferred=True)
+    version('1.5', git=url, tag='v1.5')
     version('1.4', git=url, tag='v1.4')
 
     variant('mpi', default=True, description="Enable MPI backend")
