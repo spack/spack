@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.build_systems.intel import debug_print
 
 
 class IntelParallelStudio(IntelPackage):

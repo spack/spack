@@ -6,7 +6,6 @@
 import sys
 
 from spack import *
-from spack.build_systems.intel import debug_print
 
 
 class IntelMkl(IntelPackage):
