@@ -224,10 +224,22 @@ class Dealii(CMakePackage, CudaPackage):
                 lapack_blas_headers.directories),
             '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
-            '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if (spec.satisfies('^intel-parallel-studio+tbb')):
+            # deal.II/cmake will have hard time picking up TBB from Intel.
+            tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
+            options.extend([
+                '-DTBB_FOUND=true',
+                '-DTBB_VERSION=%s' % tbb_ver,
+                '-DTBB_INCLUDE_DIRS=%s' % ';'.join(
+                    spec['tbb'].headers.directories),
+                '-DTBB_LIBRARIES=%s' % spec['tbb'].libs.joined(';')
+            ])
+        else:
+            options.append('-DTBB_DIR=%s' % spec['tbb'].prefix)
 
         if (spec.satisfies('^openblas+ilp64') or
             spec.satisfies('^intel-mkl+ilp64') or
