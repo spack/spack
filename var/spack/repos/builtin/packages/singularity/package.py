@@ -17,19 +17,22 @@ class Singularity(Package):
     '''
 
     homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/sylabs/singularity/archive/v3.1.0.tar.gz"
+    url      = "https://github.com/sylabs/singularity/releases/download/v3.1.0/singularity-3.1.0.tar.gz"
     git      = "https://github.com/singularityware/singularity.git"
 
     # ##########################################################################
     # 3.1.0 Release Branch (GoLang)
 
     version('develop', branch='master')
-    version('3.1.0', 'f3f1388f7e904dbcc1f7934740b847a771965019')
+    version('3.1.0', 'd3a963ae85c527521434723b1cf8dda9594bf6c6')
 
-    depends_on('go', when='@develop')
-    depends_on('libuuid', when='@develop')
-    depends_on('libgpg-error', when='@develop')
-    depends_on('squashfs', when='@develop')
+    # Shared dependencies
+
+    depends_on('go')
+    depends_on('libuuid')
+    depends_on('libgpg-error')
+    depends_on('squashfs', type='run')
+    depends_on('git')
 
     phases = ['configure', 'build', 'install']
 
@@ -74,10 +77,15 @@ def prepare_gopath():
     '''
     gopath = os.path.join(tempfile.gettempdir(), 'go')
     tmpgo = os.path.join(gopath, 'src', 'github.com', 'sylabs', 'singularity')
-    os.environ['GOPATH'] = gopath + ':' + os.environ['GOPATH']
 
     # Create gopath
     if not os.path.exists(gopath):
         os.makedirs(gopath)
 
+    # If the user has go installed (and previous libraries, use them)
+    user_gopath = os.environ.get('GOPATH')
+    if user_gopath is not None:
+        gopath = gopath + ':' + user_gopath
+
+    os.environ['GOPATH'] = gopath
     return tmpgo
