@@ -223,6 +223,7 @@ class Openmpi(AutotoolsPackage):
         default=False,
         description='Do not remove mpirun/mpiexec when building with slurm'
     )
+    variant('wrapper_ldflags', default=True, description='Enable wrapper ldflags')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -360,11 +361,12 @@ class Openmpi(AutotoolsPackage):
         ]
 
         # Add extra_rpaths dirs from compilers.yaml into link wrapper
-        rpaths = [self.compiler.cc_rpath_arg + path
-                  for path in self.compiler.extra_rpaths]
-        config_args.extend([
-            '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
-        ])
+        if spec.satisfies('+wrapper_ldflags', strict=True):
+            rpaths = [self.compiler.cc_rpath_arg + path
+                      for path in self.compiler.extra_rpaths]
+            config_args.extend([
+                '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
+            ])
 
         # According to this comment on github:
         #
