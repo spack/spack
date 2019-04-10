@@ -49,14 +49,15 @@ import spack.binary_distribution as binary_distribution
 
 from llnl.util.filesystem import mkdirp, touch, chgrp
 from llnl.util.filesystem import working_dir, install_tree, install
-from llnl.util.lang import memoized
+from llnl.util.lang import memoized, dedupe
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
+from spack.error import NoLibrariesError
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
-from spack.util.environment import dump_environment
+from spack.util.environment import dump_environment, filter_system_paths
 from spack.util.package_hash import package_hash
 from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
@@ -2196,13 +2197,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
-        rpaths = [self.prefix.lib, self.prefix.lib64]
-        deps = self.rpath_deps
-        rpaths.extend(d.prefix.lib for d in deps
-                      if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64 for d in deps
-                      if os.path.isdir(d.prefix.lib64))
-        return rpaths
+        try:
+            rpaths = self.spec[self.name].libs.directories
+        except NoLibrariesError:
+            rpaths = [self.prefix.lib, self.prefix.lib64]
+
+        for d in self.rpath_deps:
+            try:
+                rpaths.extend(d[d.name].libs.directories)
+            except NoLibrariesError:
+                # fallback to prefix.lib/lib64
+                if os.path.isdir(d.prefix.lib64):
+                    rpaths.append(d.prefix.lib64)
+                if os.path.isdir(d.prefix.lib):
+                    rpaths.append(d.prefix.lib)
+
+        return list(dedupe(filter_system_paths(rpaths)))
 
     @property
     def rpath_args(self):
