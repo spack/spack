@@ -40,7 +40,7 @@ This has the following consequences:
 
 #. Users should not uninstall packages from the upstream instance. Since the
    upstream instance doesn't know about the local instance, it cannot prevent
-   the installation of packages which the local instance depends on.
+   the uninstallation of packages which the local instance depends on.
 
 Other details about upstream installations:
 
@@ -53,7 +53,7 @@ Other details about upstream installations:
    the local Spack instance will treat this the same as a Spack-installed
    package. This feature will only work if the upstream Spack instance
    includes the upstream functionality (i.e. if its commit is after March
-   27, 2019)
+   27, 2019).
 
 ---------------------------------------
 Using Multiple Upstream Spack Instances
@@ -62,7 +62,7 @@ Using Multiple Upstream Spack Instances
 A single Spack instance can use multiple upstream Spack installations. Spack
 will search upstream instances in the order you list them in your
 configuration. If your installation refers to instances X and Y, in that order,
-then instance X must list Y as an upstream in its own ``config.yaml``
+then instance X must list Y as an upstream in its own ``config.yaml``.
 
 -----------------------------------
 Using Modules for Upstream Packages
@@ -89,7 +89,7 @@ configuration:
 
 Each time new packages are installed in the upstream Spack instance, the
 upstream Spack maintainer should run ``spack module tcl refresh`` (or the
-corresponding command for the type of module they intend to use)
+corresponding command for the type of module they intend to use).
 
 .. note::
 
