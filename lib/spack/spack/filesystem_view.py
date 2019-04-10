@@ -14,7 +14,8 @@ from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
 from llnl.util.lang import match_predicate, index_by
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import (
+    mkdirp, remove_dead_links, remove_empty_directories)
 
 import spack.util.spack_yaml as s_yaml
 
@@ -407,7 +408,7 @@ class YamlFilesystemView(FilesystemView):
         set(map(remove_extension, extensions))
         set(map(self.remove_standalone, standalones))
 
-        self.purge_empty_directories()
+        self._purge_empty_directories()
 
     def remove_extension(self, spec, with_dependents=True):
         """
@@ -575,18 +576,15 @@ class YamlFilesystemView(FilesystemView):
         else:
             tty.warn(self._croot + "No packages found.")
 
-    def purge_empty_directories(self):
-        """
-            Ascend up from the leaves accessible from `path`
-            and remove empty directories.
-        """
-        for dirpath, subdirs, files in os.walk(self._root, topdown=False):
-            for sd in subdirs:
-                sdp = os.path.join(dirpath, sd)
-                try:
-                    os.rmdir(sdp)
-                except OSError:
-                    pass
+    def _purge_empty_directories(self):
+        remove_empty_directories(self._root)
+
+    def _purge_broken_links(self):
+        remove_dead_links(self._root)
+
+    def clean(self):
+        self._purge_broken_links()
+        self._purge_empty_directories()
 
     def unlink_meta_folder(self, spec):
         path = self.get_path_meta_folder(spec)

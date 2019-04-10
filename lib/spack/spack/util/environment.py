@@ -25,6 +25,18 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
     system_paths
 
 
+_shell_set_strings = {
+    'sh': 'export {0}={1};\n',
+    'csh': 'setenv {0} {1};\n',
+}
+
+
+_shell_unset_strings = {
+    'sh': 'unset {0};\n',
+    'csh': 'unsetenv {0};\n',
+}
+
+
 def is_system_path(path):
     """Predicate that given a path returns True if it is a system path,
     False otherwise.
@@ -138,62 +150,62 @@ class NameValueModifier(object):
 
 class SetEnv(NameValueModifier):
 
-    def execute(self):
-        os.environ[self.name] = str(self.value)
+    def execute(self, env):
+        env[self.name] = str(self.value)
 
 
 class AppendFlagsEnv(NameValueModifier):
 
-    def execute(self):
-        if self.name in os.environ and os.environ[self.name]:
-            os.environ[self.name] += self.separator + str(self.value)
+    def execute(self, env):
+        if self.name in env and env[self.name]:
+            env[self.name] += self.separator + str(self.value)
         else:
-            os.environ[self.name] = str(self.value)
+            env[self.name] = str(self.value)
 
 
 class UnsetEnv(NameModifier):
 
-    def execute(self):
+    def execute(self, env):
         # Avoid throwing if the variable was not set
-        os.environ.pop(self.name, None)
+        env.pop(self.name, None)
 
 
 class SetPath(NameValueModifier):
 
-    def execute(self):
+    def execute(self, env):
         string_path = concatenate_paths(self.value, separator=self.separator)
-        os.environ[self.name] = string_path
+        env[self.name] = string_path
 
 
 class AppendPath(NameValueModifier):
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories.append(os.path.normpath(self.value))
-        os.environ[self.name] = self.separator.join(directories)
+        env[self.name] = self.separator.join(directories)
 
 
 class PrependPath(NameValueModifier):
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories = [os.path.normpath(self.value)] + directories
-        os.environ[self.name] = self.separator.join(directories)
+        env[self.name] = self.separator.join(directories)
 
 
 class RemovePath(NameValueModifier):
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
-        os.environ[self.name] = self.separator.join(directories)
+        env[self.name] = self.separator.join(directories)
 
 
 class EnvironmentModifications(object):
@@ -361,7 +373,28 @@ class EnvironmentModifications(object):
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                x.execute()
+                x.execute(os.environ)
+
+    def shell_modifications(self, shell='sh'):
+        """Return shell code to apply the modifications and clears the list."""
+        modifications = self.group_by_name()
+        new_env = os.environ.copy()
+
+        for name, actions in sorted(modifications.items()):
+            for x in actions:
+                x.execute(new_env)
+
+        cmds = ''
+        for name in set(new_env) & set(os.environ):
+            new = new_env.get(name, None)
+            old = os.environ.get(name, None)
+            if new != old:
+                if new is None:
+                    cmds += _shell_unset_strings[shell].format(name)
+                else:
+                    cmds += _shell_set_strings[shell].format(name,
+                                                             new_env[name])
+        return cmds
 
     @staticmethod
     def from_sourcing_file(filename, *args, **kwargs):
