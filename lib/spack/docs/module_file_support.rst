@@ -600,6 +600,9 @@ The configuration above will generate dotkit module files that will not contain
 modifications to either ``CPATH`` or ``LIBRARY_PATH`` and environment module
 files that instead will contain these modifications.
 
+
+.. _autoloading-dependencies:
+
 """""""""""""""""""""
 Autoload dependencies
 """""""""""""""""""""
