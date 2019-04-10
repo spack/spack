@@ -37,7 +37,7 @@ class SuiteSparse(Package):
 
     depends_on('cuda', when='+cuda')
 
-    patch('tbb_453.patch', when='@4.5.3:+tbb')
+    patch('tbb_453.patch', when='@4.5.3:4.5.5+tbb')
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
