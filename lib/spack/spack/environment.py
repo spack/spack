@@ -9,9 +9,11 @@ import sys
 import shutil
 
 import ruamel.yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.tty.color import colorize
 
 import spack.error
 import spack.repo
@@ -20,7 +22,9 @@ import spack.spec
 import spack.util.spack_json as sjson
 import spack.config
 from spack.spec import Spec
+from spack.filesystem_view import YamlFilesystemView
 
+from spack.util.environment import EnvironmentModifications
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -56,6 +60,7 @@ spack:
   # add package specs to the `specs` list
   specs:
   -
+  view: true
 """
 #: regex for validating enviroment names
 valid_environment_name_re = r'^\w[\w-]*$'
@@ -79,7 +84,9 @@ def validate_env_name(name):
     return name
 
 
-def activate(env, use_env_repo=False):
+def activate(
+    env, use_env_repo=False, add_view=True, shell='sh', prompt=None
+):
     """Activate an environment.
 
     To activate an environment, we add its configuration scope to the
@@ -90,8 +97,12 @@ def activate(env, use_env_repo=False):
         env (Environment): the environment to activate
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
+        add_view (bool): generate commands to add view to path variables
+        shell (string): One of `sh`, `csh`.
+        prompt (string): string to add to the users prompt, or None
 
-    TODO: Add support for views here.  Activation should set up the shell
+    Returns:
+        cmds: Shell commands to activate environment.
     TODO: environment to use the activated spack environment.
     """
     global _active_environment
@@ -103,13 +114,41 @@ def activate(env, use_env_repo=False):
 
     tty.debug("Using environmennt '%s'" % _active_environment.name)
 
+    # Construct the commands to run
+    cmds = ''
+    if shell == 'csh':
+        # TODO: figure out how to make color work for csh
+        cmds += 'setenv SPACK_ENV %s;\n' % env.path
+        cmds += 'alias despacktivate "spack env deactivate";\n'
+        if prompt:
+            cmds += 'if (! $?SPACK_OLD_PROMPT ) '
+            cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
+            cmds += 'set prompt="%s ${prompt}";\n' % prompt
+    else:
+        if 'color' in os.environ['TERM'] and prompt:
+            prompt = colorize('@G{%s} ' % prompt, color=True)
 
-def deactivate():
+        cmds += 'export SPACK_ENV=%s;\n' % env.path
+        cmds += "alias despacktivate='spack env deactivate';\n"
+        if prompt:
+            cmds += 'if [ -z "${SPACK_OLD_PS1}" ]; then\n'
+            cmds += 'export SPACK_OLD_PS1="${PS1}"; fi;\n'
+            cmds += 'export PS1="%s ${PS1}";\n' % prompt
+
+    if add_view and env._view_path:
+        cmds += env.add_view_to_shell(shell)
+
+    return cmds
+
+
+def deactivate(shell='sh'):
     """Undo any configuration or repo settings modified by ``activate()``.
 
+    Arguments:
+        shell (string): One of `sh`, `csh`. Shell style to use.
+
     Returns:
-        (bool): True if an environment was deactivated, False if no
-        environment was active.
+        (string): shell commands for `shell` to undo environment variables
 
     """
     global _active_environment
@@ -123,8 +162,28 @@ def deactivate():
     if _active_environment._repo:
         spack.repo.path.remove(_active_environment._repo)
 
+    cmds = ''
+    if shell == 'csh':
+        cmds += 'unsetenv SPACK_ENV;\n'
+        cmds += 'if ( $?SPACK_OLD_PROMPT ) '
+        cmds += 'set prompt="$SPACK_OLD_PROMPT" && '
+        cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
+        cmds += 'unalias despacktivate;\n'
+    else:
+        cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
+        cmds += 'unalias despacktivate;\n'
+        cmds += 'if [ -n "$SPACK_OLD_PS1" ]; then\n'
+        cmds += 'export PS1="$SPACK_OLD_PS1";\n'
+        cmds += 'unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
+        cmds += 'fi;\n'
+
+    if _active_environment._view_path:
+        cmds += _active_environment.rm_view_from_shell(shell)
+
     tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
     _active_environment = None
+
+    return cmds
 
 
 def find_environment(args):
@@ -265,12 +324,12 @@ def read(name):
     return Environment(root(name))
 
 
-def create(name, init_file=None):
+def create(name, init_file=None, with_view=None):
     """Create a named environment in Spack."""
     validate_env_name(name)
     if exists(name):
         raise SpackEnvironmentError("'%s': environment already exists" % name)
-    return Environment(root(name), init_file)
+    return Environment(root(name), init_file, with_view)
 
 
 def config_dict(yaml_data):
@@ -327,7 +386,7 @@ def _write_yaml(data, str_or_file):
 
 
 class Environment(object):
-    def __init__(self, path, init_file=None):
+    def __init__(self, path, init_file=None, with_view=None):
         """Create a new environment.
 
         The environment can be optionally initialized with either a
@@ -337,39 +396,41 @@ class Environment(object):
             path (str): path to the root directory of this environment
             init_file (str or file object): filename or file object to
                 initialize the environment
+            with_view (str or bool): whether a view should be maintained for
+                the environment. If the value is a string, it specifies the
+                path to the view.
         """
         self.path = os.path.abspath(path)
         self.clear()
 
         if init_file:
-            # initialize the environment from a file if provided
             with fs.open_if_filename(init_file) as f:
                 if hasattr(f, 'name') and f.name.endswith('.lock'):
-                    # Initialize the environment from a lockfile
+                    self._read_manifest(default_manifest_yaml)
                     self._read_lockfile(f)
                     self._set_user_specs_from_lockfile()
-                    self.yaml = _read_yaml(default_manifest_yaml)
                 else:
-                    # Initialize the environment from a spack.yaml file
                     self._read_manifest(f)
         else:
-            # read lockfile, if it exists
-            if os.path.exists(self.lock_path):
-                with open(self.lock_path) as f:
-                    self._read_lockfile(f)
-
-            if os.path.exists(self.manifest_path):
-                # read the spack.yaml file, if exists
+            default_manifest = not os.path.exists(self.manifest_path)
+            if default_manifest:
+                self._read_manifest(default_manifest_yaml)
+            else:
                 with open(self.manifest_path) as f:
                     self._read_manifest(f)
 
-            elif self.concretized_user_specs:
-                # if not, take user specs from the lockfile
-                self._set_user_specs_from_lockfile()
-                self.yaml = _read_yaml(default_manifest_yaml)
-            else:
-                # if there's no manifest or lockfile, use the default
-                self._read_manifest(default_manifest_yaml)
+            if os.path.exists(self.lock_path):
+                with open(self.lock_path) as f:
+                    self._read_lockfile(f)
+                if default_manifest:
+                    self._set_user_specs_from_lockfile()
+
+        if with_view is False:
+            self._view_path = None
+        elif isinstance(with_view, six.string_types):
+            self._view_path = with_view
+        # If with_view is None, then defer to the view settings determined by
+        # the manifest file
 
     def _read_manifest(self, f):
         """Read manifest file and set up user specs."""
@@ -377,6 +438,17 @@ class Environment(object):
         spec_list = config_dict(self.yaml).get('specs')
         if spec_list:
             self.user_specs = [Spec(s) for s in spec_list if s]
+
+        enable_view = config_dict(self.yaml).get('view')
+        # enable_view can be true/false, a string, or None (if the manifest did
+        # not specify it)
+        if enable_view is True or enable_view is None:
+            self._view_path = self.default_view_path
+        elif isinstance(enable_view, six.string_types):
+            self._view_path = enable_view
+        else:
+            # enable_view is False
+            self._view_path = None
 
     def _set_user_specs_from_lockfile(self):
         """Copy user_specs from a read-in lockfile."""
@@ -435,6 +507,10 @@ class Environment(object):
     @property
     def log_path(self):
         return os.path.join(self.path, env_subdir_name, 'logs')
+
+    @property
+    def default_view_path(self):
+        return os.path.join(self.env_subdir_path, 'view')
 
     @property
     def repo(self):
@@ -619,7 +695,97 @@ class Environment(object):
                 concrete = spec.concretized()
                 self._add_concrete_spec(spec, concrete)
 
-        concrete.package.do_install(**install_args)
+        self._install(concrete, **install_args)
+
+    def _install(self, spec, **install_args):
+        spec.package.do_install(**install_args)
+
+        # Make sure log directory exists
+        log_path = self.log_path
+        fs.mkdirp(log_path)
+
+        with fs.working_dir(self.path):
+            # Link the resulting log file into logs dir
+            build_log_link = os.path.join(
+                log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
+            if os.path.lexists(build_log_link):
+                os.remove(build_log_link)
+            os.symlink(spec.package.build_log_path, build_log_link)
+
+    def view(self):
+        if not self._view_path:
+            raise SpackEnvironmentError(
+                "{0} does not have a view enabled".format(self.name))
+
+        return YamlFilesystemView(
+            self._view_path, spack.store.layout, ignore_conflicts=True)
+
+    def update_view(self, view_path):
+        if self._view_path and self._view_path != view_path:
+            shutil.rmtree(self._view_path)
+
+        self._view_path = view_path
+
+    def regenerate_view(self):
+        if not self._view_path:
+            tty.debug("Skip view update, this environment does not"
+                      " maintain a view")
+            return
+
+        specs_for_view = []
+        for spec in self._get_environment_specs():
+            # The view does not store build deps, so if we want it to
+            # recognize environment specs (which do store build deps), then
+            # they need to be stripped
+            specs_for_view.append(spack.spec.Spec.from_dict(
+                spec.to_dict(all_deps=False)
+            ))
+        installed_specs_for_view = set(s for s in specs_for_view
+                                       if s.package.installed)
+
+        view = self.view()
+        view.clean()
+        specs_in_view = set(view.get_all_specs())
+        tty.msg("Updating view at {0}".format(self._view_path))
+
+        rm_specs = specs_in_view - installed_specs_for_view
+        view.remove_specs(*rm_specs, with_dependents=False)
+
+        add_specs = installed_specs_for_view - specs_in_view
+        view.add_specs(*add_specs, with_dependencies=False)
+
+    def _shell_vars(self):
+        updates = [
+            ('PATH', ['bin']),
+            ('MANPATH', ['man', 'share/man']),
+            ('ACLOCAL_PATH', ['share/aclocal']),
+            ('LD_LIBRARY_PATH', ['lib', 'lib64']),
+            ('LIBRARY_PATH', ['lib', 'lib64']),
+            ('CPATH', ['include']),
+            ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig']),
+            ('CMAKE_PREFIX_PATH', ['']),
+        ]
+        path_updates = list()
+        for var, subdirs in updates:
+            paths = filter(lambda x: os.path.exists(x),
+                           list(os.path.join(self._view_path, x)
+                                for x in subdirs))
+            path_updates.append((var, paths))
+        return path_updates
+
+    def add_view_to_shell(self, shell):
+        env_mod = EnvironmentModifications()
+        for var, paths in self._shell_vars():
+            for path in paths:
+                env_mod.prepend_path(var, path)
+        return env_mod.shell_modifications(shell)
+
+    def rm_view_from_shell(self, shell):
+        env_mod = EnvironmentModifications()
+        for var, paths in self._shell_vars():
+            for path in paths:
+                env_mod.remove_path(var, path)
+        return env_mod.shell_modifications(shell)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
@@ -648,11 +814,6 @@ class Environment(object):
 
     def install_all(self, args=None):
         """Install all concretized specs in an environment."""
-
-        # Make sure log directory exists
-        log_path = self.log_path
-        fs.mkdirp(log_path)
-
         for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[concretized_hash]
 
@@ -662,16 +823,17 @@ class Environment(object):
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
 
-            with fs.working_dir(self.path):
-                spec.package.do_install(**kwargs)
+            self._install(spec, **kwargs)
 
             if not spec.external:
                 # Link the resulting log file into logs dir
                 build_log_link = os.path.join(
-                    log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
-                if os.path.exists(build_log_link):
+                    self.log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
+                if os.path.lexists(build_log_link):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
+
+        self.regenerate_view()
 
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""
@@ -857,12 +1019,25 @@ class Environment(object):
         self._repo = None
 
         # put the new user specs in the YAML
-        yaml_spec_list = config_dict(self.yaml).setdefault('specs', [])
+        yaml_dict = config_dict(self.yaml)
+        yaml_spec_list = yaml_dict.setdefault('specs', [])
         yaml_spec_list[:] = [str(s) for s in self.user_specs]
+
+        if self._view_path == self.default_view_path:
+            view = True
+        elif self._view_path:
+            view = self._view_path
+        else:
+            view = False
+        config_dict(self.yaml)['view'] = view
 
         # if all that worked, write out the manifest file at the top level
         with fs.write_tmp_and_move(self.manifest_path) as f:
             _write_yaml(self.yaml, f)
+
+        # TODO: for operations that just add to the env (install etc.) this
+        # could just call update_view
+        self.regenerate_view()
 
     def __enter__(self):
         self._previous_active = _active_environment
