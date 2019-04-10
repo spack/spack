@@ -7,6 +7,7 @@ import pytest
 import llnl.util.lang
 
 import spack.architecture
+import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec
@@ -525,3 +526,24 @@ class TestConcretize(object):
         t.concretize()
 
         assert s.dag_hash() == t.dag_hash()
+
+    @pytest.mark.parametrize('abstract_specs, checklist', [
+        # Handle
+        (['mpileaks', 'callpath@0.9', 'dyninst@8.1.1'],
+         [['callpath@0.9', 'dyninst@8.1.1'],  # mpileaks
+          ['callpath@0.9', 'dyninst@8.1.1'],  # callpath
+          ['dyninst@8.1.1']  # dyninst
+          ]),
+        # Handle recursive syntax within specs
+        (['mpileaks', 'callpath@0.9 ^dyninst@8.1.1', 'dyninst'],
+         [['callpath@0.9', 'dyninst@8.1.1'],  # mpileaks
+          ['callpath@0.9', 'dyninst@8.1.1'],  # callpath
+          ['dyninst@8.1.1']  # dyninst
+          ])
+    ])
+    def test_simultaneous_concretization_of_specs(
+            self, abstract_specs, checklist
+    ):
+        specs = spack.concretize.concretize_specs_together(*abstract_specs)
+        for spec, checks in zip(specs, checklist):
+            assert all(check in spec for check in checks)
