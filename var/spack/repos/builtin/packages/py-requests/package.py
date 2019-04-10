@@ -31,6 +31,11 @@ class PyRequests(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
+    depends_on('py-chardet@3.0.2:3.0.999', type=('build', 'run'), when='@2.16.0:')
+    depends_on('py-idna@2.5', type=('build', 'run'), when='@2.16.0:')
+    depends_on('py-urllib3@1.21.1:1.21.999', type=('build', 'run'), when='@2.16.0:')
+    depends_on('py-certifi@2017.4.17', type=('build', 'run'), when='@2.16.0:')
+
     depends_on('py-pytest@2.8.0:',        type='test')
     depends_on('py-pytest-cov',           type='test')
     depends_on('py-pytest-httpbin@0.0.7', type='test')
