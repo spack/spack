@@ -546,3 +546,6 @@ class TestConcretize(object):
         specs = spack.concretize.concretize_specs_together(*abstract_specs)
         for spec, checks in zip(specs, checklist):
             assert all(check in spec for check in checks)
+            # Make sure the spec we test are top-level specs
+            # with no dependents
+            assert not spec.dependents()

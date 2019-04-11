@@ -514,7 +514,7 @@ def concretize_specs_together(*abstract_specs):
         concretization_root.concretize()
         # Retrieve the direct dependencies
         concrete_specs = [
-            concretization_root[spec.name] for spec in abstract_specs
+            concretization_root[spec.name].copy() for spec in abstract_specs
         ]
 
     return concrete_specs
