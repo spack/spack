@@ -683,6 +683,19 @@ class IntelPackage(PackageBase):
         return omp_libs
 
     @property
+    def _gcc_executable(self):
+        '''Return GCC executable'''
+        # Match the available gcc, as it's done in tbbvars.sh.
+        gcc_name = 'gcc'
+        # but first check if -gcc-name is specified in cflags
+        for flag in self.spec.compiler_flags['cflags']:
+            if flag.startswith('-gcc-name='):
+                gcc_name = flag.split('-gcc-name=')[1]
+                break
+        debug_print(gcc_name)
+        return Executable(gcc_name)
+
+    @property
     def tbb_libs(self):
         '''Supply LibraryList for linking TBB'''
 
@@ -693,7 +706,7 @@ class IntelPackage(PackageBase):
         # option: "icpc -tbb"
 
         # TODO: clang(?)
-        gcc = Executable('gcc')     # must be gcc, not self.compiler.cc
+        gcc = self._gcc_executable     # must be gcc, not self.compiler.cc
         cxx_lib_path = gcc(
             '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
 
@@ -704,8 +717,7 @@ class IntelPackage(PackageBase):
     @property
     def _tbb_abi(self):
         '''Select the ABI needed for linking TBB'''
-        # Match the available gcc, as it's done in tbbvars.sh.
-        gcc = Executable('gcc')
+        gcc = self._gcc_executable
         matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
                             gcc('--version', output=str), re.I | re.M)
         abi = ''
