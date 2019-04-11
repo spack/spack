@@ -19,7 +19,7 @@ class Fastmath(Package):
     version('1.0', 'e2b724dfcc31d735897971db91be89ff')
 
     # BundlePackage
-    depends_on('amrex dimensions=3')
+    depends_on('amrex') # default is 3 dimensions
     depends_on('chombo@3.2')
     depends_on('hypre~internal-superlu')
 #    depends_on('ml-trilinos')  # hoping for stripped down install of just ml
