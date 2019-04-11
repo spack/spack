@@ -22,10 +22,8 @@ class Fastmath(Package):
     depends_on('boxlib dims=3')
     depends_on('chombo@3.2')
     depends_on('hypre~internal-superlu')
-    depends_on('mesquite')
 #    depends_on('ml-trilinos')  # hoping for stripped down install of just ml
 #    depends_on('nox-trilinos')  # hoping for stripped down install of just nox
-    depends_on('moab')
     depends_on('mpi')
     depends_on('arpack-ng')
     depends_on('petsc')
