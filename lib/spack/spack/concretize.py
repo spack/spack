@@ -529,9 +529,9 @@ class NoCompilersForArchError(spack.error.SpackError):
                    (arch.os, arch.target))
 
         available_os_target_strs = list()
-        for operative_system, t in available_os_targets:
-            os_target_str = "%s-%s" % (operative_system, t) if t \
-                else operative_system
+        for operating_system, t in available_os_targets:
+            os_target_str = "%s-%s" % (operating_system, t) if t \
+                else operating_system
             available_os_target_strs.append(os_target_str)
         err_msg += (
             "\nCompilers are defined for the following"

@@ -528,7 +528,6 @@ class TestConcretize(object):
         assert s.dag_hash() == t.dag_hash()
 
     @pytest.mark.parametrize('abstract_specs, checklist', [
-        # Handle
         (['mpileaks', 'callpath@0.9', 'dyninst@8.1.1'],
          [['callpath@0.9', 'dyninst@8.1.1'],  # mpileaks
           ['callpath@0.9', 'dyninst@8.1.1'],  # callpath
