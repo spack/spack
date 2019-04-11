@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 
+import codecs
 import re
 import os
 import ssl
@@ -12,9 +13,11 @@ import sys
 import traceback
 import hashlib
 
+from types import CodeType, FunctionType
+
+from six import PY3
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
-from six.moves.urllib.parse import urljoin
 import multiprocessing.pool
 
 try:
@@ -36,7 +39,11 @@ import spack.url
 import spack.stage
 import spack.error
 import spack.util.crypto
+
+from spack.util.url import join as urljoin, parse as urlparse
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
+
+from spack.s3_handler import open as s3_open
 
 
 # Timeout in seconds for web requests
@@ -86,25 +93,39 @@ else:
             super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
-def _read_from_url(url, accept_content_type=None):
+__UNABLE_TO_VERIFY_SSL = (
+        lambda pyver: (
+            (pyver < (2, 7, 9)) or
+            ((3,) < pyver < (3, 4, 3))
+        ))(sys.version_info)
+
+def read_from_url(url, accept_content_type=None):
+    parsed_url = urlparse(url)
     context = None
+
     verify_ssl = spack.config.get('config:verify_ssl')
-    pyver = sys.version_info
-    if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
-        if verify_ssl:
-            tty.warn("Spack will not check SSL certificates. You need to "
-                     "update your Python to enable certificate "
-                     "verification.")
-    elif verify_ssl:
+
+    user_expects_verify_ssl = lambda: (
+            verify_ssl and (
+                parsed_url.scheme == 'https' or (
+                    parsed_url.scheme == 's3' and
+                    urlparse(
+                        parsed_url.netloc, scheme='https').scheme == 'https')))
+
+    if __UNABLE_TO_VERIFY_SSL and user_expects_verify_ssl():
+        tty.warn("Spack will not check SSL certificates. You need to update"
+                 "your Python to enable certificate verification.")
+    else:
         # without a defined context, urlopen will not verify the ssl cert for
         # python 3.x
-        context = ssl.create_default_context()
-    else:
-        context = ssl._create_unverified_context()
+        context = (
+                ssl.create_default_context() if verify_ssl else
+                ssl._create_unverified_context())
 
     req = Request(url)
-
-    if accept_content_type:
+    content_type = None
+    is_web_url = parsed_url.scheme in ('http', 'https')
+    if accept_content_type and is_web_url:
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
         # It would be nice to do this with the HTTP Accept header to avoid
@@ -113,29 +134,29 @@ def _read_from_url(url, accept_content_type=None):
         req.get_method = lambda: "HEAD"
         resp = _urlopen(req, timeout=_timeout, context=context)
 
-        if "Content-type" not in resp.headers:
-            tty.debug("ignoring page " + url)
-            return None, None
-
-        if not resp.headers["Content-type"].startswith(accept_content_type):
-            tty.debug("ignoring page " + url + " with content type " +
-                      resp.headers["Content-type"])
-            return None, None
+        content_type = resp.headers.get('Content-type')
 
     # Do the real GET request when we know it's just HTML.
     req.get_method = lambda: "GET"
     response = _urlopen(req, timeout=_timeout, context=context)
-    response_url = response.geturl()
 
-    # Read the page and and stick it in the map we'll return
-    page = response.read().decode('utf-8')
+    if accept_content_type and not is_web_url:
+        content_type = response.headers.get('Content-type')
 
-    return response_url, page
+    reject_content_type = (
+            accept_content_type and (
+                content_type is None or
+                not content_type.startswith(accept_content_type)))
 
+    if reject_content_type:
+        tty.debug("ignoring page {0}{1}{2}".format(
+            url,
+            " with content type " if content_type is not None else "",
+            content_type or ""))
 
-def read_from_url(url, accept_content_type=None):
-    resp_url, contents = _read_from_url(url, accept_content_type)
-    return contents
+        return None, None, None
+
+    return response.geturl(), response.headers, response
 
 
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
@@ -159,11 +180,11 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         root = re.sub('/index.html$', '', root)
 
     try:
-        response_url, page = _read_from_url(url, 'text/html')
-
-        if not response_url or not page:
+        response_url, _, response = read_from_url(url, 'text/html')
+        if not response_url or not response:
             return pages, links
 
+        page = codecs.getreader('utf-8')(response).read()
         pages[response_url] = page
 
         # Parse out the links in the page
@@ -243,13 +264,63 @@ def _spider_wrapper(args):
     return _spider(*args)
 
 
-def _urlopen(*args, **kwargs):
+# TODO(opadron): There's gotta be a better place for stuff like this.
+CODE_THAT_DOES_NOTHING = (lambda: None).func_code.co_code
+
+def noopify(func):
+    return FunctionType(
+            CodeType(*(
+                [func.func_code.co_argcount] +
+
+                ([
+                    func.func_code.co_kwonlyargcount
+                ] if PY3 else []) +
+
+                [
+                    func.func_code.co_nlocals,
+                    func.func_code.co_stacksize,
+                    func.func_code.co_flags,
+                    CODE_THAT_DOES_NOTHING,
+                    func.func_code.co_consts,
+                    func.func_code.co_names,
+                    func.func_code.co_varnames,
+                    func.func_code.co_filename,
+                    func.func_code.co_name,
+                    func.func_code.co_firstlineno,
+                    func.func_code.co_lnotab,
+                    func.func_code.co_freevars,
+                    func.func_code.co_cellvars
+                ]
+            )),
+
+            func.func_globals,
+            func.func_name,
+            func.func_defaults,
+            func.func_closure)
+
+
+def _urlopen(req, *args, **kwargs):
     """Wrapper for compatibility with old versions of Python."""
-    # We don't pass 'context' parameter to urlopen because it
-    # was introduces only starting versions 2.7.9 and 3.4.3 of Python.
-    if 'context' in kwargs and kwargs['context'] is None:
-        del kwargs['context']
-    return urlopen(*args, **kwargs)
+    url = req
+    try:
+        url = url.get_full_url()
+    except AttributeError:
+        pass
+
+    open_func = (
+            s3_open if urlparse(url).scheme == 's3'
+            else urlopen)
+
+    try:
+        # does nothing (e.g.: only throws if the passed arguments don't match
+        # the original function's signature)
+        noopify(open_func)(req, *args, **kwargs)
+    except TypeError:
+        # We don't pass 'context' parameter because it was only introduced
+        # starting with versions 2.7.9 and 3.4.3 of Python.
+        kwargs.pop('context', None)
+
+    return open_func(req, *args, **kwargs)
 
 
 def spider(root_url, depth=0):

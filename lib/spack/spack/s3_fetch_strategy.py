@@ -19,6 +19,7 @@ from llnl.util import tty
 import spack
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.url import parse as urlparse
+from spack.util.web import read_from_url
 
 
 def _needs_stage(fun):
@@ -57,49 +58,18 @@ class S3FetchStrategy(URLFetchStrategy):
         if parsed_url.scheme != 's3':
             raise ValueError('S3FetchStrategy can only fetch from s3:// urls.')
 
-        # NOTE(opadron): import boto and friends as late as possible.  We don't
-        # want to require boto as a dependency unless the user actually wants to
-        # access S3 mirrors.
-        #
-        # TODO(opadron): handle case where API endpoint is *not* AWS
-        from boto3 import Session
-        kwargs = {}
-
-        if hasattr(parsed_url, 's3_profile'):
-            kwargs['profile_name'] = parsed_url.s3_profile
-
-        elif (hasattr(parsed_url, 's3_access_key_id') and
-                hasattr(parsed_url, 's3_secret_access_key')):
-            kwargs['aws_access_key_id'] = parsed_url.s3_access_key_id
-            kwargs['aws_secret_access_key'] = parsed_url.s3_secret_access_key
-
-        session = Session(**kwargs)
-        s3_client_args = {
-                "use_ssl": spack.config.get('config:verify_ssl')}
-
-        # NOTE: if no access credentials provided above, then access anonymously
-        if not session.get_credentials():
-            from botocore import UNSIGNED
-            from botocore.client import Config
-
-            s3_client_args["config"] = Config(signature_version=UNSIGNED)
-
-        s3 = session.client('s3', **s3_client_args)
-
         save_file = getattr(self.stage, "save_filename", None)
         tty.msg("Fetching %s" % self.url)
 
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
-            obj = s3.get_object(
-                    Bucket=parsed_url.s3_bucket,
-                    Key=parsed_url.path)
+            _, headers, stream = read_from_url(self.url)
 
             with open(basename, 'wb') as f:
-                copyfileobj(obj['Body'], f)
+                copyfileobj(stream, f)
 
-            content_type = obj['ContentType']
+            content_type = headers['ContentType']
 
         if content_type == 'text/html':
             msg = ("The contents of {0} look like HTML. Either the URL "

@@ -14,6 +14,16 @@ from six.moves.urllib.parse import urlparse, ParseResult
 
 from spack.util.path import canonicalize_path
 
+
+class ParseResultWrapper(ParseResult):
+    def __setattr__(self, key, val):
+        object.__setattr__(self, key, val)
+
+    def __str__(self):
+        return ''.join((
+            super(ParseResultWrapper, self).__str__(),
+            ' ({})'.format(str(self.__dict__)) if self.__dict__ else ''))
+
 def _split_all(path):
     result = []
     a = path
@@ -27,17 +37,38 @@ def _split_all(path):
     return result
 
 
-def parse(url):
+def parse(url, scheme='file'):
     """Parse a mirror url."""
     (scheme, netloc, path, params, query, _) = urlparse(
-            url, scheme='file', allow_fragments=False)
+            url, scheme=scheme, allow_fragments=False)
 
-    scheme = scheme.lower()
+    scheme = (scheme or 'file').lower()
     extra_attrs = {}
 
     if scheme == 'file':
         path = canonicalize_path(path)
     elif scheme == 's3':
+        # NOTE(opadron): For s3 URLs, we assume API access over https.  If users
+        # provide a URL with their own endpoint, they can explicitly specify the
+        # API access protocol as part of the netloc.
+        #
+        # e.g.:  s3://my-profile@http://localhost:9000/my-bucket/path...
+        #
+        # ...which urllib parses as:
+        #
+        #        (s3://)(my-profile@http:)(//localhost:9000/my-bucket/path...)
+        #       (scheme)(netloc          )(path                              )
+        #
+        # This little branch takes care of this specific case where part of the
+        # "path" needs to be extracted and concatenated to the "netloc".
+        #
+        # Note, that any API access protocol specified in these URLs are not
+        # related to whether Spack validates certificates for https connections.
+        # That is controlled by Spack's config and/or -k/--insecure CLI flags.
+        if netloc.endswith(':') and path.startswith('//'):
+            netloc_host, path = (path[2:].split('/', 1) + [''])[:2]
+            netloc = '//'.join((netloc, netloc_host))
+
         path_tokens = [part for part in _split_all(path)
                 if part and part != '/']
 
@@ -58,12 +89,12 @@ def parse(url):
                 extra_attrs["s3_access_key_id"] = key_id
                 extra_attrs["s3_secret_access_key"] = key_secret
 
-    result = ParseResult(scheme=scheme,
-                         netloc=netloc,
-                         path=path,
-                         params=params,
-                         query=query,
-                         fragment=None)
+    result = ParseResultWrapper(scheme=scheme,
+                                netloc=netloc,
+                                path=path,
+                                params=params,
+                                query=query,
+                                fragment=None)
 
     for key, val in extra_attrs.items():
         setattr(result, key, val)
@@ -126,12 +157,12 @@ def format(parsed_url):
             if path == '/':
                 path = ''
 
-    return ParseResult(scheme=scheme,
-                       netloc=netloc,
-                       path=path,
-                       params=params,
-                       query=query,
-                       fragment=None).geturl()
+    return ParseResultWrapper(scheme=scheme,
+                              netloc=netloc,
+                              path=path,
+                              params=params,
+                              query=query,
+                              fragment=None).geturl()
 
 def join(base_url, path):
     if isinstance(base_url, string_types):
@@ -146,8 +177,12 @@ def join(base_url, path):
         try:
             extra_attrs["s3_profile"] = base_url.s3_profile
         except AttributeError:
-            extra_attrs["s3_access_key_id"] = base_url.s3_access_key_id
-            extra_attrs["s3_secret_access_key"] = base_url.s3_secret_access_key
+            try:
+                extra_attrs["s3_access_key_id"] = base_url.s3_access_key_id
+                extra_attrs["s3_secret_access_key"] = (
+                        base_url.s3_secret_access_key)
+            except AttributeError:
+                pass
 
 
         path_tokens = [part for part in _split_all(path)
@@ -159,12 +194,12 @@ def join(base_url, path):
 
         base_path = pathjoin('', base_path, *path_tokens)
 
-    result = ParseResult(scheme=scheme,
-                         netloc=netloc,
-                         path=base_path,
-                         params=params,
-                         query=query,
-                         fragment=None)
+    result = ParseResultWrapper(scheme=scheme,
+                                netloc=netloc,
+                                path=base_path,
+                                params=params,
+                                query=query,
+                                fragment=None)
 
     for key, val in extra_attrs.items():
         setattr(result, key, val)

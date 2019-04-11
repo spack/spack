@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import codecs
 import os
 import re
 import tarfile
@@ -725,7 +726,8 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
         spec.short_spec, '' if rebuild_on_errors else 'not ')
 
     try:
-        yaml_contents = read_from_url(file_path)
+        _, _, yaml_file = read_from_url(file_path)
+        yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
     except URLError as url_err:
         err_msg = [
             'Unable to determine whether {0} needs rebuilding,',
