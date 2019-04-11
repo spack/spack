@@ -174,6 +174,11 @@ class CDash(Reporter):
                             event['source_file'])
                     return event
 
+                # Convert errors to warnings if the package reported success.
+                if package['result'] == 'success':
+                    warnings = errors + warnings
+                    errors = []
+
                 report_data[phase]['errors'] = []
                 report_data[phase]['warnings'] = []
                 for error in errors:
