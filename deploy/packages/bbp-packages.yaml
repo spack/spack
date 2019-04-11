@@ -109,9 +109,10 @@ packages:
       - neurodamus@master~coreneuron
       - neurodamus@hippocampus~coreneuron
       - neurodamus+coreneuron^coreneuron+knl
-      - neurodamus-hippocampus
       - neurodamus-neocortex
+      - neurodamus-hippocampus
       - neurodamus-thalamus
+      - neurodamus-mousify
       - neurodamus-neocortex+coreneuron^coreneuron+knl^neuron@7.6.6
       - neurodamus-thalamus+coreneuron^coreneuron+knl^neuron@7.6.6
       - neurodamus-hippocampus+coreneuron^coreneuron+knl^neuron@7.6.6
