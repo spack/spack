@@ -476,39 +476,43 @@ def concretize_specs_together(*abstract_specs):
     """Given a number of specs as input, tries to concretize them together.
 
     Args:
-        *abstract_specs: abstract specs to be concretized
+        *abstract_specs: abstract specs to be concretized, given either
+            as Specs or strings
 
     Returns:
         List of concretized specs
     """
-    # Create a temporary repository with an umbrella package
-    # that depends on each spec
-    tmpdir = tempfile.mkdtemp()
-    repo_path, namespace = spack.repo.create_repo(tmpdir)
+    def make_concretization_repository(abstract_specs):
+        """Returns the path to a temporary repository created to contain
+        a fake package that depends on all of the abstract specs.
+        """
+        tmpdir = tempfile.mkdtemp()
+        repo_path, _ = spack.repo.create_repo(tmpdir)
 
-    debug_msg = '[CONCRETIZATION]: Creating helper repository in {0}'
-    tty.debug(debug_msg.format(repo_path))
-    pkg_dir = os.path.join(repo_path, 'packages', 'concretizationroot')
-    fs.mkdirp(pkg_dir)
+        debug_msg = '[CONCRETIZATION]: Creating helper repository in {0}'
+        tty.debug(debug_msg.format(repo_path))
 
-    environment = spack.tengine.make_environment()
-    template = environment.get_template('misc/coconcretization.pyt')
+        pkg_dir = os.path.join(repo_path, 'packages', 'concretizationroot')
+        fs.mkdirp(pkg_dir)
+        environment = spack.tengine.make_environment()
+        template = environment.get_template('misc/coconcretization.pyt')
 
-    # Split recursive specs, as it seems the concretizer has issue
-    # respecting conditions on dependents expressed like
-    # depends_on('foo ^bar@1.0')
-    split_specs = []
-    for spec in abstract_specs:
-        split_specs.extend([s.strip() for s in spec.split('^')])
+        # Split recursive specs, as it seems the concretizer has issue
+        # respecting conditions on dependents expressed like
+        # depends_on('foo ^bar@1.0'), see issue #11160
+        split_specs = []
+        for spec in abstract_specs:
+            split_specs.extend([s.strip() for s in str(spec).split('^')])
+
+        with open(os.path.join(pkg_dir, 'package.py'), 'w') as f:
+            f.write(template.render(specs=[str(s) for s in split_specs]))
+
+        return spack.repo.Repo(repo_path)
 
     abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
+    concretization_repository = make_concretization_repository(abstract_specs)
 
-    with open(os.path.join(pkg_dir, 'package.py'), 'w') as f:
-        f.write(template.render(specs=[str(s) for s in split_specs]))
-
-    # Temporary use this repository on top of the existing ones
-    repo = spack.repo.Repo(repo_path)
-    with spack.repo.additional_repository(repo):
+    with spack.repo.additional_repository(concretization_repository):
         # Create a spec from that umbrella package and concretize it
         concretization_root = spack.spec.Spec('concretizationroot')
         concretization_root.concretize()
