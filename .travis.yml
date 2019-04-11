@@ -73,7 +73,7 @@ jobs:
           - r-base-core
           - r-base-dev
 
-    - python: '3.6'
+    - python: '3.7'
       sudo: required
       os: linux
       language: python
