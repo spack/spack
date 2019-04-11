@@ -78,7 +78,7 @@ class ActsCore(CMakePackage):
             cmake_variant("TGEO_PLUGIN", "tgeo")
         ]
 
-        if spec.satisfies('+tgeo'):
+        if 'root' in spec:
             cxxstd = spec['root'].variants['cxxstd'].value
             args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
 
