@@ -638,11 +638,8 @@ class RepoPath(object):
         return self.first_repo()
 
     @autospec
-    def get(self, spec, new=False):
-        """Find a repo that contains the supplied spec's package.
-
-           Raises UnknownPackageError if not found.
-        """
+    def get(self, spec):
+        """Returns the package associated with the supplied spec."""
         return self.repo_for_pkg(spec).get(spec)
 
     def get_pkg_class(self, pkg_name):
@@ -873,6 +870,7 @@ class Repo(object):
 
     @autospec
     def get(self, spec):
+        """Returns the package associated with the supplied spec."""
         if not self.exists(spec.name):
             raise UnknownPackageError(spec.name)
 
