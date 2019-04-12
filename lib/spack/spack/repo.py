@@ -44,7 +44,13 @@ from spack.util.naming import mod_to_class, possible_spack_module_names
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
-repo_namespace     = 'spack.pkg'
+repo_namespace = 'spack.pkg'
+
+
+def get_full_namespace(namespace):
+    """Returns the full namespace of a repository, given its relative one."""
+    return '{0}.{1}'.format(repo_namespace, namespace)
+
 
 #
 # These names describe how repos should be laid out in the filesystem.
@@ -332,7 +338,7 @@ class RepoIndex(object):
     updates (using ``FastPackageChecker``) and for regenerating indexes
     when they're needed.
 
-    ``Indexers`` shoudl be added to the ``RepoIndex`` using
+    ``Indexers`` should be added to the ``RepoIndex`` using
     ``add_index(name, indexer)``, and they should support the interface
     defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
     and update stored indices.
@@ -428,15 +434,9 @@ class RepoPath(object):
 
     Args:
         repos (list): list Repo objects or paths to put in this RepoPath
-
-    Optional Args:
-        repo_namespace (str): super-namespace for all packages in this
-            RepoPath (used when importing repos as modules)
     """
 
-    def __init__(self, *repos, **kwargs):
-        self.super_namespace = kwargs.get('namespace', repo_namespace)
-
+    def __init__(self, *repos):
         self.repos = []
         self.by_namespace = NamespaceTrie()
 
@@ -448,7 +448,7 @@ class RepoPath(object):
         for repo in repos:
             try:
                 if isinstance(repo, string_types):
-                    repo = Repo(repo, self.super_namespace)
+                    repo = Repo(repo)
                 self.put_last(repo)
             except RepoError as e:
                 tty.warn("Failed to initialize repository: '%s'." % repo,
@@ -500,12 +500,12 @@ class RepoPath(object):
                 If default is provided, return it when the namespace
                 isn't found.  If not, raise an UnknownNamespaceError.
         """
-        fullspace = '%s.%s' % (self.super_namespace, namespace)
-        if fullspace not in self.by_namespace:
+        full_namespace = get_full_namespace(namespace)
+        if full_namespace not in self.by_namespace:
             if default == NOT_PROVIDED:
                 raise UnknownNamespaceError(namespace)
             return default
-        return self.by_namespace[fullspace]
+        return self.by_namespace[full_namespace]
 
     def first_repo(self):
         """Get the first repo in precedence order."""
@@ -619,7 +619,7 @@ class RepoPath(object):
         # If the spec already has a namespace, then return the
         # corresponding repo if we know about it.
         if namespace:
-            fullspace = '%s.%s' % (self.super_namespace, namespace)
+            fullspace = get_full_namespace(namespace)
             if fullspace not in self.by_namespace:
                 raise UnknownNamespaceError(spec.namespace)
             return self.by_namespace[fullspace]
@@ -689,24 +689,15 @@ class Repo(object):
 
     """
 
-    def __init__(self, root, namespace=repo_namespace):
+    def __init__(self, root):
         """Instantiate a package repository from a filesystem path.
 
-        Arguments:
-        root        The root directory of the repository.
-
-        namespace   A super-namespace that will contain the repo-defined
-                    namespace (this is generally jsut `spack.pkg`). The
-                    super-namespace is Spack's way of separating repositories
-                    from other python namespaces.
-
+        Args:
+            root: the root directory of the repository
         """
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
         self.root = canonicalize_path(root)
-
-        # super-namespace for all packages in the Repo
-        self.super_namespace = namespace
 
         # check and raise BadRepoError on fail.
         def check(condition, msg):
@@ -734,11 +725,7 @@ class Repo(object):
               "Namespaces must be valid python identifiers separated by '.'")
 
         # Set up 'full_namespace' to include the super-namespace
-        if self.super_namespace:
-            self.full_namespace = "%s.%s" % (
-                self.super_namespace, self.namespace)
-        else:
-            self.full_namespace = self.namespace
+        self.full_namespace = get_full_namespace(self.namespace)
 
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split('.')
@@ -1168,7 +1155,7 @@ def create_or_construct(path, namespace=None):
     if not os.path.exists(path):
         mkdirp(path)
         create_repo(path, namespace)
-    return Repo(path, namespace)
+    return Repo(path)
 
 
 def _path():
