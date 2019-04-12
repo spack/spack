@@ -1447,8 +1447,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if install_deps or not explicit:
             if spack.config.get('config:install_missing_compilers', False):
                 tty.debug('Boostrapping {0} compiler for {1}'.format(
-                        self.spec.compiler, self.name
-                        ))
+                    self.spec.compiler, self.name
+                ))
                 comp_kwargs = kwargs.copy()
                 comp_kwargs['explicit'] = False
                 self.bootstrap_compiler(**comp_kwargs)
