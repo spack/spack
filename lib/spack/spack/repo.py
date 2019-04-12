@@ -1138,15 +1138,15 @@ def create_repo(root, namespace=None):
             config.write("  namespace: '%s'\n" % namespace)
 
     except (IOError, OSError) as e:
-        raise BadRepoError('Failed to create new repository in %s.' % root,
-                           "Caused by %s: %s" % (type(e), e))
-
         # try to clean up.
         if existed:
             shutil.rmtree(config_path, ignore_errors=True)
             shutil.rmtree(packages_path, ignore_errors=True)
         else:
             shutil.rmtree(root, ignore_errors=True)
+
+        raise BadRepoError('Failed to create new repository in %s.' % root,
+                           "Caused by %s: %s" % (type(e), e))
 
     return full_path, namespace
 
