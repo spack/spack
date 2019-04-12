@@ -77,12 +77,12 @@ class Ceed(Package):
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
     # Ideally, these can be turned into recommendations to Spack for
     # concretizing the PETSc spec, if Spack ever supports recommendations.
-    depends_on('petsc@3.11.0~hdf5~superlu-dist',
+    depends_on('petsc@3.11.1~hdf5~superlu-dist',
                when='@2.0.0+petsc+quickbuild')
-    depends_on('petsc@3.11.0+mpi+double~int64', when='@2.0.0+petsc~mfem')
+    depends_on('petsc@3.11.1+mpi+double~int64', when='@2.0.0+petsc~mfem')
     # The mfem petsc examples need the petsc variants +hypre, +suite-sparse,
     # and +mumps:
-    depends_on('petsc@3.11.0+mpi+hypre+suite-sparse+mumps+double~int64',
+    depends_on('petsc@3.11.1+mpi+hypre+suite-sparse+mumps+double~int64',
                when='@2.0.0+petsc+mfem')
     depends_on('hpgmg@0.4+fe', when='@2.0.0+petsc')
     # ceed-1.0
