@@ -82,6 +82,8 @@ class Petsc(Package):
     variant('clanguage', default='C', values=('C', 'C++'),
             description='Specify C (recommended) or C++ to compile PETSc',
             multi=False)
+    variant('fftw', default=False,
+            description='Activates support for FFTW (only parallel)')
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
     variant('knl', default=False,
@@ -164,6 +166,7 @@ class Petsc(Package):
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
+    depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
 
@@ -264,7 +267,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos'):
+                        'mumps', 'trilinos', 'fftw'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))
