@@ -5,15 +5,17 @@
 
 import abc
 import collections
-import os
-import stat
-import shutil
+import contextlib
 import errno
-import sys
+import functools
 import inspect
+import os
 import re
+import shutil
+import stat
+import sys
 import traceback
-from contextlib import contextmanager
+
 from six import string_types, add_metaclass
 
 try:
@@ -80,10 +82,11 @@ NOT_PROVIDED = object()
 _package_prepend = 'from spack.pkgkit import *'
 
 
-def _autospec(function):
-    """Decorator that automatically converts the argument of a single-arg
-       function to a Spec."""
-
+def autospec(function):
+    """Decorator that automatically converts the first argument of a
+    function to a Spec.
+    """
+    @functools.wraps(function)
     def converter(self, spec_like, *args, **kwargs):
         if not isinstance(spec_like, spack.spec.Spec):
             spec_like = spack.spec.Spec(spec_like)
@@ -551,14 +554,14 @@ class RepoPath(object):
 
         return self._patch_index
 
-    @_autospec
+    @autospec
     def providers_for(self, vpkg_spec):
         providers = self.provider_index.providers_for(vpkg_spec)
         if not providers:
             raise UnknownPackageError(vpkg_spec.name)
         return providers
 
-    @_autospec
+    @autospec
     def extensions_for(self, extendee_spec):
         return [p for p in self.all_packages() if p.extends(extendee_spec)]
 
@@ -634,7 +637,7 @@ class RepoPath(object):
         # that can operate on packages that don't exist yet.
         return self.first_repo()
 
-    @_autospec
+    @autospec
     def get(self, spec, new=False):
         """Find a repo that contains the supplied spec's package.
 
@@ -646,7 +649,7 @@ class RepoPath(object):
         """Find a class for the spec's package and return the class object."""
         return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
 
-    @_autospec
+    @autospec
     def dump_provenance(self, spec, path):
         """Dump provenance information for a spec to a particular path.
 
@@ -868,7 +871,7 @@ class Repo(object):
             tty.die("Error reading %s when opening %s"
                     % (self.config_file, self.root))
 
-    @_autospec
+    @autospec
     def get(self, spec):
         if not self.exists(spec.name):
             raise UnknownPackageError(spec.name)
@@ -891,7 +894,7 @@ class Repo(object):
                 sys.excepthook(*sys.exc_info())
             raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
-    @_autospec
+    @autospec
     def dump_provenance(self, spec, path):
         """Dump provenance information for a spec to a particular path.
 
@@ -948,14 +951,14 @@ class Repo(object):
         """Index of patches and packages they're defined on."""
         return self.index['patches']
 
-    @_autospec
+    @autospec
     def providers_for(self, vpkg_spec):
         providers = self.provider_index.providers_for(vpkg_spec)
         if not providers:
             raise UnknownPackageError(vpkg_spec.name)
         return providers
 
-    @_autospec
+    @autospec
     def extensions_for(self, extendee_spec):
         return [p for p in self.all_packages() if p.extends(extendee_spec)]
 
@@ -964,14 +967,14 @@ class Repo(object):
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownNamespaceError(spec.namespace)
 
-    @_autospec
+    @autospec
     def dirname_for_package_name(self, spec):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
         self._check_namespace(spec)
         return os.path.join(self.packages_path, spec.name)
 
-    @_autospec
+    @autospec
     def filename_for_package_name(self, spec):
         """Get the filename for the module we should load for a particular
            package.  Packages for a Repo live in
@@ -1205,7 +1208,7 @@ def set_path(repo):
     return append
 
 
-@contextmanager
+@contextlib.contextmanager
 def swap(repo_path):
     """Temporarily use another RepoPath."""
     global path
