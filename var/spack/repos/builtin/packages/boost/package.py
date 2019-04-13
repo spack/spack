@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import llnl.util.tty as tty
 import sys
 import os
 
@@ -340,8 +341,9 @@ class Boost(Package):
     def add_buildopt_symlinks(self, prefix):
         with working_dir(prefix.lib):
             for lib in os.listdir(os.curdir):
-                prefix, remainder = lib.split('.', 1)
-                symlink(lib, '%s-mt.%s' % (prefix, remainder))
+                if os.path.isfile(lib):
+                    prefix, remainder = lib.split('.', 1)
+                    symlink(lib, '%s-mt.%s' % (prefix, remainder))
 
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
