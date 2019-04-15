@@ -24,6 +24,7 @@ class Boost(Package):
     list_depth = 1
 
     version('develop', branch='develop', submodules=True)
+    version('1.70.0', '5b2e5ccc454503cfbba6c1221f5d495f0de279ea')
     version('1.69.0', 'ea6eee4b5999f9c02105386850f63a53f0250eaa')
     version('1.68.0', '18863a7cae4d58ae85eb63d400f774f60a383411')
     version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae')
@@ -339,8 +340,9 @@ class Boost(Package):
     def add_buildopt_symlinks(self, prefix):
         with working_dir(prefix.lib):
             for lib in os.listdir(os.curdir):
-                prefix, remainder = lib.split('.', 1)
-                symlink(lib, '%s-mt.%s' % (prefix, remainder))
+                if os.path.isfile(lib):
+                    prefix, remainder = lib.split('.', 1)
+                    symlink(lib, '%s-mt.%s' % (prefix, remainder))
 
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
