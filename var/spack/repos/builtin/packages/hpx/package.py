@@ -29,6 +29,9 @@ class Hpx(CMakePackage):
         'apex', 'google_perftools', 'papi', 'valgrind'
     ), description='Add support for various kind of instrumentation')
 
+    variant('networking', default=True,
+            description='Support for networking and multi=node runs')
+
     depends_on('boost@1.55.0:')
     depends_on('hwloc@1.6:')
     depends_on('python')
@@ -70,5 +73,10 @@ class Hpx(CMakePackage):
 
         # Instrumentation
         args.extend(self.instrumentation_args())
+
+        # Networking
+        args.append('-DHPX_WITH_NETWORKING={0}'.format(
+            'ON' if '+networking' in spec else 'OFF'
+        ))
 
         return args
