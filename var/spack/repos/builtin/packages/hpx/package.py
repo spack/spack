@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Hpx(CMakePackage):
+class Hpx(CMakePackage, CudaPackage):
     """C++ runtime system for parallel and distributed applications."""
 
     homepage = "http://stellar.cct.lsu.edu/tag/hpx/"
@@ -31,6 +31,7 @@ class Hpx(CMakePackage):
 
     variant('networking', default=True,
             description='Support for networking and multi=node runs')
+    variant('tools', default=True, description='Build HPX tools')
 
     depends_on('boost@1.55.0:')
     depends_on('hwloc@1.6:')
@@ -77,6 +78,16 @@ class Hpx(CMakePackage):
         # Networking
         args.append('-DHPX_WITH_NETWORKING={0}'.format(
             'ON' if '+networking' in spec else 'OFF'
+        ))
+
+        # Cuda support
+        args.append('-DHPX_WITH_CUDA={0}'.format(
+            'ON' if '+cuda' in spec else 'OFF'
+        ))
+
+        # Tools
+        args.append('-DHPX_WITH_TOOLS={0}'.format(
+            'ON' if '+tools' in spec else 'OFF'
         ))
 
         return args
