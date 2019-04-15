@@ -13,7 +13,7 @@ class Brainbuilder(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/brainbuilder"
 
     version('develop', branch='master')
-    version('0.10.4', tag='brainbuilder-v0.10.4', preferred=True)
+    version('0.10.5', tag='brainbuilder-v0.10.5', preferred=True)
     version('0.9.2', tag='brainbuilder-v0.9.2')
     version('0.8.1', tag='brainbuilder-v0.8.1')
 
