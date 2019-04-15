@@ -94,12 +94,12 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     # Prior to QMCPACK 3.5.0 Intel MKL was not properly detected with
     # non-Intel compilers without a Spack-based hack. This hack
-    # had the potential to for negative side effects and let to more
+    # had the potential for negative side effects and led to more
     # complex Python code that would have been difficult to maintain
     # long term. Note that this has not been an issue since QMCPACK 3.5.0.
     # For older versions of QMCPACK, we issue a conflict below if you
-    # try to use Intel MKL with a non-Intel compilers.
-    mkl_warning = 'QMCPACK release prior to 3.5.0 require the ' \
+    # try to use Intel MKL with a non-Intel compiler.
+    mkl_warning = 'QMCPACK releases prior to 3.5.0 require the ' \
                   'Intel compiler when linking against Intel MKL'
     conflicts('%gcc', when='@:3.4.0 ^intel-mkl', msg=mkl_warning)
     conflicts('%pgi', when='@:3.4.0 ^intel-mkl', msg=mkl_warning)
@@ -285,7 +285,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         ])
 
         # Next two environment variables were introduced in QMCPACK 3.5.0
-        # Prior to v3.5.0, these lines should be benign but you CMake
+        # Prior to v3.5.0, these lines should be benign but CMake
         # may issue a warning.
         if 'intel-mkl' in spec:
             args.append('-DENABLE_MKL=1')
