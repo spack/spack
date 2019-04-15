@@ -1441,18 +1441,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dep_kwargs['explicit'] = False
             dep_kwargs['install_deps'] = False
             for dep in self.spec.traverse(order='post', root=False):
+                if spack.config.get('config:install_missing_compilers', False):
+                    tty.debug('Boostrapping {0} compiler for {1}'.format(
+                        self.spec.compiler, self.name
+                    ))
+                    comp_kwargs = kwargs.copy()
+                    comp_kwargs['explicit'] = False
+                    comp_kwargs['install_deps'] = True
+                    dep.package.bootstrap_compiler(**comp_kwargs)
                 dep.package.do_install(**dep_kwargs)
-
-        # Then, install the compiler if it is not already installed.
-        if install_deps or not explicit:
-            if spack.config.get('config:install_missing_compilers', False):
-                tty.debug('Boostrapping {0} compiler for {1}'.format(
-                    self.spec.compiler, self.name
-                ))
-                comp_kwargs = kwargs.copy()
-                comp_kwargs['explicit'] = False
-                comp_kwargs['install_deps'] = True
-                self.bootstrap_compiler(**comp_kwargs)
 
         # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
