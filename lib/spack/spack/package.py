@@ -1451,6 +1451,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 ))
                 comp_kwargs = kwargs.copy()
                 comp_kwargs['explicit'] = False
+                comp_kwargs['install_deps'] = True
                 self.bootstrap_compiler(**comp_kwargs)
 
         # Then, install the package proper
