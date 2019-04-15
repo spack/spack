@@ -21,9 +21,13 @@ class Hpx(CMakePackage):
 
     variant(
         'malloc', default='tcmalloc',
-        description='define which allocator will be linked in',
+        description='Define which allocator will be linked in',
         values=('system', 'tcmalloc', 'jemalloc', 'tbbmalloc')
     )
+
+    variant('instrumentation', values=any_combination_of(
+        'apex', 'google_perftools', 'papi', 'valgrind'
+    ), description='Add support for various kind of instrumentation')
 
     depends_on('boost@1.55.0:')
     depends_on('hwloc@1.6:')
@@ -36,15 +40,35 @@ class Hpx(CMakePackage):
     depends_on('jemalloc', when='malloc=jemalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
 
+    # Instrumentation
+    depends_on('apex', when='instrumentation=apex')
+    depends_on('gperftools', when='instrumentation=google_perftools')
+    depends_on('papi', when='instrumentation=papi')
+    depends_on('valgrind', when='instrumentation=valgrind')
+
     # TODO: hpx can build perfectly fine in parallel, except that each
     # TODO: process might need more than 2GB to compile. This is just the
     # TODO: most conservative approach to ensure a sane build.
     parallel = False
 
+    def instrumentation_args(self):
+        for value in self.variants['instrumentation'].values:
+            if value == 'none':
+                continue
+
+            condition = 'instrumentation={0}'.format(value)
+            yield '-DHPX_WITH_{0}={1}'.format(
+                str(value).upper(), 'ON' if condition in self.spec else 'OFF'
+            )
+
     def cmake_args(self):
         spec, args = self.spec, []
 
+        # Malloc
         selected_malloc = spec.variants['malloc'].value
         args.append('-DHPX_WITH_MALLOC={0}'.format(selected_malloc))
+
+        # Instrumentation
+        args.extend(self.instrumentation_args())
 
         return args
