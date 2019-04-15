@@ -1442,7 +1442,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dep_kwargs['install_deps'] = False
             for dep in self.spec.traverse(order='post', root=False):
                 if spack.config.get('config:install_missing_compilers', False):
-                    tty.debug('Boostrapping {0} compiler for {1}'.format(
+                    tty.debug('Bootstrapping {0} compiler for {1}'.format(
                         self.spec.compiler, self.name
                     ))
                     comp_kwargs = kwargs.copy()
