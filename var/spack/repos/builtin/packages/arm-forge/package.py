@@ -15,8 +15,8 @@ class ArmForge(Package):
 
     homepage = "http://www.allinea.com/products/develop-allinea-forge"
 
-    # TODO: this mess should be fixed as soon as a way to parametrize/constrain versions
-    #       (and checksums) based on the target platform shows up
+    # TODO: this mess should be fixed as soon as a way to parametrize/constrain
+    #       versions (and checksums) based on the target platform shows up
 
     version(
         "19.0.3-linux-rhel6-x86_64",
