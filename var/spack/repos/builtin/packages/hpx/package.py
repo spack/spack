@@ -19,6 +19,11 @@ class Hpx(CMakePackage, CudaPackage):
 
     version('1.0.0', '4983e7c6402417ec794d40343e36e417', url='http://stellar.cct.lsu.edu/files/hpx_1.0.0')
 
+    variant('cxxstd',
+            default='17',
+            values=('98', '11', '14', '17'),
+            description='Use the specified C++ standard when building.')
+
     variant(
         'malloc', default='tcmalloc',
         description='Define which allocator will be linked in',
@@ -31,13 +36,20 @@ class Hpx(CMakePackage, CudaPackage):
 
     variant('networking', default=True,
             description='Support for networking and multi=node runs')
-    variant('tools', default=True, description='Build HPX tools')
+    variant('tools', default=False, description='Build HPX tools')
 
+    depends_on('boost')
     depends_on('boost@1.55.0:')
     depends_on('hwloc@1.6:')
     depends_on('python')
     depends_on('pkgconfig', type='build')
     depends_on('git', type='build')
+
+    # CXX Standard
+    depends_on('boost cxxstd=98', when='cxxstd=98')
+    depends_on('boost cxxstd=11', when='cxxstd=11')
+    depends_on('boost cxxstd=14', when='cxxstd=14')
+    depends_on('boost cxxstd=17', when='cxxstd=17')
 
     # Malloc
     depends_on('gperftools', when='malloc=tcmalloc')
@@ -55,6 +67,11 @@ class Hpx(CMakePackage, CudaPackage):
     # TODO: most conservative approach to ensure a sane build.
     parallel = False
 
+    def cxx_standard(self):
+        value = self.spec.variants['cxxstd'].value
+        value = '0X' if value == '98' else value
+        return '-DHPX_WITH_CXX{0}=ON'.format(value)
+
     def instrumentation_args(self):
         for value in self.variants['instrumentation'].values:
             if value == 'none':
@@ -67,6 +84,9 @@ class Hpx(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec, args = self.spec, []
+
+        # CXX Standard
+        args.append(self.cxx_standard())
 
         # Malloc
         selected_malloc = spec.variants['malloc'].value
@@ -89,5 +109,12 @@ class Hpx(CMakePackage, CudaPackage):
         args.append('-DHPX_WITH_TOOLS={0}'.format(
             'ON' if '+tools' in spec else 'OFF'
         ))
+
+        args.extend([
+            '-DBOOST_ROOT={0}'.format(spec['boost'].prefix),
+            '-DHWLOC_ROOT={0}'.format(spec['hwloc'].prefix),
+            '-DHPX_WITH_BOOST_ALL_DYNAMIC_LINK=ON',
+            '-DBUILD_SHARED_LIBS=ON'
+        ])
 
         return args
