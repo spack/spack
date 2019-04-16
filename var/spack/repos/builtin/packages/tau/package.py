@@ -61,6 +61,7 @@ class Tau(Package):
     variant('craycnl', default=False, description='Build for Cray compute nodes')
     variant('bgq', default=False, description='Build for IBM BlueGene/Q compute nodes')
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
+    variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
@@ -123,6 +124,21 @@ class Tau(Package):
         # a few #peculiarities# that make this build quite hackish.
         options = ["-prefix=%s" % prefix,
                    "-iowrapper"]
+
+        if '+craycnl' in spec:
+            options.append('-arch=craycnl')
+
+        if '+bgq' in spec:
+            options.append('-arch=bgq')
+
+        if '+ppc64le' in spec:
+            options.append('-arch=ibm64linux')
+
+        if '+x86_64' in spec:
+            options.append('-arch=x86_64')
+
+        if ('platform=cray' in self.spec) and ('+x86_64' not in spec):
+            options.append('-arch=craycnl')
 
         if '+pdt' in spec:
             options.append("-pdt=%s" % spec['pdt'].prefix)
