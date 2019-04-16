@@ -631,5 +631,147 @@ The valid variables for a ``when`` clause are:
 Environment-managed Views
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Code for Spack Environments is in code review at the
-moment. Documentation will be updated when the code is finalized.
+Spack Environments can define filesystem views of their software,
+which are maintained as packages are installed and uninstalled from
+the Environment. Filesystem views provide an access point for packages
+from the filesystem for users who want to access those packages
+directly. For more information on filesystem views, see the section
+:ref:`filesystem-views`.
+
+Spack Environment managed views are updated every time the environment
+is written out to the lock file ``spack.lock``, so the concrete
+environment and the view are always compatible.
+
+"""""""""""""""""""""""""""""
+Configuring environment views
+"""""""""""""""""""""""""""""
+
+The Spack Environment manifest file has a top-level keyword
+``view``. Each entry under that heading is a view descriptor, headed
+by a name. The view descriptor contains the root of the view, and
+optionally the projections for the view, and ``select`` and
+``exclude`` lists for the view. For example, in the following manifest
+file snipped we define a view named ``mpis``, rooted at
+``/path/to/view`` in which all projections use the package name,
+version, and compiler name to determine the path for a given
+package. This view selects all packages that depend on MPI, and
+excludes those built with the PGI compiler at version 18.5.
+
+.. code-block:: yaml
+
+   spack:
+     ...
+     view:
+       mpis:
+         root: /path/to/view
+         select: [^mpi]
+         exclude: ['%pgi@18.5']
+         projections:
+           all: ${package}/${version}-${compilername}
+
+For more information on using view projections, see the section on
+:ref:`adding_projections_to_views`. The default for the ``select`` and
+``exclude`` values is to select everything and exclude nothing. The
+default projection is the default view projection (``{}``).
+
+Any number of views may be defined under the ``view`` heading in a
+Spack Environment.
+
+There are two shorthands for environments with a single view. If the
+environment at ``/path/to/env`` has a single view, with a root at
+``/path/to/env/.spack-env/view``, with default selection and exclusion
+and the default projection, we can put ``view: True`` in the
+environment manifest. Similarly, if the environment has a view with a
+different root, but default selection, exclusion, and projections, the
+manifest can say ``view: /path/to/view``. These views are
+automatically named ``default``, so that
+
+.. code-block:: yaml
+
+   spack:
+     ...
+     view: True
+
+is equivalent to
+
+.. code-block:: yaml
+
+   spack:
+     ...
+     view:
+       default:
+         root: .spack-env/view
+
+and
+
+.. code-block:: yaml
+
+   spack:
+     ...
+     view: /path/to/view
+
+is equivalent to
+
+.. code-block:: yaml
+
+   spack:
+     ...
+     view:
+       default:
+         root: /path/to/view
+
+By default, Spack environments are configured with ``view: True`` in
+the manifest. Environments can be configured without views using
+``view: False``. For backwards compatibility reasons, environments
+with no ``view`` key are treated the same as ``view: True``.
+
+From the command line, the ``spack env create`` command takes an
+argument ``with-view [PATH]`` that sets the path for a single, default
+view. If no path is specified, the default path is used (``view:
+True``). The argument ``without-view`` can be used to create an
+environment without any view configured.
+
+The ``spack env view`` command can be used to change the manage views
+of an Environment. The subcommand ``spack env view enable`` will add a
+view named ``default`` to an environment. It takes an optional
+argument to specify the path for the new default view. The subcommand
+``spack env view disable`` will remove the view named ``default`` from
+an environment if one exists. The subcommand ``spack env view
+regenerate`` will regenerate the views for the environment. This will
+apply any updates in the environment configuration that have not yet
+been applied.
+
+""""""""""""""""""""""""""""
+Activating environment views
+""""""""""""""""""""""""""""
+
+The ``spack env activate`` command will put the default view for the
+environment into the user's path, in addition to activating the
+environment for Spack commands. The arguments ``-v,--with-view`` and
+``-V,--without-view`` can be used to tune this behavior. The default
+behavior is to activate with the environment view if there is one.
+
+The environment variables affected by the ``spack env activate``
+command and the paths that are used to update them are in the
+following table.
+
+=================== =========
+Variable            Paths
+=================== =========
+PATH                bin
+MANPATH             man, share/man
+ACLOCAL_PATH        share/aclocal
+LD_LIBRARY_PATH     lib, lib64
+LIBRARY_PATH        lib, lib64
+CPATH               include
+PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig
+CMAKE_PREFIX_PATH   ''
+=================== =========
+
+Each of these paths are appended to the view root, and added to the
+relevant variable if the path exists. For this reason, it is not
+recommended to use non-default projections with the default view of an
+environment.
+
+The ``spack env deactivate`` command will remove the default view of
+the environment from the user's path.
