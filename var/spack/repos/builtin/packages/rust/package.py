@@ -13,6 +13,7 @@ class Rust(Package):
     git      = "https://github.com/rust-lang/rust.git"
 
     version('develop', branch='master')
+    version('1.34.0', tag='1.34.0')
     version('1.32.0', tag='1.32.0')
     version('1.31.1', tag='1.31.1')
     version('1.31.0', tag='1.31.0')  # "Rust 2018" edition
