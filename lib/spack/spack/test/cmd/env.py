@@ -675,7 +675,7 @@ env:
 
     e = ev.read('test')
     # Try retrieving the view object
-    view = e.default_view
+    view = e.default_view.view()
     assert view.get_spec('mpileaks')
 
 
