@@ -103,7 +103,7 @@ def env_activate(args):
             sys.stdout.write('set prompt="%s ${prompt}";\n' % env_prompt)
 
     else:
-        if 'color' in os.environ['TERM']:
+        if 'color' in os.getenv('TERM', ''):
             env_prompt = colorize('@G{%s} ' % env_prompt, color=True)
 
         sys.stdout.write('export SPACK_ENV=%s;\n' % spack_env)
