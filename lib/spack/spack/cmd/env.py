@@ -310,7 +310,7 @@ def env_view(args):
 
     if env:
         if args.action == ViewAction.regenerate:
-            env.regenerate_view()
+            env.regenerate_views()
         elif args.action == ViewAction.enable:
             if args.view_path:
                 view_path = args.view_path
