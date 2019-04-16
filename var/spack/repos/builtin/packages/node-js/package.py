@@ -28,6 +28,7 @@ class NodeJs(Package):
     variant('icu4c', default=False, description='Build with support for all locales instead of just English')
     variant('openssl', default=True,  description='Build with Spacks OpenSSL instead of the bundled version')
     variant('zlib', default=True,  description='Build with Spacks zlib instead of the bundled version')
+    variant('bundled-npm', default=False, description='Include NPM in the build')
 
     depends_on('libtool', type='build', when=sys.platform != 'darwin')
     depends_on('pkgconfig', type='build')
@@ -44,7 +45,8 @@ class NodeJs(Package):
 
         # Note: npm is updated more regularly than node.js, so we build the
         #       package instead of using the bundled version
-        options.extend(['--without-npm'])
+        if '~bundled-npm' in spec:
+            options.extend(['--without-npm'])
 
         # On OSX, the system libtool must be used
         # So, we ensure that this is the case by...
