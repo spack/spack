@@ -67,9 +67,6 @@ schema = {
                             'type': 'string'
                         },
                     },
-                    'view': {
-                        'type': ['boolean', 'string']
-                    },
                     'definitions': {
                         'type': 'array',
                         'default': [],
@@ -81,7 +78,7 @@ schema = {
                                 }
                             },
                             'patternProperties': {
-                                '^(?!when$)\w*': spec_list_schema
+                               r'^(?!when$)\w*': spec_list_schema
                             }
                         }
                     },
@@ -91,25 +88,29 @@ schema = {
                             {'type': 'boolean'},
                             {'type': 'string'},
                             {'type': 'object',
-                             'required': ['root'],
-                             'additionalProperties': False,
-                             'properties': {
-                                 'root': {
-                                     'type': 'string'
-                                 },
-                                 'select': {
-                                     'type': 'array',
-                                     'items': {
-                                         'type': 'string'
-                                     }
-                                 },
-                                 'exclude': {
-                                     'type': 'array',
-                                     'items': {
-                                         'type': 'string'
-                                     }
-                                 },
-                                 'projections': projections_scheme
+                             'patternProperties': {
+                                  r'\w+': {
+                                      'required': ['root'],
+                                      'additionalProperties': False,
+                                      'properties': {
+                                          'root': {
+                                              'type': 'string'
+                                          },
+                                          'select': {
+                                              'type': 'array',
+                                              'items': {
+                                                  'type': 'string'
+                                              }
+                                          },
+                                          'exclude': {
+                                              'type': 'array',
+                                              'items': {
+                                                  'type': 'string'
+                                              }
+                                        },
+                                          'projections': projections_scheme
+                                      }
+                                  }
                              }
                             }
                         ]

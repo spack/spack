@@ -15,6 +15,7 @@ from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
+import spack.compilers
 
 
 def check_spec(abstract, concrete):
