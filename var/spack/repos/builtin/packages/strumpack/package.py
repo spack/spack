@@ -60,6 +60,8 @@ class Strumpack(CMakePackage):
 
     conflicts('+parmetis', when='~mpi')
 
+    patch('intel-19-compile.patch', when='@3.1.1')
+
     def cmake_args(self):
         spec = self.spec
 
