@@ -1,0 +1,60 @@
+diff --git a/cmake/modules/FindMySQL.cmake b/cmake/modules/FindMySQL.cmake
+index c818f5a..755da92 100644
+--- a/cmake/modules/FindMySQL.cmake
++++ b/cmake/modules/FindMySQL.cmake
+@@ -10,11 +10,18 @@ if(MYSQL_INCLUDE_DIR OR MYSQL_)
+ endif()
+ 
+ if(NOT WIN32)
+-  find_program(MYSQL_CONFIG_EXECUTABLE mysql_config
+-    /usr/bin/
+-    /usr/local/bin
+-    ${MYSQL_DIR}/bin $ENV{MYSQL_DIR}/bin
+-  )
++  # Split into two find_program invocations to avoid user-specified
++  # mariadb_config being overridden by system mysql_config.
++  find_program(MYSQL_CONFIG_EXECUTABLE NAMES mysql_config mariadb_config
++    PATH_SUFFIXES bin
++    NO_DEFAULT_PATH
++    HINTS ${MYSQL_DIR} $ENV{MYSQL_DIR}
++    )
++  # Will not overwrite if MYSQL_CONFIG_EXECUTABLE is already set.
++  find_program(MYSQL_CONFIG_EXECUTABLE NAMES mysql_config mariadb_config
++    PATH_SUFFIXES bin
++    PATHS /usr/local /usr
++    )
+ endif()
+ 
+ if(MYSQL_CONFIG_EXECUTABLE)
+@@ -26,17 +33,22 @@ if(MYSQL_CONFIG_EXECUTABLE)
+   execute_process(COMMAND ${MYSQL_CONFIG_EXECUTABLE} --libs OUTPUT_VARIABLE MYSQL_LIBRARIES OUTPUT_STRIP_TRAILING_WHITESPACE)
+ else()
+   find_path(MYSQL_INCLUDE_DIR mysql.h
+-    /usr/local/mysql/include
+-    /usr/local/include/mysql
+-    /usr/local/include
+-    /usr/include/mysql
+-    /usr/include
+-    /usr/mysql/include
+-    $ENV{MYSQL_DIR}/include
+-  )
++    PATH_SUFFIXES include include/mysql include/mariadb
++    HINTS ${MYSQL_DIR} $ENV{MYSQL_DIR}
++    NO_DEFAULT_PATH
++    )
++  if (NOT MYSQL_INCLUDE_DIR)
++    find_path(MYSQL_INCLUDE_DIR mysql.h
++      PATH_SUFFIXES include include/mysql include/mariadb
++      PATHS /usr/local/mysql /usr/local /usr
++      )
++  endif()
+   set(MYSQL_NAMES mysqlclient mysqlclient_r)
+   find_library(MYSQL_LIBRARY NAMES ${MYSQL_NAMES}
+-    PATHS /usr/local/mysql/lib /usr/local/lib /usr/lib $ENV{MYSQL_DIR}/lib $ENV{MYSQL_DIR}/lib/opt
++    PATH_SUFFIXES lib lib/mariadb lib/mysql
++    lib/opt lib/opt/mariadb lib/opt/mysql
++    HINTS ${MYSQL_DIR} $ENV{MYSQL_DIR}
++    PATHS /usr/local/mysql /usr/local /usr
+   )
+   set(MYSQL_LIBRARIES ${MYSQL_LIBRARY})
+ endif()
