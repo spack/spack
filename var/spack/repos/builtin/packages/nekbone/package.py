@@ -52,7 +52,7 @@ class Nekbone(Package):
         install(makenek, prefix.bin)
         install(nekpmpi, prefix.bin)
 
-        error = Executable(fc)('this-is-so-dumb.f', output=str, error=str,
+        error = Executable(fc)('empty.f', output=str, error=str,
                                fail_on_error=False)
 
         fflags = ''

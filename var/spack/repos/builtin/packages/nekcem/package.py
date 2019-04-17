@@ -83,7 +83,7 @@ class Nekcem(Package):
                 fflags += ['-r8']
                 cflags += ['-DUNDERSCORE']
 
-            error = Executable(fc)('this-is-so-dumb.f', output=str, error=str,
+            error = Executable(fc)('empty.f', output=str, error=str,
                                    fail_on_error=False)
 
             if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
