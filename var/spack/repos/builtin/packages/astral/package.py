@@ -14,6 +14,8 @@ class Astral(Package):
     homepage = "https://github.com/smirarab/ASTRAL"
     url      = "https://github.com/smirarab/ASTRAL/archive/v4.10.7.tar.gz"
 
+    version('5.6.1', sha256='b49a67c9fe19c0c92a89dc2f1a3928840e698a53054a595c61546ca98448a076',
+            url='https://github.com/smirarab/ASTRAL/archive/untagged-697f19dbce69929ece09.tar.gz')
     version('4.10.7', '38c81020570254e3f5c75d6c3c27fc6d')
 
     depends_on('java', type=('build', 'run'))
