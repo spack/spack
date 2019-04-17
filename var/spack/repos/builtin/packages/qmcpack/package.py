@@ -190,6 +190,16 @@ class Qmcpack(CMakePackage, CudaPackage):
         args.append('-DCMAKE_C_FLAGS=%s' % ' '.join(cflags))
         args.append('-DCMAKE_CXX_FLAGS=%s' % ' '.join(cxxflags))
 
+        # This issue appears specifically with the the Intel compiler,
+        # but may be an issue with other compilers as well. The final fix
+        # probably needs to go into QMCPACK's CMake instead of in Spack.
+        # QMCPACK binaries are linked with the C++ compiler, but *may* contain
+        # Fortran libraries such as NETLIB-LAPACK and OpenBLAS on the link
+        # line. For the case of the Intel C++ compiler, we need to manually
+        # add a libray from the Intel Fortran compiler.
+        if self.compiler.name == 'intel':
+            args.append('-DQMC_EXTRA_LIBS=-lifcore')
+
         if '+mpi' in spec:
             mpi = spec['mpi']
             args.append('-DCMAKE_C_COMPILER={0}'.format(mpi.mpicc))
