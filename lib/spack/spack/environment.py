@@ -1029,7 +1029,14 @@ class Environment(object):
             view = self._view_path
         else:
             view = False
-        config_dict(self.yaml)['view'] = view
+
+        if view is not True:
+            # The default case is to keep an active view inside of the
+            # Spack environment directory. To avoid cluttering the config,
+            # we omit the setting in this case.
+            yaml_dict['view'] = view
+        elif 'view' in yaml_dict:
+            del yaml_dict['view']
 
         # if all that worked, write out the manifest file at the top level
         with fs.write_tmp_and_move(self.manifest_path) as f:
