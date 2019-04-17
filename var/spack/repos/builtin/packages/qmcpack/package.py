@@ -180,6 +180,16 @@ class Qmcpack(CMakePackage, CudaPackage):
         spec = self.spec
         args = []
 
+        # This bit of code is needed in order to pass compiler.yaml flags
+        # into the QMCPACK's CMake. Probably the CMake base class in
+        # the code of Spack should be doing this instead. Otherwise, it
+        # it would need to be done on a per package basis which is
+        # problematic.
+        cflags = spec.compiler_flags['cflags']
+        cxxflags = spec.compiler_flags['cxxflags']
+        args.append('-DCMAKE_C_FLAGS=%s' % ' '.join(cflags))
+        args.append('-DCMAKE_CXX_FLAGS=%s' % ' '.join(cxxflags))
+
         if '+mpi' in spec:
             mpi = spec['mpi']
             args.append('-DCMAKE_C_COMPILER={0}'.format(mpi.mpicc))
