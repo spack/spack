@@ -96,13 +96,14 @@ class Ruby(AutotoolsPackage):
         http://guides.rubygems.org/ssl-certificate-update/
         for details.
         """
-        rubygems_updated_cert_path = join_path(self.stage.source_path,
-                                               'rubygems-updated-ssl-cert',
-                                               'GlobalSignRootCA.pem')
-        rubygems_certs_path = join_path(self.spec.prefix.lib,
-                                        'ruby',
-                                        '{0}.0'.format(self.spec.version.
-                                                       up_to(2)),
-                                        'rubygems',
-                                        'ssl_certs')
-        install(rubygems_updated_cert_path, rubygems_certs_path)
+        if self.spec.satisfies("+openssl"):
+            rubygems_updated_cert_path = join_path(self.stage.source_path,
+                                                   'rubygems-updated-ssl-cert',
+                                                   'GlobalSignRootCA.pem')
+            rubygems_certs_path = join_path(self.spec.prefix.lib,
+                                            'ruby',
+                                            '{0}.0'.format(self.spec.version.
+                                                           up_to(2)),
+                                            'rubygems',
+                                            'ssl_certs')
+            install(rubygems_updated_cert_path, rubygems_certs_path)
