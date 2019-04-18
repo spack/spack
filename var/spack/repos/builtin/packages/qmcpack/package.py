@@ -180,6 +180,26 @@ class Qmcpack(CMakePackage, CudaPackage):
         spec = self.spec
         args = []
 
+        # This bit of code is needed in order to pass compiler.yaml flags
+        # into the QMCPACK's CMake. Probably the CMake base class in
+        # the code of Spack should be doing this instead. Otherwise, it
+        # it would need to be done on a per package basis which is
+        # problematic.
+        cflags = spec.compiler_flags['cflags']
+        cxxflags = spec.compiler_flags['cxxflags']
+        args.append('-DCMAKE_C_FLAGS=%s' % ' '.join(cflags))
+        args.append('-DCMAKE_CXX_FLAGS=%s' % ' '.join(cxxflags))
+
+        # This issue appears specifically with the the Intel compiler,
+        # but may be an issue with other compilers as well. The final fix
+        # probably needs to go into QMCPACK's CMake instead of in Spack.
+        # QMCPACK binaries are linked with the C++ compiler, but *may* contain
+        # Fortran libraries such as NETLIB-LAPACK and OpenBLAS on the link
+        # line. For the case of the Intel C++ compiler, we need to manually
+        # add a libray from the Intel Fortran compiler.
+        if '%intel' in spec:
+            args.append('-DQMC_EXTRA_LIBS=-lifcore')
+
         if '+mpi' in spec:
             mpi = spec['mpi']
             args.append('-DCMAKE_C_COMPILER={0}'.format(mpi.mpicc))
