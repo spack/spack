@@ -19,6 +19,8 @@ class Pumi(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/pumi"
     git      = "https://github.com/SCOREC/core.git"
 
+    maintainers = ['cwsmith']
+
     # We will use the scorec/core master branch as the 'nightly' version
     # of pumi in spack.  The master branch is more stable than the
     # scorec/core develop branch and we perfer not to expose spack users
