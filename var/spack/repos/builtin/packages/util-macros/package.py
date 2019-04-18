@@ -16,3 +16,8 @@ class UtilMacros(AutotoolsPackage):
 
     version('1.19.1', '6e76e546a4e580f15cebaf8019ef1625')
     version('1.19.0', '1cf984125e75f8204938d998a8b6c1e1')
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Adds the ACLOCAL path for autotools."""
+        spack_env.append_path('ACLOCAL_PATH',
+                              join_path(self.prefix.share, 'aclocal'))

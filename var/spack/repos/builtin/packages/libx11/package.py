@@ -27,6 +27,10 @@ class Libx11(AutotoolsPackage):
     depends_on('util-macros', type='build')
     depends_on('perl', type='build')
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path('XLOCALEDIR', self.prefix.share.X11.locale)
+        run_env.prepend_path('XLOCALEDIR', self.prefix.share.X11.locale)
+
     @property
     def libs(self):
         for dir in ['lib64', 'lib']:
