@@ -7,6 +7,8 @@ from spack import *
 
 
 class Apex(CMakePackage):
+    """Autonomic Performance Environment for eXascale (APEX)."""
+
     homepage = "http://github.com/khuck/xpress-apex"
     url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
 

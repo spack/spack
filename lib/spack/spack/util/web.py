@@ -304,8 +304,9 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     list_urls.update(additional_list_urls)
 
     # Grab some web pages to scrape.
+    # Start with any links already given.
     pages = {}
-    links = set()
+    links = set(archive_urls)
     for lurl in list_urls:
         pg, lnk = spider(lurl, depth=list_depth)
         pages.update(pg)

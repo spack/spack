@@ -16,6 +16,10 @@ class Libseccomp(AutotoolsPackage):
 
     variant('python', default=True, description="Build Python bindings")
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     depends_on("py-cython", type="build", when="+python")
 
     def configure_args(self):

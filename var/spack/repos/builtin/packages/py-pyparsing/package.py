@@ -13,6 +13,7 @@ class PyPyparsing(PythonPackage):
 
     import_modules = ['pyparsing']
 
+    version('2.3.1',  '630e86b719619a251de0ba4a97239cec')
     version('2.2.0',  '0214e42d63af850256962b6744c948d9')
     version('2.1.10', '065908b92904e0d3634eb156f44cc80e')
     version('2.0.3',  '0fe479be09fc2cf005f753d3acc35939')
@@ -23,5 +24,4 @@ class PyPyparsing(PythonPackage):
     # optional dependency of pyparsing, if it is not found, setup.py will
     # fallback on distutils.core instead. Don't add a setuptools dependency
     # or we won't be able to bootstrap setuptools.
-
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build', when='@2.3.1:')

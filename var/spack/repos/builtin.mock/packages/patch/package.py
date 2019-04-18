@@ -13,9 +13,10 @@ class Patch(Package):
     url = "http://www.example.com/patch-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
+    version('2.0', '0123456789abcdef0123456789abcdef')
 
     patch('foo.patch')
-    patch('bar.patch')
+    patch('bar.patch', when='@2:')
     patch('baz.patch')
 
     def install(self, spec, prefix):

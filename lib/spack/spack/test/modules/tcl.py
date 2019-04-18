@@ -151,7 +151,7 @@ class TestTcl(object):
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory('mpileaks')
-        expected = '${PACKAGE}/${VERSION}-${COMPILERNAME}'
+        expected = '{name}/{version}-{compiler.name}'
 
         assert writer.conf.naming_scheme == expected
 
@@ -191,6 +191,23 @@ class TestTcl(object):
         module_configuration('wrong_conflicts')
         with pytest.raises(SystemExit):
             modulefile_content('mpileaks')
+
+    def test_module_index(
+            self, module_configuration, factory, tmpdir_factory):
+
+        module_configuration('suffix')
+
+        w1, s1 = factory('mpileaks')
+        w2, s2 = factory('callpath')
+
+        test_root = str(tmpdir_factory.mktemp('module-root'))
+
+        spack.modules.common.generate_module_index(test_root, [w1, w2])
+
+        index = spack.modules.common.read_module_index(test_root)
+
+        assert index[s1.dag_hash()].use_name == w1.layout.use_name
+        assert index[s2.dag_hash()].path == w2.layout.filename
 
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""

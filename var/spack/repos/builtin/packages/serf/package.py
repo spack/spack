@@ -26,6 +26,8 @@ class Serf(SConsPackage):
     depends_on('openssl')
     depends_on('zlib')
 
+    patch('py3syntax.patch')
+
     def build_args(self, spec, prefix):
         args = [
             'PREFIX={0}'.format(prefix),

@@ -5,6 +5,7 @@
 
 import os
 import re
+import shlex
 import subprocess
 from six import string_types, text_type
 
@@ -19,7 +20,7 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        self.exe = name.split(' ')
+        self.exe = shlex.split(name)
         self.default_env = {}
         self.returncode = None
 

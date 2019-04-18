@@ -214,10 +214,10 @@ fi
 # Figure out where this file is.  Below code needs to be portable to
 # bash and zsh.
 #
-_sp_source_file="${BASH_SOURCE[0]}"  # Bash's location of last sourced file.
+_sp_source_file="${BASH_SOURCE[0]:-}"  # Bash's location of last sourced file.
 if [ -z "$_sp_source_file" ]; then
-    _sp_source_file="$0:A"           # zsh way to do it
-    if [[ "$_sp_source_file" == *":A" ]]; then
+    _sp_source_file="${(%):-%N}"       # zsh way to do it
+    if [ -z "$_sp_source_file" ]; then
         # Not zsh either... bail out with plain old $0,
         # which WILL NOT work if this is sourced indirectly.
         _sp_source_file="$0"
@@ -272,10 +272,16 @@ if [ "${need_module}" = "yes" ]; then
 
     # _sp_module_prefix is set by spack --print-sh-vars
     if [ "${_sp_module_prefix}" != "not_installed" ]; then
-        #activate it!
-        export MODULE_PREFIX=${_sp_module_prefix}
-        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        # activate it!
+        # environment-modules@4: has a bin directory inside its prefix
+        MODULE_PREFIX_BIN="${_sp_module_prefix}/bin"
+        if [ ! -d "${MODULE_PREFIX_BIN}" ]; then
+            # environment-modules@3 has a nested bin directory
+            MODULE_PREFIX_BIN="${_sp_module_prefix}/Modules/bin"
+        fi
+        export MODULE_PREFIX_BIN
+        _spack_pathadd PATH "${MODULE_PREFIX_BIN}"
+        module() { eval `${MODULE_PREFIX_BIN}/modulecmd ${SPACK_SHELL} $*`; }
     fi;
 else
     eval `spack --print-shell-vars sh`
@@ -284,8 +290,17 @@ fi;
 #
 # set module system roots
 #
-_spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+_sp_multi_pathadd() {
+    local IFS=':'
+    if  [[ -n "${ZSH_VERSION:-}" ]]; then
+        setopt sh_word_split
+    fi
+    for pth in "$2"; do
+        _spack_pathadd "$1" "${pth}/${_sp_sys_type}"
+    done
+}
+_sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+_sp_multi_pathadd DK_NODE "$_sp_dotkit_roots"
 
 # Add programmable tab completion for Bash
 #

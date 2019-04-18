@@ -23,11 +23,19 @@ class Netcdf(AutotoolsPackage):
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     git      = "https://github.com/Unidata/netcdf-c"
-    url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.6.1.tar.gz"
+    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.6.3.tar.gz"
+
+    def url_for_version(self, version):
+        if version >= Version('4.6.2'):
+            url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-{0}.tar.gz"
+        else:
+            url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-{0}.tar.gz"
+
+        return url.format(version.dotted)
 
     version('master', branch='master')
-    version('4.6.2',   sha256='c37525981167b3cd82d32e1afa3022afb94e59287db5f116c57f5ed4d9c6a638',
-            url="https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.6.2.tar.gz")
+    version('4.6.3',   sha256='335fdf16d7531f430ad75e732ed1a9a3fc83ad3ef91fb33a70119a555dd5415c')
+    version('4.6.2',   sha256='c37525981167b3cd82d32e1afa3022afb94e59287db5f116c57f5ed4d9c6a638')
     version('4.6.1',   sha256='89c7957458740b763ae828c345240b8a1d29c2c1fed0f065f99b73181b0b2642')
     version('4.6.0',   sha256='4bf05818c1d858224942ae39bfd9c4f1330abec57f04f58b9c3c152065ab3825')
     version('4.5.0',   sha256='cbe70049cf1643c4ad7453f86510811436c9580cb7a1684ada2f32b95b00ca79')
@@ -95,7 +103,8 @@ class Netcdf(AutotoolsPackage):
 
     # High-level API of HDF5 1.8.9 or later is required for netCDF-4 support:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
-    depends_on('hdf5@1.8.9:+hl')
+    depends_on('hdf5@1.8.9:+hl~mpi', when='~mpi')
+    depends_on('hdf5@1.8.9:+hl+mpi', when='+mpi')
 
     # Starting version 4.4.0, it became possible to disable parallel I/O even
     # if HDF5 supports it. For previous versions of the library we need

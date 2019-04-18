@@ -48,7 +48,8 @@ class Python(AutotoolsPackage):
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
     version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.15', '045fb3440219a1f6923fefdabde63342', preferred=True)
+    version('2.7.16', 'f1a2ace631068444831d01485466ece0', preferred=True)
+    version('2.7.15', '045fb3440219a1f6923fefdabde63342')
     version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724')
     version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700')
     version('2.7.12', '88d61f82e3616a4be952828b3694109d')
@@ -619,12 +620,14 @@ class Python(AutotoolsPackage):
     def headers(self):
         config_h = self.get_config_h_filename()
 
-        if os.path.exists(config_h):
-            return HeaderList(config_h)
-        else:
+        if not os.path.exists(config_h):
             includepy = self.get_config_var('INCLUDEPY')
             msg = 'Unable to locate {0} headers in {1}'
             raise RuntimeError(msg.format(self.name, includepy))
+
+        headers = HeaderList(config_h)
+        headers.directories = [os.path.dirname(config_h)]
+        return headers
 
     @property
     def python_lib_dir(self):

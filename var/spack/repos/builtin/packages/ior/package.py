@@ -13,7 +13,7 @@ class Ior(AutotoolsPackage):
     homepage = "https://github.com/hpc/ior"
     url      = "https://github.com/hpc/ior/archive/3.2.0.tar.gz"
 
-    version('3.2.0',    sha256='0cda0e00b7f070c6754ef8acb3873eb3a625bd8dee3f2e220291656be1322bbb')
+    version('3.2.0',    sha256='91a766fb9c34b5780705d0997b71b236a1120da46652763ba11d9a8c44251852')
     version('3.0.1', '71150025e0bb6ea1761150f48b553065')
 
     variant('hdf5',  default=False, description='support IO with HDF5 backend')
@@ -26,6 +26,12 @@ class Ior(AutotoolsPackage):
     depends_on('mpi')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('parallel-netcdf', when='+ncmpi')
+
+    # The build for 3.2.0 fails if hdf5 is enabled
+    # See https://github.com/hpc/ior/pull/124
+    patch('https://github.com/hpc/ior/commit/1dbca5c293f95074f9887ddb2043fa984670fb4d.patch',
+          sha256='f28d6638a74a09e147e9fa870930e54a82ff580d1c232add47a67c375e255ada',
+          when='@3.2.0 +hdf5')
 
     @run_before('autoreconf')
     def bootstrap(self):

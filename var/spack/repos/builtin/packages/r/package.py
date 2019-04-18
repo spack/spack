@@ -20,6 +20,7 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('3.5.3', sha256='2bfa37b7bd709f003d6b8a172ddfb6d03ddd2d672d6096439523039f7a8e678c')
     version('3.5.2', sha256='e53d8c3cf20f2b8d7a9c1631b6f6a22874506fb392034758b3bb341c586c5b62')
     version('3.5.1', sha256='0463bff5eea0f3d93fa071f79c18d0993878fd4f2e18ae6cf22c1639d11457ed')
     version('3.5.0', 'c0455dbfa76ca807e4dfa93d49dcc817')

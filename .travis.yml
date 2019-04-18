@@ -55,7 +55,25 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=unit
-    - python: '3.6'
+      addons:
+        apt:
+          packages:
+          - cmake
+          - gfortran
+          - graphviz
+          - gnupg2
+          - kcov
+          - mercurial
+          - ninja-build
+          - perl
+          - perl-base
+          - realpath
+          - patchelf
+          - r-base
+          - r-base-core
+          - r-base-dev
+
+    - python: '3.7'
       sudo: required
       os: linux
       language: python

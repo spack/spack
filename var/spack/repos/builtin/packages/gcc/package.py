@@ -23,6 +23,7 @@ class Gcc(AutotoolsPackage):
     list_depth = 1
 
     version('develop', svn=svn + 'trunk')
+    version('8.3.0', '1811337ae3add9680cec64968a2509d085b6dc5b6783fc1e8c295e3e47416196fd1a3ad8dfe7e10be2276b4f62c357659ce2902f239f60a8648548231b4b5802')
     version('8.2.0', '64898a165f67e136d802a92e7633bf1b06c85266027e52127ea025bf5fc2291b5e858288aac0bdba246e6cdf7c6ec88bc8e0e7f3f6f1985f4297710cafde56ed')
     version('8.1.0', '65f7c65818dc540b3437605026d329fc')
 
@@ -396,7 +397,7 @@ class Gcc(AutotoolsPackage):
            the compiler used to build the executable."""
         if not self.spec_dir:
             tty.warn('Could not install specs for {0}.'.format(
-                     self.spec.format('$_$@')))
+                     self.spec.format('{name}{@version}')))
             return
 
         gcc = self.spec['gcc'].command
