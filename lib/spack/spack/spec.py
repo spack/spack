@@ -843,10 +843,10 @@ class ForwardQueryToPackage(object):
         # properties defined and no default handler, or that all callbacks
         # raised AttributeError. In this case, we raise AttributeError with an
         # appropriate message.
-        fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
+        fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'
         fmt += '\tspec : \'{spec}\'\n'
         fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
-        fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
+        fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'
         message = fmt.format(
             name=pkg.name,
             query=self.attribute_name,
@@ -3023,7 +3023,7 @@ class Spec(object):
         return colorize_spec(self)
 
     def format(self, format_string=default_format, **kwargs):
-        """Prints out particular pieces of a spec, depending on what is
+        r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
         Using the ``{attribute}`` syntax, any field of the spec can be
@@ -3100,7 +3100,7 @@ class Spec(object):
             transform (dict): maps full-string formats to a callable \
                 that accepts a string and returns another one
 
-        """  # NOQA: ignore=W605
+        """
         # If we have an unescaped $ sigil, use the deprecated format strings
         if re.search(r'[^\\]*\$', format_string):
             return self.old_format(format_string, **kwargs)
