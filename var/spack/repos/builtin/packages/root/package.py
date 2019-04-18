@@ -76,7 +76,8 @@ class Root(CMakePackage):
     variant('gdml', default=True,
         description='Enable GDML writer and reader')
     variant('gminimal', default=True,
-        description='Ignore most of Root\'s feature defaults except for basic graphic options')
+        description='Ignore most of Root\'s feature defaults except for '
+        'basic graphic options')
     variant('gsl', default=True,
         description='Enable linking against shared libraries for GSL')
     variant('http', default=False,
@@ -453,7 +454,8 @@ class Root(CMakePackage):
             '-Drfio:BOOL=OFF',      # not supported
             '-Droottest:BOOL=OFF',  # requires network
             '-Druby:BOOL=OFF',      # unmantained upstream
-            '-Druntime_cxxmodules:BOOL=OFF',  # use clang C++ modules, experimental
+            # Use clang C++ modules, experimental
+            '-Druntime_cxxmodules:BOOL=OFF',
             '-Dsapdb:BOOL=OFF',     # option not implemented
             '-Dsrp:BOOL=OFF',       # option not implemented
             '-Dtcmalloc:BOOL=OFF'
