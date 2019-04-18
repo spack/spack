@@ -572,7 +572,8 @@ class Llvm(CMakePackage):
     conflicts('+lldb',        when='~clang')
 
     # LLVM 4 and 5 does not build with GCC 8
-    conflicts('%gcc@8:',      when='@:5')
+    conflicts('%gcc@8:',       when='@:5')
+    conflicts('%gcc@:5.0.999', when='@8:')
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
