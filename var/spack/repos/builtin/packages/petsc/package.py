@@ -108,6 +108,8 @@ class Petsc(Package):
 
     patch('xcode_stub_out_of_sync.patch', when='@:3.10.4')
 
+    patch('xlf_fix-dup-petscfecreate.patch', when='@3.11.0')
+
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@develop')

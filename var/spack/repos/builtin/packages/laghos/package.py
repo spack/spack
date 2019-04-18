@@ -28,11 +28,13 @@ class Laghos(MakefilePackage):
     depends_on('mfem@develop+mpi+metis', when='@develop+metis')
     depends_on('mfem@develop+mpi~metis', when='@develop~metis')
 
-    depends_on('mfem@laghos-v2.0,3.4.0:+mpi+metis', when='@2.0:+metis')
-    depends_on('mfem@laghos-v2.0,3.4.0:+mpi~metis', when='@2.0:~metis')
+    # Recommended mfem version for laghos v2.0 is: ^mfem@3.4.1-laghos-v2.0
+    depends_on('mfem@3.4.0:+mpi+metis', when='@2.0+metis')
+    depends_on('mfem@3.4.0:+mpi~metis', when='@2.0~metis')
 
-    depends_on('mfem@laghos-v1.0,3.3.2:+mpi+metis', when='@1.0:+metis')
-    depends_on('mfem@laghos-v1.0,3.3.2:+mpi~metis', when='@1.0:~metis')
+    # Recommended mfem version for laghos v1.x is: ^mfem@3.3.1-laghos-v1.0
+    depends_on('mfem@3.3.1-laghos-v1.0:+mpi+metis', when='@1.0,1.1+metis')
+    depends_on('mfem@3.3.1-laghos-v1.0:+mpi~metis', when='@1.0,1.1~metis')
 
     @property
     def build_targets(self):

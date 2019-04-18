@@ -114,6 +114,14 @@ class SuiteSparse(Package):
                 'TBB=-L%s -ltbb' % spec['tbb'].prefix.lib,
             ]
 
+        if '@5.3:' in spec:
+            # Without CMAKE_LIBRARY_PATH defined, the CMake file in the
+            # Mongoose directory finds libsuitesparseconfig.so in system
+            # directories like /usr/lib.
+            make_args += [
+                'CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s' % prefix +
+                ' -DCMAKE_LIBRARY_PATH=%s' % prefix.lib]
+
         make('install', *make_args)
 
     @property
