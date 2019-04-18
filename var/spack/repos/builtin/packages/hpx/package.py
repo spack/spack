@@ -38,11 +38,20 @@ class Hpx(CMakePackage, CudaPackage):
             description='Support for networking and multi=node runs')
     variant('tools', default=False, description='Build HPX tools')
 
-    depends_on('boost@1.55.0:')
-    depends_on('hwloc@1.6:')
+    depends_on('boost')
+    depends_on('hwloc')
     depends_on('python', type=('build', 'test', 'run'))
     depends_on('pkgconfig', type='build')
     depends_on('git', type='build')
+
+    # Recommended dependency versions for 1.2.X
+    depends_on('cmake@3.9.0:', when='@:1.2.1', type='build')
+    depends_on('boost@1.62.0:', when='@:1.2.1')
+    depends_on('hwloc@1.11:', when='@:1.2.1')
+
+    # Recommended dependency versions before 1.2
+    depends_on('boost@1.55.0:', when='@:1.1.0')
+    depends_on('hwloc@1.6:', when='@:1.1.0')
 
     # CXX Standard
     depends_on('boost cxxstd=98', when='cxxstd=98')
