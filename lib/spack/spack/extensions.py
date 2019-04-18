@@ -50,6 +50,13 @@ def load_command_extension(command, path):
     if not extension:
         return None
 
+    # Compute the name of the module we search, exit early if already imported
+    cmd_package = '{0}.{1}.cmd'.format(__name__, extension)
+    python_name = command.replace('-', '_')
+    module_name = '{0}.{1}'.format(cmd_package, python_name)
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+
     def ensure_package_creation(name):
         package_name = '{0}.{1}'.format(__name__, name)
         if package_name in sys.modules:
@@ -78,12 +85,12 @@ def load_command_extension(command, path):
     # Compute the absolute path of the file to be loaded, along with the
     # name of the python module where it will be stored
     cmd_path = os.path.join(path, extension, 'cmd', command + '.py')
-    cmd_package = '{0}.{1}.cmd'.format(__name__, extension)
-    python_name = command.replace('-', '_')
-    module_name = '{0}.{1}'.format(cmd_package, python_name)
 
     try:
+        # TODO: Upon removal of support for Python 2.6 substitute the call
+        # TODO: below with importlib.import_module(module_name)
         module = llnl.util.lang.load_module_from_file(module_name, cmd_path)
+        sys.modules[module_name] = module
     except (ImportError, IOError):
         module = None
 

@@ -39,6 +39,7 @@ def hello(parser, args):
 
     del sys.modules['spack.extensions.testcommand']
     del sys.modules['spack.extensions.testcommand.cmd']
+    del sys.modules['spack.extensions.testcommand.cmd.hello']
 
 
 @pytest.fixture()
@@ -58,17 +59,25 @@ description = "hello world extension command"
 section = "test command"
 level = "long"
 
+# Test setting a global variable in setup_parser and retrieving
+# it in the command
+global_message = 'foo'
+
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subcommand')
-    world = sp.add_parser('world', help='Print Hello world!')
-    folks = sp.add_parser('folks', help='Print Hello folks!')
-
+    global global_message
+    sp.add_parser('world', help='Print Hello world!')
+    sp.add_parser('folks', help='Print Hello folks!')
+    sp.add_parser('global', help='Print Hello folks!')
+    global_message = 'bar'
 
 def hello(parser, args):
     if args.subcommand == 'world':
         hello_world()
     elif args.subcommand == 'folks':
         hello_folks()
+    elif args.subcommand == 'global':
+        print(global_message)
 """)
     implementation = extension_root.ensure('testcommand', 'implementation.py')
     implementation.write("""
@@ -84,6 +93,7 @@ def hello_folks():
     del sys.modules['spack.extensions.testcommand']
     del sys.modules['spack.extensions.testcommand.implementation']
     del sys.modules['spack.extensions.testcommand.cmd']
+    del sys.modules['spack.extensions.testcommand.cmd.hello']
 
 
 def test_simple_command_extension(hello_world_cmd):
@@ -96,3 +106,5 @@ def test_subcommand_in_nested_directory(hello_world_with_module_in_root):
     assert 'Hello world!' in output
     output = hello_world_with_module_in_root('folks')
     assert 'Hello folks!' in output
+    output = hello_world_with_module_in_root('global')
+    assert 'bar' in output
