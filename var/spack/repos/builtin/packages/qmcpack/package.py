@@ -197,7 +197,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         # Fortran libraries such as NETLIB-LAPACK and OpenBLAS on the link
         # line. For the case of the Intel C++ compiler, we need to manually
         # add a libray from the Intel Fortran compiler.
-        if self.compiler.name == 'intel':
+        if '%intel' in spec:
             args.append('-DQMC_EXTRA_LIBS=-lifcore')
 
         if '+mpi' in spec:
