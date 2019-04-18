@@ -28,7 +28,7 @@ class Trilinos(CMakePackage):
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ['aprokop']
+    maintainers = ['aprokop', 'keitat']
 
     # ###################### Versions ##########################
 
