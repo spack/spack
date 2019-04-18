@@ -59,12 +59,12 @@ prefix_inspections = spack.config.get('modules:prefix_inspections', {})
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
-    'PACKAGE',
-    'VERSION',
-    'COMPILER',
-    'COMPILERNAME',
-    'COMPILERVER',
-    'ARCHITECTURE'
+    'name',
+    'version',
+    'compiler',
+    'compiler.name',
+    'compiler.version',
+    'architecture'
 )
 
 
@@ -80,8 +80,9 @@ def _check_tokens_are_valid(format_string, message):
             tokens are found
 
     """
-    named_tokens = re.findall(r'\${(\w*)}', format_string)
-    invalid_tokens = [x for x in named_tokens if x not in _valid_tokens]
+    named_tokens = re.findall(r'{(\w*)}', format_string)
+    invalid_tokens = [x for x in named_tokens
+                      if x.lower() not in _valid_tokens]
     if invalid_tokens:
         msg = message
         msg += ' [{0}]. '.format(', '.join(invalid_tokens))
@@ -294,7 +295,7 @@ class BaseConfiguration(object):
         """Naming scheme suitable for non-hierarchical layouts"""
         scheme = self.module.configuration.get(
             'naming_scheme',
-            '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+            '{name}-{version}-{compiler.name}-{compiler.version}'
         )
 
         # Ensure the named tokens we are expanding are allowed, see
@@ -523,7 +524,7 @@ class BaseContext(tengine.Context):
             value = re.sub(r'"', "'", value)
             return value
         # Otherwise the short description is just the package + version
-        return self.spec.format("$_ $@")
+        return self.spec.format("{name} {@version}")
 
     @tengine.context_property
     def long_description(self):

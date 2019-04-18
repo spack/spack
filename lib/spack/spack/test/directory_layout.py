@@ -41,9 +41,9 @@ def test_yaml_directory_layout_parameters(
     layout_default = YamlDirectoryLayout(str(tmpdir))
     path_default = layout_default.relative_path_for_spec(spec)
     assert(path_default == spec.format(
-        "${ARCHITECTURE}/"
-        "${COMPILERNAME}-${COMPILERVER}/"
-        "${PACKAGE}-${VERSION}-${HASH}"))
+        "{architecture}/"
+        "{compiler.name}-{compiler.version}/"
+        "{name}-{version}-{hash}"))
 
     # Test hash_length parameter works correctly
     layout_10 = YamlDirectoryLayout(str(tmpdir), hash_len=10)
@@ -56,7 +56,7 @@ def test_yaml_directory_layout_parameters(
 
     # Test path_scheme
     arch, compiler, package7 = path_7.split('/')
-    scheme_package7 = "${PACKAGE}-${VERSION}-${HASH:7}"
+    scheme_package7 = "{name}-{version}-{hash:7}"
     layout_package7 = YamlDirectoryLayout(str(tmpdir),
                                           path_scheme=scheme_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
@@ -64,7 +64,7 @@ def test_yaml_directory_layout_parameters(
     assert(package7 == path_package7)
 
     # Test separation of architecture
-    arch_scheme_package = "${PLATFORM}/${TARGET}/${OS}/${PACKAGE}/${VERSION}/${HASH:7}"   # NOQA: ignore=E501
+    arch_scheme_package = "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"   # NOQA: ignore=E501
     layout_arch_package = YamlDirectoryLayout(str(tmpdir),
                                               path_scheme=arch_scheme_package)
     arch_path_package = layout_arch_package.relative_path_for_spec(spec)

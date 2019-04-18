@@ -384,7 +384,8 @@ class Database(object):
                 if not child:
                     msg = ("Missing dependency not in database: "
                            "%s needs %s-%s" % (
-                               spec.cformat('$_$/'), dname, dhash[:7]))
+                               spec.cformat('{name}{/hash:7}'),
+                               dname, dhash[:7]))
                     if self._fail_when_missing_deps:
                         raise MissingDependenciesError(msg)
                     tty.warn(msg)

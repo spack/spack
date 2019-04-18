@@ -260,7 +260,8 @@ def get_uninstall_list(args, specs, env):
             if i > 0:
                 print()
 
-            tty.info("Will not uninstall %s" % spec.cformat("$_$@$%@$/"),
+            spec_format = '{name}{@version}{%compiler}{/hash:7}'
+            tty.info("Will not uninstall %s" % spec.cformat(spec_format),
                      format='*r')
 
             dependents = active_dpts.get(spec)
