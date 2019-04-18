@@ -397,7 +397,7 @@ def _eval_conditional(string):
         architecture.platform(), 'default_os', 'default_target')
     valid_variables = {
         'target': str(arch.target),
-        'os': str(arch.platform_os),
+        'os': str(arch.os),
         'platform': str(arch.platform),
         'arch': str(arch),
         'architecture': str(arch),
@@ -1204,6 +1204,7 @@ class Environment(object):
         else:
             view = False
 
+        yaml_dict = config_dict(self.yaml)
         if view is not True:
             # The default case is to keep an active view inside of the
             # Spack environment directory. To avoid cluttering the config,
