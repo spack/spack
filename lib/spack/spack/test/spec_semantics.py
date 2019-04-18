@@ -8,6 +8,7 @@ import pytest
 
 from spack.spec import Spec, UnsatisfiableSpecError, SpecError
 from spack.spec import substitute_abstract_variants, parse_anonymous_spec
+from spack.spec import SpecFormatSigilError, SpecFormatStringError
 from spack.variant import InvalidVariantValueError
 from spack.variant import MultipleValuesInExclusiveVariantError
 
@@ -736,28 +737,133 @@ class TestSpecSematics(object):
             Spec('libelf foo')
 
     def test_spec_formatting(self):
+        spec = Spec("multivalue_variant cflags=-O2")
+        spec.concretize()
+
+        # Since the default is the full spec see if the string rep of
+        # spec is the same as the output of spec.format()
+        # ignoring whitespace (though should we?) and ignoring dependencies
+        spec_string = str(spec)
+        idx = spec_string.index(' ^')
+        assert spec_string[:idx] == spec.format().strip()
+
+        # Testing named strings ie {string} and whether we get
+        # the correct component
+        # Mixed case intentional to test both
+        package_segments = [("{NAME}", "name"),
+                            ("{VERSION}", "versions"),
+                            ("{compiler}", "compiler"),
+                            ("{compiler_flags}", "compiler_flags"),
+                            ("{variants}", "variants"),
+                            ("{architecture}", "architecture")]
+
+        sigil_package_segments = [("{@VERSIONS}", '@' + str(spec.version)),
+                                  ("{%compiler}", '%' + str(spec.compiler)),
+                                  ("{arch=architecture}",
+                                   ' arch=' + str(spec.architecture))]
+
+        compiler_segments = [("{compiler.name}", "name"),
+                             ("{compiler.version}", "versions")]
+
+        sigil_compiler_segments = [("{%compiler.name}",
+                                    '%' + spec.compiler.name),
+                                   ("{@compiler.version}",
+                                    '@' + str(spec.compiler.version))]
+
+        architecture_segments = [("{architecture.platform}", "platform"),
+                                 ("{architecture.os}", "os"),
+                                 ("{architecture.target}", "target")]
+
+        other_segments = [('{spack_root}', spack.paths.spack_root),
+                          ('{spack_install}', spack.store.layout.root),
+                          ('{hash:7}', spec.dag_hash(7)),
+                          ('{/hash}', '/' + spec.dag_hash())]
+
+        for named_str, prop in package_segments:
+            expected = getattr(spec, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        for named_str, expected in sigil_package_segments:
+            actual = spec.format(named_str)
+            assert expected == actual
+
+        compiler = spec.compiler
+        for named_str, prop in compiler_segments:
+            expected = getattr(compiler, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        for named_str, expected in sigil_compiler_segments:
+            actual = spec.format(named_str)
+            assert expected == actual
+
+        arch = spec.architecture
+        for named_str, prop in architecture_segments:
+            expected = getattr(arch, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        for named_str, expected in other_segments:
+            actual = spec.format(named_str)
+            assert expected == actual
+
+    def test_spec_formatting_escapes(self):
+        spec = Spec('multivalue_variant cflags=-O2')
+        spec.concretize()
+
+        sigil_mismatches = [
+            '{@name}',
+            '{@version.concrete}',
+            '{%compiler.version}',
+            '{/hashd}',
+            '{arch=architecture.os}'
+        ]
+
+        for fmt_str in sigil_mismatches:
+            with pytest.raises(SpecFormatSigilError):
+                spec.format(fmt_str)
+
+        bad_formats = [
+            '{}',
+            'name}',
+            '\{name}',  # NOQA: ignore=W605
+            '{name',
+            '{name\}',  # NOQA: ignore=W605
+            '{_concrete}',
+            '{dag_hash}',
+            '{foo}',
+            '{+variants.debug}'
+        ]
+
+        for fmt_str in bad_formats:
+            with pytest.raises(SpecFormatStringError):
+                spec.format(fmt_str)
+
+    def test_spec_deprecated_formatting(self):
         spec = Spec("libelf cflags=-O2")
         spec.concretize()
 
         # Since the default is the full spec see if the string rep of
         # spec is the same as the output of spec.format()
         # ignoring whitespace (though should we?)
-        assert str(spec) == spec.format().strip()
+        assert str(spec) == spec.format('$_$@$%@+$+$=').strip()
 
-        # Testing named strings ie ${STRING} and whether we get
+        # Testing named strings ie {string} and whether we get
         # the correct component
+        # Mixed case intentional for testing both
         package_segments = [("${PACKAGE}", "name"),
                             ("${VERSION}", "versions"),
-                            ("${COMPILER}", "compiler"),
-                            ("${COMPILERFLAGS}", "compiler_flags"),
-                            ("${OPTIONS}", "variants"),
-                            ("${ARCHITECTURE}", "architecture")]
+                            ("${compiler}", "compiler"),
+                            ("${compilerflags}", "compiler_flags"),
+                            ("${options}", "variants"),
+                            ("${architecture}", "architecture")]
 
-        compiler_segments = [("${COMPILERNAME}", "name"),
-                             ("${COMPILERVER}", "versions")]
+        compiler_segments = [("${compilername}", "name"),
+                             ("${compilerver}", "versions")]
 
         architecture_segments = [("${PLATFORM}", "platform"),
-                                 ("${OS}", "platform_os"),
+                                 ("${OS}", "os"),
                                  ("${TARGET}", "target")]
 
         for named_str, prop in package_segments:

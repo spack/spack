@@ -381,7 +381,7 @@ def set_build_environment_variables(pkg, env, dirty):
     if spack.config.get('config:debug'):
         env.set(SPACK_DEBUG, 'TRUE')
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
-    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('{name}-{hash:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
 
     # Find ccache binary and hand it to build environment

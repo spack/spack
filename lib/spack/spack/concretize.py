@@ -285,7 +285,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler if the target or operating system
         # is not yet determined
-        if not (spec.architecture.platform_os and spec.architecture.target):
+        if not (spec.architecture.os and spec.architecture.target):
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -371,7 +371,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler flags if the target or operating
         # system is not set.
-        if not (spec.architecture.platform_os and spec.architecture.target):
+        if not (spec.architecture.os and spec.architecture.target):
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -471,7 +471,7 @@ class NoCompilersForArchError(spack.error.SpackError):
                    " for operating system %s and target %s."
                    "\nIf previous installations have succeeded, the"
                    " operating system may have been updated." %
-                   (arch.platform_os, arch.target))
+                   (arch.os, arch.target))
 
         available_os_target_strs = list()
         for os, t in available_os_targets:
@@ -494,7 +494,7 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
         err_msg = "No compilers with spec {0} found".format(compiler_spec)
         if arch:
             err_msg += " for operating system {0} and target {1}.".format(
-                arch.platform_os, arch.target
+                arch.os, arch.target
             )
 
         super(UnavailableCompilerVersionError, self).__init__(

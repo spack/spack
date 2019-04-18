@@ -65,16 +65,16 @@ def test_dynamic_dot_graph_mpileaks(mock_packages):
 
     dot = stream.getvalue()
 
-    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('$_$/')
-    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('$_$/')
+    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('{name}{/hash:7}')
+    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('{name}{/hash:7}')
     callpath_hash, callpath_lbl = (
-        s['callpath'].dag_hash(), s['callpath'].format('$_$/'))
+        s['callpath'].dag_hash(), s['callpath'].format('{name}{/hash:7}'))
     dyninst_hash, dyninst_lbl = (
-        s['dyninst'].dag_hash(), s['dyninst'].format('$_$/'))
+        s['dyninst'].dag_hash(), s['dyninst'].format('{name}{/hash:7}'))
     libdwarf_hash, libdwarf_lbl = (
-        s['libdwarf'].dag_hash(), s['libdwarf'].format('$_$/'))
+        s['libdwarf'].dag_hash(), s['libdwarf'].format('{name}{/hash:7}'))
     libelf_hash, libelf_lbl = (
-        s['libelf'].dag_hash(), s['libelf'].format('$_$/'))
+        s['libelf'].dag_hash(), s['libelf'].format('{name}{/hash:7}'))
 
     assert '  "%s" [label="%s"]\n' % (mpileaks_hash, mpileaks_lbl) in dot
     assert '  "%s" [label="%s"]\n' % (callpath_hash, callpath_lbl) in dot

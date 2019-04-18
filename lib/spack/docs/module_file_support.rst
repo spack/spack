@@ -535,10 +535,10 @@ most likely via the ``+blas`` variant specification.
 
        modules:
          tcl:
-           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+           naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
            all:
              conflict:
-               - '${PACKAGE}'
+               - '{name}'
                - 'intel/14.0.1'
 
      will create module files that will conflict with ``intel/14.0.1`` and with the

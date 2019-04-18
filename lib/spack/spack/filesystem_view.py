@@ -557,7 +557,8 @@ class YamlFilesystemView(FilesystemView):
                 specs = index[(architecture, compiler)]
                 specs.sort()
 
-                format_string = '$_$@$%@+$+'
+                format_string = '{name}{@version}'
+                format_string += '{%compiler}{compiler_flags}{variants}'
                 abbreviated = [s.cformat(format_string) for s in specs]
 
                 # Print one spec per line along with prefix path

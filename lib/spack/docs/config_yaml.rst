@@ -39,7 +39,7 @@ default path uses the full 32 characters.
 Secondly, it is
 also possible to modify the entire installation scheme. By default
 Spack uses
-``${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}``
+``{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}``
 where the tokens that are available for use in this directive are the
 same as those understood by the ``Spec.format`` method. Using this parameter it
 is possible to use a different package layout or reduce the depth of
@@ -48,7 +48,7 @@ the installation paths. For example
      .. code-block:: yaml
 
        config:
-         install_path_scheme: '${PACKAGE}/${VERSION}/${HASH:7}'
+         install_path_scheme: '{name}/{version}/{hash:7}'
 
 would install packages into sub-directories using only the package
 name, version and a hash length of 7 characters.

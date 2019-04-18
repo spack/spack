@@ -32,7 +32,7 @@ def arch(parser, args):
     if args.platform:
         print(arch.platform)
     elif args.operating_system:
-        print(arch.platform_os)
+        print(arch.os)
     elif args.target:
         print(arch.target)
     else:

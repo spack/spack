@@ -162,7 +162,7 @@ def mirror_create(args):
         # If nothing is passed, use all packages.
         if not specs:
             specs = [Spec(n) for n in spack.repo.all_package_names()]
-            specs.sort(key=lambda s: s.format("$_$@").lower())
+            specs.sort(key=lambda s: s.format("{name}{@version}").lower())
 
         # If the user asked for dependencies, traverse spec DAG get them.
         if args.dependencies:
@@ -204,7 +204,7 @@ def mirror_create(args):
             "  %-4d failed to fetch." % e)
         if error:
             tty.error("Failed downloads:")
-            colify(s.cformat("$_$@") for s in error)
+            colify(s.cformat("{name}{@version}") for s in error)
 
 
 def mirror(parser, args):

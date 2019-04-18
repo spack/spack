@@ -646,14 +646,14 @@ modules that refer to different flavors of the same library/application:
   modules:
     tcl:
       hash_length: 0
-      naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+      naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
       whitelist:
         -  gcc
       blacklist:
         -  '%gcc@5.4.0'
       all:
         conflict:
-          - '${PACKAGE}'
+          - '{name}'
         suffixes:
           '^openblas': openblas
           '^netlib-lapack': netlib
@@ -713,14 +713,14 @@ is installed. You can achieve this with Spack by adding an
   modules:
     tcl:
       hash_length: 0
-      naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+      naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
       whitelist:
         -  gcc
       blacklist:
         -  '%gcc@5.4.0'
       all:
         conflict:
-          - '${PACKAGE}'
+          - '{name}'
         suffixes:
           '^openblas': openblas
           '^netlib-lapack': netlib
@@ -728,7 +728,7 @@ is installed. You can achieve this with Spack by adding an
           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
         environment:
           set:
-            '${PACKAGE}_ROOT': '${PREFIX}'
+            '{name}_ROOT': '{prefix}'
       netlib-scalapack:
         suffixes:
           '^openmpi': openmpi
@@ -737,8 +737,9 @@ is installed. You can achieve this with Spack by adding an
 Under the hood Spack uses the :meth:`~spack.spec.Spec.format` API to substitute
 tokens in either environment variable names or values. There are two caveats though:
 
-- The set of allowed tokens in variable names is restricted to ``PACKAGE``,
-  ``VERSION``, ``COMPILER``, ``COMPILERNAME``, ``COMPILERVER``, ``ARCHITECTURE``
+- The set of allowed tokens in variable names is restricted to
+  ``name``, ``version``, ``compiler``, ``compiler.name``,
+  ``compiler.version``, ``architecture``
 - Any token expanded in a variable name is made uppercase, but other than that
   case sensitivity is preserved
 
@@ -784,14 +785,14 @@ etc. in the ``gcc`` module file and apply other custom modifications to the
   modules:
     tcl:
       hash_length: 0
-      naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+      naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
       whitelist:
         - gcc
       blacklist:
         - '%gcc@5.4.0'
       all:
         conflict:
-          - '${PACKAGE}'
+          - '{name}'
         suffixes:
           '^openblas': openblas
           '^netlib-lapack': netlib
@@ -799,7 +800,7 @@ etc. in the ``gcc`` module file and apply other custom modifications to the
           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
         environment:
           set:
-            '${PACKAGE}_ROOT': '${PREFIX}'
+            '{name}_ROOT': '{prefix}'
       gcc:
         environment:
           set:
@@ -896,14 +897,14 @@ directive and assigning it the value ``direct``:
     tcl:
       verbose: True
       hash_length: 0
-      naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+      naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
       whitelist:
         - gcc
       blacklist:
         - '%gcc@5.4.0'
       all:
         conflict:
-          - '${PACKAGE}'
+          - '{name}'
         suffixes:
           '^openblas': openblas
           '^netlib-lapack': netlib
@@ -911,7 +912,7 @@ directive and assigning it the value ``direct``:
           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
         environment:
           set:
-            '${PACKAGE}_ROOT': '${PREFIX}'
+            '{name}_ROOT': '{prefix}'
       gcc:
         environment:
           set:
@@ -1089,7 +1090,7 @@ After these modifications your configuration file should look like:
           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
         environment:
           set:
-            '${PACKAGE}_ROOT': '${PREFIX}'
+            '{name}_ROOT': '{prefix}'
       gcc:
         environment:
           set:
@@ -1298,7 +1299,7 @@ Coming back to our example, let's add ``lapack`` to the hierarchy and remove any
           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
         environment:
           set:
-            '${PACKAGE}_ROOT': '${PREFIX}'
+            '{name}_ROOT': '{prefix}'
       gcc:
         environment:
           set:
@@ -1534,7 +1535,7 @@ it's ``netlib-scalapack``:
           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
         environment:
           set:
-            '${PACKAGE}_ROOT': '${PREFIX}'
+            '{name}_ROOT': '{prefix}'
       gcc:
         environment:
           set:
