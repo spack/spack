@@ -262,24 +262,24 @@ class RemovePath(NameValueModifier):
 
 class DeprioritizeSystemPaths(NameModifier):
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories = deprioritize_system_paths([os.path.normpath(x)
                                                  for x in directories])
-        os.environ[self.name] = self.separator.join(directories)
+        env[self.name] = self.separator.join(directories)
 
 
 class PruneDuplicatePaths(NameModifier):
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories = prune_duplicate_paths([os.path.normpath(x)
                                              for x in directories])
-        os.environ[self.name] = self.separator.join(directories)
+        env[self.name] = self.separator.join(directories)
 
 
 class EnvironmentModifications(object):
