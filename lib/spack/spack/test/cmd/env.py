@@ -1116,7 +1116,7 @@ env:
     combinatorial:
       root: %s
       projections:
-        'all': '${package}/${version}-${compilername}'""" % viewdir)
+        'all': '{name}/{version}-{compiler.name}'""" % viewdir)
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -1149,7 +1149,7 @@ env:
       root: %s
       select: ['%%gcc']
       projections:
-        'all': '${package}/${version}-${compilername}'""" % viewdir)
+        'all': '{name}/{version}-{compiler.name}'""" % viewdir)
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -1187,7 +1187,7 @@ env:
       root: %s
       exclude: [callpath]
       projections:
-        'all': '${package}/${version}-${compilername}'""" % viewdir)
+        'all': '{name}/{version}-{compiler.name}'""" % viewdir)
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -1226,7 +1226,7 @@ env:
       select: ['%%gcc']
       exclude: [callpath]
       projections:
-        'all': '${package}/${version}-${compilername}'""" % viewdir)
+        'all': '{name}/{version}-{compiler.name}'""" % viewdir)
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -1330,8 +1330,8 @@ env:
       root: %s
       exclude: [callpath %%gcc]
       projections:
-        'all': '${package}/${version}-${compilername}'""" % (default_viewdir,
-                                                             combin_viewdir))
+        'all': '{name}/{version}-{compiler.name}'""" % (default_viewdir,
+                                                        combin_viewdir))
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):

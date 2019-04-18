@@ -87,12 +87,12 @@ def get_job_name(spec, osarch):
 
 def get_spec_string(spec):
     format_elements = [
-        '${package}@${version}',
-        '%${compilername}@${compilerversion}',
+        '{name}{@version}',
+        '{%compiler}',
     ]
 
     if spec.architecture:
-        format_elements.append(' arch=${architecture}')
+        format_elements.append(' {arch=architecture}')
 
     return spec.format(''.join(format_elements))
 

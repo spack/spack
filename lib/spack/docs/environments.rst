@@ -667,7 +667,7 @@ excludes those built with the PGI compiler at version 18.5.
          select: [^mpi]
          exclude: ['%pgi@18.5']
          projections:
-           all: ${package}/${version}-${compilername}
+           all: {name}/{version}-{compiler.name}
 
 For more information on using view projections, see the section on
 :ref:`adding_projections_to_views`. The default for the ``select`` and
