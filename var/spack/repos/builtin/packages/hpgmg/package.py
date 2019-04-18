@@ -23,6 +23,7 @@ class Hpgmg(Package):
     tags = ['proxy-app']
 
     version('develop', branch='master')
+    version('0.4',          'abdabfe09453487299500b5bd8da4e6dc3d88477199bcfa38ac41d0b3c780f6f')
     version('a0a5510df23b', 'b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
     version('0.3',          '12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793')
 
@@ -64,7 +65,14 @@ class Hpgmg(Package):
         if '+debug' in self.spec:
             cflags.append('-g')
         elif any(map(self.spec.satisfies, ['%gcc', '%clang', '%intel'])):
-            cflags += ['-O3', '-march=native']
+            cflags.append('-O3')
+            if self.compiler.target in ['x86_64']:
+                cflags.append('-march=native')
+            else:
+                cflags.append('-mcpu=native')
+                cflags.append('-mtune=native')
+        else:
+            cflags.append('-O3')
 
         args.append('--CFLAGS=' + ' '.join(cflags))
 
@@ -75,7 +83,7 @@ class Hpgmg(Package):
         return args
 
     def configure(self, spec, prefix):
-        configure(*self.configure_args())
+        python('configure', *self.configure_args())
 
     def build(self, spec, prefix):
         make('-C', 'build')
