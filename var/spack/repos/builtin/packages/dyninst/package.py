@@ -34,6 +34,9 @@ class Dyninst(CMakePackage):
 
     boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
 
+    conflicts('^boost@1.70.0:', when='@10.0.0',
+          msg='See https://github.com/dyninst/dyninst/issues/585')
+
     depends_on('boost@1.61.0:' + boost_libs)
     depends_on('libiberty+pic')
 
