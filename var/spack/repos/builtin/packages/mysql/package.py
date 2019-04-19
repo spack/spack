@@ -79,10 +79,10 @@ class Mysql(CMakePackage):
     depends_on('boost@1.66.0 cxxstd=14', type='build', when='@8.0.11 cxxstd=14')
     depends_on('boost@1.66.0 cxxstd=17', type='build', when='@8.0.11 cxxstd=17')
     # 5.7.X
-    depends_on('boost@1.59.0 cxxstd=98', type='build', when='@5.7.0:5.7.999 cxxstd=98')
-    depends_on('boost@1.59.0 cxxstd=11', type='build', when='@5.7.0:5.7.999 cxxstd=11')
-    depends_on('boost@1.59.0 cxxstd=14', type='build', when='@5.7.0:5.7.999 cxxstd=14')
-    depends_on('boost@1.59.0 cxxstd=17', type='build', when='@5.7.0:5.7.999 cxxstd=17')
+    depends_on('boost@1.59.0 cxxstd=98', when='@5.7.0:5.7.999 cxxstd=98')
+    depends_on('boost@1.59.0 cxxstd=11', when='@5.7.0:5.7.999 cxxstd=11')
+    depends_on('boost@1.59.0 cxxstd=14', when='@5.7.0:5.7.999 cxxstd=14')
+    depends_on('boost@1.59.0 cxxstd=17', when='@5.7.0:5.7.999 cxxstd=17')
 
     depends_on('ncurses')
     depends_on('openssl')
