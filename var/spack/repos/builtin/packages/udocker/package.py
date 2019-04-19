@@ -19,12 +19,11 @@ class Udocker(Package):
 
     def install(self, spec, prefix):
         # udocker consists of a single python script
-        source='udocker.py'
-        dest=join_path(prefix.bin, 'udocker')
+        source = 'udocker.py'
+        dest = join_path(prefix.bin, 'udocker')
 
         mkdir(prefix.bin)
         install(source, dest)
 
         chmod = which('chmod')
         chmod('a+x', dest)
-
