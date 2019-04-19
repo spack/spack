@@ -40,7 +40,7 @@ class Geopm(AutotoolsPackage):
 
     # Added dependencies.
     depends_on('ruby-ronn', type='build', when='+doc')
-    depends_on('mpi@2.2:2.3', when='+mpi')
+    depends_on('mpi@2.2:', when='+mpi')
 
     depends_on('py-matplotlib@2.2.2:2.2.3', type=('build', 'run'))
     depends_on('py-cycler@0.10.0:', type=('build', 'run'))
