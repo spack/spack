@@ -17,7 +17,7 @@ class Hypre(Package):
     url      = "https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/LLNL/hypre.git"
 
-    maintainers = ['ulrikeyang', 'balay']
+    maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
     version('develop', branch='master')
     version('2.15.1', '877002d49f38b6a1434955baf79eff35')
