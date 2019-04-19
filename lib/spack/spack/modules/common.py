@@ -65,6 +65,10 @@ _valid_tokens = (
     'compiler.name',
     'compiler.version',
     'architecture'
+    # tokens from old-style format strings
+    'package',
+    'compilername',
+    'compilerver',
 )
 
 
