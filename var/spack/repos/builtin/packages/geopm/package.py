@@ -18,22 +18,13 @@ class Geopm(AutotoolsPackage):
     msr-safe kernel module by your administrator."""
 
     homepage = "https://geopm.github.io"
-    url      = "https://github.com/geopm/geopm/releases/download/v0.4.0/geopm-0.4.0.tar.gz"
+    url      = "https://github.com/geopm/geopm/releases/download/v1.0.0/geopm-1.0.0.tar.gz"
     git      = "https://github.com/geopm/geopm.git"
 
     # Add additional proper versions and checksums here. "spack checksum geopm"
     version('develop', branch='dev')
     version('master', branch='master')
-    version('1.0.0-rc2', sha256='c6637df54728ded31fd682f39a07dffee45883f350e6dbd13e1496dd50243ffd',
-            url='https://github.com/geopm/geopm/releases/download/v1.0.0%2Brc2/geopm-1.0.0+rc2.tar.gz')
-    version('1.0.0-rc1', sha256='f8a2e5c384a15e9663f409de478b6372cd63e63a28d4701a33ac043fc27905e0', 
-            url='https://github.com/geopm/geopm/releases/download/v1.0.0-rc1/geopm-1.0.0+rc1.tar.gz')
-    version('0.6.1', sha256='0ca42853f90885bf213df190c3462b8675c143cc843aee0d8b8a0e30802b55a9')
-    version('0.6.0', sha256='95ccf256c2b7cb35838978152479569d154347c3065af1639ed17be1399182d3')
-    version('0.5.1', sha256='db247af55f7000b6e4628af099956349b68a637500b9d4fe8d8fb13687124d53')
-    version('0.5.0', '61b454bc74d4606fe84818aef16c1be4')
-    version('0.4.0', 'd4cc8fffe521296dab379857d7e2064d')
-    version('0.3.0', '568fd37234396fff134f8d57b60f2b83')
+    version('1.0.0',     sha256='24fe72265a7e44d62bdfe49467c49f0b7a649131ddda402d763c00a49765e1cb')
 
     # Variants reflecting most ./configure --help options
     variant('debug', default=False, description='Enable debug.')
@@ -45,24 +36,20 @@ class Geopm(AutotoolsPackage):
     variant('doc', default=True, description='Create man pages with ruby-ronn.')
     variant('openmp', default=True, description='Build with OpenMP.')
     variant('ompt', default=False, description='Use OpenMP Tools Interface.')
-    variant('hwloc', default=False, description='Build with hwloc, deprecated and ignored after v0.5.1.')
     variant('gnu-ld', default=False, description='Assume C compiler uses gnu-ld.')
 
     # Added dependencies.
-    depends_on('m4', type='build')
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool', type='build')
     depends_on('ruby-ronn', type='build', when='+doc')
-    depends_on('doxygen', type='build', when='+doc')
-    depends_on('numactl')
-    depends_on('mpi', when='+mpi')
-    depends_on('hwloc@1.11.9', when='@:0.5.1+hwloc')
-    depends_on('json-c')
-    depends_on('py-pandas', type='run')
-    depends_on('py-numpy', type='run')
-    depends_on('py-natsort', type='run')
-    depends_on('py-matplotlib@2.2.3', type='run')
+    depends_on('mpi@2.2:2.3', when='+mpi')
+
+    depends_on('py-matplotlib@2.2.2:2.2.3', type=('build', 'run'))
+    depends_on('py-cycler@0.10.0:', type=('build', 'run'))
+    depends_on('py-numpy@1.14.3:', type=('build', 'run'))
+    depends_on('py-setuptools@39.2.0:', type=('build', 'run'))
+    depends_on('py-natsort@5.3.2:', type=('build', 'run'))
+    depends_on('py-psutil@5.4.8:', type=('build', 'run'))
+    depends_on('py-pandas@0.22.0:', type=('build', 'run'))
+    depends_on('py-tables@3.4.3:', type=('build', 'run'))
 
     parallel = False
 
@@ -77,10 +64,6 @@ class Geopm(AutotoolsPackage):
         args.extend(self.enable_or_disable('doc'))
         args.extend(self.enable_or_disable('openmp'))
         args.extend(self.enable_or_disable('ompt'))
-        if self.version <= Version('0.5.1'):
-            args.extend(self.with_or_without(
-                'hwloc',
-                activation_value='prefix'))
         args.extend(self.with_or_without('gnu-ld'))
 
         return args
