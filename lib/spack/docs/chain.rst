@@ -11,16 +11,15 @@ Chaining Spack Installations
 
 You can point your Spack installation to another installation to use any
 packages that are installed there. To register the other Spack instance,
-you can add it as an entry to ``config.yaml``:
+you can add it as an entry to ``upstreams.yaml``:
 
 .. code-block:: yaml
 
-  config:
-    upstreams:
-      spack-instance-1:
-        install_tree: /path/to/other/spack/opt/spack
-      spack-instance-2:
-        install_tree: /path/to/another/spack/opt/spack
+  upstreams:
+    spack-instance-1:
+      install_tree: /path/to/other/spack/opt/spack
+    spack-instance-2:
+      install_tree: /path/to/another/spack/opt/spack
 
 ``install_tree`` must point to the ``opt/spack`` directory inside of the
 Spack base directory.
@@ -62,7 +61,7 @@ Using Multiple Upstream Spack Instances
 A single Spack instance can use multiple upstream Spack installations. Spack
 will search upstream instances in the order you list them in your
 configuration. If your installation refers to instances X and Y, in that order,
-then instance X must list Y as an upstream in its own ``config.yaml``.
+then instance X must list Y as an upstream in its own ``upstreams.yaml``.
 
 -----------------------------------
 Using Modules for Upstream Packages
@@ -80,12 +79,11 @@ configuration:
 
 .. code-block:: yaml
 
-  config:
-    upstreams:
-      spack-instance-1:
-        install_tree: /path/to/other/spack/opt/spack
-        modules:
-          tcl: /path/to/other/spack/share/spack/modules
+  upstreams:
+    spack-instance-1:
+      install_tree: /path/to/other/spack/opt/spack
+      modules:
+        tcl: /path/to/other/spack/share/spack/modules
 
 Each time new packages are installed in the upstream Spack instance, the
 upstream Spack maintainer should run ``spack module tcl refresh`` (or the
