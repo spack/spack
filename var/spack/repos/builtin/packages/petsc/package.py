@@ -24,6 +24,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.11.1', 'cb627f99f7ce1540ebbbf338189f89a5f1ecf3ab3b5b0e357f9e46c209f1fb23')
     version('3.11.0', 'b3bed2a9263193c84138052a1b92d47299c3490dd24d1d0bf79fb884e71e678a')
     version('3.10.5', '3a81c8406410e0ffa8a3e9f8efcdf2e683cc40613c9bb5cb378a6498f595803e')
     version('3.10.4', '6c836df84caa9ae683ae401d3f94eb9471353156fec6db602bf2e857e4ec339f')
@@ -81,6 +82,8 @@ class Petsc(Package):
     variant('clanguage', default='C', values=('C', 'C++'),
             description='Specify C (recommended) or C++ to compile PETSc',
             multi=False)
+    variant('fftw', default=False,
+            description='Activates support for FFTW (only parallel)')
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
     variant('knl', default=False,
@@ -104,6 +107,8 @@ class Petsc(Package):
     patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
 
     patch('xcode_stub_out_of_sync.patch', when='@:3.10.4')
+
+    patch('xlf_fix-dup-petscfecreate.patch', when='@3.11.0')
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
@@ -163,6 +168,7 @@ class Petsc(Package):
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
+    depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
 
@@ -263,7 +269,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos'):
+                        'mumps', 'trilinos', 'fftw'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))

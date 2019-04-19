@@ -17,6 +17,7 @@ class Vtk(CMakePackage):
     url      = "http://www.vtk.org/files/release/8.0/VTK-8.0.1.tar.gz"
     list_url = "http://www.vtk.org/download/"
 
+    version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.0.1', '692d09ae8fadc97b59d35cab429b261a')
     version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')

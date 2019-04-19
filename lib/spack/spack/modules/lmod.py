@@ -232,7 +232,7 @@ class LmodFileLayout(BaseFileLayout):
         to console to use it.
         """
         # Package name and version
-        base = os.path.join("${PACKAGE}", "${VERSION}")
+        base = os.path.join("{name}", "{version}")
         name_parts = [self.spec.format(base)]
         # The remaining elements are filename suffixes
         name_parts.extend(self.conf.suffixes)

@@ -27,6 +27,7 @@ class Mgis(CMakePackage):
     version("rliv-1.0", branch="rliv-1.0")
 
     # released version
+    version('1.0.1', sha256='6102621455bc5d9b1591cd33e93b2e15a9572d2ce59ca6dfa30ba57ae1265c08')
     version('1.0', sha256='279c98da00fa6855edf29c2b8f8bad6e7732298dc62ef67d028d6bbeaac043b3')
 
     # variants
@@ -42,7 +43,8 @@ class Mgis(CMakePackage):
 
     # dependencies
     depends_on('tfel@3.2.0', when="@1.0")
-    depends_on('tfel@rliv-3.2', when="@rliv-3.2")
+    depends_on('tfel@3.2.1', when="@1.0.1")
+    depends_on('tfel@rliv-3.2', when="@rliv-1.0")
     depends_on('tfel@master', when="@master")
     depends_on('boost+python', when='+python')
     extends('python', when='+python')

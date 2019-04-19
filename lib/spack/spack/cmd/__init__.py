@@ -184,10 +184,11 @@ def disambiguate_spec(spec, env):
         tty.die("Spec '%s' matches no installed packages." % spec)
 
     elif len(matching_specs) > 1:
+        format_string = '{name}{@version}{%compiler}{arch=architecture}'
         args = ["%s matches multiple packages." % spec,
                 "Matching packages:"]
         args += [colorize("  @K{%s} " % s.dag_hash(7)) +
-                 s.cformat('$_$@$%@$=') for s in matching_specs]
+                 s.cformat(format_string) for s in matching_specs]
         args += ["Use a more specific spec."]
         tty.die(*args)
 
@@ -263,15 +264,15 @@ def display_specs(specs, args=None, **kwargs):
         hashes = True
         hlen = None
 
-    nfmt = '{fullpackage}' if namespace else '{package}'
+    nfmt = '{namespace}{name}' if namespace else '{name}'
     ffmt = ''
     if full_compiler or flags:
-        ffmt += '$%'
+        ffmt += '{%compiler.name}'
         if full_compiler:
-            ffmt += '@'
-        ffmt += '+'
-    vfmt = '$+' if variants else ''
-    format_string = '$%s$@%s%s' % (nfmt, ffmt, vfmt)
+            ffmt += '{@compiler.version}'
+        ffmt += ' {compiler_flags}'
+    vfmt = '{variants}' if variants else ''
+    format_string = nfmt + '{@version}' + ffmt + vfmt
 
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
@@ -329,7 +330,7 @@ def display_specs(specs, args=None, **kwargs):
                 if hashes:
                     string += gray_hash(s, hlen) + ' '
                 string += s.cformat(
-                    '$%s$@%s' % (nfmt, vfmt), transform=transform)
+                    nfmt + '{@version}' + vfmt, transform=transform)
                 return string
 
             if not flags and not full_compiler:
