@@ -38,13 +38,13 @@ index c818f5a..755da92 100644
 -    /usr/mysql/include
 -    $ENV{MYSQL_DIR}/include
 -  )
-+    PATH_SUFFIXES include include/mysql include/mariadb
++    PATH_SUFFIXES include/mysql include/mariadb
 +    HINTS ${MYSQL_DIR} $ENV{MYSQL_DIR}
 +    NO_DEFAULT_PATH
 +    )
 +  if (NOT MYSQL_INCLUDE_DIR)
 +    find_path(MYSQL_INCLUDE_DIR mysql.h
-+      PATH_SUFFIXES include include/mysql include/mariadb
++      PATH_SUFFIXES include/mysql include/mariadb
 +      PATHS /usr/local/mysql /usr/local /usr
 +      )
 +  endif()
