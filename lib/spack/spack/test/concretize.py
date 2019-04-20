@@ -528,6 +528,11 @@ class TestConcretize(object):
         assert s.dag_hash() == t.dag_hash()
 
     @pytest.mark.parametrize('abstract_specs, checklist', [
+        # Establish a baseline - mpileaks alone concretizes with
+        # the newest version of callpath and dyninst
+        (['mpileaks'], [['callpath@1.0', 'dyninst@8.2']]),
+        # When concretized together with older version of callpath
+        # and dyninst it uses those older versions
         (['mpileaks', 'callpath@0.9', 'dyninst@8.1.1'],
          [['callpath@0.9', 'dyninst@8.1.1'],  # mpileaks
           ['callpath@0.9', 'dyninst@8.1.1'],  # callpath
