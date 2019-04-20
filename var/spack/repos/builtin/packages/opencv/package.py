@@ -34,7 +34,6 @@ class Opencv(CMakePackage):
     version('3.4.6',          sha256='e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d')
     version('3.4.5',          sha256='0c57d9dd6d30cbffe68a09b03f4bebe773ee44dc8ff5cd6eaeb7f4d5ef3b428e')
     version('3.4.4',          sha256='a35b00a71d77b484f73ec485c65fe56c7a6fa48acd5ce55c197aef2e13c78746')
-    version('3.1.0',          sha256='f3b160b9213dd17aa15ddd45f6fb06017fe205359dbd1f7219aad59c98899f15')
     version('3.4.3',    '712896f5815938c014c199dde142d508')
     version('3.4.1',    'a0b7a47899e67b3490ea31edc4f6e8e6')
     version('3.4.0',    '170732dc760e5f7ddeccbe53ba5d16a6')
