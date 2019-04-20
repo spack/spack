@@ -49,7 +49,7 @@ class Geopm(AutotoolsPackage):
     depends_on('py-natsort@5.3.2:', type=('build', 'run'))
     depends_on('py-psutil@5.4.8:', type=('build', 'run'))
     depends_on('py-pandas@0.22.0:', type=('build', 'run'))
-    depends_on('py-tables@3.4.3:', type=('build', 'run'))
+    depends_on('py-pytables@3.4.3:', type=('build', 'run'))
 
     parallel = False
 
