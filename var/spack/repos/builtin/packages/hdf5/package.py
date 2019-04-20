@@ -197,6 +197,7 @@ class Hdf5(AutotoolsPackage):
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
         extra_args = ['--enable-unsupported']
+        extra_args += ['--enable-symbols=yes']
         extra_args += self.enable_or_disable('threadsafe')
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
