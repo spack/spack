@@ -163,6 +163,11 @@ class Dealii(CMakePackage, CudaPackage):
           sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
           when='@9.0.1')
 
+    # https://github.com/dealii/dealii/pull/7935
+    patch('https://github.com/dealii/dealii/commit/f8de8c5c28c715717bf8a086e94f071e0fe9deab.patch',
+          sha256='61f217744b70f352965be265d2f06e8c1276685e2944ca0a88b7297dd55755da',
+          when='@9.0.1 ^boost@1.70.0:')
+
     # check that the combination of variants makes sense
     # 64-bit BLAS:
     for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
