@@ -58,6 +58,7 @@ from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
     EnvironmentModifications, validate, preserve_environment)
 from spack.util.environment import system_dirs
+from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
 from spack.util.log_parse import parse_log_events, make_log_context
@@ -280,7 +281,7 @@ def set_build_environment_variables(pkg, env, dirty):
         dep_link_dirs = list()
         try:
             dep_link_dirs.extend(query.libs.directories)
-        except spack.spec.NoLibrariesError:
+        except NoLibrariesError:
             tty.debug("No libraries found for {0}".format(dep.name))
 
         for default_lib_dir in ['lib', 'lib64']:
@@ -294,7 +295,7 @@ def set_build_environment_variables(pkg, env, dirty):
 
         try:
             include_dirs.extend(query.headers.directories)
-        except spack.spec.NoHeadersError:
+        except NoHeadersError:
             tty.debug("No headers found for {0}".format(dep.name))
 
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
