@@ -19,6 +19,10 @@ class Pgi(spack.compiler.Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
+    # LLVM-enabled PGI compilers add a '-llvm' suffix:
+    #   pgcc-llvm, pgc++llvm, pgfortran-llvm
+    suffixes = ['-?llvm']
+
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'pgi/pgcc',
                   'cxx': 'pgi/pgc++',
@@ -29,7 +33,7 @@ class Pgi(spack.compiler.Compiler):
     PrgEnv_compiler = 'pgi'
 
     version_argument = '-V'
-    version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ [^ ]+ target on '
+    version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '
 
     @property
     def openmp_flag(self):

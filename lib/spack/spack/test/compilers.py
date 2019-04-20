@@ -317,7 +317,13 @@ def test_nag_version_detection(version_str, expected_version):
     # Output on PowerPC
     ('pgcc 17.4-0 linuxpower target on Linuxpower\n'
      'PGI Compilers and Tools\n'
-     'Copyright (c) 2017, NVIDIA CORPORATION.  All rights reserved.\n', '17.4')
+     'Copyright (c) 2017, NVIDIA CORPORATION.  All rights reserved.\n',
+     '17.4'),
+    # Output when LLVM-enabled
+    ('pgcc-llvm 18.4-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'PGI Compilers and Tools\n'
+     'Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.\n',
+     '18.4')
 ])
 def test_pgi_version_detection(version_str, expected_version):
     version = spack.compilers.pgi.Pgi.extract_version_from_output(version_str)
