@@ -62,10 +62,6 @@ from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
 
-"""Allowed URL schemes for spack packages."""
-_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
-
-
 class InstallPhase(object):
     """Manages a single phase of the installation.
 
