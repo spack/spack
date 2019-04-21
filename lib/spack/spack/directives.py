@@ -100,11 +100,6 @@ class DirectiveMeta(type):
         # that the directives are called on the class to set it up
 
         if 'spack.pkg' in cls.__module__:
-            # Package name as taken
-            # from llnl.util.lang.get_calling_module_name
-            pkg_name = cls.__module__.split('.')[-1]
-            setattr(cls, 'name', pkg_name)
-
             # Ensure the presence of the dictionaries associated
             # with the directives
             for d in DirectiveMeta._directive_names:
