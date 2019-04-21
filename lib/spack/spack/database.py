@@ -875,7 +875,8 @@ class Database(object):
             return self._remove(spec)
 
     @_autospec
-    def installed_relatives(self, spec, direction='children', transitive=True):
+    def installed_relatives(self, spec, direction='children', transitive=True,
+                            deptype='all'):
         """Return installed specs related to this one."""
         if direction not in ('parents', 'children'):
             raise ValueError("Invalid direction: %s" % direction)
@@ -883,11 +884,12 @@ class Database(object):
         relatives = set()
         for spec in self.query(spec):
             if transitive:
-                to_add = spec.traverse(direction=direction, root=False)
+                to_add = spec.traverse(
+                    direction=direction, root=False, deptype=deptype)
             elif direction == 'parents':
-                to_add = spec.dependents()
+                to_add = spec.dependents(deptype=deptype)
             else:  # direction == 'children'
-                to_add = spec.dependencies()
+                to_add = spec.dependencies(deptype=deptype)
 
             for relative in to_add:
                 hash_key = relative.dag_hash()
