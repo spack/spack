@@ -34,17 +34,14 @@ def canonical_deptype(deptype):
             raise ValueError('Invalid dependency type: %s' % deptype)
         return (deptype,)
 
-    elif isinstance(deptype, (tuple, list)):
+    elif isinstance(deptype, (tuple, list, set)):
         bad = [d for d in deptype if d not in all_deptypes]
         if bad:
             raise ValueError(
                 'Invalid dependency types: %s' % ','.join(str(t) for t in bad))
         return tuple(sorted(deptype))
 
-    elif deptype is None:
-        raise ValueError('Invalid dependency type: None')
-
-    return deptype
+    raise ValueError('Invalid dependency type: %s' % repr(deptype))
 
 
 class Dependency(object):
