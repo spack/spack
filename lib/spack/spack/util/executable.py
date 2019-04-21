@@ -224,6 +224,26 @@ class Executable(object):
         return ' '.join(self.exe)
 
 
+def which_string(*args, **kwargs):
+    """Like ``which()``, but return a string instead of an ``Executable``."""
+    path = kwargs.get('path', os.environ.get('PATH', ''))
+    required = kwargs.get('required', False)
+
+    if isinstance(path, string_types):
+        path = path.split(os.pathsep)
+
+    for name in args:
+        for directory in path:
+            exe = os.path.join(directory, name)
+            if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                return exe
+
+    if required:
+        tty.die("spack requires '%s'. Make sure it is in your path." % args[0])
+
+    return None
+
+
 def which(*args, **kwargs):
     """Finds an executable in the path like command-line which.
 
@@ -240,22 +260,8 @@ def which(*args, **kwargs):
     Returns:
         Executable: The first executable that is found in the path
     """
-    path = kwargs.get('path', os.environ.get('PATH', ''))
-    required = kwargs.get('required', False)
-
-    if isinstance(path, string_types):
-        path = path.split(os.pathsep)
-
-    for name in args:
-        for directory in path:
-            exe = os.path.join(directory, name)
-            if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                return Executable(exe)
-
-    if required:
-        tty.die("spack requires '%s'. Make sure it is in your path." % args[0])
-
-    return None
+    exe = which_string(*args, **kwargs)
+    return Executable(exe) if exe else None
 
 
 class ProcessError(spack.error.SpackError):
