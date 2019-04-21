@@ -5,6 +5,7 @@
 
 from six import StringIO
 
+import spack.repo
 from spack.spec import Spec
 from spack.graph import AsciiGraph, topological_sort, graph_dot
 
@@ -47,34 +48,38 @@ def test_static_graph_mpileaks(mock_packages):
     assert '  "libelf" [label="libelf"]\n'     in dot
     assert '  "libdwarf" [label="libdwarf"]\n' in dot
 
+    mpi_providers = spack.repo.path.providers_for('mpi')
+    for spec in mpi_providers:
+        assert ('"mpileaks" -> "%s"' % spec.name) in dot
+        assert ('"callpath" -> "%s"' % spec.name) in dot
+
     assert '  "dyninst" -> "libdwarf"\n'  in dot
     assert '  "callpath" -> "dyninst"\n'  in dot
-    assert '  "mpileaks" -> "mpi"\n'      in dot
     assert '  "libdwarf" -> "libelf"\n'   in dot
-    assert '  "callpath" -> "mpi"\n'      in dot
     assert '  "mpileaks" -> "callpath"\n' in dot
     assert '  "dyninst" -> "libelf"\n'    in dot
 
 
-def test_dynamic_dot_graph_mpileaks(mock_packages):
+def test_dynamic_dot_graph_mpileaks(mock_packages, config):
     """Test dynamically graphing the mpileaks package."""
-    s = Spec('mpileaks').normalized()
+    s = Spec('mpileaks').concretized()
 
     stream = StringIO()
     graph_dot([s], static=False, out=stream)
 
     dot = stream.getvalue()
+    print(dot)
 
-    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('{name}{/hash:7}')
-    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('{name}{/hash:7}')
+    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('{name}')
+    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('{name}')
     callpath_hash, callpath_lbl = (
-        s['callpath'].dag_hash(), s['callpath'].format('{name}{/hash:7}'))
+        s['callpath'].dag_hash(), s['callpath'].format('{name}'))
     dyninst_hash, dyninst_lbl = (
-        s['dyninst'].dag_hash(), s['dyninst'].format('{name}{/hash:7}'))
+        s['dyninst'].dag_hash(), s['dyninst'].format('{name}'))
     libdwarf_hash, libdwarf_lbl = (
-        s['libdwarf'].dag_hash(), s['libdwarf'].format('{name}{/hash:7}'))
+        s['libdwarf'].dag_hash(), s['libdwarf'].format('{name}'))
     libelf_hash, libelf_lbl = (
-        s['libelf'].dag_hash(), s['libelf'].format('{name}{/hash:7}'))
+        s['libelf'].dag_hash(), s['libelf'].format('{name}'))
 
     assert '  "%s" [label="%s"]\n' % (mpileaks_hash, mpileaks_lbl) in dot
     assert '  "%s" [label="%s"]\n' % (callpath_hash, callpath_lbl) in dot
