@@ -527,30 +527,37 @@ class TestConcretize(object):
 
         assert s.dag_hash() == t.dag_hash()
 
-    @pytest.mark.parametrize('abstract_specs, checklist', [
-        # Establish a baseline - mpileaks alone concretizes with
-        # the newest version of callpath and dyninst
-        (['mpileaks'], [['callpath@1.0', 'dyninst@8.2']]),
+    @pytest.mark.parametrize('abstract_specs', [
+        # Establish a baseline - concretize a single spec
+        ('mpileaks',),
         # When concretized together with older version of callpath
         # and dyninst it uses those older versions
-        (['mpileaks', 'callpath@0.9', 'dyninst@8.1.1'],
-         [['callpath@0.9', 'dyninst@8.1.1'],  # mpileaks
-          ['callpath@0.9', 'dyninst@8.1.1'],  # callpath
-          ['dyninst@8.1.1']  # dyninst
-          ]),
+        ('mpileaks', 'callpath@0.9', 'dyninst@8.1.1'),
         # Handle recursive syntax within specs
-        (['mpileaks', 'callpath@0.9 ^dyninst@8.1.1', 'dyninst'],
-         [['callpath@0.9', 'dyninst@8.1.1'],  # mpileaks
-          ['callpath@0.9', 'dyninst@8.1.1'],  # callpath
-          ['dyninst@8.1.1']  # dyninst
-          ])
+        ('mpileaks', 'callpath@0.9 ^dyninst@8.1.1', 'dyninst'),
     ])
-    def test_simultaneous_concretization_of_specs(
-            self, abstract_specs, checklist
-    ):
-        specs = spack.concretize.concretize_specs_together(*abstract_specs)
-        for spec, checks in zip(specs, checklist):
-            assert all(check in spec for check in checks)
-            # Make sure the spec we test are top-level specs
-            # with no dependents
+    def test_simultaneous_concretization_of_specs(self, abstract_specs):
+
+        abstract_specs = [Spec(x) for x in abstract_specs]
+        concrete_specs = spack.concretize.concretize_specs_together(
+            *abstract_specs
+        )
+
+        # Check there's only one configuration of each package in the DAG
+        names = set(
+            dep.name for spec in concrete_specs for dep in spec.traverse()
+        )
+        for name in names:
+            name_specs = set(
+                spec[name] for spec in concrete_specs if name in spec
+            )
+            assert len(name_specs) == 1
+
+        # Check that there's at least one Spec that satisfies the
+        # initial abstract request
+        for aspec in abstract_specs:
+            assert any(cspec.satisfies(aspec) for cspec in concrete_specs)
+
+        # Make sure the concrete spec are top-level specs with no dependents
+        for spec in concrete_specs:
             assert not spec.dependents()
