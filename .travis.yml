@@ -211,7 +211,7 @@ before_script:
   - git config --global user.name "Test User"
 
   # Need this to be able to compute the list of changed files
-  - git fetch origin develop:develop
+  - git fetch origin ${TRAVIS_BRANCH}:${TRAVIS_BRANCH}
 
   # Set up external deps for build tests, b/c they take too long to compile
   - if [[ "$TEST_SUITE" == "build" ]]; then
