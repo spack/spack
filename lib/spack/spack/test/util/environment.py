@@ -27,12 +27,6 @@ def test_filter_system_paths():
     assert(expected == filtered)
 
 
-def test_system_paths():
-    expected = [p for p in test_paths if not p.startswith('/nonsense_path')]
-    filtered = envutil.system_paths(test_paths)
-    assert(expected == filtered)
-
-
 def deprioritize_system_paths():
     expected = [p for p in test_paths if p.startswith('/nonsense_path')]
     expected.extend([p for p in test_paths
