@@ -34,10 +34,10 @@ class Dyninst(CMakePackage):
 
     boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
 
-    conflicts('^boost@1.70.0:', when='@10.0.0',
-          msg='See https://github.com/dyninst/dyninst/issues/585')
+    # Boost 1.70 broken https://github.com/dyninst/dyninst/issues/585
+    depends_on('boost@:1.61.0:' + boost_libs, when='@10.0.1:')
+    depends_on('boost@1.61.0:1.69.99' + boost_libs, when='@:10.0.0')
 
-    depends_on('boost@1.61.0:' + boost_libs)
     depends_on('libiberty+pic')
 
     # Dyninst uses elf@1 (elfutils) starting with 9.3.0, and used
