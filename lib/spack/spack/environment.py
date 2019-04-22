@@ -125,12 +125,12 @@ def activate(
             cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
             cmds += 'set prompt="%s ${prompt}";\n' % prompt
     else:
-        if prompt and 'color' in os.environ.get('TERM', ''):
-            prompt = colorize('@G{%s} ' % prompt, color=True)
-
         cmds += 'export SPACK_ENV=%s;\n' % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
+            if 'color' in os.environ.get('TERM', ''):
+                prompt = colorize('@G{%s} ' % prompt, color=True)
+
             cmds += 'if [ -z "${SPACK_OLD_PS1}" ]; then\n'
             cmds += 'export SPACK_OLD_PS1="${PS1}"; fi;\n'
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
