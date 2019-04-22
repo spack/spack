@@ -46,8 +46,9 @@ class Root(CMakePackage):
     # buffers used to improve the operation of TString.
     patch('format-stringbuf-size.patch', level=0)
     # Support use of `mariadb-c-client` and `mariadb` to provide the
-    # MySQL API _cf_ https://github.com/root-project/root/pull/1993.
-    patch('find-mysql.patch', level=1)
+    # MySQL API _cf_
+    # https://github.com/root-project/root/commit/9c0fa8c554a569c971185249f9acfff4418c0c13.
+    patch('find-mysql.patch', level=1, when='@:6.16.00')
     # Some ROOT versions did not honor the option to avoid building an
     # internal version of unuran, _cf_
     # https://github.com/root-project/ROOT/commit/3e60764f133218b6938e5aa4986de760e8f058d9.
