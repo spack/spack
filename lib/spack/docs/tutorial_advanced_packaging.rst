@@ -27,8 +27,8 @@ Setup for the tutorial
 
 .. note::
 
-  If you are not using the tutorial docker image, it is recommended that you
-  do this section of the tutorial in a fresh clone of Spack
+  We do not recommend doing this section of the tutorial in a
+  production Spack instance.
 
 The tutorial uses custom package definitions with missing sections that
 will be filled in during the tutorial. These package definitions are stored
@@ -38,13 +38,14 @@ in a separate package repository, which can be enabled with:
 
   $ spack repo add --scope=site var/spack/repos/tutorial
 
-This section of the tutorial may also require a newer version of gcc, which
-you can add with:
+This section of the tutorial may also require a newer version of
+gcc. If you have not already installed gcc@7.2.0 and added it to your
+configuration, you can do so with:
 
 .. code-block:: console
 
-  $ spack install gcc@7.2.0
-  $ spack compiler add --scope=site path/to/spack-installed-gcc/bin
+  $ spack install gcc@7.2.0 %gcc@5.4.0
+  $ spack compiler add --scope=site `spack location -i gcc@7.2.0 %gcc@5.4.0`
 
 If you are using the tutorial docker image, all dependency packages
 will have been installed. Otherwise, to install these packages you can use
