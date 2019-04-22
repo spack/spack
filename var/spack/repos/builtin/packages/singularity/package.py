@@ -21,7 +21,7 @@ class Singularity(MakefilePackage):
 
     homepage = "https://www.sylabs.io/singularity/"
     url      = "https://github.com/sylabs/singularity/releases/download/v3.1.1/singularity-3.1.1.tar.gz"
-    git      = "https://github.com/singularityware/singularity.git"
+    git      = "https://github.com/sylabs/singularity.git"
 
     version('develop', branch='master')
     version('3.1.1', '158f58a79db5337e1d655ee0159b641e42ea7435')
