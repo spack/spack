@@ -98,6 +98,7 @@ class Opencv(CMakePackage):
     variant('tiff', default=True, description='Include TIFF support')
     variant('vtk', default=True, description='Activates support for VTK')
     variant('zlib', default=True, description='Build zlib from source')
+    variant('protobuf', default=True, description='Activate Google\'s data interchange format')
 
     # Patch to fix conflict between CUDA and OpenCV (reproduced with 3.3.0
     # and 3.4.1) header file that have the same name.Problem is fixed in
@@ -118,6 +119,8 @@ class Opencv(CMakePackage):
     depends_on('qt', when='+qt')
     depends_on('java', when='+java')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
+    #depends_on('protobuf@3.1.0', when='@3.3.0: +dnn')
+    depends_on('protobuf', when='+protobuf')
 
     depends_on('ffmpeg', when='+videoio')
     depends_on('mpi', when='+videoio')
@@ -210,6 +213,9 @@ class Opencv(CMakePackage):
                 'ON' if '+tiff' in spec else 'OFF')),
             '-DWITH_VTK:BOOL={0}'.format((
                 'ON' if '+vtk' in spec else 'OFF')),
+            '-DWITH_PROTOBUF:BOOL={0}'.format((
+                'ON' if '+protobuf' in spec else 'OFF')),
+            '-DBUILD_PROTOBUF:BOOL=OFF',
         ])
 
         # Media I/O
