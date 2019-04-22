@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import sys
 from spack import *
 
 
@@ -15,14 +17,10 @@ class Ftgl(AutotoolsPackage):
     list_depth = 1
 
     version('2.1.3-rc5', sha256='5458d62122454869572d39f8aa85745fc05d5518001bcefa63bd6cbb8d26565b')
+    version('2.1.2', 'f81c0a7128192ba11e036186f9a968f2')
 
-    patch('ftgl-2.1.3-rc5-ldflags.patch')
-
-    def patch(self):
-        filter_file('SUBDIRS = src test demo docs',
-                    'SUBDIRS = src test demo', 'Makefile.am')
-        filter_file('SUBDIRS = src test demo docs',
-                    'SUBDIRS = src test demo', 'Makefile.in')
+    variant('doc', default=False, description='Build docs')
+    conflicts('+doc', when='@2.1.3-rc5')
 
     # Ftgl does not come with a configure script
     depends_on('autoconf', type='build')
@@ -34,6 +32,33 @@ class Ftgl(AutotoolsPackage):
     depends_on('gl')
     depends_on('glu')
     depends_on('freetype@2.0.9:')
+    depends_on('doxygen', type='build', when='+doc')
+
+    # Fix unnecessary qualifier in 2.1.2.
+    patch('remove-extra-qualifier.diff', when='@2.1.2')
+    # Add missing GL libraries to LDFLAGS.
+    patch('ftgl-2.1.3-rc5-ldflags.patch', when='@2.1.3-rc5')
+
+    # Deactivate docs if we're not building them.
+    @when('@2.1.2~doc')
+    def patch(self):
+        filter_file('SUBDIRS = src demo docs',
+                    'SUBDIRS = src demo', os.path.join('unix', 'Makefile'))
+
+    @when('@2.1.3-rc5~doc')
+    def patch(self):
+        filter_file('SUBDIRS = src test demo docs',
+                    'SUBDIRS = src test demo', 'Makefile.am')
+        filter_file('SUBDIRS = src test demo docs',
+                    'SUBDIRS = src test demo', 'Makefile.in')
+
+    @property
+    def configure_directory(self):
+        if self.spec.satisfies('@2.1.2'):
+            subdir = 'mac' if sys.platform == 'darwin' else 'unix'
+            return os.path.join(self.stage.source_path, subdir)
+        else:
+            return self.stage.source_path
 
     def configure_args(self):
         args = ['--enable-shared', '--disable-static',
