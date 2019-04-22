@@ -14,7 +14,10 @@ try:
     from hpccm.building_blocks.base import bb_base
     from hpccm.primitives import baseimage, comment, copy, environment, shell
 except ImportError:
-    tty.die("spack container requires HPCCM")
+    # The HPCCM module is not present, but do not error out here.
+    # HPCCM is optional unless using 'spack container'.  Check again
+    # inside the container() function and error there.
+    pass
 
 import spack
 import spack.cmd
@@ -41,6 +44,9 @@ def setup_parser(subparser):
         help='Linux distribution type of the base image '
         '(default: try to determine automatically from the base image name)')
     subparser.add_argument(
+        '--extra-package', action='append', type=str, default=[],
+        help='extra OS package to install')
+    subparser.add_argument(
         '--format', action='store', type=str, default='docker',
         choices=['docker', 'singularity'],
         help='container specification format (default: docker)')
@@ -55,28 +61,40 @@ def setup_parser(subparser):
         help='print full build log if build fails')
     subparser.add_argument(
         '--spack-branch', '--branch', action='store', type=str,
-        default='master',
-        help='branch of Spack to deploy (default: master)')
+        default='develop',
+        help='branch of Spack to deploy (default: develop)')
 
 
 def container(parser, args):
     if not args.specs:
-        tty.die("spack spec requires at least one spec")
+        tty.die("spack container requires at least one spec")
 
-    recipe = hpccm.Stage()
+    # Verify that HPCCM is installed
+    try:
+        recipe = hpccm.Stage()
+    except NameError:
+        tty.die('The HPCCM Python module must be installed to use spack container')
 
     recipe += baseimage(image=args.baseimage, _distro=args.distro)
 
-    # OS dependencies
+    # Base OS dependencies
     recipe += hpccm.building_blocks.packages(
         apt=['autoconf', 'build-essential', 'bzip2', 'ca-certificates',
              'coreutils', 'cpio', 'curl', 'environment-modules', 'git',
              'gzip', 'libssl-dev', 'make', 'openssh-client', 'patch',
-             'pkg-config', 'svn', 'tar', 'tcl', 'unzip', 'zlib1g'],
+             'pkg-config', 'subversion', 'tar', 'tcl', 'unzip', 'zlib1g'],
         yum=['autoconf', 'bzip2', 'ca-certificates', 'coreutils', 'cpio',
              'curl', 'environment-modules', 'git', 'gzip', 'make',
              'openssh-clients', 'openssl-devel', 'patch', 'pkg-config',
              'svn', 'tar', 'tcl', 'unzip', 'zlib-devel'])
+
+    # Extra OS dependencies
+    if args.extra_package:
+        recipe += hpccm.building_blocks.packages(
+            ospackages=args.extra_package)
+
+    # Python
+    recipe += hpccm.building_blocks.python()
 
     # GNU compilers
     recipe += hpccm.building_blocks.gnu()
@@ -86,7 +104,7 @@ def container(parser, args):
     spack_bb += comment('Spack')
     spack_bb += shell(commands=[
         'mkdir -p /opt && cd /opt',
-        'git clone --depth=1 --branch {} https://github.com/spack/spack'.format(args.spack_branch),
+        'git clone --depth=1 --branch %s https://github.com/spack/spack' % args.spack_branch,
         '/opt/spack/bin/spack bootstrap',
         'ln -s /opt/spack/share/spack/setup-env.sh /etc/profile.d/spack.sh',
         'ln -s /opt/spack/share/spack/spack-completion.bash /etc/profile.d'])
@@ -107,16 +125,19 @@ def container(parser, args):
         spec.concretize()
 
         bb = bb_base()
-        bb += comment('{0} {1}'.format(spec.name, spec.version))
+        bb += comment('%s %s' % (spec.name, spec.version))
 
         # Process each dependency.  Use a selectable depth to balance
         # the build cache vs. container spec file complexity
         for depth, dspec in spec.traverse_edges(order='post', depth=True):
             if depth <= args.depth:
                 node = dspec.spec
-                cmd = 'spack install {0} {1}@{2}'.format(install_args_str,
-                                                         node.name,
-                                                         node.version)
+                # Compilers and arch are omitted from the format
+                # string because they reflect the host, not the
+                # container.
+                cmd = 'spack install %s %s' % (
+                    install_args_str,
+                    node.format(format_string='$_$@$+'))
                 bb += shell(chdir=False, commands=[cmd, 'spack clean --all'])
 
         recipe += bb
