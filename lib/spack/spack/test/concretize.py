@@ -535,6 +535,9 @@ class TestConcretize(object):
         ('mpileaks', 'callpath@0.9', 'dyninst@8.1.1'),
         # Handle recursive syntax within specs
         ('mpileaks', 'callpath@0.9 ^dyninst@8.1.1', 'dyninst'),
+        # Test specs that have overlapping dependencies but are not
+        # one a dependency of the other
+        ('mpileaks', 'direct-mpich')
     ])
     def test_simultaneous_concretization_of_specs(self, abstract_specs):
 
