@@ -13,53 +13,106 @@ class Mercury(CMakePackage):
     git = 'https://github.com/mercury-hpc/mercury.git'
 
     version('develop', branch='master', submodules=True)
+    version('1.0.1', tag='v1.0.1', submodules=True)
     version('1.0.0', tag='v1.0.0', submodules=True)
     version('0.9.0', tag='v0.9.0', submodules=True)
 
-    variant('cci', default=False, description='Use CCI for network transport')
     variant('bmi', default=False, description='Use BMI for network transport')
-    variant('fabric', default=True, description='Use libfabric for network transport')
+    variant('cci', default=False, description='Use CCI for network transport')
+    variant('mpi', default=False, description='Use MPI for network transport')
+    variant('ofi', default=True,  description='Use libfabric plugin')
+    variant('sm',  default=False, description='Use shared-memory plugin')
+    variant('opa', default=False, description='Use OpenPA for atomics')
+    variant('boost', default=True, description='Use BOOST preprocessor macros')
     variant('selfforward', default=True,
             description='Mercury will short-circuit operations' +
                         ' by forwarding to itself when possible')
-# NOTE: the 'udreg' variant requires that the MPICH_GNI_NDREG_ENTRIES=1024
-#   environment variable be set at run time to avoid conflicts with
-#   Cray-MPICH if libfabric and MPI are used at the same time
+    # NOTE: the 'udreg' variant requires that the MPICH_GNI_NDREG_ENTRIES=1024
+    #   environment variable be set at run time to avoid conflicts with
+    #   Cray-MPICH if libfabric and MPI are used at the same time
     variant('udreg', default=False,
             description='Enable udreg on supported Cray platforms')
 
-    depends_on('cci@master', when='+cci', type=('build', 'link', 'run'))
-    depends_on('libfabric', when='+fabric', type=('build', 'link', 'run'))
-    depends_on('bmi', when='+bmi', type=('build', 'link', 'run'))
-    depends_on('openpa', type=('build', 'link', 'run'))
+    depends_on('cmake@2.8.12.2:', type='build')
+    # depends_on('bmi', when='+bmi')  # TODO: add BMI package
+    # depends_on('cci', when='+cci')  # TODO: add CCI package
+    depends_on('mpi', when='+mpi')
+    depends_on('libfabric@1.5:', when='+ofi')
+    depends_on('openpa@1.0.3:', when='+opa')
+    depends_on('boost@1.48:', when='+boost')
 
     def cmake_args(self):
-        args = ['-DMERCURY_USE_BOOST_PP:BOOL=ON',
-                '-DBUILD_SHARED_LIBS=ON']
+        spec = self.spec
+        args = [
+            '-DBUILD_SHARED_LIBS=ON',
+            '-DMERCURY_USE_CHECKSUMS=ON',
+            '-DMERCURY_USE_EAGER_BULK=ON',
+            '-DMERCURY_USE_SYSTEM_MCHECKSUM=OFF',
+            '-DMERCURY_USE_XDR=OFF'
+        ]
 
-        if (self.spec.variants['cci'].value):
-            args.extend(['-DNA_USE_CCI:BOOL=ON'])
+        if '+boost' in spec:
+            args.append('-DMERCURY_USE_BOOST_PP=ON')
         else:
-            args.extend(['-DNA_USE_CCI:BOOL=OFF'])
+            args.append('-DMERCURY_USE_BOOST_PP=OFF')
 
-        if (self.spec.variants['bmi'].value):
-            args.extend(['-DNA_USE_BMI:BOOL=ON'])
+        if '+bmi' in spec:
+            args.append('-DNA_USE_BMI=ON')
         else:
-            args.extend(['-DNA_USE_BMI:BOOL=OFF'])
+            args.append('-DNA_USE_BMI=OFF')
 
-        if (self.spec.variants['fabric'].value):
-            args.extend(['-DNA_USE_OFI:BOOL=ON'])
+        if '+cci' in spec:
+            args.append('-DNA_USE_CCI=ON')
         else:
-            args.extend(['-DNA_USE_OFI:BOOL=OFF'])
+            args.append('-DNA_USE_CCI=OFF')
 
-        if (self.spec.variants['selfforward'].value):
-            args.extend(['-DMERCURY_USE_SELF_FORWARD=ON'])
+        if '+mpi' in spec:
+            args.append('-DNA_USE_MPI=ON')
         else:
-            args.extend(['-DMERCURY_USE_SELF_FORWARD=OFF'])
+            args.append('-DNA_USE_MPI=OFF')
 
-        if (self.spec.variants['udreg'].value):
-            args.extend(['-DNA_OFI_GNI_USE_UDREG=ON'])
+        if '+ofi' in spec:
+            args.append('-DNA_USE_OFI=ON')
+            if self.run_tests:
+                args.append('-DNA_OFI_TESTING_PROTOCOL={0}'.format(';'.join(
+                    spec['libfabric'].variants['fabrics'].value)))
         else:
-            args.extend(['-DNA_OFI_GNI_USE_UDREG=OFF'])
+            args.append('-DNA_USE_OFI=OFF')
+
+        if '+sm' in spec:
+            args.append('-DNA_USE_SM=ON')
+        else:
+            args.append('-DNA_USE_SM=OFF')
+
+        if '+opa' in spec:
+            args.append('-DMERCURY_USE_OPA=ON')
+        else:
+            args.append('-DMERCURY_USE_OPA=OFF')
+
+        if '+selfforward' in spec:
+            args.append('-DMERCURY_USE_SELF_FORWARD=ON')
+        else:
+            args.append('-DMERCURY_USE_SELF_FORWARD=OFF')
+
+        if '+udreg' in spec:
+            args.append('-DNA_OFI_GNI_USE_UDREG=ON')
+        else:
+            args.append('-DNA_OFI_GNI_USE_UDREG=OFF')
+
+        if self.run_tests:
+            args.append('-DBUILD_TESTING=ON')
+        else:
+            args.append('-DBUILD_TESTING=OFF')
+
+        if '+mpi' in spec and self.run_tests:
+            args.append('-DMERCURY_ENABLE_PARALLEL_TESTING=ON')
+        else:
+            args.append('-DMERCURY_ENABLE_PARALLEL_TESTING=OFF')
 
         return args
+
+    def check(self):
+        """Unit tests fail when run in parallel."""
+
+        with working_dir(self.build_directory):
+            make('test', parallel=False)

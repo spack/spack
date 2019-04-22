@@ -50,8 +50,8 @@ class NaluWind(CMakePackage):
     depends_on('openfast+cxx~shared', when='+openfast~shared')
     depends_on('tioga', when='+tioga+shared')
     depends_on('tioga~shared', when='+tioga~shared')
-    depends_on('hypre+mpi+int64', when='+hypre+shared')
-    depends_on('hypre+mpi+int64~shared', when='+hypre~shared')
+    depends_on('hypre+mpi+int64~superlu-dist', when='+hypre+shared')
+    depends_on('hypre+mpi+int64~superlu-dist~shared', when='+hypre~shared')
     depends_on('trilinos-catalyst-ioss-adapter', when='+catalyst')
     # FFTW doesn't have a 'shared' variant at this moment
     depends_on('fftw+mpi', when='+fftw')

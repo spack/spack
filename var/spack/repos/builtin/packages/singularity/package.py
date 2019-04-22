@@ -4,88 +4,127 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+
+import llnl.util.tty as tty
 import os
-import shutil
-import tempfile
 
 
-class Singularity(Package):
+class Singularity(MakefilePackage):
     '''Singularity is a container technology focused on building portable
        encapsulated environments to support "Mobility of Compute" For older
        versions of Singularity (pre 3.0) you should use singularity-legacy,
        which has a different install base (Autotools).
+
+       Needs post-install chmod/chown steps to enable full functionality.
+       See package definition for details.
     '''
 
     homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/sylabs/singularity/releases/download/v3.1.0/singularity-3.1.0.tar.gz"
-    git      = "https://github.com/singularityware/singularity.git"
-
-    # ##########################################################################
-    # 3.1.0 Release Branch (GoLang)
+    url      = "https://github.com/sylabs/singularity/releases/download/v3.1.1/singularity-3.1.1.tar.gz"
+    git      = "https://github.com/sylabs/singularity.git"
 
     version('develop', branch='master')
-    version('3.1.0', 'd3a963ae85c527521434723b1cf8dda9594bf6c6')
-
-    # Shared dependencies
+    version('3.1.1', '158f58a79db5337e1d655ee0159b641e42ea7435')
 
     depends_on('go')
     depends_on('libuuid')
     depends_on('libgpg-error')
     depends_on('squashfs', type='run')
-    depends_on('git')
+    depends_on('git', when='@develop')  # mconfig uses it for version info
 
-    phases = ['configure', 'build', 'install']
+    # Where go traditionally thinks the source should be.
+    # Used as working_dir in "edit" step.
+    @property
+    def sylabs_dir(self):
+        return join_path(self.stage.path, 'src/github.com/sylabs/')
 
-    def configure(self, spec, prefix):
+    # Unpack the tarball as usual, then make a link to the traditional
+    # location.
+    def do_stage(self, mirror_only=False):
+        super(Singularity, self).do_stage(mirror_only)
+        if not os.path.exists(self.sylabs_dir):
+            tty.debug("Making symbolic link for singularity in {0}".format(
+                self.sylabs_dir))
+            mkdirp(self.sylabs_dir)
+            os.symlink(self.stage.source_path,
+                       join_path(self.sylabs_dir, 'singularity'))
 
-        # $GOPATH/src/github.com/sylabs/singularity
-        tmpgo = prepare_gopath()
-
-        # Remove old install
-        if os.path.exists(tmpgo):
-            shutil.rmtree(tmpgo)
-
-        shutil.move(os.getcwd(), tmpgo)
-
-        with working_dir(tmpgo):
+    # Hijack the edit stage to run mconfig.
+    def edit(self, spec, prefix):
+        tty.info(os.getcwd())
+        with working_dir(self.build_directory):
+            tty.info(os.getcwd())
             configure = Executable('./mconfig --prefix=%s' % prefix)
             configure()
 
-    def build(self, spec, prefix):
+    # Set these for use by MakefilePackage's default build/install methods.
+    build_targets = ['-C', 'builddir', 'parallel=False']
+    install_targets = ['install', '-C', 'builddir', 'parallel=False']
 
-        # $GOPATH/src/github.com/sylabs/singularity
-        tmpgo = prepare_gopath()
+    def setup_environment(self, spack_env, run_env):
+        # Point GOPATH at the top of the staging dir for the build
+        # step.
+        spack_env.prepend_path('GOPATH', self.stage.path)
 
-        # The package needs to be in GOPATH in order for it to be found
-        with working_dir(tmpgo):
-            make('-C', 'builddir', parallel=False)
+    # `singularity` has a fixed path where it will look for
+    # mksquashfs.  If it lives somewhere else you need to specify the
+    # full path in the config file.  Fix the config file after it's
+    # installed.
+    @run_after('install')
+    def fix_mksquashfs_path(self):
+        prefix = self.spec.prefix
+        squash_path = join_path(self.spec['squashfs'].prefix.bin, 'mksquashfs')
+        filter_file(r'^# mksquashfs path =',
+                    'mksquashfs path = {0}'.format(squash_path),
+                    join_path(prefix.etc, 'singularity', 'singularity.conf'))
 
-    def install(self, spec, prefix):
-        with working_dir(prepare_gopath()):
-            make('install', '-C', 'builddir', parallel=False)
+    #
+    # Assemble a script that fixes the ownership and permissions of several
+    # key files, install it, and tty.warn() the user.
+    # HEADSUP: https://github.com/spack/spack/pull/10412.
+    #
+    def perm_script(self):
+        return 'spack_perms_fix.sh'
 
+    def perm_script_tmpl(self):
+        return "{0}.j2".format(self.perm_script())
 
-def prepare_gopath():
-    '''The repository needed to be cloned into
-          $GOPATH/src/github.com/sylabs/singularity to begin with. To
-       mimic this, we create the structure in a temporary directory and
-       work from there. If we don't do that, when we cd into the builddir
-       to make, the entire set of source files aren't found on GOPATH. But
-       we cannot add the default cloned source to the GOPATH because it
-       will append the default src/github.com. If we lose working from the
-       present working directory, we also risk losing the vendor folder.
-    '''
-    gopath = os.path.join(tempfile.gettempdir(), 'go')
-    tmpgo = os.path.join(gopath, 'src', 'github.com', 'sylabs', 'singularity')
+    def perm_script_path(self):
+        return join_path(self.spec.prefix.bin, self.perm_script())
 
-    # Create gopath
-    if not os.path.exists(gopath):
-        os.makedirs(gopath)
+    def _build_script(self, filename, variable_data):
+        with open(filename, 'w') as f:
+            env = spack.tengine.make_environment(dirs=self.package_dir)
+            t = env.get_template(self.perm_script_tmpl())
+            f.write(t.render(variable_data))
 
-    # If the user has go installed (and previous libraries, use them)
-    user_gopath = os.environ.get('GOPATH')
-    if user_gopath is not None:
-        gopath = gopath + ':' + user_gopath
+    @run_after('install')
+    def build_perms_script(self):
+        script = self.perm_script_path()
+        chown_files = ['libexec/singularity/bin/starter-suid',
+                       'etc/singularity/singularity.conf',
+                       'etc/singularity/capability.json',
+                       'etc/singularity/ecl.toml']
+        setuid_files = ['libexec/singularity/bin/starter-suid']
+        self._build_script(script, {'prefix': self.spec.prefix,
+                                    'chown_files': chown_files,
+                                    'setuid_files': setuid_files})
+        chmod = which('chmod')
+        chmod('555', script)
 
-    os.environ['GOPATH'] = gopath
-    return tmpgo
+    # Until tty output works better from build steps, this ends up in
+    # the build log.  See https://github.com/spack/spack/pull/10412.
+    @run_after('install')
+    def caveats(self):
+        tty.warn("""
+        For full functionality, you'll need to chown and chmod some files
+        after installing the package.  This has security implications.
+        See: https://singularity.lbl.gov/docs-security for details.
+
+        We've installed a script that will make the necessary changes;
+        read through it and then execute it as root (e.g. via sudo).
+
+        The script is named:
+
+        {0}
+        """.format(self.perm_script_path()))

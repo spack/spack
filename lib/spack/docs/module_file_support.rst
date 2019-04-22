@@ -535,10 +535,10 @@ most likely via the ``+blas`` variant specification.
 
        modules:
          tcl:
-           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+           naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
            all:
              conflict:
-               - '${PACKAGE}'
+               - '{name}'
                - 'intel/14.0.1'
 
      will create module files that will conflict with ``intel/14.0.1`` and with the
@@ -599,6 +599,9 @@ do so by using the environment blacklist:
 The configuration above will generate dotkit module files that will not contain
 modifications to either ``CPATH`` or ``LIBRARY_PATH`` and environment module
 files that instead will contain these modifications.
+
+
+.. _autoloading-dependencies:
 
 """""""""""""""""""""
 Autoload dependencies

@@ -112,7 +112,7 @@ class InstallRecord(object):
             installation_time=None
     ):
         self.spec = spec
-        self.path = str(path)
+        self.path = str(path) if path else None
         self.installed = bool(installed)
         self.ref_count = ref_count
         self.explicit = explicit
@@ -132,6 +132,10 @@ class InstallRecord(object):
     def from_dict(cls, spec, dictionary):
         d = dict(dictionary.items())
         d.pop('spec', None)
+
+        # Old databases may have "None" for path for externals
+        if d['path'] == 'None':
+            d['path'] = None
         return InstallRecord(spec, **d)
 
 
@@ -380,7 +384,8 @@ class Database(object):
                 if not child:
                     msg = ("Missing dependency not in database: "
                            "%s needs %s-%s" % (
-                               spec.cformat('$_$/'), dname, dhash[:7]))
+                               spec.cformat('{name}{/hash:7}'),
+                               dname, dhash[:7]))
                     if self._fail_when_missing_deps:
                         raise MissingDependenciesError(msg)
                     tty.warn(msg)

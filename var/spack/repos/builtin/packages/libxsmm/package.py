@@ -46,6 +46,8 @@ class Libxsmm(MakefilePackage):
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
     variant('header-only', default=False,
             description='Produce header-only installation')
+    variant('generator', default=False,
+            description='build generator executables')
     conflicts('+header-only', when='@:1.6.2',
               msg='Header-only is available since v1.6.2!')
 
@@ -88,6 +90,10 @@ class Libxsmm(MakefilePackage):
 
         make(*make_args)
 
+        if '+generator' in spec:
+            make_args += ['generator']
+            make(*make_args)
+
     def install(self, spec, prefix):
         install_tree('include', prefix.include)
 
@@ -101,6 +107,10 @@ class Libxsmm(MakefilePackage):
             install_tree('src', prefix.src)
         else:
             install_tree('lib', prefix.lib)
+
+        if '+generator' in spec:
+            install_tree('bin', prefix.bin)
+
         mkdirp(prefix.doc)
         for doc_file in glob(join_path('documentation', '*.md')):
             install(doc_file, prefix.doc)

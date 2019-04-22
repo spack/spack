@@ -151,7 +151,7 @@ class TestTcl(object):
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory('mpileaks')
-        expected = '${PACKAGE}/${VERSION}-${COMPILERNAME}'
+        expected = '{name}/{version}-{compiler.name}'
 
         assert writer.conf.naming_scheme == expected
 

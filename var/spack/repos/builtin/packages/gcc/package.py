@@ -397,7 +397,7 @@ class Gcc(AutotoolsPackage):
            the compiler used to build the executable."""
         if not self.spec_dir:
             tty.warn('Could not install specs for {0}.'.format(
-                     self.spec.format('$_$@')))
+                     self.spec.format('{name}{@version}')))
             return
 
         gcc = self.spec['gcc'].command

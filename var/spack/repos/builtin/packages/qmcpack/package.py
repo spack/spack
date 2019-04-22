@@ -92,6 +92,19 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
     conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
 
+    # Prior to QMCPACK 3.5.0 Intel MKL was not properly detected with
+    # non-Intel compilers without a Spack-based hack. This hack
+    # had the potential for negative side effects and led to more
+    # complex Python code that would have been difficult to maintain
+    # long term. Note that this has not been an issue since QMCPACK 3.5.0.
+    # For older versions of QMCPACK, we issue a conflict below if you
+    # try to use Intel MKL with a non-Intel compiler.
+    mkl_warning = 'QMCPACK releases prior to 3.5.0 require the ' \
+                  'Intel compiler when linking against Intel MKL'
+    conflicts('%gcc', when='@:3.4.0 ^intel-mkl', msg=mkl_warning)
+    conflicts('%pgi', when='@:3.4.0 ^intel-mkl', msg=mkl_warning)
+    conflicts('%llvm', when='@:3.4.0 ^intel-mkl', msg=mkl_warning)
+
     # Dependencies match those in the QMCPACK manual.
     # FIXME: once concretizer can unite unconditional and conditional
     # dependencies, some of the '~mpi' variants below will not be necessary.
@@ -166,6 +179,26 @@ class Qmcpack(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         args = []
+
+        # This bit of code is needed in order to pass compiler.yaml flags
+        # into the QMCPACK's CMake. Probably the CMake base class in
+        # the code of Spack should be doing this instead. Otherwise, it
+        # it would need to be done on a per package basis which is
+        # problematic.
+        cflags = spec.compiler_flags['cflags']
+        cxxflags = spec.compiler_flags['cxxflags']
+        args.append('-DCMAKE_C_FLAGS=%s' % ' '.join(cflags))
+        args.append('-DCMAKE_CXX_FLAGS=%s' % ' '.join(cxxflags))
+
+        # This issue appears specifically with the the Intel compiler,
+        # but may be an issue with other compilers as well. The final fix
+        # probably needs to go into QMCPACK's CMake instead of in Spack.
+        # QMCPACK binaries are linked with the C++ compiler, but *may* contain
+        # Fortran libraries such as NETLIB-LAPACK and OpenBLAS on the link
+        # line. For the case of the Intel C++ compiler, we need to manually
+        # add a libray from the Intel Fortran compiler.
+        if '%intel' in spec:
+            args.append('-DQMC_EXTRA_LIBS=-lifcore')
 
         if '+mpi' in spec:
             mpi = spec['mpi']
@@ -258,35 +291,27 @@ class Qmcpack(CMakePackage, CudaPackage):
         # https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py
         #
         # Basically, we override CMake's auto-detection mechanism
-        # and use the Spack's interface instead
+        # and use the Spack's interface instead.
+        #
+        # For version of QMCPACK prior to 3.5.0, the lines
+        # below are used for detection of all math libraries.
+        # For QMCPACK 3.5.0 and later, the lines below are only
+        # needed when MKL is *not* used. Thus, it is redundant
+        # but there are no negative side effects.
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
         args.extend([
             '-DLAPACK_FOUND=true',
             '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';')
         ])
 
-        # Additionally, we need to pass the BLAS+LAPACK include directory for
-        # header files. This is to insure vectorized math and FFT libraries
-        # get properly detected. Intel MKL requires special case due to
-        # differences in Darwin vs. Linux $MKLROOT naming schemes. This section
-        # of code is intentionally redundant for backwards compatibility.
+        # Next two environment variables were introduced in QMCPACK 3.5.0
+        # Prior to v3.5.0, these lines should be benign but CMake
+        # may issue a warning.
         if 'intel-mkl' in spec:
-            lapack_dir = format(join_path(env['MKLROOT'], 'include'))
-            # Next two lines were introduced in QMCPACK 3.5.0 and later.
-            # Prior to v3.5.0, these lines should be benign.
             args.append('-DENABLE_MKL=1')
             args.append('-DMKL_ROOT=%s' % env['MKLROOT'])
         else:
             args.append('-DENABLE_MKL=0')
-            lapack_dir = ':'.join((
-                spec['lapack'].prefix.include,
-                spec['blas'].prefix.include
-            ))
-
-        args.extend([
-            '-DCMAKE_CXX_FLAGS=-I%s' % lapack_dir,
-            '-DCMAKE_C_FLAGS=-I%s' % lapack_dir
-        ])
 
         return args
 

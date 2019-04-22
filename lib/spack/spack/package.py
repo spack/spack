@@ -946,7 +946,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         checksum = spack.config.get('config:checksum')
         if checksum and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
-                     self.spec.cformat('$_$@'))
+                     self.spec.cformat('{name}{@version}'))
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
@@ -960,7 +960,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
-                                 self.spec.format('$_$@'), ck_msg)
+                                 self.spec.format('{name}{@version}'), ck_msg)
 
         self.stage.create()
         self.stage.fetch(mirror_only)
@@ -1441,16 +1441,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dep_kwargs['explicit'] = False
             dep_kwargs['install_deps'] = False
             for dep in self.spec.traverse(order='post', root=False):
+                if spack.config.get('config:install_missing_compilers', False):
+                    tty.debug('Bootstrapping {0} compiler for {1}'.format(
+                        self.spec.compiler, self.name
+                    ))
+                    comp_kwargs = kwargs.copy()
+                    comp_kwargs['explicit'] = False
+                    comp_kwargs['install_deps'] = True
+                    dep.package.bootstrap_compiler(**comp_kwargs)
                 dep.package.do_install(**dep_kwargs)
-
-        # Then, install the compiler if it is not already installed.
-        if install_deps:
-            tty.debug('Boostrapping {0} compiler for {1}'.format(
-                self.spec.compiler, self.name
-            ))
-            comp_kwargs = kwargs.copy()
-            comp_kwargs['explicit'] = False
-            self.bootstrap_compiler(**comp_kwargs)
 
         # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))

@@ -37,7 +37,7 @@ class SuiteSparse(Package):
 
     depends_on('cuda', when='+cuda')
 
-    patch('tbb_453.patch', when='@4.5.3:+tbb')
+    patch('tbb_453.patch', when='@4.5.3:4.5.5+tbb')
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
@@ -113,6 +113,14 @@ class SuiteSparse(Package):
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=-L%s -ltbb' % spec['tbb'].prefix.lib,
             ]
+
+        if '@5.3:' in spec:
+            # Without CMAKE_LIBRARY_PATH defined, the CMake file in the
+            # Mongoose directory finds libsuitesparseconfig.so in system
+            # directories like /usr/lib.
+            make_args += [
+                'CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s' % prefix +
+                ' -DCMAKE_LIBRARY_PATH=%s' % prefix.lib]
 
         make('install', *make_args)
 

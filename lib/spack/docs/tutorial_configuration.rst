@@ -868,7 +868,7 @@ this will look like:
 
 .. code-block:: console
 
-   $ spack install --no-cache --verbose zlib
+   $ spack install --no-cache --verbose --overwrite zlib
    ==> Installing zlib
    ==> Using cached archive: /home/user/spack/var/spack/cache/zlib/zlib-1.2.11.tar.gz
    ==> Staging archive: /home/user/spack/var/spack/stage/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb/zlib-1.2.11.tar.gz
@@ -897,14 +897,14 @@ the number of cores our build uses, set ``build_jobs`` like so:
 .. code-block:: yaml
 
    config:
-     build_jobs: 4
+     build_jobs: 2
 
 
 If we uninstall and reinstall zlib, we see that it now uses only 4 cores:
 
 .. code-block:: console
 
-   $ spack install --no-cache --verbose zlib
+   $ spack install --no-cache --verbose --overwrite zlib
    ==> Installing zlib
    ==> Using cached archive: /home/user/spack/var/spack/cache/zlib/zlib-1.2.11.tar.gz
    ==> Staging archive: /home/user/spack/var/spack/stage/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb/zlib-1.2.11.tar.gz
@@ -914,9 +914,9 @@ If we uninstall and reinstall zlib, we see that it now uses only 4 cores:
    ==> Executing phase: 'install'
    ==> './configure' '--prefix=/home/user/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb'
    ...
-   ==> 'make' '-j4'
+   ==> 'make' '-j2'
    ...
-   ==> 'make' '-j4' 'install'
+   ==> 'make' '-j2' 'install'
    ...
    ==> Successfully installed zlib
      Fetch: 0.00s.  Build: 1.03s.  Total: 1.03s.

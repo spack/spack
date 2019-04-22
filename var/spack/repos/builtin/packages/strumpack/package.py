@@ -21,6 +21,8 @@ class Strumpack(CMakePackage):
     url      = "https://github.com/pghysels/STRUMPACK/archive/v3.0.3.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
+    maintainers = ['pghysels']
+
     version('master', branch='master')
     version('3.1.1', sha256='c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778')
     version('3.1.0', sha256='b4f91b7d433955518b04538be1c726afc5de4bffb163e982ef8844d391b26fa7')
@@ -59,6 +61,8 @@ class Strumpack(CMakePackage):
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
 
     conflicts('+parmetis', when='~mpi')
+
+    patch('intel-19-compile.patch', when='@3.1.1')
 
     def cmake_args(self):
         spec = self.spec

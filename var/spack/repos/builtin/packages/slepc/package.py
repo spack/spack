@@ -15,6 +15,8 @@ class Slepc(Package):
     url      = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
     git      = "https://bitbucket.org/slepc/slepc.git"
 
+    maintainers = ['joseeroman', 'balay']
+
     version('develop', branch='master')
     version('3.11.0', 'bf29043c311fe2c549a25e2b0835095723a3eebc1dff288a233b32913b5762a2')
     version('3.10.2', '0594972293f6586458a54b7c1e1121b311a9c9449060355d52bb3bf09ad6812b')

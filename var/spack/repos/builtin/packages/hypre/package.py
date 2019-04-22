@@ -17,6 +17,8 @@ class Hypre(Package):
     url      = "https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/LLNL/hypre.git"
 
+    maintainers = ['ulrikeyang', 'osborn9', 'balay']
+
     version('develop', branch='master')
     version('2.15.1', '877002d49f38b6a1434955baf79eff35')
     version('2.15.0', '4645acc49141069cae1d53de96107a08')
@@ -38,7 +40,7 @@ class Hypre(Package):
     # SuperluDist have conflicting headers with those in Hypre
     variant('internal-superlu', default=True,
             description="Use internal Superlu routines")
-    variant('superlu-dist', default=True,
+    variant('superlu-dist', default=False,
             description='Activates support for SuperluDist')
     variant('int64', default=False,
             description="Use 64bit integers")

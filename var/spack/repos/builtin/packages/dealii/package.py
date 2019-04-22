@@ -163,6 +163,11 @@ class Dealii(CMakePackage, CudaPackage):
           sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
           when='@9.0.1')
 
+    # https://github.com/dealii/dealii/pull/7935
+    patch('https://github.com/dealii/dealii/commit/f8de8c5c28c715717bf8a086e94f071e0fe9deab.patch',
+          sha256='61f217744b70f352965be265d2f06e8c1276685e2944ca0a88b7297dd55755da',
+          when='@9.0.1 ^boost@1.70.0:')
+
     # check that the combination of variants makes sense
     # 64-bit BLAS:
     for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
@@ -224,10 +229,22 @@ class Dealii(CMakePackage, CudaPackage):
                 lapack_blas_headers.directories),
             '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
-            '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if (spec.satisfies('^intel-parallel-studio+tbb')):
+            # deal.II/cmake will have hard time picking up TBB from Intel.
+            tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
+            options.extend([
+                '-DTBB_FOUND=true',
+                '-DTBB_VERSION=%s' % tbb_ver,
+                '-DTBB_INCLUDE_DIRS=%s' % ';'.join(
+                    spec['tbb'].headers.directories),
+                '-DTBB_LIBRARIES=%s' % spec['tbb'].libs.joined(';')
+            ])
+        else:
+            options.append('-DTBB_DIR=%s' % spec['tbb'].prefix)
 
         if (spec.satisfies('^openblas+ilp64') or
             spec.satisfies('^intel-mkl+ilp64') or

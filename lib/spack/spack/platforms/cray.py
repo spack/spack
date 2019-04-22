@@ -89,7 +89,7 @@ class Cray(Platform):
         """
         # Unload these modules to prevent any silent linking or unnecessary
         # I/O profiling in the case of darshan.
-        modules_to_unload = ["cray-mpich", "darshan", "cray-libsci"]
+        modules_to_unload = ["cray-mpich", "darshan", "cray-libsci", "altd"]
         for module in modules_to_unload:
             unload_module(module)
 

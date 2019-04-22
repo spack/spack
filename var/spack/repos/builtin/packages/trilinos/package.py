@@ -28,7 +28,7 @@ class Trilinos(CMakePackage):
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ['aprokop']
+    maintainers = ['aprokop', 'keitat']
 
     # ###################### Versions ##########################
 
@@ -701,6 +701,7 @@ class Trilinos(CMakePackage):
             options.extend([
                 '-DTpetra_INST_DOUBLE:BOOL=ON',
                 '-DTpetra_INST_INT_LONG:BOOL=ON',
+                '-DTpetra_INST_INT_LONG_LONG:BOOL=ON',
                 '-DTpetra_INST_COMPLEX_DOUBLE=%s' % complex_s,
                 '-DTpetra_INST_COMPLEX_FLOAT=%s' % complex_float_s,
                 '-DTpetra_INST_FLOAT=%s' % float_s,
