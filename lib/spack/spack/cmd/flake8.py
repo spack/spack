@@ -96,7 +96,11 @@ def changed_files(args):
 
     git = which('git', required=True)
 
-    range = "{0}...".format(args.base)
+    base = args.base
+    if base is None:
+        base = os.environ.get('TRAVIS_BRANCH', 'develop')
+
+    range = "{0}...".format(base)
 
     git_args = [
         # Add changed files committed since branching off of develop
@@ -193,7 +197,7 @@ def filter_file(source, dest, output=False):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-b', '--base', action='store', default='develop',
+        '-b', '--base', action='store', default=None,
         help="select base branch for collecting list of modified files")
     subparser.add_argument(
         '-k', '--keep-temp', action='store_true',
