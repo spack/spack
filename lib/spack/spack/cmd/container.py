@@ -73,7 +73,8 @@ def container(parser, args):
     try:
         recipe = hpccm.Stage()
     except NameError:
-        tty.die('The HPCCM Python module must be installed to use spack container')
+        tty.die('The HPCCM Python module must be installed to use '
+                'spack container')
 
     recipe += baseimage(image=args.baseimage, _distro=args.distro)
 
