@@ -56,6 +56,18 @@ class Openblas(MakefilePackage):
         description="Adding options to build openblas on Linux virtual machine"
     )
 
+    variant(
+        'avx2',
+        default=True,
+        description='Enable use of AVX2 instructions'
+    )
+
+    variant(
+        'avx512',
+        default=False,
+        description='Enable use of AVX512 instructions'
+    )
+
     # virtual dependency
     provides('blas')
     provides('lapack')
@@ -147,7 +159,6 @@ class Openblas(MakefilePackage):
         if self.spec.variants['virtual_machine'].value:
             make_defs += [
                 'DYNAMIC_ARCH=1',
-                'NO_AVX2=1',
                 'NUM_THREADS=64',  # OpenBLAS stores present no of CPUs as max
             ]
 
@@ -184,6 +195,12 @@ class Openblas(MakefilePackage):
         # 64bit ints
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
+
+        if 'x86' in spack.architecture.sys_type():
+            if '~avx2' in self.spec:
+                make_defs += ['NO_AVX2=1']
+            if '~avx512' in self.spec:
+                make_defs += ['NO_AVX512=1']
 
         return make_defs
 

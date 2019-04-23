@@ -12,11 +12,12 @@ import re
 import socket
 import time
 import xml.sax.saxutils
-from six import text_type
+from six import iteritems, text_type
 from six.moves.urllib.request import build_opener, HTTPHandler, Request
 from six.moves.urllib.parse import urlencode
 
 from llnl.util.filesystem import working_dir
+from ordereddict_backport import OrderedDict
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
@@ -59,6 +60,11 @@ class CDash(Reporter):
         Reporter.__init__(self, args)
         self.template_dir = os.path.join('reports', 'cdash')
         self.cdash_upload_url = args.cdash_upload_url
+
+        if self.cdash_upload_url:
+            self.buildid_regexp = re.compile("<buildId>([0-9]+)</buildId>")
+        self.phase_regexp = re.compile(r"Executing phase: '(.*)'")
+
         if args.package:
             packages = args.package
         else:
@@ -68,7 +74,7 @@ class CDash(Reporter):
                     s = spack.spec.Spec.from_yaml(f)
                     packages.append(s.format())
         self.install_command = ' '.join(packages)
-        self.buildname = args.cdash_build or self.install_command
+        self.base_buildname = args.cdash_build or self.install_command
         self.site = args.cdash_site or socket.gethostname()
         self.osname = platform.system()
         self.endtime = int(time.time())
@@ -78,15 +84,25 @@ class CDash(Reporter):
             buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
             self.buildstamp = time.strftime(buildstamp_format,
                                             time.localtime(self.endtime))
-        self.buildId = None
+        self.buildIds = OrderedDict()
         self.revision = ''
         git = which('git')
         with working_dir(spack.paths.spack_root):
             self.revision = git('rev-parse', 'HEAD', output=str).strip()
+        self.multiple_packages = False
 
-    def build_report(self, filename, report_data):
-        self.initialize_report(filename, report_data)
+    def report_for_package(self, directory_name, package, duration):
+        if 'stdout' not in package:
+            # Skip reporting on packages that did not generate any output.
+            return
 
+        self.current_package_name = package['name']
+        if self.multiple_packages:
+            self.buildname = "{0} - {1}".format(
+                self.base_buildname, package['name'])
+        else:
+            self.buildname = self.base_buildname
+        report_data = self.initialize_report(directory_name)
         for phase in cdash_phases:
             report_data[phase] = {}
             report_data[phase]['loglines'] = []
@@ -94,40 +110,32 @@ class CDash(Reporter):
             report_data[phase]['endtime'] = self.endtime
 
         # Track the phases we perform so we know what reports to create.
-        phases_encountered = []
-        total_duration = 0
+        # We always report the update step because this is how we tell CDash
+        # what revision of Spack we are using.
+        phases_encountered = ['update']
 
-        # Parse output phase-by-phase.
-        phase_regexp = re.compile(r"Executing phase: '(.*)'")
+        # Generate a report for this package.
+        current_phase = ''
         cdash_phase = ''
-        for spec in report_data['specs']:
-            if 'time' in spec:
-                total_duration += int(spec['time'])
-            for package in spec['packages']:
-                if 'stdout' in package:
+        for line in package['stdout'].splitlines():
+            match = None
+            if line.find("Executing phase: '") != -1:
+                match = self.phase_regexp.search(line)
+            if match:
+                current_phase = match.group(1)
+                if current_phase not in map_phases_to_cdash:
                     current_phase = ''
-                    cdash_phase = ''
-                    for line in package['stdout'].splitlines():
-                        match = None
-                        if line.find("Executing phase: '") != -1:
-                            match = phase_regexp.search(line)
-                        if match:
-                            current_phase = match.group(1)
-                            if current_phase not in map_phases_to_cdash:
-                                current_phase = ''
-                                continue
-                            cdash_phase = \
-                                map_phases_to_cdash[current_phase]
-                            if cdash_phase not in phases_encountered:
-                                phases_encountered.append(cdash_phase)
-                            report_data[cdash_phase]['loglines'].append(
-                                text_type("{0} output for {1}:".format(
-                                    cdash_phase, package['name'])))
-                        elif cdash_phase:
-                            report_data[cdash_phase]['loglines'].append(
-                                xml.sax.saxutils.escape(line))
-
-        phases_encountered.append('update')
+                    continue
+                cdash_phase = \
+                    map_phases_to_cdash[current_phase]
+                if cdash_phase not in phases_encountered:
+                    phases_encountered.append(cdash_phase)
+                report_data[cdash_phase]['loglines'].append(
+                    text_type("{0} output for {1}:".format(
+                        cdash_phase, package['name'])))
+            elif cdash_phase:
+                report_data[cdash_phase]['loglines'].append(
+                    xml.sax.saxutils.escape(line))
 
         # Move the build phase to the front of the list if it occurred.
         # This supports older versions of CDash that expect this phase
@@ -136,12 +144,15 @@ class CDash(Reporter):
             build_pos = phases_encountered.index("build")
             phases_encountered.insert(0, phases_encountered.pop(build_pos))
 
-        self.starttime = self.endtime - total_duration
+        self.starttime = self.endtime - duration
         for phase in phases_encountered:
             report_data[phase]['starttime'] = self.starttime
             report_data[phase]['log'] = \
                 '\n'.join(report_data[phase]['loglines'])
             errors, warnings = parse_log_events(report_data[phase]['loglines'])
+            # Cap the number of errors and warnings at 50 each.
+            errors = errors[0:49]
+            warnings = warnings[0:49]
             nerrors = len(errors)
 
             if phase == 'configure' and nerrors > 0:
@@ -166,6 +177,11 @@ class CDash(Reporter):
                             event['source_file'])
                     return event
 
+                # Convert errors to warnings if the package reported success.
+                if package['result'] == 'success':
+                    warnings = errors + warnings
+                    errors = []
+
                 report_data[phase]['errors'] = []
                 report_data[phase]['warnings'] = []
                 for error in errors:
@@ -179,7 +195,11 @@ class CDash(Reporter):
 
             # Write the report.
             report_name = phase.capitalize() + ".xml"
-            phase_report = os.path.join(filename, report_name)
+            if self.multiple_packages:
+                report_file_name = package['name'] + "_" + report_name
+            else:
+                report_file_name = report_name
+            phase_report = os.path.join(directory_name, report_file_name)
 
             with codecs.open(phase_report, 'w', 'utf-8') as f:
                 env = spack.tengine.make_environment()
@@ -194,11 +214,34 @@ class CDash(Reporter):
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
             self.upload(phase_report)
+
+    def build_report(self, directory_name, input_data):
+        # Do an initial scan to determine if we are generating reports for more
+        # than one package. When we're only reporting on a single package we
+        # do not explicitly include the package's name in the CDash build name.
+        num_packages = 0
+        for spec in input_data['specs']:
+            for package in spec['packages']:
+                if 'stdout' in package:
+                    num_packages += 1
+                    if num_packages > 1:
+                        self.multiple_packages = True
+                        break
+            if self.multiple_packages:
+                break
+
+        # Generate reports for each package in each spec.
+        for spec in input_data['specs']:
+            duration = 0
+            if 'time' in spec:
+                duration = int(spec['time'])
+            for package in spec['packages']:
+                self.report_for_package(directory_name, package, duration)
         self.print_cdash_link()
 
-    def concretization_report(self, filename, msg):
-        report_data = {}
-        self.initialize_report(filename, report_data)
+    def concretization_report(self, directory_name, msg):
+        self.buildname = self.base_buildname
+        report_data = self.initialize_report(directory_name)
         report_data['update'] = {}
         report_data['update']['starttime'] = self.endtime
         report_data['update']['endtime'] = self.endtime
@@ -208,20 +251,25 @@ class CDash(Reporter):
         env = spack.tengine.make_environment()
         update_template = os.path.join(self.template_dir, 'Update.xml')
         t = env.get_template(update_template)
-        output_filename = os.path.join(filename, 'Update.xml')
+        output_filename = os.path.join(directory_name, 'Update.xml')
         with open(output_filename, 'w') as f:
             f.write(t.render(report_data))
+        # We don't have a current package when reporting on concretization
+        # errors so refer to this report with the base buildname instead.
+        self.current_package_name = self.base_buildname
         self.upload(output_filename)
         self.print_cdash_link()
 
-    def initialize_report(self, filename, report_data):
-        if not os.path.exists(filename):
-            os.mkdir(filename)
+    def initialize_report(self, directory_name):
+        if not os.path.exists(directory_name):
+            os.mkdir(directory_name)
+        report_data = {}
         report_data['buildname'] = self.buildname
         report_data['buildstamp'] = self.buildstamp
         report_data['install_command'] = self.install_command
         report_data['osname'] = self.osname
         report_data['site'] = self.site
+        return report_data
 
     def upload(self, filename):
         if not self.cdash_upload_url:
@@ -230,7 +278,6 @@ class CDash(Reporter):
         # Compute md5 checksum for the contents of this file.
         md5sum = checksum(hashlib.md5, filename, block_size=8192)
 
-        buildid_regexp = re.compile("<buildId>([0-9]+)</buildId>")
         opener = build_opener(HTTPHandler)
         with open(filename, 'rb') as f:
             params_dict = {
@@ -248,16 +295,19 @@ class CDash(Reporter):
             # CDash needs expects this file to be uploaded via PUT.
             request.get_method = lambda: 'PUT'
             response = opener.open(request)
-            if not self.buildId:
-                match = buildid_regexp.search(response.read())
+            if self.current_package_name not in self.buildIds:
+                match = self.buildid_regexp.search(response.read())
                 if match:
-                    self.buildId = match.group(1)
+                    buildid = match.group(1)
+                    self.buildIds[self.current_package_name] = buildid
 
     def print_cdash_link(self):
-        if self.buildId:
-            # Construct and display a helpful link if CDash responded with
-            # a buildId.
-            build_url = self.cdash_upload_url
-            build_url = build_url[0:build_url.find("submit.php")]
-            build_url += "buildSummary.php?buildid={0}".format(self.buildId)
-            print("View your build results here:\n  {0}\n".format(build_url))
+        if self.buildIds:
+            print("View your build results here:")
+            for package_name, buildid in iteritems(self.buildIds):
+                # Construct and display a helpful link if CDash responded with
+                # a buildId.
+                build_url = self.cdash_upload_url
+                build_url = build_url[0:build_url.find("submit.php")]
+                build_url += "buildSummary.php?buildid={0}".format(buildid)
+                print("{0}: {1}".format(package_name, build_url))
