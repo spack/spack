@@ -5,9 +5,14 @@
 
 from spack import *
 
+
 class Ccfits(Package):
-    """CCfits is an object oriented interface to the cfitsio library. It is designed to make the capabilities of cfitsio available to programmers working in C++. It is written in ANSI C++ and implemented using the C++ Standard Library with namespaces, exception handling, and member template functions. """
-    
+    """CCfits is an object oriented interface to the cfitsio library.
+    It is designed to make the capabilities of cfitsio available to programmers
+    working in C++. It is written in ANSI C++ and implemented using the C++
+    Standard Library with namespaces, exception handling, and member template
+    functions. """
+
     homepage = "https://heasarc.gsfc.nasa.gov/fitsio/CCfits/"
     url      = "https://heasarc.gsfc.nasa.gov/fitsio/CCfits/CCfits-2.5.tar.gz"
 
@@ -19,7 +24,7 @@ class Ccfits(Package):
     def url_for_version(self, version):
         url = 'https://heasarc.gsfc.nasa.gov/fitsio/CCfits/CCfits-{0}.tar.gz'
         return url.format(version)
-    
+
     def install(self, spec, prefix):
         print("Install ... ")
         configure('--prefix={0}'.format(prefix))
