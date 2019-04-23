@@ -19,57 +19,6 @@ class ArmForge(Package):
     #       versions (and checksums) based on the target platform shows up
 
     version(
-        "19.0.3-linux-rhel6-x86_64",
-        sha256="0ace88a1847d8f622f077cd38fa9dddf7f2d6dd6aad086be0e0a66e10fb8b64b",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Redhat-6.0-x86_64.tar",
-    )
-    version(
-        "19.0.3-linux-rhel7-x86_64",
-        sha256="35c7a9532aa19251343c37b8f5eb51ef04f7b6e8b42bea2bd932f4d83a1e8375",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Redhat-7.0-x86_64.tar",
-    )
-    version(
-        "19.0.3-linux-sles11-x86_64",
-        sha256="48fe2b1b81a824909fedf5e02cd08d8a62033cce80440eca6efbea0ae8023e75",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Suse-11-x86_64.tar",
-    )
-    version(
-        "19.0.3-linux-sles12-x86_64",
-        sha256="b4d0f91780dc43544ea946f5117a50ba18750fd50ef811cae5b6b6771b4ebb77",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Suse-12-x86_64.tar",
-    )
-    version(
-        "19.0.3-linux-ubuntu16.04-x86_64",
-        sha256="ed6726434a6d24d413ed6183756433d63438936dc671cb6a3567b407c8e233e1",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Ubuntu-16.04-x86_64.tar",
-    )
-    version(
-        "19.0.3-linux-ubuntu14.04-x86_64",
-        sha256="22350d068c4ef60d1aad330636d443f00269c0cc49bed4c05b80f93b9d9a9c66",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Ubuntu-14.04-x86_64.tar",
-    )
-    version(
-        "19.0.3-linux-rhel7-ppc64le",
-        sha256="dc6ea53eead78f0d9ffd8fa74ffddb80e8bd3b4ab8a1edd6f8505ffbea9cea15",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Redhat-7.2-ppc64le.tar",
-    )
-    version(
-        "19.0.3-linux-rhel7-aarch64",
-        sha256="4e19d4200e2936d542bf2b9dc79c7f8b00ccfb37b9191dfc90ac0787680a8b0c",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Redhat-7.4-aarch64.tar",
-    )
-    version(
-        "19.0.3-linux-sles12-aarch64",
-        sha256="9b27b678d0228b4e51fd517ef0acd1df65b780a3a0b226caa6b6f1b7dccf31e6",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Suse-12-aarch64.tar",
-    )
-    version(
-        "19.0.3-linux-ubuntu16.04-aarch64",
-        sha256="4470f7067d4a4e0369df8af28b6ca95f58fa0062bf8dffc49f0b7415112c0332",
-        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Ubuntu-16.04-aarch64.tar",
-    )
-
-    version(
         "19.0.4-linux-rhel6-x86_64",
         sha256="0b0b6ed5c3d6833bad46d5ea84346cd46f0e4b3020c31f2fd4318b75ddaf01aa",
         url="http://content.allinea.com/downloads/arm-forge-19.0.4-Redhat-6.0-x86_64.tar",
@@ -123,6 +72,56 @@ class ArmForge(Package):
         "19.0.4-linux-ubuntu16.04-aarch64",
         sha256="3910e320c635dd5c09af7f5696909c7c0ae25406910d2e592e522ed0233e0451",
         url="http://content.allinea.com/downloads/arm-forge-19.0.4-Ubuntu-16.04-aarch64.tar",
+    )
+    version(
+        "19.0.3-linux-rhel6-x86_64",
+        sha256="0ace88a1847d8f622f077cd38fa9dddf7f2d6dd6aad086be0e0a66e10fb8b64b",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Redhat-6.0-x86_64.tar",
+    )
+    version(
+        "19.0.3-linux-rhel7-x86_64",
+        sha256="35c7a9532aa19251343c37b8f5eb51ef04f7b6e8b42bea2bd932f4d83a1e8375",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Redhat-7.0-x86_64.tar",
+    )
+    version(
+        "19.0.3-linux-sles11-x86_64",
+        sha256="48fe2b1b81a824909fedf5e02cd08d8a62033cce80440eca6efbea0ae8023e75",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Suse-11-x86_64.tar",
+    )
+    version(
+        "19.0.3-linux-sles12-x86_64",
+        sha256="b4d0f91780dc43544ea946f5117a50ba18750fd50ef811cae5b6b6771b4ebb77",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Suse-12-x86_64.tar",
+    )
+    version(
+        "19.0.3-linux-ubuntu16.04-x86_64",
+        sha256="ed6726434a6d24d413ed6183756433d63438936dc671cb6a3567b407c8e233e1",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Ubuntu-16.04-x86_64.tar",
+    )
+    version(
+        "19.0.3-linux-ubuntu14.04-x86_64",
+        sha256="22350d068c4ef60d1aad330636d443f00269c0cc49bed4c05b80f93b9d9a9c66",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Ubuntu-14.04-x86_64.tar",
+    )
+    version(
+        "19.0.3-linux-rhel7-ppc64le",
+        sha256="dc6ea53eead78f0d9ffd8fa74ffddb80e8bd3b4ab8a1edd6f8505ffbea9cea15",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Redhat-7.2-ppc64le.tar",
+    )
+    version(
+        "19.0.3-linux-rhel7-aarch64",
+        sha256="4e19d4200e2936d542bf2b9dc79c7f8b00ccfb37b9191dfc90ac0787680a8b0c",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Redhat-7.4-aarch64.tar",
+    )
+    version(
+        "19.0.3-linux-sles12-aarch64",
+        sha256="9b27b678d0228b4e51fd517ef0acd1df65b780a3a0b226caa6b6f1b7dccf31e6",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Suse-12-aarch64.tar",
+    )
+    version(
+        "19.0.3-linux-ubuntu16.04-aarch64",
+        sha256="4470f7067d4a4e0369df8af28b6ca95f58fa0062bf8dffc49f0b7415112c0332",
+        url="http://content.allinea.com/downloads/arm-forge-19.0.3-Ubuntu-16.04-aarch64.tar",
     )
 
     # Licensing
