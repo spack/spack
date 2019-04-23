@@ -10,10 +10,10 @@ class PyCfUnits(PythonPackage):
     """Units of measure as required by the Climate and Forecast (CF) metadata conventions."""
 
     homepage = "https://scitools.org.uk"
-    url      = "https://github.com/SciTools/cf-units/releases/tag/v2.1.1"
+    url      = "https://pypi.io/packages/source/c/cf-units/cf-units-2.1.1.tar.gz"
     git      = "https://github.com/SciTools/cf-units.git"
 
-    version('2.1.1', extension='tar.gz', sha256='aa4a82ade2f974436e18ce5924accd72057f77876fae14e37b578d50eee855d9')
+    version('2.1.1', extension='tar.gz', sha256='fa0ef8efd84546e61088aa23e76ebbaf7043167dc3a7f35f34549c234b543530')
     version('master', branch='master')
 
     depends_on('python@3:', type=('build', 'run'))
