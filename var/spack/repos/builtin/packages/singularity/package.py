@@ -7,6 +7,7 @@ from spack import *
 
 import llnl.util.tty as tty
 import os
+import shutil
 
 
 class Singularity(MakefilePackage):
@@ -32,22 +33,37 @@ class Singularity(MakefilePackage):
     depends_on('squashfs', type='run')
     depends_on('git', when='@develop')  # mconfig uses it for version info
 
-    # Where go traditionally thinks the source should be.
-    # Used as working_dir in "edit" step.
+    # Go has novel ideas about how projects should be organized.
+    # We'll point GOPATH at the stage dir, and move the unpacked src
+    # tree into the proper subdir in our overridden do_stage below.
     @property
-    def sylabs_dir(self):
-        return join_path(self.stage.path, 'src/github.com/sylabs/')
+    def gopath(self):
+        return join_path(self.stage.path)
 
-    # Unpack the tarball as usual, then make a link to the traditional
-    # location.
+    @property
+    def sylabs_gopath_dir(self):
+        return join_path(self.gopath, 'src/github.com/sylabs/')
+
+    @property
+    def singularity_gopath_dir(self):
+        return join_path(self.sylabs_gopath_dir, 'singularity')
+
+
+    # Unpack the tarball as usual, then move the src dir into
+    # its home within GOPATH.
     def do_stage(self, mirror_only=False):
         super(Singularity, self).do_stage(mirror_only)
-        if not os.path.exists(self.sylabs_dir):
-            tty.debug("Making symbolic link for {0} in {1}".format(
-                self.stage.source_path, self.sylabs_dir))
-            mkdirp(self.sylabs_dir)
-            os.symlink(self.stage.source_path,
-                       join_path(self.sylabs_dir, 'singularity'))
+        if not os.path.exists(self.singularity_gopath_dir):
+            tty.debug("Moving {0} to {1}".format(
+                self.stage.source_path, self.singularity_gopath_dir))
+            mkdirp(self.sylabs_gopath_dir)
+            shutil.move(self.stage.source_path,
+                        self.singularity_gopath_dir)
+
+    # MakefilePackage's stages use this via working_dir()
+    @property
+    def build_directory(self):
+        return self.singularity_gopath_dir
 
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
@@ -64,7 +80,7 @@ class Singularity(MakefilePackage):
     def setup_environment(self, spack_env, run_env):
         # Point GOPATH at the top of the staging dir for the build
         # step.
-        spack_env.prepend_path('GOPATH', self.stage.path)
+        spack_env.prepend_path('GOPATH', self.gopath)
 
     # `singularity` has a fixed path where it will look for
     # mksquashfs.  If it lives somewhere else you need to specify the
