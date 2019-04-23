@@ -103,7 +103,14 @@ def set_working_dir():
 def add_all_commands(parser):
     """Add all spack subcommands to the parser."""
     for cmd in spack.cmd.all_commands():
-        parser.add_command(cmd)
+        try:
+            parser.add_command(cmd)
+        except Exception:
+            if spack.config.get('config:debug'):
+                raise
+            tty.die(
+                'While finding commands: problem loading command {0}'.
+                format(cmd))
 
 
 def index_commands():
@@ -671,10 +678,11 @@ def main(argv=None):
 
         try:
             command = parser.add_command(cmd_name)
-        except ImportError:
+        except Exception:
             if spack.config.get('config:debug'):
                 raise
-            tty.die("Unknown command: %s" % args.command[0])
+            tty.die(
+                "Unknown command or failed command load: %s" % args.command[0])
 
         # Re-parse with the proper sub-parser added.
         args, unknown = parser.parse_known_args()

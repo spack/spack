@@ -9,6 +9,7 @@ import sys
 
 import spack.config
 import spack.main
+import spack.extensions
 
 
 @pytest.fixture()
@@ -36,6 +37,7 @@ def hello(parser, args):
 """)
     list_of_modules = list(sys.modules.keys())
     with spack.config.override('config:extensions', [str(extension_root)]):
+        spack.extensions.reset_command_cache()
         yield spack.main.SpackCommand('hello')
 
     to_be_deleted = [x for x in sys.modules if x not in list_of_modules]
@@ -90,6 +92,7 @@ def hello_folks():
 """)
     list_of_modules = list(sys.modules.keys())
     with spack.config.override('config:extensions', [str(extension_root)]):
+        spack.extensions.reset_command_cache()
         yield spack.main.SpackCommand('hello')
 
     to_be_deleted = [x for x in sys.modules if x not in list_of_modules]

@@ -11,10 +11,65 @@ import sys
 import types
 
 import llnl.util.lang
-import llnl.util.tty as tty
+import spack.cmd
 import spack.config
+from spack.error import SpackError
 
-extension_regexp = re.compile(r'spack-([\w]*)')
+_command_paths = []
+_extension_regexp = re.compile(r'spack-([\w]*)')
+_extension_command_map = None
+
+
+class CommandNotFoundError(SpackError):
+    """Exception class thrown when a requested command is not recognized as
+    such.
+    """
+    def __init__(self, cmd_name):
+        super(CommandNotFoundError, self).__init__(
+            '{0} is not a recognized Spack command or extension command.'
+            .format(cmd_name),
+            'Known commands: {0}'.format(' '.join(spack.cmd.all_commands())))
+
+
+class ExtensionNamingError(SpackError):
+    """Exception class thrown when a configured extension does not follow
+    the expected naming convention.
+    """
+    def __init__(self, path):
+        super(ExtensionNamingError, self).__init__(
+            '{0} does not match the format for a Spack extension path.'
+            .format(path))
+
+
+def _init_extension_command_map():
+    """Return the list of paths where to search for command files."""
+    global _extension_command_map
+    if _extension_command_map is None:
+        _extension_command_map = {}
+        extension_paths = spack.config.get('config:extensions') or []
+        for path in extension_paths:
+            extension = extension_name(path)
+            command_path = os.path.join(path, extension, 'cmd')
+            _command_paths.append(command_path)
+            commands = spack.cmd.find_commands(command_path)
+            _extension_command_map.update(
+                dict((command, path) for command in
+                     commands if command not in _extension_command_map))
+
+
+def reset_command_cache():
+    """For testing purposes, reset the command cache e.g. for a modified
+    extension configuration.
+    """
+    global _command_paths
+    _command_paths = []
+    global _extension_command_map
+    _extension_command_map = None
+
+
+def get_command_paths():
+    _init_extension_command_map()  # Ensure we are initialized.
+    return _command_paths
 
 
 def extension_name(path):
@@ -27,28 +82,27 @@ def extension_name(path):
         The extension name or None if path doesn't match the format
         for Spack's extension.
     """
-    regexp_match = re.search(extension_regexp, os.path.basename(path))
+    regexp_match = re.search(_extension_regexp, os.path.basename(path))
     if not regexp_match:
-        msg = "[FOLDER NAMING]"
-        msg += " {0} doesn't match the format for Spack's extensions"
-        tty.warn(msg.format(path))
-        return None
+        raise ExtensionNamingError(path)
     return regexp_match.group(1)
 
 
-def load_command_extension(command, path):
+def load_command_extension(command):
     """Loads a command extension from the path passed as argument.
 
     Args:
         command (str): name of the command
-        path (str): base path of the command extension
 
     Returns:
         A valid module object if the command is found or None
     """
+    _init_extension_command_map()  # Ensure we have initialized.
+    global _extension_command_map
+    if command not in _extension_command_map:
+        raise CommandNotFoundError(command)
+    path = _extension_command_map[command]
     extension = extension_name(path)
-    if not extension:
-        return None
 
     # Compute the name of the module we search, exit early if already imported
     cmd_package = '{0}.{1}.cmd'.format(__name__, extension)
@@ -86,28 +140,12 @@ def load_command_extension(command, path):
     # name of the python module where it will be stored
     cmd_path = os.path.join(path, extension, 'cmd', command + '.py')
 
-    try:
-        # TODO: Upon removal of support for Python 2.6 substitute the call
-        # TODO: below with importlib.import_module(module_name)
-        module = llnl.util.lang.load_module_from_file(module_name, cmd_path)
-        sys.modules[module_name] = module
-    except (ImportError, IOError):
-        module = None
+    # TODO: Upon removal of support for Python 2.6 substitute the call
+    # TODO: below with importlib.import_module(module_name)
+    module = llnl.util.lang.load_module_from_file(module_name, cmd_path)
+    sys.modules[module_name] = module
 
     return module
-
-
-def get_command_paths():
-    """Return the list of paths where to search for command files."""
-    command_paths = []
-    extension_paths = spack.config.get('config:extensions') or []
-
-    for path in extension_paths:
-        extension = extension_name(path)
-        if extension:
-            command_paths.append(os.path.join(path, extension, 'cmd'))
-
-    return command_paths
 
 
 def path_for_extension(target_name, *paths):
@@ -126,25 +164,6 @@ def path_for_extension(target_name, *paths):
             return path
     else:
         raise IOError('extension "{0}" not found'.format(target_name))
-
-
-def get_module(cmd_name):
-    """Imports the extension module for a particular command name
-    and returns it.
-
-    Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
-    """
-    # If built-in failed the import search the extension
-    # directories in order
-    extensions = spack.config.get('config:extensions') or []
-    for folder in extensions:
-        module = load_command_extension(cmd_name, folder)
-        if module:
-            return module
-    else:
-        return None
 
 
 def get_template_dirs():
