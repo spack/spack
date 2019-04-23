@@ -69,8 +69,8 @@ class LlvmOpenmpOmpt(CMakePackage):
 
         # Disable support for libomptarget
         if '~libomptarget' in self.spec:
-                cmake_args.extend(
-                    ['-DOPENMP_ENABLE_LIBOMPTARGET=OFF'])
+            cmake_args.extend(
+                ['-DOPENMP_ENABLE_LIBOMPTARGET=OFF'])
 
         return cmake_args
 
