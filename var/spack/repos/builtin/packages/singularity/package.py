@@ -66,8 +66,8 @@ class Singularity(MakefilePackage):
 
     # `singularity` has a fixed path where it will look for
     # mksquashfs.  If it lives somewhere else you need to specify the
-    # full path in the config file.  Fix the config file after it's
-    # installed.
+    # full path in the config file.  This bit uses filter_file to edit
+    # the config file, uncommenting and setting the mksquashfs path.
     @run_after('install')
     def fix_mksquashfs_path(self):
         prefix = self.spec.prefix
