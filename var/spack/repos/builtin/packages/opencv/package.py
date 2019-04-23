@@ -104,6 +104,7 @@ class Opencv(CMakePackage):
     # and 3.4.1) header file that have the same name.Problem is fixed in
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
+    patch('detect_python_cmake.patch', when='@3.3.0:3.4.0')
 
     depends_on('eigen~mpfr', when='+eigen', type='build')
 
@@ -119,8 +120,8 @@ class Opencv(CMakePackage):
     depends_on('qt', when='+qt')
     depends_on('java', when='+java')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
-    #depends_on('protobuf@3.1.0', when='@3.3.0: +dnn')
-    depends_on('protobuf', when='+protobuf')
+    depends_on('protobuf@3.5.0', when='@3.4.1: +dnn')
+    depends_on('protobuf@3.1.0', when='@3.3.0:3.4.0 +dnn')
 
     depends_on('ffmpeg', when='+videoio')
     depends_on('mpi', when='+videoio')
