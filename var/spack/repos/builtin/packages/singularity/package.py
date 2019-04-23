@@ -43,8 +43,8 @@ class Singularity(MakefilePackage):
     def do_stage(self, mirror_only=False):
         super(Singularity, self).do_stage(mirror_only)
         if not os.path.exists(self.sylabs_dir):
-            tty.debug("Making symbolic link for singularity in {0}".format(
-                self.sylabs_dir))
+            tty.debug("Making symbolic link for {0} in {1}".format(
+                self.stage.source_path, self.sylabs_dir))
             mkdirp(self.sylabs_dir)
             os.symlink(self.stage.source_path,
                        join_path(self.sylabs_dir, 'singularity'))
@@ -68,8 +68,8 @@ class Singularity(MakefilePackage):
 
     # `singularity` has a fixed path where it will look for
     # mksquashfs.  If it lives somewhere else you need to specify the
-    # full path in the config file.  Fix the config file after it's
-    # installed.
+    # full path in the config file.  This bit uses filter_file to edit
+    # the config file, uncommenting and setting the mksquashfs path.
     @run_after('install')
     def fix_mksquashfs_path(self):
         prefix = self.spec.prefix
