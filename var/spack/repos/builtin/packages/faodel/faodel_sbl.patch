@@ -1,0 +1,35 @@
+diff --git a/src/faodel-common/LoggingInterface.cpp b/src/faodel-common/LoggingInterface.cpp
+index d15eb23..86bf0ef 100644
+--- a/src/faodel-common/LoggingInterface.cpp
++++ b/src/faodel-common/LoggingInterface.cpp
+@@ -11,7 +11,7 @@
+ 
+ 
+ #if Faodel_LOGGINGINTERFACE_DISABLED==0 && Faodel_LOGGINGINTERFACE_USE_SBL==1
+-#include <sbl/sbl_logger.hpp>
++#include <sbl/sbl_logger.hh>
+ #endif
+ 
+ 
+@@ -27,7 +27,7 @@
+ 
+ #if Faodel_LOGGINGINTERFACE_USE_SBL==1
+ 
+-#include <sbl/sbl_logger.hpp>
++#include <sbl/sbl_logger.hh>
+ 
+ sbl::logger *faodel::LoggingInterface::sbl_logger=nullptr;
+ 
+diff --git a/src/sbl/README_SBL.md b/src/sbl/README_SBL.md
+index d490f75..4eec0ee 100644
+--- a/src/sbl/README_SBL.md
++++ b/src/sbl/README_SBL.md
+@@ -205,7 +205,7 @@ Example:
+     #include <thread>
+     #include <map>
+ 
+-    #include "sbl/sbl_logger.hpp"
++    #include "sbl/sbl_logger.hh"
+     
+     int main(int argc, char *argv[])
+     {
