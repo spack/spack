@@ -387,3 +387,13 @@ class Cp2k(MakefilePackage):
         exe_dir = os.path.join('exe', self.makefile_architecture)
         install_tree(exe_dir, self.prefix.bin)
         install_tree('data', self.prefix.share.data)
+
+    def check(self):
+        data_dir = os.path.join(self.stage.source_path, 'data')
+
+        # CP2K < 7 still uses $PWD to detect the current working dir
+        # and Makefile is in a subdir, account for both facts here:
+        with spack.util.environment.set_env(CP2K_DATA_DIR=data_dir,
+                                            PWD=self.build_directory):
+            with working_dir(self.build_directory):
+                make('test', *self.build_targets)
