@@ -43,8 +43,8 @@ class Singularity(MakefilePackage):
     def do_stage(self, mirror_only=False):
         super(Singularity, self).do_stage(mirror_only)
         if not os.path.exists(self.sylabs_dir):
-            tty.debug("Making symbolic link for singularity in {0}".format(
-                self.sylabs_dir))
+            tty.debug("Making symbolic link for {0} in {1}".format(
+                self.stage.source_path, self.sylabs_dir))
             mkdirp(self.sylabs_dir)
             os.symlink(self.stage.source_path,
                        join_path(self.sylabs_dir, 'singularity'))
