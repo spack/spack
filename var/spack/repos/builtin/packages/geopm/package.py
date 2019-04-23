@@ -22,9 +22,9 @@ class Geopm(AutotoolsPackage):
     git      = "https://github.com/geopm/geopm.git"
 
     # Add additional proper versions and checksums here. "spack checksum geopm"
+    version('1.0.0',     sha256='24fe72265a7e44d62bdfe49467c49f0b7a649131ddda402d763c00a49765e1cb')
     version('develop', branch='dev')
     version('master', branch='master')
-    version('1.0.0',     sha256='24fe72265a7e44d62bdfe49467c49f0b7a649131ddda402d763c00a49765e1cb')
 
     # Variants reflecting most ./configure --help options
     variant('debug', default=False, description='Enable debug.')
@@ -40,7 +40,13 @@ class Geopm(AutotoolsPackage):
 
     # Added dependencies.
     depends_on('ruby-ronn', type='build', when='+doc')
+    depends_on('doxygen', type='build', when='+doc')
     depends_on('mpi@2.2:', when='+mpi')
+
+    depends_on('m4', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     depends_on('py-matplotlib@2.2.2:2.2.3', type=('build', 'run'))
     depends_on('py-cycler@0.10.0:', type=('build', 'run'))
@@ -52,6 +58,10 @@ class Geopm(AutotoolsPackage):
     depends_on('py-pytables@3.4.3:', type=('build', 'run'))
 
     parallel = False
+
+    def autoreconf(self, spec, prefix):
+        bash = which("bash")
+        bash('./autogen.sh')
 
     def configure_args(self):
         args = []
