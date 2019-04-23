@@ -23,9 +23,8 @@ class Neuron(Package):
     git      = "https://github.com/nrnhines/nrn.git"
 
     version('develop', branch='master')
-    version('7.6.6',   tag='7.6.6')
-    version('2018-10', commit='b3097b7', preferred=True)
-    version('7.6.2',   tag='7.6.2')
+    version('7.6.6',   tag='7.6.6', preferred=True)
+    version('2018-10', commit='b3097b7')
     # versions from url, with checksum
     version('7.5', 'fb72c841374dfacbb6c2168ff57bfae9')
     version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
