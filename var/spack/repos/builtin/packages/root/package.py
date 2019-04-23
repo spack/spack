@@ -190,6 +190,7 @@ class Root(CMakePackage):
     depends_on('libice')
     depends_on('libpng')
     depends_on('lz4', when='@6.13.02:')  # See cmake_args, below.
+    depends_on('ncurses')
     depends_on('pcre')
     depends_on('xxhash', when='@6.13.02:')  # See cmake_args, below.
     depends_on('xz')
