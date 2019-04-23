@@ -125,7 +125,6 @@ class Cp2k(MakefilePackage):
                 '-O2',
                 '-mtune=native',
                 '-funroll-loops',
-                '-ffast-math',
                 '-ftree-vectorize',
             ],
             'intel': ['-O2', '-pc64', '-unroll'],
