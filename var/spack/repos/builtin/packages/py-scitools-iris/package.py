@@ -27,3 +27,9 @@ class PyScitoolsIris(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
 
+    depends_on('py-mo-pack', type=('build', 'run'))
+    depends_on('py-nc-time-axis', type=('build', 'run'))
+    depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-stratify', type=('build', 'run'))
+    depends_on('py-pyugrid', type=('build', 'run'))
+    depends_on('graphviz')
