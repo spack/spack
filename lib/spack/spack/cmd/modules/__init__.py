@@ -178,9 +178,9 @@ def find(module_type, specs, args):
     def module_exists(spec):
         writer = spack.modules.module_types[module_type](spec)
         if os.path.exists(writer.layout.filename):
-           return os.path.isfile(writer.layout.filename)
+            return os.path.isfile(writer.layout.filename)
         else:
-           return spec.package.installed_upstream
+            return spec.package.installed_upstream
 
     if not module_exists(spec):
         msg = 'Even though {1} is installed, '
