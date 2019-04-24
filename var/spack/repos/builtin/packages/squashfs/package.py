@@ -22,6 +22,7 @@ class Squashfs(MakefilePackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
+    depends_on('zlib')
 
     def build(self, spec, prefix):
         with working_dir('squashfs-tools'):
