@@ -17,6 +17,7 @@ class PyScitoolsIris(PythonPackage):
 
     #depends_on('py-setuptools', type='build')
     depends_on('py-cartopy', type=('build', 'run'))
+    depends_on('proj@4:4.99')
     depends_on('py-cf-units', type=('build', 'run'))
     depends_on('py-cftime', type=('build', 'run'))
     depends_on('py-dask', type=('build', 'run'))
