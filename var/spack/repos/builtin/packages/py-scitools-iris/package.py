@@ -15,7 +15,6 @@ class PyScitoolsIris(PythonPackage):
 
     version('2.2.0', sha256='1bf8853f5d7a210f711636d32a52ff62b84a56330fe159720ef56f36f3804ade')
 
-    #depends_on('py-setuptools', type='build')
     depends_on('py-six', type='build')
     depends_on('py-pyke', type='build')
     depends_on('py-cartopy', type=('build', 'run'))
@@ -28,8 +27,3 @@ class PyScitoolsIris(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
 
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
