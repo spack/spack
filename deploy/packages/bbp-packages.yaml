@@ -92,8 +92,20 @@ packages:
       - py-bluepymm@0.6.38 ^neuron~mpi
       - py-bluepyopt@1.6.56 ^neuron~mpi
       - py-efel@3.0.22
+      - py-bglibpy
+
 
   #### cellular ####
+
+  intel-stable-parallel:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+      - mpi
+    specs:
+      - reportinglib
 
   intel-stable-python-parallel:
     target_matrix:
