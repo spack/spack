@@ -40,6 +40,9 @@ class Cp2k(MakefilePackage):
                          'for density matrix evaluation'))
     variant('elpa', default=False,
             description='Enable optimised diagonalisation routines from ELPA')
+    variant('sirius', default=False,
+            description=('Enable planewave electronic structure'
+                         ' calculations via SIRIUS'))
 
     depends_on('python', type='build')
 
@@ -79,9 +82,19 @@ class Cp2k(MakefilePackage):
     depends_on('pexsi+fortran@0.9.0:0.9.999', when='+pexsi@:4.999')
     depends_on('pexsi+fortran@0.10.0:', when='+pexsi@5.0:')
 
-    # PEXSI and ELPA need MPI in CP2K
+    # only OpenMP should be consistenly used, all other common things
+    # like ELPA, SCALAPACK are independent and Spack will ensure that
+    # a consistent/compat. combination is pulled in to the dependency graph.
+    depends_on('sirius+fortran+vdwxc+shared+openmp', when='+sirius+openmp')
+    depends_on('sirius+fortran+vdwxc+shared~openmp', when='+sirius~openmp')
+    # to get JSON-based UPF format support used in combination with SIRIUS
+    depends_on('json-fortran', when='+sirius')
+
+    # PEXSI, ELPA and SIRIUS need MPI in CP2K
     conflicts('~mpi', '+pexsi')
     conflicts('~mpi', '+elpa')
+    conflicts('~mpi', '+sirius')
+    conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
 
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
@@ -290,6 +303,19 @@ class Cp2k(MakefilePackage):
                                 .format(elpa.version[0],
                                         int(elpa.version[1])))
                 fcflags.append('-I' + os.path.join(elpa_base_path, 'elpa'))
+
+        if self.spec.satisfies('+sirius'):
+            sirius = spec['sirius']
+            cppflags.append('-D__SIRIUS')
+            fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
+            libs += [
+                os.path.join(sirius.libs.directories[0],
+                             'libsirius_f.{0}'.format(dso_suffix))
+            ]
+
+            cppflags.append('-D__JSON')
+            fcflags += ['$(shell pkg-config --cflags json-fortran)']
+            libs += ['$(shell pkg-config --libs json-fortran)']
 
         if 'smm=libsmm' in spec:
             lib_dir = os.path.join(
