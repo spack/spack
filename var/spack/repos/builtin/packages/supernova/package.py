@@ -26,7 +26,7 @@ class Supernova(Package):
     http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://support.10xgenomics.com/de-novo-assembly/software/overview/latest/welcome"
-
+    version('2.1.1', sha256='2f58eb66951e257b89359134ab8e35ad638c4ed51cb3fb8121625dfcc7761938')
     version('2.0.1', '3697ce043c798fcb672fe0a66c56d6f0')
 
     depends_on('bcl2fastq2')
@@ -39,7 +39,10 @@ class Supernova(Package):
 
     def install(self, spec, prefix):
         rm = which('rm')
+
         # remove the broken symlinks
-        rm('anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtcl.so',
-            'anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtk.so')
+        if os.path.isdir("anaconda-cs/2.2.0-anaconda-cs-c7/lib"):
+            rm('anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtcl.so',
+               'anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtk.so')
+
         install_tree('.', prefix)
