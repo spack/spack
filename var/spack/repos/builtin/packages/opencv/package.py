@@ -98,13 +98,11 @@ class Opencv(CMakePackage):
     variant('tiff', default=True, description='Include TIFF support')
     variant('vtk', default=True, description='Activates support for VTK')
     variant('zlib', default=True, description='Build zlib from source')
-    variant('protobuf', default=True, description='Activate Google\'s data interchange format')
 
     # Patch to fix conflict between CUDA and OpenCV (reproduced with 3.3.0
     # and 3.4.1) header file that have the same name.Problem is fixed in
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
-    patch('detect_python_cmake.patch', when='@3.3.0:3.4.0')
 
     depends_on('eigen~mpfr', when='+eigen', type='build')
 
@@ -215,7 +213,7 @@ class Opencv(CMakePackage):
             '-DWITH_VTK:BOOL={0}'.format((
                 'ON' if '+vtk' in spec else 'OFF')),
             '-DWITH_PROTOBUF:BOOL={0}'.format((
-                'ON' if '+protobuf' in spec else 'OFF')),
+                'ON' if '@3.3.0: +dnn' in spec else 'OFF')),
             '-DBUILD_PROTOBUF:BOOL=OFF',
         ])
 
