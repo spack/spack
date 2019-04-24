@@ -48,7 +48,6 @@ class Singularity(MakefilePackage):
     def singularity_gopath_dir(self):
         return join_path(self.sylabs_gopath_dir, 'singularity')
 
-
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
     def do_stage(self, mirror_only=False):
