@@ -55,7 +55,7 @@ class Singularity(MakefilePackage):
         source_path = self.stage.source_path
         if not os.path.exists(self.singularity_gopath_dir):
             tty.debug("Moving {0} to {1}".format(
-                self.stage.source_path, self.singularity_gopath_dir))
+                source_path, self.singularity_gopath_dir))
             mkdirp(self.sylabs_gopath_dir)
             shutil.move(source_path,
                         self.singularity_gopath_dir)
@@ -67,9 +67,7 @@ class Singularity(MakefilePackage):
 
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
-        tty.info(os.getcwd())
         with working_dir(self.build_directory):
-            tty.info(os.getcwd())
             configure = Executable('./mconfig --prefix=%s' % prefix)
             configure()
 
