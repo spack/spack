@@ -295,7 +295,7 @@ _sp_multi_pathadd() {
     if  [[ -n "${ZSH_VERSION:-}" ]]; then
         setopt sh_word_split
     fi
-    for pth in "$2"; do
+    for pth in $2; do
         _spack_pathadd "$1" "${pth}/${_sp_sys_type}"
     done
 }
