@@ -577,6 +577,12 @@ class Llvm(CMakePackage):
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
+    # https://bugs.llvm.org/show_bug.cgi?id=38233
+    # either python@v3.7.2:, gcc8 or libc-related (probably python)
+    # - compilation with 3.7.2 was fine on Debian 9, not on Fedora 30
+    # - both using a spack-built gcc@8.3.0
+    patch('llvm6.0.0+py3.7.patch', when='@6.0.0 %gcc@8.0:8.4 ^python@3.7:')
+    patch('llvm6.0.1+py3.7.patch', when='@6.0.1 %gcc@8.0:8.4 ^python@3.7:')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
