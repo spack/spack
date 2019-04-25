@@ -17,6 +17,7 @@ class Vtk(CMakePackage):
     url      = "http://www.vtk.org/files/release/8.0/VTK-8.0.1.tar.gz"
     list_url = "http://www.vtk.org/download/"
 
+    version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.0.1', '692d09ae8fadc97b59d35cab429b261a')
@@ -30,22 +31,38 @@ class Vtk(CMakePackage):
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('python', default=False, description='Enable Python support')
     variant('qt', default=False, description='Build with support for Qt')
+    variant('tk', default=False, description='Build with support for Tk')
+    variant('tkinter', default=False, description='Support tkinter')
     variant('xdmf', default=False, description='Build XDMF file support')
     variant('ffmpeg', default=False, description='Build with FFMPEG support')
     variant('mpi', default=True, description='Enable MPI support')
 
     # Haru causes trouble on Fedora and Ubuntu in v8.1.1
     # See https://bugzilla.redhat.com/show_bug.cgi?id=1460059#c13
+    # probably related: https://github.com/libharu/libharu/pull/157
     variant('haru', default=True, description='Enable libharu')
 
     patch('gcc.patch', when='@6.1.0')
 
-    # At the moment, we cannot build with both osmesa and qt, but as of
-    # VTK 8.1, that should change
-    conflicts('+osmesa', when='+qt')
+    # Apparently there are problems
+    # with mesa/offscreen-rendering in older versions of VTK
+    conflicts('+osmesa', when='@:8.1 +qt')
+    conflicts('+osmesa', when='@:8.1 +tk')
+
+    # Tk dependency
+    depends_on('tk', when='+tk')
+    depends_on('tcl', when='+tk')
+    depends_on('libx11', when='+tk')
+    depends_on('libxt', when='+tk')
+
+    depends_on('mesa-glu', when='+osmesa +tk')
+    depends_on('mesa-glu', when='+osmesa +qt')
+
+    conflicts('~tk', when='+tkinter')
 
     depends_on('python', when='+python')
     depends_on('py-mpi4py', when='+mpi +python', type='run')
+    depends_on('python+tkinter', when='+tkinter')
     extends('python', when='+python')
     # python3.7 compatibility patch backported from upstream
     # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
@@ -65,10 +82,13 @@ class Vtk(CMakePackage):
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
+    depends_on('libx11', when='+qt')
+    depends_on('libxt', when='+qt')
 
     depends_on('mpi', when='+mpi')
 
     depends_on('libharu', when='+haru')
+    depends_on('libharu+ff', when='+haru @8.1:')
 
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
@@ -77,10 +97,12 @@ class Vtk(CMakePackage):
 
     depends_on('ffmpeg', when='+ffmpeg')
 
+    depends_on('eigen@2.91:', when='@8.2:')
+    depends_on('double-conversion', when='@8.2:')
     depends_on('expat')
     depends_on('freetype')
     depends_on('glew')
-    depends_on('hdf5')
+    depends_on('hdf5+hl')  # netcdf needs highlevel-API
     depends_on('libjpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')
@@ -99,6 +121,13 @@ class Vtk(CMakePackage):
         # VTK has some trouble finding freetype unless it is set in
         # the environment
         spack_env.set('FREETYPE_DIR', self.spec['freetype'].prefix)
+        # somehow VTK 8 still puts python libraries into a lib64-folder
+        if "python" in self.spec:
+            pver = self.spec['python'].version.up_to(2)
+            if self.spec.satisfies("@8.1:"):
+                vtk_lib64 = join_path(self.prefix.lib64,
+                                      'python{}'.format(pver), 'site-packages')
+                run_env.prepend_path('PYTHONPATH', vtk_lib64)
 
     def cmake_args(self):
         spec = self.spec
@@ -108,17 +137,17 @@ class Vtk(CMakePackage):
         cmake_args = [
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
-
-            '-DVTK_USE_SYSTEM_LIBHARU=%s' % (
-                'ON' if '+haru' in spec else 'OFF'),
-
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible
             '-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON',
 
             # However, in a few cases we can't do without them yet
+            '-DVTK_USE_SYSTEM_LIBPROJ:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF',
             '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
             '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_OGG:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_THEORA:BOOL=OFF',
             '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
 
             '-DNETCDF_DIR={0}'.format(spec['netcdf'].prefix),
@@ -127,8 +156,19 @@ class Vtk(CMakePackage):
 
             # Disable wrappers for other languages.
             '-DVTK_WRAP_JAVA=OFF',
-            '-DVTK_WRAP_TCL=OFF',
         ]
+
+        if '+haru' in spec:
+            cmake_args.extend([
+                '-DVTK_USE_SYSTEM_LIBHARU={0}'.format('ON'),
+                '-DVTK_LIBHARU_LIBRARY={0}'.format(spec['libharu'].prefix),
+                '-DVTK_LIBHARU_INCLUDE_DIR={0}'.format(
+                    spec['libharu'].prefix.include),
+            ])
+        else:
+            cmake_args.extend([
+                '-DVTK_USE_SYSTEM_LIBHARU={0}'.format('OFF'),
+            ])
 
         if '+mpi' in spec:
             cmake_args.extend([
@@ -141,10 +181,17 @@ class Vtk(CMakePackage):
 
         # Enable/Disable wrappers for Python.
         if '+python' in spec:
+            pyver = spec['python'].version.up_to(2)
             cmake_args.extend([
                 '-DVTK_WRAP_PYTHON=ON',
                 '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON'
+                '-DPYTHON_INCLUDE_DIR={0}/python{1}m'.format(
+                    spec['python'].prefix.include, pyver),
+                '-DPYTHON_LIBRARY={0}/lib/libpython{1}m.so'.format(
+                    spec['python'].prefix, pyver),
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON',
+                '-DVTK_PYTHON_VERSION={0}'.format(
+                    spec['python'].version.up_to(1)),
             ])
         else:
             cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
@@ -175,6 +222,39 @@ class Vtk(CMakePackage):
                     '-DModule_vtkGUISupportQt:BOOL=ON',
                     '-DModule_vtkGUISupportQtOpenGL:BOOL=ON',
                 ])
+
+        if '+tk' in spec:
+            tk_ver = spec['tk'].version.up_to(2)
+            tcl_ver = spec['tcl'].version.up_to(2)
+
+            cmake_args.extend([
+                # Enable Tk support here.
+                '-DVTK_WRAP_TCL=ON',
+                '-DModule_vtkTclTk=ON',
+                '-DUSE_TK:BOOL=ON',
+                '-DVTK_Group_Tk=ON',
+                '-DModule_vtkRenderingTk:BOOL=ON',
+                '-DTCL_INCLUDE_PATH={0}'.format(spec['tcl'].prefix.include),
+                '-DTCL_LIBRARY={0}/lib/libtcl{1}.so'.format(
+                    spec['tcl'].prefix, tcl_ver),
+                '-DTCL_TCLSH={0}/bin/tclsh{1}'.format(
+                    spec['tcl'].prefix, tcl_ver),
+                '-DTK_INCLUDE_PATH={0}'.format(
+                    spec['tk'].prefix.include),
+                '-DTK_LIBRARY={0}/lib/libtk{1}.so'.format(
+                    spec['tk'].prefix, tk_ver),
+            ])
+
+            if '+tkinter' in spec:
+                # test with
+                # python -c "import vtk.tk.vtkTkRenderWindowInteractor as v; \
+                # v.vtkRenderWindowInteractorConeExample()"
+                # no tkinter specific things?
+                pass
+        else:
+            cmake_args.extend([
+                '-DVTK_WRAP_TCL=OFF'
+            ])
 
         if '+xdmf' in spec:
             if spec.satisfies('^cmake@3.12:'):
@@ -207,12 +287,16 @@ class Vtk(CMakePackage):
             osmesa_include_dir = prefix.include
             osmesa_library = os.path.join(prefix.lib, 'libOSMesa.so')
 
-            use_param = 'VTK_USE_X'
+            draw_api = 'VTK_USE_X'
             if 'darwin' in spec.architecture:
-                use_param = 'VTK_USE_COCOA'
+                draw_api = 'VTK_USE_COCOA'
+
+            mesa_draw = 'OFF'
+            if '+tkinter' in spec or '+qt' in spec:
+                mesa_draw = 'ON'
 
             cmake_args.extend([
-                '-D{0}:BOOL=OFF'.format(use_param),
+                '-D{0}:BOOL={1}'.format(draw_api, mesa_draw),
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON',
                 '-DOSMESA_INCLUDE_DIR:PATH={0}'.format(osmesa_include_dir),
                 '-DOSMESA_LIBRARY:FILEPATH={0}'.format(osmesa_library),
