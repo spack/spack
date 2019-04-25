@@ -96,7 +96,6 @@ from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs, memoized
 import llnl.util.tty as tty
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
-import llnl.util.tty as tty
 
 import spack.paths
 import spack.architecture
