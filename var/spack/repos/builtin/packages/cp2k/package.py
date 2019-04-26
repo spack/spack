@@ -174,7 +174,11 @@ class Cp2k(MakefilePackage):
             cxxflags.append('-fp-model precise')
             fcflags.extend(['-fp-model source', '-heap-arrays 64'])
         elif '%gcc' in spec:
-            fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
+            fcflags.extend([
+                '-ffree-form',
+                '-ffree-line-length-none',
+                '-ggdb',  # make sure we get proper Fortran backtraces
+            ])
         elif '%pgi' in spec:
             fcflags.extend(['-Mfreeform', '-Mextend'])
 
