@@ -177,7 +177,7 @@ def find(module_type, specs, args):
         modules = [spack.modules.common.get_module(module_type, spec,
                                                    args.full_path)
                    for spec in specs_to_retrieve]
-    except spack.modules.common.ModuleNotFoundError, e:
+    except spack.modules.common.ModuleNotFoundError as e:
         tty.die(e.message)
     print(' '.join(modules))
 
