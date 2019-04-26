@@ -274,8 +274,8 @@ def read_module_indices():
 module_type_to_indices = read_module_indices()
 
 
-def upstream_module(spec, module_type):
-    indices = module_type_to_indices[module_type]
+def upstream_module(spec, module_type, _module_indices=None):
+    indices = _module_indices or module_type_to_indices[module_type]
     for index in indices:
         if spec.dag_hash() in index:
             return index[spec.dag_hash()]

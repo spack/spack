@@ -165,15 +165,16 @@ def loads(module_type, specs, args, out=sys.stdout):
         out.write('\n')
 
 
-def _get_module(module_type, spec, full_path):
+def _get_module(module_type, spec, get_full_path, module_indices=None):
     if spec.package.installed_upstream:
-        module = spack.modules.common.upstream_module(spec, module_type)
+        module = spack.modules.common.upstream_module(
+            spec, module_type, _module_indices=module_indices)
         if not module:
             err_msg = "No module available for upstream package {0}".format(
                 spec
             )
             raise ModuleNotFoundError(err_msg)
-        if full_path:
+        if get_full_path:
             return module.path
         else:
             return module.use_name
@@ -184,7 +185,7 @@ def _get_module(module_type, spec, full_path):
                 spec, writer.layout.filename
             )
             raise ModuleNotFoundError(err_msg)
-        if full_path:
+        if get_full_path:
             return writer.layout.filename
         else:
             return writer.layout.use_name
@@ -202,7 +203,7 @@ def find(module_type, specs, args):
 
     try:
         modules = [_get_module(module_type, spec, args.full_path)
-                   for spec in specs_to_retrieve)
+                   for spec in specs_to_retrieve]
     except ModuleNotFoundError, e:
         tty.die(e.message)
     print(' '.join(modules))
