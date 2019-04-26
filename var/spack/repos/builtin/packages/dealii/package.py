@@ -41,7 +41,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
-    variant('ginkgo',   default=False, description='Compile wit Ginkgo')
+    variant('ginkgo',   default=False, description='Compile with Ginkgo')
     variant('gmsh',     default=True,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
