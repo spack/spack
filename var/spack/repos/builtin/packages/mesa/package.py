@@ -18,6 +18,7 @@ class Mesa(AutotoolsPackage):
     _oldurlfmt = "https://mesa.freedesktop.org/archive/older-versions/{0}.x/{1}/mesa-{1}.tar.xz"
     list_depth = 2
 
+    version('18.3.6', sha256='aaf17638dcf5a90b93b6389e152fdc9ef147768b09598f24d2c5cf482fcfc705')
     version('18.1.2', 'a2d4f031eb6bd6111d44d84004476918')
     version('17.2.3', 'a7dca71afbc7294cb7d505067fd44ef6')
     version('17.2.2', '1a157b5baefb5adf9f4fbb8a6632d74c')
