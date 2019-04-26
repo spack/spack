@@ -126,7 +126,7 @@ class Vtk(CMakePackage):
             pver = self.spec['python'].version.up_to(2)
             if self.spec.satisfies("@8.1:"):
                 vtk_lib64 = join_path(self.prefix.lib64,
-                                      'python{}'.format(pver), 'site-packages')
+                                      'python{0}'.format(pver), 'site-packages')
                 run_env.prepend_path('PYTHONPATH', vtk_lib64)
 
     def cmake_args(self):
