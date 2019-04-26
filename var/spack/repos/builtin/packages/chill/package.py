@@ -30,21 +30,35 @@ from spack import *
 
 class Chill(Package):
     """FIXME: Put a proper description of your package here."""
-
-    homepage = "http://github.com/CtopCsUtahEdu"
-    url      = "https://github.com/CtopCsUtahEdu/chill/archive/v0.3.tar.gz"
-    git      = "https://github.com/CtopCsUtahEdu/chill.git"
+    rose_git        = "https://github.com/rose-compiler/rose-develop.git"
+    rose_version    = "v0.9.10.0"
+    
+    homepage    = "http://github.com/CtopCsUtahEdu"
+    url         = "https://github.com/CtopCsUtahEdu/chill/archive/v0.3.tar.gz"
+    git         = "https://github.com/CtopCsUtahEdu/chill.git"
 
     #version('0.3', sha256='574b622368a6bfaadbe9c1fa02fabefdc6c006069246f67d299f943b7e1d8aa3')
     version('master', branch='master')
 
-    depends_on('rose@0.9.10.0 +cxx11')
+    depends_on("autoconf@2.69:", type='build')
+    depends_on("automake@1.14:", type='build')
+    depends_on("libtool@2.4:", type='build')
+    depends_on("bison", type='build')
+    depends_on("flex", type='build')
+    depends_on("boost@1.60.0")
     depends_on('iegenlib')
     depends_on('isl')
     depends_on('python')
-
+    
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        
+        with working_dir(self.stage.source_path + '/..'):
+            bash('git clone -b {0} {1}'.format(rose_version, rose_git, 'rose_src')
+            with working_dir('rose_src'):
+                bash('build')
+    
     def setup_environment(self, spack_env, run_env):
-        rose_home = self.spec['rose'].prefix
         boost_home = self.spec['boost'].prefix
         iegen_home = self.spec['iegenlib'].prefix
         
@@ -57,8 +71,26 @@ class Chill(Package):
     
     def install(self, spec, prefix):
         bash = which('bash')
-        bash('./bootstrap')
         
+        #build rose
+        with working_dir(self.stage.build_path + '/..'):
+            bash('mkdir rose_build')
+            with working_dir('rose_build'):
+                bash(self.stage.source_path + '/../rose_src/confgiure'
+                    '--prefix={0}'.format(prefix),
+                    '--disable-boost-version-check',
+                    '--enable-edg_version=4.12',
+                    '--with-alternate_backend_C_compiler={0}'.format(self.compiler.cc),
+                    '--with-alternate_backend_Cxx_compiler={0}'.format(self.compiler.cxx),
+                    '--enable-languages=c,c++',
+                    '--disable-tests-directory',
+                    '--enable-tutorial-directory={0}'.format('no'),
+                    '--without-java',
+                    'CXXFLAGS=-std=c++11')
+                bash('make install-core')
+        
+        #build chill
+        bash('./bootstrap')
         configure(
             '--prefix={0}'.format(prefix),
             '--with-rose={0}'.format(spec['rose'].prefix),
