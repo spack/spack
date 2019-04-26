@@ -97,10 +97,6 @@ class NoSpecMatches(Exception):
     """
 
 
-class ModuleNotFoundError(Exception):
-    """Raised when a module cannot be found for a spec"""
-
-
 def one_spec_or_raise(specs):
     """Ensures exactly one spec has been selected, or raises the appropriate
     exception.
@@ -169,18 +165,19 @@ def loads(module_type, specs, args, out=sys.stdout):
 def find(module_type, specs, args):
     """Retrieve paths or use names of module files"""
 
-    spec = one_spec_or_raise(specs)
+    single_spec = one_spec_or_raise(specs)
 
     if args.recurse_dependencies:
-        specs_to_retrieve = list(spec.traverse(order='post', cover='nodes'))
+        specs_to_retrieve = list(
+            single_spec.traverse(order='post', cover='nodes'))
     else:
-        specs_to_retrieve = [spec]
+        specs_to_retrieve = [single_spec]
 
     try:
         modules = [spack.modules.common.get_module(module_type, spec,
                                                    args.full_path)
                    for spec in specs_to_retrieve]
-    except ModuleNotFoundError, e:
+    except spack.modules.common.ModuleNotFoundError, e:
         tty.die(e.message)
     print(' '.join(modules))
 

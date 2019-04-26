@@ -211,7 +211,6 @@ class TestTcl(object):
         assert index[s1.dag_hash()].use_name == w1.layout.use_name
         assert index[s2.dag_hash()].path == w2.layout.filename
 
-
     def test_find_local_with_upstream_dep(
             self, factory, tmpdir_factory, config, install_mockery):
 
@@ -230,7 +229,6 @@ class TestTcl(object):
             setattr(x_spec.package, 'installed_upstream', False)
 
             wx = spack.modules.tcl.TclModulefileWriter(x_spec)
-            wy = spack.modules.tcl.TclModulefileWriter(y_spec)
 
             # For the purposes of the test, the module file doesn't have to
             # contain anything, we just want to make sure we can locate it

@@ -799,6 +799,10 @@ class ModulesError(spack.error.SpackError):
     """Base error for modules."""
 
 
+class ModuleNotFoundError(ModulesError):
+    """Raised when a module cannot be found for a spec"""
+
+
 class DefaultTemplateNotDefined(AttributeError, ModulesError):
     """Raised if the attribute 'default_template' has not been specified
     in the derived classes.
