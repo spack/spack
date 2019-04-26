@@ -96,6 +96,10 @@ class NoSpecMatches(Exception):
     """
 
 
+class ModuleNotFoundError(Exception):
+    """Raised when a module cannot be found for a spec"""
+
+
 def one_spec_or_raise(specs):
     """Ensures exactly one spec has been selected, or raises the appropriate
     exception.
@@ -161,50 +165,47 @@ def loads(module_type, specs, args, out=sys.stdout):
         out.write('\n')
 
 
+def _get_module(module_type, spec, full_path):
+    if spec.package.installed_upstream:
+        module = spack.modules.common.upstream_module(spec, module_type)
+        if not module:
+            err_msg = "No module available for upstream package {0}".format(
+                spec
+            )
+            raise ModuleNotFoundError(err_msg)
+        if full_path:
+            return module.path
+        else:
+            return module.use_name
+    else:
+        writer = spack.modules.module_types[module_type](spec)
+        if not os.path.isfile(writer.layout.filename):
+            err_msg = "No module available for package {0} at {1}".format(
+                spec, writer.layout.filename
+            )
+            raise ModuleNotFoundError(err_msg)
+        if full_path:
+            return writer.layout.filename
+        else:
+            return writer.layout.use_name
+
+
 def find(module_type, specs, args):
-    """Returns the module file "use" name if there's a single match. Raises
-    error messages otherwise.
-    """
+    """Retrieve paths or use names of module files"""
 
     spec = one_spec_or_raise(specs)
 
-    if spec.package.installed_upstream:
-        module = spack.modules.common.upstream_module(spec, module_type)
-        if module:
-            print(module.path)
-        return
-
-    # Check if the module file is present
-    def module_exists(spec):
-        writer = spack.modules.module_types[module_type](spec)
-        return os.path.isfile(writer.layout.filename)
-
-    if not module_exists(spec):
-        msg = 'Even though {1} is installed, '
-        msg += 'no {0} module has been generated for it.'
-        tty.die(msg.format(module_type, spec))
-
-    # Check if we want to recurse and load all dependencies. In that case
-    # modify the list of specs adding all the dependencies in post order
     if args.recurse_dependencies:
-        specs = [
-            item for item in spec.traverse(order='post', cover='nodes')
-            if module_exists(item)
-        ]
+        specs_to_retrieve = list(spec.traverse(order='post', cover='nodes'))
+    else:
+        specs_to_retrieve = [spec]
 
-    # ... and if it is print its use name or full-path if requested
-    def module_str(specs):
-        modules = []
-        for x in specs:
-            writer = spack.modules.module_types[module_type](x)
-            if args.full_path:
-                modules.append(writer.layout.filename)
-            else:
-                modules.append(writer.layout.use_name)
-
-        return ' '.join(modules)
-
-    print(module_str(specs))
+    try:
+        modules = [_get_module(module_type, spec, args.full_path)
+                   for spec in specs_to_retrieve)
+    except ModuleNotFoundError, e:
+        tty.die(e.message)
+    print(' '.join(modules))
 
 
 def rm(module_type, specs, args):
