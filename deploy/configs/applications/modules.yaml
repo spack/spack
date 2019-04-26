@@ -40,6 +40,7 @@ modules:
       - placement-algorithm
       - psp-validation
       - py-basalt
+      - py-bglibpy
       - py-bluepymm
       - py-bluepyopt
       - py-efel
