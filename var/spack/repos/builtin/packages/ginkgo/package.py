@@ -36,5 +36,11 @@ class Ginkgo(CMakePackage, CudaPackage):
             '-DGINKGO_BUILD_OMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
             '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
             '-DGINKGO_JACOBI_FULL_OPTIMIZATIONS=%s' % (
-                'ON' if '+full_optimizations' in spec else 'OFF')
+                'ON' if '+full_optimizations' in spec else 'OFF'),
+            # As we are not exposing benchmarks, examples, tests nor doc
+            # as part of the installation, disable building them altogether.
+            '-DGINKGO_BUILD_BENCHMARKS=OFF',
+            '-DGINKGO_BUILD_DOC=OFF',
+            '-DGINKGO_BUILD_EXAMPLES=OFF',
+            '-DGINKGO_BUILD_TESTS=OFF'
         ]
