@@ -241,10 +241,10 @@ class TestTcl(object):
                 '/test/path/to/y-module', 'y-module')
             test_index = {y_spec.dag_hash(): y_module_index_entry}
 
-            x_mod = spack.cmd.modules._get_module(
+            x_mod = spack.modules.common.get_module(
                 'tcl', x_spec, False, [test_index])
             assert x_mod == wx.layout.use_name
-            y_mod = spack.cmd.modules._get_module(
+            y_mod = spack.modules.common.get_module(
                 'tcl', y_spec, False, [test_index]
             )
             assert y_mod == 'y-module'

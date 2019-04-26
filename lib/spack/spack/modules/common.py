@@ -281,6 +281,32 @@ def upstream_module(spec, module_type, _module_indices=None):
             return index[spec.dag_hash()]
 
 
+def get_module(module_type, spec, get_full_path, module_indices=None):
+    if spec.package.installed_upstream:
+        module = spack.modules.common.upstream_module(
+            spec, module_type, _module_indices=module_indices)
+        if not module:
+            err_msg = "No module available for upstream package {0}".format(
+                spec
+            )
+            raise ModuleNotFoundError(err_msg)
+        if get_full_path:
+            return module.path
+        else:
+            return module.use_name
+    else:
+        writer = spack.modules.module_types[module_type](spec)
+        if not os.path.isfile(writer.layout.filename):
+            err_msg = "No module available for package {0} at {1}".format(
+                spec, writer.layout.filename
+            )
+            raise ModuleNotFoundError(err_msg)
+        if get_full_path:
+            return writer.layout.filename
+        else:
+            return writer.layout.use_name
+
+
 class BaseConfiguration(object):
     """Manipulates the information needed to generate a module file to make
     querying easier. It needs to be sub-classed for specific module types.
