@@ -16,7 +16,7 @@ class Ginkgo(CMakePackage, CudaPackage):
     git      = "https://github.com/ginkgo-project/ginkgo.git"
 
     version('develop', branch='develop')
-    version('latest', branch='master')
+    version('master', branch='master')
     version('1.0.0', branch='v1.0.0')
 
     variant('shared', default=True, description='Build shared libraries')
