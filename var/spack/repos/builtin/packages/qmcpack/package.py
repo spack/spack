@@ -304,10 +304,27 @@ class Qmcpack(CMakePackage, CudaPackage):
     # QMCPACK 3.6.0 release and later has a functional 'make install',
     # the Spack 'def install' is retained for backwards compatiblity.
     # Note that the two install methods differ in their directory
-    # structure.
+    # structure. Additionally, we follow the recommendation on the Spack
+    # website for defining the compilers to be the MPI compiler wrappers.
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html#compiler-wrappers
+    @when('@3.6.0:')
+    def install(self, spec, prefix):
+        if '+mpi' in spec:
+            env['CC'] = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+            env['F77'] = spec['mpi'].mpif77
+            env['FC'] = spec['mpi'].mpifc
+
+        with working_dir(self.build_directory):
+            make('install')
+
     @when('@:3.5.0')
     def install(self, spec, prefix):
-        """Make the install targets"""
+        if '+mpi' in spec:
+            env['CC'] = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+            env['F77'] = spec['mpi'].mpif77
+            env['FC'] = spec['mpi'].mpifc
 
         # QMCPACK 'make install' does nothing, which causes
         # Spack to throw an error.
