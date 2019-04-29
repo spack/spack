@@ -60,7 +60,7 @@ class Llvm(CMakePackage):
     variant('link_dylib', default=False,
             description="Build and link the libLLVM shared library rather "
             "than static")
-    variant('all_targets', default=True,
+    variant('all_targets', default=False,
             description="Build all supported targets, default targets "
             "<current arch>,NVPTX,AMDGPU,CppBackend")
     variant('build_type', default='Release',
@@ -663,13 +663,12 @@ class Llvm(CMakePackage):
 
         if '+all_targets' not in spec:  # all is default on cmake
 
+            targets = ['NVPTX', 'AMDGPU']
             if spec.version < Version('3.9.0'):
-                targets = ['CppBackend', 'NVPTX', 'AMDGPU']
-            else:
                 # Starting in 3.9.0 CppBackend is no longer a target (see
                 # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
                 # the complete list of targets)
-                targets = ['NVPTX', 'AMDGPU']
+                targets.append('CppBackend')
 
             if 'x86' in spec.architecture.target.lower():
                 targets.append('X86')
@@ -684,7 +683,7 @@ class Llvm(CMakePackage):
                 targets.append('PowerPC')
 
             cmake_args.append(
-                '-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
+                '-DLLVM_TARGETS_TO_BUILD:STRING=' + ';'.join(targets))
 
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
