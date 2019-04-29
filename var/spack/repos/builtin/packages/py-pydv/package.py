@@ -11,9 +11,9 @@ class PyPydv(PythonPackage):
     ULTRA plotting tool"""
 
     homepage = "https://github.com/griffin28/PyDV"
-    url      = "https://github.com/griffin28/PyDV.git"
+    url      = "https://github.com/griffin28/PyDV/archive/pydv-2.4.2.tar.gz"
 
-    version('2.4.2', git=url, tag='pydv-2.4.2')
+    version('2.4.2', 'fff9560177387a258f765c2d900bb241')
 
     depends_on('py-backports-functools-lru-cache')
     depends_on('py-cycler')
