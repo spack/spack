@@ -169,6 +169,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     patch_checksum = 'c066c79901a612cf8848135e0d544efb114534cca70b90bfccc8ed989d3d9dde'
     patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
+    flag_handler = CMakePackage.build_system_flags
+
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
         # for libxml2, so we fix that.
