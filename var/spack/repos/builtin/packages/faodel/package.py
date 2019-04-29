@@ -35,11 +35,17 @@ class Faodel(CMakePackage):
                          low-level communication')
 
     depends_on('mpi', when='+mpi')
-    depends_on('boost+mpi', when='+mpi', type='build')
-    depends_on('boost~mpi', when='~mpi', type='build')
+    depends_on('boost@1.58.0:')
+    depends_on('cmake@3.8.0:')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
-    depends_on('libfabric', when='network=libfabric')
+    depends_on('libfabric@1.5.3:', when='network=libfabric')
+
+    # FAODEL v1.1803.1 requires googletest even if tests are disabled
+    depends_on('googletest@1.7.0:', when='@1.1803.1')
+
+    # Boost.Log v1.59.0 has a bug that causes problems for FAODEL
+    conflicts('^boost@1.59.0')
 
     # Github issue #11267
     # Requires master branch of `leveldb` which is not available in spack
@@ -48,10 +54,23 @@ class Faodel(CMakePackage):
     # variant('leveldb', default=False,
     #        description='Build the LevelDB-based IOM in Kelpie')
 
+    # Only clang requires this patch, but it should be applied for all compilers
+    patch('array.patch', when="@1.1803.1")
+
     # FAODEL Github issue #4
-    patch('faodel_mpi.patch', when='~mpi')
+    patch('faodel_mpi.patch', when='@1.1811.1 ~mpi')
     # FAODEL Github issue #5
-    patch('faodel_sbl.patch', when='logging=sbl')
+    patch('faodel_sbl.patch', when='@1.1811.1 logging=sbl')
+
+    @run_before('cmake')
+    def die_without_cxx11(self):
+        # Until we can specify compiler variants such as +cxx11, do
+        # a brute force check here.
+        if self.spec.satisfies('%gcc'):
+            if not self.spec.satisfies('%gcc@4.8.1:'):
+                raise InstallError(
+                    'Faodel requires C++11.  When using GCC, gcc >= 4.8.1 is required.'
+                )
 
     def cmake_args(self):
         spec = self.spec
