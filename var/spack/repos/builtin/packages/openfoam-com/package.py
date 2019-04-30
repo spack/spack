@@ -276,7 +276,7 @@ class OpenfoamCom(Package):
             description='With 64-bit labels')
     variant('knl', default=False,
             description='Use KNL compiler settings')
-    variant('kahip', default=True,
+    variant('kahip', default=False,
             description='With kahip decomposition')
     variant('metis', default=False,
             description='With metis decomposition')
