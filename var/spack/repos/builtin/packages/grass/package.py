@@ -69,7 +69,7 @@ class Grass(AutotoolsPackage):
     depends_on('bzip2', when='+bzlib')
     depends_on('netcdf', when='+netcdf')
     depends_on('geos', when='+geos')
-  
+
     def url_for_version(self, version):
         base = 'https://grass.osgeo.org'
         return '{0}/grass{1}/source/grass-{2}.tar.gz'.format(base,
