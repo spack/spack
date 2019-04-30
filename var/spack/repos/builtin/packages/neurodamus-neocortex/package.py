@@ -1,7 +1,7 @@
 # Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 from spack import *
-from spack.pkg.builtin.neurodamus_model import NeurodamusModel, copy_all
+from spack.pkg.builtin.neurodamus_model import NeurodamusModel
 
 
 class NeurodamusNeocortex(NeurodamusModel):
@@ -19,11 +19,11 @@ class NeurodamusNeocortex(NeurodamusModel):
 
     mech_name = "neocortex"
 
-    @run_before('merge_hoc_mod')
+    @run_before('build_model')
     def prepare_mods(self):
         if self.spec.satisfies('+v5'):
-            copy_all('mod/v5', 'mod', copyfunc=copy_all.symlink2)
-        copy_all('mod/v6', 'mod', copyfunc=copy_all.symlink2)
+            copy_all('mod/v5', 'mod', make_link)
+        copy_all('mod/v6', 'mod', make_link)
         # Plasticity
         if self.spec.satisfies('+plasticity'):
-            copy_all('mod/v6/optimized', 'mod', copyfunc=copy_all.symlink2)
+            copy_all('mod/v6/optimized', 'mod', make_link)

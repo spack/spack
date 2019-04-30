@@ -116,11 +116,6 @@ packages:
       - mpi
       - python
     specs:
-      - neurodamus@plasticity
-      - neurodamus@plasticity+coreneuron^coreneuron+knl
-      - neurodamus@master~coreneuron
-      - neurodamus@hippocampus~coreneuron
-      - neurodamus+coreneuron^coreneuron+knl
       - neurodamus-neocortex
       - neurodamus-hippocampus
       - neurodamus-thalamus
