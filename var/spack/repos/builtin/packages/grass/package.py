@@ -72,8 +72,9 @@ class Grass(AutotoolsPackage):
 
     def url_for_version(self, version):
         base = 'https://grass.osgeo.org'
-        return '{0}/grass{1}/source/grass-{2}.tar.gz'.format(base,
-            version.up_to(2).joined, version.dotted)
+        return '{0}/grass{1}/source/grass-{2}.tar.gz'.format(
+            base, version.up_to(2).joined, version.dotted
+        )
 
     def configure_args(self):
         spec = self.spec
