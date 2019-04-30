@@ -86,12 +86,14 @@ class PackageTemplate(object):
         make('install')"""
 
     caveats = """\
-    # FIXME: Package caveats; for example, steps users must
-    # take post-install.
+    # FIXME: Description of package caveats; for example, steps
+    # users must take post-install.
     # Delete this entirely if there are no caveats.
     # It is called from a post_install hook with a concrete
-    # spec and from `spack info` with a simple spec.
+    # spec and from `spack info` with a simple spec, you should
+    # handle both cases.
     # def caveats(self):
+    #     '''Documents package caveats'''
     #     # if self.spec.concrete:
     #     #     e.g. can use self.spec.prefix here
     #     # else:
