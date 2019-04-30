@@ -17,12 +17,14 @@ class Cp2k(MakefilePackage):
     """
     homepage = 'https://www.cp2k.org'
     url = 'https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2'
+    git = 'https://github.com/cp2k/cp2k.git'
     list_url = 'https://github.com/cp2k/cp2k/releases'
 
     version('6.1', sha256='af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b')
     version('5.1', sha256='e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412')
     version('4.1', sha256='4a3e4a101d8a35ebd80a9e9ecb02697fb8256364f1eccdbe4e5a85d31fe21343')
     version('3.0', sha256='1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151')
+    version('develop', branch='master', submodules="True")
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate'),
@@ -59,7 +61,7 @@ class Cp2k(MakefilePackage):
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
 
     # libint & libxc are always statically linked
-    depends_on('libint@1.1.4:1.2', when='@3.0:6.999', type='build')
+    depends_on('libint@1.1.4:1.2', when='@3.0:', type='build')
     depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
     depends_on('libxc@4.0.3:', when='+libxc@6.0:', type='build')
 
@@ -125,7 +127,6 @@ class Cp2k(MakefilePackage):
                 '-O2',
                 '-mtune=native',
                 '-funroll-loops',
-                '-ffast-math',
                 '-ftree-vectorize',
             ],
             'intel': ['-O2', '-pc64', '-unroll'],
@@ -361,7 +362,13 @@ class Cp2k(MakefilePackage):
 
     @property
     def build_directory(self):
-        return os.path.join(self.stage.source_path, 'makefiles')
+        build_dir = self.stage.source_path
+
+        if self.spec.satisfies('@:6.9999'):
+            # prior to version 7.1 was the Makefile located in makefiles/
+            build_dir = os.path.join(build_dir, 'makefiles')
+
+        return build_dir
 
     @property
     def build_targets(self):
@@ -380,3 +387,13 @@ class Cp2k(MakefilePackage):
         exe_dir = os.path.join('exe', self.makefile_architecture)
         install_tree(exe_dir, self.prefix.bin)
         install_tree('data', self.prefix.share.data)
+
+    def check(self):
+        data_dir = os.path.join(self.stage.source_path, 'data')
+
+        # CP2K < 7 still uses $PWD to detect the current working dir
+        # and Makefile is in a subdir, account for both facts here:
+        with spack.util.environment.set_env(CP2K_DATA_DIR=data_dir,
+                                            PWD=self.build_directory):
+            with working_dir(self.build_directory):
+                make('test', *self.build_targets)
