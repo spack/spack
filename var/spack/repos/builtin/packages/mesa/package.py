@@ -61,7 +61,7 @@ class Mesa(MesonPackage):
     # Provides
     provides('gl@4.5',  when='+opengl')
     provides('glx@1.4', when='+glx')
-    provides('egl@1.5', when='+egl')
+    # provides('egl@1.5', when='+egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
