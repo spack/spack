@@ -17,8 +17,6 @@ class Tethex(CMakePackage):
     url      = "https://github.com/martemyev/tethex/archive/v0.0.7.tar.gz"
     git      = "https://github.com/martemyev/tethex.git"
 
-    maintainers = ['davydden']
-
     version('develop', branch='master')
     version('0.0.7', '6c9e4a18a6637deb4400c6d77ec03184')
 
