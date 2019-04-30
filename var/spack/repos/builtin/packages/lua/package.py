@@ -58,7 +58,8 @@ class Lua(Package):
              'install')
 
         static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
-                                 arguments=['-lm'], version=self.version,
+                                 arguments=['-lm', '-ldl'],
+                                 version=self.version,
                                  compat_version=self.version.up_to(2))
 
         # compatibility with ax_lua.m4 from autoconf-archive
