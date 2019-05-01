@@ -37,8 +37,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
     variant('cxx', default=True, description='Build the C++ Interface')
     variant('fortran', default=True, description='Build the Fortran Interface')
-    variant('pic', default=True,
-            description='Produce position-independent code (for shared libs)')
+    variant('shared', default=True, description='Build shared libraries')
 
     depends_on('mpi')
 
@@ -56,12 +55,10 @@ class ParallelNetcdf(AutotoolsPackage):
         args.append('MPIF90={0}'.format(spec['mpi'].mpifc))
         args.append('SEQ_CC={0}'.format(spack_cc))
 
-        if '+pic' in spec:
-            args.extend([
-                'CFLAGS={0}'.format(self.compiler.pic_flag),
-                'CXXFLAGS={0}'.format(self.compiler.pic_flag),
-                'FFLAGS={0}'.format(self.compiler.pic_flag)
-            ])
+        if '+shared' in spec:
+            args.extend(['--disable-static', '--enable-shared'])
+        else:
+            args.extend(['--enable-static', '--disable-shared'])
 
         if '~cxx' in spec:
             args.append('--disable-cxx')
