@@ -35,14 +35,15 @@ class Catalyst(CMakePackage):
     variant('extras', default=False, description='Enable Extras support')
     variant('rendering', default=False, description='Enable VTK Rendering support')
     variant('osmesa', default=True, description='Use offscreen rendering')
+    conflicts('+osmesa', when='~rendering')
 
     depends_on('git', type='build')
     depends_on('mpi')
     depends_on('python@2:2.8', when='+python', type=("build", "link", "run"))
     depends_on('python', when='~python', type=("build"))
-    depends_on('mesa', when='+rendering')
-    depends_on('libx11', when='+rendering')
-    depends_on('libxt', when='+rendering')
+    depends_on('gl@3.2', when='+rendering')
+    depends_on('mesa+osmesa', when='+rendering+osmesa')
+    depends_on('glx', when='+rendering~osmesa')
     depends_on('cmake@3.3:', type='build')
 
     @when('@5.5.0:5.5.2')
