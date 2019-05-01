@@ -29,6 +29,7 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  '41b6595deb4147a1ed517a7d9a580271')
@@ -41,9 +42,11 @@ class Python(AutotoolsPackage):
     version('3.6.2', 'e1a36bfffdd1d3a780b1825daf16e56c')
     version('3.6.1', '2d0fc9f3a5940707590e07f03ecb08b9')
     version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
+    version('3.5.7', sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
     version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
     version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
     version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
+    version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d')
     version('3.4.3', '4281ff86778db65892c05151d5de738d')
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
