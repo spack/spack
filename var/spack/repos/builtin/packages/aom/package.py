@@ -7,7 +7,7 @@ from spack import *
 
 
 class Aom(CMakePackage):
-    """Alliance for Open Media"""
+    """Alliance for Open Media AOM AV1 Codec Library"""
     homepage = "https://aomedia.googlesource.com/aom"
     git      = "https://aomedia.googlesource.com/aom"
     version('v1.0.0-errata1', commit='29d8ce4836630df5cc7ab58f1afc4836765fc212')
