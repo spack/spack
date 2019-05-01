@@ -54,8 +54,6 @@ class Netcdf(AutotoolsPackage):
     variant('parallel-netcdf', default=False,
             description='Enable parallel I/O for classic files')
     variant('hdf4', default=False, description='Enable HDF4 support')
-    variant('pic', default=True,
-            description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
 
@@ -158,7 +156,6 @@ class Netcdf(AutotoolsPackage):
 
         config_args = ['--enable-v2',
                        '--enable-utilities',
-                       '--enable-static',
                        '--enable-largefile',
                        '--enable-netcdf-4']
 
@@ -170,12 +167,10 @@ class Netcdf(AutotoolsPackage):
         if self.spec.satisfies('@4.3.1:'):
             config_args.append('--enable-dynamic-loading')
 
-        config_args += self.enable_or_disable('shared')
-
-        if '~shared' in self.spec or '+pic' in self.spec:
-            # We don't have shared libraries but we still want it to be
-            # possible to use this library in shared builds
-            cflags.append(self.compiler.pic_flag)
+        if '+shared' in self.spec:
+            config_args.extend(['--disable-static', '--enable-shared'])
+        else:
+            config_args.extend(['--enable-static', '--disable-shared'])
 
         config_args += self.enable_or_disable('dap')
         # config_args += self.enable_or_disable('cdmremote')
