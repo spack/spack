@@ -5,6 +5,7 @@
 
 
 import os
+import sys
 from spack import *
 
 
@@ -34,10 +35,6 @@ class Vtk(CMakePackage):
     variant('ffmpeg', default=False, description='Build with FFMPEG support')
     variant('mpi', default=True, description='Enable MPI support')
 
-    # Haru causes trouble on Fedora and Ubuntu in v8.1.1
-    # See https://bugzilla.redhat.com/show_bug.cgi?id=1460059#c13
-    variant('haru', default=True, description='Enable libharu')
-
     patch('gcc.patch', when='@6.1.0')
 
     # At the moment, we cannot build with both osmesa and qt, but as of
@@ -54,21 +51,19 @@ class Vtk(CMakePackage):
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
     depends_on('gl@3.2:', when='+opengl2')
+    depends_on('gl@1.2:', when='~opengl2')
 
-    # If you didn't ask for osmesa, then hw rendering using vendor-specific
-    # drivers is faster, but it must be done externally.
-    depends_on('opengl', when='~osmesa')
+    if sys.platform != 'darwin':
+        depends_on('glx', when='~osmesa')
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
-    depends_on('mesa', when='+osmesa')
+    depends_on('mesa+osmesa', when='+osmesa')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
 
     depends_on('mpi', when='+mpi')
-
-    depends_on('libharu', when='+haru')
 
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
@@ -109,15 +104,13 @@ class Vtk(CMakePackage):
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
 
-            '-DVTK_USE_SYSTEM_LIBHARU=%s' % (
-                'ON' if '+haru' in spec else 'OFF'),
-
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible
             '-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON',
 
             # However, in a few cases we can't do without them yet
             '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_LIBHARU=OFF',
             '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
             '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
 

@@ -157,6 +157,8 @@ class Trilinos(CMakePackage):
             description='Compile with STK')
     variant('shards',       default=False,
             description='Compile with Shards')
+    variant('shylu',        default=False,
+            description='Compile with ShyLU')
     variant('teko',         default=False,
             description='Compile with Teko')
     variant('tempus',       default=False,
@@ -417,6 +419,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+sacado' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Shards=%s' % (
                 'ON' if '+shards' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_ShyLU=%s' % (
+                'ON' if '+shylu' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Teko=%s' % (
                 'ON' if '+teko' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Tempus=%s' % (
