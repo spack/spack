@@ -18,7 +18,7 @@ class Libepoxy(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('meson')
-    depends_on('mesa')
+    depends_on('gl')
 
     def configure_args(self):
         # Disable egl, otherwise configure fails with:

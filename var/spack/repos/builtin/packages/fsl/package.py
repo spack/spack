@@ -26,7 +26,7 @@ class Fsl(Package):
     depends_on('python', type=('build', 'run'))
     depends_on('expat')
     depends_on('libx11')
-    depends_on('mesa-glu')
+    depends_on('glu')
     depends_on('zlib')
     depends_on('libpng')
     depends_on('boost')

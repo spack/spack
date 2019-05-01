@@ -3,194 +3,153 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 from spack import *
 
+import sys
 
-class Mesa(AutotoolsPackage):
+
+class Mesa(MesonPackage):
     """Mesa is an open-source implementation of the OpenGL specification
      - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
-    url      = "https://mesa.freedesktop.org/archive/mesa-17.1.5.tar.xz"
-    list_url = "https://mesa.freedesktop.org/archive"
-    _urlfmt = "https://mesa.freedesktop.org/archive/mesa-{0}.tar.xz"
-    _oldurlfmt = "https://mesa.freedesktop.org/archive/older-versions/{0}.x/{1}/mesa-{1}.tar.xz"
-    list_depth = 2
 
-    version('18.1.2', 'a2d4f031eb6bd6111d44d84004476918')
-    version('17.2.3', 'a7dca71afbc7294cb7d505067fd44ef6')
-    version('17.2.2', '1a157b5baefb5adf9f4fbb8a6632d74c')
-    version('17.1.5', '6cf936fbcaadd98924298a7009e8265d')
-    version('17.1.4', 'be2ef7c9edec23b07f74f6512a6a6fa5')
-    version('17.1.3', '1946a93d543bc219427e2bebe2ac4752')
-    version('17.1.1', 'a4844bc6052578574f9629458bcbb749')
-    version('13.0.6', '1e5a769bc6cfd839cf3febcb179c27cc')
-    version('12.0.6', '1a3d4fea0656c208db59289e4ed33b3f')
-    version('12.0.3', '1113699c714042d8c4df4766be8c57d8')
+    # Note that we always want to build from the git repo instead of a
+    # tarball since the tarball has pre-generated files for certain versions
+    # of LLVM while the git repo doesn't so it can adapt at build time to
+    # whatever version of LLVM you're using.
+    git      = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    provides('gl@:4.5', when='@17:')
-    provides('gl@:4.4', when='@13:')
-    provides('gl@:4.3', when='@12:')
+    version('19.0.0', tag='mesa-19.0.0')
 
-    variant('swrender', default=True,
-            description="Build with (gallium) software rendering.")
-    variant('hwrender', default=False,
-            description="Build with (DRI) hardware rendering.")
-    variant('llvm', default=False,
-            description="Use llvm for rendering pipes.")
+    version('19.0.develop', branch='19.0')
+    version('develop',      branch='master')
 
-    # General dependencies
+    depends_on('meson@0.45:', type='build')
+    depends_on('binutils', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('flex@2.5.35:', type='build')
-    depends_on('bison@2.4.1:', type='build')
-    depends_on('binutils', type='build', when=(sys.platform != 'darwin'))
-    depends_on('python@2.6.4:', type='build')
-    depends_on('py-mako@0.3.4:', type='build')
-    depends_on('py-argparse', type='build')
-    depends_on('gettext')
-    depends_on('icu4c')
+    depends_on('python@3:', type='build')
+    depends_on('py-mako@0.8.0:', type='build')
+    depends_on('libxml2')
+    depends_on('zlib')
     depends_on('expat')
-    depends_on('libpthread-stubs')
-    depends_on('openssl')
-    depends_on('xproto')
-    depends_on('glproto@1.4.14:')
-    depends_on('presentproto@1.0:')
-    depends_on('libxcb@1.9.3:')
-    depends_on('libx11')
-    depends_on('libxext')
-    depends_on('libxshmfence@1.1:')
-    depends_on('libxdamage')
-    depends_on('libxfixes')
-    depends_on('libxv')
-    depends_on('libxvmc')
-    depends_on('zlib@1.2.3:')
 
-    # For DRI and hardware acceleration
-    depends_on('dri2proto@2.6:', type='build', when='+hwrender')
-    depends_on('dri3proto@1.0:', type='build', when='+hwrender')
-    depends_on('libdrm', when='+hwrender')
+    # Internal options
+    variant('llvm', default=True, description="Enable LLVM.")
+    variant('swr', values=any_combination_of('avx', 'avx2', 'knl', 'skx'),
+            description="Enable the SWR driver.")
+    # conflicts('~llvm', when='~swr=none')
 
-    depends_on('llvm@:3.8.1+link_dylib', when='@12:12.99+llvm')
-    depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+llvm')
-    depends_on('llvm+link_dylib', when='+llvm')
-    depends_on('libelf', when='+llvm')
-    depends_on('damageproto', when='+hwrender')
-    depends_on('fixesproto', when='+hwrender')
+    # Front ends
+    variant('osmesa', default=True, description="Enable the OSMesa frontend.")
 
-    def url_for_version(self, version):
-        """Handle Mesa version-based custom URLs."""
-        if version < Version('17.0.0'):
-            return self._oldurlfmt.format(version.up_to(1), version)
-        else:
-            return self._urlfmt.format(version)
+    is_linux = sys.platform.startswith('linux')
+    variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
-    def configure_args(self):
-        """Build drivers for platforms supported by spack;
-        exclude drivers for embedded systems.
-        """
+    # TODO: effectively deal with EGL.  The implications of this have not been
+    # worked through yet
+    # variant('egl', default=False, description="Enable the EGL frontend.")
+
+    # TODO: Effectively deal with hardware drivers
+    # The implication of this is enabling DRI, among other things, and
+    # needing to check which llvm targets were built (ptx or amdgpu, etc.)
+
+    # Back ends
+    variant('opengl', default=True, description="Enable full OpenGL support.")
+    variant('opengles', default=False, description="Enable OpenGL ES support.")
+
+    # Provides
+    provides('gl@4.5',  when='+opengl')
+    provides('glx@1.4', when='+glx')
+    # provides('egl@1.5', when='+egl')
+
+    # Variant dependencies
+    depends_on('llvm@6:', when='+llvm')
+    depends_on('libx11',  when='+glx')
+    depends_on('libxcb',  when='+glx')
+    depends_on('libxext', when='+glx')
+
+    def meson_args(self):
         spec = self.spec
-        args = ['--enable-glx', '--enable-glx-tls']
-        drivers = []
+        args = [
+            '-Dglvnd=false',
+            '-Dgallium-nine=false',
+            '-Dgallium-omx=disabled',
+            '-Dgallium-opencl=disabled',
+            '-Dgallium-va=false',
+            '-Dgallium-vdpau=false',
+            '-Dgallium-xa=false',
+            '-Dgallium-xvmc=false',
+            '-Dvulkan-drivers=']
+        args_platforms = []
+        args_gallium_drivers = ['swrast']
+        args_dri_drivers = []
 
-        if '+swrender' in spec:
-            drivers = ['swrast']
-            args.extend([
-                '--disable-osmesa',
-                '--enable-gallium-osmesa',
-                '--enable-texture-float',
-            ])
-            if '+llvm' in spec:
-                # For @17.1.1:17.1.2 the swr driver requires C++14 support
-                # Should be fixed in 17.1.3, but can still encounter problems
-                if spec.version >= Version('17') and \
-                   spec.version < Version('17.2'):
-                    if spec.satisfies('%gcc@4.9:'):
-                        drivers.append('swr')
-                else:
-                    drivers.append('swr')
+        num_frontends = 0
+        if '+osmesa' in spec:
+            num_frontends += 1
+            args.append('-Dosmesa=gallium')
         else:
-            args.append('--disable-gallium-osmesa')
-            # Fallback for "~hwrender~swrender" -> old osmesa
-            if '~hwrender' in spec:
-                args.append('--enable-osmesa')
+            args.append('-Dosmesa=disabled')
 
-        if '+hwrender' in spec:
-            args.append('--enable-xa')
-            if spec.version >= Version('17'):
-                args.append('--with-platforms=x11,drm')
-            else:
-                args.append('--with-egl-platforms=x11,drm')
-            drivers.extend([
-                'svga', 'i915', 'r600', 'nouveau', 'virgl'
-            ])
-
-            # These hardware drivers need llvm
-            if '+llvm' in spec:
-                drivers.extend(['r300', 'radeonsi'])
-
+        if '+glx' in spec:
+            num_frontends += 1
+            args.append('-Dglx=gallium-xlib')
+            args_platforms.append('x11')
         else:
-            args.extend([
-                '--disable-xa',
-                '--disable-dri',
-                '--disable-dri3',
-                '--disable-egl',
-                '--disable-gbm',
-                '--disable-xvmc',
-            ])
-            if spec.version >= Version('17'):
-                args.append('--with-platforms=x11')
+            args.append('-Dglx=disabled')
+
+        if '+egl' in spec:
+            num_frontends += 1
+            args.extend(['-Degl=true', '-Dgbm=true'])
+        else:
+            args.extend(['-Degl=false', '-Dgbm=false'])
+
+        if '+opengl' in spec:
+            args.append('-Dopengl=true')
+        else:
+            args.append('-Dopengl=false')
+
+        if '+opengles' in spec:
+            args.extend(['-Dgles1=true', '-Dgles2=true'])
+        else:
+            args.extend(['-Dgles1=false', '-Dgles2=false'])
+
+        if '+egl' in spec or '+osmesa' in spec:
+            args_platforms.append('surfaceless')
+
+        if num_frontends > 1:
+            args.append('-Dshared-glapi=true')
+        else:
+            args.append('-Dshared-glapi=false')
 
         if '+llvm' in spec:
-            if self.spec.version < Version('17'):
-                args.append('--enable-gallium-llvm')
+            args.append('-Dllvm=true')
+            if '+link_dylib' in spec['llvm']:
+                args.append('-Dshared-llvm=true')
             else:
-                args.append('--enable-llvm')
-            if '+link_dylib' in self.spec['llvm']:
-                args.append('--enable-llvm-shared-libs')
-            else:
-                args.append('--disable-llvm-shared-libs')
-            args.append('--with-llvm-prefix=%s' % spec['llvm'].prefix)
-
-        if drivers:
-            args.append('--with-gallium-drivers=' + ','.join(drivers))
+                args.append('-Dshared-llvm=false')
         else:
-            args.append('--without-gallium-drivers')
+            args.append('-Dllvm=false')
 
-        # Avoid errors due to missing clock_gettime symbol:
-        arch = spec.architecture
-        if arch.platform == 'linux':
-            args.append('LIBS=-lrt')
+        args_swr_arches = []
+        if 'swr=avx' in spec:
+            args_swr_arches.append('avx')
+        if 'swr=avx2' in spec:
+            args_swr_arches.append('avx2')
+        if 'swr=knl' in spec:
+            args_swr_arches.append('knl')
+        if 'swr=skx' in spec:
+            args_swr_arches.append('skx')
+        if args_swr_arches:
+            if '+llvm' not in spec:
+                raise SpecError('Variant swr requires +llvm')
+            args_gallium_drivers.append('swr')
+            args.append('-Dswr-arches=' + ','.join(args_swr_arches))
+
+        # Add the remaining list args
+        args.append('-Dplatforms=' + ','.join(args_platforms))
+        args.append('-Dgallium-drivers=' + ','.join(args_gallium_drivers))
+        args.append('-Ddri-drivers=' + ','.join(args_dri_drivers))
 
         return args
-
-    def configure(self, spec, prefix):
-        """Configure mesa, detecting if libsysfs is required
-        for DRI support on the build host.
-        """
-        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
-
-        try:
-            # First attempt uses libudev:
-            configure(*options)
-        except ProcessError:
-            if '+hwrender' in spec and not spec.satisfies('@13:'):
-                print('Configuring with libudev failed ... '
-                      ' trying libsysfs ...')
-                options.append('--enable-sysfs')
-                configure(*options)
-            else:
-                raise
-
-    @property
-    def libs(self):
-        for dir in ['lib64', 'lib']:
-            libs = find_libraries('libGL', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
-            if libs:
-                return libs
-
-    @when('^python@3:')
-    def setup_environment(self, spack_env, run_env):
-        # this avoids an "import site" error in the build
-        spack_env.unset('PYTHONHOME')
