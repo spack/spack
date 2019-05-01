@@ -13,13 +13,12 @@ class Faodel(CMakePackage):
     url      = "https://github.com/faodel/faodel/archive/v1.1811.1.tar.gz"
     git      = "https://github.com/faodel/faodel.git"
 
-    maintainers = ['fbudin69500', 'chuckatkins']
+    maintainers = ['tkordenbrock', 'craigulmer']
 
-    version('develop', branch='master')
     version('1.1811.1', sha256='8e95ee99b8c136ff687eb07a2481ee04560cb1526408eb22ab56cd9c60206916')
     version('1.1803.1', sha256='70ce7125c02601e14abe5985243d67adf677ed9e7a4dd6d3eaef8a97cf281a16')
 
-    variant('shared', default=False,
+    variant('shared', default=True,
             description='Build Faodel as shared libs')
     variant('mpi', default=True,
             description='Enable MPI')
@@ -35,17 +34,15 @@ class Faodel(CMakePackage):
                          low-level communication')
 
     depends_on('mpi', when='+mpi')
-    depends_on('boost@1.58.0:')
-    depends_on('cmake@3.8.0:')
+    depends_on('boost@1.60.0:')
+    depends_on('cmake@3.8.0:', type='build')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('libfabric@1.5.3:', when='network=libfabric')
+    depends_on('googletest@1.7.0:', type='build')
 
-    # FAODEL v1.1803.1 requires googletest even if tests are disabled
-    depends_on('googletest@1.7.0:', when='@1.1803.1')
-
-    # Boost.Log v1.59.0 has a bug that causes problems for FAODEL
-    conflicts('^boost@1.59.0')
+    # FAODEL requires C++11 support which starts with gcc 4.8.1
+    conflicts('%gcc@:4.8.0')
 
     # Github issue #11267
     # Requires master branch of `leveldb` which is not available in spack
@@ -62,24 +59,16 @@ class Faodel(CMakePackage):
     # FAODEL Github issue #5
     patch('faodel_sbl.patch', when='@1.1811.1 logging=sbl')
 
-    @run_before('cmake')
-    def die_without_cxx11(self):
-        # Until we can specify compiler variants such as +cxx11, do
-        # a brute force check here.
-        if self.spec.satisfies('%gcc'):
-            if not self.spec.satisfies('%gcc@4.8.1:'):
-                raise InstallError(
-                    'Faodel requires C++11.  When using GCC, gcc >= 4.8.1 is required.'
-                )
-
     def cmake_args(self):
         spec = self.spec
 
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
-            '-DBUILD_TESTS:BOOL=OFF',
+            '-DBUILD_TESTS:BOOL={0}'.format(
+                'ON' if '+mpi' in spec else 'OFF'),
             '-DBOOST_ROOT:PATH={0}'.format(spec['boost'].prefix),
+            '-DGTEST_ROOT:PATH={0}'.format(spec['googletest'].prefix),
             '-DBUILD_DOCS:BOOL=OFF',
             '-DFaodel_ENABLE_IOM_HDF5:BOOL={0}'.format(
                 'ON' if '+hdf5' in spec else 'OFF'),
