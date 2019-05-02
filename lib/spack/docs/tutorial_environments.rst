@@ -289,7 +289,7 @@ simply running ``spack install`` with no arguments:
 
    $ spack install
    ==> Concretizing hdf5
-   [+]  ozyvmhz  hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran~hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   [+]  ozyvmhz  hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran~hl+mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
    [+]  3njc4q5      ^openmpi@3.1.3%gcc@5.4.0~cuda+cxx_exceptions fabrics= ~java~legacylaunchers~memchecker~pmi schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
    [+]  43tkw5m          ^hwloc@1.11.9%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_64
    [+]  5urc6tc              ^libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
@@ -488,7 +488,7 @@ all of its specs.  We can run it here:
    [+]  q4fpyuo                  ^gdbm@1.14.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
    [+]  nxhwrg7                      ^readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
    [+]  jnw622j      ^glm@0.9.7.1%gcc@5.4.0 build_type=RelWithDebInfo arch=linux-ubuntu16.04-x86_64
-   [+]  xxd7syh      ^hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran+hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   [+]  xxd7syh      ^hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran+hl+mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
    [+]  p3f7p2r          ^mpich@3.2.1%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
    [+]  d4iajxs              ^findutils@4.6.0%gcc@5.4.0 patches=84b916c0bf8c51b7e7b28417692f0ad3e7030d1f3c248ba77c42ede5c1c5d11e,bd9e4e5cc280f9753ae14956c4e4aa17fe7a210f55dd6c84aa60b12d106d47a2 arch=linux-ubuntu16.04-x86_64
    [+]  3sx2gxe                  ^autoconf@2.69%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
@@ -507,7 +507,7 @@ all of its specs.  We can run it here:
    [+]  jehtata      ^parmetis@4.0.3%gcc@5.4.0 build_type=RelWithDebInfo ~gdb patches=4f892531eb0a807eb1b82e683a416d3e35154a455274cf9b162fb02054d11a5b,50ed2081bc939269689789942067c58b3e522c269269a430d5d34c00edbc5870,704b84f7c7444d4372cb59cca6e1209df4ef3b033bc4ee3cf50f369bce972a9d +shared arch=linux-ubuntu16.04-x86_64
    [+]  zaau4ki      ^suite-sparse@5.3.0%gcc@5.4.0~cuda~openmp+pic~tbb arch=linux-ubuntu16.04-x86_64
    ==> Concretizing hdf5
-    -   zjgyn3w  hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran~hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+    -   zjgyn3w  hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran~hl+mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
    [+]  p3f7p2r      ^mpich@3.2.1%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
    [+]  d4iajxs          ^findutils@4.6.0%gcc@5.4.0 patches=84b916c0bf8c51b7e7b28417692f0ad3e7030d1f3c248ba77c42ede5c1c5d11e,bd9e4e5cc280f9753ae14956c4e4aa17fe7a210f55dd6c84aa60b12d106d47a2 arch=linux-ubuntu16.04-x86_64
    [+]  3sx2gxe              ^autoconf@2.69%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
@@ -661,7 +661,7 @@ install the project's dependencies.  They need only clone the repository,
    [+]  q4fpyuo                  ^gdbm@1.14.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
    [+]  nxhwrg7                      ^readline@7.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
    [+]  jnw622j      ^glm@0.9.7.1%gcc@5.4.0 build_type=RelWithDebInfo arch=linux-ubuntu16.04-x86_64
-   [+]  oqwnui7      ^hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran+hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   [+]  oqwnui7      ^hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran+hl+mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
    [+]  3njc4q5          ^openmpi@3.1.3%gcc@5.4.0~cuda+cxx_exceptions fabrics= ~java~legacylaunchers~memchecker~pmi schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
    [+]  43tkw5m              ^hwloc@1.11.9%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_64
    [+]  5urc6tc                  ^libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64

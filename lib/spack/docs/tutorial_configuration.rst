@@ -410,7 +410,7 @@ MPICH over OpenMPI. Currently, we prefer GCC and OpenMPI.
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran~hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran~hl+mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^openmpi@3.1.3%gcc@5.4.0~cuda+cxx_exceptions fabrics= ~java~legacylaunchers~memchecker~pmi schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
            ^hwloc@1.11.9%gcc@5.4.0~cairo~cuda+libxml2+pci+shared arch=linux-ubuntu16.04-x86_64
                ^libpciaccess@0.13.5%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
@@ -460,7 +460,7 @@ overrides the default settings just for these two items.
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^mpich@3.2.1%clang@3.8.0-2ubuntu4 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
            ^findutils@4.6.0%clang@3.8.0-2ubuntu4 patches=84b916c0bf8c51b7e7b28417692f0ad3e7030d1f3c248ba77c42ede5c1c5d11e,bd9e4e5cc280f9753ae14956c4e4aa17fe7a210f55dd6c84aa60b12d106d47a2 arch=linux-ubuntu16.04-x86_64
                ^autoconf@2.69%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
@@ -507,7 +507,7 @@ We can check the effect of this command with ``spack spec hdf5`` again.
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^mpich@3.2.1%clang@3.8.0-2ubuntu4 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
            ^findutils@4.6.0%clang@3.8.0-2ubuntu4 patches=84b916c0bf8c51b7e7b28417692f0ad3e7030d1f3c248ba77c42ede5c1c5d11e,bd9e4e5cc280f9753ae14956c4e4aa17fe7a210f55dd6c84aa60b12d106d47a2 arch=linux-ubuntu16.04-x86_64
                ^autoconf@2.69%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
@@ -554,7 +554,7 @@ Now hdf5 will concretize without an MPI dependency by default.
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl~mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl~mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^zlib@1.2.11%clang@3.8.0-2ubuntu4+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
 
 
@@ -598,7 +598,7 @@ okay.
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran~hl~mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%gcc@5.4.0~cxx~debug~fortran~hl~mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^zlib@1.2.8%gcc@5.4.0+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
 
 
@@ -615,7 +615,7 @@ preference of clang. If we explicitly specify clang:
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl~mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl~mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^zlib@1.2.11%clang@3.8.0-2ubuntu4+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
 
 
@@ -652,7 +652,7 @@ Now Spack will be forced to choose the external zlib.
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl~mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl~mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^zlib@1.2.8%gcc@5.4.0+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
 
 
@@ -692,7 +692,7 @@ build with an alternate MPI implementation.
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^openmpi@3.1.3%clang@3.8.0-2ubuntu4~cuda+cxx_exceptions fabrics= ~java~legacylaunchers~memchecker~pmi schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
            ^hwloc@1.11.9%clang@3.8.0-2ubuntu4~cairo~cuda+libxml2+pci~shared arch=linux-ubuntu16.04-x86_64
                ^libpciaccess@0.13.5%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
@@ -770,7 +770,7 @@ providers for MPI we can try again.
 
    Concretized
    --------------------------------
-   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.4%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
        ^zlib@1.2.8%gcc@5.4.0+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
 

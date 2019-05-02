@@ -55,8 +55,6 @@ class Hdf5(AutotoolsPackage):
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
-    variant('pic', default=True,
-            description='Produce position-independent code (for shared libs)')
 
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
@@ -226,14 +224,12 @@ class Hdf5(AutotoolsPackage):
                 extra_args.append('--disable-fortran2003')
 
         if '+shared' in self.spec:
+            extra_args.append('--disable-static')
             extra_args.append('--enable-shared')
         else:
+            extra_args.append('--enable-static')
             extra_args.append('--disable-shared')
             extra_args.append('--enable-static-exec')
-
-        if '+pic' in self.spec:
-            extra_args += ['%s=%s' % (f, self.compiler.pic_flag)
-                           for f in ['CFLAGS', 'CXXFLAGS', 'FCFLAGS']]
 
         if '+mpi' in self.spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
