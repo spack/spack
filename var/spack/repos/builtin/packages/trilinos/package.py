@@ -317,6 +317,11 @@ class Trilinos(CMakePackage):
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
+    # Use Ninja for faster build times
+    generator = 'Ninja'
+    # Need to use a Ninja with Fortran support
+    depends_on('ninja@1.9.0.1:', type='build')
+
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
