@@ -41,7 +41,7 @@ def get_patchelf():
         patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
         patchelf = spack.repo.get(patchelf_spec)
         if not patchelf.installed:
-            patchelf.do_install()
+            patchelf.do_install(use_cache=False)
         patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
         return patchelf_executable
     else:
