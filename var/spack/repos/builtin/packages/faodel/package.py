@@ -10,11 +10,12 @@ class Faodel(CMakePackage):
     """Flexible, Asynchronous, Object Data-Exchange Libraries"""
 
     homepage = "https://github.com/faodel/faodel"
-    url      = "https://github.com/faodel/faodel/archive/v1.1811.1.tar.gz"
+    url      = "https://github.com/faodel/faodel/archive/v1.1811.2.tar.gz"
     git      = "https://github.com/faodel/faodel.git"
 
     maintainers = ['tkordenbrock', 'craigulmer']
 
+    version('1.1811.2', sha256='22feb502dad0f56fb8af492f6e2cdc53a97fd6c31f6fa3c655be0a6266c46996')
     version('1.1811.1', sha256='8e95ee99b8c136ff687eb07a2481ee04560cb1526408eb22ab56cd9c60206916')
     version('1.1803.1', sha256='70ce7125c02601e14abe5985243d67adf677ed9e7a4dd6d3eaef8a97cf281a16')
 
@@ -51,7 +52,7 @@ class Faodel(CMakePackage):
     # variant('leveldb', default=False,
     #        description='Build the LevelDB-based IOM in Kelpie')
 
-    # Only clang requires this patch, but it should be applied for all compilers
+    # Only clang requires this patch, but it should be applied for all
     patch('array.patch', when="@1.1803.1")
 
     # FAODEL Github issue #4
