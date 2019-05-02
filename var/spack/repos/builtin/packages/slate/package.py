@@ -22,17 +22,11 @@ class Slate(Package):
     version('develop', hg=hg)
 
     variant('cuda',   default=True, description='Build with CUDA support.')
-    # SLATE will eventually be buildable without intel-mkl by using other
-    # providers of cblas and scalapack.
-    # variant('mkl',  default=True, description='Build using Intel MKL.')
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
 
     depends_on('cuda@9:', when='+cuda')
     depends_on('intel-mkl')
-    # The cblas and scalapack dependencies are provided by MKL only for now.
-    # depends_on('cblas')
-    # depends_on('scalapack')
     depends_on('mpi', when='+mpi')
 
     conflicts('%gcc@:5')
@@ -47,16 +41,15 @@ class Slate(Package):
         f_cuda = "1" if spec.variants['cuda'].value else "0"
         f_mpi = "1" if spec.variants['mpi'].value else "0"
         f_openmp = "1" if spec.variants['openmp'].value else "0"
-        f_mkl = "1" if spec.variants['mkl'].value else "0"
 
         compiler = 'mpicxx' if spec.variants['mpi'].value else ''
 
         make('mpi=' + f_mpi, 'mkl=1', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
-             'mkl=' + f_mkl, 'CXX=' + compiler)
+             'CXX=' + compiler)
         install_tree('lib', prefix.lib)
         install_tree('test', prefix.test)
         mkdirp(prefix.include)
-        install('slate.hh', prefix.include)
+        install('include/slate/slate.hh', prefix.include)
         install('lapack_api/lapack_slate.hh',
                 prefix.include + "/slate_lapack_api.hh")
         install('scalapack_api/scalapack_slate.hh',
