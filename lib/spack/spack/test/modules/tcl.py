@@ -8,8 +8,6 @@ import pytest
 import spack.modules.common
 import spack.modules.tcl
 import spack.spec
-import spack.store
-
 
 mpich_spec_string = 'mpich@3.0.4'
 mpileaks_spec_string = 'mpileaks'
