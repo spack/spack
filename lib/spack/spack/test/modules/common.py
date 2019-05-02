@@ -10,6 +10,12 @@ import spack.spec
 import spack.modules.common
 import spack.modules.tcl
 
+from spack.modules.common import (
+    ModuleIndexEntry, UpstreamModuleIndex, ModuleNotFoundError)
+import spack.error
+
+import pytest
+
 
 def test_update_dictionary_extending_list():
     target = {
@@ -70,3 +76,56 @@ def test_modules_written_with_proper_permissions(mock_module_filename,
 
     assert mock_package_perms & os.stat(
         mock_module_filename).st_mode == mock_package_perms
+
+
+class MockDb(object):
+    def __init__(self, db_ids, spec_hash_to_db):
+        self.upstream_dbs = db_ids
+        self.spec_hash_to_db = spec_hash_to_db
+
+    def db_for_spec_hash(self, spec_hash):
+        return self.spec_hash_to_db.get(spec_hash)
+
+
+class MockSpec(object):
+    def __init__(self, unique_id):
+        self.unique_id = unique_id
+
+    def dag_hash(self):
+        return self.unique_id
+
+
+def test_upstream_module_index():
+    s1 = MockSpec('spec-1')
+    s2 = MockSpec('spec-2')
+    s3 = MockSpec('spec-3')
+
+    module_indices = [
+        {
+            'tcl': {s1.dag_hash(): ModuleIndexEntry('/path/to/a', 'a')}
+        },
+        {}
+    ]
+
+    dbs = [
+        'd0',
+        'd1'
+    ]
+
+    mock_db = MockDb(dbs, {s1.dag_hash(): 'd0', s2.dag_hash(): 'd1'})
+    upstream_index = UpstreamModuleIndex(mock_db, module_indices)
+
+    m1 = upstream_index.upstream_module(s1, 'tcl')
+    assert m1.path == '/path/to/a'
+
+    # No modules are defined for the DB associated with s2
+    with pytest.raises(ModuleNotFoundError):
+        upstream_index.upstream_module(s2, 'tcl')
+
+    # Modules are defined for the index associated with s1, but not for the
+    # requested type
+    with pytest.raises(ModuleNotFoundError):
+        upstream_index.upstream_module(s1, 'lmod')
+
+    with pytest.raises(spack.error.SpackError):
+        upstream_index.upstream_module(s3, 'tcl')

@@ -58,8 +58,14 @@ class Store(object):
     """
     def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
+
+        upstream_dbs = retrieve_upstream_dbs()
+        module_indices = spack.modules.common.read_module_indices()
+
         self.db = spack.database.Database(
-            root, upstream_dbs=retrieve_upstream_dbs())
+            root, upstream_dbs=upstream_dbs)
+        self.upstream_module_index = spack.modules.common.UpstreamModuleIndex(
+            self.db, module_indices)
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, hash_len=hash_length, path_scheme=path_scheme)
 
@@ -85,6 +91,8 @@ store = llnl.util.lang.Singleton(_store)
 root = llnl.util.lang.LazyReference(lambda: store.root)
 db = llnl.util.lang.LazyReference(lambda: store.db)
 layout = llnl.util.lang.LazyReference(lambda: store.layout)
+upstream_module_index = llnl.util.lang.LazyReference(
+    lambda: store.upstream_module_index)
 
 
 def retrieve_upstream_dbs():

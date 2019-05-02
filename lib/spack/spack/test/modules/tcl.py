@@ -211,43 +211,6 @@ class TestTcl(object):
         assert index[s1.dag_hash()].use_name == w1.layout.use_name
         assert index[s2.dag_hash()].path == w2.layout.filename
 
-    def test_find_local_with_upstream_dep(
-            self, factory, tmpdir_factory, config, install_mockery):
-
-        default = ('build', 'link')
-
-        y = MockPackage('y', [], [])
-        x = MockPackage('x', [y], [default])
-
-        mock_repo = MockPackageMultiRepo([x, y])
-        with spack.repo.swap(mock_repo):
-            x_spec = spack.spec.Spec('x')
-            x_spec.concretize()
-
-            y_spec = x_spec['y']
-            setattr(y_spec.package, 'installed_upstream', True)
-            setattr(x_spec.package, 'installed_upstream', False)
-
-            wx = spack.modules.tcl.TclModulefileWriter(x_spec)
-
-            # For the purposes of the test, the module file doesn't have to
-            # contain anything, we just want to make sure we can locate it
-            # properly
-            open(wx.layout.filename, 'w')
-
-            y_module_index_entry = spack.modules.common.ModuleIndexEntry(
-                '/test/path/to/y-module', 'y-module')
-            test_index = {y_spec.dag_hash(): y_module_index_entry}
-
-            x_mod = spack.modules.common.get_module(
-                'tcl', x_spec, False, [test_index])
-            assert x_mod == wx.layout.use_name
-            y_mod = spack.modules.common.get_module(
-                'tcl', y_spec, False, [test_index]
-            )
-            assert y_mod == 'y-module'
-            os.remove(wx.layout.filename)
-
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""
         module_configuration('suffix')

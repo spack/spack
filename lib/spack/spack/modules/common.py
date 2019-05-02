@@ -258,38 +258,54 @@ def read_module_index(root):
 
 
 def read_module_indices():
-    module_type_to_indices = {}
     other_spack_instances = spack.config.get(
         'upstreams') or {}
 
+    module_indices = []
+
     for install_properties in other_spack_instances.values():
+        module_type_to_index = {}
         module_type_to_root = install_properties.get('modules', {})
         for module_type, root in module_type_to_root.items():
-            indices = module_type_to_indices.setdefault(module_type, [])
-            indices.append(read_module_index(root))
+            module_type_to_index[module_type] = read_module_index(root)
+        module_indices.append(module_type_to_index)
 
-    return module_type_to_indices
-
-
-module_type_to_indices = read_module_indices()
+    return module_indices
 
 
-def upstream_module(spec, module_type, _module_indices=None):
-    indices = _module_indices or module_type_to_indices[module_type]
-    for index in indices:
-        if spec.dag_hash() in index:
-            return index[spec.dag_hash()]
+class UpstreamModuleIndex(object):
+    def __init__(self, local_db, module_indices):
+        self.local_db = local_db
+        self.upstream_dbs = local_db.upstream_dbs
+        self.module_indices = module_indices
+
+    def upstream_module(self, spec, module_type):
+        db_for_spec = self.local_db.db_for_spec_hash(spec.dag_hash())
+        if db_for_spec in self.upstream_dbs:
+            db_index = self.upstream_dbs.index(db_for_spec)
+        elif db_for_spec:
+            raise spack.error.SpackError(
+                "Unexpected: {0} is installed locally".format(spec))
+        else:
+            raise spack.error.SpackError(
+                "Unexpected: no install DB found for {0}".format(spec))
+        module_index = self.module_indices[db_index]
+        module_type_index = module_index.get(module_type, {})
+        if not module_type_index:
+            raise ModuleNotFoundError(
+                "No {0} modules associated with the Spack instance where"
+                " {1} is installed".format(module_type, spec))
+        if spec.dag_hash() in module_type_index:
+            return module_type_index[spec.dag_hash()]
+        else:
+            raise ModuleNotFoundError(
+                "No module is available for upstream package {0}".format(spec))
 
 
-def get_module(module_type, spec, get_full_path, module_indices=None):
+def get_module(module_type, spec, get_full_path):
     if spec.package.installed_upstream:
-        module = spack.modules.common.upstream_module(
-            spec, module_type, _module_indices=module_indices)
-        if not module:
-            err_msg = "No module available for upstream package {0}".format(
-                spec
-            )
-            raise ModuleNotFoundError(err_msg)
+        module = spack.store.upstream_module_index.upstream_module(
+            spec, module_type)
         if get_full_path:
             return module.path
         else:
