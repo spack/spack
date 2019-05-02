@@ -169,7 +169,8 @@ def find(module_type, specs, args):
 
     if args.recurse_dependencies:
         specs_to_retrieve = list(
-            single_spec.traverse(order='post', cover='nodes'))
+            single_spec.traverse(order='post', cover='nodes',
+                                 deptype=('link', 'run')))
     else:
         specs_to_retrieve = [single_spec]
 
