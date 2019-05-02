@@ -18,6 +18,7 @@ from llnl.util.filesystem import \
     HeaderList, find_headers, \
     LibraryList, find_libraries, find_system_libraries
 
+from spack.error import NoLibrariesError
 from spack.version import Version, ver
 from spack.package import PackageBase, run_after, InstallError
 from spack.util.environment import EnvironmentModifications
@@ -45,7 +46,7 @@ def raise_lib_error(*args):
     '''Bails out with an error message. Shows args after the first as one per
     line, tab-indented, useful for long paths to line up and stand out.
     '''
-    raise InstallError("\n\t".join(str(i) for i in args))
+    raise NoLibrariesError("\n\t".join(str(i) for i in args))
 
 
 def _expand_fields(s):

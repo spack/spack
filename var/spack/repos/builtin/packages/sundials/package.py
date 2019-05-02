@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 import os
 import sys
 
@@ -508,4 +509,4 @@ class Sundials(CMakePackage):
                                   recursive=recursive)
             if libs:
                 return libs
-        return None  # Raise an error
+        raise NoLibrariesError(self.name, self.prefix)

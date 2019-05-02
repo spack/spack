@@ -16,6 +16,7 @@ from llnl.util.filesystem import (force_remove, get_filetype,
 
 import spack.store
 import spack.util.spack_json as sjson
+from spack.error import NoLibrariesError
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 from spack import *
@@ -588,36 +589,33 @@ class Python(AutotoolsPackage):
 
     @property
     def libs(self):
+        # Below we will call command(), if prefix.bin does not exist,
+        # raise exception soon to make catching easier
+        if not os.path.exists(self.prefix.bin):
+            raise NoLibrariesError(self.name, self.prefix)
+
         # Spack installs libraries into lib, except on openSUSE where it
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
         # to ask Python where its LIBDIR is.
         libdir = self.get_config_var('LIBDIR')
 
+        # The system Python installation on Ubuntu is in /usr/lib/python2.7/
+        libdir_own = os.path.join(self.prefix, self.python_lib_dir)
+
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
         frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
 
-        if '+shared' in self.spec:
-            ldlibrary = self.get_config_var('LDLIBRARY')
+        library = self.get_config_var('LDLIBRARY') if '+shared' \
+            in self.spec else self.get_config_var('LIBRARY')
 
-            if os.path.exists(os.path.join(libdir, ldlibrary)):
-                return LibraryList(os.path.join(libdir, ldlibrary))
-            elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
-                return LibraryList(os.path.join(frameworkprefix, ldlibrary))
-            else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(ldlibrary, libdir))
-        else:
-            library = self.get_config_var('LIBRARY')
+        for d in [libdir, frameworkprefix, libdir_own]:
+            if os.path.exists(os.path.join(d, library)):
+                return LibraryList(os.path.join(d, library))
 
-            if os.path.exists(os.path.join(libdir, library)):
-                return LibraryList(os.path.join(libdir, library))
-            elif os.path.exists(os.path.join(frameworkprefix, library)):
-                return LibraryList(os.path.join(frameworkprefix, library))
-            else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(library, libdir))
+        msg = 'Unable to locate {0} libraries in {1}'
+        raise NoLibrariesError(msg.format(library, libdir))
 
     @property
     def headers(self):

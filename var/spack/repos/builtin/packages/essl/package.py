@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 
 
 class Essl(Package):
@@ -58,6 +59,8 @@ class Essl(Package):
             shared=True
         )
 
+        if not essl_libs:
+            raise NoLibrariesError(self.name, self.prefix)
         return essl_libs
 
     def install(self, spec, prefix):

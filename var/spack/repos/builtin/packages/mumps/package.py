@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 import os
 import sys
 import glob
@@ -304,7 +305,10 @@ class Mumps(Package):
     @property
     def libs(self):
         component_libs = ['*mumps*', 'pord']
-        return find_libraries(['lib' + comp for comp in component_libs],
+        libs = find_libraries(['lib' + comp for comp in component_libs],
                               root=self.prefix.lib,
                               shared=('+shared' in self.spec),
-                              recursive=False) or None
+                              recursive=False)
+        if not libs:
+            raise NoLibrariesError(self.name, self.prefix)
+        return libs

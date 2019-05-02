@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 
 
 class Libx11(AutotoolsPackage):
@@ -38,4 +39,4 @@ class Libx11(AutotoolsPackage):
                                   shared=True, recursive=False)
             if libs:
                 return libs
-        return None
+        raise NoLibrariesError(self.name, self.prefix)

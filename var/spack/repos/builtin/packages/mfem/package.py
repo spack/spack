@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 import os
 import shutil
 
@@ -471,7 +472,9 @@ class Mfem(Package):
         """
         libs = find_libraries('libmfem', root=self.prefix.lib,
                               shared=('+shared' in self.spec), recursive=False)
-        return libs or None
+        if not libs:
+            raise NoLibrariesError(self.name, self.prefix)
+        return libs
 
     @property
     def config_mk(self):

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 
 
 class SuiteSparse(Package):
@@ -139,6 +140,6 @@ class SuiteSparse(Package):
         libs = find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
                               shared=True, recursive=False)
         if not libs:
-            return None
+            raise NoLibrariesError(self.name, self.prefix)
         libs += find_system_libraries('librt')
         return libs

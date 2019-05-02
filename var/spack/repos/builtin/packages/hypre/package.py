@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 import os
 import sys
 
@@ -137,8 +138,8 @@ class Hypre(Package):
 
     @property
     def headers(self):
-        """Export the main hypre header, HYPRE.h; all other headers can be found
-        in the same directory.
+        """Export the main hypre header, HYPRE.h; all other headers can be
+        found in the same directory.
         Sample usage: spec['hypre'].headers.cpp_flags
         """
         hdrs = find_headers('HYPRE', self.prefix.include, recursive=False)
@@ -157,4 +158,5 @@ class Hypre(Package):
                                   shared=is_shared, recursive=recursive)
             if libs:
                 return libs
-        return None
+
+        raise NoLibrariesError(self.name, self.prefix)

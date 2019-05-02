@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 
 
 class MesaGlu(AutotoolsPackage):
@@ -25,3 +26,4 @@ class MesaGlu(AutotoolsPackage):
                                   shared=True, recursive=False)
             if libs:
                 return libs
+        raise NoLibrariesError(self.name, self.prefix)

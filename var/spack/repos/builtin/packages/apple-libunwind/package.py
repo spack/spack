@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import NoLibrariesError
 
 
 class AppleLibunwind(Package):
@@ -66,9 +67,9 @@ class AppleLibunwind(Package):
         libs = find_libraries('libSystem',
                               self.prefix.lib,
                               shared=True, recursive=False)
-        if libs:
-            return libs
-        return None
+        if not libs:
+            raise NoLibrariesError(self.name, self.prefix)
+        return libs
 
     @property
     def headers(self):
