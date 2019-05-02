@@ -82,6 +82,7 @@ spack_ldlibs   = ['-lfoo']
 lheaderpad = ['-Wl,-headerpad_max_install_names']
 headerpad = ['-headerpad_max_install_names']
 
+
 @pytest.fixture(scope='session')
 def wrapper_environment():
     with set_env(
@@ -129,9 +130,6 @@ def check_args(cc, args, expected):
     """
     with set_env(SPACK_TEST_COMMAND='dump-args'):
         cc_modified_args = cc(*args, output=str).strip().split('\n')
-        print 'args=',args
-        print 'expected=',expected
-        print 'cc_modified_args=',cc_modified_args
         assert expected == cc_modified_args
 
 
