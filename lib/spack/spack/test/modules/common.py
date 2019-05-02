@@ -3,13 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
 import os
 import stat
 import spack.spec
-import spack.modules.common
 import spack.modules.tcl
-from spack.store import (
+from spack.modules.common import (
     ModuleIndexEntry, UpstreamModuleIndex, ModuleNotFoundError)
 import spack.error
 

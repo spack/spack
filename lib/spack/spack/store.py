@@ -24,7 +24,6 @@ configuration.
 
 """
 import os
-import collections
 
 import llnl.util.lang
 
@@ -33,7 +32,6 @@ import spack.config
 import spack.util.path
 import spack.database
 import spack.directory_layout
-import spack.util.spack_yaml as syaml
 
 #: default installation root, relative to the Spack install path
 default_root = os.path.join(spack.paths.opt_path, 'spack')
@@ -60,14 +58,9 @@ class Store(object):
     """
     def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
-
         upstream_dbs = retrieve_upstream_dbs()
-        module_indices = read_module_indices()
-
         self.db = spack.database.Database(
             root, upstream_dbs=upstream_dbs)
-        self.upstream_module_index = UpstreamModuleIndex(
-            self.db, module_indices)
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, hash_len=hash_length, path_scheme=path_scheme)
 
@@ -81,8 +74,6 @@ def _store():
     root = spack.config.get('config:install_tree', default_root)
     root = spack.util.path.canonicalize_path(root)
 
-    #import pdb; pdb.set_trace()
-
     return Store(root,
                  spack.config.get('config:install_path_scheme'),
                  spack.config.get('config:install_hash_length'))
@@ -95,8 +86,6 @@ store = llnl.util.lang.Singleton(_store)
 root = llnl.util.lang.LazyReference(lambda: store.root)
 db = llnl.util.lang.LazyReference(lambda: store.db)
 layout = llnl.util.lang.LazyReference(lambda: store.layout)
-upstream_module_index = llnl.util.lang.LazyReference(
-    lambda: store.upstream_module_index)
 
 
 def retrieve_upstream_dbs():
@@ -121,71 +110,3 @@ def _construct_upstream_dbs_from_install_roots(
         accumulated_upstream_dbs.insert(0, next_db)
 
     return accumulated_upstream_dbs
-
-
-ModuleIndexEntry = collections.namedtuple(
-    'ModuleIndexEntry', ['path', 'use_name'])
-
-
-def read_module_index(root):
-    index_path = os.path.join(root, 'module-index.yaml')
-    if not os.path.exists(index_path):
-        return {}
-    with open(index_path, 'r') as index_file:
-        yaml_content = syaml.load(index_file)
-        index = {}
-        yaml_index = yaml_content['module_index']
-        for dag_hash, module_properties in yaml_index.items():
-            index[dag_hash] = ModuleIndexEntry(
-                module_properties['path'],
-                module_properties['use_name'])
-        return index
-
-
-def read_module_indices():
-    other_spack_instances = spack.config.get(
-        'upstreams') or {}
-
-    module_indices = []
-
-    for install_properties in other_spack_instances.values():
-        module_type_to_index = {}
-        module_type_to_root = install_properties.get('modules', {})
-        for module_type, root in module_type_to_root.items():
-            module_type_to_index[module_type] = read_module_index(root)
-        module_indices.append(module_type_to_index)
-
-    return module_indices
-
-
-class UpstreamModuleIndex(object):
-    def __init__(self, local_db, module_indices):
-        self.local_db = local_db
-        self.upstream_dbs = local_db.upstream_dbs
-        self.module_indices = module_indices
-
-    def upstream_module(self, spec, module_type):
-        db_for_spec = self.local_db.db_for_spec_hash(spec.dag_hash())
-        if db_for_spec in self.upstream_dbs:
-            db_index = self.upstream_dbs.index(db_for_spec)
-        elif db_for_spec:
-            raise spack.error.SpackError(
-                "Unexpected: {0} is installed locally".format(spec))
-        else:
-            raise spack.error.SpackError(
-                "Unexpected: no install DB found for {0}".format(spec))
-        module_index = self.module_indices[db_index]
-        module_type_index = module_index.get(module_type, {})
-        if not module_type_index:
-            raise ModuleNotFoundError(
-                "No {0} modules associated with the Spack instance where"
-                " {1} is installed".format(module_type, spec))
-        if spec.dag_hash() in module_type_index:
-            return module_type_index[spec.dag_hash()]
-        else:
-            raise ModuleNotFoundError(
-                "No module is available for upstream package {0}".format(spec))
-
-
-class ModuleNotFoundError(spack.error.SpackError):
-    """Raised when a module cannot be found for a spec"""
