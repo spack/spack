@@ -33,6 +33,7 @@ class Mesa(MesonPackage):
     depends_on('libxml2')
     depends_on('zlib')
     depends_on('expat')
+    depends_on('glproto')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
