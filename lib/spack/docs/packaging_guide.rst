@@ -590,13 +590,15 @@ with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
 Spack versions may also be arbitrary non-numeric strings; any string
 here will suffice; for example, ``@develop``, ``@master``, ``@local``.
-The following rules determine the sort order of numeric
-vs. non-numeric versions:
+Versions are compared as follows. First, a version string is split into
+multiple fields based on delimiters such as ``.``, ``-`` etc. Then
+matching fields are compared using the rules below:
 
-#. The non-numeric version ``@develop`` is considered greatest (newest).
+#. The following develop-like strings are greater (newer) than all
+   numbers and are ordered as ``develop > master > head > trunk``.
 
-#. Numeric versions are all less than ``@develop`` version, and are
-   sorted numerically.
+#. Numbers are all less than the chosen develop-like strings above,
+   and are sorted numerically.
 
 #. All other non-numeric versions are less than numeric versions, and
    are sorted alphabetically.
@@ -610,7 +612,7 @@ The logic behind this sort order is two-fold:
 
 #. The most-recent development version of a package will usually be
    newer than any released numeric versions.  This allows the
-   ``develop`` version to satisfy dependencies like ``depends_on(abc,
+   ``@develop`` version to satisfy dependencies like ``depends_on(abc,
    when="@x.y.z:")``
 
 ^^^^^^^^^^^^^^^^^

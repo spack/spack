@@ -38,6 +38,9 @@ __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 # Valid version characters
 VALID_VERSION = r'[A-Za-z0-9_.-]'
 
+# Infinity-like versions. The order in the list implies the comparision rules
+infinity_versions = ['develop', 'master', 'head', 'trunk']
+
 
 def int_if_int(string):
     """Convert a string to int if possible.  Otherwise, return a string."""
@@ -199,26 +202,14 @@ class Version(object):
     def highest(self):
         return self
 
-    def isnumeric(self):
-        """Tells if this version is numeric (vs. a non-numeric version).  A
-        version will be numeric as long as the first section of it is,
-        even if it contains non-numerica portions.
-
-        Some numeric versions:
-            1
-            1.1
-            1.1a
-            1.a.1b
-        Some non-numeric versions:
-            develop
-            system
-            myfavoritebranch
-        """
-        return isinstance(self.version[0], numbers.Integral)
-
     def isdevelop(self):
-        """Triggers on the special case of the `@develop` version."""
-        return self.string == 'develop'
+        """Triggers on the special case of the `@develop-like` version."""
+        for inf in infinity_versions:
+            for v in self.version:
+                if v == inf:
+                    return True
+
+        return False
 
     @coerced
     def satisfies(self, other):
@@ -272,27 +263,6 @@ class Version(object):
     def concrete(self):
         return self
 
-    def _numeric_lt(self, other):
-        """Compares two versions, knowing they're both numeric"""
-        # Standard comparison of two numeric versions
-        for a, b in zip(self.version, other.version):
-            if a == b:
-                continue
-            else:
-                # Numbers are always "newer" than letters.
-                # This is for consistency with RPM.  See patch
-                # #60884 (and details) from bugzilla #50977 in
-                # the RPM project at rpm.org.  Or look at
-                # rpmvercmp.c if you want to see how this is
-                # implemented there.
-                if type(a) != type(b):
-                    return type(b) == int
-                else:
-                    return a < b
-        # If the common prefix is equal, the one
-        # with more segments is bigger.
-        return len(self.version) < len(other.version)
-
     @coerced
     def __lt__(self, other):
         """Version comparison is designed for consistency with the way RPM
@@ -308,33 +278,35 @@ class Version(object):
         if self.version == other.version:
             return False
 
-        # First priority: anything < develop
-        sdev = self.isdevelop()
-        if sdev:
-            return False    # source = develop, it can't be < anything
+        # Standard comparison of two numeric versions
+        for a, b in zip(self.version, other.version):
+            if a == b:
+                continue
+            else:
+                if a in infinity_versions:
+                    if b in infinity_versions:
+                        return (infinity_versions.index(a) >
+                                infinity_versions.index(b))
+                    else:
+                        return False
+                if b in infinity_versions:
+                    return True
 
-        # Now we know !sdev
-        odev = other.isdevelop()
-        if odev:
-            return True    # src < dst
+                # Neither a nor b is infinity
+                # Numbers are always "newer" than letters.
+                # This is for consistency with RPM.  See patch
+                # #60884 (and details) from bugzilla #50977 in
+                # the RPM project at rpm.org.  Or look at
+                # rpmvercmp.c if you want to see how this is
+                # implemented there.
+                if type(a) != type(b):
+                    return type(b) == int
+                else:
+                    return a < b
 
-        # now we know neither self nor other isdevelop().
-
-        # Principle: Non-numeric is less than numeric
-        # (so numeric will always be preferred by default)
-        if self.isnumeric():
-            if other.isnumeric():
-                return self._numeric_lt(other)
-            else:    # self = numeric; other = non-numeric
-                # Numeric > Non-numeric (always)
-                return False
-        else:
-            if other.isnumeric():  # self = non-numeric, other = numeric
-                # non-numeric < numeric (always)
-                return True
-            else:  # Both non-numeric
-                # Maybe consider other ways to compare here...
-                return self.string < other.string
+        # If the common prefix is equal, the one
+        # with more segments is bigger.
+        return len(self.version) < len(other.version)
 
     @coerced
     def __eq__(self, other):
