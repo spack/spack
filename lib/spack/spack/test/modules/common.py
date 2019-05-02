@@ -9,8 +9,7 @@ import stat
 import spack.spec
 import spack.modules.common
 import spack.modules.tcl
-
-from spack.modules.common import (
+from spack.store import (
     ModuleIndexEntry, UpstreamModuleIndex, ModuleNotFoundError)
 import spack.error
 

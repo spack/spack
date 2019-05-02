@@ -8,6 +8,7 @@ import pytest
 import spack.modules.common
 import spack.modules.tcl
 import spack.spec
+import spack.store
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 import os
 
@@ -206,7 +207,7 @@ class TestTcl(object):
 
         spack.modules.common.generate_module_index(test_root, [w1, w2])
 
-        index = spack.modules.common.read_module_index(test_root)
+        index = spack.store.read_module_index(test_root)
 
         assert index[s1.dag_hash()].use_name == w1.layout.use_name
         assert index[s2.dag_hash()].path == w2.layout.filename
