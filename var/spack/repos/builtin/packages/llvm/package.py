@@ -71,11 +71,12 @@ class Llvm(CMakePackage):
 
     # Build dependency
     depends_on('cmake@3.4.3:', type='build')
+    depends_on('python@2.7:2.8', when='@:4.999 ~python', type='build')
+    depends_on('python', when='@5: ~python', type='build')
 
     # Universal dependency
-    depends_on('python@2.7:2.8', when='@:4.999')
-    depends_on('python')
-    depends_on('py-lit', type=('build', 'run'))
+    depends_on('python@2.7:2.8', when='@:4.999+python')
+    depends_on('python', when='@5:+python')
 
     # openmp dependencies
     depends_on('perl-data-dumper', type=('build'))
@@ -607,7 +608,6 @@ class Llvm(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-
         cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
             '-DLLVM_ENABLE_RTTI:BOOL=ON',
