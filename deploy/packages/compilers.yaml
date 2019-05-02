@@ -35,4 +35,4 @@ packages:
       - intel-parallel-studio+advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune@cluster.2018.3
       - intel@18.0.3
       - llvm@7.0.0
-      - pgi+network+nvidia+mpi@18.4
+      - pgi+network+nvidia+mpi@19.4

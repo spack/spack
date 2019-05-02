@@ -20,6 +20,7 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
+    version('19.4',  sha256='23eee0d4da751dd6f247d624b68b03538ebd172e63a053c41bb67013f07cf68e')
     version('18.4',  'e11423ba43b26a9cd5bf21832f6b1df9')
     version('17.10', '33e407eea9600997914b2535a36b4d92')
     version('17.4',  'a311d2756ddda657860bad8e5725597b')
