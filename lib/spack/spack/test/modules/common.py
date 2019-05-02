@@ -99,6 +99,7 @@ def test_upstream_module_index():
     s1 = MockSpec('spec-1')
     s2 = MockSpec('spec-2')
     s3 = MockSpec('spec-3')
+    s4 = MockSpec('spec-4')
 
     module_indices = [
         {
@@ -112,7 +113,14 @@ def test_upstream_module_index():
         'd1'
     ]
 
-    mock_db = MockDb(dbs, {s1.dag_hash(): 'd0', s2.dag_hash(): 'd1'})
+    mock_db = MockDb(
+        dbs,
+        {
+            s1.dag_hash(): 'd0',
+            s2.dag_hash(): 'd1',
+            s3.dag_hash(): 'd0'
+        }
+    )
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
     m1 = upstream_index.upstream_module(s1, 'tcl')
@@ -122,10 +130,16 @@ def test_upstream_module_index():
     with pytest.raises(ModuleNotFoundError):
         upstream_index.upstream_module(s2, 'tcl')
 
-    # Modules are defined for the index associated with s1, but not for the
-    # requested type
+    # Modules are defined for the index associated with s1, but none are
+    # defined for the requested type
     with pytest.raises(ModuleNotFoundError):
         upstream_index.upstream_module(s1, 'lmod')
 
-    with pytest.raises(spack.error.SpackError):
+    # A module is registered with a DB and the associated module index has
+    # modules of the specified type defined, but not for the requested spec
+    with pytest.raises(ModuleNotFoundError):
         upstream_index.upstream_module(s3, 'tcl')
+
+    # The spec isn't recorded as installed in any of the DBs
+    with pytest.raises(spack.error.SpackError):
+        upstream_index.upstream_module(s4, 'tcl')
