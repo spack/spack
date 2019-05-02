@@ -45,7 +45,7 @@ class Chill(Package):
     depends_on("libtool@2.4:", type='build')
     depends_on("bison", type='build')
     depends_on("flex", type='build')
-    depends_on("boost@1.60.0")
+    depends_on("boost@1.60.0:1.69.0")
     depends_on('iegenlib')
     depends_on('isl')
     depends_on('python')
