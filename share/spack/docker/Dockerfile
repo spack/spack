@@ -10,7 +10,7 @@ ARG DISTRO_VERSION
 ENV DOCKERFILE_BASE=$BASE                     \
     DOCKERFILE_DISTRO=$DISTRO                 \
     DOCKERFILE_DISTRO_VERSION=$DISTRO_VERSION \
-    SPACK_ROOT=/spack                         \
+    SPACK_ROOT=/opt/spack                     \
     FORCE_UNSAFE_CONFIGURE=1                  \
     DEBIAN_FRONTEND=noninteractive            \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1         \
@@ -124,22 +124,34 @@ RUN rm -rf /var/lib/apt/lists/*
 
 MASK POP
 
-RUN rm -rf $SPACK_ROOT/.git                                          \
- && pip install boto3                                                \
- && (  echo ". /usr/share/lmod/lmod/init/bash"                       \
-    && echo ". $SPACK_ROOT/share/spack/setup-env.sh"                 \
-    && echo "if [ \"\$CURRENTLY_BUILDING_DOCKER_IMAGE\" '!=' '1' ]"  \
-    && echo "then"                                                   \
-    && echo "  . $SPACK_ROOT/share/spack/spack-completion.bash"      \
-    && echo "fi"                                                   ) \
-        >> /etc/profile.d/spack.sh                                   \
- && ln -s $SPACK_ROOT/share/spack/docker/handle-ssh.sh               \
-        /etc/profile.d/handle-ssh.sh                                 \
- && ln -s $SPACK_ROOT/share/spack/docker/handle-prompt.sh            \
-        /etc/profile.d/handle-prompt.sh                              \
- && mkdir -p /root/.spack                                            \
- && cp $SPACK_ROOT/share/spack/docker/modules.yaml                   \
-        /root/.spack/modules.yaml                                    \
+RUN rm -rf $SPACK_ROOT/.git                                                \
+ && pip install boto3                                                      \
+ && (  echo ". /usr/share/lmod/lmod/init/bash"                             \
+    && echo ". \\\$SPACK_ROOT/share/spack/setup-env.sh"                    \
+    && echo "if [ \\\"\\\$CURRENTLY_BUILDING_DOCKER_IMAGE\\\" '!=' '1' ]"  \
+    && echo "then"                                                         \
+    && echo "  . \\\$SPACK_ROOT/share/spack/spack-completion.bash"         \
+    && echo "fi"                                                   )       \
+        >> /etc/profile.d/spack.sh                                         \
+ && (  echo "f=\\\"\\\$SPACK_ROOT/share/spack/docker/handle-ssh.sh\\\""    \
+    && echo "if [ -f \\\"\\\$f\\\" ]"                                      \
+    && echo "then"                                                         \
+    && echo "  .  \\\"\\\$f\\\""                                           \
+    && echo "else"                                                         \
+    && cat  $SPACK_ROOT/share/spack/docker/handle-ssh.sh                   \
+    && echo "fi"                                                   )       \
+        >> /etc/profile.d/handle-ssh.sh                                    \
+ && (  echo "f=\\\"\\\$SPACK_ROOT/share/spack/docker/handle-prompt.sh\\\"" \
+    && echo "if [ -f \\\"\\\$f\\\" ]"                                      \
+    && echo "then"                                                         \
+    && echo "  .  \\\"\\\$f\\\""                                           \
+    && echo "else"                                                         \
+    && cat  $SPACK_ROOT/share/spack/docker/handle-prompt.sh                \
+    && echo "fi"                                                   )       \
+        >> /etc/profile.d/handle-prompt.sh                                 \
+ && mkdir -p /root/.spack                                                  \
+ && cp $SPACK_ROOT/share/spack/docker/modules.yaml                         \
+        /root/.spack/modules.yaml                                          \
  && rm -rf /root/*.*
 
 MASK PUSH
@@ -156,6 +168,10 @@ RUN [ -f ~/.profile ]                                               \
 
 WORKDIR /root
 SHELL ["/bin/bash", "-l", "-c"]
-ENTRYPOINT ["/bin/bash", "/spack/share/spack/docker/entrypoint.bash"]
+
+# TODO: add a command to Spack that (re)creates the package cache
+RUN spack spec hdf5+mpi
+
+ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
 CMD ["docker-shell"]
 
