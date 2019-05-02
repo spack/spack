@@ -47,8 +47,7 @@ import spack.util.path
 import spack.util.environment
 import spack.error
 import spack.util.spack_yaml as syaml
-
-from spack.package_prefs import get_package_permissions, get_package_group
+import spack.util.file_permissions as fp
 
 #: config section for this file
 configuration = spack.config.get('modules')
@@ -655,10 +654,6 @@ class BaseModuleFileWriter(object):
         self.layout = m.make_layout(spec)
         self.context = m.make_context(spec)
 
-        # Get the file permissions for the module file
-        self.perms = get_package_permissions(spec)
-        self.group = get_package_group(spec)
-
         # Check if a default template has been defined,
         # throw if not found
         try:
@@ -757,12 +752,8 @@ class BaseModuleFileWriter(object):
             f.write(text)
 
         # Set the file permissions of the module to match that of the package
-        # We have to check for file existence here in case the Writer has been
-        # connected to a StringIO
         if os.path.exists(self.layout.filename):
-            llnl.util.filesystem.chmod_x(self.layout.filename, self.perms)
-            if self.group:
-                llnl.util.filesystem.chgrp(self.layout.filename, self.group)
+            fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
     def remove(self):
         """Deletes the module file."""
