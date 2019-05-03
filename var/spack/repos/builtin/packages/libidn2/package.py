@@ -25,7 +25,8 @@ from spack import *
 
 class Libidn2(AutotoolsPackage):
     """Libidn2 is a free software implementation of IDNA2008, Punycode and
-    TR46. Its purpose is to encode and decode internationalized domain names."""
+    TR46. Its purpose is to encode and decode internationalized domain
+    names."""
 
     homepage = "https://gitlab.com/libidn/libidn2"
     url      = "https://ftp.gnu.org/gnu/libidn/libidn2-2.0.5.tar.gz"
