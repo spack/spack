@@ -58,9 +58,8 @@ class Store(object):
     """
     def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
-        upstream_dbs = retrieve_upstream_dbs()
         self.db = spack.database.Database(
-            root, upstream_dbs=upstream_dbs)
+            root, upstream_dbs=retrieve_upstream_dbs())
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, hash_len=hash_length, path_scheme=path_scheme)
 
