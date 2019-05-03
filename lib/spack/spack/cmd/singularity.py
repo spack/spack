@@ -13,7 +13,6 @@
 # 7. Check if Singularity not installed
 
 import argparse
-import contextlib
 import os
 import tempfile
 
@@ -38,7 +37,7 @@ def setup_parser(subparser):
     # subcommands are added as a courtesy so the user interaction reads as
     # a sentence, e.g., "spack singularity <build|recipe> --image ...
     recipe = actions.add_parser('recipe', help='generate a recipe')
-    build = actions.add_parser('build', help='generate a recipe and build it (required sudo)')
+    build = actions.add_parser('build', help='generate, build a recipe (sudo)')
 
     # Add equivalent options to all subparsers
     for action in [recipe, build]:
@@ -70,7 +69,7 @@ def setup_parser(subparser):
             '--distro', action='store', type=str, default='',
             choices=['centos', 'archlinux', 'ubuntu', 'debian'],
             help='Linux distribution type of the base image'
-            '(default: try to determine automatically from the base image name)')
+            '(default: try to determine from the base image name)')
 
         action.add_argument(
             '--branch', action='store', type=str,
@@ -92,10 +91,10 @@ def singularity(parser, args):
     tty.msg("Installing packages %s" % specs)
 
     # Singularity %help section provides information about the container
-    # via "singularity help <container>. If a help string isn't provided, 
+    # via "singularity help <container>. If a help string isn't provided,
     # share the packages installed.
     help_str = args.helpstr
-    if help_str == None:
+    if help_str is None:
         help_str = "This is a spack container with packages %s" % specs
 
     # Can we infer the distro from the base image?
@@ -110,13 +109,14 @@ def singularity(parser, args):
                               image=args.image,
                               distro=distro,
                               bootstrap=args.bootstrap,
-                              branch=args.branch, 
-                              repo=args.repo, 
+                              branch=args.branch,
+                              repo=args.repo,
                               help=help_str)
 
     # Build the container, or show how to do it?
     if args.action == "recipe":
-        tty.msg("sudo singularity build container.sif %s/Singularity" % build_dir)
+        recipe_path = "%s/Singularity" % build_dir
+        tty.msg("sudo singularity build container.sif %" % recipe_path)
 
     else:
         with llnl.util.filesystem.working_dir(build_dir):
@@ -130,7 +130,7 @@ def singularity(parser, args):
             # Should we clean up?
             tty.fail("Container build failed.")
 
-        tty.msg("Container successfully built:", container)        
+        tty.msg("Container successfully built:", container)
 
 
 def get_distro(distro, image):
@@ -156,9 +156,10 @@ def get_distro(distro, image):
 
     return distro
 
+
 def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
-    '''create_recipe will start with the Singularity template, add
-       dependencies, and return a populated recipe file.
+    ''' create_recipe will start with the Singularity template, add
+        dependencies, and return a populated recipe file.
 
         Parameters
         ==========
@@ -167,7 +168,7 @@ def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
         branch (str): branch of the Spack repository to checkout (develop)
         repo (str): Spack repository to checkout (spack/spack)
         help (str): the help string to provide to the container
-        specs (str): space separated list of packages (specs) to install 
+        specs (str): space separated list of packages (specs) to install
    '''
 
     # Dependencies based on base
@@ -190,7 +191,8 @@ def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
 
     # Double check we have a valid distro
     if distro not in dependencies:
-        tty.die("%s is not a valid choice, should be in debian, centos, alpinelinux.")
+        choices = "debian, centos, alpinelinux"
+        tty.die("%s is not a valid choice, should be in %s" % choices)
 
     # Create a temporary build directory
     build_dir = tempfile.mkdtemp()
@@ -203,7 +205,7 @@ def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
     # Tell the user what's going on!
     tty.msg("Working directory created in %s" % build_dir)
     tty.msg("Writing recipe to %s/Singularity" % build_dir)
-   
+
     with open(recipe, 'w') as filey:
         filey.write(template.render({
             'bootstrap': bootstrap,
