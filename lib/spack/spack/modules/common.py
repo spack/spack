@@ -257,14 +257,17 @@ def read_module_index(root):
     if not os.path.exists(index_path):
         return {}
     with open(index_path, 'r') as index_file:
-        yaml_content = syaml.load(index_file)
-        index = {}
-        yaml_index = yaml_content['module_index']
-        for dag_hash, module_properties in yaml_index.items():
-            index[dag_hash] = ModuleIndexEntry(
-                module_properties['path'],
-                module_properties['use_name'])
-        return index
+        return _read_module_index(index_file)
+
+def _read_module_index(str_or_file):
+    yaml_content = syaml.load(str_or_file)
+    index = {}
+    yaml_index = yaml_content['module_index']
+    for dag_hash, module_properties in yaml_index.items():
+        index[dag_hash] = ModuleIndexEntry(
+            module_properties['path'],
+            module_properties['use_name'])
+    return index
 
 
 def read_module_indices():
