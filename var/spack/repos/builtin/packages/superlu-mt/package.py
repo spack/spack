@@ -18,11 +18,16 @@ class SuperluMt(Package):
 
     version('3.1', '06ac62f1b4b7d17123fffa0d0c315e91')
 
+    variant('int64',   default=False,
+            description='Build with 64 bit integers')
+    variant('pic',     default=True,
+            description='Build with position independent code')
     variant('blas',    default=True,
             description='Build with external BLAS library')
 
     # Must choose one or the other
-    variant('openmp',  default=False, description='Build with OpenMP support')
+    variant('openmp',  default=False,
+            description='Build with OpenMP support')
     variant('pthread', default=True,
             description='Build with POSIX threads support')
 
@@ -85,13 +90,26 @@ class SuperluMt(Package):
             'PREDEFS    = -D_$(PLAT)',
             # Compilers and flags
             'CC         = {0}'.format(os.environ['CC']),
-            'CFLAGS    += $(PREDEFS) -D_LONGINT',
+            'CFLAGS    += $(PREDEFS)',
             'NOOPTS     = -O0',
             'FORTRAN    = {0}'.format(os.environ['FC']),
             'LOADER     = {0}'.format(os.environ['CC']),
             # C preprocessor defs for compilation
             'CDEFS      = -DAdd_'
         ])
+
+        if '+int64' in spec:
+            config.extend([
+                'CFLAGS    += -D_LONGINT',
+            ])
+
+        if '+pic' in spec:
+            config.extend([
+                'CFLAGS     += {0}'.format(self.compiler.pic_flag),
+                'NOOPTS     += {0}'.format(self.compiler.pic_flag),
+                'FFLAGS     += {0}'.format(self.compiler.pic_flag),
+                'LOADOPTS   += {0}'.format(self.compiler.pic_flag)
+            ])
 
         # Write configuration options to include file
         with open('make.inc', 'w') as inc:
