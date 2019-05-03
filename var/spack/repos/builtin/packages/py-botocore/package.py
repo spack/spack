@@ -34,4 +34,3 @@ class PyBotocore(PythonPackage):
     depends_on('py-nose', type='test')
     depends_on('py-mock', type='test')
     depends_on('py-tox@2.5.0:2.99', type='test')
-
