@@ -34,6 +34,7 @@ class Netcdf(AutotoolsPackage):
         return url.format(version.dotted)
 
     version('master', branch='master')
+    version('4.7.0',   sha256='a512d2b4828c6177dd4b96791c4163e4e06e6bfc7123bebfbfe01762d777d1cb')
     version('4.6.3',   sha256='335fdf16d7531f430ad75e732ed1a9a3fc83ad3ef91fb33a70119a555dd5415c')
     version('4.6.2',   sha256='c37525981167b3cd82d32e1afa3022afb94e59287db5f116c57f5ed4d9c6a638')
     version('4.6.1',   sha256='89c7957458740b763ae828c345240b8a1d29c2c1fed0f065f99b73181b0b2642')
