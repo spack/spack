@@ -18,6 +18,9 @@ class RangeV3(CMakePackage):
     git      = "https://github.com/ericniebler/range-v3.git"
 
     version('develop', branch='master')
+    version('0.5.0', sha256='32e30b3be042246030f31d40394115b751431d9d2b4e0f6d58834b2fd5594280')
+    version('0.4.0', sha256='5dbc878b7dfc500fb04b6b9f99d63993a2731ea34b0a4b8d5f670a5a71a18e39')
+    version('0.3.7', sha256='e6b0fb33bfd07ec32d54bcddd3e8d62e995a3cf0b64b34788ec264da62581207')
     version('0.3.6', sha256='ce6e80c6b018ca0e03df8c54a34e1fd04282ac1b068cd39e902e2e5201ac117f')
     version('0.3.5', sha256='0a0094b450fe17e1454468bef5b6bf60e73ef100aebe1663daf6fbdf2c353836')
     version('0.3.0', sha256='cc29fbed5b06b11e7f9a732f7e1211483ebbd3cfe29d86e40c93209014790d74')
