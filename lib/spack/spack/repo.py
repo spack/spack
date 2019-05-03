@@ -1223,6 +1223,18 @@ def swap(repo_path):
     path = saved
 
 
+@contextlib.contextmanager
+def additional_repository(repository):
+    """Adds temporarily a repository to the default one.
+
+    Args:
+        repository: repository to be added
+    """
+    path.put_first(repository)
+    yield
+    path.remove(repository)
+
+
 class RepoError(spack.error.SpackError):
     """Superclass for repository-related errors."""
 

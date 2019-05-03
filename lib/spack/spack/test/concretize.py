@@ -7,6 +7,7 @@ import pytest
 import llnl.util.lang
 
 import spack.architecture
+import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec
@@ -525,3 +526,41 @@ class TestConcretize(object):
         t.concretize()
 
         assert s.dag_hash() == t.dag_hash()
+
+    @pytest.mark.parametrize('abstract_specs', [
+        # Establish a baseline - concretize a single spec
+        ('mpileaks',),
+        # When concretized together with older version of callpath
+        # and dyninst it uses those older versions
+        ('mpileaks', 'callpath@0.9', 'dyninst@8.1.1'),
+        # Handle recursive syntax within specs
+        ('mpileaks', 'callpath@0.9 ^dyninst@8.1.1', 'dyninst'),
+        # Test specs that have overlapping dependencies but are not
+        # one a dependency of the other
+        ('mpileaks', 'direct-mpich')
+    ])
+    def test_simultaneous_concretization_of_specs(self, abstract_specs):
+
+        abstract_specs = [Spec(x) for x in abstract_specs]
+        concrete_specs = spack.concretize.concretize_specs_together(
+            *abstract_specs
+        )
+
+        # Check there's only one configuration of each package in the DAG
+        names = set(
+            dep.name for spec in concrete_specs for dep in spec.traverse()
+        )
+        for name in names:
+            name_specs = set(
+                spec[name] for spec in concrete_specs if name in spec
+            )
+            assert len(name_specs) == 1
+
+        # Check that there's at least one Spec that satisfies the
+        # initial abstract request
+        for aspec in abstract_specs:
+            assert any(cspec.satisfies(aspec) for cspec in concrete_specs)
+
+        # Make sure the concrete spec are top-level specs with no dependents
+        for spec in concrete_specs:
+            assert not spec.dependents()
