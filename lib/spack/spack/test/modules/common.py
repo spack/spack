@@ -5,14 +5,15 @@
 
 import os
 import stat
+import pytest
+import collections
+
 import spack.spec
 import spack.modules.tcl
 from spack.modules.common import (
-    ModuleIndexEntry, UpstreamModuleIndex, ModuleNotFoundError)
-import spack.error
+    UpstreamModuleIndex, ModuleNotFoundError)
 
-import pytest
-import collections
+import spack.error
 
 
 def test_update_dictionary_extending_list():
