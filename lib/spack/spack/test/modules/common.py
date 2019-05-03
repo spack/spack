@@ -12,6 +12,7 @@ from spack.modules.common import (
 import spack.error
 
 import pytest
+import collections
 
 
 def test_update_dictionary_extending_list():
@@ -147,3 +148,41 @@ module_index:
     # The spec isn't recorded as installed in any of the DBs
     with pytest.raises(spack.error.SpackError):
         upstream_index.upstream_module(s4, 'tcl')
+
+
+def test_get_module_upstream():
+    s1 = MockSpec('spec-1')
+
+    tcl_module_index = """\
+module_index:
+  {0}:
+    path: /path/to/a
+    use_name: a
+""".format(s1.dag_hash())
+
+    module_indices = [
+        {},
+        {
+            'tcl': spack.modules.common._read_module_index(tcl_module_index)
+        }
+    ]
+
+    dbs = ['d0', 'd1']
+
+    mock_db = MockDb(
+        dbs,
+        {s1.dag_hash(): 'd1'}
+    )
+    upstream_index = UpstreamModuleIndex(mock_db, module_indices)
+
+    MockPackage = collections.namedtuple('MockPackage', ['installed_upstream'])
+    setattr(s1, "package", MockPackage(True))
+
+    try:
+        old_index = spack.modules.common.upstream_module_index
+        spack.modules.common.upstream_module_index = upstream_index
+
+        m1_path = spack.modules.common.get_module('tcl', s1, True)
+        assert m1_path == '/path/to/a'
+    finally:
+        spack.modules.common.upstream_module_index = old_index
