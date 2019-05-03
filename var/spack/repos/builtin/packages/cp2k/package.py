@@ -59,7 +59,8 @@ class Cp2k(MakefilePackage):
 
     conflicts('blas=accelerate', '+openmp')  # there is no Accelerate with OpenMP support
 
-    depends_on('libxsmm@1.10:~header-only', when='smm=libxsmm')
+    # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
+    depends_on('libxsmm@1.11:~header-only', when='smm=libxsmm')
     # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
 
