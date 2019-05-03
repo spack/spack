@@ -14,6 +14,7 @@ class Libxml2(AutotoolsPackage):
     homepage = "http://xmlsoft.org"
     url      = "http://xmlsoft.org/sources/libxml2-2.9.8.tar.gz"
 
+    version('2.9.9', sha256='94fb70890143e3c6549f265cee93ec064c80a84c42ad0f23e85ee1fd6540a871')
     version('2.9.8', 'b786e353e2aa1b872d70d5d1ca0c740d')
     version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
     version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
