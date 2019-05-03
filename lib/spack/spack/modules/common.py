@@ -259,7 +259,11 @@ def read_module_index(root):
     with open(index_path, 'r') as index_file:
         return _read_module_index(index_file)
 
+
 def _read_module_index(str_or_file):
+    """Read in the mapping of spec hash to module location/name. For a given
+       Spack installation there is assumed to be (at most) one such mapping
+       per module type."""
     yaml_content = syaml.load(str_or_file)
     index = {}
     yaml_index = yaml_content['module_index']
@@ -287,6 +291,9 @@ def read_module_indices():
 
 
 class UpstreamModuleIndex(object):
+    """This is responsible for taking the individual module indices of all
+       upstream Spack installations and locating the module for a given spec
+       based on which upstream install it is located in."""
     def __init__(self, local_db, module_indices):
         self.local_db = local_db
         self.upstream_dbs = local_db.upstream_dbs
