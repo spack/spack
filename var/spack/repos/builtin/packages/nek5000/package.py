@@ -96,10 +96,10 @@ class Nek5000(Package):
             filter_file(r'^#SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
                         prefix.bin.Nek5000 + '\"',  'makenek')
             if fflags:
-                filter_file(r'^#FFLAGS=.*', 'FFLAGS="{0}"'.format(fflags),
+                filter_file(r'^#FFLAGS=.*', 'FFLAGS+=" {0}"'.format(fflags),
                             'makenek')
             if cflags:
-                filter_file(r'^#CFLAGS=.*', 'CFLAGS="{0}"'.format(cflags),
+                filter_file(r'^#CFLAGS=.*', 'CFLAGS+=" {0}"'.format(cflags),
                             'makenek')
 
         with working_dir('core'):
