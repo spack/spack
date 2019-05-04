@@ -54,12 +54,9 @@ def setup_parser(subparser):
             help='container name (default container.sif)')
 
         action.add_argument(
-            '--image', action='store', type=str, default='ubuntu:18.04',
+            '--from', action='store', dest="image", type=str,
+            default='ubuntu:18.04',
             help='image or from string (From:<image>) (default ubuntu:18.04)')
-
-        action.add_argument(
-            '--from', action='store', type=str, default='centos:7',
-            help='container base image (default: centos:7)')
 
         action.add_argument(
             '--helpstr', action='store', type=str, default=None,
@@ -67,7 +64,7 @@ def setup_parser(subparser):
 
         action.add_argument(
             '--distro', action='store', type=str, default='',
-            choices=['centos', 'archlinux', 'ubuntu', 'debian'],
+            choices=['centos', 'archlinux', 'ubuntu', 'debian', 'alpine'],
             help='Linux distribution type of the base image'
             '(default: try to determine from the base image name)')
 
@@ -116,7 +113,7 @@ def singularity(parser, args):
     # Build the container, or show how to do it?
     if args.action == "recipe":
         recipe_path = "%s/Singularity" % build_dir
-        tty.msg("sudo singularity build container.sif %" % recipe_path)
+        tty.msg("sudo singularity build container.sif %s" % recipe_path)
 
     else:
         with llnl.util.filesystem.working_dir(build_dir):
@@ -144,7 +141,7 @@ def get_distro(distro, image):
     '''
     if distro == '':
         tty.msg("Attempting to infer distro from base image...")
-        for contender in ["alpinelinux", "debian", "centos", "ubuntu"]:
+        for contender in ["archlinux", "debian", "centos", "ubuntu", "alpine"]:
             if contender in image:
                 tty.msg("Found distro %s" % contender)
                 distro = contender
@@ -186,12 +183,17 @@ def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
     base-devel ca-certificates curl \\
     gcc gcc-fortran git gnupg2 iproute2 \\
     make openssh python sudo tcl
+    ''',
+        'alpine': '''apk update && \\
+    apk add --no-cache git gcc g++ gfortran make bzip2 && \\
+    apk add --no-cache patch file curl python gnupg xz && \\
+    apk add --no-cache curl bash openssh libtool linuxheaders
     '''
     }
 
     # Double check we have a valid distro
     if distro not in dependencies:
-        choices = "debian, centos, alpinelinux"
+        choices = "debian, centos, archlinux, alpine"
         tty.die("%s is not a valid choice, should be in %s" % choices)
 
     # Create a temporary build directory
