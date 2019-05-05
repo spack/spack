@@ -34,12 +34,13 @@ def setup_parser(subparser):
 def hello(parser, args):
     print('Hello world!')
 """)
+    list_of_modules = list(sys.modules.keys())
     with spack.config.override('config:extensions', [str(extension_root)]):
         yield spack.main.SpackCommand('hello')
 
-    del sys.modules['spack.extensions.testcommand']
-    del sys.modules['spack.extensions.testcommand.cmd']
-    del sys.modules['spack.extensions.testcommand.cmd.hello']
+    to_be_deleted = [x for x in sys.modules if x not in list_of_modules]
+    for module_name in to_be_deleted:
+        del sys.modules[module_name]
 
 
 @pytest.fixture()
@@ -87,13 +88,13 @@ def hello_world():
 def hello_folks():
     print('Hello folks!')
 """)
+    list_of_modules = list(sys.modules.keys())
     with spack.config.override('config:extensions', [str(extension_root)]):
         yield spack.main.SpackCommand('hello')
 
-    del sys.modules['spack.extensions.testcommand']
-    del sys.modules['spack.extensions.testcommand.implementation']
-    del sys.modules['spack.extensions.testcommand.cmd']
-    del sys.modules['spack.extensions.testcommand.cmd.hello']
+    to_be_deleted = [x for x in sys.modules if x not in list_of_modules]
+    for module_name in to_be_deleted:
+        del sys.modules[module_name]
 
 
 def test_simple_command_extension(hello_world_cmd):
