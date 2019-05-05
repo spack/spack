@@ -68,9 +68,12 @@ class IntelTbb(Package):
     depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
 
     # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1: %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1: %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1: %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@2019.0 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@2019.0 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@2019.0 %gcc@4.8.0: os=centos6')
     patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2018.99')
     patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019:')
 
