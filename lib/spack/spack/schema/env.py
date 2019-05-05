@@ -119,6 +119,10 @@ schema = {
                                 }
                             }
                         ]
+                    },
+                    'concretize_together': {
+                        'type': 'boolean',
+                        'default': False
                     }
                 }
             )
