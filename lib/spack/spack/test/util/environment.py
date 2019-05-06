@@ -4,8 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test Spack's environment utility functions."""
+import pytest
 import os
 import spack.util.environment as envutil
+
+
+@pytest.fixture()
+def prepare_environment_for_tests():
+    if 'TEST_ENV_VAR' in os.environ:
+        del os.environ['TEST_ENV_VAR']
+    yield
+    del os.environ['TEST_ENV_VAR']
 
 
 def test_is_system_path():
@@ -41,14 +50,13 @@ def test_prune_duplicate_paths():
     assert(expected == envutil.prune_duplicate_paths(test_paths))
 
 
-def test_get_path():
+def test_get_path(prepare_environment_for_tests):
     os.environ['TEST_ENV_VAR'] = '/a:/b:/c/d'
     expected = ['/a', '/b', '/c/d']
     assert(envutil.get_path('TEST_ENV_VAR') == expected)
-    del os.environ['TEST_ENV_VAR']
 
 
-def test_env_flag():
+def test_env_flag(prepare_environment_for_tests):
     assert(not envutil.env_flag('TEST_NO_ENV_VAR'))
     os.environ['TEST_ENV_VAR'] = '1'
     assert(envutil.env_flag('TEST_ENV_VAR'))
@@ -72,16 +80,14 @@ def test_env_flag():
     assert(not envutil.env_flag('TEST_ENV_VAR'))
     os.environ['TEST_ENV_VAR'] = 'garbage'
     assert(not envutil.env_flag('TEST_ENV_VAR'))
-    del os.environ['TEST_ENV_VAR']
 
 
-def test_path_set():
+def test_path_set(prepare_environment_for_tests):
     envutil.path_set('TEST_ENV_VAR', ['/a', '/a/b', '/a/a'])
     assert(os.environ['TEST_ENV_VAR'] == '/a:/a/b:/a/a')
-    del os.environ['TEST_ENV_VAR']
 
 
-def test_path_put_first():
+def test_path_put_first(prepare_environment_for_tests):
     envutil.path_set('TEST_ENV_VAR', test_paths)
     expected = ['/usr/bin', '/new_nonsense_path/a/b']
     expected.extend([p for p in test_paths if p != '/usr/bin'])
@@ -89,7 +95,7 @@ def test_path_put_first():
     assert(envutil.get_path('TEST_ENV_VAR') == expected)
 
 
-def test_dump_environment(tmpdir):
+def test_dump_environment(prepare_environment_for_tests, tmpdir):
     test_paths = '/a:/b/x:/b/c'
     os.environ['TEST_ENV_VAR'] = test_paths
     dumpfile_path = str(tmpdir.join('envdump.txt'))
@@ -97,4 +103,3 @@ def test_dump_environment(tmpdir):
     with open(dumpfile_path, 'r') as dumpfile:
         assert('TEST_ENV_VAR={0}; export TEST_ENV_VAR\n'.format(test_paths)
                in list(dumpfile))
-    del os.environ['TEST_ENV_VAR']
