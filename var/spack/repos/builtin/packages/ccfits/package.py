@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Ccfits(Package):
+class Ccfits(AutotoolsPackage):
     """CCfits is an object oriented interface to the cfitsio library.
     It is designed to make the capabilities of cfitsio available to programmers
     working in C++. It is written in ANSI C++ and implemented using the C++
@@ -20,13 +20,3 @@ class Ccfits(Package):
     version('2.4', sha256='ba6c5012b260adf7633f92581279ea582e331343d8c973981aa7de07242bd7f8')
 
     depends_on('cfitsio')
-
-    def url_for_version(self, version):
-        url = 'https://heasarc.gsfc.nasa.gov/fitsio/CCfits/CCfits-{0}.tar.gz'
-        return url.format(version)
-
-    def install(self, spec, prefix):
-        print("Install ... ")
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make('install')
