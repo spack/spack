@@ -16,16 +16,19 @@ class Turbine(AutotoolsPackage):
     configure_directory = 'turbine/code'
 
     version('develop', branch='master')
-    version('1.2.3', 'f2e393c292c4248b4e77a19f8272ae88')
+    version('1.2.3', '028f6f4f5041e5ffbbf3ab8008e3b781')
     version('1.2.1', 'c8976b22849aafe02a8fb4259dfed434')
     version('1.1.0', '9a347cf16df02707cb529f96c265a082')
 
     variant('python', default=False,
             description='Enable calling python')
+    variant('python3', default=False,
+            description='Enable calling python3')
     variant('r', default=False,
             description='Enable calling R')
     variant('hdf5', default=False,
             description='Enable HDF5 support')
+    depends_on('adlbx@develop', when='@develop')
     depends_on('adlbx@:0.8.0', when='@:1.1.0')
     depends_on('adlbx', when='@1.2.1:')
     depends_on('adlbx')
@@ -33,6 +36,7 @@ class Turbine(AutotoolsPackage):
     depends_on('zsh', type=('build', 'run'))
     depends_on('swig', type='build')
     depends_on('python', when='+python')
+    depends_on('python@3', when='+python3')
     depends_on('r', when='+r')
     depends_on('r-rinside', when='+r')
     depends_on('hdf5', when='+hdf5')
@@ -49,6 +53,18 @@ class Turbine(AutotoolsPackage):
         spack_env.set('CXX', spec['mpi'].mpicxx)
         spack_env.set('CXXLD', spec['mpi'].mpicxx)
 
+    @when('@develop')
+    def configure_directory_helper(self):
+        return "turbine/code"
+
+    @when('@1')
+    def configure_directory_helper(self):
+        return "."
+
+    @property
+    def configure_directory(self):
+        return self.configure_directory_helper()
+
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix,
                 '--with-adlb='    + self.spec['adlbx'].prefix,
@@ -60,6 +76,9 @@ class Turbine(AutotoolsPackage):
         else:
             args.append('--with-hdf5=OFF')
         if '+python' in self.spec:
+            args.append('--with-python-exe={0}'.format(
+                        self.spec['python'].command.path))
+        if '+python3' in self.spec:
             args.append('--with-python-exe={0}'.format(
                         self.spec['python'].command.path))
         if '+r' in self.spec:

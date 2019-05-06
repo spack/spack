@@ -12,7 +12,25 @@ class Exmcutils(AutotoolsPackage):
 
     homepage = 'http://swift-lang.org/Swift-T'
     url      = 'http://swift-lang.github.io/swift-t-downloads/spack/exmcutils-0.0.0.tar.gz'
+    git      = "https://github.com/swift-lang/swift-t.git"
 
+    version('develop', branch='master')
+    version('0.5.7', '69bb32f364e93e8a60865c05efbf4f52')
     version('0.5.6', 'b12a8dc163e3369492ec7c1403fe86e4')
 
-    # This package has no dependencies.
+    @when('@develop')
+    def configure_directory_helper(self):
+        return "c-utils/code"
+
+    @when('@0')
+    def configure_directory_helper(self):
+        return "."
+
+    @property
+    def configure_directory(self):
+        return self.configure_directory_helper()
+
+    depends_on('m4')
+    depends_on('autoconf')
+    depends_on('automake')
+    depends_on('libtool')
