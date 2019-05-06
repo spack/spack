@@ -68,6 +68,11 @@ class Mesa(MesonPackage):
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
+    depends_on('glproto@1.4.14:', when='+glx', type='build')
+
+    # Fix glproto dependency for glx=gallium-xlib
+    # https://gitlab.freedesktop.org/mesa/mesa/merge_requests/806
+    patch('glproto-mr806.patch', when='@19.0.0')
 
     def meson_args(self):
         spec = self.spec
