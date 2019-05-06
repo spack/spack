@@ -251,9 +251,6 @@ class Compiler(object):
         prefixes = [''] + cls.prefixes
         suffixes = [''] + cls.suffixes
 
-        def check_cmp_key(check):
-            return compiler_names.index(check[2])
-
         checks = []
         for directory in path:
             dir_checks = []
@@ -276,7 +273,8 @@ class Compiler(object):
 
             # sort dir_checks by compiler name order
             # this allows us to prioritize compiler names in subclass
-            dir_checks = sorted(dir_checks, key=check_cmp_key)
+            dir_checks = sorted(dir_checks,
+                                key=lambda c: compiler_names.index(c[2]))
             checks.extend(dir_checks)
 
         successful = [k for k in mp.parmap(_get_versioned_tuple, checks)
