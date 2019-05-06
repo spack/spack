@@ -20,7 +20,6 @@ except ImportError:
     pass
 
 import spack
-import spack.cmd
 
 description = "generate a container specification file"
 section = "build"
