@@ -21,7 +21,6 @@ except ImportError:
 
 import spack
 import spack.cmd
-import spack.spec
 
 description = "generate a container specification file"
 section = "build"
