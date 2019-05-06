@@ -40,6 +40,7 @@ class Turbine(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
+    depends_on('m4', type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
