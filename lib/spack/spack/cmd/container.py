@@ -19,8 +19,6 @@ except ImportError:
     # inside the container() function and error there.
     pass
 
-import spack
-
 description = "generate a container specification file"
 section = "build"
 level = "short"
