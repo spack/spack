@@ -36,13 +36,20 @@ def setup_parser(subparser):
         '--baseimage', action='store', type=str, default='centos:7',
         help='container base image (default: centos:7)')
     subparser.add_argument(
-        '--depth', action='store', type=int, default=2,
-        help='spack DAG depth to use (default: 2)')
+        '--compiler', action='store', type=str, default='gnu',
+        choices=['gnu', 'llvm', 'pgi'],
+        help='compiler family (default: gnu)')
+    subparser.add_argument(
+        '--compiler-version', action='store', type=str, default=None,
+        help='compiler version (default: distro default)')
     subparser.add_argument(
         '--distro', action='store', type=str, default='',
         choices=['centos', 'rhel', 'ubuntu', 'ubuntu16', 'ubuntu18'],
         help='Linux distribution type of the base image '
         '(default: try to determine automatically from the base image name)')
+    subparser.add_argument(
+        '--eula', action='store_true', default=False,
+        help='accept end user licence agreements, if applicable')
     subparser.add_argument(
         '--extra-package', action='append', type=str, default=[],
         help='extra OS package to install')
@@ -76,13 +83,14 @@ def container(parser, args):
         tty.die('The HPCCM Python module must be installed to use '
                 'spack container')
 
-    recipe += baseimage(image=args.baseimage, _distro=args.distro)
+    recipe += baseimage(image=args.baseimage, _as='spack_build',
+                        _distro=args.distro)
 
     # Base OS dependencies
     recipe += hpccm.building_blocks.packages(
         apt=['autoconf', 'build-essential', 'bzip2', 'ca-certificates',
              'coreutils', 'cpio', 'curl', 'environment-modules', 'git',
-             'gzip', 'libssl-dev', 'make', 'openssh-client', 'patch',
+             'gzip', 'less', 'libssl-dev', 'make', 'openssh-client', 'patch',
              'pkg-config', 'subversion', 'tar', 'tcl', 'unzip', 'zlib1g'],
         yum=['autoconf', 'bzip2', 'ca-certificates', 'coreutils', 'cpio',
              'curl', 'environment-modules', 'git', 'gzip', 'make',
@@ -97,8 +105,24 @@ def container(parser, args):
     # Python
     recipe += hpccm.building_blocks.python()
 
-    # GNU compilers
-    recipe += hpccm.building_blocks.gnu()
+    # Compilers
+    if args.compiler == 'gnu':
+        if args.compiler_version:
+            recipe += hpccm.building_blocks.gnu(extra_repository=True,
+                                                version=args.compiler_version)
+        else:
+            recipe += hpccm.building_blocks.gnu()
+    elif args.compiler == 'llvm':
+        if args.compiler_version:
+            recipe += hpccm.building_blocks.llvm(extra_repository=True,
+                                                 version=args.compiler_version)
+        else:
+            recipe += hpccm.building_blocks.llvm()
+    elif args.compiler == 'pgi':
+        if not args.eula:
+            # https://www.pgroup.com/doc/LICENSE.txt
+            tty.warn('PGI EULA was not accepted')
+        recipe += hpccm.building_blocks.pgi(eula=args.eula)
 
     # Spack itself
     spack_bb = bb_base()
@@ -121,28 +145,17 @@ def container(parser, args):
         install_args.append('--show-log-on-error')
     install_args_str = ' '.join(install_args)
 
-    # Process each spec
-    for spec in spack.cmd.parse_specs(args.specs):
-        spec.concretize()
+    # Process input spec(s)
+    spec_str = ' '.join(args.specs)
+    bb = bb_base()
+    bb += comment(spec_str)
+    bb += shell(chdir=False,
+                commands=['spack compiler find',
+                          'spack install %s %s' % (install_args_str, spec_str),
+                          'spack clean --all'])
+    recipe += bb
 
-        bb = bb_base()
-        bb += comment('%s %s' % (spec.name, spec.version))
-
-        # Process each dependency.  Use a selectable depth to balance
-        # the build cache vs. container spec file complexity
-        for depth, dspec in spec.traverse_edges(order='post', depth=True):
-            if depth <= args.depth:
-                node = dspec.spec
-                # Compilers and arch are omitted from the format
-                # string because they reflect the host, not the
-                # container.
-                cmd = 'spack install %s %s' % (
-                    install_args_str,
-                    node.format(format_string='$_$@$+'))
-                bb += shell(chdir=False, commands=[cmd, 'spack clean --all'])
-
-        recipe += bb
-
+    # Output container recipe
     hpccm.config.set_container_format(args.format)
     print(recipe)
 
@@ -160,7 +173,8 @@ def container(parser, args):
 
         spack_rt = bb_base()
         spack_rt += comment('Spack')
-        spack_rt += copy(_from='0', src='/opt/spack', dest='/opt/spack')
+        spack_rt += copy(_from='spack_build', src='/opt/spack',
+                         dest='/opt/spack')
         spack_rt += shell(commands=[
             'ln -s /opt/spack/share/spack/setup-env.sh'
             ' /etc/profile.d/spack.sh',
