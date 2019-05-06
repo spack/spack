@@ -54,6 +54,7 @@ or refer to the full manual below.
    features
    getting_started
    basic_usage
+   containers
    workflows
    tutorial
    known_issues

@@ -187,7 +187,7 @@ def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
         'alpine': '''apk update && \\
     apk add --no-cache git gcc g++ gfortran make bzip2 && \\
     apk add --no-cache patch file curl python gnupg xz && \\
-    apk add --no-cache curl bash openssh libtool linuxheaders
+    apk add --no-cache curl bash openssh libtool linux-headers
     '''
     }
 

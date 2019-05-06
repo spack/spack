@@ -1195,6 +1195,116 @@ This issue typically manifests with the error below:
 A nicer error message is TBD in future versions of Spack.
 
 
+----------------------
+Support for Containers
+----------------------
+
+Spack provides current support for installing into `Singularity
+<https://www.sylabs.io/guides/3.1/user-guide/>`_ containers, with more functionality under development.
+This brief guide will get you started to generate a recipe to build one
+or more packages, and optionally, to run the build (sudo is required).
+First, let's take a look
+
+.. _cmd-spack-singularity:
+
+^^^^^^^^^^^^^^^^^^^^
+``spack singularity``
+^^^^^^^^^^^^^^^^^^^^
+
+First, let's take a look at the singularity command group usage.
+
+.. code-block:: console
+
+   $ spack singularity --help
+     usage: spack singularity [-h] build|recipe ...
+
+     use singularity to build containers with spack packages
+
+     positional arguments:
+       build|recipe
+         recipe      generate a recipe
+         build       generate, build a recipe (sudo)
+
+     optional arguments:
+       -h, --help    show this help message and exit
+
+
+The command group is simple - you can generate a recipe, or generate a recipe
+and build it.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create a Singularity Recipe
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For the recipe generation, no additional dependencies are required.
+Here is how we would create a recipe for using the base image ubuntu:16.04 and
+installing curl:
+
+.. code-block:: console
+
+    $ spack singularity recipe --from ubuntu:16.04 curl
+    ==> Installing packages curl
+    ==> Attempting to infer distro from base image...
+    ==> Found distro ubuntu
+    ==> Working directory created in /tmp/tmpfvp7wlfq
+    ==> Writing recipe to /tmp/tmpfvp7wlfq/Singularity
+    ==> sudo singularity build container.sif /tmp/tmpfvp7wlfq/Singularity
+
+You'll notice that the last line is helpful to give you the build command
+directly. If we then wanted to build the recipe, we would use Singularity:
+
+.. code-block:: console
+
+    $ sudo singularity build container.sif /tmp/tmpfvp7wlfq/Singularity
+
+
+Spack would be installed into the container, and curl installed. 
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Custom Bases and Distributions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to use a base that doesn't have an obvious distribution (for example,
+the container "vanessa/salad" has an alpine base, but we can't figure this out
+from the name) then you can use the ``--distro`` flag to specify it directly.
+Currently, we have support for ubuntu (debian), alpine, centos, and archlinux.
+
+.. code-block:: console
+
+    $ spack singularity recipe --from vanessa/salad --distro alpine perl
+    ==> Installing packages perl
+    ==> Working directory created in /tmp/tmpp26k0pye
+    ==> Writing recipe to /tmp/tmpp26k0pye/Singularity
+    ==> sudo singularity build container.sif /tmp/tmpp26k0pye/Singularity
+
+If you perform the build (or look at the recipe) file, you'll notice that we
+use apk to install packages. The specificiation of the distro worked!
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Build a Container Directly
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you are able (and willing) to run spack with sudo, then you can build
+the container directly. For example, here is how to build the container 
+we just generated a recipe for above:
+
+.. code-block:: console
+
+    $ spack singularity build --from vanessa/salad --distro alpine perl
+    ==> Installing packages perl
+    ==> Working directory created in /tmp/tmpO0Ww9s
+    ==> Writing recipe to /tmp/tmpO0Ww9s/Singularity
+    ==> Building container for "vanessa/salad"
+    INFO:    Starting build...
+    Getting image source signatures
+    ...
+
+You'll notice that the commands are almost identical, except that we've
+replaced "recipe" with "build." This is intentional to make it easy for you.
+If you forget to use "sudo" above, the recipe will be generated and the build
+will exit and fail quickly.
+
+
 ------------
 Getting Help
 ------------
