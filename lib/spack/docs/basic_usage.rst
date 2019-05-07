@@ -1207,9 +1207,9 @@ First, let's take a look
 
 .. _cmd-spack-singularity:
 
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 ``spack singularity``
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 First, let's take a look at the singularity command group usage.
 
