@@ -62,9 +62,14 @@ def prepare_environment_for_tests():
     os.environ['UNSET_ME'] = 'foo'
     os.environ['EMPTY_PATH_LIST'] = ''
     os.environ['PATH_LIST'] = '/path/second:/path/third'
-    os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'  # NOQA: ignore=E501
+    os.environ['REMOVE_PATH_LIST'] \
+        = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'
+    os.environ['PATH_LIST_WITH_SYSTEM_PATHS'] \
+        = '/usr/include:' + os.environ['REMOVE_PATH_LIST']
+    os.environ['PATH_LIST_WITH_DUPLICATES'] = os.environ['REMOVE_PATH_LIST']
     yield
-    for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST', 'REMOVE_PATH_LIST'):
+    for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST', 'REMOVE_PATH_LIST',
+              'PATH_LIST_WITH_SYSTEM_PATHS', 'PATH_LIST_WITH_DUPLICATES'):
         if x in os.environ:
             del os.environ[x]
 
@@ -203,6 +208,9 @@ def test_path_manipulation(env):
     env.remove_path('REMOVE_PATH_LIST', '/remove/this')
     env.remove_path('REMOVE_PATH_LIST', '/duplicate/')
 
+    env.deprioritize_system_paths('PATH_LIST_WITH_SYSTEM_PATHS')
+    env.prune_duplicate_paths('PATH_LIST_WITH_DUPLICATES')
+
     env.apply_modifications()
 
     expected = '/path/first:/path/second:/path/third:/path/last'
@@ -215,6 +223,12 @@ def test_path_manipulation(env):
     assert os.environ['NEWLY_CREATED_PATH_LIST'] == expected
 
     assert os.environ['REMOVE_PATH_LIST'] == '/a/b:/a/c:/a/d:/f/g'
+
+    assert not os.environ['PATH_LIST_WITH_SYSTEM_PATHS'].\
+        startswith('/usr/include:')
+    assert os.environ['PATH_LIST_WITH_SYSTEM_PATHS'].endswith(':/usr/include')
+
+    assert os.environ['PATH_LIST_WITH_DUPLICATES'].count('/duplicate') == 1
 
 
 def test_extra_arguments(env):
