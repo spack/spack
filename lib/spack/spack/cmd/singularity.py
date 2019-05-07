@@ -50,6 +50,10 @@ def setup_parser(subparser):
             help='Singularity bootstrap (default: docker)')
 
         action.add_argument(
+            '--working_dir', action='store', type=str, default=None,
+            help='temporary working directory for recipe|build.')
+
+        action.add_argument(
             '--name', action='store', type=str, default='container.sif',
             help='container name (default container.sif)')
 
@@ -108,7 +112,8 @@ def singularity(parser, args):
                               bootstrap=args.bootstrap,
                               branch=args.branch,
                               repo=args.repo,
-                              help=help_str)
+                              help=help_str,
+                              build_dir=args.working_dir)
 
     # Build the container, or show how to do it?
     if args.action == "recipe":
@@ -154,7 +159,15 @@ def get_distro(distro, image):
     return distro
 
 
-def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
+def create_recipe(bootstrap,
+                  image,
+                  branch,
+                  repo,
+                  help,
+                  specs,
+                  distro,
+                  build_dir):
+
     ''' create_recipe will start with the Singularity template, add
         dependencies, and return a populated recipe file.
 
@@ -166,6 +179,8 @@ def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
         repo (str): Spack repository to checkout (spack/spack)
         help (str): the help string to provide to the container
         specs (str): space separated list of packages (specs) to install
+        distro (str) the OS distibution, if not obvious from name
+        build_dir (str): the temporary directory to write / build in.
    '''
 
     # Dependencies based on base
@@ -197,7 +212,12 @@ def create_recipe(bootstrap, image, branch, repo, help, specs, distro):
         tty.die("%s is not a valid choice, should be in %s" % choices)
 
     # Create a temporary build directory
-    build_dir = tempfile.mkdtemp()
+    if build_dir is None:
+        build_dir = tempfile.mkdtemp()
+
+    if not os.path.exists(build_dir):
+        tty.die("Working directory %s does not exist." % build_dir)
+
     recipe = os.path.join(build_dir, 'Singularity')
 
     # Singularity recipe template to build container
