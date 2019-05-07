@@ -1305,6 +1305,49 @@ If you forget to use "sudo" above, the recipe will be generated and the build
 will exit and fail quickly.
 
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Customize Recipe Generation or Build
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We've shown you the basic way to generate a recipe, or to build directly. If you
+want to customize the location or naming of the container, you can do that too!
+Let's take a look at all of the arguments that are available to both recipe
+and build.
+
+.. code-block:: console
+    usage: spack singularity recipe [-h] [--bootstrap BOOTSTRAP]
+                                    [--working_dir WORKING_DIR] [--name NAME]
+                                    [--from IMAGE] [--helpstr HELPSTR]
+                                    [--distro {centos,archlinux,ubuntu,debian,alpine}]
+                                    [--branch BRANCH] [--repo REPO]
+                                ...
+
+    positional arguments:
+      specs                 specs of packages
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --bootstrap BOOTSTRAP
+                            Singularity bootstrap (default: docker)
+      --working_dir WORKING_DIR
+                            temporary working directory for recipe|build.
+      --name NAME           container name (default container.sif)
+      --from IMAGE          image or from string (From:<image>) (default ubuntu:18.04)
+      --helpstr HELPSTR     custom help string to describe the container
+      --distro {centos,archlinux,ubuntu,debian,alpine}
+                            Linux distribution type of the base image(default: try to determine from the base image name)
+      --branch BRANCH       branch of Spack to deploy (default: develop)
+      --repo REPO           name of spack repository owner (default: spack)
+
+
+ - *bootstrap* indicates the `bootstrap header <https://www.sylabs.io/guides/3.0/user-guide/definition_files.html#header>`_ field. This defaults to docker, meaning the "from" image is a Docker container, and we dump layers into a rootfs to build a Singularity container.
+ - *working_dir* is where you want the recipe generated, and/or the build to occur. If you don't provide one, a temporary directory is made. The directory you provide must exist.
+ - *name* is the name of the container to build in the working directory. This defaults to container.sif.
+ - *helpstr* is any additional help you want to provide the user for your container. By default, a simple string is printed to indicate that spack is in the container with the set of packages (specs) that you choose (``This is a spack container with packages curl``).
+ - *distro* must coincide with the operating system of the from image, with choices listed above. If it can be derived from the name (e.g., "ubuntu:16.04") you don't need to specify the argument. If it cannot, then you need to.
+ - *branch* is the branch of spack to deploy, which defaults to develop.
+ - *repo* is the name of the spack repository, which defaults to spack.
+
 ------------
 Getting Help
 ------------
