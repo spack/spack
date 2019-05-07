@@ -119,10 +119,14 @@ def env_var_to_source_line(var, val):
 
 def dump_environment(path, environment=None):
     """Dump an environment dictionary to a source-able file."""
-    use_env = environment if environment else os.environ
+    use_env = environment or os.environ
+    hidden_vars = set(['PS1', 'PWD', 'OLDPWD', 'TERM_SESSION_ID'])
+
     with open(path, 'w') as env_file:
         for var, val in sorted(use_env.items()):
-            env_file.write('{0}\n'.format(env_var_to_source_line(var, val)))
+            env_file.write(''.join(['#' if var in hidden_vars else '',
+                                    env_var_to_source_line(var, val),
+                                    '\n']))
 
 
 def pickle_environment(path, environment=None):
