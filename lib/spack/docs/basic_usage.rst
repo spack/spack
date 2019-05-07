@@ -1315,6 +1315,7 @@ Let's take a look at all of the arguments that are available to both recipe
 and build.
 
 .. code-block:: console
+
     usage: spack singularity recipe [-h] [--bootstrap BOOTSTRAP]
                                     [--working_dir WORKING_DIR] [--name NAME]
                                     [--from IMAGE] [--helpstr HELPSTR]
