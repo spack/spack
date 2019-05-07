@@ -25,7 +25,9 @@ class NinjaFortran(Package):
     version('1.7.2.0.gcc0ea', '3982f508c415c0abaca34cb5e92e711a')
     version('1.7.1.0.g7ca7f', '187a8d15c1e20e5e9b00c5c3f227ca8a')
 
-    depends_on('python', type=('build', 'run'))
+    depends_on('python', type='build')
+
+    provides('ninja')
 
     phases = ['configure', 'install']
 
