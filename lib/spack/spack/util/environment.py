@@ -18,6 +18,8 @@ import llnl.util.tty as tty
 
 from llnl.util.lang import dedupe
 
+from six.moves import shlex_quote as cmd_quote
+from six.moves import cPickle
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -51,7 +53,20 @@ def is_system_path(path):
 
 
 def filter_system_paths(paths):
+    """Return only paths that are not system paths."""
     return [p for p in paths if not is_system_path(p)]
+
+
+def deprioritize_system_paths(paths):
+    """Put system paths at the end of paths, otherwise preserving order."""
+    filtered_paths = filter_system_paths(paths)
+    fp = set(filtered_paths)
+    return filtered_paths + [p for p in paths if p not in fp]
+
+
+def prune_duplicate_paths(paths):
+    """Returns the paths with duplicates removed, order preserved."""
+    return list(dedupe(paths))
 
 
 def get_path(name):
@@ -88,11 +103,32 @@ def path_put_first(var_name, directories):
     path_set(var_name, new_path)
 
 
-def dump_environment(path):
-    """Dump the current environment out to a file."""
+bash_function_finder = re.compile(r'BASH_FUNC_(.*?)\(\)')
+
+
+def env_var_to_source_line(var, val):
+    if var.startswith('BASH_FUNC'):
+        source_line = 'function {fname}{decl}; export -f {fname}'.\
+                      format(fname=bash_function_finder.sub(r'\1', var),
+                             decl=val)
+    else:
+        source_line = '{var}={val}; export {var}'.format(var=var,
+                                                         val=cmd_quote(val))
+    return source_line
+
+
+def dump_environment(path, environment=None):
+    """Dump an environment dictionary to a source-able file."""
+    use_env = environment if environment else os.environ
     with open(path, 'w') as env_file:
-        for key, val in sorted(os.environ.items()):
-            env_file.write('export %s="%s"\n' % (key, val))
+        for var, val in sorted(use_env.items()):
+            env_file.write('{0}\n'.format(env_var_to_source_line(var, val)))
+
+
+def pickle_environment(path, environment=None):
+    """Pickle an environment dictionary to a file."""
+    cPickle.dump(dict(environment if environment else os.environ),
+                 open(path, 'wb'), protocol=2)
 
 
 @contextlib.contextmanager
@@ -126,7 +162,9 @@ class NameModifier(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
-        self.args = {'name': name}
+        self.separator = kwargs.get('separator', ':')
+        self.args = {'name': name, 'separator': self.separator}
+
         self.args.update(kwargs)
 
     def update_args(self, **kwargs):
@@ -205,6 +243,28 @@ class RemovePath(NameValueModifier):
             self.separator) if environment_value else []
         directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
+        env[self.name] = self.separator.join(directories)
+
+
+class DeprioritizeSystemPaths(NameModifier):
+
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = deprioritize_system_paths([os.path.normpath(x)
+                                                 for x in directories])
+        env[self.name] = self.separator.join(directories)
+
+
+class PruneDuplicatePaths(NameModifier):
+
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = prune_duplicate_paths([os.path.normpath(x)
+                                             for x in directories])
         env[self.name] = self.separator.join(directories)
 
 
@@ -336,6 +396,28 @@ class EnvironmentModifications(object):
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = RemovePath(name, path, **kwargs)
+        self.env_modifications.append(item)
+
+    def deprioritize_system_paths(self, name, **kwargs):
+        """Stores a request to deprioritize system paths in a path list,
+        otherwise preserving the order.
+
+        Args:
+            name: name of the path list in the environment.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = DeprioritizeSystemPaths(name, **kwargs)
+        self.env_modifications.append(item)
+
+    def prune_duplicate_paths(self, name, **kwargs):
+        """Stores a request to remove duplicates from a path list, otherwise
+        preserving the order.
+
+        Args:
+            name: name of the path list in the environment.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = PruneDuplicatePaths(name, **kwargs)
         self.env_modifications.append(item)
 
     def group_by_name(self):
