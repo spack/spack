@@ -25,7 +25,7 @@ class Adlbx(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
-    depends_on('m4', type=('build','run'))
+    depends_on('m4', type='build')
     depends_on('mpi')
 
     def setup_environment(self, spack_env, run_env):
