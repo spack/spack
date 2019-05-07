@@ -15,6 +15,12 @@ TODO: make this customizable and allow users to configure
       concretization  policies.
 """
 from __future__ import print_function
+
+import os.path
+import tempfile
+import llnl.util.filesystem as fs
+import llnl.util.tty as tty
+
 from itertools import chain
 from functools_backport import reverse_order
 from contextlib import contextmanager
@@ -28,6 +34,7 @@ import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
+import spack.tengine
 from spack.config import config
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
@@ -465,6 +472,57 @@ def _compiler_concretization_failure(compiler_spec, arch):
         raise UnavailableCompilerVersionError(compiler_spec, arch)
 
 
+def concretize_specs_together(*abstract_specs):
+    """Given a number of specs as input, tries to concretize them together.
+
+    Args:
+        *abstract_specs: abstract specs to be concretized, given either
+            as Specs or strings
+
+    Returns:
+        List of concretized specs
+    """
+    def make_concretization_repository(abstract_specs):
+        """Returns the path to a temporary repository created to contain
+        a fake package that depends on all of the abstract specs.
+        """
+        tmpdir = tempfile.mkdtemp()
+        repo_path, _ = spack.repo.create_repo(tmpdir)
+
+        debug_msg = '[CONCRETIZATION]: Creating helper repository in {0}'
+        tty.debug(debug_msg.format(repo_path))
+
+        pkg_dir = os.path.join(repo_path, 'packages', 'concretizationroot')
+        fs.mkdirp(pkg_dir)
+        environment = spack.tengine.make_environment()
+        template = environment.get_template('misc/coconcretization.pyt')
+
+        # Split recursive specs, as it seems the concretizer has issue
+        # respecting conditions on dependents expressed like
+        # depends_on('foo ^bar@1.0'), see issue #11160
+        split_specs = [dep for spec in abstract_specs
+                       for dep in spec.traverse(root=True)]
+
+        with open(os.path.join(pkg_dir, 'package.py'), 'w') as f:
+            f.write(template.render(specs=[str(s) for s in split_specs]))
+
+        return spack.repo.Repo(repo_path)
+
+    abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
+    concretization_repository = make_concretization_repository(abstract_specs)
+
+    with spack.repo.additional_repository(concretization_repository):
+        # Spec from a helper package that depends on all the abstract_specs
+        concretization_root = spack.spec.Spec('concretizationroot')
+        concretization_root.concretize()
+        # Retrieve the direct dependencies
+        concrete_specs = [
+            concretization_root[spec.name].copy() for spec in abstract_specs
+        ]
+
+    return concrete_specs
+
+
 class NoCompilersForArchError(spack.error.SpackError):
     def __init__(self, arch, available_os_targets):
         err_msg = ("No compilers found"
@@ -474,8 +532,9 @@ class NoCompilersForArchError(spack.error.SpackError):
                    (arch.os, arch.target))
 
         available_os_target_strs = list()
-        for os, t in available_os_targets:
-            os_target_str = "%s-%s" % (os, t) if t else os
+        for operating_system, t in available_os_targets:
+            os_target_str = "%s-%s" % (operating_system, t) if t \
+                else operating_system
             available_os_target_strs.append(os_target_str)
         err_msg += (
             "\nCompilers are defined for the following"

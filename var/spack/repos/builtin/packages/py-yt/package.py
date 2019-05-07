@@ -16,11 +16,14 @@ class PyYt(PythonPackage):
        interdisciplinary community.
     """
     homepage = "http://yt-project.org"
-    url      = "https://github.com/yt-project/yt/archive/yt-3.4.0.tar.gz"
+    url      = "https://github.com/yt-project/yt/archive/yt-3.5.0.tar.gz"
     git      = "https://github.com/yt-project/yt.git"
 
     version("develop", branch="master")
+    version("develop-4.0", branch="yt-4.0")
 
+    version('3.5.1', sha256='cdc0ecb153e737d74820581f311d1be7b6f1a7ee065ad69706470939db88b041')
+    version('3.5.0', sha256='548598912adba72b782b7422d40d1d12a8c1a6cd064281a9a537fdb2a5af89fc')
     version('3.4.1', sha256='b9a73ade3726a8163fc992999c8c1010ca89473131901fe4d48b820ab2ced486')
     version('3.4.0', sha256='2120793a76864cf3165b2b7290ef719e358fa57501ee8721941e7cfc434cfb2b')
     version('3.3.5', sha256='2ebe4bbefd9f5367563ce4d7eb87d3f6ef0de1f97ed1c03106d9541e71b7e1ca')

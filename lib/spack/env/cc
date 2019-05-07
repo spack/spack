@@ -382,6 +382,17 @@ case "$mode" in
         flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
 esac
 
+# On macOS insert headerpad_max_install_names linker flag
+if [[ ($mode == ld || $mode == ccld) && "$SPACK_SHORT_SPEC" =~ "darwin" ]];
+then
+    case "$mode" in
+        ld)
+            flags=("${flags[@]}" -headerpad_max_install_names) ;;
+        ccld)
+            flags=("${flags[@]}" -Wl,-headerpad_max_install_names) ;;
+    esac
+fi
+
 # Prepend include directories
 IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"
 if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
