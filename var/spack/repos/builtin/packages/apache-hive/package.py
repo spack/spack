@@ -52,4 +52,3 @@ class ApacheHive(Package):
         install('LICENSE', prefix)
         install('NOTICE', prefix)
         install('RELEASE_NOTES.txt', prefix)
-
