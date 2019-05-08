@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
-from spack.compiler import Compiler
+import spack.compiler
 
-class Fj(Compiler):
+
+class Fj(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['fcc']
 
@@ -30,7 +31,7 @@ class Fj(Compiler):
         return "-Kopenmp"
 
     @property
-    def cxx98_flag(self): 
+    def cxx98_flag(self):
         return "-std=c++98"
 
     @property
@@ -48,14 +49,16 @@ class Fj(Compiler):
     @classmethod
     def default_version(cls, cc):
         output = spack.compiler.get_compiler_version_output(cc, '--version')
-        match = re.search(r'(?:fcc \(FCC\) )?([\d.]+)', output)
+        match = re.search(
+            r'(?:fcc \(FCC\) )?([\d.]+)', output)
         version = match.group(match.lastindex) if match else 'unknown'
         return version
 
     @classmethod
     def fc_version(cls, fc):
         output = spack.compiler.get_compiler_version_output(fc, '-V')
-        match = re.search(r'(?:frt\: Fujitsu Fortran Driver Version )?([\d.]+)', output)
+        match = re.search(
+            r'(?:frt\: Fujitsu Fortran Driver Version )?([\d.]+)', output)
         version = match.group(match.lastindex) if match else 'unknown'
         return version
 
