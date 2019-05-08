@@ -131,8 +131,7 @@ class SpecList(object):
                     if name in self._reference:
                         ret = [self._expand_references(i) for i in yaml[:idx]]
                         ret += self._reference[name].specs_as_yaml_list
-                        ret += [self._expand_references(i)
-                                for i in yaml[idx + 1:]]
+                        ret += self._expand_references(yaml[idx + 1:])
                         return ret
                     else:
                         msg = 'SpecList %s refers to ' % self.name
