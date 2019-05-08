@@ -103,7 +103,7 @@ class Qt(Package):
     depends_on("icu4c")
     depends_on("fontconfig", when=(sys.platform != 'darwin'))  # (Unix only)
     depends_on("freetype")
-    depends_on("sqlite")
+    depends_on("sqlite", type=('build', 'run'))
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("double-conversion", when='@5.7:')
