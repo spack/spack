@@ -76,6 +76,43 @@ class Trilinos(CMakePackage):
     variant('xsdkflags',    default=False,
             description='Compile using the default xSDK configuration')
 
+    # CUDA options (compare to kokkos/package.py)
+    variant('cuda', default=False, description="enable Cuda backend")
+    # kokkos has conflicts with cuda for kokkos@2.5:2.7, restrict this variant
+    # to @12.14.1 or later.
+    conflicts('+cuda', when='@:12.14.0')
+    conflicts('+cuda', when='~kokkos')
+    variant('kokkos_enable_cuda_uvm', default=False,
+            description="set force_uvm Kokkos CUDA option")
+    variant('kokkos_enable_rdc', default=False,
+            description="set rdc Kokkos CUDA option")
+    variant('kokkos_enable_cuda_lambda', default=False,
+            description="set enable_lambda Kokkos CUDA option")
+
+    # CUDA: Set the Host and GPU architecture variants
+    gpu_values = ('Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
+                  'Maxwell50', 'Maxwell52', 'Maxwell53',
+                  'Pascal60', 'Pascal61',
+                  'Volta70', 'Volta72')
+    host_values = ('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
+                   'Power7', 'Power8', 'Power9',
+                   'WSM', 'SNB', 'HSW', 'BDW', 'SKX', 'KNC', 'KNL')
+    variant('host_arch', default='none', values=host_values,
+        description='Set the host architecture to use')
+    variant('gpu_arch', default='none', values=gpu_values,
+        description='Set the GPU architecture to use')
+    # CUDA: Check that we haven't specified a gpu architecture
+    #       or using a specified CUDA option without specifying CUDA
+    for p in gpu_values:
+        conflicts('gpu_arch={0}'.format(p), when='~cuda',
+            msg='Must specify CUDA backend to use a GPU architecture.')
+    conflicts('+kokkos_enable_cuda_uvm', when='~cuda',
+        msg='Must enable CUDA to use force_uvm.')
+    conflicts('+kokkos_enable_rdc', when='~cuda',
+        msg='Must enable CUDA to use rdc.')
+    conflicts('+kokkos_enable_cuda_lambda', when='~cuda',
+        msg='Must enable CUDA to use enable_lambda.')
+
     # TPLs (alphabet order)
     variant('boost',        default=True,
             description='Compile with Boost')
@@ -279,6 +316,7 @@ class Trilinos(CMakePackage):
     depends_on('lapack')
     depends_on('boost', when='+boost')
     depends_on('boost', when='+dtk')
+    depends_on('cuda', when='+cuda')
     depends_on('matio')
     depends_on('glm')
     depends_on('metis@5:', when='+metis')
@@ -365,6 +403,8 @@ class Trilinos(CMakePackage):
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix
         ])
+        if '+shared' in spec:
+            options.extend(['-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON'])
 
         # ################## Trilinos Packages #####################
 
@@ -659,6 +699,63 @@ class Trilinos(CMakePackage):
 
         # ################# Miscellaneous Stuff ######################
 
+        # CUDA
+        if '+cuda' in spec:
+            options.extend([
+                '-DTPL_ENABLE_CUDA:BOOL=ON',
+                '-DTPL_ENABLE_CUSPARSE:BOOL=ON'
+            ])
+            arch_args = []
+            # Host architectures
+            host_arch = spec.variants['host_arch'].value
+            # GPU architectures
+            gpu_arch  = spec.variants['gpu_arch'].value
+            if host_arch != 'none':
+                arch_args.append(host_arch)
+            if gpu_arch != 'none':
+                arch_args.append(gpu_arch)
+            # Combined architecture flags
+            if arch_args:
+                options.extend([
+                    '-DKOKKOS_ARCH={0}'.format(';'.join(arch_args))
+                ])
+            if '+kokkos_enable_cuda_lambda' in spec:
+                options.extend([
+                    '-DKokkos_ENABLE_Cuda_Lambda:BOOL=ON'
+                ])
+            if '+kokkos_enable_rdc' in spec:
+                options.extend([
+                    '-DKokkos_ENABLE_Cuda_Relocatable_Device_Code:BOOL=ON'
+                ])
+            if '+kokkos_enable_cuda_uvm' in spec:
+                options.extend([
+                    '-DKokkos_ENABLE_Cuda_UVM:BOOL=ON'
+                ])
+            if '+phalanx' in spec:
+                options.extend([
+                    '-DPhalanx_KOKKOS_DEVICE_TYPE:STRING=CUDA'
+                ])
+            if '+sacado' in spec:
+                options.extend([
+                    '-DSacado_ENABLE_HIERARCHICAL_DFAD:BOOL=ON'
+                ])
+            if '+muelu' in spec:
+                options.extend([
+                    '-DMueLu_ENABLE_Kokkos_Refactor_Use_By_Default:BOOL=ON'
+                ])
+            if '+tpetra' in spec:
+                options.extend([
+                    '-DTpetra_INST_CUDA:BOOL=ON',
+                    '-DTpetra_ASSUME_CUDA_AWARE_MPI:BOOL=ON',
+                    '-DTpetra_ETI_SCALARS_KOKKOS:BOOL=ON',
+                    '-DPanzer_ENABLE_FADTYPE:STRING=' +
+                    'Sacado::Fad::DFad<RealType>'
+                ])
+            if '+xpetra' in spec:
+                options.extend([
+                    '-DXpetra_ENABLE_Kokkos_Refactor:BOOL=ON'
+                ])
+
         # OpenMP
         if '+openmp' in spec:
             options.extend([
@@ -750,6 +847,30 @@ class Trilinos(CMakePackage):
         ])
 
         return options
+
+    def setup_environment(self, spack_env, run_env):
+        if '+cuda' in self.spec:
+            if not self.stage.source_path:
+                self.stage.fetch()
+                self.stage.expand_archive()
+            # The nvcc_wrapper is also needed by client software, so save this
+            # path to be used in the function 'install_additional_files'.  We
+            # save this path becuase self.stage.source_path points to the wrong
+            # location when called from 'install_additional_files.'
+            self.nvcc_wrapper = join_path(self.stage.source_path,
+                                          'packages', 'kokkos', 'bin',
+                                          'nvcc_wrapper')
+            spack_env.set('OMPI_CXX', self.nvcc_wrapper)
+            spack_env.set('NVCC_WRAPPER_DEFAULT_COMPILER',
+                          '{0}'.format(env['CXX']))
+
+    @run_after('install')
+    def install_additional_files(self):
+        if '+cuda' in self.spec:
+            # The nvcc_wrapper is needed by client software.
+            # This needs to be done before the build directory is created,
+            # otherwise self.stage.source_path points to the wrong location.
+            install(self.nvcc_wrapper, prefix.bin)
 
     @run_after('install')
     def filter_python(self):
