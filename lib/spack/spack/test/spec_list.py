@@ -8,10 +8,11 @@ from spack.spec import Spec
 
 class TestSpecList(object):
     default_input = ['mpileaks', '$mpis',
-                     {'matrix': [['hypre'], ['$gccs', '%clang@3.3']]},
+                     {'matrix': [['hypre'], ['$gccs', '$clangs']]},
                      'libelf']
 
     default_reference = {'gccs': SpecList('gccs', ['%gcc@4.5.0']),
+                         'clangs': SpecList('clangs', ['%clang@3.3']),
                          'mpis': SpecList('mpis', ['zmpi@1.0', 'mpich@3.0'])}
 
     default_expansion = ['mpileaks', 'zmpi@1.0', 'mpich@3.0',
