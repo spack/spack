@@ -49,6 +49,7 @@ class ApacheHive(Package):
         install_dir('lib')
         install_dir('scripts')
         install_dir('binary-package-licenses')
- #       install_file('LICENSE')
- #       install_file('NOTICE')
- #       install_file('RELEASE_NOTES.txt')
+        install('LICENSE', prefix)
+        install('NOTICE', prefix)
+        install('RELEASE_NOTES.txt', prefix)
+
