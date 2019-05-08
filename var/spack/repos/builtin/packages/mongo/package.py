@@ -58,20 +58,20 @@ class Mongo(SConsPackage):
 
     depends_on('python@2.7.16', when='@4.0.6')
 
-    def build_args(self, spec, prefix):
+     def build_args(self, spec, prefix):
         # FIXME: Add arguments to pass to build.
         # FIXME: If not needed delete this functiona
         args = [
-                'MONGO_VERSION=4.0.6',
-                '--prefix=/opt/mongo',
-                '--disable-warnings-as-errors',
-                'CFLAGS="-march=armv8-a+crc -mtune=generic"',
-                'CFLAGS="-march=armv8-a+crc"',
-                ]
+               'MONGO_VERSION=4.0.6',
+               '--disable-warnings-as-errors',
+               'CFLAGS="-march=armv8-a+crc -mtune=generic"',
+               'CFLAGS="-march=armv8-a+crc"',
+               ]
         return args
 
     def install_args(self, spec, prefix):
         args = [
+                '--prefix={0}'.format(prefix),
                 'MONGO_VERSION=4.0.6',
                 '--disable-warnings-as-errors',
                 'CCFLAGS="-march=armv8-a+crc"'
