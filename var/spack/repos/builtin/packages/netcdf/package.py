@@ -87,7 +87,7 @@ class Netcdf(AutotoolsPackage):
 
     # curl 7.18.0 or later is required:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
-    depends_on("curl@7.18.0:", when='+dap')
+    depends_on("curl@7.18.0:") # , when='+dap')
     # depends_on("curl@7.18.0:", when='+cdmremote')
 
     depends_on('parallel-netcdf', when='+parallel-netcdf')
