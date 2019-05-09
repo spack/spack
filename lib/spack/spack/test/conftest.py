@@ -142,7 +142,11 @@ def remove_whatever_it_is(path):
 def working_env():
     saved_env = os.environ.copy()
     yield
-    os.environ = saved_env
+    # os.environ = saved_env doesn't work
+    # it causes module_parsing::test_module_function to fail
+    # when it's run after any test using this fixutre
+    os.environ.clear()
+    os.environ.update(saved_env)
 
 
 @pytest.fixture(scope='function', autouse=True)
