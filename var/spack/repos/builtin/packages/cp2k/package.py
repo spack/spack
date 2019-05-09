@@ -284,13 +284,9 @@ class Cp2k(MakefilePackage):
         if '+elpa' in self.spec:
             elpa = spec['elpa']
             elpa_suffix = '_openmp' if '+openmp' in elpa else ''
-            elpa_base_path = os.path.join(
-                elpa.prefix,
-                'include',
-                'elpa{suffix}-{version!s}'.format(
-                    suffix=elpa_suffix, version=elpa.version))
+            elpa_incdir = elpa.headers.directories[0]
 
-            fcflags.append('-I' + os.path.join(elpa_base_path, 'modules'))
+            fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'modules'))]
             libs.append(os.path.join(elpa.libs.directories[0],
                                      ('libelpa{elpa_suffix}.{dso_suffix}'
                                       .format(elpa_suffix=elpa_suffix,
@@ -307,7 +303,7 @@ class Cp2k(MakefilePackage):
                 cppflags.append('-D__ELPA={0}{1:02d}'
                                 .format(elpa.version[0],
                                         int(elpa.version[1])))
-                fcflags.append('-I' + os.path.join(elpa_base_path, 'elpa'))
+                fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'elpa'))]
 
         if self.spec.satisfies('+sirius'):
             sirius = spec['sirius']
