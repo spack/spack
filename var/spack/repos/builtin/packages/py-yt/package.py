@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -35,11 +16,14 @@ class PyYt(PythonPackage):
        interdisciplinary community.
     """
     homepage = "http://yt-project.org"
-    url      = "https://github.com/yt-project/yt/archive/yt-3.4.0.tar.gz"
+    url      = "https://github.com/yt-project/yt/archive/yt-3.5.0.tar.gz"
     git      = "https://github.com/yt-project/yt.git"
 
     version("develop", branch="master")
+    version("develop-4.0", branch="yt-4.0")
 
+    version('3.5.1', sha256='cdc0ecb153e737d74820581f311d1be7b6f1a7ee065ad69706470939db88b041')
+    version('3.5.0', sha256='548598912adba72b782b7422d40d1d12a8c1a6cd064281a9a537fdb2a5af89fc')
     version('3.4.1', sha256='b9a73ade3726a8163fc992999c8c1010ca89473131901fe4d48b820ab2ced486')
     version('3.4.0', sha256='2120793a76864cf3165b2b7290ef719e358fa57501ee8721941e7cfc434cfb2b')
     version('3.3.5', sha256='2ebe4bbefd9f5367563ce4d7eb87d3f6ef0de1f97ed1c03106d9541e71b7e1ca')

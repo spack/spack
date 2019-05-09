@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 import sys
@@ -36,7 +17,10 @@ class Hypre(Package):
     url      = "https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/LLNL/hypre.git"
 
+    maintainers = ['ulrikeyang', 'osborn9', 'balay']
+
     version('develop', branch='master')
+    version('2.15.1', '877002d49f38b6a1434955baf79eff35')
     version('2.15.0', '4645acc49141069cae1d53de96107a08')
     version('2.14.0', 'ecde5cc807ec45bfb647e9f28d2eaea1')
     version('2.13.0', '4b688a5c15b6b5e3de5e045ae081b89b')
@@ -56,6 +40,8 @@ class Hypre(Package):
     # SuperluDist have conflicting headers with those in Hypre
     variant('internal-superlu', default=True,
             description="Use internal Superlu routines")
+    variant('superlu-dist', default=False,
+            description='Activates support for SuperluDist')
     variant('int64', default=False,
             description="Use 64bit integers")
     variant('mpi', default=True, description='Enable MPI support')
@@ -67,11 +53,14 @@ class Hypre(Package):
 
     # Patch to build shared libraries on Darwin
     patch('darwin-shared-libs-for-hypre-2.13.0.patch', when='+shared@2.13.0 platform=darwin')
-    patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0: platform=darwin')
+    patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0 platform=darwin')
+    patch('superlu-dist-link-2.15.0.patch', when='+superlu-dist @2.15:')
+    patch('superlu-dist-link-2.14.0.patch', when='+superlu-dist @:2.14.0')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
+    depends_on('superlu-dist', when='+superlu-dist+mpi')
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
@@ -117,6 +106,13 @@ class Hypre(Package):
             # MLI and FEI do not build without superlu on Linux
             configure_args.append("--without-mli")
             configure_args.append("--without-fei")
+
+        if 'superlu-dist' in self.spec:
+            configure_args.append('--with-dsuperlu-include=%s' %
+                                  spec['superlu-dist'].prefix.include)
+            configure_args.append('--with-dsuperlu-lib=%s' %
+                                  spec['superlu-dist'].libs)
+            configure_args.append('--with-dsuperlu')
 
         if '+debug' in self.spec:
             configure_args.append("--enable-debug")

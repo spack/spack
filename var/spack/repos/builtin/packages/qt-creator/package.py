@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,6 +14,7 @@ class QtCreator(QMakePackage):
     list_url = 'http://download.qt.io/official_releases/qtcreator/'
     list_depth = 2
 
+    version('4.8.0', '9e75b07f068d8577ca7160a827bcecae')
     version('4.4.0', 'bae2e08bb5087aba65d41eb3f9328d9a')
     version('4.3.1', '6769ea47f287e2d9e30ff92acb899eef')
     version('4.1.0', '657727e4209befa4bf5889dff62d9e0a')
@@ -43,7 +25,8 @@ class QtCreator(QMakePackage):
     # built with a different version of sqlite than the bundled copy, it will
     # cause symbol conflict. Force Spack to build with the same version of
     # sqlite as the bundled copy.
-    depends_on('sqlite@3.8.10.2')
+    depends_on('sqlite@3.8.10.2', when='@:4.4.0')
+    depends_on('sqlite@3.8.10.3:', when='@4.8.0:')
 
     # Qt Creator 4.3.0+ requires a C++14 compiler
     conflicts('%gcc@:4.8', when='@4.3.0:')

@@ -22,16 +22,22 @@ packages:
       blas: [openblas]
       daal: [intel-daal]
       elf: [elfutils]
-      gl: [mesa, opengl]
+      fftw-api: [fftw]
+      gl: [mesa+opengl, opengl]
+      glx: [mesa+glx, opengl]
       glu: [mesa-glu, openglu]
       golang: [gcc]
       ipp: [intel-ipp]
-      java: [jdk]
+      java: [jdk, openjdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas]
+      mariadb-client: [mariadb-c-client, mariadb]
       mkl: [intel-mkl]
       mpe: [mpe2]
       mpi: [openmpi, mpich]
+      mysql-client: [mysql, mariadb-c-client]
+      ninja: [ninja, ninja-fortran]
+      ninja-fortran: [ninja-fortran, ninja@kitware]
       opencl: [pocl]
       openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]
@@ -40,4 +46,6 @@ packages:
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
-
+    permissions:
+      read: world
+      write: user

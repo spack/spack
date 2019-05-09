@@ -1,0 +1,8 @@
+enable:
+  - tcl
+tcl:
+  ^mpich2:
+    autoload: 'direct'
+
+  ^python:
+    autoload: 'direct'

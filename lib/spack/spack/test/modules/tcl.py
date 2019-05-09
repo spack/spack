@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import pytest
 import spack.modules.common
@@ -170,7 +151,7 @@ class TestTcl(object):
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory('mpileaks')
-        expected = '${PACKAGE}/${VERSION}-${COMPILERNAME}'
+        expected = '{name}/{version}-{compiler.name}'
 
         assert writer.conf.naming_scheme == expected
 
@@ -210,6 +191,23 @@ class TestTcl(object):
         module_configuration('wrong_conflicts')
         with pytest.raises(SystemExit):
             modulefile_content('mpileaks')
+
+    def test_module_index(
+            self, module_configuration, factory, tmpdir_factory):
+
+        module_configuration('suffix')
+
+        w1, s1 = factory('mpileaks')
+        w2, s2 = factory('callpath')
+
+        test_root = str(tmpdir_factory.mktemp('module-root'))
+
+        spack.modules.common.generate_module_index(test_root, [w1, w2])
+
+        index = spack.modules.common.read_module_index(test_root)
+
+        assert index[s1.dag_hash()].use_name == w1.layout.use_name
+        assert index[s2.dag_hash()].path == w2.layout.filename
 
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""
@@ -295,3 +293,20 @@ class TestTcl(object):
         for item in callpath_specs:
             writer = writer_cls(item)
             assert writer.conf.blacklisted
+
+    @pytest.mark.regression('9624')
+    @pytest.mark.db
+    def test_autoload_with_constraints(
+            self, modulefile_content, module_configuration, database
+    ):
+        """Tests the automatic loading of direct dependencies."""
+
+        module_configuration('autoload_with_constraints')
+
+        # Test the mpileaks that should have the autoloaded dependencies
+        content = modulefile_content('mpileaks ^mpich2')
+        assert len([x for x in content if 'is-loaded' in x]) == 2
+
+        # Test the mpileaks that should NOT have the autoloaded dependencies
+        content = modulefile_content('mpileaks ^mpich')
+        assert len([x for x in content if 'is-loaded' in x]) == 0

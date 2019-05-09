@@ -1,31 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import re
 import itertools
 
+import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.multiproc as mp
 
@@ -35,7 +17,7 @@ import spack.architecture
 from spack.util.executable import Executable, ProcessError
 from spack.util.environment import get_path
 
-__all__ = ['Compiler', 'get_compiler_version']
+__all__ = ['Compiler']
 
 
 def _verify_executables(*paths):
@@ -44,24 +26,18 @@ def _verify_executables(*paths):
             raise CompilerAccessError(path)
 
 
-_version_cache = {}
+@llnl.util.lang.memoized
+def get_compiler_version_output(compiler_path, version_arg):
+    """Invokes the compiler at a given path passing a single
+    version argument and returns the output.
 
-
-def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
-    key = (compiler_path, version_arg, regex)
-    if key not in _version_cache:
-        compiler = Executable(compiler_path)
-        output = compiler(version_arg, output=str, error=str)
-
-        match = re.search(regex, output)
-        _version_cache[key] = match.group(1) if match else 'unknown'
-
-    return _version_cache[key]
-
-
-def dumpversion(compiler_path):
-    """Simple default dumpversion method -- this is what gcc does."""
-    return get_compiler_version(compiler_path, '-dumpversion')
+    Args:
+        compiler_path (path): path of the compiler to be invoked
+        version_arg (str): the argument used to extract version information
+    """
+    compiler = Executable(compiler_path)
+    output = compiler(version_arg, output=str, error=str)
+    return output
 
 
 def tokenize_flags(flags_str):
@@ -111,6 +87,12 @@ class Compiler(object):
     # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
     # version suffix for gcc.
     suffixes = [r'-.*']
+
+    #: Compiler argument that produces version information
+    version_argument = '-dumpversion'
+
+    #: Regex used to extract version from compiler's output
+    version_regex = '(.*)'
 
     # Default flags used by a compiler to set an rpath
     @property
@@ -223,7 +205,15 @@ class Compiler(object):
     @classmethod
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
-        return dumpversion(cc)
+        output = get_compiler_version_output(cc, cls.version_argument)
+        return cls.extract_version_from_output(output)
+
+    @classmethod
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
+        """Extracts the version from compiler's output."""
+        match = re.search(cls.version_regex, output)
+        return match.group(1) if match else 'unknown'
 
     @classmethod
     def cc_version(cls, cc):

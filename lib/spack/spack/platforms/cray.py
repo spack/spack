@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import re
 import llnl.util.tty as tty
@@ -69,6 +50,10 @@ class Cray(Platform):
             name = target.replace('-', '_')
             self.add_target(name, Target(name, 'craype-%s' % target))
 
+        self.add_target("x86_64", Target("x86_64"))
+        self.add_target("front_end", Target("x86_64"))
+        self.front_end = "x86_64"
+
         # Get aliased targets from config or best guess from environment:
         for name in ('front_end', 'back_end'):
             _target = getattr(self, name, None)
@@ -104,7 +89,7 @@ class Cray(Platform):
         """
         # Unload these modules to prevent any silent linking or unnecessary
         # I/O profiling in the case of darshan.
-        modules_to_unload = ["cray-mpich", "darshan", "cray-libsci"]
+        modules_to_unload = ["cray-mpich", "darshan", "cray-libsci", "altd"]
         for module in modules_to_unload:
             unload_module(module)
 
@@ -130,24 +115,13 @@ class Cray(Platform):
         A bash subshell is launched with a wiped environment and the list of
         loaded modules is parsed for the first acceptable CrayPE target.
         '''
-        # Based on the incantation:
-        # echo "$(env - USER=$USER /bin/bash -l -c 'module list -lt')"
+        # env -i /bin/bash -lc echo $CRAY_CPU_TARGET 2> /dev/null
         if getattr(self, 'default', None) is None:
             env = which('env')
-            env.add_default_arg('-')
-            # CAUTION - $USER is generally needed in the sub-environment.
-            # There may be other variables needed for general success.
-            output = env('USER=%s' % os.environ['USER'],
-                         'HOME=%s' % os.environ['HOME'],
-                         '/bin/bash', '--noprofile', '--norc', '-c',
-                         '. /etc/profile; module list -lt',
-                         output=str, error=str)
-            self._defmods = _get_modules_in_modulecmd_output(output)
-            targets = []
-            _fill_craype_targets_from_modules(targets, self._defmods)
-            self.default = targets[0] if targets else None
-            tty.debug("Found default modules:",
-                      *["     %s" % mod for mod in self._defmods])
+            output = env("-i", "/bin/bash", "-lc", "echo $CRAY_CPU_TARGET",
+                         output=str, error=os.devnull)
+            self.default = output.strip()
+            tty.debug("Found default module:%s" % self.default)
         return self.default
 
     def _avail_targets(self):

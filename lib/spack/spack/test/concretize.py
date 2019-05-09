@@ -1,31 +1,13 @@
-#############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import pytest
 import llnl.util.lang
 
 import spack.architecture
+import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec
@@ -149,9 +131,11 @@ class TestConcretize(object):
         concrete = check_concretize('mpileaks   ^mpich2@1.3.1:1.4')
         assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
-    def test_concretize_disable_compiler_existence_check(self):
-        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            check_concretize('dttop %gcc@100.100')
+    def test_concretize_enable_disable_compiler_existence_check(self):
+        with spack.concretize.concretizer.enable_compiler_existence_check():
+            with pytest.raises(
+                    spack.concretize.UnavailableCompilerVersionError):
+                check_concretize('dttop %gcc@100.100')
 
         with spack.concretize.concretizer.disable_compiler_existence_check():
             spec = check_concretize('dttop %gcc@100.100')
@@ -198,9 +182,9 @@ class TestConcretize(object):
                       ' ^cmake %clang@3.5 platform=test os=fe target=fe')
         client.concretize()
         cmake = client['cmake']
-        assert set(client.compiler_flags['cflags']) == set(['-O0'])
+        assert set(client.compiler_flags['cflags']) == set(['-O0', '-g'])
         assert set(cmake.compiler_flags['cflags']) == set(['-O3'])
-        assert set(client.compiler_flags['fflags']) == set(['-O0'])
+        assert set(client.compiler_flags['fflags']) == set(['-O0', '-g'])
         assert not set(cmake.compiler_flags['fflags'])
 
     def test_architecture_inheritance(self):
@@ -243,6 +227,17 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
 
+    @pytest.mark.parametrize("spec,version", [
+        ('dealii', 'develop'),
+        ('xsdk', '0.4.0'),
+    ])
+    def concretize_difficult_packages(self, a, b):
+        """Test a couple of large packages that are often broken due
+        to current limitations in the concretizer"""
+        s = Spec(a + '@' + b)
+        s.concretize()
+        assert s[a].version == ver(b)
+
     def test_concretize_two_virtuals(self):
 
         """Test a package with multiple virtual dependencies."""
@@ -275,10 +270,13 @@ class TestConcretize(object):
         with pytest.raises(spack.spec.MultipleProviderError):
             s.concretize()
 
-    def test_no_matching_compiler_specs(self):
-        s = Spec('a %gcc@0.0.0')
-        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            s.concretize()
+    def test_no_matching_compiler_specs(self, mock_config):
+        # only relevant when not building compilers as needed
+        with spack.concretize.concretizer.enable_compiler_existence_check():
+            s = Spec('a %gcc@0.0.0')
+            with pytest.raises(
+                    spack.concretize.UnavailableCompilerVersionError):
+                s.concretize()
 
     def test_no_compilers_for_arch(self):
         s = Spec('a arch=linux-rhel0-x86_64')
@@ -528,3 +526,41 @@ class TestConcretize(object):
         t.concretize()
 
         assert s.dag_hash() == t.dag_hash()
+
+    @pytest.mark.parametrize('abstract_specs', [
+        # Establish a baseline - concretize a single spec
+        ('mpileaks',),
+        # When concretized together with older version of callpath
+        # and dyninst it uses those older versions
+        ('mpileaks', 'callpath@0.9', 'dyninst@8.1.1'),
+        # Handle recursive syntax within specs
+        ('mpileaks', 'callpath@0.9 ^dyninst@8.1.1', 'dyninst'),
+        # Test specs that have overlapping dependencies but are not
+        # one a dependency of the other
+        ('mpileaks', 'direct-mpich')
+    ])
+    def test_simultaneous_concretization_of_specs(self, abstract_specs):
+
+        abstract_specs = [Spec(x) for x in abstract_specs]
+        concrete_specs = spack.concretize.concretize_specs_together(
+            *abstract_specs
+        )
+
+        # Check there's only one configuration of each package in the DAG
+        names = set(
+            dep.name for spec in concrete_specs for dep in spec.traverse()
+        )
+        for name in names:
+            name_specs = set(
+                spec[name] for spec in concrete_specs if name in spec
+            )
+            assert len(name_specs) == 1
+
+        # Check that there's at least one Spec that satisfies the
+        # initial abstract request
+        for aspec in abstract_specs:
+            assert any(cspec.satisfies(aspec) for cspec in concrete_specs)
+
+        # Make sure the concrete spec are top-level specs with no dependents
+        for spec in concrete_specs:
+            assert not spec.dependents()

@@ -1,38 +1,39 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 import os
 import sys
 from shutil import copytree, ignore_patterns
 
+import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.paths
-from spack.compiler import Compiler, _version_cache, UnsupportedCompilerFlag
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
+
+
+#: compiler symlink mappings for mixed f77 compilers
+f77_mapping = [
+    ('gfortran', 'clang/gfortran'),
+    ('xlf_r', 'xl_r/xlf_r'),
+    ('xlf', 'xl/xlf'),
+    ('pgfortran', 'pgi/pgfortran'),
+    ('ifort', 'intel/ifort')
+]
+
+#: compiler symlink mappings for mixed f90/fc compilers
+fc_mapping = [
+    ('gfortran', 'clang/gfortran'),
+    ('xlf90_r', 'xl_r/xlf90_r'),
+    ('xlf90', 'xl/xlf90'),
+    ('pgfortran', 'pgi/pgfortran'),
+    ('ifort', 'intel/ifort')
+]
 
 
 class Clang(Compiler):
@@ -48,22 +49,31 @@ class Clang(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['flang', 'gfortran', 'xlf90_r']
 
-    # Named wrapper links within lib/spack/env
-    link_paths = {'cc': 'clang/clang',
-                  'cxx': 'clang/clang++'}
+    # Clang has support for using different fortran compilers with the
+    # clang executable.
+    @property
+    def link_paths(self):
+        # clang links are always the same
+        link_paths = {'cc': 'clang/clang',
+                      'cxx': 'clang/clang++'}
 
-    if sys.platform == 'darwin':
-        # Use default wrappers for fortran, in case provided in
-        # compilers.yaml
-        link_paths['f77'] = 'clang/gfortran'
-        link_paths['fc'] = 'clang/gfortran'
-    elif spack.architecture.sys_type() == 'linux-rhel7-ppc64le':
-        # This platform uses clang with IBM XL Fortran compiler
-        link_paths['f77'] = 'xl_r/xlf_r'
-        link_paths['fc'] = 'xl_r/xlf90_r'
-    else:
-        link_paths['f77'] = 'clang/flang'
-        link_paths['fc'] = 'clang/flang'
+        # fortran links need to look at the actual compiler names from
+        # compilers.yaml to figure out which named symlink to use
+        for compiler_name, link_path in f77_mapping:
+            if self.f77 and compiler_name in self.f77:
+                link_paths['f77'] = link_path
+                break
+        else:
+            link_paths['f77'] = 'clang/flang'
+
+        for compiler_name, link_path in fc_mapping:
+            if self.fc and compiler_name in self.fc:
+                link_paths['fc'] = link_path
+                break
+        else:
+            link_paths['fc'] = 'clang/flang'
+
+        return link_paths
 
     @property
     def is_apple(self):
@@ -152,6 +162,7 @@ class Clang(Compiler):
         return "-fPIC"
 
     @classmethod
+    @llnl.util.lang.memoized
     def default_version(cls, comp):
         """The ``--version`` option works for clang compilers.
         On most platforms, output looks like this::
@@ -166,24 +177,26 @@ class Clang(Compiler):
             Target: x86_64-apple-darwin15.2.0
             Thread model: posix
         """
-        if comp not in _version_cache:
-            compiler = Executable(comp)
-            output = compiler('--version', output=str, error=str)
+        compiler = Executable(comp)
+        output = compiler('--version', output=str, error=str)
+        return cls.extract_version_from_output(output)
 
-            ver = 'unknown'
-            match = re.search(r'^Apple LLVM version ([^ )]+)', output)
-            if match:
-                # Apple's LLVM compiler has its own versions, so suffix them.
-                ver = match.group(1) + '-apple'
-            else:
-                # Normal clang compiler versions are left as-is
-                match = re.search(r'clang version ([^ )]+)', output)
-                if match:
-                    ver = match.group(1)
-
-            _version_cache[comp] = ver
-
-        return _version_cache[comp]
+    @classmethod
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
+        ver = 'unknown'
+        match = re.search(
+            # Apple's LLVM compiler has its own versions, so suffix them.
+            r'^Apple LLVM version ([^ )]+)|'
+            # Normal clang compiler versions are left as-is
+            r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+            r'clang version ([^ )]+)',
+            output
+        )
+        if match:
+            suffix = '-apple' if match.lastindex == 1 else ''
+            ver = match.group(match.lastindex) + suffix
+        return ver
 
     @classmethod
     def fc_version(cls, fc):

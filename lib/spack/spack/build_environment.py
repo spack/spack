@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This module contains all routines related to setting up the package
 build environment.  All of this is set up by package.py just before
@@ -64,6 +45,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
+from llnl.util.lang import dedupe
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -72,10 +54,11 @@ import spack.main
 import spack.paths
 import spack.store
 from spack.util.string import plural
-from spack.environment import EnvironmentModifications, validate
-from spack.environment import preserve_environment
-from spack.util.environment import env_flag, filter_system_paths, get_path
+from spack.util.environment import (
+    env_flag, filter_system_paths, get_path, is_system_path,
+    EnvironmentModifications, validate, preserve_environment)
 from spack.util.environment import system_dirs
+from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
 from spack.util.log_parse import parse_log_events, make_log_context
@@ -92,7 +75,9 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
-SPACK_DEPENDENCIES = 'SPACK_DEPENDENCIES'
+SPACK_INCLUDE_DIRS = 'SPACK_INCLUDE_DIRS'
+SPACK_LINK_DIRS = 'SPACK_LINK_DIRS'
+SPACK_RPATH_DIRS = 'SPACK_RPATH_DIRS'
 SPACK_RPATH_DEPS = 'SPACK_RPATH_DEPS'
 SPACK_LINK_DEPS = 'SPACK_LINK_DEPS'
 SPACK_PREFIX = 'SPACK_PREFIX'
@@ -160,6 +145,13 @@ def clean_environment():
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
+
+    build_lang = spack.config.get('config:build_language')
+    if build_lang:
+        # Override language-related variables. This can be used to force
+        # English compiler messages etc., which allows parse_log_events to
+        # show useful matches.
+        env.set('LC_ALL', build_lang)
 
     # Remove any macports installs from the PATH.  The macports ld can
     # cause conflicts with the built-in linker on el capitan.  Solves
@@ -269,10 +261,53 @@ def set_build_environment_variables(pkg, env, dirty):
     build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
+    link_dirs = []
+    include_dirs = []
+    rpath_dirs = []
+
+    # The top-level package is always RPATHed. It hasn't been installed yet
+    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
+    # not be created for the install).
+    for libdir in ['lib', 'lib64']:
+        lib_path = os.path.join(pkg.prefix, libdir)
+        rpath_dirs.append(lib_path)
+
+    # Set up link, include, RPATH directories that are passed to the
+    # compiler wrapper
+    for dep in link_deps:
+        if is_system_path(dep.prefix):
+            continue
+        query = pkg.spec[dep.name]
+        dep_link_dirs = list()
+        try:
+            dep_link_dirs.extend(query.libs.directories)
+        except NoLibrariesError:
+            tty.debug("No libraries found for {0}".format(dep.name))
+
+        for default_lib_dir in ['lib', 'lib64']:
+            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
+            if os.path.isdir(default_lib_prefix):
+                dep_link_dirs.append(default_lib_prefix)
+
+        link_dirs.extend(dep_link_dirs)
+        if dep in rpath_deps:
+            rpath_dirs.extend(dep_link_dirs)
+
+        try:
+            include_dirs.extend(query.headers.directories)
+        except NoHeadersError:
+            tty.debug("No headers found for {0}".format(dep.name))
+
+    link_dirs = list(dedupe(filter_system_paths(link_dirs)))
+    include_dirs = list(dedupe(filter_system_paths(include_dirs)))
+    rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
+
+    env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
+    env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
+    env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
+
     build_prefixes      = [dep.prefix for dep in build_deps]
-    link_prefixes       = [dep.prefix for dep in link_deps]
     build_link_prefixes = [dep.prefix for dep in build_link_deps]
-    rpath_prefixes      = [dep.prefix for dep in rpath_deps]
 
     # add run-time dependencies of direct build-time dependencies:
     for build_dep in build_deps:
@@ -285,25 +320,10 @@ def set_build_environment_variables(pkg, env, dirty):
     # contain hundreds of other packages installed in the same directory.
     # If these paths come first, they can overshadow Spack installations.
     build_prefixes      = filter_system_paths(build_prefixes)
-    link_prefixes       = filter_system_paths(link_prefixes)
     build_link_prefixes = filter_system_paths(build_link_prefixes)
-    rpath_prefixes      = filter_system_paths(rpath_prefixes)
-
-    # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    env.set_path(SPACK_DEPENDENCIES, build_link_prefixes)
-
-    # These variables control compiler wrapper behavior
-    env.set_path(SPACK_RPATH_DEPS, rpath_prefixes)
-    env.set_path(SPACK_LINK_DEPS, link_prefixes)
 
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
-
-    # Install prefix
-    env.set(SPACK_PREFIX, pkg.prefix)
-
-    # Install root prefix
-    env.set(SPACK_INSTALL, spack.store.root)
 
     # Set environment variables if specified for
     # the given compiler
@@ -354,7 +374,7 @@ def set_build_environment_variables(pkg, env, dirty):
         if os.path.isdir(ci):
             env_paths.append(ci)
 
-    for item in reversed(env_paths):
+    for item in env_paths:
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
 
@@ -362,7 +382,7 @@ def set_build_environment_variables(pkg, env, dirty):
     if spack.config.get('config:debug'):
         env.set(SPACK_DEBUG, 'TRUE')
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
-    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('{name}-{hash:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
 
     # Find ccache binary and hand it to build environment
@@ -382,10 +402,8 @@ def set_build_environment_variables(pkg, env, dirty):
     return env
 
 
-def set_module_variables_for_package(pkg, module):
-    """Populate the module scope of install() with some useful functions.
-       This makes things easier for package writers.
-    """
+def _set_variables_for_single_module(pkg, module):
+    """Helper function to set module variables for single module."""
     # number of jobs spack will build with.
     jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
     if not pkg.parallel:
@@ -456,6 +474,20 @@ def set_module_variables_for_package(pkg, module):
     m.static_to_shared_library = static_to_shared_library
 
 
+def set_module_variables_for_package(pkg):
+    """Populate the module scope of install() with some useful functions.
+       This makes things easier for package writers.
+    """
+    # If a user makes their own package repo, e.g.
+    # spack.pkg.mystuff.libelf.Libelf, and they inherit from an existing class
+    # like spack.pkg.original.libelf.Libelf, then set the module variables
+    # for both classes so the parent class can still use them if it gets
+    # called. parent_class_modules includes pkg.module.
+    modules = parent_class_modules(pkg.__class__)
+    for mod in modules:
+        _set_variables_for_single_module(pkg, mod)
+
+
 def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
                               **kwargs):
     """
@@ -509,16 +541,16 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
 
         compiler_args = [
             '-dynamiclib',
-            '-install_name {0}'.format(install_name),
+            '-install_name', '{0}'.format(install_name),
             '-Wl,-force_load,{0}'.format(static_lib)
         ]
 
         if compat_version:
-            compiler_args.append('-compatibility_version {0}'.format(
-                compat_version))
+            compiler_args.extend(['-compatibility_version', '{0}'.format(
+                compat_version)])
 
         if version:
-            compiler_args.append('-current_version {0}'.format(version))
+            compiler_args.extend(['-current_version', '{0}'.format(version)])
 
     if len(arguments) > 0:
         compiler_args.extend(arguments)
@@ -603,6 +635,8 @@ def get_std_meson_args(pkg):
 def parent_class_modules(cls):
     """
     Get list of superclass modules that descend from spack.package.PackageBase
+
+    Includes cls.__module__
     """
     if (not issubclass(cls, spack.package.PackageBase) or
         issubclass(spack.package.PackageBase, cls)):
@@ -646,23 +680,20 @@ def setup_package(pkg, dirty):
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False,
                                    deptype=('build', 'test')):
-        # If a user makes their own package repo, e.g.
-        # spack.pkg.mystuff.libelf.Libelf, and they inherit from
-        # an existing class like spack.pkg.original.libelf.Libelf,
-        # then set the module variables for both classes so the
-        # parent class can still use them if it gets called.
         spkg = dspec.package
-        modules = parent_class_modules(spkg.__class__)
-        for mod in modules:
-            set_module_variables_for_package(spkg, mod)
-        set_module_variables_for_package(spkg, spkg.module)
+        set_module_variables_for_package(spkg)
 
         # Allow dependencies to modify the module
         dpkg = dspec.package
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
-    set_module_variables_for_package(pkg, pkg.module)
+    if (not dirty) and (not spack_env.is_unset('CPATH')):
+        tty.debug("A dependency has updated CPATH, this may lead pkg-config"
+                  " to assume that the package is part of the system"
+                  " includes and omit it when invoked with '--cflags'.")
+
+    set_module_variables_for_package(pkg)
     pkg.setup_environment(spack_env, run_env)
 
     # Loading modules, in particular if they are meant to be used outside

@@ -1,32 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Implementation details of the ``spack module`` command."""
 
 import collections
 import os.path
 import shutil
+import sys
 
 from llnl.util import filesystem, tty
 
@@ -48,6 +30,11 @@ def setup_parser(subparser):
     refresh_parser.add_argument(
         '--delete-tree',
         help='delete the module file tree before refresh',
+        action='store_true'
+    )
+    refresh_parser.add_argument(
+        '--upstream-modules',
+        help='generate modules for packages installed upstream',
         action='store_true'
     )
     arguments.add_common_arguments(
@@ -73,22 +60,28 @@ def setup_parser(subparser):
         'loads',
         help='prompt the list of modules associated with a constraint'
     )
-    loads_parser.add_argument(
+    add_loads_arguments(loads_parser)
+    arguments.add_common_arguments(loads_parser, ['constraint'])
+
+    return sp
+
+
+def add_loads_arguments(subparser):
+    subparser.add_argument(
         '--input-only', action='store_false', dest='shell',
         help='generate input for module command (instead of a shell script)'
     )
-    loads_parser.add_argument(
+    subparser.add_argument(
         '-p', '--prefix', dest='prefix', default='',
         help='prepend to module names when issuing module load commands'
     )
-    loads_parser.add_argument(
+    subparser.add_argument(
         '-x', '--exclude', dest='exclude', action='append', default=[],
         help="exclude package from output; may be specified multiple times"
     )
     arguments.add_common_arguments(
-        loads_parser, ['constraint', 'recurse_dependencies']
+        subparser, ['recurse_dependencies']
     )
-    return sp
 
 
 class MultipleSpecsMatch(Exception):
@@ -117,7 +110,7 @@ def one_spec_or_raise(specs):
     return specs[0]
 
 
-def loads(module_type, specs, args):
+def loads(module_type, specs, args, out=sys.stdout):
     """Prompt the list of modules associated with a list of specs"""
 
     # Get a comprehensive list of specs
@@ -137,10 +130,14 @@ def loads(module_type, specs, args):
             )
 
     module_cls = spack.modules.module_types[module_type]
-    modules = [
-        (spec, module_cls(spec).layout.use_name)
-        for spec in specs if os.path.exists(module_cls(spec).layout.filename)
-    ]
+    modules = list()
+    for spec in specs:
+        if os.path.exists(module_cls(spec).layout.filename):
+            modules.append((spec, module_cls(spec).layout.use_name))
+        elif spec.package.installed_upstream:
+            tty.debug("Using upstream module for {0}".format(spec))
+            module = spack.modules.common.upstream_module(spec, module_type)
+            modules.append((spec, module.use_name))
 
     module_commands = {
         'tcl': 'module load ',
@@ -160,7 +157,8 @@ def loads(module_type, specs, args):
         d['comment'] = '' if not args.shell else '# {0}\n'.format(
             spec.format())
         d['name'] = mod
-        print(prompt_template.format(**d))
+        out.write(prompt_template.format(**d))
+        out.write('\n')
 
 
 def find(module_type, specs, args):
@@ -169,6 +167,12 @@ def find(module_type, specs, args):
     """
 
     spec = one_spec_or_raise(specs)
+
+    if spec.package.installed_upstream:
+        module = spack.modules.common.upstream_module(spec, module_type)
+        if module:
+            print(module.path)
+        return
 
     # Check if the module file is present
     def module_exists(spec):
@@ -243,6 +247,9 @@ def refresh(module_type, specs, args):
         tty.msg('No package matches your query')
         return
 
+    if not args.upstream_modules:
+        specs = list(s for s in specs if not s.package.installed_upstream)
+
     if not args.yes_to_all:
         msg = 'You are about to regenerate {types} module files for:\n'
         tty.msg(msg.format(types=module_type))
@@ -287,6 +294,7 @@ def refresh(module_type, specs, args):
 
     # If we arrived here we have at least one writer
     module_type_root = writers[0].layout.dirname()
+    spack.modules.common.generate_module_index(module_type_root, writers)
     # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=module_type))
     if os.path.isdir(module_type_root) and args.delete_tree:
@@ -336,7 +344,9 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
     except MultipleSpecsMatch:
         msg = "the constraint '{query}' matches multiple packages:\n"
         for s in specs:
-            msg += '\t' + s.cformat(format_string='$/ $_$@$+$%@+$+$=') + '\n'
+            spec_fmt = '{hash:7} {name}{@version}{%compiler}'
+            spec_fmt += '{compiler_flags}{variants}{arch=architecture}'
+            msg += '\t' + s.cformat(spec_fmt) + '\n'
         tty.error(msg.format(query=args.constraint))
         tty.die('In this context exactly **one** match is needed: please specify your constraints better.')  # NOQA: ignore=E501
 

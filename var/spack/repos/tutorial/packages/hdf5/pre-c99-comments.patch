@@ -1,0 +1,43 @@
+diff --git a/test/th5s.c b/test/th5s.c
+index 462bc36..8e18fad 100644
+--- a/test/th5s.c
++++ b/test/th5s.c
+@@ -730,8 +730,8 @@ test_h5s_zero_dim(void)
+         ret = H5Pset_chunk(plist_id, SPACE1_RANK, chunk_dims);
+         CHECK(ret, FAIL, "H5Pset_chunk");
+ 
+-        // ret = H5Pset_alloc_time(plist_id, alloc_time);
+-        // CHECK(ret, FAIL, "H5Pset_alloc_time");
++        /* ret = H5Pset_alloc_time(plist_id, alloc_time); */
++        /* CHECK(ret, FAIL, "H5Pset_alloc_time"); */
+ 
+         dset1 = H5Dcreate2(fid1, BASICDATASET1, H5T_NATIVE_INT, sid_chunk, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+         CHECK(dset1, FAIL, "H5Dcreate2");
+diff --git a/tools/h5dump/h5dump_ddl.c b/tools/h5dump/h5dump_ddl.c
+index ee6de5e..3ed6045 100644
+--- a/tools/h5dump/h5dump_ddl.c
++++ b/tools/h5dump/h5dump_ddl.c
+@@ -1341,8 +1341,8 @@ handle_attributes(hid_t fid, const char *attr, void UNUSED * data, int UNUSED pe
+     string_dataformat.do_escape = display_escape;
+     outputformat = &string_dataformat;
+ 
+-    //attr_name = attr + j + 1;
+-	// need to replace escape characters
++    /* attr_name = attr + j + 1; */
++	/* need to replace escape characters */
+ 	attr_name = h5tools_str_replace(attr + j + 1, "\\/", "/");
+ 
+ 
+diff --git a/tools/lib/h5tools_str.c b/tools/lib/h5tools_str.c
+index 9ce3524..3b4e5e7 100644
+--- a/tools/lib/h5tools_str.c
++++ b/tools/lib/h5tools_str.c
+@@ -632,7 +632,7 @@ h5tools_str_indent(h5tools_str_t *str, const h5tool_format_t *info,
+         h5tools_str_append(str, "%s", OPT(info->line_indent, ""));
+     }
+ 
+-//    ctx->need_prefix = 0;
++/*    ctx->need_prefix = 0; */
+ }
+ 
+ /*-------------------------------------------------------------------------

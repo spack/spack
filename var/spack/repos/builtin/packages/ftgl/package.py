@@ -1,30 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
-import sys
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
+import sys
+from spack import *
 
 
 class Ftgl(AutotoolsPackage):
@@ -35,10 +16,11 @@ class Ftgl(AutotoolsPackage):
     list_url = "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/"
     list_depth = 1
 
+    version('2.1.3-rc5', sha256='5458d62122454869572d39f8aa85745fc05d5518001bcefa63bd6cbb8d26565b')
     version('2.1.2', 'f81c0a7128192ba11e036186f9a968f2')
 
-    # There is an unnecessary qualifier around, which makes modern GCC sad
-    patch('remove-extra-qualifier.diff')
+    variant('doc', default=False, description='Build docs')
+    conflicts('+doc', when='@2.1.3-rc5')
 
     # Ftgl does not come with a configure script
     depends_on('autoconf', type='build')
@@ -50,18 +32,45 @@ class Ftgl(AutotoolsPackage):
     depends_on('gl')
     depends_on('glu')
     depends_on('freetype@2.0.9:')
+    depends_on('doxygen', type='build', when='+doc')
 
-    # Currently, "make install" will fail if the docs weren't built
-    #
-    # FIXME: Can someone with autotools experience fix the build system
-    #        so that it doesn't fail when that happens?
-    #
-    depends_on('doxygen', type='build')
+    # Fix unnecessary qualifier in 2.1.2.
+    patch('remove-extra-qualifier.diff', when='@2.1.2')
+    # Add missing GL libraries to LDFLAGS.
+    patch('ftgl-2.1.3-rc5-ldflags.patch', when='@2.1.3-rc5')
+
+    # Deactivate docs if we're not building them.
+    @when('@2.1.2~doc')
+    def patch(self):
+        filter_file('SUBDIRS = src demo docs',
+                    'SUBDIRS = src demo', os.path.join('unix', 'Makefile'))
+
+    @when('@2.1.3-rc5~doc')
+    def patch(self):
+        filter_file('SUBDIRS = src test demo docs',
+                    'SUBDIRS = src test demo', 'Makefile.am')
+        filter_file('SUBDIRS = src test demo docs',
+                    'SUBDIRS = src test demo', 'Makefile.in')
 
     @property
-    @when('@2.1.2')
     def configure_directory(self):
-        subdir = 'unix'
-        if sys.platform == 'darwin':
-            subdir = 'mac'
-        return os.path.join(self.stage.source_path, subdir)
+        if self.spec.satisfies('@2.1.2'):
+            subdir = 'mac' if sys.platform == 'darwin' else 'unix'
+            return os.path.join(self.stage.source_path, subdir)
+        else:
+            return self.stage.source_path
+
+    def configure_args(self):
+        args = ['--enable-shared', '--disable-static',
+                '--with-gl-inc={0}'.format(
+                    self.spec['gl'].prefix.include),
+                '--with-gl-lib={0}'.format(
+                    self.spec['gl'].prefix.lib),
+                '--with-freetype={0}'.format(
+                    self.spec['freetype'].prefix),
+                '--with-glut-inc={0}'.format(
+                    self.spec['glu'].prefix.include),
+                '--with-glut-lib={0}'.format(
+                    self.spec['glu'].prefix.lib),
+                '--with-x']
+        return args

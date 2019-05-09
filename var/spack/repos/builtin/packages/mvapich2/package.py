@@ -1,38 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import sys
 
 from spack import *
-from spack.error import SpackError
-
-
-def _process_manager_validator(values):
-    if len(values) > 1 and 'slurm' in values:
-        raise SpackError(
-            'slurm cannot be activated along with other process managers'
-        )
 
 
 class Mvapich2(AutotoolsPackage):
@@ -41,12 +14,12 @@ class Mvapich2(AutotoolsPackage):
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
+    # Prefer the latest stable release
+    version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf', preferred=True)
+    version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd')
     version('2.3rc2', '6fcf22fe2a16023b462ef57614daa357')
     version('2.3rc1', '386d79ae36b2136d203826465ad8b6cc')
     version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
-
-    # Prefer the latest stable release
-    version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd', preferred=True)
     version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e')
     version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
     version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
@@ -89,9 +62,12 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'process_managers',
         description='List of the process managers to activate',
-        values=('slurm', 'hydra', 'gforker', 'remshell'),
-        multi=True,
-        validator=_process_manager_validator
+        values=disjoint_sets(
+            ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
+        ).prohibit_empty_set().with_error(
+            "'slurm' or 'auto' cannot be activated along with "
+            "other process managers"
+        ).with_default('auto').with_non_feature_values('auto'),
     )
 
     variant(
@@ -99,8 +75,8 @@ class Mvapich2(AutotoolsPackage):
         description='The fabric enabled for this build',
         default='psm',
         values=(
-            'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
-            'nemesistcpib'
+            'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
+            'nemesisibtcp', 'nemesistcpib', 'nemesisofi'
         )
     )
 
@@ -113,19 +89,25 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'file_systems',
         description='List of the ROMIO file systems to activate',
-        values=('lustre', 'gpfs', 'nfs', 'ufs'),
-        multi=True
+        values=auto_or_any_combination_of('lustre', 'gpfs', 'nfs', 'ufs'),
     )
 
     depends_on('findutils', type='build')
     depends_on('bison', type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('zlib')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
+    depends_on('libxml2')
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
+    depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('rdma-core', when='fabrics=mrail')
     depends_on('rdma-core', when='fabrics=nemesisib')
     depends_on('rdma-core', when='fabrics=nemesistcpib')
     depends_on('rdma-core', when='fabrics=nemesisibtcp')
+    depends_on('libfabric', when='fabrics=nemesisofi')
+
+    conflicts('fabrics=psm2', when='@:2.1')  # psm2 support was added at version 2.2
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -174,6 +156,11 @@ class Mvapich2(AutotoolsPackage):
                 "--with-device=ch3:psm",
                 "--with-psm={0}".format(self.spec['psm'].prefix)
             ]
+        elif 'fabrics=psm2' in self.spec:
+            opts = [
+                "--with-device=ch3:psm",
+                "--with-psm2={0}".format(self.spec['opa-psm2'].prefix)
+            ]
         elif 'fabrics=sock' in self.spec:
             opts = ["--with-device=ch3:sock"]
         elif 'fabrics=nemesistcpib' in self.spec:
@@ -187,6 +174,9 @@ class Mvapich2(AutotoolsPackage):
         elif 'fabrics=mrail' in self.spec:
             opts = ["--with-device=ch3:mrail", "--with-rdma=gen2",
                     "--disable-mcast"]
+        elif 'fabrics=nemesisofi' in self.spec:
+            opts = ["--with-device=ch3:nemesis:ofi",
+                    "--with-ofi={0}".format(self.spec['libfabric'].prefix)]
         return opts
 
     @property

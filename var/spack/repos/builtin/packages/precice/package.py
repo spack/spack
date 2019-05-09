@@ -1,26 +1,8 @@
-##############################################################################
-# Copyright (c) 2018 Mark Olesen, OpenCFD Ltd.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file was authored by Mark Olesen <mark.olesen@esi-group.com>
-# and is released as part of spack under the LGPL license.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,9 +15,15 @@ class Precice(CMakePackage):
 
     homepage = 'https://www.precice.org'
     git      = 'https://github.com/precice/precice.git'
+    url      = 'https://github.com/precice/precice/archive/v1.2.0.tar.gz'
+    maintainers = ['fsimonis', 'MakisH']
 
-    # Skip version 1.1.1 entirely, the cmake was lacking install.
     version('develop', branch='develop')
+    version('1.4.1', sha256='dde4882edde17882340f9f601941d110d5976340bd71af54c6e6ea22ae56f1a5')
+    version('1.4.0', sha256='3499bfc0941fb9f004d5e32eb63d64f93e17b4057fab3ada1cde40c8311bd466')
+    version('1.3.0', sha256='610322ba1b03df8e8f7d060d57a6a5afeabd5db4e8c4a638d04ba4060a3aec96')
+    version('1.2.0', sha256='0784ecd002092949835151b90393beb6e9e7a3e9bd78ffd40d18302d6da4b05b')
+    # Skip version 1.1.1 entirely, the cmake was lacking install.
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('petsc', default=False, description='Enable PETSc support')
@@ -51,11 +39,13 @@ class Precice(CMakePackage):
 #        default=False, description='Use 64-bit integers for indices')
 
     depends_on('cmake@3.5:', type='build')
+    depends_on('cmake@3.9.6:', type='build', when='@1.4:')
     depends_on('boost@1.60.0:')
+    depends_on('boost@1.65.1:', when='@1.4:')
     depends_on('eigen@3.2:')
-    # Implicit via eigen, don't over-constrain: depends_on('libxml2')
+    depends_on('libxml2')
     depends_on('mpi', when='+mpi')
-    depends_on('petsc', when='+petsc')
+    depends_on('petsc@3.6:', when='+petsc')
     depends_on('python@2.7', when='+python', type=('build', 'run'))
 
     def cmake_args(self):

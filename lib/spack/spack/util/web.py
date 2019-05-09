@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import re
@@ -79,18 +60,82 @@ class LinkParser(HTMLParser):
 
 class NonDaemonProcess(multiprocessing.Process):
     """Process tha allows sub-processes, so pools can have sub-pools."""
-    def _get_daemon(self):
+    @property
+    def daemon(self):
         return False
 
-    def _set_daemon(self, value):
+    @daemon.setter
+    def daemon(self, value):
         pass
 
-    daemon = property(_get_daemon, _set_daemon)
+
+if sys.version_info[0] < 3:
+    class NonDaemonPool(multiprocessing.pool.Pool):
+        """Pool that uses non-daemon processes"""
+        Process = NonDaemonProcess
+else:
+
+    class NonDaemonContext(type(multiprocessing.get_context())):
+        Process = NonDaemonProcess
+
+    class NonDaemonPool(multiprocessing.pool.Pool):
+        """Pool that uses non-daemon processes"""
+
+        def __init__(self, *args, **kwargs):
+            kwargs['context'] = NonDaemonContext()
+            super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
-class NonDaemonPool(multiprocessing.pool.Pool):
-    """Pool that uses non-daemon processes"""
-    Process = NonDaemonProcess
+def _read_from_url(url, accept_content_type=None):
+    context = None
+    verify_ssl = spack.config.get('config:verify_ssl')
+    pyver = sys.version_info
+    if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
+        if verify_ssl:
+            tty.warn("Spack will not check SSL certificates. You need to "
+                     "update your Python to enable certificate "
+                     "verification.")
+    elif verify_ssl:
+        # without a defined context, urlopen will not verify the ssl cert for
+        # python 3.x
+        context = ssl.create_default_context()
+    else:
+        context = ssl._create_unverified_context()
+
+    req = Request(url)
+
+    if accept_content_type:
+        # Make a HEAD request first to check the content type.  This lets
+        # us ignore tarballs and gigantic files.
+        # It would be nice to do this with the HTTP Accept header to avoid
+        # one round-trip.  However, most servers seem to ignore the header
+        # if you ask for a tarball with Accept: text/html.
+        req.get_method = lambda: "HEAD"
+        resp = _urlopen(req, timeout=_timeout, context=context)
+
+        if "Content-type" not in resp.headers:
+            tty.debug("ignoring page " + url)
+            return None, None
+
+        if not resp.headers["Content-type"].startswith(accept_content_type):
+            tty.debug("ignoring page " + url + " with content type " +
+                      resp.headers["Content-type"])
+            return None, None
+
+    # Do the real GET request when we know it's just HTML.
+    req.get_method = lambda: "GET"
+    response = _urlopen(req, timeout=_timeout, context=context)
+    response_url = response.geturl()
+
+    # Read the page and and stick it in the map we'll return
+    page = response.read().decode('utf-8')
+
+    return response_url, page
+
+
+def read_from_url(url, accept_content_type=None):
+    resp_url, contents = _read_from_url(url, accept_content_type)
+    return contents
 
 
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
@@ -114,46 +159,11 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         root = re.sub('/index.html$', '', root)
 
     try:
-        context = None
-        verify_ssl = spack.config.get('config:verify_ssl')
-        pyver = sys.version_info
-        if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
-            if verify_ssl:
-                tty.warn("Spack will not check SSL certificates. You need to "
-                         "update your Python to enable certificate "
-                         "verification.")
-        elif verify_ssl:
-            # We explicitly create default context to avoid error described in
-            # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
-            context = ssl.create_default_context()
-        else:
-            context = ssl._create_unverified_context()
+        response_url, page = _read_from_url(url, 'text/html')
 
-        # Make a HEAD request first to check the content type.  This lets
-        # us ignore tarballs and gigantic files.
-        # It would be nice to do this with the HTTP Accept header to avoid
-        # one round-trip.  However, most servers seem to ignore the header
-        # if you ask for a tarball with Accept: text/html.
-        req = Request(url)
-        req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=_timeout, context=context)
-
-        if "Content-type" not in resp.headers:
-            tty.debug("ignoring page " + url)
+        if not response_url or not page:
             return pages, links
 
-        if not resp.headers["Content-type"].startswith('text/html'):
-            tty.debug("ignoring page " + url + " with content type " +
-                      resp.headers["Content-type"])
-            return pages, links
-
-        # Do the real GET request when we know it's just HTML.
-        req.get_method = lambda: "GET"
-        response = _urlopen(req, timeout=_timeout, context=context)
-        response_url = response.geturl()
-
-        # Read the page and and stick it in the map we'll return
-        page = response.read().decode('utf-8')
         pages[response_url] = page
 
         # Parse out the links in the page
@@ -329,13 +339,15 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += '(\/download)?$'
+        url_regex += r'(\/download)?$'
 
         regexes.append(url_regex)
 
     # Build a dict version -> URL from any links that match the wildcards.
+    # Walk through archive_url links first.
+    # Any conflicting versions will be overwritten by the list_url links.
     versions = {}
-    for url in links:
+    for url in archive_urls + sorted(links):
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)

@@ -1,44 +1,34 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class Breseq(AutotoolsPackage):
-    """breseq is a computational pipeline for finding mutations relative to a
-    reference sequence in short-read DNA re-sequencing data for haploid
+    """breseq is a computational pipeline for finding mutations relative to
+    a reference sequence in short-read DNA re-sequencing data for haploid
     microbial-sized genomes."""
 
     homepage = "http://barricklab.org/breseq"
     url      = "https://github.com/barricklab/breseq/archive/v0.31.1.tar.gz"
 
+    version('0.33.2', sha256='c698d2d25cc7ed251ff916343a8c04f79b5540281288cb7c955f458255ac21de')
+    version('0.33.1', sha256='e24a50e254ad026c519747313b9e42bbeb32bd766a6a06ed369bd5b9dc50e84d')
     version('0.31.1', 'a4e602d5481f8692833ba3d5a3cd0394')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
+    depends_on('zlib', type='build')
 
     depends_on('bedtools2', type='run')
     depends_on('r', type='run')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('LDFLAGS',
+                      "-L{0}".format(self.spec['zlib'].prefix.lib))
+        spack_env.set('CFLAGS',
+                      "-I{0}".format(self.spec['zlib'].prefix.include))

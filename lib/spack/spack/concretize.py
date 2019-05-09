@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 Functions here are used to take abstract specs and make them concrete.
 For example, if a spec asks for a version between 1.8 and 1.9, these
@@ -34,6 +15,12 @@ TODO: make this customizable and allow users to configure
       concretization  policies.
 """
 from __future__ import print_function
+
+import os.path
+import tempfile
+import llnl.util.filesystem as fs
+import llnl.util.tty as tty
+
 from itertools import chain
 from functools_backport import reverse_order
 from contextlib import contextmanager
@@ -47,6 +34,8 @@ import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
+import spack.tengine
+from spack.config import config
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
@@ -66,12 +55,20 @@ class Concretizer(object):
     def __init__(self):
         # controls whether we check that compiler versions actually exist
         # during concretization. Used for testing and for mirror creation
-        self.check_for_compiler_existence = True
+        self.check_for_compiler_existence = not config.get(
+            'config:install_missing_compilers', False)
 
     @contextmanager
     def disable_compiler_existence_check(self):
         saved = self.check_for_compiler_existence
         self.check_for_compiler_existence = False
+        yield
+        self.check_for_compiler_existence = saved
+
+    @contextmanager
+    def enable_compiler_existence_check(self):
+        saved = self.check_for_compiler_existence
+        self.check_for_compiler_existence = True
         yield
         self.check_for_compiler_existence = saved
 
@@ -295,7 +292,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler if the target or operating system
         # is not yet determined
-        if not (spec.architecture.platform_os and spec.architecture.target):
+        if not (spec.architecture.os and spec.architecture.target):
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -322,36 +319,37 @@ class Concretizer(object):
         assert(other_spec)
 
         # Check if the compiler is already fully specified
-        if (other_compiler and other_compiler.concrete and
-                not self.check_for_compiler_existence):
-            spec.compiler = other_compiler.copy()
-            return True
-
-        all_compiler_specs = spack.compilers.all_compiler_specs()
-        if not all_compiler_specs:
-            # If compiler existence checking is disabled, then we would have
-            # exited by now if there were sufficient hints to form a full
-            # compiler spec. Therefore even if compiler existence checking is
-            # disabled, compilers must be available at this point because the
-            # available compilers are used to choose a compiler. If compiler
-            # existence checking is enabled then some compiler must exist in
-            # order to complete the spec.
-            raise spack.compilers.NoCompilersError()
-
-        if other_compiler in all_compiler_specs:
-            spec.compiler = other_compiler.copy()
-            if not _proper_compiler_style(spec.compiler, spec.architecture):
+        if other_compiler and other_compiler.concrete:
+            if (self.check_for_compiler_existence and not
+                    _proper_compiler_style(other_compiler, spec.architecture)):
                 _compiler_concretization_failure(
-                    spec.compiler, spec.architecture)
+                    other_compiler, spec.architecture)
+            spec.compiler = other_compiler
             return True
 
-        # Filter the compilers into a sorted list based on the compiler_order
-        # from spackconfig
-        compiler_list = all_compiler_specs if not other_compiler else \
-            spack.compilers.find(other_compiler)
-        if not compiler_list:
-            # No compiler with a satisfactory spec was found
-            raise UnavailableCompilerVersionError(other_compiler)
+        if other_compiler:  # Another node has abstract compiler information
+            compiler_list = spack.compilers.find_specs_by_arch(
+                other_compiler, spec.architecture
+            )
+            if not compiler_list:
+                # We don't have a matching compiler installed
+                if not self.check_for_compiler_existence:
+                    # Concretize compiler spec versions as a package to build
+                    cpkg_spec = spack.compilers.pkg_spec_for_compiler(
+                        other_compiler
+                    )
+                    self.concretize_version(cpkg_spec)
+                    spec.compiler.versions = cpkg_spec.versions
+                    return True
+                else:
+                    # No compiler with a satisfactory spec was found
+                    raise UnavailableCompilerVersionError(other_compiler)
+        else:
+            # We have no hints to go by, grab any compiler
+            compiler_list = spack.compilers.all_compiler_specs()
+            if not compiler_list:
+                # Spack has no compilers.
+                raise spack.compilers.NoCompilersError()
 
         # By default, prefer later versions of compilers
         compiler_list = sorted(
@@ -380,7 +378,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler flags if the target or operating
         # system is not set.
-        if not (spec.architecture.platform_os and spec.architecture.target):
+        if not (spec.architecture.os and spec.architecture.target):
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -399,13 +397,12 @@ class Concretizer(object):
                                if (compiler_match(p) and
                                    (p is not spec) and
                                    flag in p.compiler_flags))
-                nearest_flags = set(nearest.compiler_flags.get(flag, []))
-                flags = set(spec.compiler_flags.get(flag, []))
-                if (nearest_flags - flags):
-                    # TODO: these set operations may reorder the flags, which
-                    # for some orders of flags can be invalid. See:
-                    # https://github.com/spack/spack/issues/6154#issuecomment-342365573
-                    spec.compiler_flags[flag] = list(nearest_flags | flags)
+                nearest_flags = nearest.compiler_flags.get(flag, [])
+                flags = spec.compiler_flags.get(flag, [])
+                if set(nearest_flags) - set(flags):
+                    spec.compiler_flags[flag] = list(
+                        llnl.util.lang.dedupe(nearest_flags + flags)
+                    )
                     ret = True
             except StopIteration:
                 pass
@@ -421,10 +418,12 @@ class Concretizer(object):
                 raise
             return ret
         for flag in compiler.flags:
-            config_flags = set(compiler.flags.get(flag, []))
-            flags = set(spec.compiler_flags.get(flag, []))
-            spec.compiler_flags[flag] = list(config_flags | flags)
-            if (config_flags - flags):
+            config_flags = compiler.flags.get(flag, [])
+            flags = spec.compiler_flags.get(flag, [])
+            spec.compiler_flags[flag] = list(
+                llnl.util.lang.dedupe(config_flags + flags)
+            )
+            if set(config_flags) - set(flags):
                 ret = True
 
         return ret
@@ -473,17 +472,69 @@ def _compiler_concretization_failure(compiler_spec, arch):
         raise UnavailableCompilerVersionError(compiler_spec, arch)
 
 
+def concretize_specs_together(*abstract_specs):
+    """Given a number of specs as input, tries to concretize them together.
+
+    Args:
+        *abstract_specs: abstract specs to be concretized, given either
+            as Specs or strings
+
+    Returns:
+        List of concretized specs
+    """
+    def make_concretization_repository(abstract_specs):
+        """Returns the path to a temporary repository created to contain
+        a fake package that depends on all of the abstract specs.
+        """
+        tmpdir = tempfile.mkdtemp()
+        repo_path, _ = spack.repo.create_repo(tmpdir)
+
+        debug_msg = '[CONCRETIZATION]: Creating helper repository in {0}'
+        tty.debug(debug_msg.format(repo_path))
+
+        pkg_dir = os.path.join(repo_path, 'packages', 'concretizationroot')
+        fs.mkdirp(pkg_dir)
+        environment = spack.tengine.make_environment()
+        template = environment.get_template('misc/coconcretization.pyt')
+
+        # Split recursive specs, as it seems the concretizer has issue
+        # respecting conditions on dependents expressed like
+        # depends_on('foo ^bar@1.0'), see issue #11160
+        split_specs = [dep for spec in abstract_specs
+                       for dep in spec.traverse(root=True)]
+
+        with open(os.path.join(pkg_dir, 'package.py'), 'w') as f:
+            f.write(template.render(specs=[str(s) for s in split_specs]))
+
+        return spack.repo.Repo(repo_path)
+
+    abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
+    concretization_repository = make_concretization_repository(abstract_specs)
+
+    with spack.repo.additional_repository(concretization_repository):
+        # Spec from a helper package that depends on all the abstract_specs
+        concretization_root = spack.spec.Spec('concretizationroot')
+        concretization_root.concretize()
+        # Retrieve the direct dependencies
+        concrete_specs = [
+            concretization_root[spec.name].copy() for spec in abstract_specs
+        ]
+
+    return concrete_specs
+
+
 class NoCompilersForArchError(spack.error.SpackError):
     def __init__(self, arch, available_os_targets):
         err_msg = ("No compilers found"
                    " for operating system %s and target %s."
                    "\nIf previous installations have succeeded, the"
                    " operating system may have been updated." %
-                   (arch.platform_os, arch.target))
+                   (arch.os, arch.target))
 
         available_os_target_strs = list()
-        for os, t in available_os_targets:
-            os_target_str = "%s-%s" % (os, t) if t else os
+        for operating_system, t in available_os_targets:
+            os_target_str = "%s-%s" % (operating_system, t) if t \
+                else operating_system
             available_os_target_strs.append(os_target_str)
         err_msg += (
             "\nCompilers are defined for the following"
@@ -502,7 +553,7 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
         err_msg = "No compilers with spec {0} found".format(compiler_spec)
         if arch:
             err_msg += " for operating system {0} and target {1}.".format(
-                arch.platform_os, arch.target
+                arch.os, arch.target
             )
 
         super(UnavailableCompilerVersionError, self).__init__(
