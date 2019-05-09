@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,13 +38,13 @@ class Chill(Package):
     #version('0.3', sha256='574b622368a6bfaadbe9c1fa02fabefdc6c006069246f67d299f943b7e1d8aa3')
     version('master', branch='master')
 
-    depends_on('rose@0.9.10.0 +cxx11')
+    depends_on('rose-for-chill@0.9.10.0 +cxx11')
     depends_on('iegenlib')
     depends_on('isl')
     depends_on('python')
 
     def setup_environment(self, spack_env, run_env):
-        rose_home = self.spec['rose'].prefix
+        rose_home = self.spec['rose-for-chill'].prefix
         boost_home = self.spec['boost'].prefix
         iegen_home = self.spec['iegenlib'].prefix
         
