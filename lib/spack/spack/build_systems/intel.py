@@ -965,7 +965,7 @@ class IntelPackage(PackageBase):
                 shared=True, recursive=True) + result
 
         if '^mpi' in self.spec.root and ('+mkl' in self.spec or
-                                    self.provides('scalapack')):
+                                         self.provides('scalapack')):
             result = self.scalapack_libs + result
 
         debug_print(result)
