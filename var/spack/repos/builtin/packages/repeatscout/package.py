@@ -17,6 +17,7 @@ class Repeatscout(MakefilePackage):
     version('1.0.5', sha256='bda6f782382f2b7dcb6a004b7da586d5046b3c12429b158e24787be62de6199c')
 
     depends_on('perl', type='run')
+    depends_on('trf', type='run')
 
     def edit(self, spec, prefix):
         filter_file('^INSTDIR.*$', 'INSTDIR=%s' % prefix.bin, 'Makefile')
