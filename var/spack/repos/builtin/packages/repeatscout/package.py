@@ -18,6 +18,7 @@ class Repeatscout(MakefilePackage):
 
     depends_on('perl', type='run')
     depends_on('trf', type='run')
+    depends_on('nseg', type='run')
 
     def edit(self, spec, prefix):
         filter_file('^INSTDIR.*$', 'INSTDIR=%s' % prefix.bin, 'Makefile')
