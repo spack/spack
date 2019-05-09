@@ -1,4 +1,4 @@
-# Contributor Covenant Code of Conduct
+# Spack Community Code of Conduct
 
 ## Our Pledge
 
@@ -30,7 +30,7 @@ Project maintainers have the right and responsibility to remove, edit, or reject
 
 ## Scope
 
-This Code of Conduct applies both within project spaces and in public spaces when an individual is representing the project or its community. Examples of representing a project or community include using an official project e-mail address, posting via an official social media account, or acting as an appointed representative at an online or offline event. Representation of a project may be further defined and clarified by project maintainers.
+This Code of Conduct applies both within project spaces and in public spaces when an individual is representing the Spack project or its community. Examples of representing the project or community include using an official project e-mail address, posting via an official social media account, or acting as an appointed representative at an online or offline event. Representation of the project may be further defined and clarified by Spack maintainers.
 
 ## Enforcement
 
