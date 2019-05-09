@@ -81,15 +81,10 @@ class Sirius(CMakePackage):
         ]
 
         if self.spec.satisfies('+elpa'):
-            elpa = self.spec['elpa']
-            elpa_suffix = '_openmp' if elpa.satisfies('+openmp') else ''
             elpa_incdir = os.path.join(
-                elpa.prefix,
-                'include',
-                'elpa{suffix}-{version!s}'.format(
-                    suffix=elpa_suffix, version=elpa.version),
-                'elpa')
-
+                self.spec['elpa'].headers.directories[0],
+                'elpa'
+            )
             args += ["-DELPA_INCLUDE_DIR={0}".format(elpa_incdir)]
 
         return args
