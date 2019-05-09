@@ -20,6 +20,7 @@ class Llvm(CMakePackage):
 
     family = 'compiler'  # Used by lmod
 
+    version('develop', git='https://github.com/llvm/llvm-project')
     version('9.0.0', sha256='7807fac25330e24e9955ca46cd855dd34bbc9cc4fdba8322366206654d1036f2')
     version('8.0.0', sha256='d81238b4a69e93e29f74ce56f8107cbfcf0c7d7b40510b7879e98cc031e25167')
     version('7.1.0', sha256='71c93979f20e01f1a1cc839a247945f556fa5e63abf2084e8468b238080fd839')
