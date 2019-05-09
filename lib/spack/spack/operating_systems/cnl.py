@@ -9,7 +9,7 @@ import llnl.util.tty as tty
 import llnl.util.multiproc as mp
 
 from spack.architecture import OperatingSystem
-from spack.util.module_cmd import get_module_cmd
+from spack.util.module_cmd import module
 
 
 class Cnl(OperatingSystem):
@@ -29,8 +29,7 @@ class Cnl(OperatingSystem):
         return self.name + str(self.version)
 
     def _detect_crayos_version(self):
-        modulecmd = get_module_cmd()
-        output = modulecmd("avail", "PrgEnv-", output=str, error=str)
+        output = module("avail", "PrgEnv-")
         matches = re.findall(r'PrgEnv-\w+/(\d+).\d+.\d+', output)
         major_versions = set(matches)
         latest_version = max(major_versions)
@@ -58,10 +57,7 @@ class Cnl(OperatingSystem):
             if not cmp_cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            modulecmd = get_module_cmd()
-
-            output = modulecmd(
-                'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)
+            output = module('avail', cmp_cls.PrgEnv_compiler)
             version_regex = r'(%s)/([\d\.]+[\d])' % cmp_cls.PrgEnv_compiler
             matches = re.findall(version_regex, output)
             for name, version in matches:
