@@ -37,7 +37,6 @@ class Nut(CMakePackage):
         install('README.md', prefix)
         mkdirp(prefix.bin)
         mkdirp(prefix.lib)
-        install('../spack-build/test/nut_unittests', prefix.bin)
         install('../spack-build/apps/bh-3', prefix.bin)
         install('../spack-build/lib/libnut.a', prefix.lib)
         install_tree('test/data', prefix.data)
