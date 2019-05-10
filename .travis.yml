@@ -34,7 +34,7 @@ jobs:
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.4'
       sudo: required
       os: linux
@@ -54,7 +54,7 @@ jobs:
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
       addons:
         apt:
           packages:
@@ -80,7 +80,7 @@ jobs:
       env: TEST_SUITE=doc
     - os: osx
       language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7 ]
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
