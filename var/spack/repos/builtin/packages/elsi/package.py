@@ -18,25 +18,37 @@ class Elsi(CMakePackage):
 
     version('2.2.1', sha256='5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d')
 
+    # Variants
     variant(
       'enable_pexsi', default=False, description='Enable PEXSI support'
     )
     variant(
       'enable_sips', default=False, description='Enable SLEPc-SIPs support'
     )
+    variant(
+      'external_elpa', default=True, description="Build ELPA using SPACK"
+    )
+    variant(
+      'external_ntpoly', default=True, description="Build NTPoly using SPACK"
+    )
 
+    # Basic dependencies
     depends_on('blas')
-    depends_on('cmake')
-    depends_on('elpa')
     depends_on('lapack')
+    depends_on('cmake')
     depends_on('mpi')
-    depends_on('ntpoly')
+    depends_on('scalapack')
+
+    # Library dependencies
+    depends_on('elpa', when='+external_elpa')
+    depends_on('ntpoly', when='+external_ntpoly')
     depends_on('slepc', when='+enable_sips')
     depends_on('petsc', when='+enable_sips')
-    depends_on('scalapack')
-    depends_on('superlu', when='+enable_pexsi')
+    depends_on('superlu-dist', when='+enable_pexsi')
 
     def cmake_args(self):
+        from os.path import dirname
+
         args = []
 
         # Compiler Information
@@ -46,10 +58,17 @@ class Elsi(CMakePackage):
         args += ["-DCMAKE_CXX_COMPILER="+self.spec["mpi"].mpicxx]
 
         # External Arguments
-        #args += ["-DUSE_EXTERNAL_ELPA=ON"]
-        args += ["-DUSE_EXTERNAL_NTPOLY=ON"]
+        if '+external_elpa' in self.spec:
+            args += ["-DUSE_EXTERNAL_ELPA=ON"]
 
-        # Optional parameters
+            # Setup the searchpath for elpa
+            elpa = self.spec['elpa']
+            elpa_module = find(elpa.prefix, 'elpa.mod')
+            args += ["-DINC_PATHS="+dirname(elpa_module[0])]
+
+        if '+external_ntpoly' in self.spec:
+            args += ["-DUSE_EXTERNAL_NTPOLY=ON"]
+        
         if '+enable_pexsi' in self.spec:
             args += ["-DENABLE_PEXSI=ON"]
             args += ["-DUSE_EXTERNAL_SUPERLU=ON"]
