@@ -29,7 +29,7 @@ jobs:
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '2.7'
       sudo: required
       os: linux
