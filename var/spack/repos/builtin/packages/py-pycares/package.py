@@ -1,5 +1,5 @@
-# Copyright 2019 Shane R. Spencer and other Spack Project Developers. See the
-# top-level COPYRIGHT file for details.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
