@@ -182,9 +182,6 @@ class Cp2k(MakefilePackage, CudaPackage):
         elif '^mpi@2:' in spec:
             cppflags.append('-D__MPI_VERSION=2')
 
-        if '^intel-mkl' in spec:
-            cppflags.append('-D__FFTSG')
-
         cflags = optimization_flags[self.spec.compiler.name][:]
         cxxflags = optimization_flags[self.spec.compiler.name][:]
         fcflags = optimization_flags[self.spec.compiler.name][:]
@@ -196,7 +193,12 @@ class Cp2k(MakefilePackage, CudaPackage):
         if '%intel' in spec:
             cflags.append('-fp-model precise')
             cxxflags.append('-fp-model precise')
-            fcflags.extend(['-fp-model source', '-heap-arrays 64'])
+            fcflags += [
+                '-fp-model source',
+                '-heap-arrays 64',
+                '-g',
+                '-traceback',
+            ]
         elif '%gcc' in spec:
             fcflags.extend([
                 '-ffree-form',
@@ -257,6 +259,11 @@ class Cp2k(MakefilePackage, CudaPackage):
         blas = spec['blas'].libs
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+
+        if self.spec.variants['blas'].value == 'mkl':
+            cppflags += ['-D__MKL']
+        elif self.spec.variants['blas'].value == 'accelerate':
+            cppflags += ['-D__ACCELERATE']
 
         # MPI
         if '+mpi' in self.spec:
