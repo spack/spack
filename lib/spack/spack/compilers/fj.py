@@ -22,7 +22,7 @@ class Fj(spack.compiler.Compiler):
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'fj/fcc',
-                  'cxx': 'fj/FCC',
+                  'cxx': 'fj/case-insensitive/FCC',
                   'f77': 'fj/frt',
                   'fc': 'fj/frt'}
 
