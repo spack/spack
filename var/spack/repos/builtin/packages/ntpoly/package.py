@@ -18,7 +18,7 @@ class Ntpoly(CMakePackage):
     homepage = "https://william-dawson.github.io/NTPoly/"
     url      = "https://github.com/william-dawson/NTPoly/archive/ntpoly-v2.3.1-alpha.tar.gz"
 
-    version('2.3.1-alpha', sha256='c3a6f008acde27638375a17ab2aaa9d2a15eb84c1d059685795596ce4352075e')
+    version('2.3.1', sha256='af8c7690321607fbdee9671b9cb3acbed945148014e0541435858cf82bfd887e')
 
     depends_on('cmake', type='build')
     depends_on('blas', type='build')
