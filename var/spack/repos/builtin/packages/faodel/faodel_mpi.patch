@@ -1,0 +1,68 @@
+diff --git a/src/kelpie/CMakeLists.txt b/src/kelpie/CMakeLists.txt
+index f2e8ef6..7f957a7 100644
+--- a/src/kelpie/CMakeLists.txt
++++ b/src/kelpie/CMakeLists.txt
+@@ -36,7 +36,7 @@ set( HEADERS
+      pools/DHTPool/DHTPool.hh
+      pools/PoolRegistry.hh
+      pools/UnconfiguredPool/UnconfiguredPool.hh
+-        services/PoolServerDriver.hh
++
+ )
+ 
+ set( SOURCES
+@@ -67,12 +67,17 @@ set( SOURCES
+      pools/PoolBase.cpp
+      pools/PoolRegistry.cpp
+      pools/UnconfiguredPool/UnconfiguredPool.cpp
+-        services/PoolServerDriver.cpp
+ )
+ 
+ if( Faodel_ENABLE_MPI_SUPPORT )
+-  LIST( APPEND HEADERS pools/RFTPool/RFTPool.hh)
+-  LIST( APPEND SOURCES pools/RFTPool/RFTPool.cpp)
++  LIST( APPEND HEADERS
++        pools/RFTPool/RFTPool.hh
++        services/PoolServerDriver.hh
++  )
++  LIST( APPEND SOURCES
++        pools/RFTPool/RFTPool.cpp
++        services/PoolServerDriver.cpp
++  )
+ endif( Faodel_ENABLE_MPI_SUPPORT )
+ 
+ 
+diff --git a/tools/kelpie-server/CMakeLists.txt b/tools/kelpie-server/CMakeLists.txt
+index 57f8a81..d05337b 100644
+--- a/tools/kelpie-server/CMakeLists.txt
++++ b/tools/kelpie-server/CMakeLists.txt
+@@ -1,15 +1,16 @@
++if( Faodel_ENABLE_MPI_SUPPORT )
++  set(
++    SOURCES
++          kelpie_server_main.cpp
++  )
+ 
+-set(
+-  SOURCES
+-        kelpie_server_main.cpp
+-)
++  add_executable( kelpie-server ${SOURCES} )
++  set_target_properties( kelpie-server PROPERTIES LINKER_LANGUAGE CXX )
+ 
+-add_executable( kelpie-server ${SOURCES} )
+-set_target_properties( kelpie-server PROPERTIES LINKER_LANGUAGE CXX )
++  target_link_libraries( kelpie-server kelpie) #Faodel::kelpie )
+ 
+-target_link_libraries( kelpie-server kelpie) #Faodel::kelpie )
+-
+-install(TARGETS kelpie-server
+-        EXPORT faodelTargets
+-        RUNTIME DESTINATION "${BINARY_INSTALL_DIR}" COMPONENT bin
+-  )
+\ No newline at end of file
++  install(TARGETS kelpie-server
++          EXPORT faodelTargets
++          RUNTIME DESTINATION "${BINARY_INSTALL_DIR}" COMPONENT bin
++    )
++endif()

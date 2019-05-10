@@ -10,14 +10,15 @@ from glob import glob
 
 class Libxsmm(MakefilePackage):
     """Library targeting Intel Architecture
-    for small, dense or sparse matrix multiplications,
-    and small convolutions."""
+    for specialized dense and sparse matrix operations,
+    and deep learning primitives."""
 
     homepage = 'https://github.com/hfp/libxsmm'
-    url      = 'https://github.com/hfp/libxsmm/archive/1.10.tar.gz'
+    url      = 'https://github.com/hfp/libxsmm/archive/1.11.tar.gz'
     git      = 'https://github.com/hfp/libxsmm.git'
 
     version('develop', branch='master')
+    version('1.11',  '5fc1972471cd8e2b8b64ea017590193739fc88d9818e3d086621e5c08e86ea35')
     version('1.10',  '2904f7983719fd5c5af081121c1d028d45b10b854aec9a9e67996a0602631abc')
     version('1.9',   'cd8532021352b4a0290d209f7f9bfd7c2411e08286a893af3577a43457287bfa')
     version('1.8.3', '08ed4a67731d07c739fa83c426a06a5a8fe576bc273da4bab84eb0d1f4405011')
@@ -60,22 +61,15 @@ class Libxsmm(MakefilePackage):
                                     shared=False, recursive=True)
         return result
 
-    def edit(self, spec, prefix):
-        kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
-        makefile = FileFilter('Makefile.inc')
-
-        # Spack sets CC, CXX, and FC to point to the compiler wrappers
-        # Don't let Makefile.inc overwrite these
-        makefile.filter('CC = icc',         'CC ?= icc', **kwargs)
-        makefile.filter('CC = gcc',         'CC ?= gcc', **kwargs)
-        makefile.filter('CXX = icpc',       'CXX ?= icpc', **kwargs)
-        makefile.filter('CXX = g++',        'CXX ?= g++', **kwargs)
-        makefile.filter('FC = ifort',       'FC ?= ifort', **kwargs)
-        makefile.filter('FC = gfortran',    'FC ?= gfortran', **kwargs)
-
     def build(self, spec, prefix):
         # include symbols by default
-        make_args = ['SYM=1', 'PREFIX=%s' % prefix]
+        make_args = [
+            'CC={0}'.format(spack_cc),
+            'CXX={0}'.format(spack_cxx),
+            'FC={0}'.format(spack_fc),
+            'PREFIX=%s' % prefix,
+            'SYM=1'
+        ]
 
         if '+header-only' in spec:
             make_args += ['header-only']

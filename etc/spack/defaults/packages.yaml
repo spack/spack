@@ -36,6 +36,8 @@ packages:
       mpe: [mpe2]
       mpi: [openmpi, mpich]
       mysql-client: [mysql, mariadb-c-client]
+      ninja: [ninja, ninja-fortran]
+      ninja-fortran: [ninja-fortran, ninja@kitware]
       opencl: [pocl]
       openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]

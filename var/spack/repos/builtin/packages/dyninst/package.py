@@ -34,7 +34,7 @@ class Dyninst(CMakePackage):
 
     boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
 
-    depends_on('boost@1.61.0:' + boost_libs)
+    depends_on('boost@1.61.0:1.69.99' + boost_libs)
     depends_on('libiberty+pic')
 
     # Dyninst uses elf@1 (elfutils) starting with 9.3.0, and used
@@ -48,7 +48,7 @@ class Dyninst(CMakePackage):
 
     depends_on('tbb@2018.6:', when='@10.0:')
 
-    depends_on('cmake@3.0:', type='build', when='@10.0:')
+    depends_on('cmake@3.4.0:', type='build', when='@10.0:')
     depends_on('cmake@2.8:', type='build', when='@:9.99')
 
     patch('stat_dysect.patch', when='+stat_dysect')
@@ -84,13 +84,23 @@ class Dyninst(CMakePackage):
         args = [
             '-DPATH_BOOST=%s' % spec['boost'].prefix,
             '-DIBERTY_LIBRARIES=%s' % spec['libiberty'].libs,
-
-            '-DLIBELF_INCLUDE_DIR=%s' % elf_include,
-            '-DLIBELF_LIBRARIES=%s' % spec['elf'].libs,
-
-            '-DLIBDWARF_INCLUDE_DIR=%s' % dwarf_include,
-            '-DLIBDWARF_LIBRARIES=%s' % dwarf_lib,
         ]
+
+        # 10.1 changed the spelling of LibElf and LibDwarf.
+        if spec.satisfies('@10.1.0:'):
+            args.extend([
+                '-DLibElf_INCLUDE_DIR=%s' % elf_include,
+                '-DLibElf_LIBRARIES=%s' % spec['elf'].libs,
+                '-DLibDwarf_INCLUDE_DIR=%s' % dwarf_include,
+                '-DLibDwarf_LIBRARIES=%s' % dwarf_lib,
+            ])
+        else:
+            args.extend([
+                '-DLIBELF_INCLUDE_DIR=%s' % elf_include,
+                '-DLIBELF_LIBRARIES=%s' % spec['elf'].libs,
+                '-DLIBDWARF_INCLUDE_DIR=%s' % dwarf_include,
+                '-DLIBDWARF_LIBRARIES=%s' % dwarf_lib,
+            ])
 
         # TBB include and lib directories, version 10.x or later.
         if spec.satisfies('@10.0.0:'):
