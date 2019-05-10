@@ -31,7 +31,9 @@ ${coverage_run} bin/spack -h
 ${coverage_run} bin/spack help -a
 
 # Profile and print top 20 lines for a simple call to spack spec
-${coverage_run} bin/spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
+if [[ $TRAVIS_PYTHON_VERSION != 2.6 ]]; then
+    ${coverage_run} bin/spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
+fi
 
 # Run unit tests with code coverage
 extra_args=""
