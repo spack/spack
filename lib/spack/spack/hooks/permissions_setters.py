@@ -4,11 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import stat
 
 from llnl.util.filesystem import chmod_x, chgrp
 
 from spack.package_prefs import get_package_permissions, get_package_group
 from spack.package_prefs import get_package_dir_permissions
+from spack.error import SpackError
 
 
 def forall_files(path, fn, args, dir_args=None):
@@ -31,6 +33,11 @@ def forall_files(path, fn, args, dir_args=None):
 def chmod_real_entries(path, perms):
     # Don't follow links so we don't change things outside the prefix
     if not os.path.islink(path):
+        mode = os.stat(path).st_mode
+        perms |= mode & (stat.S_ISUID | stat.S_ISGID | stat.S_ISVTX)
+        if perms & stat.S_ISUID and perms & stat.S_IWGRP:
+            raise InvalidPermissionsError(
+                'Attempting to set suid with world writable')
         chmod_x(path, perms)
 
 
@@ -44,3 +51,7 @@ def post_install(spec):
 
         if group:
             forall_files(spec.prefix, chgrp, [group])
+
+
+class InvalidPermissionsError(SpackError):
+    """Error class for invalid permission setters"""
