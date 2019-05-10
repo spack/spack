@@ -23,7 +23,8 @@ class Mesa(MesonPackage):
     version('develop',      branch='master')
     version('19.1.develop', branch='19.1')
     version('19.0.develop', branch='19.0')
-    version('19.0.3', tag='mesa-19.0.3', preferred=True)
+    version('19.0.4', tag='mesa-19.0.4', preferred=True)
+    version('19.0.3', tag='mesa-19.0.3')
     version('19.0.2', tag='mesa-19.0.2')
     version('19.0.1', tag='mesa-19.0.1')
     version('19.0.0', tag='mesa-19.0.0')
@@ -78,7 +79,8 @@ class Mesa(MesonPackage):
 
     # Fix glproto dependency for glx=gallium-xlib
     # https://gitlab.freedesktop.org/mesa/mesa/merge_requests/806
-    patch('glproto-mr806.patch', when='@19.0.0:19.0.999')
+    # Was included in the upstream patch release for 19.0.4
+    patch('glproto-mr806.patch', when='@19.0.0:19.0.3')
 
     def meson_args(self):
         spec = self.spec
