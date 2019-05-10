@@ -1,0 +1,13 @@
+--- a/shell.c  2017-05-03 10:49:13.266276246 -0700
++++ b/shell.c  2017-05-03 10:51:34.868963321 -0700
+@@ -198,6 +198,10 @@
+ #define getrusage(A,B) memset(B,0,sizeof(*B))
+ #endif
+ 
++#ifdef B0
++#undef B0
++#endif
++
+ /* Saved resource information for the beginning of an operation */
+ static struct rusage sBegin;  /* CPU time at start */
+ static sqlite3_int64 iBegin;  /* Wall-clock time at start */
