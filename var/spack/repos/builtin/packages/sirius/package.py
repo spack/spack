@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Sirius(CMakePackage):
+class Sirius(CMakePackage, CudaPackage):
     """Domain specific library for electronic structure calculations"""
 
     homepage = "https://github.com/electronic-structure/SIRIUS"
@@ -38,12 +38,14 @@ class Sirius(CMakePackage):
     depends_on('elpa~openmp', when='+elpa~openmp')
     depends_on('libvdwxc+mpi', when='+vdwxc')
     depends_on('scalapack', when='+scalapack')
+    depends_on("cuda", when="+cuda")
 
     # TODO:
-    # add support for MKL, CUDA, MAGMA, CRAY_LIBSCI, Python bindings, testing
+    # add support for MKL, MAGMA, CRAY_LIBSCI, Python bindings, testing
 
     patch("strip-spglib-include-subfolder.patch")
     patch("link-libraries-fortran.patch")
+    patch("cmake-fix-shared-library-installation.patch")
 
     @property
     def libs(self):
@@ -52,12 +54,17 @@ class Sirius(CMakePackage):
         if self.spec.satisfies('+fortran'):
             libraries += ['libsirius_f']
 
+        if self.spec.satisfies('+cuda'):
+            libraries += ['libsirius_cu']
+
         return find_libraries(
             libraries, root=self.prefix,
             shared=self.spec.satisfies('+shared'), recursive=True
         )
 
     def cmake_args(self):
+        spec = self.spec
+
         def _def(variant, flag=None):
             """Returns "-DUSE_VARIANT:BOOL={ON,OFF}" depending on whether
                +variant is set. If the CMake flag differs from the variant
@@ -68,7 +75,7 @@ class Sirius(CMakePackage):
                 flag if flag else "USE_{0}".format(
                     variant.strip('+~').upper()
                 ),
-                "ON" if self.spec.satisfies(variant) else "OFF"
+                "ON" if spec.satisfies(variant) else "OFF"
             )
 
         args = [
@@ -78,13 +85,21 @@ class Sirius(CMakePackage):
             _def('+vdwxc'),
             _def('+scalapack'),
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
+            _def('+cuda')
         ]
 
-        if self.spec.satisfies('+elpa'):
+        if spec.satisfies('+elpa'):
             elpa_incdir = os.path.join(
-                self.spec['elpa'].headers.directories[0],
+                spec['elpa'].headers.directories[0],
                 'elpa'
             )
             args += ["-DELPA_INCLUDE_DIR={0}".format(elpa_incdir)]
+
+        if spec.satisfies('+cuda'):
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch:
+                args += [
+                    '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0])
+                ]
 
         return args
