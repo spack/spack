@@ -47,6 +47,8 @@ class Lbann(CMakePackage):
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('docs', default=False, description='Builds with support for building documentation')
 
+    conflicts('@:0.90,0.99:', when='~conduit')
+
     # It seems that there is a need for one statement per version bounds
     depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90,0.95: ~al')
     depends_on('hydrogen +openmp_blas +shared +int64 +al', when='@:0.90,0.95: +al')
@@ -94,7 +96,7 @@ class Lbann(CMakePackage):
 
     depends_on('protobuf@3.6.1: build_type=Release')
     depends_on('cnpy')
-    depends_on('nccl', when='+gpu +nccl')
+#    depends_on('nccl', when='+gpu +nccl')
 
     depends_on('conduit@master +hdf5', when='@0.94:0.99 +conduit')
     depends_on('conduit@master +hdf5', when='@:0.90,0.99:')
@@ -145,7 +147,7 @@ class Lbann(CMakePackage):
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
-            '-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec),
+#            '-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec),
             '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' %
             ('+seq_init' in spec),
@@ -162,6 +164,9 @@ class Lbann(CMakePackage):
             args.extend([
                 '-DElemental_DIR={0}/CMake/elemental'.format(
                     spec['elemental'].prefix)])
+
+        if self.spec.satisfies('@0.94:0.98.2'):
+            args.extend(['-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec)])
 
         if '+vtune' in spec:
             args.extend(['-DVTUNE_DIR={0}'.format(spec['vtune'].prefix)])
@@ -198,10 +203,10 @@ class Lbann(CMakePackage):
                     spec['cudnn'].prefix)])
             args.extend(['-DCUB_DIR={0}'.format(
                 spec['cub'].prefix)])
-            if '+nccl' in spec:
-                args.extend([
-                    '-DNCCL_DIR={0}'.format(
-                        spec['nccl'].prefix)])
+            # if '+nccl' in spec:
+            #     args.extend([
+            #         '-DNCCL_DIR={0}'.format(
+            #             spec['nccl'].prefix)])
 
         return args
 
