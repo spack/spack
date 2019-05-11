@@ -35,11 +35,6 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '3.4'
-      sudo: required
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
     - python: '3.5'
       sudo: required
       os: linux
