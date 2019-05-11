@@ -21,8 +21,8 @@ class Ntpoly(CMakePackage):
     version('2.3.1', sha256='af8c7690321607fbdee9671b9cb3acbed945148014e0541435858cf82bfd887e')
 
     depends_on('cmake', type='build')
-    depends_on('blas', type='build')
-    depends_on('mpi@3', type='build')
+    depends_on('blas', type='link')
+    depends_on('mpi@3')
 
     def cmake_args(self):
         args = ["-DNOSWIG=Yes"]
