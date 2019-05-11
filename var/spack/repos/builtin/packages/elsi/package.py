@@ -33,11 +33,11 @@ class Elsi(CMakePackage):
     )
 
     # Basic dependencies
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('cmake')
+    depends_on('blas', type="link")
+    depends_on('lapack', type="link")
+    depends_on('cmake', type="build")
     depends_on('mpi')
-    depends_on('scalapack')
+    depends_on('scalapack', type="link")
 
     # Library dependencies
     depends_on('elpa', when='+external_elpa')
