@@ -102,7 +102,7 @@ def test_simple_command_extension(hello_world_cmd):
     assert 'Hello world!' in output
 
 
-def test_subcommand_in_nested_directory(hello_world_with_module_in_root):
+def test_command_with_import(hello_world_with_module_in_root):
     output = hello_world_with_module_in_root('world')
     assert 'Hello world!' in output
     output = hello_world_with_module_in_root('folks')
