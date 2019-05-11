@@ -96,7 +96,7 @@ class Lbann(CMakePackage):
 
     depends_on('protobuf@3.6.1: build_type=Release')
     depends_on('cnpy')
-#    depends_on('nccl', when='+gpu +nccl')
+    depends_on('nccl', when='@0.94:0.98.2 +gpu +nccl')
 
     depends_on('conduit@master +hdf5', when='@0.94:0.99 +conduit')
     depends_on('conduit@master +hdf5', when='@:0.90,0.99:')
