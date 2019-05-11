@@ -8,7 +8,8 @@ from spack import *
 
 
 class PySpatialist(PythonPackage):
-    """This package offers functionalities for user-friendly geo data processing using GDAL and OGR."""
+    """This package offers functionalities for user-friendly geo data
+    processing using GDAL and OGR."""
 
     homepage = "https://github.com/johntruckenbrodt/spatialist"
     url      = "https://files.pythonhosted.org/packages/source/s/spatialist/spatialist-0.2.8.tar.gz"
