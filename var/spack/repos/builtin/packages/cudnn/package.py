@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -44,3 +45,7 @@ class Cudnn(Package):
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
+
+        if 'target=ppc64le platform=linux' in spec:
+            symlink(os.path.join(prefix, 'targets', 'ppc64le-linux', 'lib'), prefix.lib)
+            symlink(os.path.join(prefix, 'targets', 'ppc64le-linux', 'include'), prefix.include)
