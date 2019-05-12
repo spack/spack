@@ -23,5 +23,5 @@ class PyPyrosar(PythonPackage):
     depends_on('py-scoop', type=('build', 'run'))
     depends_on('py-spatialist@0.2.8', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
-	# other
+    # other
     depends_on('gdal+python', type=('build', 'link', 'run'))
