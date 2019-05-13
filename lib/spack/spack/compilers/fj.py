@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import llnl.util.lang
 import spack.compiler
 
 
@@ -53,6 +54,20 @@ class Fj(spack.compiler.Compiler):
             r'(?:fcc \(FCC\) )?([\d.]+)', output)
         version = match.group(match.lastindex) if match else 'unknown'
         return version
+
+    @classmethod
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
+        ver = 'unknown'
+        match = re.search(
+            # C compiler
+            r'(?:fcc \(FCC\) )?([\d.]+)|'
+            # Fortran compiler
+            r'(?:frt\: Fujitsu Fortran Driver Version )?([\d.]+)',
+            output
+        )
+        ver = match.group(match.lastindex) if match else 'unknown'
+        return ver
 
     @classmethod
     def fc_version(cls, fc):
