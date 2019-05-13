@@ -49,5 +49,6 @@ class Cudnn(Package):
         if 'target=ppc64le platform=linux' in spec:
             symlink(os.path.join(prefix, 'targets', 'ppc64le-linux', 'lib'),
                     prefix.lib)
-            symlink(os.path.join(prefix, 'targets', 'ppc64le-linux', 'include'),
-                    prefix.include)
+            symlink(
+                os.path.join(prefix, 'targets', 'ppc64le-linux', 'include'),
+                prefix.include)
