@@ -79,7 +79,7 @@ class Lbann(CMakePackage):
 
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
-    depends_on('cub', when='+gpu')
+    depends_on('cub', when='@0.94:0.98.2 +gpu')
     depends_on('mpi')
     depends_on('hwloc')
 
@@ -147,7 +147,6 @@ class Lbann(CMakePackage):
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
-#            '-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec),
             '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' %
             ('+seq_init' in spec),
@@ -201,12 +200,13 @@ class Lbann(CMakePackage):
             args.extend([
                 '-DcuDNN_DIR={0}'.format(
                     spec['cudnn'].prefix)])
-            args.extend(['-DCUB_DIR={0}'.format(
-                spec['cub'].prefix)])
-            # if '+nccl' in spec:
-            #     args.extend([
-            #         '-DNCCL_DIR={0}'.format(
-            #             spec['nccl'].prefix)])
+            if self.spec.satisfies('@0.94:0.98.2'):
+                args.extend(['-DCUB_DIR={0}'.format(
+                    spec['cub'].prefix)])
+                if '+nccl' in spec:
+                    args.extend([
+                        '-DNCCL_DIR={0}'.format(
+                            spec['nccl'].prefix)])
 
         return args
 
