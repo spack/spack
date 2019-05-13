@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyPauvre(PythonPackage):
-    """pauvre: a plotting package designed for nanopore and PacBio long reads"""
+    """pauvre: plotting package designed for nanopore and PacBio long reads"""
 
     homepage = "https://github.com/conchoecia/pauvre"
     url      = "https://github.com/conchoecia/pauvre/archive/0.1.86.tar.gz"
