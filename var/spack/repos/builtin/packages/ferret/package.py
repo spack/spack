@@ -17,7 +17,7 @@ class Ferret(Package):
 
     version('6.96', '51722027c864369f41bab5751dfff8cc')
 
-    depends_on("hdf5~mpi~fortran")
+    depends_on("hdf5~mpi")
     depends_on("netcdf~mpi")
     depends_on("netcdf-fortran")
     depends_on("readline")
