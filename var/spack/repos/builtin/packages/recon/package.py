@@ -9,7 +9,7 @@ from os import symlink
 
 class Recon(MakefilePackage):
     """RECON: a package for automated de novo identification of repeat families
-       from genomic sequences
+       from genomic sequences.
 
        NOTE: The 1.08 is a patched version from the RepeatModeler developers.
              The original versions can be found on the homepage."""
