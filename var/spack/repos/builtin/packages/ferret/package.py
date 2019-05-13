@@ -22,6 +22,7 @@ class Ferret(Package):
     depends_on("netcdf-fortran")
     depends_on("readline")
     depends_on("zlib")
+    depends_on("libx11")
 
     def url_for_version(self, version):
         return "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v{0}.tar.gz".format(
@@ -86,7 +87,7 @@ class Ferret(Package):
             env['LDFLAGS'] = '-lquadmath'
 
         with working_dir('FERRET', create=False):
-            os.environ['LD_X11'] = '-L/usr/lib/X11 -lX11'
+            os.environ['LD_X11'] = '-L%s -lX11' % spec['libx11'].prefix.lib
             os.environ['HOSTTYPE'] = 'x86_64-linux'
             make(parallel=False)
             make("install")
