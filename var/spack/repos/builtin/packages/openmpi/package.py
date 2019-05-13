@@ -264,7 +264,8 @@ class Openmpi(AutotoolsPackage):
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3.0.0:',
-              msg='The loadleveler scheduler is not supported with openmpi(>=3.0.0).')
+              msg='The loadleveler scheduler is not supported with '
+              'openmpi(>=3.0.0).')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
