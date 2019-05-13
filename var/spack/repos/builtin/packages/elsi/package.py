@@ -18,7 +18,18 @@ class Elsi(CMakePackage):
 
     version('2.2.1', sha256='5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d')
 
-    # Variants
+    # Variants (translation of cmake options)
+    variant(
+      'add_underscore', default=True,
+      description="Suffix C functions with an underscore"
+    )
+    variant(
+      'elpa2_kernel', default="none", description="ELPA2 Kernel",
+      values=('BGQ', 'AVX', 'AVX2', 'AVX512'), multi=False
+    )
+    variant(
+      'enable_c_tests', default=False, description="Build C test programs"
+    )
     variant(
       'enable_pexsi', default=False, description='Enable PEXSI support'
     )
@@ -26,10 +37,34 @@ class Elsi(CMakePackage):
       'enable_sips', default=False, description='Enable SLEPc-SIPs support'
     )
     variant(
-      'external_elpa', default=True, description="Build ELPA using SPACK"
+      'enable_tests', default=False, description="Build Fortran test programs"
     )
     variant(
-      'external_ntpoly', default=True, description="Build NTPoly using SPACK"
+      'use_external_elpa', default=False, description="Build ELPA using SPACK"
+    )
+    variant(
+      'use_external_ntpoly', default=False,
+      description="Build NTPoly using SPACK"
+    )
+    variant(
+      'use_external_omm', default=False,
+      description="Use external libOMM and MatrixSwitch"
+    )
+    variant(
+      'use_external_superlu', default=False,
+      description="Use external SuperLU DIST"
+    )
+    variant(
+      'use_mpi_iallgather', default=True,
+      description="Use non-blocking collective MPI functions"
+    )
+
+    # For ELSI, you can specify the mpirun command for the tests. However,
+    # when using spack it seems sensible to trust spack's judgement on
+    # what that command is, and only let the user specify the number of
+    # processes.
+    variant(
+      'mpiexec_np', default="4", description="Number of processes to test with"
     )
 
     # Basic dependencies
@@ -40,11 +75,11 @@ class Elsi(CMakePackage):
     depends_on('scalapack', type="link")
 
     # Library dependencies
-    depends_on('elpa', when='+external_elpa')
-    depends_on('ntpoly', when='+external_ntpoly')
+    depends_on('elpa', when='+use_external_elpa')
+    depends_on('ntpoly', when='+use_external_ntpoly')
     depends_on('slepc', when='+enable_sips')
     depends_on('petsc', when='+enable_sips')
-    depends_on('superlu-dist', when='+enable_pexsi')
+    depends_on('superlu-dist', when='+use_external_superlu')
 
     def cmake_args(self):
         from os.path import dirname
@@ -53,26 +88,36 @@ class Elsi(CMakePackage):
 
         # Compiler Information
         # (ELSI wants these explicitly set)
-        args += ["-DCMAKE_Fortran_COMPILER="+self.spec["mpi"].mpifc]
-        args += ["-DCMAKE_C_COMPILER="+self.spec["mpi"].mpicc]
-        args += ["-DCMAKE_CXX_COMPILER="+self.spec["mpi"].mpicxx]
+        args += ["-DCMAKE_Fortran_COMPILER=" + self.spec["mpi"].mpifc]
+        args += ["-DCMAKE_C_COMPILER=" + self.spec["mpi"].mpicc]
+        args += ["-DCMAKE_CXX_COMPILER=" + self.spec["mpi"].mpicxx]
 
-        # External Arguments
-        if '+external_elpa' in self.spec:
+        # Handle the various variants
+        if "-add_underscore" in self.spec:
+            args += ["-DADD_UNDERSCORE=OFF"]
+        if "elpa2_kernel" in self.spec and self.spec["elpa2_kernel"] != "none":
+            args += ["-DELPA2_KERNEL=" + self.spec["elpa2_kernel"]]
+        if "+enable_c_tests" in self.spec:
+            args += ["-DENABLE_C_TESTS=" + self.spec["enable_c_tests"]]
+        if '+enable_pexsi' in self.spec:
+            args += ["-DENABLE_PEXSI=ON"]
+        if '+enable_sips' in self.spec:
+            args += ["-DENABLE_SIPS=ON"]
+        if 'enable_test' in self.spec:
+            args += ["-DENABLE_TEST=ON"]
+        if '+use_external_elpa' in self.spec:
             args += ["-DUSE_EXTERNAL_ELPA=ON"]
-
             # Setup the searchpath for elpa
             elpa = self.spec['elpa']
             elpa_module = find(elpa.prefix, 'elpa.mod')
-            args += ["-DINC_PATHS="+dirname(elpa_module[0])]
-
-        if '+external_ntpoly' in self.spec:
+            args += ["-DINC_PATHS=" + dirname(elpa_module[0])]
+        if '+use_external_ntpoly' in self.spec:
             args += ["-DUSE_EXTERNAL_NTPOLY=ON"]
-        
-        if '+enable_pexsi' in self.spec:
-            args += ["-DENABLE_PEXSI=ON"]
+        if '+use_external_omm' in self.spec:
+            args += ["-DUSE_EXTERNAL_OMM=ON"]
+        if '+use_external_superlu' in self.spec:
             args += ["-DUSE_EXTERNAL_SUPERLU=ON"]
-        if '+enable_sips' in self.spec:
-            args += ["-DENABLE_SIPS=ON"]
+        if '-use_mpi_iallgather' in self.spec:
+            args += ["-DUSE_MPI_IALLGATHER=OFF"]
 
         return args
