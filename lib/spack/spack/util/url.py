@@ -7,6 +7,8 @@
 Utility functions for parsing, formatting, and manipulating URLs.
 """
 
+import itertools as it
+
 from os.path import join as pathjoin, split as pathsplit
 
 from six import string_types
@@ -164,7 +166,7 @@ def format(parsed_url):
                               query=query,
                               fragment=None).geturl()
 
-def join(base_url, path):
+def join(base_url, path, *extra):
     if isinstance(base_url, string_types):
         base_url = parse(base_url)
 
@@ -172,6 +174,14 @@ def join(base_url, path):
 
     scheme = scheme.lower()
     extra_attrs = {}
+
+    path_tokens = [
+            part for part in it.chain(
+                _split_all(path),
+                it.chain.from_iterable(
+                    _split_all(extra_path) for extra_path in extra))
+
+                if part and part != '/']
 
     if scheme == 's3':
         try:
@@ -184,15 +194,11 @@ def join(base_url, path):
             except AttributeError:
                 pass
 
-
-        path_tokens = [part for part in _split_all(path)
-                if part and part != '/']
-
         extra_attrs["s3_bucket"] = (
                 base_url.s3_bucket if base_url.s3_bucket
                 else path_tokens.pop(0) if path_tokens else None)
 
-        base_path = pathjoin('', base_path, *path_tokens)
+    base_path = pathjoin('', base_path, *path_tokens)
 
     result = ParseResultWrapper(scheme=scheme,
                                 netloc=netloc,

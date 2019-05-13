@@ -312,6 +312,7 @@ def createtarball(args):
                 " yaml file containing a spec to install")
     pkgs = set(packages)
     specs = set()
+    # TODO(opadron): handle -d MIRROR_NAME
     outdir = '.'
     if args.directory:
         outdir = args.directory

@@ -26,8 +26,10 @@ import spack.relocate as relocate
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec
 from spack.stage import Stage
+from spack.util.config import has_mirrors, iter_mirrors
 from spack.util.gpg import Gpg
 from spack.util.web import spider, read_from_url
+from spack.util.url import join as urljoin
 from spack.util.executable import ProcessError
 
 _build_cache_relative_path = 'build_cache'
@@ -395,13 +397,15 @@ def download_tarball(spec):
     Download binary tarball for given package into stage area
     Return True if successful
     """
-    mirrors = spack.config.get('mirrors')
-    if len(mirrors) == 0:
+    if not has_mirrors():
         tty.die("Please add a spack mirror to allow " +
                 "download of pre-compiled packages.")
+
     tarball = tarball_path_name(spec, '.spack')
-    for mirror_name, mirror_url in mirrors.items():
-        url = mirror_url + '/' + _build_cache_relative_path + '/' + tarball
+
+    for _, fetch_url, _ in iter_mirrors():
+        url = urljoin(fetch_url, _build_cache_relative_path, tarball)
+
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
         try:
@@ -409,6 +413,7 @@ def download_tarball(spec):
             return stage.save_filename
         except fs.FetchError:
             continue
+
     return None
 
 
@@ -611,26 +616,26 @@ def get_specs(force=False):
         tty.debug("Using previously-retrieved specs")
         return _cached_specs
 
-    mirrors = spack.config.get('mirrors')
-    if len(mirrors) == 0:
-        tty.debug("No Spack mirrors are currently configured")
+    if not has_mirrors():
+        tty.warn("No Spack mirrors are currently configured")
         return {}
 
     urls = set()
-    for mirror_name, mirror_url in mirrors.items():
-        if mirror_url.startswith('file'):
-            mirror = mirror_url.replace(
-                'file://', '') + "/" + _build_cache_relative_path
+    for _, fetch_url, _ in iter_mirrors():
+        fetch_url_build_cache = urljoin(fetch_url, _build_cache_relative_path)
+
+        if fetch_url_build_cache.startswith('file://'):
+            mirror = fetch_url_build_cache.replace('file://', '')
             tty.msg("Finding buildcaches in %s" % mirror)
             if os.path.exists(mirror):
                 files = os.listdir(mirror)
                 for file in files:
                     if re.search('spec.yaml', file):
-                        link = 'file://' + mirror + '/' + file
+                        link = urljoin(fetch_url_build_cache, file)
                         urls.add(link)
         else:
-            tty.msg("Finding buildcaches on %s" % mirror_url)
-            p, links = spider(mirror_url + "/" + _build_cache_relative_path)
+            tty.msg("Finding buildcaches on %s" % fetch_url)
+            p, links = spider(fetch_url_build_cache)
             for link in links:
                 if re.search("spec.yaml", link):
                     urls.add(link)
@@ -660,25 +665,29 @@ def get_keys(install=False, trust=False, force=False):
     """
     Get pgp public keys available on mirror
     """
-    mirrors = spack.config.get('mirrors')
-    if len(mirrors) == 0:
+    if not has_mirrors():
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")
 
     keys = set()
-    for mirror_name, mirror_url in mirrors.items():
-        if mirror_url.startswith('file'):
-            mirror = os.path.join(
-                mirror_url.replace('file://', ''), _build_cache_relative_path)
+
+    for _, fetch_url, _ in iter_mirrors():
+        url = urljoin(fetch_url, _build_cache_relative_path, tarball)
+
+        fetch_url_build_cache = urljoin(fetch_url, _build_cache_relative_path)
+
+        if fetch_url_build_cache.startswith('file://'):
+            mirror = fetch_url_build_cache.replace('file://', '')
             tty.msg("Finding public keys in %s" % mirror)
             files = os.listdir(mirror)
             for file in files:
                 if re.search(r'\.key', file):
-                    link = 'file://' + mirror + '/' + file
+                    link = urljoin(fetch_url_build_cache, file)
                     keys.add(link)
         else:
-            tty.msg("Finding public keys on %s" % mirror_url)
-            p, links = spider(mirror_url + "/build_cache", depth=1)
+            tty.msg("Finding public keys on %s" % fetch_url)
+            p, links = spider(fetch_url_build_cache, depth=1)
+
             for link in links:
                 if re.search(r'\.key', link):
                     keys.add(link)
@@ -784,22 +793,22 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
 
     """
     rebuilds = {}
-    for mirror_name, mirror_url in mirrors.items():
-        tty.msg('Checking for built specs at %s' % mirror_url)
+    for mirror_name, fetch_url, _ in iter_mirrors(mirrors=mirrors):
+        tty.msg('Checking for built specs at %s' % fetch_url)
 
         rebuild_list = []
 
         for spec in specs:
-            if needs_rebuild(spec, mirror_url, rebuild_on_errors):
+            if needs_rebuild(spec, fetch_url, rebuild_on_errors):
                 rebuild_list.append({
                     'short_spec': spec.short_spec,
                     'hash': spec.dag_hash()
                 })
 
         if rebuild_list:
-            rebuilds[mirror_url] = {
+            rebuilds[fetch_url] = {
                 'mirrorName': mirror_name,
-                'mirrorUrl': mirror_url,
+                'mirrorUrl': fetch_url,
                 'rebuildSpecs': rebuild_list
             }
 
@@ -832,13 +841,12 @@ def _download_buildcache_entry(mirror_root, descriptions):
 
 
 def download_buildcache_entry(file_descriptions):
-    mirrors = spack.config.get('mirrors')
-    if len(mirrors) == 0:
+    if not has_mirrors():
         tty.die("Please add a spack mirror to allow " +
                 "download of buildcache entries.")
 
-    for mirror_name, mirror_url in mirrors.items():
-        mirror_root = os.path.join(mirror_url, _build_cache_relative_path)
+    for _, fetch_url, _ in iter_mirrors():
+        mirror_root = os.path.join(fetch_url, _build_cache_relative_path)
 
         if _download_buildcache_entry(mirror_root, file_descriptions):
             return True
