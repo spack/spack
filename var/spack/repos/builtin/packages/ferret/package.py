@@ -15,6 +15,7 @@ class Ferret(Package):
     homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
     url      = "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz"
 
+    version('7.2', '21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095')
     version('6.96', '51722027c864369f41bab5751dfff8cc')
 
     depends_on("hdf5~mpi")
