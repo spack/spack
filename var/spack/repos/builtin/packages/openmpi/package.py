@@ -263,6 +263,8 @@ class Openmpi(AutotoolsPackage):
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
+    conflicts('schedulers=loadleveler', when='@3.0.0:',
+              msg='The loadleveler scheduler is not supported with openmpi(>=3.0.0).')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
@@ -397,9 +399,11 @@ class Openmpi(AutotoolsPackage):
             config_args.append('--enable-mpi1-compatibility')
 
         # Fabrics
-        config_args.extend(self.with_or_without('fabrics'))
+        if 'fabrics=auto' not in spec:
+            config_args.extend(self.with_or_without('fabrics'))
         # Schedulers
-        config_args.extend(self.with_or_without('schedulers'))
+        if 'schedulers=auto' not in spec:
+            config_args.extend(self.with_or_without('schedulers'))
 
         config_args.extend(self.enable_or_disable('memchecker'))
         if spec.satisfies('+memchecker', strict=True):
