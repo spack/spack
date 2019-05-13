@@ -12,14 +12,24 @@ import llnl.util.tty as tty
 import spack.build_environment as build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+from spack.util.environment import dump_environment, pickle_environment
 
-description = "show install environment for a spec, and run commands"
+description = "run a command in a spec's install environment, " \
+              "or dump its environment to screen or file"
 section = "build"
 level = "long"
 
 
 def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ['clean', 'dirty'])
+    subparser.add_argument(
+        '--dump', metavar="FILE",
+        help="dump a source-able environment to FILE"
+    )
+    subparser.add_argument(
+        '--pickle', metavar="FILE",
+        help="dump a pickled source-able environment to FILE"
+    )
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs of package environment to emulate")
@@ -49,11 +59,23 @@ def build_env(parser, args):
 
     build_environment.setup_package(spec.package, args.dirty)
 
-    if not cmd:
-        # If no command act like the "env" command and print out env vars.
+    if args.dump:
+        # Dump a source-able environment to a text file.
+        tty.msg("Dumping a source-able environment to {0}".format(args.dump))
+        dump_environment(args.dump)
+
+    if args.pickle:
+        # Dump a source-able environment to a pickle file.
+        tty.msg(
+            "Pickling a source-able environment to {0}".format(args.pickle))
+        pickle_environment(args.pickle)
+
+    if cmd:
+        # Execute the command with the new environment
+        os.execvp(cmd[0], cmd)
+
+    elif not bool(args.pickle or args.dump):
+        # If no command or dump/pickle option act like the "env" command
+        # and print out env vars.
         for key, val in os.environ.items():
             print("%s=%s" % (key, val))
-
-    else:
-        # Otherwise execute the command with the new environment
-        os.execvp(cmd[0], cmd)
