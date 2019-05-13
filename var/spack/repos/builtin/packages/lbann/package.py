@@ -101,7 +101,7 @@ class Lbann(CMakePackage):
     depends_on('conduit@master +hdf5', when='@0.94:0.99 +conduit')
     depends_on('conduit@master +hdf5', when='@:0.90,0.99:')
 
-    depends_on('python@3: +shared', type='run', when='@:0.90,0.99:')
+    depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
     extends("python")
     depends_on('py-setuptools', type='build')
     depends_on('py-argparse', type='run', when='@:0.90,0.99:')
@@ -134,6 +134,10 @@ class Lbann(CMakePackage):
             '-DLBANN_VERSION=spack',
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
         ]
+
+    # Add a custom installation directory to the PYTHONPATH
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PYTHONPATH', os.path.join(self.spec.prefix.share,'python'))
 
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
@@ -176,6 +180,9 @@ class Lbann(CMakePackage):
         if '+conduit' in spec:
             args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(
                 spec['conduit'].prefix)])
+
+        if self.spec.satisfies('@:0.90,0.99:'):
+            args.extend(['-DLBANN_PYTHON_INSTALL_DIR:STRING={0}'.format(prefix.lib)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):
