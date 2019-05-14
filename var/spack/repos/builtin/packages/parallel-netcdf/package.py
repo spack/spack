@@ -70,6 +70,9 @@ class ParallelNetcdf(AutotoolsPackage):
         if '~fortran' in spec:
             args.append('--disable-fortran')
 
+        if spec.satisfies('@1.8.0:'):
+            args.append('--enable-relax-coord-bound')
+
         return args
 
     def install(self, spec, prefix):
