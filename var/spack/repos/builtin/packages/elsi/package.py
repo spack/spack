@@ -59,14 +59,6 @@ class Elsi(CMakePackage):
       description="Use non-blocking collective MPI functions"
     )
 
-    # For ELSI, you can specify the mpirun command for the tests. However,
-    # when using spack it seems sensible to trust spack's judgement on
-    # what that command is, and only let the user specify the number of
-    # processes.
-    variant(
-      'mpiexec_np', default="4", description="Number of processes to test with"
-    )
-
     # Basic dependencies
     depends_on('blas', type="link")
     depends_on('lapack', type="link")
@@ -98,7 +90,7 @@ class Elsi(CMakePackage):
         if "elpa2_kernel" in self.spec and self.spec["elpa2_kernel"] != "none":
             args += ["-DELPA2_KERNEL=" + self.spec["elpa2_kernel"]]
         if "+enable_c_tests" in self.spec:
-            args += ["-DENABLE_C_TESTS=" + self.spec["enable_c_tests"]]
+            args += ["-DENABLE_C_TESTS=ON"]
         if '+enable_pexsi' in self.spec:
             args += ["-DENABLE_PEXSI=ON"]
         if '+enable_sips' in self.spec:
