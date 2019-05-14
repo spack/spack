@@ -36,3 +36,5 @@ class PyIpython(PythonPackage):
     depends_on('py-appnope', type=('build', 'run'),
                     when=sys.platform == 'darwin' and
                             int(platform.mac_ver()[0].split('.')[1]) >= 9)
+
+    conflicts('^python@2.7:2.8', when='@7.0.0:')
