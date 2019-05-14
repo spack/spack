@@ -41,8 +41,6 @@ class Flecsi(CMakePackage):
 
     def cmake_args(self):
         options = ['-DCMAKE_BUILD_TYPE=debug -DFLECSI_RUNTIME_MODEL=mpi']
-        options.extend(['-DENABLE_UNIT_TESTS=ON -DENABLE_PARMETIS=ON -DENABLE_COLORING=ON']) 
-        options.extend(['-DENABLE_DOXYGEN=ON -DENABLE_DOCUMENTATION=OFF -DENABLE_COVERAGE_BUILD=OFF'])
 
         if '~mpi' in self.spec:
             options.extend([
