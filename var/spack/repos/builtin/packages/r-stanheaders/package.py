@@ -27,5 +27,6 @@ class RStanheaders(RPackage):
     url      = "https://cran.r-project.org/src/contrib/StanHeaders_2.10.0-2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/StanHeaders"
 
+    version('2.18.1', sha256='ce0d609a7cd11725b1203bdeae92acc54da3a48b8266eb9dbdb9d95b14df9209')
     version('2.17.1', '11d8770277dd18e563852852633c6c25')
     version('2.10.0-2', '9d09b1e9278f08768f7a988ad9082d57')
