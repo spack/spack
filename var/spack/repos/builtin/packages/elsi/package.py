@@ -18,6 +18,7 @@ class Elsi(CMakePackage):
 
     version('2.2.1', sha256='5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d')
 
+<<<<<<< HEAD
     # Variants (translation of cmake options)
     variant(
       'add_underscore', default=True,
@@ -30,6 +31,9 @@ class Elsi(CMakePackage):
     variant(
       'enable_c_tests', default=False, description="Build C test programs"
     )
+=======
+    # Variants
+>>>>>>> b805136cf94049318a8a3c4cdc76e24e34fd0321
     variant(
       'enable_pexsi', default=False, description='Enable PEXSI support'
     )
@@ -37,6 +41,7 @@ class Elsi(CMakePackage):
       'enable_sips', default=False, description='Enable SLEPc-SIPs support'
     )
     variant(
+<<<<<<< HEAD
       'enable_tests', default=False, description="Build Fortran test programs"
     )
     variant(
@@ -57,6 +62,12 @@ class Elsi(CMakePackage):
     variant(
       'use_mpi_iallgather', default=True,
       description="Use non-blocking collective MPI functions"
+=======
+      'external_elpa', default=True, description="Build ELPA using SPACK"
+    )
+    variant(
+      'external_ntpoly', default=True, description="Build NTPoly using SPACK"
+>>>>>>> b805136cf94049318a8a3c4cdc76e24e34fd0321
     )
 
     # Basic dependencies
