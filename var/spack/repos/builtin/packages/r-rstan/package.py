@@ -21,6 +21,7 @@ class RRstan(RPackage):
     url      = "https://cran.r-project.org/src/contrib/rstan_2.10.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/rstan"
 
+    version('2.18.2', sha256='4d75dad95610d5a1d1c89a4ddbaf4326462e4ffe0ad28aed2129f2d9292e70ff')
     version('2.17.2', '60f4a0284c58f5efc1b1cbf488d7edda')
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 
@@ -32,3 +33,9 @@ class RRstan(RPackage):
     depends_on('r-rcppeigen', type=('build', 'run'))
     depends_on('r-rcppeigen@0.3.3.3.0:', type=('build', 'run'), when='@2.17.2:')
     depends_on('r-bh', type=('build', 'run'))
+
+    depends_on('r-bh@1.66:', type=('build', 'run'), when='@2.18:')
+    depends_on('r-loo@2.0.0:', type=('build', 'run'), when='@2.18:')
+    depends_on('r-pkgbuild', type=('build', 'run'), when='@2.18:')
+    depends_on('r-stanheaders@2.18.0:', type=('build', 'run'), when='@2.18:')
+    conflicts('%gcc@:4.9', when='@2.18:')
