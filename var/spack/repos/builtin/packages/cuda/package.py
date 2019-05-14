@@ -63,6 +63,7 @@ class Cuda(Package):
 
     @property
     def libs(self):
+        prefix = self.prefix
         search_paths = [(prefix.lib, False), (prefix.lib64, False),
                         (prefix, True)]
         for search_root, recursive in search_paths:
