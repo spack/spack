@@ -18,8 +18,8 @@ class Nut(CMakePackage):
 
     tags = ['proxy-app']
 
+    version('master', branch='master')
     version('0.1.1', sha256='9f1dca4a9d7003b170fd57d6720228ff25471616cf884e033652e90c49c089bb')
-    version('develop', branch='master')
 
     depends_on('cmake@3.0:')
     depends_on('random123')
