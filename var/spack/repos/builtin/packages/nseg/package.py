@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from shutil import copyfile
 
 
 class Nseg(MakefilePackage):
@@ -66,14 +65,14 @@ class Nseg(MakefilePackage):
         mkdirp(self.build_directory)
 
         # move the primary source file in
-        copyfile('nseg.c', join_path(self.build_directory, 'nseg.c'))
+        copy('nseg.c', join_path(self.build_directory, 'nseg.c'))
 
         # move all of the single-file resources into the build dir
         for key in self.resources:
             for res in self.resources[key]:
                 res_name = res.name
                 res_path = join_path(res.fetcher.stage.path, res.name)
-                copyfile(res_path, join_path(self.build_directory, res_name))
+                copy(res_path, join_path(self.build_directory, res_name))
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
