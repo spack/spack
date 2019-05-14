@@ -9,15 +9,17 @@ from os import symlink
 
 class Recon(MakefilePackage):
     """RECON: a package for automated de novo identification of repeat families
-       from genomic sequences.
-
-       NOTE: The 1.08 is a patched version from the RepeatModeler developers.
-             The original versions can be found on the homepage."""
+       from genomic sequences."""
 
     homepage = "http://eddylab.org/software/recon/"
-    url      = "http://www.repeatmasker.org/RepeatModeler/RECON-1.08.tar.gz"
+    url      = "http://eddylab.org/software/recon/RECON1.05.tar.gz"
 
-    version('1.08', sha256='699765fa49d18dbfac9f7a82ecd054464b468cb7521abe9c2bd8caccf08ee7d8')
+    version('1.05', sha256='4d4f76f439bcffd50380cffc41a80dc15fa4a80f38a04234e24da893ed7c025a')
+
+    variant('repeatmasker', default=False,
+            description='Use RepeatMasker developer patches (1.08)')
+
+    patch('repeatmasker_recon.patch', when='+repeatmasker')
 
     build_directory = 'src'
 
