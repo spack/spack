@@ -135,11 +135,6 @@ class Lbann(CMakePackage):
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
         ]
 
-    # Add a custom installation directory to the PYTHONPATH
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PYTHONPATH',
-                             os.path.join(self.spec.prefix.share, 'python'))
-
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
     @when('@:0.90,0.94:')
@@ -181,10 +176,6 @@ class Lbann(CMakePackage):
         if '+conduit' in spec:
             args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(
                 spec['conduit'].prefix)])
-
-        if self.spec.satisfies('@:0.90,0.99:'):
-            args.extend(['-DLBANN_PYTHON_INSTALL_DIR:STRING={0}'.format(
-                prefix.lib)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):
