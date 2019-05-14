@@ -20,6 +20,7 @@ class PyProtobuf(PythonPackage):
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
+    version('3.7.1', sha256='21e395d7959551e759d604940a115c51c6347d90a475c9baf471a1a86b5604a9')
     version('3.6.1', sha256='1489b376b0f364bcc6f89519718c057eb191d7ad6f1b395ffd93d1aa45587811')
     version('3.5.2.post1', '3b60685732bd0cbdc802dfcb6071efbcf5d927ce3127c13c33ea1a8efae3aa76')
     version('3.5.2', '09879a295fd7234e523b62066223b128c5a8a88f682e3aff62fb115e4a0d8be0')

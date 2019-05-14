@@ -117,6 +117,8 @@ class Hydrogen(CMakePackage):
             '-DHydrogen_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
             '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
             '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
+            '-DHydrogen_ENABLE_ALUMINUM=%s' % ('+al' in spec),
+            '-DHydrogen_ENABLE_CUB=%s' % ('+cuda' in spec),
             '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec),
             '-DHydrogen_ENABLE_TESTING=%s' % ('+test' in spec),
         ]
