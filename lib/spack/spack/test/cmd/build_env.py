@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+import cPickle
 import pytest
 
 from spack.main import SpackCommand, SpackCommandError
@@ -33,23 +33,18 @@ def test_it_just_fails(pkg, error_cls):
 _out_file = 'env.out'
 
 
-@pytest.fixture
-def _test_file_cleaner():
-    """Ensure test creates a file; clean up after test.
-    """
-    if os.path.exists(_out_file):
-        os.remove(_out_file)
-
-    yield
-
-    assert(os.path.exists(_out_file))
-    os.remove(_out_file)
+@pytest.mark.usefixtures('config')
+def test_dump(tmpdir):
+    with tmpdir.as_cwd():
+        info('--dump', _out_file, 'zlib')
+        with open(_out_file) as f:
+            assert(any(line.startswith('PATH=') for line in f.readlines()))
 
 
-@pytest.mark.parametrize('pkg', [
-    ('--dump', _out_file, 'zlib'),
-    ('--pickle', _out_file, 'zlib')
-])
-@pytest.mark.usefixtures('config', '_test_file_cleaner')
-def test_pickle_dump(pkg):
-    info(*pkg)
+@pytest.mark.usefixtures('config')
+def test_pickle(tmpdir):
+    with tmpdir.as_cwd():
+        info('--pickle', _out_file, 'zlib')
+        environment = cPickle.load(open(_out_file, 'rb'))
+        assert(type(environment) == dict)
+        assert('PATH' in environment)
