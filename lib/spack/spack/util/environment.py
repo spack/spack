@@ -18,11 +18,25 @@ import llnl.util.tty as tty
 
 from llnl.util.lang import dedupe
 
+from six.moves import shlex_quote as cmd_quote
+from six.moves import cPickle
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
 system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
     system_paths
+
+
+_shell_set_strings = {
+    'sh': 'export {0}={1};\n',
+    'csh': 'setenv {0} {1};\n',
+}
+
+
+_shell_unset_strings = {
+    'sh': 'unset {0};\n',
+    'csh': 'unsetenv {0};\n',
+}
 
 
 def is_system_path(path):
@@ -39,7 +53,20 @@ def is_system_path(path):
 
 
 def filter_system_paths(paths):
+    """Return only paths that are not system paths."""
     return [p for p in paths if not is_system_path(p)]
+
+
+def deprioritize_system_paths(paths):
+    """Put system paths at the end of paths, otherwise preserving order."""
+    filtered_paths = filter_system_paths(paths)
+    fp = set(filtered_paths)
+    return filtered_paths + [p for p in paths if p not in fp]
+
+
+def prune_duplicate_paths(paths):
+    """Returns the paths with duplicates removed, order preserved."""
+    return list(dedupe(paths))
 
 
 def get_path(name):
@@ -76,11 +103,36 @@ def path_put_first(var_name, directories):
     path_set(var_name, new_path)
 
 
-def dump_environment(path):
-    """Dump the current environment out to a file."""
+bash_function_finder = re.compile(r'BASH_FUNC_(.*?)\(\)')
+
+
+def env_var_to_source_line(var, val):
+    if var.startswith('BASH_FUNC'):
+        source_line = 'function {fname}{decl}; export -f {fname}'.\
+                      format(fname=bash_function_finder.sub(r'\1', var),
+                             decl=val)
+    else:
+        source_line = '{var}={val}; export {var}'.format(var=var,
+                                                         val=cmd_quote(val))
+    return source_line
+
+
+def dump_environment(path, environment=None):
+    """Dump an environment dictionary to a source-able file."""
+    use_env = environment or os.environ
+    hidden_vars = set(['PS1', 'PWD', 'OLDPWD', 'TERM_SESSION_ID'])
+
     with open(path, 'w') as env_file:
-        for key, val in sorted(os.environ.items()):
-            env_file.write('export %s="%s"\n' % (key, val))
+        for var, val in sorted(use_env.items()):
+            env_file.write(''.join(['#' if var in hidden_vars else '',
+                                    env_var_to_source_line(var, val),
+                                    '\n']))
+
+
+def pickle_environment(path, environment=None):
+    """Pickle an environment dictionary to a file."""
+    cPickle.dump(dict(environment if environment else os.environ),
+                 open(path, 'wb'), protocol=2)
 
 
 @contextlib.contextmanager
@@ -114,7 +166,9 @@ class NameModifier(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
-        self.args = {'name': name}
+        self.separator = kwargs.get('separator', ':')
+        self.args = {'name': name, 'separator': self.separator}
+
         self.args.update(kwargs)
 
     def update_args(self, **kwargs):
@@ -138,62 +192,84 @@ class NameValueModifier(object):
 
 class SetEnv(NameValueModifier):
 
-    def execute(self):
-        os.environ[self.name] = str(self.value)
+    def execute(self, env):
+        env[self.name] = str(self.value)
 
 
 class AppendFlagsEnv(NameValueModifier):
 
-    def execute(self):
-        if self.name in os.environ and os.environ[self.name]:
-            os.environ[self.name] += self.separator + str(self.value)
+    def execute(self, env):
+        if self.name in env and env[self.name]:
+            env[self.name] += self.separator + str(self.value)
         else:
-            os.environ[self.name] = str(self.value)
+            env[self.name] = str(self.value)
 
 
 class UnsetEnv(NameModifier):
 
-    def execute(self):
+    def execute(self, env):
         # Avoid throwing if the variable was not set
-        os.environ.pop(self.name, None)
+        env.pop(self.name, None)
 
 
 class SetPath(NameValueModifier):
 
-    def execute(self):
+    def execute(self, env):
         string_path = concatenate_paths(self.value, separator=self.separator)
-        os.environ[self.name] = string_path
+        env[self.name] = string_path
 
 
 class AppendPath(NameValueModifier):
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories.append(os.path.normpath(self.value))
-        os.environ[self.name] = self.separator.join(directories)
+        env[self.name] = self.separator.join(directories)
 
 
 class PrependPath(NameValueModifier):
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories = [os.path.normpath(self.value)] + directories
-        os.environ[self.name] = self.separator.join(directories)
+        env[self.name] = self.separator.join(directories)
 
 
 class RemovePath(NameValueModifier):
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
-        os.environ[self.name] = self.separator.join(directories)
+        env[self.name] = self.separator.join(directories)
+
+
+class DeprioritizeSystemPaths(NameModifier):
+
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = deprioritize_system_paths([os.path.normpath(x)
+                                                 for x in directories])
+        env[self.name] = self.separator.join(directories)
+
+
+class PruneDuplicatePaths(NameModifier):
+
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = prune_duplicate_paths([os.path.normpath(x)
+                                             for x in directories])
+        env[self.name] = self.separator.join(directories)
 
 
 class EnvironmentModifications(object):
@@ -326,6 +402,28 @@ class EnvironmentModifications(object):
         item = RemovePath(name, path, **kwargs)
         self.env_modifications.append(item)
 
+    def deprioritize_system_paths(self, name, **kwargs):
+        """Stores a request to deprioritize system paths in a path list,
+        otherwise preserving the order.
+
+        Args:
+            name: name of the path list in the environment.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = DeprioritizeSystemPaths(name, **kwargs)
+        self.env_modifications.append(item)
+
+    def prune_duplicate_paths(self, name, **kwargs):
+        """Stores a request to remove duplicates from a path list, otherwise
+        preserving the order.
+
+        Args:
+            name: name of the path list in the environment.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = PruneDuplicatePaths(name, **kwargs)
+        self.env_modifications.append(item)
+
     def group_by_name(self):
         """Returns a dict of the modifications grouped by variable name.
 
@@ -361,7 +459,28 @@ class EnvironmentModifications(object):
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                x.execute()
+                x.execute(os.environ)
+
+    def shell_modifications(self, shell='sh'):
+        """Return shell code to apply the modifications and clears the list."""
+        modifications = self.group_by_name()
+        new_env = os.environ.copy()
+
+        for name, actions in sorted(modifications.items()):
+            for x in actions:
+                x.execute(new_env)
+
+        cmds = ''
+        for name in set(new_env) & set(os.environ):
+            new = new_env.get(name, None)
+            old = os.environ.get(name, None)
+            if new != old:
+                if new is None:
+                    cmds += _shell_unset_strings[shell].format(name)
+                else:
+                    cmds += _shell_set_strings[shell].format(name,
+                                                             new_env[name])
+        return cmds
 
     @staticmethod
     def from_sourcing_file(filename, *args, **kwargs):
@@ -542,6 +661,7 @@ class EnvironmentModifications(object):
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
                     env.prepend_path(x, after)
+                    continue
 
                 if search not in before:
                     # We just need to set the variable to the new value

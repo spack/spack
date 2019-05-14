@@ -703,15 +703,32 @@ def set_executable(path):
     os.chmod(path, mode)
 
 
+def remove_empty_directories(root):
+    """Ascend up from the leaves accessible from `root` and remove empty
+    directories.
+
+    Parameters:
+        root (str): path where to search for empty directories
+    """
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for sd in subdirs:
+            sdp = os.path.join(dirpath, sd)
+            try:
+                os.rmdir(sdp)
+            except OSError:
+                pass
+
+
 def remove_dead_links(root):
-    """Removes any dead link that is present in root.
+    """Recursively removes any dead link that is present in root.
 
     Parameters:
         root (str): path where to search for dead links
     """
-    for file in os.listdir(root):
-        path = join_path(root, file)
-        remove_if_dead_link(path)
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for f in files:
+            path = join_path(dirpath, f)
+            remove_if_dead_link(path)
 
 
 def remove_if_dead_link(path):

@@ -519,6 +519,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         super(PackageBase, self).__init__()
 
+    @property
+    def installed_upstream(self):
+        if not hasattr(self, '_installed_upstream'):
+            upstream, record = spack.store.db.query_by_spec_hash(
+                self.spec.dag_hash())
+            self._installed_upstream = upstream
+
+        return self._installed_upstream
+
     def possible_dependencies(
             self, transitive=True, expand_virtuals=True, visited=None):
         """Return set of possible dependencies of this package.
@@ -739,17 +748,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def env_path(self):
-        if self.stage.source_path is None:
-            return None
-        else:
-            return os.path.join(self.stage.source_path, 'spack-build.env')
+        return os.path.join(self.stage.path, 'spack-build.env')
 
     @property
     def log_path(self):
-        if self.stage.source_path is None:
-            return None
-        else:
-            return os.path.join(self.stage.source_path, 'spack-build.out')
+        return os.path.join(self.stage.path, 'spack-build.out')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -943,7 +946,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         checksum = spack.config.get('config:checksum')
         if checksum and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
-                     self.spec.cformat('$_$@'))
+                     self.spec.cformat('{name}{@version}'))
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
@@ -957,7 +960,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
-                                 self.spec.format('$_$@'), ck_msg)
+                                 self.spec.format('{name}{@version}'), ck_msg)
 
         self.stage.create()
         self.stage.fetch(mirror_only)
@@ -1402,6 +1405,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.spec.external:
             return self._process_external_package(explicit)
 
+        if self.installed_upstream:
+            tty.msg("{0.name} is installed in an upstream Spack instance"
+                    " at {0.prefix}".format(self))
+            # Note this skips all post-install hooks. In the case of modules
+            # this is considered correct because we want to retrieve the
+            # module from the upstream Spack instance.
+            return
+
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
 
         # Ensure package is not already installed
@@ -1430,16 +1441,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dep_kwargs['explicit'] = False
             dep_kwargs['install_deps'] = False
             for dep in self.spec.traverse(order='post', root=False):
+                if spack.config.get('config:install_missing_compilers', False):
+                    tty.debug('Bootstrapping {0} compiler for {1}'.format(
+                        self.spec.compiler, self.name
+                    ))
+                    comp_kwargs = kwargs.copy()
+                    comp_kwargs['explicit'] = False
+                    comp_kwargs['install_deps'] = True
+                    dep.package.bootstrap_compiler(**comp_kwargs)
                 dep.package.do_install(**dep_kwargs)
-
-        # Then, install the compiler if it is not already installed.
-        if install_deps:
-            tty.debug('Boostrapping {0} compiler for {1}'.format(
-                self.spec.compiler, self.name
-            ))
-            comp_kwargs = kwargs.copy()
-            comp_kwargs['explicit'] = False
-            self.bootstrap_compiler(**comp_kwargs)
 
         # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
@@ -1695,7 +1705,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Archive the environment used for the build
         install(self.env_path, env_install_path)
         # Finally, archive files that are specific to each package
-        with working_dir(self.stage.source_path):
+        with working_dir(self.stage.path):
             errors = StringIO()
             target_dir = os.path.join(
                 spack.store.layout.metadata_path(self.spec),
@@ -1703,9 +1713,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             for glob_expr in self.archive_files:
                 # Check that we are trying to copy things that are
-                # in the source_path tree (not arbitrary files)
+                # in the stage tree (not arbitrary files)
                 abs_expr = os.path.realpath(glob_expr)
-                if os.path.realpath(self.stage.source_path) not in abs_expr:
+                if os.path.realpath(self.stage.path) not in abs_expr:
                     errors.write(
                         '[OUTSIDE SOURCE PATH]: {0}\n'.format(glob_expr)
                     )
@@ -1714,7 +1724,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # folder, make it relative and check for matches
                 if os.path.isabs(glob_expr):
                     glob_expr = os.path.relpath(
-                        glob_expr, self.stage.source_path
+                        glob_expr, self.stage.path
                     )
                 files = glob.glob(glob_expr)
                 for f in files:
@@ -1769,7 +1779,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.installed:
             return spack.store.layout.build_log_path(self.spec)
         else:
-            return os.path.join(self.stage.source_path, 'spack-build.out')
+            return os.path.join(self.stage.path, 'spack-build.out')
 
     @classmethod
     def inject_flags(cls, name, flags):

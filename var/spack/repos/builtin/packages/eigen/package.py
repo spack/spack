@@ -14,6 +14,7 @@ class Eigen(CMakePackage):
     homepage = 'http://eigen.tuxfamily.org/'
     url      = 'https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2'
 
+    version('3.3.7', sha256='9f13cf90dedbe3e52a19f43000d71fdf72e986beb9a5436dddcd61ff9d77a3ce')
     version('3.3.5', 'e83549a79d1b721da0f8899ab34edf95')
     version('3.3.4', 'a7aab9f758249b86c93221ad417fbe18')
     version('3.3.3', 'b2ddade41040d9cf73b39b4b51e8775b')

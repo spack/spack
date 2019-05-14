@@ -16,16 +16,40 @@ class IntelXed(Package):
     homepage = "https://intelxed.github.io/"
     git      = "https://github.com/intelxed/xed.git"
 
-    version('2018.02.14', commit='44d06033b69aef2c20ab01bfb518c52cd71bb537')
+    # The version name and git commit hashes for the main xed repo and
+    # the mbuild resource.  Xed doesn't have official releases, only
+    # git commits.
 
+    version_list = [
+        ('2019.03.01',
+         'b7231de4c808db821d64f4018d15412640c34113',
+         '176544e1fb54b6bfb40f596111368981d287e951',
+        ),
+        ('2018.02.14',
+         '44d06033b69aef2c20ab01bfb518c52cd71bb537',
+         'bb9123152a330c7fa1ff1a502950dc199c83e177',
+        )
+    ]
+
+    version('develop', branch='master')
     resource(name='mbuild',
              git='https://github.com/intelxed/mbuild.git',
-             commit='bb9123152a330c7fa1ff1a502950dc199c83e177',
-             destination='')
+             branch='master', destination='',
+             when='@develop')
 
-    variant('debug', default=False, description='enable debug symbols')
+    for (vers, xed_hash, mbuild_hash) in version_list:
+        version(vers, commit=xed_hash)
+        resource(name='mbuild',
+                 git='https://github.com/intelxed/mbuild.git',
+                 commit=mbuild_hash, destination='',
+                 when='@{0}'.format(vers))
+
+    variant('debug', default=False, description='Enable debug symbols')
 
     depends_on('python@2.7:', type='build')
+
+    conflicts('target=ppc64', msg='intel-xed only runs on x86')
+    conflicts('target=ppc64le', msg='intel-xed only runs on x86')
 
     mycflags = []
 
@@ -53,7 +77,7 @@ class IntelXed(Package):
         # If an optimization flag (-O...) is specified in CFLAGS, use
         # that, else set default opt level.
         for flag in self.mycflags:
-            if len(flag) >= 2 and flag[0:2] == '-O':
+            if flag.startswith('-O'):
                 break
         else:
             args.append('--opt=2')

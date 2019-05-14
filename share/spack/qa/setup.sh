@@ -16,8 +16,12 @@ export SPACK_ROOT=$(realpath "$QA_DIR/../../..")
 # Source the setup script
 . "$SPACK_ROOT/share/spack/setup-env.sh"
 
+# by default coverage is off.
+coverage=""
+coverage_run=""
+
 # Set up some variables for running coverage tests.
-if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
+if [[ "$COVERAGE" == "true" ]]; then
     # these set up coverage for Python
     coverage=coverage
     coverage_run="coverage run"
@@ -33,9 +37,6 @@ if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
         bashcov=$(realpath ${QA_DIR}/bashcov)
         sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$cc_script"
     fi
-else
-    coverage=""
-    coverage_run=""
 fi
 
 #

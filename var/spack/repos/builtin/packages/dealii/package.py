@@ -41,6 +41,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
+    variant('ginkgo',   default=False, description='Compile with Ginkgo')
     variant('gmsh',     default=True,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
@@ -61,6 +62,8 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Sundials')
     variant('slepc',    default=True,
             description='Compile with Slepc (only with Petsc and MPI)')
+    variant('symengine', default=False,
+            description='Compile with SymEngine')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
     variant('python',   default=False,
@@ -115,16 +118,17 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
+    depends_on('ginkgo',           when='@9.1:+ginkgo')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     # FIXME: next line fixes concretization with petsc
     depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
     depends_on('hdf5+mpi+hl', when='+hdf5+mpi~petsc')
     depends_on('cuda@8:',          when='+cuda')
-    depends_on('cmake@3.9:',       when='+cuda')
+    depends_on('cmake@3.9:',       when='+cuda', type='build')
     # older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99',    when='@:8.99')
+    depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on('metis@5:+int64',   when='+metis+int64')
@@ -144,6 +148,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('symengine@0.3:', when='@9.1:+symengine')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
@@ -158,6 +163,11 @@ class Dealii(CMakePackage, CudaPackage):
           sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
           when='@9.0.1')
 
+    # https://github.com/dealii/dealii/pull/7935
+    patch('https://github.com/dealii/dealii/commit/f8de8c5c28c715717bf8a086e94f071e0fe9deab.patch',
+          sha256='61f217744b70f352965be265d2f06e8c1276685e2944ca0a88b7297dd55755da',
+          when='@9.0.1 ^boost@1.70.0:')
+
     # check that the combination of variants makes sense
     # 64-bit BLAS:
     for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
@@ -169,6 +179,13 @@ class Dealii(CMakePackage, CudaPackage):
               'adol-c']:
         conflicts('+{0}'.format(p), when='@:8.5.1',
                   msg='The interface to {0} is supported from version 9.0.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    # interfaces added in 9.1.0:
+    for p in ['ginkgo', 'symengine']:
+        conflicts('+{0}'.format(p), when='@:9.0',
+                  msg='The interface to {0} is supported from version 9.1.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
@@ -212,10 +229,22 @@ class Dealii(CMakePackage, CudaPackage):
                 lapack_blas_headers.directories),
             '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
-            '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if (spec.satisfies('^intel-parallel-studio+tbb')):
+            # deal.II/cmake will have hard time picking up TBB from Intel.
+            tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
+            options.extend([
+                '-DTBB_FOUND=true',
+                '-DTBB_VERSION=%s' % tbb_ver,
+                '-DTBB_INCLUDE_DIRS=%s' % ';'.join(
+                    spec['tbb'].headers.directories),
+                '-DTBB_LIBRARIES=%s' % spec['tbb'].libs.joined(';')
+            ])
+        else:
+            options.append('-DTBB_DIR=%s' % spec['tbb'].prefix)
 
         if (spec.satisfies('^openblas+ilp64') or
             spec.satisfies('^intel-mkl+ilp64') or
@@ -310,7 +339,8 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser'):
+                'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
+                'symengine', 'ginkgo'):
             if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),

@@ -34,6 +34,7 @@ class Netcdf(AutotoolsPackage):
         return url.format(version.dotted)
 
     version('master', branch='master')
+    version('4.7.0',   sha256='a512d2b4828c6177dd4b96791c4163e4e06e6bfc7123bebfbfe01762d777d1cb')
     version('4.6.3',   sha256='335fdf16d7531f430ad75e732ed1a9a3fc83ad3ef91fb33a70119a555dd5415c')
     version('4.6.2',   sha256='c37525981167b3cd82d32e1afa3022afb94e59287db5f116c57f5ed4d9c6a638')
     version('4.6.1',   sha256='89c7957458740b763ae828c345240b8a1d29c2c1fed0f065f99b73181b0b2642')
@@ -48,6 +49,10 @@ class Netcdf(AutotoolsPackage):
     version('4.4.0',   sha256='0d40cb7845abd03c363abcd5f57f16e3c0685a0faf8badb2c59867452f6bcf78')
     version('4.3.3.1', sha256='bdde3d8b0e48eed2948ead65f82c5cfb7590313bc32c4cf6c6546e4cea47ba19')
     version('4.3.3',   sha256='83223ed74423c685a10f6c3cfa15c2d6bf7dc84b46af1e95b9fa862016aaa27e')
+
+    # configure fails if curl is not installed.
+    # See https://github.com/Unidata/netcdf-c/issues/1390
+    patch('https://github.com/Unidata/netcdf-c/commit/e5315da1e748dc541d50796fb05233da65e86b6b.patch', sha256='10a1c3f7fa05e2c82457482e272bbe04d66d0047b237ad0a73e87d63d848b16c', when='@4.7.0')
 
     variant('mpi', default=True,
             description='Enable parallel I/O for netcdf-4')
@@ -80,6 +85,11 @@ class Netcdf(AutotoolsPackage):
         description='Defines the maximum variables of NetCDF files.',
         values=is_integral
     )
+
+    # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
+    depends_on('autoconf', type='build', when='@4.7.0')
+    depends_on('automake', type='build', when='@4.7.0')
+    depends_on('libtool', type='build', when='@4.7.0')
 
     depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')
@@ -135,6 +145,11 @@ class Netcdf(AutotoolsPackage):
     # The features were introduced in version 4.1.0
     conflicts('+parallel-netcdf', when='@:4.0')
     conflicts('+hdf4', when='@:4.0')
+
+    @property
+    def force_autoreconf(self):
+        # The patch for 4.7.0 touches configure.ac.
+        return self.spec.satisfies('@4.7.0')
 
     def patch(self):
         try:

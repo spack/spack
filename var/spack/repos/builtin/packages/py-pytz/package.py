@@ -14,8 +14,8 @@ class PyPytz(PythonPackage):
 
     import_modules = ['pytz']
 
-    version('2017.2',   'f89bde8a811c8a1a5bac17eaaa94383c',
-            url="https://pypi.io/packages/source/p/pytz/pytz-2017.2.zip")
+    version('2018.4', sha256='c06425302f2cf668f1bba7a0a03f3c1d34d4ebeef2c72003da308b3947c7f749')
+    version('2017.2',   'f89bde8a811c8a1a5bac17eaaa94383c')
     version('2016.10',  'cc9f16ba436efabdcef3c4d32ae4919c')
     version('2016.6.1', 'b6c28a3b968bc1d8badfb61b93874e03')
     version('2014.10',  'eb1cb941a20c5b751352c52486aa1dd7')

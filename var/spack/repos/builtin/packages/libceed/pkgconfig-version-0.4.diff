@@ -1,0 +1,12 @@
+diff --git c/ceed.pc.template w/ceed.pc.template
+index 3216f08..5ada754 100644
+--- c/ceed.pc.template
++++ w/ceed.pc.template
+@@ -4,6 +4,6 @@ libdir=${prefix}/lib
+ 
+ Name: CEED
+ Description: Code for Efficient Extensible Discretization
+-Version: 0.2.1
++Version: 0.4
+ Cflags: -I${includedir}
+ Libs: -L${libdir} -lceed

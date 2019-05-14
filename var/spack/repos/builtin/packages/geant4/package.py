@@ -3,9 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack import *
-import platform
 import os
 import glob
 
@@ -60,7 +58,9 @@ class Geant4(CMakePackage):
 
     depends_on("expat")
     depends_on("zlib")
-    depends_on("mesa", when='+opengl')
+    depends_on("xerces-c")
+    depends_on("gl", when='+opengl')
+    depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')
     depends_on("motif", when='+motif')
@@ -88,8 +88,7 @@ class Geant4(CMakePackage):
             '-DXERCESC_ROOT_DIR:STRING=%s' %
             spec['xerces-c'].prefix, ]
 
-        arch = platform.system().lower()
-        if arch != 'darwin':
+        if 'platform=darwin' not in spec:
             if "+x11" in spec and "+opengl" in spec:
                 options.append('-DGEANT4_USE_OPENGL_X11=ON')
             if "+motif" in spec and "+opengl" in spec:
@@ -143,3 +142,16 @@ class Geant4(CMakePackage):
             for d in dirs:
                 target = os.readlink(d)
                 os.symlink(target, os.path.basename(target))
+
+    def setup_dependent_environment(self, spack_env, run_env, dep_spec):
+        version = self.version
+        major = version[0]
+        minor = version[1]
+        if len(version) > 2:
+            patch = version[-1]
+        else:
+            patch = 0
+        datadir = 'Geant4-%s.%s.%s' % (major, minor, patch)
+        spack_env.append_path('CMAKE_MODULE_PATH',
+                              '{0}/{1}/Modules'.format(
+                                  self.prefix.lib64, datadir))

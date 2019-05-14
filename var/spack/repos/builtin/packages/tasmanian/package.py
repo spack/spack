@@ -15,6 +15,8 @@ class Tasmanian(CMakePackage):
     url      = 'https://github.com/ORNL/TASMANIAN/archive/v6.0.tar.gz'
     git      = 'https://github.com/ORNL/TASMANIAN.git'
 
+    maintainers = ['mkstoyanov']
+
     version('develop', branch='master')
 
     version('6.0', '43dcb1d2bcb2f2c829ad046d0e91e83d')  # use for xsdk-0.4.0

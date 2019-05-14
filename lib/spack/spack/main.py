@@ -577,14 +577,34 @@ def print_setup_info(*info):
 
     # print roots for all module systems
     module_roots = spack.config.get('config:module_roots')
+    module_to_roots = {
+        'tcl': list(),
+        'dotkit': list(),
+        'lmod': list()
+    }
     for name, path in module_roots.items():
         path = spack.util.path.canonicalize_path(path)
-        shell_set('_sp_%s_root' % name, path)
+        module_to_roots[name].append(path)
+
+    other_spack_instances = spack.config.get(
+        'upstreams') or {}
+    for install_properties in other_spack_instances.values():
+        upstream_module_roots = install_properties.get('modules', {})
+        for module_type, root in upstream_module_roots.items():
+            module_to_roots[module_type].append(root)
+
+    for name, paths in module_to_roots.items():
+        # Environment setup prepends paths, so the order is reversed here to
+        # preserve the intended priority: the modules of the local Spack
+        # instance are the highest-precedence.
+        roots_val = ':'.join(reversed(paths))
+        shell_set('_sp_%s_roots' % name, roots_val)
 
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
     if 'modules' in info:
-        specs = spack.store.db.query('environment-modules')
+        specs = spack.store.db.query(
+            'environment-modules arch=%s' % spack.architecture.sys_type())
         if specs:
             shell_set('_sp_module_prefix', specs[-1].prefix)
         else:

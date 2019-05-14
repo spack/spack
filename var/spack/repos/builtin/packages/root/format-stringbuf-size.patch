@@ -1,0 +1,14 @@
+diff -Naur core/base/src/TString.cxx core/base/src/TString.cxx
+--- core/base/src/TString.cxx	2016-02-03 03:15:51.000000000 -0600
++++ core/base/src/TString.cxx	2016-02-22 16:51:35.283316959 -0600
+@@ -2397,8 +2397,8 @@
+ 
+ static char *Format(const char *format, va_list ap)
+ {
+-   static const int cb_size  = 4096;
+-   static const int fld_size = 2048;
++   static const int cb_size  = 3*4096;
++   static const int fld_size = 3*2048;
+ 
+    // a circular formating buffer
+    TTHREAD_TLS_ARRAY(char,cb_size,gFormbuf); // gFormbuf[cb_size]; // some slob for form overflow

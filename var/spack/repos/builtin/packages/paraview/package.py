@@ -46,7 +46,9 @@ class Paraview(CMakePackage):
     depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')
     depends_on('qt@:4', when='@:5.2.0+qt')
 
-    depends_on('mesa+swrender', when='+osmesa')
+    depends_on('mesa+osmesa', when='+osmesa')
+    depends_on('gl@3.2:', when='+opengl2')
+    depends_on('gl@1.2:', when='~opengl2')
     depends_on('libxt', when='+qt')
     conflicts('+qt', when='+osmesa')
 
@@ -169,6 +171,7 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
             '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
+            '-DOpenGL_GL_PREFERENCE:STRING=LEGACY'
         ]
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),

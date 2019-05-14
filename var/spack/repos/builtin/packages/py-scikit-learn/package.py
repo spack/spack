@@ -29,3 +29,4 @@ class PyScikitLearn(PythonPackage):
     depends_on('py-scipy@0.13.3:', type=('build', 'run'), when='@0.20.0:')
     depends_on('py-cython@0.23:', type='build')
     depends_on('py-test@3.3.0:', type='test')
+    depends_on('py-setuptools', type='build')

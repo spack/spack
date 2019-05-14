@@ -26,8 +26,8 @@ class RRgl(RPackage):
     depends_on('libpng', type=('link'))
     depends_on('libx11')
     depends_on('freetype', type=('link'))
-    depends_on('mesa', type=('link'))
-    depends_on('mesa-glu', type=('link'))
+    depends_on('gl')
+    depends_on('glu')
     depends_on('r-htmlwidgets', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))
@@ -40,7 +40,7 @@ class RRgl(RPackage):
     def configure_args(self):
         args = ['--x-includes=%s' % self.spec['libx11'].prefix.include,
                 '--x-libraries=%s' % self.spec['libx11'].prefix.lib,
-                '--with-gl-includes=%s' % self.spec['mesa'].prefix.include,
-                '--with-gl-libraries=%s' % self.spec['mesa'].prefix.lib,
-                '--with-gl-prefix=%s' % self.spec['mesa'].prefix]
+                '--with-gl-includes=%s' % self.spec['gl'].prefix.include,
+                '--with-gl-libraries=%s' % self.spec['gl'].prefix.lib,
+                '--with-gl-prefix=%s' % self.spec['gl'].prefix]
         return args
