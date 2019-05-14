@@ -44,6 +44,7 @@ class PyYt(PythonPackage):
     depends_on("py-cython", type=('build', 'run'))
     depends_on("py-h5py", type=('build', 'run'), when="+h5py")
     depends_on("py-ipython", type=('build', 'run'))
+    depends_on("py-ipython@:6.99", type=('build', 'run'), when="^python@:2.99")
     depends_on("py-matplotlib", type=('build', 'run'))
     depends_on("py-numpy", type=('build', 'run'))
     depends_on("py-scipy", type=('build', 'run'), when="+scipy")
