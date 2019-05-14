@@ -24,8 +24,7 @@ class Flecsi(CMakePackage):
 
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
-    variant('legion', default=False,
-            description='Build on top of legion conduit for legion inoperability')
+    variant('legion', default=False)
 
     depends_on("cmake@3.1:")
     depends_on("mpi")
@@ -41,7 +40,9 @@ class Flecsi(CMakePackage):
     depends_on("graphviz")
 
     def cmake_args(self):
-        options = ['-DCMAKE_BUILD_TYPE=debug -DFLECSI_RUNTIME_MODEL=mpi -DENABLE_UNIT_TESTS=ON -DENABLE_PARMETIS=ON -DENABLE_COLORING=ON -DENABLE_DOXYGEN=ON -DENABLE_DOCUMENTATION=OFF -DENABLE_COVERAGE_BUILD=OFF']
+        options = ['-DCMAKE_BUILD_TYPE=debug -DFLECSI_RUNTIME_MODEL=mpi']
+        options.extend(['-DENABLE_UNIT_TESTS=ON -DENABLE_PARMETIS=ON -DENABLE_COLORING=ON']) 
+        options.extend(['-DENABLE_DOXYGEN=ON -DENABLE_DOCUMENTATION=OFF -DENABLE_COVERAGE_BUILD=OFF'])
 
         if '~mpi' in self.spec:
             options.extend([
