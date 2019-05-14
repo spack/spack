@@ -24,18 +24,28 @@ class Flecsi(CMakePackage):
 
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
+    variant('legion', default=False,
+            description='Build on top of legion conduit for legion inoperability')
 
-    depends_on("cmake@3.1:", type='build')
+    depends_on("cmake@3.1:")
+    depends_on("mpi")
+    depends_on("gasnet~pshm")
+    depends_on("legion")
     depends_on("legion+shared", when='~mpi')
     depends_on("legion+shared+mpi", when='+mpi')
-    depends_on("parmetis")
+    depends_on("boost@1.59.0 cxxstd=11 +program_options")
+    depends_on("metis@5.1.0")
+    depends_on("parmetis@4.0.3")
+    depends_on("caliper")
+    depends_on("gotcha")
+    depends_on("graphviz")
 
     def cmake_args(self):
-        options = ['-DENABLE_UNIT_TESTS=ON']
+        options = ['-DCMAKE_BUILD_TYPE=debug -DFLECSI_RUNTIME_MODEL=mpi -DENABLE_UNIT_TESTS=ON -DENABLE_PARMETIS=ON -DENABLE_COLORING=ON -DENABLE_DOXYGEN=ON -DENABLE_DOCUMENTATION=OFF -DENABLE_COVERAGE_BUILD=OFF']
 
-        if '+mpi' in self.spec:
+        if '~mpi' in self.spec:
             options.extend([
-                '-DENABLE_MPI=ON',
+                '-DENABLE_MPI=OFF',
             ])
 
         return options
