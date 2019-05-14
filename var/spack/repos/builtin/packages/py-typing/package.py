@@ -15,6 +15,7 @@ class PyTyping(PythonPackage):
 
     import_modules = ['typing']
 
+    version('3.6.4', '5b2ade08d83be488f17b5fe587c27c74')
     version('3.6.1', '3fec97415bae6f742fb3c3013dedeb89')
 
     # You need Python 2.7 or 3.3+ to install the typing package
