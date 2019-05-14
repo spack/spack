@@ -52,10 +52,6 @@ properties = {
                                 'type':  'string',
                             },
                         },
-                        'craype_link_type': {
-                            'type': 'string',
-                            'default' : ''
-                        },
                     },
                     'modules': {
                         'type': 'object',
