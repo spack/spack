@@ -42,12 +42,13 @@ class CrayLibsci(Package):
     provides("blas")
     provides("lapack")
     provides("scalapack")
-    
+
     def _find_gnu_lib_version(self, compiler_ver):
-        """Cray-libsci names its gnu libs in the following form: gnu_XX. Depending on the
-        version of the compiler the suffix will change. Note that the suffix does not directly match
-        the compiler version, so instead we parse the module file and parse out the available versions and
-        try to make a match with the first number."""
+        """Cray-libsci names its gnu libs in the following form: gnu_XX.
+        Depending on the version of the compiler the suffix will change. Note
+        that the suffix does not directly match the compiler version, so
+        instead we parse the module file and parse out the available versions
+        and try to make a match with the first number."""
         ver = str(compiler_ver)
         mod = "cray-libsci/{0}".format(self.version)
         libsci_module = module("show", mod).split()
@@ -64,7 +65,8 @@ class CrayLibsci(Package):
         compiler = self.spec.compiler.name
 
         # libs use intel in their name but for others need to convert
-        canonical_names = {'gcc': "gnu_{0}".format(self._find_gnu_lib_version(self.compiler.version[0])),
+        gnu_lib_ver = self._find_gnu_lib_version(self.compiler.version[0])
+        canonical_names = {'gcc': "gnu_{0}".format(gnu_lib_ver),
                            'cce': 'cray'}
 
         compiler = canonical_names[compiler]
