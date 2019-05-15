@@ -14,6 +14,7 @@ class PyPybedtools(PythonPackage):
 
     version('0.6.9', sha256='2639e80917999e76572017fd93757e8d7ceb384f0b92647ccfdd23a0d60def7c')
 
+    depends_on('bedtools2', type='run')
     depends_on('py-cython', type=('build', 'run'))
     depends_on('py-pysam', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
