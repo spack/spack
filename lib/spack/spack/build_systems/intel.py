@@ -695,6 +695,7 @@ class IntelPackage(PackageBase):
         debug_print(gcc_name)
         return Executable(gcc_name)
 
+    @property
     def tbb_headers(self):
         # Note: TBB is included as
         # #include <tbb/task_scheduler_init.h>
@@ -948,7 +949,7 @@ class IntelPackage(PackageBase):
                 root=self.component_include_dir('mkl'),
                 recursive=False)
         if '+tbb' in self.spec or self.provides('tbb'):
-            result += self.tbb_headers()
+            result += self.tbb_headers
 
         debug_print(result)
         return result
