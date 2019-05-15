@@ -22,12 +22,12 @@ class Parsplice(CMakePackage):
     depends_on("cmake@3.1:", type='build')
     depends_on("berkeley-db")
     depends_on("nauty")
-    depends_on("boost")
+    depends_on("boost cxxstd=11")
     depends_on("mpi")
     depends_on("eigen@3:")
     depends_on("lammps+lib@20170901:")
 
     def cmake_args(self):
-        options = ['-DBUILD_SHARED_LIBS=ON']
+        options = ['-DBUILD_SHARED_LIBS=ON', '-DBoost_NO_BOOST_CMAKE=ON']
 
         return options
