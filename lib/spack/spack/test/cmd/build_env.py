@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import cPickle
+from six.moves import cPickle as pickle
 import pytest
 
 from spack.main import SpackCommand, SpackCommandError
@@ -45,6 +45,6 @@ def test_dump(tmpdir):
 def test_pickle(tmpdir):
     with tmpdir.as_cwd():
         info('--pickle', _out_file, 'zlib')
-        environment = cPickle.load(open(_out_file, 'rb'))
+        environment = pickle.load(open(_out_file, 'rb'))
         assert(type(environment) == dict)
         assert('PATH' in environment)
