@@ -696,6 +696,13 @@ class IntelPackage(PackageBase):
         return Executable(gcc_name)
 
     @property
+    def tbb_headers(self):
+        # Note: TBB is included as
+        # #include <tbb/task_scheduler_init.h>
+        return HeaderList([
+            self.component_include_dir('tbb') + '/dummy.h'])
+
+    @property
     def tbb_libs(self):
         '''Supply LibraryList for linking TBB'''
 
@@ -710,7 +717,7 @@ class IntelPackage(PackageBase):
         cxx_lib_path = gcc(
             '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
 
-        libs = tbb_lib + LibraryList(cxx_lib_path)
+        libs = tbb_lib + LibraryList(cxx_lib_path.rstrip())
         debug_print(libs)
         return libs
 
@@ -941,6 +948,9 @@ class IntelPackage(PackageBase):
                 ['mkl_cblas', 'mkl_lapacke'],
                 root=self.component_include_dir('mkl'),
                 recursive=False)
+        if '+tbb' in self.spec or self.provides('tbb'):
+            result += self.tbb_headers
+
         debug_print(result)
         return result
 
