@@ -9,7 +9,7 @@ import inspect
 import os
 import os.path
 import shutil
-import re
+import xml.etree.ElementTree
 
 import ordereddict_backport
 import py
@@ -725,12 +725,9 @@ def mock_svn_repository(tmpdir_factory):
     }
 
     def get_rev():
-        output = svn('info', output=str)
-        assert "Revision" in output
-        for line in output.split('\n'):
-            match = re.match(r'Revision: (\d+)', line)
-            if match:
-                return match.group(1)
+        output = svn('info', '--xml', output=str)
+        info = xml.etree.ElementTree.fromstring(output)
+        return info.find('entry/commit').get('revision')
 
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
