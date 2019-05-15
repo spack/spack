@@ -24,7 +24,7 @@
 ##############################################################################
 from spack import *
 from spack.concretize import NoBuildError
-from spack.util.module_cmd import load_module
+from spack.util.module_cmd import load_module, module
 
 class CrayLibsci(Package):
     """The Cray Scientific Libraries package, LibSci, is a collection of
@@ -42,6 +42,20 @@ class CrayLibsci(Package):
     provides("blas")
     provides("lapack")
     provides("scalapack")
+    
+    def _find_gnu_lib_version(self, compiler_ver):
+        """Cray-libsci names its gnu libs in the following form: gnu_XX. Depending on the
+        version of the compiler the suffix will change. Note that the suffix does not directly match
+        the compiler version, so instead we parse the module file and parse out the available versions and
+        try to make a match with the first number."""
+        ver = str(compiler_ver)
+        mod = "cray-libsci/{0}".format(self.version)
+        libsci_module = module("show", mod).split()
+        i = libsci_module.index("PE_LIBSCI_GENCOMPS_GNU_x86_64") + 1
+        while libsci_module[i] != "setenv":
+            if ver == libsci_module[i][0]:
+                return libsci_module[i]
+            i += 1
 
     @property
     def blas_libs(self):
@@ -50,10 +64,10 @@ class CrayLibsci(Package):
         compiler = self.spec.compiler.name
 
         # libs use intel in their name but for others need to convert
-        if compiler == "gcc":
-            compiler = "gnu"
-        elif compiler == "cce":
-            compiler = "cray"
+        canonical_names = {'gcc': "gnu_{0}".format(self._find_gnu_lib_version(self.compiler.version[0])),
+                           'cce': 'cray'}
+
+        compiler = canonical_names[compiler]
 
         if "+openmp" in self.spec and "+mpi" in self.spec:
             lib = "libsci_{0}_mpi_mp"
@@ -79,7 +93,9 @@ class CrayLibsci(Package):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """ Load the module into the environment for dependents """
-        load_module('cray-libsci')
+        version = self.version
+        mod = 'cray-libsci/{0}'.format(version)
+        load_module(mod)
 
     def install(self, spec, prefix):
         raise NoBuildError(spec)
