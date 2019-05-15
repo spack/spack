@@ -56,6 +56,11 @@ def module(*args):
         return str(module_p.communicate()[0].decode())
 
 
+def unload_module(mod):
+    """Takes a module name and removes the module"""
+    module("unload", mod)
+
+
 def load_module(mod):
     """Takes a module name and removes modules until it is possible to
     load that module. It then loads the provided module. Depends on the

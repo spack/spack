@@ -60,7 +60,8 @@ from spack.util.environment import (
 from spack.util.environment import system_dirs
 from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, get_path_from_module
+from spack.util.module_cmd import (load_module, get_path_from_module,
+                                   unload_module)
 from spack.util.log_parse import parse_log_events, make_log_context
 
 
