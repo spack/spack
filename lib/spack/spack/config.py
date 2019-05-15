@@ -676,11 +676,7 @@ def _read_config_file(filename, schema):
     try:
         tty.debug("Reading config file %s" % filename)
         with open(filename) as f:
-            data = _mark_overrides(syaml.load(f))
-
-        if data:
-            validate(data, schema)
-        return data
+            return _read_config(f, schema)
 
     except MarkedYAMLError as e:
         raise ConfigFileError(
@@ -689,6 +685,13 @@ def _read_config_file(filename, schema):
     except IOError as e:
         raise ConfigFileError(
             "Error reading configuration file %s: %s" % (filename, str(e)))
+
+
+def _read_config(stream, schema):
+    data = _mark_overrides(syaml.load(stream))
+    if data:
+        validate(data, schema)
+    return data
 
 
 def _override(string):
