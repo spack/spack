@@ -19,6 +19,8 @@ packages:
         paths:
             curl@7.29.0: /usr
         version: [7.29.0]
+    eigen:
+        variants: ~fftw~metis~scotch
     flex:
         paths:
             flex@2.5.37: /usr
