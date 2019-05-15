@@ -24,6 +24,9 @@ import spack.store
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
 
+from spack.util.config import lookup_mirror
+from spack.util.url import format as url_format
+
 from spack.cmd import display_specs
 
 description = "create, download and install binary packages"
@@ -312,10 +315,14 @@ def createtarball(args):
                 " yaml file containing a spec to install")
     pkgs = set(packages)
     specs = set()
-    # TODO(opadron): handle -d MIRROR_NAME
+
     outdir = '.'
     if args.directory:
         outdir = args.directory
+
+    _, outdir = lookup_mirror(outdir)
+    outdir = url_format(outdir)
+
     signkey = None
     if args.key:
         signkey = args.key

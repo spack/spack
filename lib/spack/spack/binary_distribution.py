@@ -28,8 +28,11 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.config import has_mirrors, iter_mirrors
 from spack.util.gpg import Gpg
-from spack.util.web import spider, read_from_url
-from spack.util.url import join as urljoin
+from spack.util.web import spider
+from spack.util.web import list_url, url_exists
+from spack.util.web import read_from_url, push_to_url, remove_url
+from spack.util.url import join as urljoin, format as urlformat
+from spack.util.url import parse as urlparse
 from spack.util.executable import ProcessError
 
 _build_cache_relative_path = 'build_cache'
@@ -250,28 +253,40 @@ def sign_tarball(key, force, specfile_path):
 
 
 def _generate_html_index(path_list, output_path):
-    f = open(output_path, 'w')
-    header = """<html>\n
-<head>\n</head>\n
-<list>\n"""
-    footer = "</list>\n</html>\n"
-    f.write(header)
-    for path in path_list:
-        rel = os.path.basename(path)
-        f.write('<li><a href="%s"> %s</a>\n' % (rel, rel))
-    f.write(footer)
-    f.close()
+    with open(output_path, 'w') as f:
+        f.write('\n'.join((
+            '<html>',
+            '<head></head>',
+            '<body>',
+            '<ul>',
+            '\n'.join(
+                '  <li><a href="{0}">{0}</a>'.format(path)
+                for path in path_list
+            ),
+            '</ul>',
+            '</body>',
+            '</html>',
+            ''
+        )))
 
 
 def generate_package_index(build_cache_dir):
-    yaml_list = os.listdir(build_cache_dir)
-    path_list = [os.path.join(build_cache_dir, l) for l in yaml_list]
+    tmpdir = tempfile.mkdtemp()
+    try:
+        index_html_path = os.path.join(tmpdir, 'index.html')
+        yaml_list = (
+                entry
+                for entry in list_url(build_cache_dir)
+                if entry.endswith('.yaml'))
 
-    index_html_path_tmp = os.path.join(build_cache_dir, 'index.html.tmp')
-    index_html_path = os.path.join(build_cache_dir, 'index.html')
+        _generate_html_index(yaml_list, index_html_path)
 
-    _generate_html_index(path_list, index_html_path_tmp)
-    shutil.move(index_html_path_tmp, index_html_path)
+        push_to_url(
+                index_html_path,
+                urljoin(build_cache_dir, 'index.html'),
+                keep_original=False)
+    finally:
+        shutil.rmtree(tmpdir)
 
 
 def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
@@ -284,20 +299,25 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         raise ValueError('spec must be concrete to build tarball')
 
     # set up some paths
-    build_cache_dir = build_cache_directory(outdir)
+    tmpdir = tempfile.mkdtemp()
+    build_cache_dir = build_cache_directory(tmpdir)
 
     tarfile_name = tarball_name(spec, '.tar.gz')
-    tarfile_dir = os.path.join(build_cache_dir,
-                               tarball_directory_name(spec))
+    tarfile_dir = os.path.join(build_cache_dir, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
-    mkdirp(tarfile_dir)
     spackfile_path = os.path.join(
         build_cache_dir, tarball_path_name(spec, '.spack'))
-    if os.path.exists(spackfile_path):
+
+    remote_spackfile_path = urljoin(
+            outdir, os.path.relpath(spackfile_path, tmpdir))
+
+    mkdirp(tarfile_dir)
+    if url_exists(remote_spackfile_path):
         if force:
-            os.remove(spackfile_path)
+            remove_url(remote_spackfile_path)
         else:
-            raise NoOverwriteException(str(spackfile_path))
+            raise NoOverwriteException(urlformat(remote_spackfile_path))
+
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
     # and preferences
@@ -306,11 +326,14 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     specfile_path = os.path.realpath(
         os.path.join(build_cache_dir, specfile_name))
 
-    if os.path.exists(specfile_path):
+    remote_specfile_path = urljoin(
+            outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
+
+    if url_exists(remote_specfile_path):
         if force:
-            os.remove(specfile_path)
+            remove_url(remote_specfile_path)
         else:
-            raise NoOverwriteException(str(specfile_path))
+            raise NoOverwriteException(urlformat(remote_specfile_path))
 
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
@@ -327,6 +350,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
+            shutil.rmtree(tmpdir)
             tty.die(e)
     else:
         try:
@@ -334,7 +358,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
+            shutil.rmtree(tmpdir)
             tty.die(e)
+
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
@@ -363,7 +389,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spec_dict['full_hash'] = spec.full_hash()
 
     tty.debug('The full_hash ({0}) of {1} will be written into {2}'.format(
-        spec_dict['full_hash'], spec.name, specfile_path))
+        spec_dict['full_hash'], spec.name, urlformat(remote_specfile_path)))
     tty.debug(spec.tree())
 
     with open(specfile_path, 'w') as outfile:
@@ -385,9 +411,17 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     if not unsigned:
         os.remove('%s.asc' % specfile_path)
 
-    # create an index.html for the build_cache directory so specs can be found
-    if regenerate_index:
-        generate_package_index(build_cache_dir)
+    push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
+    push_to_url(specfile_path, remote_specfile_path, keep_original=False)
+
+    try:
+        # create an index.html for the build_cache directory so specs can be
+        # found
+        if regenerate_index:
+            generate_package_index(urljoin(
+                outdir, os.path.relpath(build_cache_dir, tmpdir)))
+    finally:
+        shutil.rmtree(tmpdir)
 
     return None
 

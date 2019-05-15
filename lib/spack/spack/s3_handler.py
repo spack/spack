@@ -17,6 +17,9 @@ from llnl.util.lang import memoized
 import spack
 from spack.util.url import parse as urlparse
 
+from spack.util.s3 import create_s3_session
+
+
 # NOTE(opadron): Workaround issue in boto where its StreamingBody implementation
 # is missing several APIs expected from IOBase.  These missing APIs prevent the
 # streams returned by boto from being passed as-are along to urllib.
@@ -127,41 +130,7 @@ class UrllibS3Handler(HTTPSHandler):
     def s3_open(self, req):
         full_url = req.get_full_url()
         parsed_url = urlparse(full_url)
-        assert parsed_url.scheme == 's3'
-
-        # NOTE(opadron): import boto and friends as late as possible.  We don't
-        # want to require boto as a dependency unless the user actually wants to
-        # access S3 mirrors.
-        from boto3 import Session
-        kwargs = {}
-
-        if hasattr(parsed_url, 's3_profile'):
-            kwargs['profile_name'] = parsed_url.s3_profile
-
-        elif (hasattr(parsed_url, 's3_access_key_id') and
-                hasattr(parsed_url, 's3_secret_access_key')):
-            kwargs['aws_access_key_id'] = parsed_url.s3_access_key_id
-            kwargs['aws_secret_access_key'] = parsed_url.s3_secret_access_key
-
-        session = Session(**kwargs)
-
-        s3_client_args = {"use_ssl": spack.config.get('config:verify_ssl')}
-
-        endpoint_url = parsed_url.netloc
-        if endpoint_url:
-            if _urlparse(endpoint_url, scheme=None).scheme is None:
-                endpoint_url = '://'.join(('https', endpoint_url))
-
-            s3_client_args['endpoint_url'] = endpoint_url
-
-        # if no access credentials provided above, then access anonymously
-        if not session.get_credentials():
-            from botocore import UNSIGNED
-            from botocore.client import Config
-
-            s3_client_args["config"] = Config(signature_version=UNSIGNED)
-
-        s3 = session.client('s3', **s3_client_args)
+        s3 = create_s3_session(parsed_url)
         obj = s3.get_object(
                 Bucket=parsed_url.s3_bucket,
                 Key=parsed_url.path)

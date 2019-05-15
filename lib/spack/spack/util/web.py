@@ -8,6 +8,8 @@ from __future__ import print_function
 import codecs
 import re
 import os
+import os.path
+import shutil
 import ssl
 import sys
 import traceback
@@ -31,6 +33,7 @@ except ImportError:
     class HTMLParseError(Exception):
         pass
 
+from llnl.util.filesystem import mkdirp
 import llnl.util.tty as tty
 
 import spack.config
@@ -40,8 +43,9 @@ import spack.stage
 import spack.error
 import spack.util.crypto
 
-from spack.util.url import join as urljoin, parse as urlparse
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
+from spack.util.s3 import create_s3_session
+from spack.util.url import join as urljoin, parse as urlparse
 
 from spack.s3_handler import open as s3_open
 
@@ -157,6 +161,133 @@ def read_from_url(url, accept_content_type=None):
         return None, None, None
 
     return response.geturl(), response.headers, response
+
+
+def push_to_url(local_path, remote_path, keep_original=True, public=False):
+    local_url = urlparse(local_path)
+    if local_url.scheme != 'file':
+        raise ValueError('local path must be a file:// url')
+
+    remote_url = urlparse(remote_path)
+
+    verify_ssl = spack.config.get('config:verify_ssl')
+
+    user_expects_verify_ssl = lambda: (
+            verify_ssl and (
+                remote_url.scheme == 'https' or (
+                    remote_url.scheme == 's3' and
+                    urlparse(
+                        remote_url.netloc, scheme='https').scheme == 'https')))
+
+    if __UNABLE_TO_VERIFY_SSL and user_expects_verify_ssl():
+        tty.warn("Spack will not check SSL certificates. You need to update"
+                 "your Python to enable certificate verification.")
+
+    if remote_url.scheme == 'file':
+        mkdirp(os.path.dirname(remote_url.path))
+        if keep_original:
+            shutil.copy2(local_url.path, remote_url.path)
+        else:
+            os.rename(local_url.path, remote_url.path)
+
+    elif remote_url.scheme == 's3':
+        s3 = create_s3_session(remote_url)
+        s3.upload_file(local_url.path, remote_url.s3_bucket, remote_url.path)
+
+        if not keep_original:
+            os.remove(local_url.path)
+
+    else:
+        raise NotImplementedError(
+            'Unrecognized URL scheme: {}'.format(remote_url.scheme))
+
+
+def url_exists(path):
+    url = urlparse(path)
+
+    if url.scheme == 'file':
+        return os.path.exists(url.path)
+
+    if url.scheme == 's3':
+        s3 = create_s3_session(url)
+        from botocore.exceptions import ClientError
+        try:
+            s3.get_object(Bucket=url.s3_bucket, Key=url.path)
+            return True
+        except ClientError as err:
+            if err.response['Error']['Code'] == 'NoSuchKey':
+                return False
+            raise err
+
+    # otherwise, just try to "read" from the URL, and assume that *any*
+    # non-throwing response contains the resource represented by the URL
+    try:
+        read_from_url(url)
+        return True
+    except URLError as err:
+        return False
+
+
+def remove_url(path):
+    url = urlparse(path)
+
+    if url.scheme == 'file':
+        os.remove(url.path)
+        return
+
+    if url.scheme == 's3':
+        s3 = create_s3_session(url)
+        s3.delete_object(Bucket=url.s3_bucket, Key=url.path)
+        return
+
+    # Don't even try for other URL schemes.
+
+
+def _list_s3_objects(client, url, num_entries, start_after=None):
+    list_args = dict(
+            Bucket=url.s3_bucket,
+            Prefix=url.path,
+            MaxKeys=num_entries)
+
+    if start_after is not None:
+        list_args['StartAfter'] = start_after
+
+    result = client.list_objects_v2(**list_args)
+
+    last_key = None
+    if result['IsTruncated']:
+        last_key = result['Contents'][-1]['Key']
+
+    iter = (key for key in
+            (
+                os.path.relpath(entry['Key'], url.path)
+                for entry in result['Contents']
+            )
+            if key != '.')
+
+    return iter, last_key
+
+
+def _iter_s3_prefix(client, url, num_entries=1024):
+    key = None
+    while True:
+        contents, key = _list_s3_objects(
+                client, url, num_entries, start_after=key)
+        for x in contents: yield x
+        if not key:
+            break
+
+
+def list_url(path):
+    url = urlparse(path)
+
+    if url.scheme == 'file':
+        return os.listdir(url.path)
+
+    if url.scheme == 's3':
+        s3 = create_s3_session(url)
+        return list(set(key.split('/', 1)[0]
+                for key in _iter_s3_prefix(create_s3_session(url), url)))
 
 
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
