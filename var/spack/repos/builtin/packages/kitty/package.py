@@ -33,7 +33,7 @@ class Kitty(PythonPackage):
     depends_on('zlib')
     depends_on('libpng')
     depends_on('gl', type=('build', 'link', 'run'))
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx', type='build')
     depends_on('freetype', when=sys.platform != 'darwin')
