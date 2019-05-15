@@ -15,6 +15,7 @@ class Symengine(CMakePackage):
     git      = "https://github.com/symengine/symengine.git"
 
     version('develop', branch='master')
+    version('0.4.0', 'fd9ae3e98258291ef35b6392faa72ace')
     version('0.3.0', 'e61d7513cca4963cd062616891de54c6')
     version('0.2.0', '45401561add36a13c1f0b0c5f8d7422d')
     version('0.1.0', '41ad7daed61fc5a77c285eb6c7303425')
