@@ -676,8 +676,7 @@ def _read_config_file(filename, schema):
     try:
         tty.debug("Reading config file %s" % filename)
         with open(filename) as f:
-            base_data = syaml.load(f)
-            data = _mark_overrides(base_data)
+            data = _mark_overrides(syaml.load(f))
 
         if data:
             validate(data, schema)
