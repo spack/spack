@@ -16,6 +16,7 @@ class Protobuf(CMakePackage):
     root_cmakelists_dir = "cmake"
 
     version('3.6.1', sha256='3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b')
+    version('3.6.0', sha256='a37836aa47d1b81c2db1a6b7a5e79926062b5d76bd962115a0e615551be2b48d')
     version('3.5.2', 'ff6742018c172c66ecc627029ad54280')
     version('3.5.1.1', '5005003ae6b94773c4bbca87a644b131')
     version('3.5.1',   '710f1a75983092c9b45ecef207236104')

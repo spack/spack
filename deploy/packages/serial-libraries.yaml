@@ -23,6 +23,16 @@ packages:
       - arrow+parquet+python@0.11.0
       - neuron~mpi@2018-10
 
+  gnu-stable-serial-python3:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - python
+    specs:
+      - tensorflow@1.12.0+cuda
+
   intel-stable-serial-python:
     target_matrix:
       - intel-stable

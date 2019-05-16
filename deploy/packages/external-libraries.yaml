@@ -23,6 +23,7 @@ packages:
       - bzip2@1.0.6
       - cuda@9.0.176
       - cuda@9.2.88
+      - cudnn@7.3
       - gmsh+oce~mpi@3.0.6
       - hdf5~mpi@1.10.4
       - highfive~mpi@2.0

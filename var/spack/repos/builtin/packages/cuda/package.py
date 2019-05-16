@@ -55,3 +55,6 @@ class Cuda(Package):
             '--toolkit',        # install CUDA Toolkit
             '--toolkitpath=%s' % prefix
         )
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.lib64)

@@ -103,6 +103,14 @@ class Openssl(Package):
             make('test')            # 'VERBOSE=1'
         make('install')
 
+    @property
+    def libs(self):
+        """set up recursive search for libs"""
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "lib*", root=self.prefix, shared=shared, recursive=True
+        )
+
     @run_after('install')
     def link_system_certs(self):
         if '+systemcerts' not in self.spec:

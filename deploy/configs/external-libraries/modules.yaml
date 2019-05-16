@@ -28,6 +28,7 @@ modules:
     hash_length: 0
     whitelist:
       - cuda
+      - cudnn
       - python
       - spark
     blacklist:

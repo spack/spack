@@ -32,7 +32,8 @@ modules:
       - hdf5~mpi
       - highfive~mpi
       - neuron
-      - 'python-dev'
+      - python-dev
+      - tensorflow
     blacklist:
       - '%gcc'
       - '%intel'

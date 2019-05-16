@@ -30,6 +30,7 @@ modules:
       - allinea-forge
       - cmake
       - cuda
+      - cudnn
       - doxygen
       - emacs
       - ffmpeg
