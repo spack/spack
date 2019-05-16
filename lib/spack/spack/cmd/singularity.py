@@ -103,7 +103,7 @@ def singularity(parser, args):
 
     # If we can't, the user needs to provide it.
     if distro == "":
-        tty.fail("Cannot infer distro, please set via --distro.")
+        tty.die("Cannot infer distro, please set via --distro.")
 
     # Create the singularity recipe in a build directory
     build_dir = create_recipe(specs=specs,
@@ -121,6 +121,11 @@ def singularity(parser, args):
         tty.msg("sudo singularity build container.sif %s" % recipe_path)
 
     else:
+
+        # First ensure that Singularity is installed
+        if not check_installed('singularity'):
+            tty.die("singularity must be installed for build. Try recipe.")
+
         with llnl.util.filesystem.working_dir(build_dir):
             tty.msg('Building container for "%s"' % args.image)
             singularity_cmd('build', args.name, 'Singularity')
@@ -130,9 +135,18 @@ def singularity(parser, args):
         if not os.path.exists(container):
 
             # Should we clean up?
-            tty.fail("Container build failed.")
+            tty.die("Container build failed.")
 
         tty.msg("Container successfully built:", container)
+
+
+def check_installed(name):
+    '''check if Singularity is installed, required for build.
+    '''
+    singularity = spack.util.executable.which(name)
+    if singularity is None:
+        return False
+    return True
 
 
 def get_distro(distro, image):
