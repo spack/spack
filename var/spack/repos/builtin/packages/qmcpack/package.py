@@ -40,7 +40,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     variant('mixed', default=False,
             description='Build the mixed precision (mixture of single and '
                         'double precision) version for gpu and cpu')
-    variant('soa', default=False,
+    variant('soa', default=True,
             description='Build with Structure-of-Array instead of '
                         'Array-of-Structure code. Only for CPU code'
                         'and only in mixed precision')
