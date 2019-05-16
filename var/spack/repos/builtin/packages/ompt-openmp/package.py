@@ -23,3 +23,7 @@ class OmptOpenmp(CMakePackage):
     conflicts('%gcc@:4.7')
 
     root_cmakelists_dir = 'runtime'
+
+    @property
+    def libs(self):
+        return find_libraries('libomp', root=self.prefix, recursive=True)
