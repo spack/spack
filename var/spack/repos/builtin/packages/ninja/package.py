@@ -22,7 +22,9 @@ class Ninja(Package):
     version('1.7.2', '7b482218757acbaeac4d4d54a3cd94e1')
     version('1.6.0', '254133059f2da79d8727f654d7198f43')
 
-    depends_on('python', type=('build', 'run'))
+    depends_on('python', type='build')
+
+    provides('ninja-fortran', when='@kitware')
 
     phases = ['configure', 'install']
 

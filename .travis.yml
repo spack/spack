@@ -29,17 +29,12 @@ jobs:
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '2.7'
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
-    - python: '3.4'
-      sudo: required
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.5'
       sudo: required
       os: linux
@@ -54,7 +49,7 @@ jobs:
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
       addons:
         apt:
           packages:
@@ -80,7 +75,7 @@ jobs:
       env: TEST_SUITE=doc
     - os: osx
       language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7 ]
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
@@ -130,8 +125,6 @@ jobs:
       env: TEST_SUITE=docker
   allow_failures:
     - env: TEST_SUITE=docker
-    # temporary Python 2.6 exception while we figure out why Travis is hanging
-    - python: '2.6'
 
 stages:
   - 'style checks'

@@ -82,6 +82,7 @@ class Cmake(Package):
     depends_on('openssl', when='+openssl')
     depends_on('openssl@:1.0.99', when='@:3.6.9+openssl')
     depends_on('ncurses',        when='+ncurses')
+    depends_on('gnutls')
 
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226

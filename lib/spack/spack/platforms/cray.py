@@ -11,7 +11,7 @@ from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.operating_systems.cnl import Cnl
-from spack.util.module_cmd import get_module_cmd, unload_module
+from spack.util.module_cmd import module
 
 
 def _get_modules_in_modulecmd_output(output):
@@ -90,8 +90,8 @@ class Cray(Platform):
         # Unload these modules to prevent any silent linking or unnecessary
         # I/O profiling in the case of darshan.
         modules_to_unload = ["cray-mpich", "darshan", "cray-libsci", "altd"]
-        for module in modules_to_unload:
-            unload_module(module)
+        for mod in modules_to_unload:
+            module('unload', mod)
 
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
         cray_wrapper_names = os.path.join(build_env_path, 'cray')
@@ -127,8 +127,7 @@ class Cray(Platform):
     def _avail_targets(self):
         '''Return a list of available CrayPE CPU targets.'''
         if getattr(self, '_craype_targets', None) is None:
-            module = get_module_cmd()
-            output = module('avail', '-t', 'craype-', output=str, error=str)
+            output = module('avail', '-t', 'craype-')
             craype_modules = _get_modules_in_modulecmd_output(output)
             self._craype_targets = targets = []
             _fill_craype_targets_from_modules(targets, craype_modules)

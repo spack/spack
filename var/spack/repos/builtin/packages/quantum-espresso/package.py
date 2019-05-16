@@ -217,13 +217,13 @@ class QuantumEspresso(Package):
             # Spec for elpa
             elpa = spec['elpa']
 
-            # Find where the Fortran module resides
-            elpa_module = find(elpa.prefix, 'elpa.mod')
-
             # Compute the include directory from there: versions
             # of espresso prior to 6.1 requires -I in front of the directory
             elpa_include = '' if '@6.1:' in spec else '-I'
-            elpa_include += os.path.dirname(elpa_module[0])
+            elpa_include += os.path.join(
+                elpa.headers.directories[0],
+                'modules'
+            )
 
             options.extend([
                 '--with-elpa-include={0}'.format(elpa_include),

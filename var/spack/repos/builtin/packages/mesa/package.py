@@ -20,13 +20,20 @@ class Mesa(MesonPackage):
     # whatever version of LLVM you're using.
     git      = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    version('19.0.0', tag='mesa-19.0.0')
-
-    version('19.0.develop', branch='19.0')
     version('develop',      branch='master')
+    version('19.1.develop', branch='19.1')
+    version('19.0.develop', branch='19.0')
+    version('19.0.4', tag='mesa-19.0.4', preferred=True)
+    version('19.0.3', tag='mesa-19.0.3')
+    version('19.0.2', tag='mesa-19.0.2')
+    version('19.0.1', tag='mesa-19.0.1')
+    version('19.0.0', tag='mesa-19.0.0')
 
     depends_on('meson@0.45:', type='build')
     depends_on('binutils', type='build')
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('gettext', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('python@3:', type='build')
     depends_on('py-mako@0.8.0:', type='build')
@@ -68,6 +75,12 @@ class Mesa(MesonPackage):
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
+    depends_on('glproto@1.4.14:', when='+glx', type='build')
+
+    # Fix glproto dependency for glx=gallium-xlib
+    # https://gitlab.freedesktop.org/mesa/mesa/merge_requests/806
+    # Was included in the upstream patch release for 19.0.4
+    patch('glproto-mr806.patch', when='@19.0.0:19.0.3')
 
     def meson_args(self):
         spec = self.spec

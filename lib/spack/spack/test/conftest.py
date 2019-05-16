@@ -9,7 +9,7 @@ import inspect
 import os
 import os.path
 import shutil
-import re
+import xml.etree.ElementTree
 
 import ordereddict_backport
 import py
@@ -142,7 +142,11 @@ def remove_whatever_it_is(path):
 def working_env():
     saved_env = os.environ.copy()
     yield
-    os.environ = saved_env
+    # os.environ = saved_env doesn't work
+    # it causes module_parsing::test_module_function to fail
+    # when it's run after any test using this fixutre
+    os.environ.clear()
+    os.environ.update(saved_env)
 
 
 @pytest.fixture(scope='function', autouse=True)
@@ -721,12 +725,9 @@ def mock_svn_repository(tmpdir_factory):
     }
 
     def get_rev():
-        output = svn('info', output=str)
-        assert "Revision" in output
-        for line in output.split('\n'):
-            match = re.match(r'Revision: (\d+)', line)
-            if match:
-                return match.group(1)
+        output = svn('info', '--xml', output=str)
+        info = xml.etree.ElementTree.fromstring(output)
+        return info.find('entry/commit').get('revision')
 
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
