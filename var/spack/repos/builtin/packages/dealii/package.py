@@ -193,6 +193,10 @@ class Dealii(CMakePackage, CudaPackage):
               msg='It is not possible to enable slepc interfaces '
                   'without petsc.')
 
+    conflicts('+adol-c', when='^trilinos+chaco',
+              msg='symbol clash between the ADOL-C library and '
+                  'Trilinos SEACAS Chaco.')
+
     # interfaces added in 8.5.0:
     for p in ['gsl', 'python']:
         conflicts('+{0}'.format(p), when='@:8.4.2',
