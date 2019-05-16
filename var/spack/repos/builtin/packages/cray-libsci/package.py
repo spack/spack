@@ -6,7 +6,6 @@
 import os
 
 from spack import *
-from spack.concretize import NoBuildError
 from spack.util.module_cmd import load_module, module
 from spack.util.prefix import Prefix
 
@@ -15,14 +14,14 @@ class CrayLibsci(Package):
     """The Cray Scientific Libraries package, LibSci, is a collection of
     numerical routines optimized for best performance on Cray systems."""
 
-    homepage = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci"
-    url      = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci"
+    homepage = "https://docs.nersc.gov/programming/libraries/libsci/"
+    url = "https://docs.nersc.gov/programming/libraries/libsci/"
+
+    version('0.0.0', '')
 
     variant("shared", default=True, description="enable shared libs")
     variant("openmp", default=False, description="link with openmp")
     variant("mpi", default=False, description="link with mpi libs")
-
-    version('1.2.3', '0123456789abcdef0123456789abcdef')
 
     provides("blas")
     provides("lapack")
@@ -35,6 +34,25 @@ class CrayLibsci(Package):
     }
 
     @property
+    def fetcher(self):
+        raise InstallError("""This package is intended to be a placeholder for Cray's
+libsci, usually provided via the module system as 'cray-libsci'.
+
+Add to your packages.yaml:
+
+    packages:
+        cray-libsci:
+            buildable: false
+            modules:
+                cray-libsci+mpi+openmp@18.07.1: cray-libsci/18.07.1
+                cray-libsci+mpi~openmp@18.07.1: cray-libsci/18.07.1
+                cray-libsci~mpi+openmp@18.07.1: cray-libsci/18.07.1
+                cray-libsci~mpi~openmp@18.07.1: cray-libsci/18.07.1
+
+Replace the version numbers with the ones matching the module(s).
+        """)
+
+    @property
     def modname(self):
         return "cray-libsci/{0}".format(self.version)
 
@@ -42,6 +60,9 @@ class CrayLibsci(Package):
     def prefix(self):
         cname = self.canonical_names[self.compiler.name]
         libsci_module = module("show", self.modname).splitlines()
+
+        base_dir = None
+        lib_ver = None
 
         for line in libsci_module:
             if "CRAY_LIBSCI_BASE_DIR" in line:
@@ -52,6 +73,9 @@ class CrayLibsci(Package):
                 # check for matching major version match
                 lib_ver = [v for v in line.split()[2:]
                            if v[0] == str(self.compiler.version[0])][0]
+
+        if base_dir is None or lib_ver is None:
+            return Prefix()
 
         return Prefix(os.path.join(
             base_dir,
@@ -96,4 +120,4 @@ class CrayLibsci(Package):
         load_module(mod)
 
     def install(self, spec, prefix):
-        raise NoBuildError(spec)
+        pass
