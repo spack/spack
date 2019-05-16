@@ -18,8 +18,8 @@ class Ferret(Package):
     version('7.2', '21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095')
     version('6.96', '51722027c864369f41bab5751dfff8cc')
 
-    depends_on("hdf5~mpi")
-    depends_on("netcdf~mpi")
+    depends_on("hdf5+hl")
+    depends_on("netcdf")
     depends_on("netcdf-fortran")
     depends_on("readline")
     depends_on("zlib")
