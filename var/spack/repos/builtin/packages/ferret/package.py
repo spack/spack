@@ -59,29 +59,20 @@ class Ferret(Package):
         filter_file(r'-lm',
                     '-lgfortran -lm',
                     'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdff.a',
+                    "-L%s -lnetcdff" % self.spec['netcdf-fortran'].prefix.lib,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdf.a',
+                    "-L%s -lnetcdf" % self.spec['netcdf'].prefix.lib,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'\$\(HDF5_DIR\)/lib64/libhdf5_hl.a',
+                    "-L%s -lhdf5_hl" % self.spec['hdf5'].prefix.lib,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'\$\(HDF5_DIR\)/lib64/libhdf5.a',
+                    "-L%s -lhdf5" % self.spec['hdf5'].prefix.lib,
+                    'FERRET/platform_specific.mk.x86_64-linux')
 
     def install(self, spec, prefix):
-        hdf5_prefix = spec['hdf5'].prefix
-        netcdff_prefix = spec['netcdf-fortran'].prefix
-        netcdf_prefix = spec['netcdf'].prefix
-        libz_prefix = spec['zlib'].prefix
-        ln = which('ln')
-        ln('-sf',
-           hdf5_prefix + '/lib',
-           hdf5_prefix + '/lib64')
-        ln('-sf',
-           netcdff_prefix + '/lib',
-           netcdff_prefix + '/lib64')
-        ln('-sf',
-           netcdf_prefix + '/lib/libnetcdf.a',
-           netcdff_prefix + '/lib/libnetcdf.a')
-        ln('-sf',
-           netcdf_prefix + '/lib/libnetcdf.la',
-           netcdff_prefix + '/lib/libnetcdf.la')
-        ln('-sf',
-           libz_prefix + '/lib',
-           libz_prefix + '/lib64')
-
         if 'LDFLAGS' in env and env['LDFLAGS']:
             env['LDFLAGS'] += ' ' + '-lquadmath'
         else:
