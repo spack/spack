@@ -88,6 +88,27 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+cuda')
         ]
 
+        lapack = spec['lapack']
+        blas = spec['blas']
+
+        args += [
+            '-DLAPACK_FOUND=true',
+            '-DLAPACK_INCLUDE_DIRS={0}'.format(lapack.prefix.include),
+            '-DLAPACK_LIBRARIES={0}'.format(lapack.libs.joined(';')),
+            '-DBLAS_FOUND=true',
+            '-DBLAS_INCLUDE_DIRS={0}'.format(blas.prefix.include),
+            '-DBLAS_LIBRARIES={0}'.format(blas.libs.joined(';')),
+        ]
+
+        if '+scalapack' in spec:
+            args += [
+                '-DSCALAPACK_FOUND=true',
+                '-DSCALAPACK_INCLUDE_DIRS={0}'.format(
+                    spec['scalapack'].prefix.include),
+                '-DSCALAPACK_LIBRARIES={0}'.format(
+                    spec['scalapack'].libs.joined(';')),
+            ]
+
         if spec.satisfies('+elpa'):
             elpa_incdir = os.path.join(
                 spec['elpa'].headers.directories[0],
