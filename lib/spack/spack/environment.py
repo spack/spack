@@ -7,7 +7,6 @@ import os
 import re
 import sys
 import shutil
-import tempfile
 import StringIO
 
 import ruamel.yaml
