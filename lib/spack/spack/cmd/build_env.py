@@ -32,7 +32,13 @@ def setup_parser(subparser):
     )
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
+        metavar='spec [--] [cmd]...',
         help="specs of package environment to emulate")
+    subparser.epilog\
+        = 'If a command is not specified, the environment will be printed ' \
+        'to standard output (cf /usr/bin/env) unless --dump and/or --pickle ' \
+        'are specified.\n\nIf a command is specified and spec is ' \
+        'multi-word, then the -- separator is obligatory.'
 
 
 def build_env(parser, args):
