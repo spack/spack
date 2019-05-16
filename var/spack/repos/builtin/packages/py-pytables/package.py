@@ -26,6 +26,7 @@ class PyPytables(PythonPackage):
     depends_on('hdf5@1.8.0:1.10.999', when="@3.4.0:")
     depends_on('c-blosc', when='+blosc')
     depends_on('lzo', when='+lzo')
+    depends_on('bzip2', when='+bzip2')
     depends_on('py-numpy@1.8.0:', type=('build', 'run'))
     depends_on('py-numexpr@2.5.2:', type=('build', 'run'))
     depends_on('py-cython', type=('build', 'run'))
