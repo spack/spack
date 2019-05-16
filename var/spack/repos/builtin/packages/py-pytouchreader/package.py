@@ -12,12 +12,13 @@ class PyPytouchreader(PythonPackage):
     """Python interface to interact with touch files."""
 
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/PyModules"
-    url      = "ssh://bbpcode.epfl.ch/hpc/PyModules"
+    git      = "ssh://bbpcode.epfl.ch/hpc/PyModules"
 
-    version('develop', git=url, clean=False)
-    version('1.4.0', tag='v1.4.0', git=url, clean=False, preferred=True)
-    version('1.3.0', tag='v1.3.0', git=url, clean=False)
-    version('1.2.0', tag='v1.2.0', git=url, clean=False)
+    version('develop', clean=False)
+    version('1.4.1', tag='v1.4.1', clean=False, preferred=True)
+    version('1.4.0', tag='v1.4.0', clean=False)
+    version('1.3.0', tag='v1.3.0', clean=False)
+    version('1.2.0', tag='v1.2.0', clean=False)
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm', type=('build', 'run'))
