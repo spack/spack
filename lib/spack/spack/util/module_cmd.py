@@ -35,7 +35,8 @@ def module(*args):
         module_p  = subprocess.Popen(module_cmd,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT,
-                                     shell=True)
+                                     shell=True,
+                                     executable="/bin/bash")
 
         # Cray modules spit out warnings that we cannot supress.
         # This hack skips to the last output (the environment)
@@ -51,7 +52,8 @@ def module(*args):
         module_p = subprocess.Popen(module_cmd,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT,
-                                    shell=True)
+                                    shell=True,
+                                    executable="/bin/bash")
         # Decode and str to return a string object in both python 2 and 3
         return str(module_p.communicate()[0].decode())
 
