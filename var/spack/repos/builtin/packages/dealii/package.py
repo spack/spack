@@ -157,6 +157,13 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
 
+    # Both Trilinos and SymEngine bundle the Teuchos RCP library.
+    # This leads to conflicts between macros defined in the included
+    # headers when they are not compiled in the same mode.
+    # See https://github.com/symengine/symengine/issues/1516
+    depends_on("symengine build_type=Release", when="^symengine ^trilinos~debug")
+    depends_on("symengine build_type=Debug",   when="^symengine ^trilinos+debug")
+
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
     patch('https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch',
