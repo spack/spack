@@ -28,16 +28,10 @@ class Elsi(CMakePackage):
       values=('BGQ', 'AVX', 'AVX2', 'AVX512'), multi=False
     )
     variant(
-      'enable_c_tests', default=False, description="Build C test programs"
-    )
-    variant(
       'enable_pexsi', default=False, description='Enable PEXSI support'
     )
     variant(
       'enable_sips', default=False, description='Enable SLEPc-SIPs support'
-    )
-    variant(
-      'enable_tests', default=False, description="Build Fortran test programs"
     )
     variant(
       'use_external_elpa', default=False, description="Build ELPA using SPACK"
@@ -89,14 +83,10 @@ class Elsi(CMakePackage):
             args += ["-DADD_UNDERSCORE=OFF"]
         if "elpa2_kernel" in self.spec and self.spec["elpa2_kernel"] != "none":
             args += ["-DELPA2_KERNEL=" + self.spec["elpa2_kernel"]]
-        if "+enable_c_tests" in self.spec:
-            args += ["-DENABLE_C_TESTS=ON"]
         if '+enable_pexsi' in self.spec:
             args += ["-DENABLE_PEXSI=ON"]
         if '+enable_sips' in self.spec:
             args += ["-DENABLE_SIPS=ON"]
-        if 'enable_test' in self.spec:
-            args += ["-DENABLE_TEST=ON"]
         if '+use_external_elpa' in self.spec:
             args += ["-DUSE_EXTERNAL_ELPA=ON"]
             # Setup the searchpath for elpa
