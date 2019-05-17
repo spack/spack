@@ -46,6 +46,19 @@ intel-stable:
   python:
   - python@3.6.5
 
+# stable intel toolchain
+intel-stable-py2:
+  architecture:
+  - x86_64
+  compiler:
+  - intel@18.0.3
+  mpi:
+  - hpe-mpi@2.16
+  lapack:
+  - intel-mkl@2018.1.163
+  python:
+  - python@2.7.15
+
 # stable intel knl toolchain
 intel-knl-stable:
   architecture:

@@ -31,7 +31,7 @@ class Neuron(Package):
     version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
     version('7.2', '5486709b6366add932e3a6d141c4f7ad')
 
-    variant('binary',        default=True,  description="Create special as a binary instead of shell script")
+    variant('binary',        default=False, description="Create special as a binary instead of shell script")
     variant('coreneuron',    default=True,  description="Patch hh.mod for CoreNEURON compatibility")
     variant('cross-compile', default=False, description='Build for cross-compile environment')
     variant('debug',         default=False, description='Build debug with O0')
@@ -77,6 +77,8 @@ class Neuron(Package):
     }
 
     filter_compiler_wrappers('*/bin/nrniv_makefile')
+    filter_compiler_wrappers('*/bin/nrnmech_makefile')
+    filter_compiler_wrappers('*/bin/nrnoc_makefile')
 
     def get_neuron_archdir(self):
         """Determine the architecture-specific neuron base directory.
@@ -232,7 +234,7 @@ class Neuron(Package):
         getting embded into nrnivmodl script"""
 
         arch = self.get_neuron_archdir()
-        nrnmakefile = join_path(self.prefix, arch, 'bin/nrniv_makefile')
+        nrnmakefile = join_path(self.prefix, arch, '../share/nrn/libtool')
 
         kwargs = {
             'backup': False,
@@ -249,6 +251,8 @@ class Neuron(Package):
         if self.spec.satisfies('+pysetup'):
             run_env.prepend_path('PYTHONPATH', self.spec.prefix.lib64.python)
             run_env.prepend_path('PYTHONPATH', self.spec.prefix.lib.python)
+        if self.spec.satisfies('+mpi'):
+            run_env.set('MPICC_CC', self.compiler.cc)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()

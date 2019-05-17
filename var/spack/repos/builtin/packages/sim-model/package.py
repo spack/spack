@@ -28,8 +28,8 @@ class SimModel(Package):
     variant('coreneuron',  default=False, description="Enable CoreNEURON Support")
     variant('profile',     default=False, description="Enable profiling using Tau")
 
-    depends_on('neuron~binary+mpi')
-    depends_on('coreneuron', when='+coreneuron')
+    depends_on('neuron~binary+mpi', type=('build', 'link', 'run'))
+    depends_on('coreneuron', when='+coreneuron', type=('build', 'link', 'run'))
     depends_on('coreneuron+profile', when='+coreneuron+profile')
     depends_on('neuron+profile', when='+profile')
     depends_on('tau', when='+profile')

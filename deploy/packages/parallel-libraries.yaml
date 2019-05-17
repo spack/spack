@@ -33,7 +33,6 @@ packages:
       - mpi
       - python
     specs:
-      - neuron@2018-10
       - py-mpi4py@3.0.0
 
   gnu-stable-parallel-lapack:
@@ -82,4 +81,4 @@ packages:
       - mpi
       - python
     specs:
-      - neuron@2018-10
+      - neuron@7.6.6

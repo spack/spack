@@ -36,6 +36,7 @@ modules:
       - neurodamus-hippocampus
       - neurodamus-neocortex
       - neurodamus-thalamus
+      - neuron@7.6.6
       - parquet-converters
       - placement-algorithm
       - psp-validation
