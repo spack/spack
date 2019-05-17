@@ -32,7 +32,7 @@ class Parsplice(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         if spec.satisfies('@multisplice'):
-            options=[]
+            options = []
         else:
             options = ['-DBUILD_SHARED_LIBS=ON', '-DBoost_NO_BOOST_CMAKE=ON']
 
