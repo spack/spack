@@ -24,7 +24,7 @@ class AllineaForge(Package):
     homepage = "http://www.allinea.com/products/develop-allinea-forge"
 
     # Default versions: Redhat
-    version('latest', '6c0d28dc1193f66103bc43eb2a92c4b6', preferred=True)
+    version('19.0.5', '6c0d28dc1193f66103bc43eb2a92c4b6', preferred=True)
     version('19.0.1', 'ab1158398e72de75ea32d62abaf17649')
     version('19.0', '4c2f5b2ff83d494854df74e6df4be7be')
     version('18.3', '0188fb8a0b35b49c342927ce0ba9d552')
@@ -45,7 +45,7 @@ class AllineaForge(Package):
 
         if distro == 'Ubuntu':
             checksums = {
-                Version('latest'): '4a11929959102ae1cd2674f0b82d18c9',
+                Version('19.0.5'): '4a11929959102ae1cd2674f0b82d18c9',
                 Version('19.0.1'): '67f6f05352ee9991acb844e032282b09',
                 Version('19.0'): 'bf032f88c9294d839790886f83e9ce20',
                 Version('18.3'): 'a1a3b1c6409881e1051bb5de66eaa9f2'

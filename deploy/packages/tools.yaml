@@ -18,7 +18,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - allinea-forge@7.0
+      - allinea-forge@19.0.5
       - binutils@2.31.1
       - bison@3.0.5
       - cmake@3.13.0

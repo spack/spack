@@ -27,7 +27,7 @@ modules:
     verbose: True
     hash_length: 0
     whitelist:
-      - allinea-forge
+      - allinea-forge@19.0.5
       - cmake
       - cuda
       - cudnn
