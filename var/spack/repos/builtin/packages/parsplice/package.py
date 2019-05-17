@@ -26,6 +26,7 @@ class Parsplice(CMakePackage):
     depends_on("mpi")
     depends_on("eigen@3:")
     depends_on("lammps+lib@20170901:")
+    depends_on("lammps+lib+exceptions@20170901:", when="@1.2:")
 
     def cmake_args(self):
         options = ['-DBUILD_SHARED_LIBS=ON', '-DBoost_NO_BOOST_CMAKE=ON']
