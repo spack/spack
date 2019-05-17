@@ -7,12 +7,12 @@ for Spack's command extensions.
 """
 import os
 import re
+import sys
+import types
 
 import llnl.util.lang
 import llnl.util.tty as tty
-
 import spack.config
-
 
 extension_regexp = re.compile(r'spack-([\w]*)')
 
@@ -50,14 +50,47 @@ def load_command_extension(command, path):
     if not extension:
         return None
 
+    # Compute the name of the module we search, exit early if already imported
+    cmd_package = '{0}.{1}.cmd'.format(__name__, extension)
+    python_name = command.replace('-', '_')
+    module_name = '{0}.{1}'.format(cmd_package, python_name)
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+
+    def ensure_package_creation(name):
+        package_name = '{0}.{1}'.format(__name__, name)
+        if package_name in sys.modules:
+            return
+
+        parts = [path] + name.split('.') + ['__init__.py']
+        init_file = os.path.join(*parts)
+        if os.path.exists(init_file):
+            m = llnl.util.lang.load_module_from_file(package_name, init_file)
+        else:
+            m = types.ModuleType(package_name)
+
+        # Setting __path__ to give spack extensions the
+        # ability to import from their own tree, see:
+        #
+        # https://docs.python.org/3/reference/import.html#package-path-rules
+        #
+        m.__path__ = [os.path.dirname(init_file)]
+        sys.modules[package_name] = m
+
+    # Create a searchable package for both the root folder of the extension
+    # and the subfolder containing the commands
+    ensure_package_creation(extension)
+    ensure_package_creation(extension + '.cmd')
+
     # Compute the absolute path of the file to be loaded, along with the
     # name of the python module where it will be stored
     cmd_path = os.path.join(path, extension, 'cmd', command + '.py')
-    python_name = command.replace('-', '_')
-    module_name = '{0}.{1}'.format(__name__, python_name)
 
     try:
+        # TODO: Upon removal of support for Python 2.6 substitute the call
+        # TODO: below with importlib.import_module(module_name)
         module = llnl.util.lang.load_module_from_file(module_name, cmd_path)
+        sys.modules[module_name] = module
     except (ImportError, IOError):
         module = None
 
