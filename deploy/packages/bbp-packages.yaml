@@ -25,7 +25,7 @@ packages:
       - connectome-tools@0.3.2
       - spykfunc@0.13.2
       - psp-validation@0.1.12
-      - py-pytouchreader@1.4.1
+      - py-pytouchreader@1.4.2
       - py-basalt@0.2.4
 
   gnu-stable-parallel:
