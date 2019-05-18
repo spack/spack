@@ -100,7 +100,6 @@ class IntelTbb(Package):
     # ...another patch file for 2019 and before
     patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
 
-
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
 
