@@ -68,9 +68,10 @@ class IntelTbb(Package):
     depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
 
     # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    # Note: see issues #11371 and #8957 to understand why 2019.x patches are specified one at a time.
-    # In a nutshell, it is impossible currently to patch 2019.1 without patching 2019
-    # when #8957 is fixed, this can be simplified.
+    # Note: see issues #11371 and #8957 to understand why 2019.x patches are
+    # specified one at a time.  In a nutshell, it is currently impossible
+    # to patch 2019.1 without patching 2019 when #8957 is fixed, this can
+    # be simplified.
     patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0:4.99999 os=rhel6')
     patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0:4.99999 os=scientific6')
     patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0:4.99999 os=centos6')
