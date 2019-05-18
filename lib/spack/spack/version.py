@@ -218,7 +218,6 @@ class Version(object):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
-
         nself = len(self.version)
         nother = len(other.version)
         return nother <= nself and self.version[:nother] == other.version
@@ -384,7 +383,7 @@ class VersionRange(object):
 
         self.start = start
         self.end = end
-        if start and end and end < start:
+        if start is not None and end is not None and end < start:
             raise ValueError("Invalid Version range: %s" % self)
 
     def lowest(self):
@@ -486,7 +485,8 @@ class VersionRange(object):
         return (self.overlaps(other) or
                 # if either self.start or other.end are None, then this can't
                 # satisfy, or overlaps() would've taken care of it.
-                self.start and other.end and self.start.satisfies(other.end))
+                self.start is not None and other.end is not None and
+                self.start.satisfies(other.end))
 
     @coerced
     def overlaps(self, other):
@@ -568,10 +568,10 @@ class VersionRange(object):
 
     def __str__(self):
         out = ""
-        if self.start:
+        if self.start is not None:
             out += str(self.start)
         out += ":"
-        if self.end:
+        if self.end is not None:
             out += str(self.end)
         return out
 

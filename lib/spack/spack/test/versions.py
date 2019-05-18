@@ -9,7 +9,7 @@ where it makes sense.
 """
 import pytest
 
-from spack.version import Version, ver
+from spack.version import Version, VersionRange, ver
 
 
 def assert_ver_lt(a, b):
@@ -258,6 +258,15 @@ def test_version_ranges():
     assert_ver_lt('1.2:1.4', '1.5:1.6')
     assert_ver_gt('1.5:1.6', '1.2:1.4')
 
+    assert str(VersionRange(None, None)) == ':'
+    assert str(VersionRange(0, None)) == '0:'
+    assert str(VersionRange(None, 0)) == ':0'
+    assert str(VersionRange(0, 0)) == '0:0'
+
+    with pytest.raises(ValueError):
+        VersionRange(2, 1)
+    with pytest.raises(ValueError):
+        VersionRange(2, 0)
 
 def test_contains():
     assert_in('1.3', '1.2:1.4')
