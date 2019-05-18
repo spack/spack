@@ -268,6 +268,7 @@ def test_version_ranges():
     with pytest.raises(ValueError):
         VersionRange(2, 0)
 
+
 def test_contains():
     assert_in('1.3', '1.2:1.4')
     assert_in('1.2.5', '1.2:1.4')
