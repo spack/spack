@@ -18,7 +18,7 @@ class Mathematica(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.wolfram.com/mathematica/"
-    url = 'file:///{0}/Mathematica_12.0.0_LINUX.sh'.format(os.getcwd())
+    url = 'file://{0}/Mathematica_12.0.0_LINUX.sh'.format(os.getcwd())
 
     version('12.0.0', sha256='b9fb71e1afcc1d72c200196ffa434512d208fa2920e207878433f504e58ae9d7',
             expand=False)
