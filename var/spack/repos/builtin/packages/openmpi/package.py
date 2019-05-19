@@ -185,18 +185,24 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
-    fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
     variant(
-        'fabrics', values=auto_or_any_combination_of(*fabrics).with_default(
-            'auto' if _verbs_dir() is None else 'verbs'
-        ),
-        description="List of fabrics that are enabled",
+        'fabrics',
+        values=disjoint_sets(
+            ('auto',), ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
+        ).with_default(
+            'none' if _verbs_dir() is None else 'verbs'
+        ).with_non_feature_values('auto', 'none'),
+        description="List of fabrics that are enabled; "
+        "'auto' lets openmpi determine",
     )
 
-    schedulers = ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
     variant(
-        'schedulers', values=auto_or_any_combination_of(*schedulers),
-        description='List of schedulers for which support is enabled'
+        'schedulers',
+        values=disjoint_sets(
+            ('auto',), ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
+        ).with_non_feature_values('auto', 'none'),
+        description="List of schedulers for which support is enabled; "
+        "'auto' lets openmpi determine",
     )
 
     # Additional support options
