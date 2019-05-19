@@ -7,10 +7,12 @@ from datetime import datetime
 import fcntl
 import os
 import struct
+import subprocess
 import sys
 import termios
 import textwrap
 import traceback
+
 from six import StringIO
 from six.moves import input
 
@@ -141,6 +143,10 @@ def msg(message, *args, **kwargs):
     if not msg_enabled():
         return
 
+    subprocess.call(['osascript', '-e', 'if app "Terminal" is frontmost then '
+                     'tell app "System Events" to keystroke "u" using command '
+                     'down'])
+
     newline = kwargs.get('newline', True)
     st_text = ""
     if _stacktrace:
@@ -156,6 +162,10 @@ def msg(message, *args, **kwargs):
 
 
 def info(message, *args, **kwargs):
+    subprocess.call(['osascript', '-e', 'if app "Terminal" is frontmost then '
+                     'tell app "System Events" to keystroke "u" using command '
+                     'down'])
+
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
     wrap = kwargs.get('wrap', False)
