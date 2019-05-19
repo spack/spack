@@ -74,22 +74,22 @@ class IntelTbb(Package):
 
     # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
     # one patch format for 2019.1 and after...
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0:4.99999 os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0:4.99999 os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0:4.99999 os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0:4.99999 os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0:4.99999 os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0:4.99999 os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0:4.99999 os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0:4.99999 os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0:4.99999 os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0:4.99999 os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0:4.99999 os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0:4.99999 os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=centos6')
     # ...another patch file for 2019 and before
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0:4.99999 os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0:4.99999 os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0:4.99999 os=centos6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=centos6')
 
     # patch for pedantic warnings (#10836)
     # one patch file for 2019.1 and after...
