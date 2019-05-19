@@ -12,7 +12,7 @@ class PyScikitLearn(PythonPackage):
     homepage = "https://pypi.python.org/pypi/scikit-learn"
     url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.21.1.tar.gz"
 
-    # install_time_test_callbacks = ['install_test', 'import_module_test']
+    install_time_test_callbacks = ['install_test', 'import_module_test']
 
     import_modules = [
         'sklearn', 'sklearn.tree', 'sklearn.metrics', 'sklearn.ensemble',
@@ -82,8 +82,8 @@ class PyScikitLearn(PythonPackage):
                 'DYLD_LIBRARY_PATH',
                 self.spec['ompt-openmp'].libs.directories[0])
 
-    # def install_test(self):
-    #     # https://scikit-learn.org/stable/developers/advanced_installation.html#testing
-    #     with working_dir('spack-test', create=True):
-    #         pytest = which('pytest')
-    #         pytest('sklearn')
+    def install_test(self):
+        # https://scikit-learn.org/stable/developers/advanced_installation.html#testing
+        with working_dir('spack-test', create=True):
+            pytest = which('pytest')
+            pytest(join_path(self.prefix, site_packages_dir, 'sklearn'))
