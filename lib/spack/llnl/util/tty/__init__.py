@@ -26,6 +26,7 @@ _msg_enabled = True
 _warn_enabled = True
 _error_enabled = True
 indent = "  "
+_osascript = os.path.exists('/usr/bin/osascript')
 
 
 def is_verbose():
@@ -143,9 +144,10 @@ def msg(message, *args, **kwargs):
     if not msg_enabled():
         return
 
-    subprocess.call(['osascript', '-e', 'if app "Terminal" is frontmost then '
-                     'tell app "System Events" to keystroke "u" using command '
-                     'down'])
+    if _osascript:
+        subprocess.call(['osascript', '-e', 'if app "Terminal" is frontmost '
+                         'then tell app "System Events" to keystroke "u" '
+                         'using command down'])
 
     newline = kwargs.get('newline', True)
     st_text = ""
@@ -162,9 +164,10 @@ def msg(message, *args, **kwargs):
 
 
 def info(message, *args, **kwargs):
-    subprocess.call(['osascript', '-e', 'if app "Terminal" is frontmost then '
-                     'tell app "System Events" to keystroke "u" using command '
-                     'down'])
+    if _osascript:
+        subprocess.call(['osascript', '-e', 'if app "Terminal" is frontmost '
+                         'then tell app "System Events" to keystroke "u" '
+                         'using command down'])
 
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
