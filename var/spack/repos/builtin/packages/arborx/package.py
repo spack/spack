@@ -19,7 +19,7 @@ class Arborx(CMakePackage):
     variant('serial', default=True, description='enable Serial backend (default)')
     variant('mpi', default=True, description='enable MPI')
 
-    depends_on('cmake@3.12:')
+    depends_on('cmake@3.12:', type='build')
     depends_on('cuda', when='+cuda')
     depends_on('mpi', when='+mpi')
 
@@ -27,11 +27,8 @@ class Arborx(CMakePackage):
     # The only way to disable those devices is to make sure Kokkos does not
     # provide them
     depends_on('kokkos@2.7.00:+cuda+enable_lambda', when='+cuda')
-    depends_on('kokkos@2.7.00:~cuda', when='~cuda')
     depends_on('kokkos@2.7.00:+openmp', when='+openmp')
-    depends_on('kokkos@2.7.00:~openmp', when='~openmp')
     depends_on('kokkos@2.7.00:+serial', when='+serial')
-    depends_on('kokkos@2.7.00:~serial', when='~serial')
 
     def cmake_args(self):
         spec = self.spec
@@ -46,7 +43,7 @@ class Arborx(CMakePackage):
         if '+cuda' in spec:
             options.extend([
                 '-DCMAKE_CXX_COMPILER=%s' % (
-                    spec['kokkos'].prefix.bin + "/nvcc_wrapper"
+                    spec['kokkos'].prefix.bin.nvcc_wrapper
                 )
             ])
 
