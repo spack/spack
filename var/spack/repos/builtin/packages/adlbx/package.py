@@ -14,18 +14,18 @@ class Adlbx(AutotoolsPackage):
     url      = 'http://swift-lang.github.io/swift-t-downloads/spack/adlbx-0.0.0.tar.gz'
     git      = "https://github.com/swift-lang/swift-t.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('0.9.2', 'a7d9e208eb3b49b8bb857562f6bb61bb')
     version('0.9.1', '07151ddef5fb83d8f4b40700013d9daf')
     version('0.8.0', '34ade59ce3be5bc296955231d47a27dd')
 
-    depends_on('exmcutils@develop', when='@develop')
+    depends_on('exmcutils@master', when='@master')
     depends_on('exmcutils@:0.5.3', when='@:0.8.0')
     depends_on('exmcutils', when='@0.9.1:')
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('libtool', type='build', when='@develop')
-    depends_on('m4', type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@master')
+    depends_on('automake', type='build', when='@master')
+    depends_on('libtool', type='build', when='@master')
+    depends_on('m4', type='build', when='@master')
     depends_on('mpi')
 
     def setup_environment(self, spack_env, run_env):
@@ -34,7 +34,7 @@ class Adlbx(AutotoolsPackage):
         spack_env.set('CXX', spec['mpi'].mpicxx)
         spack_env.set('CXXLD', spec['mpi'].mpicxx)
 
-    @when('@develop')
+    @when('@master')
     def configure_directory_helper(self):
         return "lb/code"
 
