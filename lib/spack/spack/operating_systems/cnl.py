@@ -29,8 +29,8 @@ class Cnl(OperatingSystem):
         return self.name + str(self.version)
 
     def _detect_crayos_version(self):
-        output = module("avail", "PrgEnv-")
-        matches = re.findall(r'PrgEnv-\w+/(\d+).\d+.\d+', output)
+        output = module("avail", "PrgEnv-cray")
+        matches = re.findall(r'PrgEnv-cray/(\d+).\d+.\d+', output)
         major_versions = set(matches)
         latest_version = max(major_versions)
         return latest_version
