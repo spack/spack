@@ -51,36 +51,18 @@ os.environ['PATH'] += '%s%s/bin' % (os.pathsep, spack_root)
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
 os.environ['COLIFY_SIZE'] = '25x120'
-
-#
-# Generate package list using spack command
-#
-with open('package_list.html', 'w') as plist_file:
-    subprocess.Popen(
-        [spack_root + '/bin/spack', 'list', '--format=html'],
-        stdout=plist_file)
-
-#
-# Find all the `cmd-spack-*` references and add them to a command index
-#
-import spack
-import spack.cmd
-command_names = spack.cmd.all_commands()
-documented_commands = set()
-for filename in glob('*rst'):
-    with open(filename) as f:
-        for line in f:
-            match = re.match('.. _cmd-(spack-.*):', line)
-            if match:
-                documented_commands.add(match.group(1).strip())
-
 os.environ['COLUMNS'] = '120'
-shutil.copy('command_index.in', 'command_index.rst')
-with open('command_index.rst', 'a') as index:
-    subprocess.Popen(
-        [spack_root + '/bin/spack', 'commands', '--format=rst'] + list(
-            documented_commands),
-        stdout=index)
+
+# Generate full package list if needed
+subprocess.Popen(
+    ['spack', 'list', '--format=html', '--update=package_list.html'])
+
+# Generate a command index if an update is needed
+subprocess.call([
+    'spack', 'commands',
+    '--format=rst',
+    '--header=command_index.in',
+    '--update=command_index.rst'] + glob('*rst'))
 
 #
 # Run sphinx-apidoc
@@ -158,6 +140,7 @@ copyright = u'2013-2019, Lawrence Livermore National Laboratory.'
 # built documents.
 #
 # The short X.Y version.
+import spack
 version = '.'.join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
 release = spack.spack_version
