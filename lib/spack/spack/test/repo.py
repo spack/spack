@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pytest
 
 import spack.repo
@@ -56,3 +57,10 @@ def test_repo_pkg_with_unknown_namespace(repo_for_test):
 def test_repo_unknown_pkg(repo_for_test):
     with pytest.raises(spack.repo.UnknownPackageError):
         repo_for_test.get('builtin.mock.nonexistentpackage')
+
+
+@pytest.mark.maybeslow
+def test_repo_last_mtime():
+    latest_mtime = max(os.path.getmtime(p.module.__file__)
+                       for p in spack.repo.path.all_packages())
+    assert spack.repo.path.last_mtime() == latest_mtime
