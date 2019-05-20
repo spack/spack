@@ -30,31 +30,18 @@ class StringViewLite(CMakePackage):
         ]
 
     # Pre-1.2.0 install was simply a copytree on the includes
+    @when("@:1.1")
     def cmake(self, spec, prefix):
         pass
 
+    @when("@:1.1")
     def build(self, spec, prefix):
         pass
 
+    @when("@:1.1")
     def install(self, spec, prefix):
         copytree('include', prefix.include)
 
+    @when("@:1.1")
     def check(self):
         pass
-
-    # Post-1.2.0 uses CMake
-    @when("@1.2.0:")
-    def cmake(self, spec, prefix):
-        super(StringViewLite, self).cmake(spec, prefix)
-
-    @when("@1.2.0:")
-    def build(self, spec, prefix):
-        super(StringViewLite, self).build(spec, prefix)
-
-    @when("@1.2.0:")
-    def install(self, spec, prefix):
-        super(StringViewLite, self).install(spec, prefix)
-
-    @when("@1.2.0:")
-    def check(self):
-        super(StringViewLite, self).check()

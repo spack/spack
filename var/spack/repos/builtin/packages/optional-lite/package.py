@@ -33,31 +33,18 @@ class OptionalLite(CMakePackage):
         ]
 
     # Pre-3.2.0 install was simply a copytree on the includes
+    @when("@:3.1")
     def cmake(self, spec, prefix):
         pass
 
+    @when("@:3.1")
     def build(self, spec, prefix):
         pass
 
+    @when("@:3.1")
     def install(self, spec, prefix):
         copytree('include', prefix.include)
 
+    @when("@:3.1")
     def check(self):
         pass
-
-    # Post-3.2.0 uses CMake
-    @when("@3.2.0:")
-    def cmake(self, spec, prefix):
-        super(OptionalLite, self).cmake(spec, prefix)
-
-    @when("@3.2.0:")
-    def build(self, spec, prefix):
-        super(OptionalLite, self).build(spec, prefix)
-
-    @when("@3.2.0:")
-    def install(self, spec, prefix):
-        super(OptionalLite, self).install(spec, prefix)
-
-    @when("@3.2.0:")
-    def check(self):
-        super(OptionalLite, self).check()

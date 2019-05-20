@@ -31,31 +31,18 @@ class SpanLite(CMakePackage):
         ]
 
     # Pre-0.5.0 install was simply a copytree on the includes
+    @when("@:0.4")
     def cmake(self, spec, prefix):
         pass
 
+    @when("@:0.4")
     def build(self, spec, prefix):
         pass
 
+    @when("@:0.4")
     def install(self, spec, prefix):
         copytree('include', prefix.include)
 
+    @when("@:0.4")
     def check(self):
         pass
-
-    # Post-0.5.0 uses CMake
-    @when("@0.5.0:")
-    def cmake(self, spec, prefix):
-        super(SpanLite, self).cmake(spec, prefix)
-
-    @when("@0.5.0:")
-    def build(self, spec, prefix):
-        super(SpanLite, self).build(spec, prefix)
-
-    @when("@0.5.0:")
-    def install(self, spec, prefix):
-        super(SpanLite, self).install(spec, prefix)
-
-    @when("@0.5.0:")
-    def check(self):
-        super(SpanLite, self).check()
