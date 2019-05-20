@@ -22,8 +22,6 @@ class Turbine(AutotoolsPackage):
 
     variant('python', default=False,
             description='Enable calling python')
-    variant('python3', default=False,
-            description='Enable calling python3')
     variant('r', default=False,
             description='Enable calling R')
     variant('hdf5', default=False,
