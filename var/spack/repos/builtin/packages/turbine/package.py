@@ -50,17 +50,12 @@ class Turbine(AutotoolsPackage):
         spack_env.set('CXX', spec['mpi'].mpicxx)
         spack_env.set('CXXLD', spec['mpi'].mpicxx)
 
-    @when('@master')
-    def configure_directory_helper(self):
-        return "turbine/code"
-
-    @when('@1')
-    def configure_directory_helper(self):
-        return "."
-
     @property
     def configure_directory(self):
-        return self.configure_directory_helper()
+        if self.version == Version('master'):
+            return 'turbine/code'
+        else:
+            return '.'
 
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix,

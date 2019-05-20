@@ -27,17 +27,12 @@ class Stc(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
 
-    @when('@master')
-    def configure_directory_helper(self):
-        return "stc/code"
-
-    @when('@0')
-    def configure_directory_helper(self):
-        return "."
-
     @property
     def configure_directory(self):
-        return self.configure_directory_helper()
+        if self.version == Version('master'):
+            return 'stc/code'
+        else:
+            return '.'
 
     def configure_args(self):
         args = ['--with-turbine=' + self.spec['turbine'].prefix]

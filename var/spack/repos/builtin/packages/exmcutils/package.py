@@ -18,17 +18,12 @@ class Exmcutils(AutotoolsPackage):
     version('0.5.7', '69bb32f364e93e8a60865c05efbf4f52')
     version('0.5.6', 'b12a8dc163e3369492ec7c1403fe86e4')
 
-    @when('@master')
-    def configure_directory_helper(self):
-        return "c-utils/code"
-
-    @when('@0')
-    def configure_directory_helper(self):
-        return "."
-
     @property
     def configure_directory(self):
-        return self.configure_directory_helper()
+        if self.version == Version('master'):
+            return 'c-utils/code'
+        else:
+            return '.'
 
     depends_on('m4', when='@master')
     depends_on('autoconf', when='@master')
