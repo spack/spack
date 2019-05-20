@@ -189,8 +189,6 @@ class Openmpi(AutotoolsPackage):
         'fabrics',
         values=disjoint_sets(
             ('auto',), ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
-        ).with_default(
-            'none' if _verbs_dir() is None else 'verbs'
         ).with_non_feature_values('auto', 'none'),
         description="List of fabrics that are enabled; "
         "'auto' lets openmpi determine",
