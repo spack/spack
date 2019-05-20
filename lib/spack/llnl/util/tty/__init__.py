@@ -26,7 +26,7 @@ _msg_enabled = True
 _warn_enabled = True
 _error_enabled = True
 indent = "  "
-_osascript = os.path.exists('/usr/bin/osascript')
+_osascript = subprocess.call(['which', 'osascript']) == 0
 
 
 def is_verbose():
