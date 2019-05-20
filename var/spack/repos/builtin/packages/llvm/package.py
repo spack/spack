@@ -303,7 +303,7 @@ class Llvm(CMakePackage):
         if '+flang' not in spec:
             # Semicolon seperated list of projects to enable
             cmake_args.append(
-                '-DLLVM_ENABLE_PROJECTS:STRING={}'.format(';'.join(projects)))
+                '-DLLVM_ENABLE_PROJECTS:STRING={0}'.format(';'.join(projects)))
 
         return cmake_args
 
