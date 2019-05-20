@@ -12,8 +12,9 @@ import sys
 
 class ArgparseWriter(object):
     """Analyzes an argparse ArgumentParser for easy generation of help."""
-    def __init__(self):
+    def __init__(self, out=sys.stdout):
         self.level = 0
+        self.out = out
 
     def _write(self, parser, root=True, level=0):
         self.parser = parser
@@ -148,8 +149,7 @@ class ArgparseRstWriter(ArgparseWriter):
             strip_root_prog (bool): if ``True``, strip the base command name
                 from subcommands in output
         """
-        super(ArgparseWriter, self).__init__()
-        self.out = out
+        super(ArgparseRstWriter, self).__init__(out)
         self.rst_levels = rst_levels
         self.strip_root_prog = strip_root_prog
 
