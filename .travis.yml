@@ -23,7 +23,12 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=flake8
-    - stage: 'unit tests + documentation'
+    - stage: 'flake8 + documentation'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+    - stage: 'unit tests'
       python: '2.6'
       dist: trusty
       sudo: required
@@ -122,12 +127,6 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-    - python: '3.6'
-      stage: 'docker build'
-      sudo: required
-      os: linux
-      language: python
-      env: TEST_SUITE=docker
   allow_failures:
     - env: TEST_SUITE=docker
     # temporary Python 2.6 exception while we figure out why Travis is hanging
@@ -137,8 +136,13 @@ stages:
   - 'style checks'
   - 'unit tests + documentation'
   - 'build tests'
-  - name: 'docker build'
-    if: type = push AND branch IN (develop, master)
+
+stages:
+  - 'flake8 + documentation'
+  - 'unit tests'
+  - 'build tests'
+  - name: 'unit tests - osx'
+    if: type IN (cron)
 
 
 #=============================================================================
