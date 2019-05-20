@@ -36,14 +36,13 @@ class Turbine(AutotoolsPackage):
     depends_on('zsh', type=('build', 'run'))
     depends_on('swig', type='build')
     depends_on('python', when='+python')
-    depends_on('python@3', when='+python3')
     depends_on('r', when='+r')
     depends_on('r-rinside', when='+r')
     depends_on('hdf5', when='+hdf5')
     depends_on('mpi')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool', type='build', when='@develop')
     depends_on('m4', type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
@@ -76,9 +75,6 @@ class Turbine(AutotoolsPackage):
         else:
             args.append('--with-hdf5=OFF')
         if '+python' in self.spec:
-            args.append('--with-python-exe={0}'.format(
-                        self.spec['python'].command.path))
-        if '+python3' in self.spec:
             args.append('--with-python-exe={0}'.format(
                         self.spec['python'].command.path))
         if '+r' in self.spec:

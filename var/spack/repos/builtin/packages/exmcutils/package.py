@@ -30,7 +30,7 @@ class Exmcutils(AutotoolsPackage):
     def configure_directory(self):
         return self.configure_directory_helper()
 
-    depends_on('m4')
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
+    depends_on('m4', when='@develop')
+    depends_on('autoconf', when='@develop')
+    depends_on('automake', when='@develop')
+    depends_on('libtool', when='@develop')
