@@ -140,7 +140,8 @@ function _spack_blame {
 
 function _spack_bootstrap {
     compgen -W "-h --help -j --jobs --keep-prefix --keep-stage
-                -n --no-checksum -v --verbose --clean --dirty" -- "$cur"
+                -n --no-checksum -v --verbose --use-cache --no-cache
+                --clean --dirty" -- "$cur"
 }
 
 function _spack_build {
