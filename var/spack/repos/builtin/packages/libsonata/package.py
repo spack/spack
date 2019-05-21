@@ -19,6 +19,8 @@ class Libsonata(CMakePackage):
     git = "https://github.com/BlueBrain/libsonata.git"
 
     version('develop', git=git, submodules=False)
+    version('v0.0.1', commit='6d7e3929c156812969d9237bd797bf6aba6e50ec', submodules=False)
+
 
     variant('mpi', default=False, description="Enable MPI backend")
     variant('python', default=False, description="Enable Python bindings")
@@ -30,7 +32,7 @@ class Libsonata(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     depends_on('python', type=('build', 'run'), when='+python')
-    depends_on('py-pybind11@2.0:', type='build', when='+python')
+    depends_on('py-pybind11@develop', type='build', when='+python')
 
     def cmake_args(self):
         result = [
