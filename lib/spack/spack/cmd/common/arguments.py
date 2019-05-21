@@ -151,7 +151,7 @@ _arguments['jobs'] = Args(
     type=int,
     dest='jobs',
     default=None,
-    help='explicitly set number of make jobs'
+    help='explicitly set number of parallel jobs'
 )
 
 _arguments['install_status'] = Args(

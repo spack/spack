@@ -231,10 +231,6 @@ def install(parser, args, **kwargs):
         else:
             tty.die("install requires a package argument or a spack.yaml file")
 
-    if args.jobs is not None:
-        if args.jobs <= 0:
-            tty.die("The -j option must be a positive integer!")
-
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 

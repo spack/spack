@@ -15,9 +15,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs (default: #cpus)")
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="don't remove the install prefix if installation fails")
