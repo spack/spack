@@ -404,11 +404,14 @@ def set_build_environment_variables(pkg, env, dirty):
 
 def _set_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
+
+    # The package required a serial build by setting parallel=False
+    if not pkg.parallel:
+        spack.config.set('config:build_jobs', 1, scope='package')
+
     # number of jobs spack will build with.
     jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
-    if not pkg.parallel:
-        jobs = 1
-    elif pkg.make_jobs:
+    if pkg.make_jobs:
         jobs = pkg.make_jobs
 
     m = module
