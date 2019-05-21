@@ -90,7 +90,7 @@ class SetParallelJobs(argparse.Action):
         # If no option was passed set the default to the number of CPUs,
         if values is None and not spack.config.get('config:build_jobs'):
             ncpus = multiprocessing.cpu_count()
-            spack.config.set('config:build_jobs', ncpus, scope='builtin')
+            spack.config.set('config:build_jobs', ncpus, scope='_builtin')
 
         # Set the number of build jobs according to the argument passed
         # via the command line

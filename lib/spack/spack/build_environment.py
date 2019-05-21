@@ -407,7 +407,7 @@ def _set_variables_for_single_module(pkg, module):
 
     # The package required a serial build by setting parallel=False
     if not pkg.parallel:
-        spack.config.set('config:build_jobs', 1, scope='package')
+        spack.config.set('config:build_jobs', 1, scope='_builtin')
 
     # Number of jobs Spack will build with
     jobs = spack.config.get(
