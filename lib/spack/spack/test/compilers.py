@@ -369,13 +369,19 @@ def test_cce_version_detection(version_str, expected_version):
 
 @pytest.mark.parametrize('version_str,expected_version', [
     # C compiler
-    ('fcc (FCC) 1.2.0 20180907\n'
-     'simulating gcc version 4.1.2\n'
-     'Copyright FUJITSU LIMITED 2012-2018\n',
-     '1.2.0'),
+    ('fcc (FCC) 4.0.0 20190314\n'
+     'simulating gcc version 6.1\n'
+     'Copyright FUJITSU LIMITED 2019',
+     '4.0.0'),
+    # C++ compiler
+    ('FCC (FCC) 4.0.0 20190314\n'
+     'simulating gcc version 6.1\n'
+     'Copyright FUJITSU LIMITED 2019',
+     '4.0.0'),
     # Fortran compiler
-    ('frt: Fujitsu Fortran Driver Version 1.2.0 (Sep  7 2018 18:26:33)\n',
-     '1.2.0')
+    ('frt (FRT) 4.0.0 20190314\n'
+     'Copyright FUJITSU LIMITED 2019',
+     '4.0.0')
 ])
 def test_fj_version_detection(version_str, expected_version):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)

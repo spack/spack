@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
-import llnl.util.lang
 import spack.compiler
 
 
@@ -27,6 +25,9 @@ class Fj(spack.compiler.Compiler):
                   'f77': 'fj/frt',
                   'fc': 'fj/frt'}
 
+    version_argument = '--version'
+    version_regex = r'\((?:FCC|FRT)\) ([\d.]+)'
+
     @property
     def openmp_flag(self):
         return "-Kopenmp"
@@ -46,37 +47,3 @@ class Fj(spack.compiler.Compiler):
     @property
     def pic_flag(self):
         return "-fPIC"
-
-    @classmethod
-    def default_version(cls, cc):
-        output = spack.compiler.get_compiler_version_output(cc, '--version')
-        match = re.search(
-            r'(?:fcc \(FCC\) )?([\d.]+)', output)
-        version = match.group(match.lastindex) if match else 'unknown'
-        return version
-
-    @classmethod
-    @llnl.util.lang.memoized
-    def extract_version_from_output(cls, output):
-        ver = 'unknown'
-        match = re.search(
-            # C compiler
-            r'(?:fcc \(FCC\) )?([\d.]+)|'
-            # Fortran compiler
-            r'(?:frt\: Fujitsu Fortran Driver Version )?([\d.]+)',
-            output
-        )
-        ver = match.group(match.lastindex) if match else 'unknown'
-        return ver
-
-    @classmethod
-    def fc_version(cls, fc):
-        output = spack.compiler.get_compiler_version_output(fc, '-V')
-        match = re.search(
-            r'(?:frt\: Fujitsu Fortran Driver Version )?([\d.]+)', output)
-        version = match.group(match.lastindex) if match else 'unknown'
-        return version
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)
