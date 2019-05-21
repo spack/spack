@@ -38,7 +38,6 @@ def bootstrap(parser, args, **kwargs):
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'install_deps': 'dependencies',
-        'make_jobs': args.jobs,
         'verbose': args.verbose,
         'dirty': args.dirty
     })

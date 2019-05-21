@@ -410,7 +410,9 @@ def _set_variables_for_single_module(pkg, module):
         spack.config.set('config:build_jobs', 1, scope='package')
 
     # Number of jobs Spack will build with
-    jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
+    jobs = spack.config.get(
+        'config:build_jobs', default=multiprocessing.cpu_count()
+    )
 
     m = module
     m.make_jobs = jobs

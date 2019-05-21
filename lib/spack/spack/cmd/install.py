@@ -35,7 +35,6 @@ def update_kwargs_from_args(args, kwargs):
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'make_jobs': args.jobs,
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty,
