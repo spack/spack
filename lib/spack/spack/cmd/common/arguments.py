@@ -141,10 +141,6 @@ _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='show full dependency hashes as well as versions')
 
-_arguments['jobs'] = Args(
-    '-j', '--jobs', action='store', type=int, dest='jobs',
-    help="explicitely set number of make jobs. default is #cpus")
-
 _arguments['tags'] = Args(
     '-t', '--tags', action='append',
     help='filter a package query by tags')
