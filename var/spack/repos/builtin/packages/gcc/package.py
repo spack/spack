@@ -184,12 +184,8 @@ class Gcc(AutotoolsPackage):
     # (Patching the patch anyone?)
     # http://gcc.1065356.n8.nabble.com/patch-wip-warn-on-noncontiguous-pointers-td1516622.html
     # https://gcc.gnu.org/ml/fortran/2018-09/msg00210.html
-    # From the dates on the thread and the tentative release date of GCC 8.3,
-    # https://gcc.gnu.org/ml/gcc/2019-02/msg00034.html
-    # I'm guessing that this patch will make it
-    # but could not find the exact bug number in GCC's bugzilla,
-    # so pin to version 8.2 for now
-    patch('gfortran-noncontiguous-pointers.patch', when='@8.2')
+    # Fixed in version 9.1.0, lines 4277-4282 of 'gcc/fortran/expr.c'
+    patch('gfortran-noncontiguous-pointers.patch', when='@8.0.0:8.99.99')
 
     build_directory = 'spack-build'
 
