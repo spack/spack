@@ -82,6 +82,10 @@ class Mesa(MesonPackage):
     # Was included in the upstream patch release for 19.0.4
     patch('glproto-mr806.patch', when='@19.0.0:19.0.3')
 
+    # Fix missing gl symbols in OSMesa
+    # https://bugs.freedesktop.org/show_bug.cgi?id=109659
+    patch('meson-expose-glapi-through-osmesa.patch', when='@19.0.0:')
+
     def meson_args(self):
         spec = self.spec
         args = [
