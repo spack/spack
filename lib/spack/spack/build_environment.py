@@ -409,10 +409,8 @@ def _set_variables_for_single_module(pkg, module):
     if not pkg.parallel:
         spack.config.set('config:build_jobs', 1, scope='package')
 
-    # number of jobs spack will build with.
+    # Number of jobs Spack will build with
     jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
-    if pkg.make_jobs:
-        jobs = pkg.make_jobs
 
     m = module
     m.make_jobs = jobs
