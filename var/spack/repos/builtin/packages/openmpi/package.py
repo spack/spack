@@ -185,18 +185,22 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
-    fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
     variant(
-        'fabrics', values=auto_or_any_combination_of(*fabrics).with_default(
-            'auto' if _verbs_dir() is None else 'verbs'
-        ),
-        description="List of fabrics that are enabled",
+        'fabrics',
+        values=disjoint_sets(
+            ('auto',), ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
+        ).with_non_feature_values('auto', 'none'),
+        description="List of fabrics that are enabled; "
+        "'auto' lets openmpi determine",
     )
 
-    schedulers = ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
     variant(
-        'schedulers', values=auto_or_any_combination_of(*schedulers),
-        description='List of schedulers for which support is enabled'
+        'schedulers',
+        values=disjoint_sets(
+            ('auto',), ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
+        ).with_non_feature_values('auto', 'none'),
+        description="List of schedulers for which support is enabled; "
+        "'auto' lets openmpi determine",
     )
 
     # Additional support options
@@ -263,6 +267,9 @@ class Openmpi(AutotoolsPackage):
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
+    conflicts('schedulers=loadleveler', when='@3.0.0:',
+              msg='The loadleveler scheduler is not supported with '
+              'openmpi(>=3.0.0).')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
@@ -397,9 +404,11 @@ class Openmpi(AutotoolsPackage):
             config_args.append('--enable-mpi1-compatibility')
 
         # Fabrics
-        config_args.extend(self.with_or_without('fabrics'))
+        if 'fabrics=auto' not in spec:
+            config_args.extend(self.with_or_without('fabrics'))
         # Schedulers
-        config_args.extend(self.with_or_without('schedulers'))
+        if 'schedulers=auto' not in spec:
+            config_args.extend(self.with_or_without('schedulers'))
 
         config_args.extend(self.enable_or_disable('memchecker'))
         if spec.satisfies('+memchecker', strict=True):
