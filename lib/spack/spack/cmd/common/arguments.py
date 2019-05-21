@@ -5,7 +5,6 @@
 
 
 import argparse
-import multiprocessing
 
 import spack.cmd
 import spack.config
@@ -76,30 +75,33 @@ class ConstraintAction(argparse.Action):
 class SetParallelJobs(argparse.Action):
     """Sets the correct value for parallel build jobs.
 
-    The value is pushed on top of the current configuration scopes, and can be
-    retrieved using the spack.config API.
+    The value is is set in the command line configuration scope so that
+    it can be retrieved using the spack.config API.
     """
     def __call__(self, parser, namespace, values, option_string):
         # Values is a single integer, type conversion is already applied
         # see https://docs.python.org/3/library/argparse.html#action-classes
-        if values is not None and values < 1:
+        if values < 1:
             msg = 'invalid value for argument "{0}" '\
                   '[expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, values))
-
-        # If no option was passed set the default to the number of CPUs,
-        if values is None and not spack.config.get('config:build_jobs'):
-            ncpus = multiprocessing.cpu_count()
-            spack.config.set('config:build_jobs', ncpus, scope='_builtin')
 
         # Set the number of build jobs according to the argument passed
         # via the command line
         if values:
             spack.config.set('config:build_jobs', values, scope='command_line')
 
-        # Set this namespace attribute for convenience
-        jobs = spack.config.get('config:build_jobs')
-        setattr(namespace, 'jobs', jobs)
+        setattr(namespace, 'jobs', values)
+
+    @property
+    def default(self):
+        # This default is coded as a property so that look-up
+        # of this value is done only on demand
+        return spack.config.get('config:build_jobs')
+
+    @default.setter
+    def default(self, value):
+        pass
 
 
 _arguments['constraint'] = Args(
@@ -146,13 +148,8 @@ _arguments['tags'] = Args(
     help='filter a package query by tags')
 
 _arguments['jobs'] = Args(
-    '-j', '--jobs',
-    action=SetParallelJobs,
-    type=int,
-    dest='jobs',
-    default=None,
-    help='explicitly set number of parallel jobs'
-)
+    '-j', '--jobs', action=SetParallelJobs, type=int, dest='jobs',
+    help='explicitly set number of parallel jobs')
 
 _arguments['install_status'] = Args(
     '-I', '--install-status', action='store_true', default=False,
