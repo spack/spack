@@ -148,6 +148,14 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    # Both Trilinos and SymEngine bundle the Teuchos RCP library.
+    # This leads to conflicts between macros defined in the included
+    # headers when they are not compiled in the same mode.
+    # See https://github.com/symengine/symengine/issues/1516
+    # FIXME: uncomment when the following is fixed
+    # https://github.com/spack/spack/issues/11160
+    # depends_on("symengine@0.4: build_type=Release", when="@9.1:+symengine+trilinos^trilinos~debug")  # NOQA: ignore=E501
+    # depends_on("symengine@0.4: build_type=Debug", when="@9.1:+symengine+trilinos^trilinos+debug")  # NOQA: ignore=E501
     depends_on('symengine@0.4:', when='@9.1:+symengine')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
@@ -156,13 +164,6 @@ class Dealii(CMakePackage, CudaPackage):
     # namespace "Kokkos::Impl" has no member "cuda_abort"
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
     depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
-
-    # Both Trilinos and SymEngine bundle the Teuchos RCP library.
-    # This leads to conflicts between macros defined in the included
-    # headers when they are not compiled in the same mode.
-    # See https://github.com/symengine/symengine/issues/1516
-    depends_on("symengine build_type=Release", when="^symengine ^trilinos~debug")
-    depends_on("symengine build_type=Debug",   when="^symengine ^trilinos+debug")
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
