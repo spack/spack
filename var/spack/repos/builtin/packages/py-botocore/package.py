@@ -12,8 +12,9 @@ class PyBotocore(PythonPackage):
        as boto3"""
 
     homepage = "https://github.com/boto/botocore"
-    url      = "https://pypi.io/packages/source/b/botocore/botocore-1.12.61.tar.gz"
+    url      = "https://pypi.io/packages/source/b/botocore/botocore-1.12.101.tar.gz"
 
+    version('1.12.101', sha256='46e4daaa7c8cb29237802b63699c16a116f96f301ad2fcfef800574333b58b98')
     version('1.12.61', sha256='946c24b616cc885d490a6999026125524e85751540eb4af501673d0f5bc7eee1')
 
     depends_on('py-jmespath@0.7.1:0.99', type=('build', 'run'))
@@ -30,7 +31,9 @@ class PyBotocore(PythonPackage):
                when='^python@2.7')
     depends_on('py-urllib3@1.20:1.24', type=('build', 'run'),
                when='^python@2.6')
-    depends_on('py-jsonschema', type=('build', 'run'))
+    depends_on('py-ordereddict@1.1', type=('build', 'run'), 
+               when='^python@2.6')
+    depends_on('py-simplejson@3.3.0', type=('build', 'run'),
+               when='^python@2.6')
     depends_on('py-nose', type='test')
     depends_on('py-mock', type='test')
-    depends_on('py-tox@2.5.0:2.99', type='test')
