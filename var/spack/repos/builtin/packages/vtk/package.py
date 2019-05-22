@@ -35,10 +35,6 @@ class Vtk(CMakePackage):
     variant('ffmpeg', default=False, description='Build with FFMPEG support')
     variant('mpi', default=True, description='Enable MPI support')
 
-    # Haru causes trouble on Fedora and Ubuntu in v8.1.1
-    # See https://bugzilla.redhat.com/show_bug.cgi?id=1460059#c13
-    # variant('haru', default=True, description='Enable libharu')
-
     patch('gcc.patch', when='@6.1.0')
 
     # At the moment, we cannot build with both osmesa and qt, but as of
@@ -68,11 +64,6 @@ class Vtk(CMakePackage):
     depends_on('qt+opengl', when='+qt')
 
     depends_on('mpi', when='+mpi')
-
-    # TODO(opadron): (re)enable these dependencies if we ever switch to
-    #                depending on a spack-managed libharu
-    # depends_on('libharu', when='@:8.1.0.999 +haru')
-    # depends_on('libharu+ffts', when='@8.1.1: +haru')
 
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
@@ -211,16 +202,13 @@ class Vtk(CMakePackage):
                 '2' if '+opengl2' in spec else ''),
         ])
 
-        prefix = spec['gl'].prefix
-        has_osmesa = ('+osmesa' in spec)
-
-        if has_osmesa:
+        if '+osmesa' in spec:
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
                 '-DVTK_USE_COCOA:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON'])
 
-        else: # !has_osmesa
+        else:
             cmake_args.extend([
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF',
                 '-DOpenGL_GL_PREFERENCE:STRING=LEGACY'])
