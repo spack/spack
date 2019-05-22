@@ -49,8 +49,8 @@ class Touchdetector(CMakePackage):
     depends_on('pugixml', when='@4.5:')
 
     # Old dependencies
-    depends_on('hpctools~openmp', when='~openmp')
-    depends_on('hpctools+openmp', when='+openmp')
+    depends_on('hpctools~openmp', when='~openmp@:4.4')
+    depends_on('hpctools+openmp', when='+openmp@:4.4')
     depends_on('libxml2', when='@:4.4')
     depends_on('zlib', when='@:4.4')
 
