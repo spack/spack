@@ -86,10 +86,7 @@ class SetParallelJobs(argparse.Action):
                   '[expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        # Set the number of build jobs according to the argument passed
-        # via the command line
-        if jobs:
-            spack.config.set('config:build_jobs', jobs, scope='command_line')
+        spack.config.set('config:build_jobs', jobs, scope='command_line')
 
         setattr(namespace, 'jobs', jobs)
 
