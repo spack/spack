@@ -23,6 +23,7 @@ class PyAwscli(PythonPackage):
     depends_on('py-mock@1.3.0:', type='test')
     depends_on('py-rsa@3.1.2:3.5.0', type=('build', 'run'))
     depends_on('py-pyyaml@3.10:3.13', type=('build', 'run'))
-    depends_on('py-argparse@1.1:', when='^python@2.6:2.6.99', type=('build', 'run'))
+    depends_on('py-argparse@1.1:', when='^python@2.6:2.6.99',
+               type=('build', 'run'))
     depends_on('py-s3transfer@0.2.0:0.2.999', type=('build', 'run'))
     depends_on('py-botocore@1.12.101', type=('build', 'run'))
