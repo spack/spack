@@ -21,6 +21,7 @@ import spack.compilers.nag
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
+import spack.compilers.fj
 
 from spack.compiler import _get_versioned_tuple, Compiler
 
@@ -243,6 +244,14 @@ def test_xl_r_flags():
     supported_flag_test("pic_flag", "-qpic", "xl_r@1.0")
 
 
+def test_fj_flags():
+    supported_flag_test("openmp_flag", "-Kopenmp", "fj@1.2.0")
+    supported_flag_test("cxx98_flag", "-std=c++98", "fj@1.2.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "fj@1.2.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "fj@1.2.0")
+    supported_flag_test("pic_flag", "-fPIC", "fj@1.2.0")
+
+
 @pytest.mark.regression('10191')
 @pytest.mark.parametrize('version_str,expected_version', [
     # macOS clang
@@ -355,4 +364,25 @@ def test_xl_version_detection(version_str, expected_version):
 ])
 def test_cce_version_detection(version_str, expected_version):
     version = spack.compilers.cce.Cce.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # C compiler
+    ('fcc (FCC) 4.0.0 20190314\n'
+     'simulating gcc version 6.1\n'
+     'Copyright FUJITSU LIMITED 2019',
+     '4.0.0'),
+    # C++ compiler
+    ('FCC (FCC) 4.0.0 20190314\n'
+     'simulating gcc version 6.1\n'
+     'Copyright FUJITSU LIMITED 2019',
+     '4.0.0'),
+    # Fortran compiler
+    ('frt (FRT) 4.0.0 20190314\n'
+     'Copyright FUJITSU LIMITED 2019',
+     '4.0.0')
+])
+def test_fj_version_detection(version_str, expected_version):
+    version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
     assert version == expected_version
