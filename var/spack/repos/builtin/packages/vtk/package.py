@@ -195,34 +195,33 @@ class Vtk(CMakePackage):
             if '+mpi' in spec:
                 cmake_args.extend(["-DModule_vtkIOParallelXdmf3:BOOL=ON"])
 
+        cmake_args.extend([
+            '-DVTK_USE_SYSTEM_GLEW:BOOL=ON',
+
+            '-DVTK_RENDERING_BACKEND:STRING=OpenGL{0}'.format(
+                '2' if '+opengl2' in spec else ''),
+        ])
+
         if '+osmesa' in spec:
-            prefix = spec['mesa'].prefix
-            osmesa_include_dir = prefix.include
-            osmesa_library = os.path.join(prefix.lib, 'libOSMesa.so')
-
-            use_param = 'VTK_USE_X'
-            if 'darwin' in spec.architecture:
-                use_param = 'VTK_USE_COCOA'
-
             cmake_args.extend([
-                '-D{0}:BOOL=OFF'.format(use_param),
-                '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON',
-                '-DOSMESA_INCLUDE_DIR:PATH={0}'.format(osmesa_include_dir),
-                '-DOSMESA_LIBRARY:FILEPATH={0}'.format(osmesa_library),
-            ])
+                '-DVTK_USE_X:BOOL=OFF',
+                '-DVTK_USE_COCOA:BOOL=OFF',
+                '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON'])
+
         else:
-            prefix = spec['opengl'].prefix
-
-            opengl_include_dir = prefix.include
-            opengl_library = os.path.join(prefix.lib, 'libGL.so')
-            if 'darwin' in spec.architecture:
-                opengl_include_dir = prefix
-                opengl_library = prefix
-
             cmake_args.extend([
-                '-DOPENGL_INCLUDE_DIR:PATH={0}'.format(opengl_include_dir),
-                '-DOPENGL_gl_LIBRARY:FILEPATH={0}'.format(opengl_library)
-            ])
+                '-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF',
+                '-DOpenGL_GL_PREFERENCE:STRING=LEGACY'])
+
+            if 'darwin' in spec.architecture:
+                cmake_args.extend([
+                    '-DVTK_USE_X:BOOL=OFF',
+                    '-DVTK_USE_COCOA:BOOL=ON'])
+
+            elif 'linux' in spec.architecture:
+                cmake_args.extend([
+                    '-DVTK_USE_X:BOOL=ON',
+                    '-DVTK_USE_COCOA:BOOL=OFF'])
 
         if spec.satisfies('@:6.1.0'):
             cmake_args.extend([
