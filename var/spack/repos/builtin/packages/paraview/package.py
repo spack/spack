@@ -14,7 +14,9 @@ class Paraview(CMakePackage):
     homepage = 'http://www.paraview.org'
     url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
+    git      = "https://gitlab.kitware.com/paraview/paraview.git"
 
+    version('develop', branch='master', submodules=True)
     version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
@@ -37,11 +39,24 @@ class Paraview(CMakePackage):
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
 
-    depends_on('python@2:2.8', when='+python')
+    # If you get this error:
+    # paraview requires python version 3:, but spec asked for 2.7.16
+    # for `spack spec paraview+python`
+    # add to your packages.yaml
+    # packages:
+    #   python:
+    #     version: [3, 2]
+    extends('python', when='+python')
+
+    depends_on('python@3:', when='@5.6:+python', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8', when='@:5.5+python', type=('build', 'link', 'run'))
+
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
-    # Matplotlib >2.x requires Python 3
-    depends_on('py-matplotlib@:2.99', when='+python', type='run')
+
+    depends_on('py-matplotlib@:2', when='@:5.5+python', type='run')
+    depends_on('py-matplotlib@3:', when='@5.6:+python', type='run')
+
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
     depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')

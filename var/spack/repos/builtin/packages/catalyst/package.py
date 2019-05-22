@@ -19,6 +19,7 @@ class Catalyst(CMakePackage):
     _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
     _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
 
+    version('5.6.0', sha256='5b49cb96ab78eee0427e25200530ac892f9a3da7725109ce1790f8010cb5b377')
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
     version('5.5.0', 'a8f2f41edadffdcc89b37fdc9aa7f005')
@@ -32,16 +33,25 @@ class Catalyst(CMakePackage):
 
     variant('python', default=False, description='Enable Python support')
     variant('essentials', default=False, description='Enable Essentials support')
-    variant('extras', default=False, description='Enable Extras support')
-    variant('rendering', default=False, description='Enable VTK Rendering support')
+    variant('extras', default=False, description='Enable Extras support. Implies Essentials.')
+    variant('rendering', default=True, description='Enable Rendering support. Implies Extras and Essentials.')
     variant('osmesa', default=True, description='Use offscreen rendering')
     conflicts('+osmesa', when='~rendering')
 
+    # If you get this error:
+    # paraview requires python version 3:, but spec asked for 2.7.16
+    # for `spack spec catalyst+python`
+    # add to your packages.yaml
+    # packages:
+    #   python:
+    #     version: [3, 2]
+    extends('python', when='+python')
+
     depends_on('git', type='build')
     depends_on('mpi')
-    depends_on('python@2:2.8', when='+python', type=("build", "link", "run"))
-    depends_on('python', when='~python', type=("build"))
-    depends_on('gl@3.2', when='+rendering')
+    depends_on('python@3:', when='@5.6:+python', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8', when='@:5.5+python', type=('build', 'link', 'run'))
+    depends_on('gl@3.2:', when='+rendering')
     depends_on('mesa+osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
     depends_on('cmake@3.3:', type='build')
@@ -84,9 +94,12 @@ class Catalyst(CMakePackage):
             selected.append('Essentials')
 
         if '+extras' in self.spec:
+            selected.append('Essentials')
             selected.append('Extras')
 
         if '+rendering' in self.spec:
+            selected.append('Essentials')
+            selected.append('Extras')
             selected.append('Rendering-Base')
 
         return selected
@@ -182,8 +195,13 @@ class Catalyst(CMakePackage):
             '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
             '-DVTK_USE_OFFSCREEN:BOOL=%s' % variant_bool('+osmesa'),
-            '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa')
+            '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
+            '-DPARAVIEW_ENABLE_PYTHON:BOOL=%s' % variant_bool('+python')
         ]
+        if '+python' in spec:
+            cmake_args.append(
+                '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
+                spec['python'].command.path)
         return cmake_args
 
     def cmake(self, spec, prefix):
