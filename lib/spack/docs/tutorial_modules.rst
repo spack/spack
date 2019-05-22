@@ -1423,7 +1423,7 @@ they all share the same common structure.  Usually, they start with a
 header that identifies the type of module being generated. In the case of
 hierarchical module files it's:
 
-.. literalinclude:: ../../../share/spack/templates/modules/modulefile.lua
+.. literalinclude:: _spack_root/share/spack/templates/modules/modulefile.lua
   :language: jinja
   :lines: 1-6
 
@@ -1437,14 +1437,14 @@ that can be overridden or extended by users, if need be.
 , delimited by ``{% ... %}``,
 are also permitted in the template language:
 
-.. literalinclude:: ../../../share/spack/templates/modules/modulefile.lua
+.. literalinclude:: _spack_root/share/spack/templates/modules/modulefile.lua
   :language: jinja
   :lines: 73-88
 
 The locations where Spack looks for templates are specified
 in ``config.yaml``:
 
-.. literalinclude:: ../../../etc/spack/defaults/config.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
   :language: yaml
   :lines: 21-24
 

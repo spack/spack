@@ -20,28 +20,29 @@
 import sys
 import os
 import re
-import shutil
 import subprocess
 from glob import glob
 
 from sphinx.ext.apidoc import main as sphinx_apidoc
 
 # -- Spack customizations -----------------------------------------------------
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../external'))
+sys.path.insert(0, os.path.abspath('_spack_root/lib/spack/external'))
+
 if sys.version_info[0] < 3:
-    sys.path.insert(0, os.path.abspath('../external/yaml/lib'))
+    sys.path.insert(
+        0, os.path.abspath('_spack_root/lib/spack/external/yaml/lib'))
 else:
-    sys.path.insert(0, os.path.abspath('../external/yaml/lib3'))
-sys.path.append(os.path.abspath('..'))
+    sys.path.insert(
+        0, os.path.abspath('_spack_root/lib/spack/external/yaml/lib3'))
+
+sys.path.append(os.path.abspath('_spack_root/lib/spack/'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
-spack_root = '../../..'
-os.environ['SPACK_ROOT'] = spack_root
-os.environ['PATH'] += '%s%s/bin' % (os.pathsep, spack_root)
+os.environ['SPACK_ROOT'] = os.path.abspath('_spack_root')
+os.environ['PATH'] += "%s%s" % (os.pathsep, os.path.abspath('_spack_root/bin'))
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
@@ -72,8 +73,8 @@ apidoc_args = [
     '--no-toc',        # Don't create a table of contents file
     '--output-dir=.',  # Directory to place all output
 ]
-sphinx_apidoc(apidoc_args + ['../spack'])
-sphinx_apidoc(apidoc_args + ['../llnl'])
+sphinx_apidoc(apidoc_args + ['_spack_root/lib/spack/spack'])
+sphinx_apidoc(apidoc_args + ['_spack_root/lib/spack/llnl'])
 
 # Enable todo items
 todo_include_todos = True
@@ -144,6 +145,13 @@ release = spack.spack_version
 # for a list of supported languages.
 #language = None
 
+# Places to look for .po/.mo files for doc translations
+#locale_dirs = []
+
+# Sphinx gettext settings
+gettext_compact = True
+gettext_uuid = True
+
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
 #today = ''
@@ -152,7 +160,7 @@ release = spack.spack_version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', '_spack_root']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -198,12 +206,12 @@ html_theme_options = { 'logo_only' : True }
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '../../../share/spack/logo/spack-logo-white-text.svg'
+html_logo = '_spack_root/share/spack/logo/spack-logo-white-text.svg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = '../../../share/spack/logo/favicon.ico'
+html_favicon = '_spack_root/share/spack/logo/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

@@ -460,7 +460,7 @@ https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 In order to handle this, you can define a ``url_for_version()`` function
 like so:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/openmpi/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.url_for_version
 
 With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1``
@@ -1565,7 +1565,7 @@ handles ``RPATH``:
 
 .. _pyside-patch:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/py-pyside/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/py-pyside/package.py
    :pyobject: PyPyside.patch
    :linenos:
 
@@ -2027,7 +2027,7 @@ properties to be used by dependents.
 
 The function declaration should look like this:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/qt/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
    :pyobject: Qt.setup_dependent_environment
    :linenos:
 
@@ -2047,7 +2047,7 @@ The arguments to this function are:
 
 A good example of using these is in the Python package:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
    :pyobject: Python.setup_dependent_environment
    :linenos:
 
@@ -2209,7 +2209,7 @@ same way that Python does.
 
 Let's look at Python's activate function:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
    :pyobject: Python.activate
    :linenos:
 
@@ -2221,7 +2221,7 @@ Python's setuptools.
 
 Deactivate behaves similarly to activate, but it unlinks files:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
    :pyobject: Python.deactivate
    :linenos:
 
@@ -2663,7 +2663,7 @@ docs at :py:mod:`~.spack.build_systems`, or using the ``spack info`` command:
 
 Typically, phases have default implementations that fit most of the common cases:
 
-.. literalinclude:: ../../../lib/spack/spack/build_systems/autotools.py
+.. literalinclude:: _spack_root/lib/spack/spack/build_systems/autotools.py
     :pyobject: AutotoolsPackage.configure
     :linenos:
 
@@ -2671,7 +2671,7 @@ It is thus just sufficient for a packager to override a few
 build system specific helper methods or attributes to provide, for instance,
 configure arguments:
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/m4/package.py
+.. literalinclude::  _spack_root/var/spack/repos/builtin/packages/m4/package.py
     :pyobject: M4.configure_args
     :linenos:
 
@@ -2846,7 +2846,7 @@ Shell command functions
 
 Recall the install method from ``libelf``:
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
+.. literalinclude::  _spack_root/var/spack/repos/builtin/packages/libelf/package.py
    :pyobject: Libelf.install
    :linenos:
 
@@ -3505,7 +3505,7 @@ the one passed to install, only the MPI implementations all set some
 additional properties on it to help you out.  E.g., in mvapich2, you'll
 find this:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/mvapich2/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/mvapich2/package.py
    :pyobject: Mvapich2.setup_dependent_package
 
 That code allows the mvapich2 package to associate an ``mpicc`` property
