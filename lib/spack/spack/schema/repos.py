@@ -5,7 +5,7 @@
 
 """Schema for repos.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/repos.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/repos.py
    :lines: 13-
 """
 
