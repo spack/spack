@@ -79,7 +79,7 @@ class SetParallelJobs(argparse.Action):
     it can be retrieved using the spack.config API.
     """
     def __call__(self, parser, namespace, jobs, option_string):
-        # Values is a single integer, type conversion is already applied
+        # Jobs is a single integer, type conversion is already applied
         # see https://docs.python.org/3/library/argparse.html#action-classes
         if jobs < 1:
             msg = 'invalid value for argument "{0}" '\
