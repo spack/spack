@@ -10,8 +10,8 @@ from spack import *
 class Lsf(Package):
     """IBM Platform LSF is a batch scheduler for HPC environments"""
 
-    homepage = "https://www.ibm.com/ch-en/marketplace/hpc-workload-management"
-    url = "https://www.ibm.com/ch-en/marketplace/hpc-workload-management"
+    homepage = "https://www.ibm.com/marketplace/hpc-workload-management"
+    url = "https://www.ibm.com/marketplace/hpc-workload-management"
 
     # LSF needs to be added as an external package to SPACK. For this, the
     # config file packages.yaml needs to be adjusted:
