@@ -12,6 +12,7 @@ class PyScikitLearn(PythonPackage):
     homepage = "https://pypi.python.org/pypi/scikit-learn"
     url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.18.1.tar.gz"
 
+    version('0.21.1', sha256='228d0611e69e5250946f8cd7bbefec75347950f0ca426d0c518db8f06583f660')
     version('0.20.2', sha256='bc5bc7c7ee2572a1edcb51698a6caf11fae554194aaab9a38105d9ec419f29e6')
     version('0.20.0', sha256='97d1d971f8ec257011e64b7d655df68081dd3097322690afa1a71a1d755f8c18')
     version('0.19.1', 'b67143988c108862735a96cf2b1e827a')
@@ -23,10 +24,14 @@ class PyScikitLearn(PythonPackage):
 
     depends_on('python@2.6:2.8,3.3:', when='@:0.19.1')
     depends_on('python@2.7:2.8,3.4:', when='@0.20.0:')
+    depends_on('python@3.5:', type=('build', 'run'), when='@0.21.0:')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='@:0.19.1')
     depends_on('py-numpy@1.8.2:', type=('build', 'run'), when='@0.20.0:')
+    depends_on('py-numpy@1.11.0:', type=('build', 'run'), when='@0.21.0:')
     depends_on('py-scipy@0.9:', type=('build', 'run'), when='@:0.19.1')
     depends_on('py-scipy@0.13.3:', type=('build', 'run'), when='@0.20.0:')
+    depends_on('py-scipy@0.17.0:', type=('build', 'run'), when='@0.21.0:')
+    depends_on('py-joblib@0.11:', type=('build', 'run'), when='@0.21.0:')
     depends_on('py-cython@0.23:', type='build')
     depends_on('py-test@3.3.0:', type='test')
     depends_on('py-setuptools', type='build')
