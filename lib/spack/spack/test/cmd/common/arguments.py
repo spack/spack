@@ -10,27 +10,31 @@ import pytest
 
 
 import spack.cmd.common.arguments as arguments
+import spack.config
 
 
 @pytest.fixture()
 def parser():
-    return argparse.ArgumentParser()
+    p = argparse.ArgumentParser()
+    arguments.add_common_arguments(p, ['jobs'])
+    yield p
+    # Cleanup the command line scope if it was set during tests
+    if 'command_line' in spack.config.config.scopes:
+        spack.config.config.remove_scope('command_line')
 
 
-def test_setting_parallel_jobs(parser):
-    arguments.add_common_arguments(parser, ['jobs'])
+@pytest.mark.parametrize('cli_args,expected', [
+    (['-j', '24'], 24),
+    ([], multiprocessing.cpu_count())
+])
+def test_setting_parallel_jobs(parser, cli_args, expected):
+    namespace = parser.parse_args(cli_args)
+    assert namespace.jobs == expected
+    assert spack.config.get('config:build_jobs') == expected
 
-    # A negative integer has no meaning and raises an exception
+
+def test_negative_integers_not_allowed_for_parallel_jobs(parser):
     with pytest.raises(ValueError) as exc_info:
         parser.parse_args(['-j', '-2'])
 
     assert 'expected a positive integer' in str(exc_info.value)
-
-    # Check that the default value is computed correctly
-    ncpus = multiprocessing.cpu_count()
-    namespace = parser.parse_args([])
-    assert namespace.jobs == ncpus
-
-    # Check that a positive integer works as expected
-    namespace = parser.parse_args(['-j', '24'])
-    assert namespace.jobs == 24
