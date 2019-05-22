@@ -24,12 +24,7 @@ import shutil
 import subprocess
 from glob import glob
 
-# Since Sphinx 1.7, sphinx.apidoc has been moved to sphinx.ext.apidoc
-# sphinx.apidoc is deprecated and will be removed in Sphinx 2.0
-try:
-    from sphinx.ext.apidoc import main as sphinx_apidoc
-except ImportError:
-    from sphinx.apidoc import main as sphinx_apidoc
+from sphinx.ext.apidoc import main as sphinx_apidoc
 
 # -- Spack customizations -----------------------------------------------------
 
