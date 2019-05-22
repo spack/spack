@@ -405,9 +405,8 @@ def set_build_environment_variables(pkg, env, dirty):
 def _set_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
 
-    jobs = spack.config.get(
-        'config:build_jobs', default=multiprocessing.cpu_count()
-    ) if pkg.parallel else 1
+    jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
+    assert jobs is not None, "no default set for config:build_jobs"
 
     m = module
     m.make_jobs = jobs
