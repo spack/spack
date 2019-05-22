@@ -78,20 +78,20 @@ class SetParallelJobs(argparse.Action):
     The value is is set in the command line configuration scope so that
     it can be retrieved using the spack.config API.
     """
-    def __call__(self, parser, namespace, values, option_string):
+    def __call__(self, parser, namespace, jobs, option_string):
         # Values is a single integer, type conversion is already applied
         # see https://docs.python.org/3/library/argparse.html#action-classes
-        if values < 1:
+        if jobs < 1:
             msg = 'invalid value for argument "{0}" '\
                   '[expected a positive integer, got "{1}"]'
-            raise ValueError(msg.format(option_string, values))
+            raise ValueError(msg.format(option_string, jobs))
 
         # Set the number of build jobs according to the argument passed
         # via the command line
-        if values:
-            spack.config.set('config:build_jobs', values, scope='command_line')
+        if jobs:
+            spack.config.set('config:build_jobs', jobs, scope='command_line')
 
-        setattr(namespace, 'jobs', values)
+        setattr(namespace, 'jobs', jobs)
 
     @property
     def default(self):
