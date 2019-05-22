@@ -392,7 +392,7 @@ configuration file. First, we will look at the default
    $ spack config --scope defaults edit packages
 
 
-.. literalinclude:: ../../../etc/spack/defaults/packages.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/packages.yaml
    :language: yaml
 
 
@@ -829,7 +829,7 @@ running:
    $ spack config --scope defaults edit config
 
 
-.. literalinclude:: ../../../etc/spack/defaults/config.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
    :language: yaml
 
 
