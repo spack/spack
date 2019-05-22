@@ -15,7 +15,7 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler: [gcc, intel, pgi, clang, xl, nag]
+    compiler: [gcc, intel, pgi, clang, xl, nag, fj]
     providers:
       D: [ldc]
       awk: [gawk]
