@@ -23,5 +23,4 @@ class Lsf(Package):
 
     def install(self, spec, prefix):
         raise InstallError('LSF is not installable; it is vendor supplied')
-~
-~
+
