@@ -49,3 +49,5 @@ packages:
     permissions:
       read: world
       write: user
+  python:
+    version: [3, 2]
