@@ -97,6 +97,15 @@ packages:
 
   #### cellular ####
 
+  gnu-stable:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - neurodamus-core+common
+
   intel-stable-parallel:
     target_matrix:
       - intel-stable

@@ -16,11 +16,17 @@ class NeurodamusCore(Package):
     version('2.2.1', git=git, tag='2.2.1')
 
     variant('python', default=False, description="Enable Python Neurodamus")
+    variant('common', default=False, description="Merge in synapse mechanisms hoc & mods")
 
     # Neurodamus py is currently an extension to core
     resource(name='pydamus',
              git='ssh://bbpcode.epfl.ch/sim/neurodamus-py',
              when='+python',
+             destination='resources')
+
+    resource(name='common',
+             git='ssh://bbpcode.epfl.ch/sim/models/common',
+             when='+common',
              destination='resources')
 
     depends_on('python@2.7:',      type=('build', 'run'), when='+python')
@@ -35,4 +41,10 @@ class NeurodamusCore(Package):
         shutil.copytree('mod', prefix.mod)
         if spec.satisfies('+python'):
             copy_tree('resources/neurodamus-py', prefix.python)
+        if spec.satisfies('+common'):
+            copy_all('resources/common/hoc', prefix.hoc)
+            copy_all('resources/common/mod', prefix.mod)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('HOC_LIBRARY_PATH', self.prefix.hoc)
 

@@ -32,10 +32,11 @@ modules:
       - connectome-tools
       - functionalizer
       - 'neurodamus%intel'
-      #- 'neuron+mpi%intel'
+      - 'neurodamus-core+common'
       - neurodamus-hippocampus
       - neurodamus-neocortex
       - neurodamus-thalamus
+      #- 'neuron+mpi%intel'
       - neuron@7.6.6
       - parquet-converters
       - placement-algorithm
