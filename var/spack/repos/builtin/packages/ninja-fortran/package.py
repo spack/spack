@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,21 +10,43 @@ class NinjaFortran(Package):
     """A Fortran capable fork of ninja."""
 
     homepage = "https://github.com/Kitware/ninja"
-    url      = "https://github.com/Kitware/ninja/archive/v1.7.2.gaad58.kitware.dyndep-1.tar.gz"
+    url      = "https://github.com/Kitware/ninja/archive/v1.9.0.g99df1.kitware.dyndep-1.jobserver-1.tar.gz"
 
     # Each version is a fork off of a specific commit of ninja
-    # Hashes don't sort properly, so manually set newest version
-    version('1.7.2.gaad58', 'eb51b042b9dbaf8ecd79a6fb24de1320', preferred=True)
-    version('1.7.2.gcc0ea', '3982f508c415c0abaca34cb5e92e711a')
-    version('1.7.1.g7ca7f', '187a8d15c1e20e5e9b00c5c3f227ca8a')
+    # Hashes don't sort properly, so added "artificial" tweak-level version
+    # number prior to the hashes for sorting puposes
+    version('1.9.0.2.g99df1', 'f0892b1c8fd2984e8f47e9e1fcb9ce32')
+    version('1.9.0.1.g5b44b', 'f7c2e718801c1fd097a728530559e0d4')
+    version('1.9.0.0.gad558', 'cb93ffb5871225e2b813eb9c34b3096d')
+    version('1.8.2.2.g81279', '0e29d0c441dcbd9b9ee9291c3a8dfbdd')
+    version('1.8.2.1.g3bbbe', 'de6257118f2e3ac7fa1abca1e7c70afa')
+    version('1.8.2.0.g972a7', '8ace90ad0c5657022d10ba063783a652')
+    version('1.7.2.1.gaad58', 'eb51b042b9dbaf8ecd79a6fb24de1320')
+    version('1.7.2.0.gcc0ea', '3982f508c415c0abaca34cb5e92e711a')
+    version('1.7.1.0.g7ca7f', '187a8d15c1e20e5e9b00c5c3f227ca8a')
 
-    depends_on('python', type=('build', 'run'))
+    depends_on('python', type='build')
+
+    provides('ninja')
 
     phases = ['configure', 'install']
 
     def url_for_version(self, version):
-        url = 'https://github.com/Kitware/ninja/archive/v{0}.kitware.dyndep-1.tar.gz'
-        return url.format(version)
+        # for some reason the hashes are being stripped from incomming
+        # version, so find the incomming version in all package versions
+        for ver in self.versions:
+            if str(version) in str(ver):
+                break
+
+        # remove the "artificial" tweak-level
+        split_ver = str(ver).split('.')
+        url_version = ".".join(split_ver[:3]) + "." + split_ver[4]
+
+        if version < spack.version.Version('1.8.2.1'):
+            url = 'https://github.com/Kitware/ninja/archive/v{0}.kitware.dyndep-1.tar.gz'
+        else:
+            url = 'https://github.com/Kitware/ninja/archive/v{0}.kitware.dyndep-1.jobserver-1.tar.gz'
+        return url.format(url_version)
 
     def configure(self, spec, prefix):
         python('configure.py', '--bootstrap')

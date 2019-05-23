@@ -1,29 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack.compiler import \
-    Compiler, get_compiler_version, UnsupportedCompilerFlag
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
 
@@ -48,6 +28,9 @@ class Intel(Compiler):
 
     PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'
+
+    version_argument = '--version'
+    version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
 
     @property
     def openmp_flag(self):
@@ -85,22 +68,6 @@ class Intel(Compiler):
     @property
     def pic_flag(self):
         return "-fPIC"
-
-    @classmethod
-    def default_version(cls, comp):
-        """The ``--version`` option seems to be the most consistent one
-        for intel compilers.  Output looks like this::
-
-            icpc (ICC) 12.1.5 20120612
-            Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
-
-        or::
-
-            ifort (IFORT) 12.1.5 20120612
-            Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
-        """
-        return get_compiler_version(
-            comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
 
     @property
     def stdcxx_libs(self):

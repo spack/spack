@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import collections
 import errno
 import hashlib
@@ -55,6 +36,7 @@ __all__ = [
     'filter_file',
     'find',
     'find_headers',
+    'find_all_headers',
     'find_libraries',
     'find_system_libraries',
     'fix_darwin_install_name',
@@ -242,6 +224,25 @@ def group_ids(uid=None):
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
 
+def chgrp(path, group):
+    """Implement the bash chgrp function on a single path"""
+    gid = grp.getgrnam(group).gr_gid
+    os.chown(path, -1, gid)
+
+
+def chmod_x(entry, perms):
+    """Implements chmod, treating all executable bits as set using the chmod
+    utility's `+X` option.
+    """
+    mode = os.stat(entry).st_mode
+    if os.path.isfile(entry):
+        if not mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+            perms &= ~stat.S_IXUSR
+            perms &= ~stat.S_IXGRP
+            perms &= ~stat.S_IXOTH
+    os.chmod(entry, perms)
+
+
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link.
     """
@@ -413,12 +414,23 @@ def get_filetype(path_name):
     return output.strip()
 
 
-def mkdirp(*paths):
-    """Creates a directory, as well as parent directories if needed."""
+def mkdirp(*paths, **kwargs):
+    """Creates a directory, as well as parent directories if needed.
+
+    Arguments:
+        paths (str): paths to create with mkdirp
+
+    Keyword Aguments:
+        mode (permission bits or None, optional): optional permissions to
+            set on the created directory -- use OS default if not provided
+    """
+    mode = kwargs.get('mode', None)
     for path in paths:
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
+                if mode is not None:
+                    os.chmod(path, mode)
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
@@ -525,6 +537,30 @@ def hash_directory(directory):
                 md5_hash.update(f.read())
 
     return md5_hash.hexdigest()
+
+
+@contextmanager
+def write_tmp_and_move(filename):
+    """Write to a temporary file, then move into place."""
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    tmp = os.path.join(dirname, '.%s.tmp' % basename)
+    with open(tmp, 'w') as f:
+        yield f
+    shutil.move(tmp, filename)
+
+
+@contextmanager
+def open_if_filename(str_or_file, mode='r'):
+    """Takes either a path or a file object, and opens it if it is a path.
+
+    If it's a file object, just yields the file object.
+    """
+    if isinstance(str_or_file, six.string_types):
+        with open(str_or_file, mode) as f:
+            yield f
+    else:
+        yield str_or_file
 
 
 def touch(path):
@@ -667,15 +703,32 @@ def set_executable(path):
     os.chmod(path, mode)
 
 
+def remove_empty_directories(root):
+    """Ascend up from the leaves accessible from `root` and remove empty
+    directories.
+
+    Parameters:
+        root (str): path where to search for empty directories
+    """
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for sd in subdirs:
+            sdp = os.path.join(dirpath, sd)
+            try:
+                os.rmdir(sdp)
+            except OSError:
+                pass
+
+
 def remove_dead_links(root):
-    """Removes any dead link that is present in root.
+    """Recursively removes any dead link that is present in root.
 
     Parameters:
         root (str): path where to search for dead links
     """
-    for file in os.listdir(root):
-        path = join_path(root, file)
-        remove_if_dead_link(path)
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for f in files:
+            path = join_path(dirpath, f)
+            remove_if_dead_link(path)
 
 
 def remove_if_dead_link(path):
@@ -921,10 +974,46 @@ class HeaderList(FileList):
     commonly used compiler flags or names.
     """
 
+    # Make sure to only match complete words, otherwise path components such
+    # as "xinclude" will cause false matches.
+    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
+
     def __init__(self, files):
         super(HeaderList, self).__init__(files)
 
         self._macro_definitions = []
+        self._directories = None
+
+    @property
+    def directories(self):
+        """Directories to be searched for header files."""
+        values = self._directories
+        if values is None:
+            values = self._default_directories()
+        return list(dedupe(values))
+
+    @directories.setter
+    def directories(self, value):
+        value = value or []
+        # Accept a single directory as input
+        if isinstance(value, six.string_types):
+            value = [value]
+
+        self._directories = [os.path.normpath(x) for x in value]
+
+    def _default_directories(self):
+        """Default computation of directories based on the list of
+        header files.
+        """
+        dir_list = super(HeaderList, self).directories
+        values = []
+        for d in dir_list:
+            # If the path contains a subdirectory named 'include' then stop
+            # there and don't add anything else to the path.
+            m = self.include_regex.match(d)
+            value = os.path.join(*m.group(1, 2)) if m else d
+            values.append(value)
+        return values
 
     @property
     def headers(self):
@@ -1052,12 +1141,26 @@ def find_headers(headers, root, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the headers
-    suffix = 'h'
+    suffixes = ['h', 'hpp', 'mod']
 
     # List of headers we are searching with suffixes
-    headers = ['{0}.{1}'.format(header, suffix) for header in headers]
+    headers = ['{0}.{1}'.format(header, suffix) for header in headers
+               for suffix in suffixes]
 
     return HeaderList(find(root, headers, recursive))
+
+
+def find_all_headers(root):
+    """Convenience function that returns the list of all headers found
+    in the directory passed as argument.
+
+    Args:
+        root (path): directory where to look recursively for header files
+
+    Returns:
+        List of all headers found in ``root`` and subdirectories.
+    """
+    return find_headers('*', root=root, recursive=True)
 
 
 class LibraryList(FileList):

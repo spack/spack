@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This package contains directives that can be used within a package.
 
 Directives are functions that can be called inside a package
@@ -53,14 +34,15 @@ import re
 from six import string_types
 
 import llnl.util.lang
+import llnl.util.tty.color
 
 import spack.error
+import spack.patch
 import spack.spec
 import spack.url
 import spack.variant
 from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
-from spack.patch import Patch
 from spack.resource import Resource
 from spack.version import Version
 
@@ -68,6 +50,8 @@ __all__ = []
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches']
+
+_patch_order_index = 0
 
 
 class DirectiveMeta(type):
@@ -213,7 +197,7 @@ class DirectiveMeta(type):
                 # Nasty, but it's the best way I can think of to avoid
                 # side effects if directive results are passed as args
                 remove_directives(args)
-                remove_directives(kwargs.values())
+                remove_directives(list(kwargs.values()))
 
                 # A directive returns either something that is callable on a
                 # package or a sequence of them
@@ -285,8 +269,8 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         patches = [patches]
 
     # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, string_types)
-               else p for p in patches]
+    patches = [patch(p) if isinstance(p, string_types) else p
+               for p in patches]
     assert all(callable(p) for p in patches)
 
     # this is where we actually add the dependency to this package
@@ -414,7 +398,7 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
     certain conditions (e.g. a particular version).
 
     Args:
-        url_or_filename (str): url or filename of the patch
+        url_or_filename (str): url or relative filename of the patch
         level (int): patch level (as in the patch shell command)
         when (Spec): optional anonymous spec that specifies when to apply
             the patch
@@ -435,9 +419,25 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
         # if this spec is identical to some other, then append this
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
-        cur_patches.append(
-            Patch.create(pkg_or_dep, url_or_filename, level,
-                         working_dir, **kwargs))
+
+        pkg = pkg_or_dep
+        if isinstance(pkg, Dependency):
+            pkg = pkg.pkg
+
+        global _patch_order_index
+        ordering_key = (pkg.name, _patch_order_index)
+        _patch_order_index += 1
+
+        if '://' in url_or_filename:
+            patch = spack.patch.UrlPatch(
+                pkg, url_or_filename, level, working_dir,
+                ordering_key=ordering_key, **kwargs)
+        else:
+            patch = spack.patch.FilePatch(
+                pkg, url_or_filename, level, working_dir,
+                ordering_key=ordering_key)
+
+        cur_patches.append(patch)
 
     return _execute_patch
 
@@ -448,7 +448,7 @@ def variant(
         default=None,
         description='',
         values=None,
-        multi=False,
+        multi=None,
         validator=None):
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
@@ -465,23 +465,65 @@ def variant(
         multi (bool): if False only one value per spec is allowed for
             this variant
         validator (callable): optional group validator to enforce additional
-            logic. It receives a tuple of values and should raise an instance
-            of SpackError if the group doesn't meet the additional constraints
-    """
-    if name in reserved_names:
-        raise ValueError("The variant name '%s' is reserved by Spack" % name)
+            logic. It receives the package name, the variant name and a tuple
+            of values and should raise an instance of SpackError if the group
+            doesn't meet the additional constraints
 
+    Raises:
+        DirectiveError: if arguments passed to the directive are invalid
+    """
+    def format_error(msg, pkg):
+        msg += " @*r{{[{0}, variant '{1}']}}"
+        return llnl.util.tty.color.colorize(msg.format(pkg.name, name))
+
+    if name in reserved_names:
+        def _raise_reserved_name(pkg):
+            msg = "The name '%s' is reserved by Spack" % name
+            raise DirectiveError(format_error(msg, pkg))
+        return _raise_reserved_name
+
+    # Ensure we have a sequence of allowed variant values, or a
+    # predicate for it.
     if values is None:
-        if default in (True, False) or (type(default) is str and
-                                        default.upper() in ('TRUE', 'FALSE')):
+        if str(default).upper() in ('TRUE', 'FALSE'):
             values = (True, False)
         else:
             values = lambda x: True
 
-    if default is None:
-        default = False if values == (True, False) else ''
+    # The object defining variant values might supply its own defaults for
+    # all the other arguments. Ensure we have no conflicting definitions
+    # in place.
+    for argument in ('default', 'multi', 'validator'):
+        # TODO: we can consider treating 'default' differently from other
+        # TODO: attributes and let a packager decide whether to use the fluent
+        # TODO: interface or the directive argument
+        if hasattr(values, argument) and locals()[argument] is not None:
+            def _raise_argument_error(pkg):
+                msg = "Remove specification of {0} argument: it is handled " \
+                      "by an attribute of the 'values' argument"
+                raise DirectiveError(format_error(msg.format(argument), pkg))
+            return _raise_argument_error
 
-    default = default
+    # Allow for the object defining the allowed values to supply its own
+    # default value and group validator, say if it supports multiple values.
+    default = getattr(values, 'default', default)
+    validator = getattr(values, 'validator', validator)
+    multi = getattr(values, 'multi', bool(multi))
+
+    # Here we sanitize against a default value being either None
+    # or the empty string, as the former indicates that a default
+    # was not set while the latter will make the variant unparsable
+    # from the command line
+    if default is None or default == '':
+        def _raise_default_not_set(pkg):
+            if default is None:
+                msg = "either a default was not explicitly set, " \
+                      "or 'None' was used"
+            elif default == '':
+                msg = "the default cannot be an empty string"
+            raise DirectiveError(format_error(msg, pkg))
+        return _raise_default_not_set
+
     description = str(description).strip()
 
     def _execute_variant(pkg):

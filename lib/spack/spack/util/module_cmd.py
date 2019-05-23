@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 This module contains routines related to the module command for accessing and
 parsing environment modules.
@@ -44,7 +25,7 @@ def get_module_cmd(bashopts=''):
             return get_module_cmd_from_which()
         except ModuleError:
             raise ModuleError('Spack requires modulecmd or a defined module'
-                              ' fucntion. Make sure modulecmd is in your path'
+                              ' function. Make sure modulecmd is in your path'
                               ' or the function "module" is defined in your'
                               ' bash environment.')
 
@@ -118,9 +99,17 @@ def get_module_cmd_from_bash(bashopts=''):
 def unload_module(mod):
     """Takes a module name and unloads the module from the environment. It does
     not check whether conflicts arise from the unloaded module"""
+    tty.debug("Unloading module: {0}".format(mod))
+
     modulecmd = get_module_cmd()
-    exec(compile(modulecmd('unload', mod, output=str, error=str), '<string>',
-                 'exec'))
+    unload_output = modulecmd('unload', mod, output=str, error=str)
+
+    try:
+        exec(compile(unload_output, '<string>', 'exec'))
+    except Exception:
+        tty.debug("Module unload output of {0}:\n{1}\n".format(
+            mod, unload_output))
+        raise
 
 
 def load_module(mod):
@@ -128,6 +117,8 @@ def load_module(mod):
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
+    tty.debug("Loading module: {0}".format(mod))
+
     # Create an executable of the module command that will output python code
     modulecmd = get_module_cmd()
 
@@ -135,17 +126,28 @@ def load_module(mod):
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
     # loaded does nothing.
-    text = modulecmd('show', mod, output=str, error=str).split()
-    for i, word in enumerate(text):
-        if word == 'conflict':
-            unload_module(text[i + 1])
+    module_content = modulecmd('show', mod, output=str, error=str)
+    text = module_content.split()
+    try:
+        for i, word in enumerate(text):
+            if word == 'conflict':
+                unload_module(text[i + 1])
+    except Exception:
+        tty.debug("Module show output of {0}:\n{1}\n".format(
+            mod, module_content))
+        raise
 
     # Load the module now that there are no conflicts
     # Some module systems use stdout and some use stderr
     load = modulecmd('load', mod, output=str, error='/dev/null')
     if not load:
         load = modulecmd('load', mod, error=str)
-    exec(compile(load, '<string>', 'exec'))
+
+    try:
+        exec(compile(load, '<string>', 'exec'))
+    except Exception:
+        tty.debug("Module load output of {0}:\n{1}\n".format(mod, load))
+        raise
 
 
 def get_path_arg_from_module_line(line):
@@ -163,11 +165,6 @@ def get_path_arg_from_module_line(line):
         path_arg = words_and_symbols[-2]
     else:
         path_arg = line.split()[2]
-
-    if not os.path.exists(path_arg):
-        tty.warn("Extracted path from module does not exist:"
-                 "\n\tExtracted path: " + path_arg +
-                 "\n\tFull line: " + line)
     return path_arg
 
 
@@ -181,7 +178,11 @@ def get_path_from_module(mod):
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
 
-    return get_path_from_module_contents(text, mod)
+    p = get_path_from_module_contents(text, mod)
+    if p and not os.path.exists(p):
+        tty.warn("Extracted path from module does not exist:"
+                 "\n\tExtracted path: " + p)
+    return p
 
 
 def get_path_from_module_contents(text, module_name):

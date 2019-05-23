@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os.path
 import glob
@@ -32,15 +13,20 @@ class Express(CMakePackage):
        target sequences from sampled subsequences."""
 
     homepage = "http://bio.math.berkeley.edu/eXpress/"
-    git      = "https://github.com/adarob/eXpress.git"
+    url      = "https://github.com/adarob/eXpress/archive/1.5.2.zip"
 
-    version('2015-11-29', commit='f845cab2c7f2d9247b35143e4aa05869cfb10e79')
+    # 1.5.1 used to be known as 2015-11-29 (same commit), but they've
+    # added tags, so lets use 'em
+    version('1.5.2', sha256='25a63cca3dac6bd0daf04d2f0b2275e47d2190c90522bd231b1d7a875a59a52e')
+    version('1.5.1', sha256='fa3522de9cc25f1ede22fa196928912a6da2a2038681911115ec3e4da3d61293')
 
     depends_on('boost')
     depends_on('bamtools')
     depends_on('zlib')
 
-    conflicts('%gcc@6.0.0:', when='@2015-11-29')
+    # patch from the debian package repo:
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=811859
+    patch('gcc-6.patch', when='%gcc@6.0.0:')
 
     def patch(self):
         with working_dir('src'):
@@ -51,7 +37,7 @@ class Express(CMakePackage):
                     edit.filter('#include <api', '#include <%s' % self.spec[
                                 'bamtools'].prefix.include.bamtools.api)
             edit = FileFilter('CMakeLists.txt')
-            edit.filter('\${CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
+            edit.filter(r'\${CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
                         'libbamtools.a', '%s' % self.spec['bamtools'].libs)
 
     def setup_environment(self, spack_env, run_env):

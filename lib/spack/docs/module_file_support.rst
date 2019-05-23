@@ -1,3 +1,8 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _modules:
 
 =======
@@ -530,10 +535,10 @@ most likely via the ``+blas`` variant specification.
 
        modules:
          tcl:
-           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+           naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
            all:
              conflict:
-               - '${PACKAGE}'
+               - '{name}'
                - 'intel/14.0.1'
 
      will create module files that will conflict with ``intel/14.0.1`` and with the
@@ -595,6 +600,9 @@ The configuration above will generate dotkit module files that will not contain
 modifications to either ``CPATH`` or ``LIBRARY_PATH`` and environment module
 files that instead will contain these modifications.
 
+
+.. _autoloading-dependencies:
+
 """""""""""""""""""""
 Autoload dependencies
 """""""""""""""""""""
@@ -613,7 +621,21 @@ activated using ``spack activate``:
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.
+``direct`` or ``all``.  The default is ``none``.
+
+.. tip::
+  Building external software
+     Setting ``autoload`` to ``direct`` for all packages can be useful
+     when building software outside of a Spack installation that depends on
+     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
+     as appropriate):
+
+  .. code-block:: yaml
+
+     modules:
+       lmod:
+         all:
+           autoload: 'direct'
 
 .. note::
   TCL prerequisites

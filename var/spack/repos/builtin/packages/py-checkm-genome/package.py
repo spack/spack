@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,12 +13,16 @@ class PyCheckmGenome(PythonPackage):
     homepage = "https://ecogenomics.github.io/CheckM"
     url      = "https://pypi.io/packages/source/c/checkm-genome/checkm-genome-1.0.11.tar.gz"
 
+    version('1.0.13', sha256='ffb7e4966c0fac07c7e6e7db6f6eb5b48587fa83987f8a68efbaff2afb7da82e')
     version('1.0.11', '3058546ec324e2420cf72f0d2576114b')
 
-    depends_on('hmmer@3.1b1:')
-    depends_on('prodigal@2.6.1:')
-    depends_on('py-numpy@1.8.0:',        type=('build', 'run'))
-    depends_on('py-scipy@0.9.0:',        type=('build', 'run'))
-    depends_on('py-matplotlib@1.3.1:',   type=('build', 'run'))
-    depends_on('py-pysam@0.8.3:',        type=('build', 'run'))
-    depends_on('py-dendropy@4.0.0:',     type=('build', 'run'))
+    depends_on('hmmer@3.1b1:', type=('build', 'run'))
+    depends_on('pplacer', type=('build', 'run'))
+    depends_on('prodigal@2.6.1:', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
+    depends_on('py-backports-functools-lru-cache', type=('build', 'run'))
+    depends_on('py-numpy@1.8.0:', type=('build', 'run'))
+    depends_on('py-scipy@0.9.0:', type=('build', 'run'))
+    depends_on('py-matplotlib@1.3.1:2.2.3', type=('build', 'run'))
+    depends_on('py-pysam@0.8.3:', type=('build', 'run'))
+    depends_on('py-dendropy@4.0.0:', type=('build', 'run'))

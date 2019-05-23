@@ -1,32 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import re
+import shlex
 import subprocess
-from six import string_types
-import sys
+from six import string_types, text_type
 
 import llnl.util.tty as tty
 
@@ -39,7 +20,7 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        self.exe = name.split(' ')
+        self.exe = shlex.split(name)
         self.default_env = {}
         self.returncode = None
 
@@ -190,9 +171,9 @@ class Executable(object):
             if output is str or error is str:
                 result = ''
                 if output is str:
-                    result += to_str(out)
+                    result += text_type(out.decode('utf-8'))
                 if error is str:
-                    result += to_str(err)
+                    result += text_type(err.decode('utf-8'))
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
@@ -243,18 +224,24 @@ class Executable(object):
         return ' '.join(self.exe)
 
 
-def to_str(content):
-    """Produce a str type from the content of a process stream obtained with
-       Popen.communicate.
-    """
-    # Prior to python3, Popen.communicate returns a str type. For python3 it
-    # returns a bytes type. In the case of python3 we decode the
-    # byte string to produce a str type. This will generate junk if the
-    # encoding is not UTF-8 (which includes ASCII).
-    if sys.version_info < (3, 0, 0):
-        return content
-    else:
-        return content.decode('utf-8')
+def which_string(*args, **kwargs):
+    """Like ``which()``, but return a string instead of an ``Executable``."""
+    path = kwargs.get('path', os.environ.get('PATH', ''))
+    required = kwargs.get('required', False)
+
+    if isinstance(path, string_types):
+        path = path.split(os.pathsep)
+
+    for name in args:
+        for directory in path:
+            exe = os.path.join(directory, name)
+            if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                return exe
+
+    if required:
+        tty.die("spack requires '%s'. Make sure it is in your path." % args[0])
+
+    return None
 
 
 def which(*args, **kwargs):
@@ -273,22 +260,8 @@ def which(*args, **kwargs):
     Returns:
         Executable: The first executable that is found in the path
     """
-    path = kwargs.get('path', os.environ.get('PATH', ''))
-    required = kwargs.get('required', False)
-
-    if isinstance(path, string_types):
-        path = path.split(os.pathsep)
-
-    for name in args:
-        for directory in path:
-            exe = os.path.join(directory, name)
-            if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                return Executable(exe)
-
-    if required:
-        tty.die("spack requires '%s'. Make sure it is in your path." % args[0])
-
-    return None
+    exe = which_string(*args, **kwargs)
+    return Executable(exe) if exe else None
 
 
 class ProcessError(spack.error.SpackError):

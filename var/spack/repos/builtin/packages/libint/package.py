@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,10 +14,13 @@ class Libint(AutotoolsPackage):
     homepage = "https://github.com/evaleev/libint"
     url = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
 
-    version('2.2.0', 'da37dab862fb0b97a7ed7d007695ef47')
-    version('2.1.0', 'd0dcb985fe32ddebc78fe571ce37e2d6')
-    version('1.1.6', '990f67b55f49ecc18f32c58da9240684')
-    version('1.1.5', '379b7d0718ff398715d6898807adf628')
+    version('2.4.2', sha256='86dff38065e69a3a51d15cfdc638f766044cb87e5c6682d960c14f9847e2eac3')
+    version('2.4.1', sha256='0513be124563fdbbc7cd3c7043e221df1bda236a037027ba9343429a27db8ce4')
+    version('2.4.0', sha256='52eb16f065406099dcfaceb12f9a7f7e329c9cfcf6ed9bfacb0cff7431dd6019')
+    version('2.2.0', sha256='f737d485f33ac819d7f28c6ce303b1f3a2296bfd2c14f7c1323f8c5d370bb0e3')
+    version('2.1.0', sha256='43c453a1663aa1c55294df89ff9ece3aefc8d1bbba5ea31dbfe71b2d812e24c8')
+    version('1.1.6', sha256='f201b0c621df678cfe8bdf3990796b8976ff194aba357ae398f2f29b0e2985a6')
+    version('1.1.5', sha256='ec8cd4a4ba1e1a98230165210c293632372f0e573acd878ed62e5ec6f8b6174b')
 
     # Build dependencies
     depends_on('autoconf@2.52:', type='build')

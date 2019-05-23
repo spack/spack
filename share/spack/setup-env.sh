@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 ########################################################################
 #
@@ -96,7 +77,7 @@ function spack {
                 _sp_arg="$1"
                 shift
             fi
-            if [ "$_sp_arg" = "-h" ]; then
+            if [[ "$_sp_arg" = "-h" || "$_sp_arg" = "--help" ]]; then
                 command spack cd -h
             else
                 LOC="$(spack location $_sp_arg "$@")"
@@ -105,6 +86,43 @@ function spack {
                 else
                     return 1
                 fi
+            fi
+            return
+            ;;
+        "env")
+            _sp_arg=""
+            if [ -n "$1" ]; then
+                _sp_arg="$1"
+                shift
+            fi
+
+            if [[ "$_sp_arg" = "-h" || "$_sp_arg" = "--help" ]]; then
+                command spack env -h
+            else
+                case $_sp_arg in
+                    activate)
+                        _a="$@"
+                        if [ -z "$1" -o "${_a#*--sh}" != "$_a" -o "${_a#*--csh}" != "$_a" -o "${_a#*-h}" != "$_a" ]; then
+                            # no args or args contain -h/--help, --sh, or --csh: just execute
+                            command spack "${args[@]}"
+                        else
+                            # actual call to activate: source the output
+                            eval $(command spack $_sp_flags env activate --sh "$@")
+                        fi
+                        ;;
+                    deactivate)
+                        if [ -n "$1" ]; then
+                            # with args: execute the command
+                            command spack "${args[@]}"
+                        else
+                            # no args: source the output.
+                            eval $(command spack $_sp_flags env deactivate --sh)
+                        fi
+                        ;;
+                    *)
+                        command spack "${args[@]}"
+                        ;;
+                esac
             fi
             return
             ;;
@@ -196,10 +214,10 @@ fi
 # Figure out where this file is.  Below code needs to be portable to
 # bash and zsh.
 #
-_sp_source_file="${BASH_SOURCE[0]}"  # Bash's location of last sourced file.
+_sp_source_file="${BASH_SOURCE[0]:-}"  # Bash's location of last sourced file.
 if [ -z "$_sp_source_file" ]; then
-    _sp_source_file="$0:A"           # zsh way to do it
-    if [[ "$_sp_source_file" == *":A" ]]; then
+    _sp_source_file="${(%):-%N}"       # zsh way to do it
+    if [ -z "$_sp_source_file" ]; then
         # Not zsh either... bail out with plain old $0,
         # which WILL NOT work if this is sourced indirectly.
         _sp_source_file="$0"
@@ -218,7 +236,18 @@ export SPACK_ROOT=${_sp_prefix}
 # Determine which shell is being used
 #
 function _spack_determine_shell() {
-	ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+    # This logic is derived from the cea-hpc/modules profile.sh example at
+    # https://github.com/cea-hpc/modules/blob/master/init/profile.sh.in
+    #
+    # The objective is to correctly detect the shell type even when setup-env
+    # is sourced within a script itself rather than a login terminal.
+    if [ -n "${BASH:-}" ]; then
+        echo ${BASH##*/}
+    elif [ -n "${ZSH_NAME:-}" ]; then
+        echo $ZSH_NAME
+    else
+        PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+    fi
 }
 export SPACK_SHELL=$(_spack_determine_shell)
 
@@ -243,10 +272,16 @@ if [ "${need_module}" = "yes" ]; then
 
     # _sp_module_prefix is set by spack --print-sh-vars
     if [ "${_sp_module_prefix}" != "not_installed" ]; then
-        #activate it!
-        export MODULE_PREFIX=${_sp_module_prefix}
-        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        # activate it!
+        # environment-modules@4: has a bin directory inside its prefix
+        MODULE_PREFIX_BIN="${_sp_module_prefix}/bin"
+        if [ ! -d "${MODULE_PREFIX_BIN}" ]; then
+            # environment-modules@3 has a nested bin directory
+            MODULE_PREFIX_BIN="${_sp_module_prefix}/Modules/bin"
+        fi
+        export MODULE_PREFIX_BIN
+        _spack_pathadd PATH "${MODULE_PREFIX_BIN}"
+        module() { eval `${MODULE_PREFIX_BIN}/modulecmd ${SPACK_SHELL} $*`; }
     fi;
 else
     eval `spack --print-shell-vars sh`
@@ -255,8 +290,17 @@ fi;
 #
 # set module system roots
 #
-_spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+_sp_multi_pathadd() {
+    local IFS=':'
+    if  [[ -n "${ZSH_VERSION:-}" ]]; then
+        setopt sh_word_split
+    fi
+    for pth in $2; do
+        _spack_pathadd "$1" "${pth}/${_sp_sys_type}"
+    done
+}
+_sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+_sp_multi_pathadd DK_NODE "$_sp_dotkit_roots"
 
 # Add programmable tab completion for Bash
 #

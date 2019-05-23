@@ -1,32 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
+import stat
 import sys
 import errno
 import hashlib
-import shutil
 import tempfile
 import getpass
 from six import string_types
@@ -34,7 +15,7 @@ from six import iteritems
 from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, can_access
+from llnl.util.filesystem import mkdirp, can_access, install, install_tree
 from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
 import spack.paths
@@ -424,7 +405,7 @@ class Stage(object):
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
-            except spack.fetch_strategy.NoCacheError as e:
+            except spack.fetch_strategy.NoCacheError:
                 # Don't bother reporting when something is not cached.
                 continue
             except spack.error.SpackError as e:
@@ -447,11 +428,14 @@ class Stage(object):
                      "mirror.  This means we cannot know a checksum for the "
                      "tarball in advance. Be sure that your connection to "
                      "this mirror is secure!")
-        else:
+        elif spack.config.get('config:checksum'):
             self.fetcher.check()
 
     def cache_local(self):
         spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
+
+        if spack.caches.mirror_cache:
+            spack.caches.mirror_cache.store(self.fetcher, self.mirror_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -488,11 +472,13 @@ class Stage(object):
         if self._need_to_create_path():
             tmp_root = get_tmp_root()
             if tmp_root is not None:
+                # tempfile.mkdtemp already sets mode 0700
                 tmp_dir = tempfile.mkdtemp('', _stage_prefix, tmp_root)
                 tty.debug('link %s -> %s' % (self.path, tmp_dir))
                 os.symlink(tmp_dir, self.path)
             else:
-                mkdirp(self.path)
+                # emulate file permissions for tempfile.mkdtemp
+                mkdirp(self.path, mode=stat.S_IRWXU)
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
         self.created = True
@@ -558,7 +544,13 @@ class ResourceStage(Stage):
                          '{stage}\n\tdestination : {destination}'.format(
                              stage=source_path, destination=destination_path
                          ))
-                shutil.move(os.path.realpath(source_path), destination_path)
+
+                src = os.path.realpath(source_path)
+
+                if os.path.isdir(src):
+                    install_tree(src, destination_path)
+                else:
+                    install(src, destination_path)
 
 
 @pattern.composite(method_list=[

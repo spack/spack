@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
@@ -46,6 +27,17 @@ _cache_config_file = []
 
 #: cache of compilers constructed from config data, keyed by config entry id.
 _compiler_cache = {}
+
+_compiler_to_pkg = {
+    'clang': 'llvm+clang'
+}
+
+
+def pkg_spec_for_compiler(cspec):
+    """Return the spec of the package that provides the compiler."""
+    spec_str = '%s@%s' % (_compiler_to_pkg.get(cspec.name, cspec.name),
+                          cspec.versions)
+    return spack.spec.Spec(spec_str)
 
 
 def _auto_compiler_spec(function):
@@ -222,6 +214,17 @@ def find(compiler_spec, scope=None, init_config=True):
             if c.satisfies(compiler_spec)]
 
 
+@_auto_compiler_spec
+def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
+    """Return specs of available compilers that match the supplied
+       compiler spec.  Return an empty list if nothing found."""
+    return [c.spec for c in compilers_for_spec(compiler_spec,
+                                               arch_spec,
+                                               scope,
+                                               True,
+                                               init_config)]
+
+
 def all_compilers(scope=None):
     config = get_compiler_config(scope)
     compilers = list()
@@ -304,7 +307,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         # If an arch spec is given, confirm that this compiler
         # is for the given operating system
         os = items.get('operating_system', None)
-        if arch_spec and os != arch_spec.platform_os:
+        if arch_spec and os != arch_spec.os:
             continue
 
         # If an arch spec is given, confirm that this compiler
@@ -330,7 +333,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
 
     compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec)
     if len(compilers) < 1:
-        raise NoCompilerForSpecError(compiler_spec, arch_spec.platform_os)
+        raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
     if len(compilers) > 1:
         raise CompilerDuplicateError(compiler_spec, arch_spec)
     return compilers[0]

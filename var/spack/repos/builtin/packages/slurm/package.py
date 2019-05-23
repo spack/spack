@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -53,6 +34,7 @@ class Slurm(AutotoolsPackage):
     variant('hwloc', default=False, description='Enable hwloc support')
     variant('hdf5', default=False, description='Enable hdf5 support')
     variant('readline', default=True, description='Enable readline support')
+    variant('pmix', default=False, description='Enable PMIx support')
 
     # TODO: add variant for BG/Q and Cray support
 
@@ -74,6 +56,7 @@ class Slurm(AutotoolsPackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc', when='+hwloc')
     depends_on('mariadb', when='+mariadb')
+    depends_on('pmix', when='+pmix')
 
     def configure_args(self):
 
@@ -106,4 +89,13 @@ class Slurm(AutotoolsPackage):
         else:
             args.append('--without-hwloc')
 
+        if '+pmix' in spec:
+            args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
+        else:
+            args.append('--without-pmix')
+
         return args
+
+    def install(self, spec, prefix):
+        make('install')
+        make('-C', 'contribs/pmi2', 'install')

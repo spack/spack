@@ -1,27 +1,7 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
@@ -41,7 +21,11 @@ class Strumpack(CMakePackage):
     url      = "https://github.com/pghysels/STRUMPACK/archive/v3.0.3.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
+    maintainers = ['pghysels']
+
     version('master', branch='master')
+    version('3.1.1', sha256='c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778')
+    version('3.1.0', sha256='b4f91b7d433955518b04538be1c726afc5de4bffb163e982ef8844d391b26fa7')
     version('3.0.3', sha256='2bd2a40d9585b769ae4ba461de02c6e36433bf2b21827f824a50f2fdf73389f7')
     version('3.0.2', sha256='828e5ec59019b2c74e008745b04ceebbb7ef1313fb4e3ac01fa8ff350799df38')
     version('3.0.1', sha256='b4a4d870c589937e22e77a6c4b52a96fd808f0b564e363f826ae5ffc94b9d000')
@@ -66,18 +50,25 @@ class Strumpack(CMakePackage):
     variant('build_tests', default=False,
             description='Build test routines')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@3.2:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack', when='+mpi')
     depends_on('metis')
-    depends_on('parmetis', when='+parmetis+mpi')
+    depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch')
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
 
+    conflicts('+parmetis', when='~mpi')
+
+    patch('intel-19-compile.patch', when='@3.1.1')
+
     def cmake_args(self):
         spec = self.spec
+
+        def on_off(varstr):
+            return 'ON' if varstr in spec else 'OFF'
 
         if '+mpi' in spec:
             args = ['-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
@@ -87,43 +78,23 @@ class Strumpack(CMakePackage):
         else:
             args = ['-DSTRUMPACK_USE_MPI=OFF']
 
-        if '+openmp' in spec:
-            args.append('-DSTRUMPACK_USE_OPENMP=ON')
-        else:
-            args.append('-DSTRUMPACK_USE_OPENMP=OFF')
+        args.extend([
+            '-DSTRUMPACK_USE_OPENMP=%s' % on_off('+openmp'),
+            '-DSTRUMPACK_C_INTERFACE=%s' % on_off('+c_interface'),
+            '-DSTRUMPACK_COUNT_FLOPS=%s' % on_off('+count_flops'),
+            '-DSTRUMPACK_TASK_TIMERS=%s' % on_off('+task_timers'),
+            '-DSTRUMPACK_DEV_TESTING=%s' % on_off('+build_dev_tests'),
+            '-DSTRUMPACK_BUILD_TESTS=%s' % on_off('+build_tests')
+        ])
 
-        if spec.satisfies('+parmetis+mpi'):
-            args.append('-DSTRUMPACK_USE_PARMETIS=ON')
+        if spec.satisfies('@3.0.4:'):
+            args.extend([
+                '-DTPL_ENABLE_PARMETIS=%s' % on_off('+parmetis'),
+                '-DTPL_ENABLE_SCOTCH=%s' % on_off('+scotch')
+            ])
         else:
-            args.append('-DSTRUMPACK_USE_PARMETIS=OFF')
-
-        if '+scotch' in spec:
-            args.append('-DSTRUMPACK_USE_SCOTCH=ON')
-        else:
-            args.append('-DSTRUMPACK_USE_SCOTCH=OFF')
-
-        if '+c_interface' in spec:
-            args.append('-DSTRUMPACK_C_INTERFACE=ON')
-        else:
-            args.append('-DSTRUMPACK_C_INTERFACE=OFF')
-
-        if '+count_flops' in spec:
-            args.append('-DSTRUMPACK_COUNT_FLOPS=ON')
-        else:
-            args.append('-DSTRUMPACK_COUNT_FLOPS=OFF')
-
-        if '+task_timers' in spec:
-            args.append('-DSTRUMPACK_TASK_TIMERS=ON')
-        else:
-            args.append('-DSTRUMPACK_TASK_TIMERS=OFF')
-
-        if '+build_dev_tests' in spec:
-            args.append('-DSTRUMPACK_DEV_TESTING=ON')
-        else:
-            args.append('-DSTRUMPACK_DEV_TESTING=OFF')
-
-        if '+build_tests' in spec:
-            args.append('-DSTRUMPACK_BUILD_TESTS=ON')
-        else:
-            args.append('-DSTRUMPACK_BUILD_TESTS=OFF')
+            args.extend([
+                '-DSTRUMPACK_USE_PARMETIS=%s' % on_off('+parmetis'),
+                '-DSTRUMPACK_USE_SCOTCH=%s' % on_off('+scotch')
+            ])
         return args

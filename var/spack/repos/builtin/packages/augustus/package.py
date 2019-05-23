@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,17 +11,26 @@ class Augustus(MakefilePackage):
        genomic sequences"""
 
     homepage = "http://bioinf.uni-greifswald.de/augustus/"
-    url      = "http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.3.1.tar.gz"
-    list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
+    url      = "https://github.com/Gaius-Augustus/Augustus/archive/3.3.2.tar.gz"
+    # Releases have moved to github
 
-    version('3.3.1', '8363ece221c799eb169f47e545efb951')
-    version('3.3',   '93691d9aafc7d3d0e1adf31ec308507f')
-    version('3.2.3', 'b8c47ea8d0c45aa7bb9a82626c8ff830')
+    version('3.3.2', sha256='d09f972cfd88deb34b19b69878eb8af3bbbe4f1cde1434b69cedc2aa6247a0f2')
+    version('3.3.1', sha256='011379606f381ee21b9716f83e8a1a57b2aaa01aefeebd2748104efa08c47cab',
+            url='https://github.com/Gaius-Augustus/Augustus/archive/v3.3.1-tag1.tar.gz')
+    version('3.3',   '93691d9aafc7d3d0e1adf31ec308507f',
+            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.3.tar.gz')
+    version('3.2.3', 'b8c47ea8d0c45aa7bb9a82626c8ff830',
+            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.3.tar.gz')
 
     depends_on('bamtools')
     depends_on('gsl')
     depends_on('boost')
     depends_on('zlib')
+    depends_on('htslib', when='@3.3.1:')
+    depends_on('bcftools', when='@3.3.1:')
+    depends_on('samtools', when='@3.3.1:')
+    depends_on('tabix', when='@3.3.1:')
+    depends_on('curl', when='@3.3.1:')
 
     def edit(self, spec, prefix):
         with working_dir(join_path('auxprogs', 'filterBam', 'src')):
@@ -71,6 +61,27 @@ class Augustus(MakefilePackage):
                 makefile.filter('LIBS = -lbamtools -lz',
                                 'LIBS = $(BAMTOOLS)/lib/bamtools'
                                 '/libbamtools.a -lz')
+        with working_dir(join_path('auxprogs', 'bam2wig')):
+            makefile = FileFilter('Makefile')
+            # point tools to spack installations
+            bcftools = self.spec['bcftools'].prefix.include
+            samtools = self.spec['samtools'].prefix.include
+            htslib = self.spec['htslib'].prefix.include
+            tabix = self.spec['tabix'].prefix.include
+
+            makefile.filter('SAMTOOLS=.*$',
+                            'SAMTOOLS=%s' % samtools)
+            makefile.filter('HTSLIB=.*$',
+                            'HTSLIB=%s' % htslib)
+            makefile.filter('BCFTOOLS=.*$',
+                            'BCFTOOLS=%s' % bcftools)
+            makefile.filter('TABIX=.*$',
+                            'TABIX=%s' % tabix)
+            # fix bad linking dirs
+            makefile.filter('$(SAMTOOLS)/libbam.a',
+                            '$(SAMTOOLS)/../lib/libbam.a', string=True)
+            makefile.filter('$(HTSLIB)/libhts.a',
+                            '$(HTSLIB)/../lib/libhts.a', string=True)
 
     def install(self, spec, prefix):
         install_tree('bin', join_path(self.spec.prefix, 'bin'))

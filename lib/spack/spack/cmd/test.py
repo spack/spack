@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import sys
@@ -53,6 +34,10 @@ def setup_parser(subparser):
     list_group.add_argument(
         '-L', '--long-list', action='store_true', default=False,
         help="list the entire hierarchy of tests")
+    subparser.add_argument(
+        '--extension', default=None,
+        help="run test for a given Spack extension"
+    )
     subparser.add_argument(
         'tests', nargs=argparse.REMAINDER,
         help="list of tests to run (will be passed to pytest -k)")
@@ -96,8 +81,16 @@ def test(parser, args, unknown_args):
         pytest.main(['-h'])
         return
 
-    # pytest.ini lives in lib/spack/spack/test
-    with working_dir(spack.paths.test_path):
+    # The default is to test the core of Spack. If the option `--extension`
+    # has been used, then test that extension.
+    pytest_root = spack.paths.test_path
+    if args.extension:
+        target = args.extension
+        extensions = spack.config.get('config:extensions')
+        pytest_root = spack.extensions.path_for_extension(target, *extensions)
+
+    # pytest.ini lives in the root of the spack repository.
+    with working_dir(pytest_root):
         # --list and --long-list print the test output better.
         if args.list or args.long_list:
             do_list(args, unknown_args)

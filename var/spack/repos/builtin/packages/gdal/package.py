@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 
@@ -37,7 +18,7 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/2.3.1/gdal-2.3.1.tar.xz"
+    url        = "http://download.osgeo.org/gdal/2.4.0/gdal-2.4.0.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 1
 
@@ -48,6 +29,10 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('2.4.1',  sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad')
+    version('2.4.0',  sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
+    version('2.3.3',  sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe')
+    version('2.3.2',  sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4')
     version('2.3.1',  sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a')
     version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
     version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
@@ -90,6 +75,7 @@ class Gdal(AutotoolsPackage):
     variant('armadillo', default=False, description='Include Armadillo support for faster TPS transform computation')
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
+    variant('grib',      default=False, description='Include GRIB support')
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
@@ -389,6 +375,11 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-armadillo=no')
 
+        if '+grib' in spec:
+            args.append('--with-grib=yes')
+        else:
+            args.append('--with-grib=no')
+
         # TODO: add packages for these dependencies
         args.extend([
             # https://trac.osgeo.org/gdal/wiki/GRASS
@@ -415,7 +406,6 @@ class Gdal(AutotoolsPackage):
             '--with-bsb=no',
             # https://trac.osgeo.org/gdal/wiki/Oracle
             '--with-oci=no',
-            '--with-grib=no',
             '--with-mysql=no',
             # https://trac.osgeo.org/gdal/wiki/Ingres
             '--with-ingres=no',
@@ -432,9 +422,12 @@ class Gdal(AutotoolsPackage):
             '--with-freexl=no',
             '--with-pam=no',
             '--with-podofo=no',
-            '--with-php=no',
             '--with-rasdaman=no',
         ])
+
+        # TODO: add packages for these dependencies (only for 2.3 and older)
+        if spec.satisfies('@:2.3'):
+            args.append('--with-php=no')
 
         # TODO: add packages for these dependencies (only for 2.3 and newer)
         if spec.satisfies('@2.3:'):
