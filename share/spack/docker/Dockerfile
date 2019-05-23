@@ -24,38 +24,6 @@ COPY var   $SPACK_ROOT/var
 RUN mkdir -p $SPACK_ROOT/opt/spack
 
 MASK PUSH
-MASK [[ $DISTRO == arch ]]
-RUN pacman -Syu --noconfirm                                    \
- && pacman -Sy --noconfirm                                     \
-        base-devel   ca-certificates curl    gcc               \
-        gcc-fortran  git             gnupg2  inetutils         \
-        iproute2     make            openssh procps-ng         \
-        python       python-pip      sudo    tcl               \
-        unzip                                                  \
- && echo 'nobody ALL=(ALL) NOPASSWD: ALL' >                    \
-        /etc/sudoers.d/nobody-sudo                             \
- && sudo -u nobody git clone                                   \
-        'https://aur.archlinux.org/lua-std-_debug.git'         \
-        '/tmp/lua-std-_debug'                                  \
- && sudo -u nobody git clone                                   \
-        'https://aur.archlinux.org/lua-std-normalize.git'      \
-        '/tmp/lua-std-normalize'                               \
- && sudo -u nobody git clone                                   \
-        'https://aur.archlinux.org/lua-posix.git'              \
-        '/tmp/lua-posix'                                       \
- && (  cd /tmp/lua-std-_debug                                  \
- &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
- && (  cd /tmp/lua-std-normalize                               \
- &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
- && (  cd /tmp/lua-posix                                       \
- &&    sudo -u nobody makepkg -si --asdeps --noconfirm )       \
- && sudo -u nobody git clone                                   \
-        'https://aur.archlinux.org/lmod.git' '/tmp/lmod'       \
- && (  cd /tmp/lmod                                            \
- &&    sudo -u nobody makepkg -si --noconfirm )                \
- && rm -rf /tmp/lua-std-_debug /tmp/lua-std-normalize          \
-           /tmp/lmod /etc/sudoers.d/nobody-sudo
-
 MASK [[ $DISTRO =~ (centos|rhel.*) ]]
 RUN yum update -y
 
@@ -77,32 +45,6 @@ RUN yum install -y epel-release                               \
         unzip                                                 \
  && rm -rf /var/cache/yum                                     \
  && yum clean all
-
-MASK [[ $DISTRO == fedora ]]
-RUN dnf update -y                                            \
- && dnf group install -y "C Development Tools and Libraries" \
- && dnf install -y                                           \
-        @development-tools                                   \
-        curl            findutils    gcc-c++     gcc         \
-        gcc-gfortran    git          gnupg2      hostname    \
-        iproute         Lmod         make        patch       \
-        openssh-server  python       tcl         unzip       \
- && dnf clean all
-
-MASK [[ $DISTRO == opensuse ]]
-RUN zypper -n ref                                              \
- && zypper -n up --skip-interactive --no-recommends            \
- && zypper -n install -l --no-recommends --type pattern        \
-        devel_basis  devel_C_C++                               \
- && zypper -n install -l --no-recommends                       \
-        bash        bash-completion ca-certificates curl       \
-        findutils   gcc             gcc-locale      gcc-c++    \
-        gcc-fortran git             glibc-locale    gpg2       \
-        hostname    iproute         lua-lmod        make       \
-        patch       openssh         python          python-pip \
-        python-xml  tcl             unzip                      \
- && zypper clean                                               \
- && rm -rf /var/cache/zypp/*
 
 MASK [[ $DISTRO == ubuntu ]]
 RUN apt-get -yqq update                                   \
@@ -155,7 +97,7 @@ RUN rm -rf $SPACK_ROOT/.git                                                \
  && rm -rf /root/*.*
 
 MASK PUSH
-MASK [[ $DISTRO_VERSION =~ (centos|fedora|opensuse|rhel.*) ]]
+MASK [[ $DISTRO_VERSION =~ (centos|rhel.*) ]]
 RUN rm -f /run/nologin
 MASK POP
 

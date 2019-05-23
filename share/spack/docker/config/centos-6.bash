@@ -5,12 +5,17 @@
 
 unset DISTRO
 unset DISTRO_VERSION
+unset DOCKERFILE
+unset DOCKER_BUILD_CONTEXT
 unset BASE_IMAGE
 unset BASE_NAME
 unset BASE_TAG
+unset NAME
 unset TAG
 unset EXTRA_TAGS
 
 export BASE_IMAGE=centos
-export BASE_TAG="6"
-export EXTRA_TAGS="centos6"
+export BASE_TAG=6
+export NAME=spack
+export TAG='${SPACK_VERSION}-centos-6'
+export EXTRA_TAGS="centos-6"

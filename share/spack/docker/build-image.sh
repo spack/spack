@@ -8,12 +8,26 @@
 script="$( basename "$0" )"
 cd "$( dirname "$0" )"
 
+export SPACK_VERSION="$( ../../../bin/spack --version )"
+
+if [ -z "$DOCKERFILE" ] ; then
+    DOCKERFILE="Dockerfile"
+fi
+
+if [ -z "$DOCKER_BUILD_CONTEXT" ] ; then
+    DOCKER_BUILD_CONTEXT="../../.."
+fi
+
 if [ -z "$BASE_IMAGE" ] ; then
     BASE_IMAGE="ubuntu"
 fi
 
 if [ -z "$BASE_TAG" ] ; then
     BASE_TAG="latest"
+fi
+
+if [ -z "$TAG" ] ; then
+    TAG="latest"
 fi
 
 if [ -z "$DISTRO" ] ; then
@@ -24,21 +38,35 @@ if [ -z "$DISTRO_VERSION" ] ; then
     DISTRO_VERSION="${BASE_TAG}"
 fi
 
-if [ -z "$BASE_NAME" ] ; then
-    BASE_NAME="${DISTRO}"
+if [ -z "$NAME" ] ; then
+    NAME="${DISTRO}"
 fi
 
 if [ "$BASE_TAG" '=' 'latest' ] ; then
     BASE_TAG=""
 fi
 
+if [ "$TAG" '=' 'latest' ] ; then
+    TAG=""
+fi
+
 if [ -n "$BASE_TAG" ] ; then
     BASE_TAG=":${BASE_TAG}"
 fi
 
-TAG="spack/${BASE_NAME}${BASE_TAG}"
+if [ -n "$TAG" ] ; then
+    TAG=":${TAG}"
+fi
 
-export BASE_IMAGE BASE_TAG DISTRO DISTRO_VERSION BASE_NAME TAG
+eval "BASE_IMAGE=\"${BASE_IMAGE}\""
+eval "BASE_TAG=\"${BASE_TAG}\""
+eval "DISTRO=\"${DISTRO}\""
+eval "DISTRO_VERSION=\"${DISTRO_VERSION}\""
+eval "NAME=\"${NAME}\""
+eval "TAG=\"${TAG}\""
+eval "EXTRA_TAGS=\"${EXTRA_TAGS}\""
+
+export BASE_IMAGE BASE_TAG DISTRO DISTRO_VERSION NAME TAG EXTRA_TAGS
 
 if [ "$script" '=' 'run-image.sh' ] ; then
     com="docker run --rm -ti"
@@ -51,26 +79,26 @@ if [ "$script" '=' 'run-image.sh' ] ; then
     fi
 
     if [ "$DISABLE_MOUNT" '==' 0 ] ; then
-        com="${com} -v \"$( readlink -f ../../.. ):/spack\""
+        com="${com} -v \"$( readlink -f ../../.. ):/opt/spack\""
     fi
 
-    eval "exec ${com}" "${TAG}" "$@"
+    eval "exec ${com}" "spack/${NAME}${TAG}" "$@"
 elif [ "$script" '=' 'render-image-template.sh' ] ; then
-    ./dpp.bash Dockerfile
+    ./dpp.bash "$DOCKERFILE"
 elif [ "$script" '=' 'push-image.sh' ] ; then
-    docker push "${TAG}"
+    docker push "spack/${NAME}${TAG}"
     for tag in ${EXTRA_TAGS} ; do
         docker push "spack/${BASE_NAME}:${tag}"
     done
 else
-    tag_options="-t ${TAG}"
+    tag_options="-t spack/${NAME}${TAG}"
     for tag in ${EXTRA_TAGS} ; do
-        tag_options="${tag_options} -t spack/${BASE_NAME}:${tag}"
+        tag_options="${tag_options} -t spack/${NAME}:${tag}"
     done
 
     cache_options=""
-    if docker pull "${TAG}" ; then
-        cache_options="--cache-from ${TAG}"
+    if docker pull "spack/${NAME}${TAG}" ; then
+        cache_options="--cache-from spack/${NAME}${TAG}"
     fi
 
     exec ./render-image-template.sh |
@@ -80,5 +108,5 @@ else
                       --build-arg BASE="${BASE_IMAGE}${BASE_TAG}"    \
                       --build-arg DISTRO="${DISTRO}"                 \
                       --build-arg DISTRO_VERSION="${DISTRO_VERSION}" \
-                      ../../..
+                      "$DOCKER_BUILD_CONTEXT"
 fi
