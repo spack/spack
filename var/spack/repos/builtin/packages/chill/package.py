@@ -22,20 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Author: Derick Huth <derick.huth@utah.edu>
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 from spack import *
 
 
 class Chill(Package):
-    """FIXME: Put a proper description of your package here."""
+    """A polyheadral compiler for autotuning"""
 
     homepage = "http://github.com/CtopCsUtahEdu"
     url      = "https://github.com/CtopCsUtahEdu/chill/archive/v0.3.tar.gz"
     git      = "https://github.com/CtopCsUtahEdu/chill.git"
 
-    #version('0.3', sha256='574b622368a6bfaadbe9c1fa02fabefdc6c006069246f67d299f943b7e1d8aa3')
     version('master', branch='master')
 
     depends_on('rose-for-chill@0.9.10.0 +cxx11')
@@ -47,10 +46,10 @@ class Chill(Package):
         rose_home = self.spec['rose-for-chill'].prefix
         boost_home = self.spec['boost'].prefix
         iegen_home = self.spec['iegenlib'].prefix
-        
+
         spack_env.append_path('LD_LIBRARY_PATH', rose_home + '/lib')
         run_env.append_path('LD_LIBRARY_PATH', boost_home + '/lib')
-        
+
         spack_env.set('ROSEHOME', rose_home)
         spack_env.set('BOOSTHOME', boost_home)
         spack_env.set('IEGENHOME', iegen_home)
@@ -66,4 +65,3 @@ class Chill(Package):
             '--with-iegen={0}'.format(spec['iegenlib'].prefix))
         make()
         make('install')
-
