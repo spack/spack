@@ -39,12 +39,15 @@ available.  You can see a list of available package names at the
 ``spack list``
 ^^^^^^^^^^^^^^
 
-The ``spack list`` command prints out a list of all of the packages
-Spack can install:
+The ``spack list`` command prints out a list of all of the packages Spack
+can install:
 
 .. command-output:: spack list
+   :ellipsis: 10
 
-The packages are listed by name in alphabetical order.
+There are thosands of them, so we've truncated the output above, but you
+can find a :ref:`full list here <package-list>`.
+Packages are listed by name in alphabetical order.
 A pattern to match with no wildcards, ``*`` or ``?``,
 will be treated as though it started and ended with
 ``*``, so ``util`` is equivalent to ``*util*``.  All patterns will be treated
