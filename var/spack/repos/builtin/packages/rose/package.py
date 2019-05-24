@@ -24,8 +24,6 @@ class Rose(AutotoolsPackage):
     version('0.9.9.0',  tag='v0.9.9.0')
     version('0.9.7.0',  tag='v0.9.7.0')
 
-    #patch('add_spack_compiler_recognition.patch')
-
     depends_on("autoconf@2.69:", type='build')
     depends_on("automake@1.14:", type='build')
     depends_on("libtool@2.4:", type='build')
@@ -33,7 +31,6 @@ class Rose(AutotoolsPackage):
     depends_on("flex", type='build')
     depends_on("boost@1.56.0:1.60.0", when="~cxx11")
     depends_on("boost@1.60.0",        when="+cxx11")
-    
 
     variant('tests', default=False, description='Build the tests directory')
 
@@ -100,6 +97,5 @@ class Rose(AutotoolsPackage):
             args.append("CXXFLAGS=-std=c++11")
         
         return args
-        
 
     install_targets = ["install-core"]
