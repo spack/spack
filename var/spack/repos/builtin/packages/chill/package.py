@@ -53,11 +53,11 @@ class Chill(Package):
         spack_env.set('ROSEHOME', rose_home)
         spack_env.set('BOOSTHOME', boost_home)
         spack_env.set('IEGENHOME', iegen_home)
-    
+
     def install(self, spec, prefix):
         bash = which('bash')
         bash('./bootstrap')
-        
+
         configure(
             '--prefix={0}'.format(prefix),
             '--with-rose={0}'.format(spec['rose'].prefix),

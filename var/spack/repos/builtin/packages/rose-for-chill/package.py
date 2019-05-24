@@ -89,12 +89,12 @@ class RoseForChill(AutotoolsPackage):
         spec = self.spec
         cc = self.compiler.cc
         cxx = self.compiler.cxx
-        
+ 
         if spec.satisfies('@0.9.8:'):
             edg = '4.12'
         else:
             edg = '4.9'
-        
+
         args = [
             '--disable-boost-version-check',
             '--enable-edg_version={0}'.format(edg),
@@ -107,10 +107,10 @@ class RoseForChill(AutotoolsPackage):
             '--enable-tutorial-directory={0}'.format('no'),
             '--without-java',
         ]
-        
+
         if '+cxx11' in spec:
             args.append("CXXFLAGS=-std=c++11")
-        
+
         return args
 
     install_targets = ["install-core"]

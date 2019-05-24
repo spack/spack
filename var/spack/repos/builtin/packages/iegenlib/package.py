@@ -40,7 +40,7 @@ class Iegenlib(Package):
     git      = "https://github.com/CompOpt4Apps/IEGenLib.git"
 
     version('master', branch='master')
-    
+
     depends_on('cmake@2.6:', type='build')
     depends_on('isl')
     depends_on('texinfo', type='build')
