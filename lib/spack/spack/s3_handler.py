@@ -15,7 +15,7 @@ from six.moves.urllib.request import build_opener, install_opener, HTTPSHandler
 from llnl.util.lang import memoized
 
 import spack
-from spack.util.url import parse as urlparse
+from spack.util.url import parse as urlparse, join as urljoin
 
 from spack.util.s3 import create_s3_session
 
@@ -126,22 +126,46 @@ HTTP_HEADERS_KEY_ALIASES = (
 )
 
 
+def _s3_open(url):
+    parsed = urlparse(url)
+    s3 = create_s3_session(parsed)
+    obj = s3.get_object(
+            Bucket=parsed.s3_bucket,
+            Key=parsed.path)
+
+    # NOTE(opadron): Apply workaround here (see above)
+    stream = WrapStream(obj['Body'])
+    headers = MappingViewWithKeyAliases(
+            obj['ResponseMetadata']['HTTPHeaders'],
+            HTTP_HEADERS_KEY_ALIASES)
+
+    return url, headers, stream
+
+
 class UrllibS3Handler(HTTPSHandler):
     def s3_open(self, req):
-        full_url = req.get_full_url()
-        parsed_url = urlparse(full_url)
-        s3 = create_s3_session(parsed_url)
-        obj = s3.get_object(
-                Bucket=parsed_url.s3_bucket,
-                Key=parsed_url.path)
+        orig_url = req.get_full_url()
+        from botocore.exceptions import ClientError
+        try:
+            url, headers, stream = _s3_open(orig_url)
+            return addinfourl(stream, headers, url)
+        except ClientError as err:
+            # if no such [KEY], but [KEY]/index.html exists,
+            # return that, instead.
+            if err.response['Error']['Code'] == 'NoSuchKey':
+                try:
+                    _, headers, stream = _s3_open(
+                            urljoin(orig_url, 'index.html'))
+                    return addinfourl(stream, headers, orig_url)
 
-        # NOTE(opadron): Apply workaround here (see above)
-        stream = WrapStream(obj['Body'])
-        headers = MappingViewWithKeyAliases(
-                obj['ResponseMetadata']['HTTPHeaders'],
-                HTTP_HEADERS_KEY_ALIASES)
+                except ClientError as err2:
+                    if err.response['Error']['Code'] == 'NoSuchKey':
+                        raise err # raise original error
 
-        return addinfourl(stream, headers, full_url)
+                    raise err2
+
+            raise err
+
 
 S3OpenerDirector = build_opener(UrllibS3Handler())
 

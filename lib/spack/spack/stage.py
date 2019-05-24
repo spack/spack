@@ -256,7 +256,7 @@ class Stage(object):
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
         if isinstance(url_or_fetch_strategy, string_types):
-            self.fetcher = fs.from_url(url_or_fetch_strategy)
+            self.fetcher = fs.from_url_scheme(url_or_fetch_strategy)
         elif isinstance(url_or_fetch_strategy, fs.FetchStrategy):
             self.fetcher = url_or_fetch_strategy
         else:
@@ -421,8 +421,7 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
-                fetchers.insert(
-                    0, fs.from_url_scheme(
+                fetchers.append(fs.from_url_scheme(
                         url, digest, expand=expand, extension=extension))
                 # fetchers.insert(
                 #     0, fs.URLFetchStrategy(

@@ -163,7 +163,9 @@ def read_from_url(url, accept_content_type=None):
     return response.geturl(), response.headers, response
 
 
-def push_to_url(local_path, remote_path, keep_original=True, public=False):
+def push_to_url(local_path, remote_path, **kwargs):
+    keep_original = kwargs.get('keep_original', True)
+
     local_url = urlparse(local_path)
     if local_url.scheme != 'file':
         raise ValueError('local path must be a file:// url')
@@ -191,8 +193,11 @@ def push_to_url(local_path, remote_path, keep_original=True, public=False):
             os.rename(local_url.path, remote_url.path)
 
     elif remote_url.scheme == 's3':
+        extra_args = kwargs.get('extra_args', {})
+
         s3 = create_s3_session(remote_url)
-        s3.upload_file(local_url.path, remote_url.s3_bucket, remote_url.path)
+        s3.upload_file(local_url.path, remote_url.s3_bucket,
+                       remote_url.path, ExtraArgs=extra_args)
 
         if not keep_original:
             os.remove(local_url.path)
@@ -590,7 +595,7 @@ def get_checksums_for_versions(
             *spack.cmd.elide_list(
                 ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
-    print()
+    tty.msg('')
 
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=1, abort='q')

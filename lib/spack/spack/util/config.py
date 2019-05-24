@@ -21,7 +21,7 @@ def iter_mirrors(mirrors=None, scope=None):
              getattr(mirror, 'fetch', mirror),
              getattr(mirror, 'push', mirror))
 
-            for mirror in (
+            for name, mirror in (
                 mirrors.items() if mirrors is not None else
                 spack.config.get('mirrors', scope=scope).items()))
 

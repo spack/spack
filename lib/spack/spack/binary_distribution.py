@@ -284,7 +284,8 @@ def generate_package_index(build_cache_dir):
         push_to_url(
                 index_html_path,
                 urljoin(build_cache_dir, 'index.html'),
-                keep_original=False)
+                keep_original=False,
+                extra_args={'ContentType': 'text/html'})
     finally:
         shutil.rmtree(tmpdir)
 
