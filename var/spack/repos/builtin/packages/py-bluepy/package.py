@@ -13,7 +13,7 @@ class PyBluepy(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/bluepy"
 
     version('develop', branch='master')
-    version('0.13.3', tag='bluepy-v0.13.3', preferred=True)
+    version('0.13.5', tag='bluepy-v0.13.5', preferred=True)
     version('0.12.7', tag='bluepy-v0.12.7')
 
     depends_on('py-setuptools', type=('build', 'run'))
@@ -30,8 +30,8 @@ class PyBluepy(PythonPackage):
     depends_on('py-six@1.0:', type='run')
     depends_on('py-sqlalchemy@1.0:', type='run')
 
-    depends_on('libsonata+python', type='run')
     depends_on('py-bluepy-configfile@0.1:', type='run')
+    depends_on('py-libsonata@0.0.2:', type='run')
 
     # TODO: remove once legacy dependencies are removed from BluePy
     def patch(self):

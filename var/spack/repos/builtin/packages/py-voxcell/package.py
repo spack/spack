@@ -13,7 +13,8 @@ class PyVoxcell(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/voxcell"
 
     version('develop', branch='master')
-    version('2.5.6', tag='voxcell-v2.5.6', preferred=True)
+    version('2.6.0', tag='voxcell-v2.6.0', preferred=True)
+    version('2.5.6', tag='voxcell-v2.5.6')
 
     depends_on('py-setuptools', type='build')
 
@@ -25,3 +26,5 @@ class PyVoxcell(PythonPackage):
     depends_on('py-requests@2.18:', type='run')
     depends_on('py-scipy@0.13:', type='run')
     depends_on('py-six@1.0:', type='run')
+
+    depends_on('py-libsonata@0.0.2:', type='run')
