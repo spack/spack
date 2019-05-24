@@ -40,6 +40,7 @@ packages:
       ninja-fortran: [ninja-fortran, ninja@kitware]
       opencl: [pocl]
       openfoam: [openfoam-com, openfoam-org, foam-extend]
+      osmesa: [mesa+osmesa, mesa18+osmesa]
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
