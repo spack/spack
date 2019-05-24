@@ -21,4 +21,3 @@ class IntelMklDnn(CMakePackage):
     version('0.9',  'dfb89d8f9d0bce55e878df32544cb0ea')
 
     depends_on('intel-mkl')
-
