@@ -396,9 +396,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
 
-    #: # jobs to use for parallel make. If set, overrides default of ncpus.
-    make_jobs = None
-
     #: By default do not run tests within package's install()
     run_tests = False
 
@@ -1369,8 +1366,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             skip_patch (bool): Skip patch stage of build if True.
             verbose (bool): Display verbose build output (by default,
                 suppresses it)
-            make_jobs (int): Number of make jobs to use for install. Default
-                is ncpus
             fake (bool): Don't really build; install fake stub files instead.
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
@@ -1393,7 +1388,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         install_deps = kwargs.get('install_deps', True)
         skip_patch = kwargs.get('skip_patch', False)
         verbose = kwargs.get('verbose', False)
-        make_jobs = kwargs.get('make_jobs', None)
         fake = kwargs.get('fake', False)
         explicit = kwargs.get('explicit', False)
         tests = kwargs.get('tests', False)
@@ -1468,9 +1462,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Set run_tests flag before starting build
         self.run_tests = (tests is True or
                           tests and self.name in tests)
-
-        # Set parallelism before starting build.
-        self.make_jobs = make_jobs
 
         # Then install the package itself.
         def build_process():
