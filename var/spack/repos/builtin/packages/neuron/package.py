@@ -50,7 +50,6 @@ class Neuron(Package):
     depends_on('libtool',    type='build')
     depends_on('pkgconfig',  type='build')
 
-    depends_on('readline')
     depends_on('mpi',         when='+mpi')
     depends_on('ncurses',     when='~cross-compile')
     depends_on('python@2.6:', when='+python', type=('build', 'link', 'run'))
@@ -64,6 +63,7 @@ class Neuron(Package):
                         '--without-x']
     _specs_to_options = {
         '+cross-compile': ['cross_compiling=yes',
+                           '--without-readline',
                            '--without-memacs',
                            '--without-nmodl'],
         '~python':    ['--without-nrnpython'],
@@ -205,15 +205,11 @@ class Neuron(Package):
         options.extend(self.get_python_options(spec))
         options.extend(self.get_compilation_options(spec))
 
-        options.append('--with-readline=%s' % spec['readline'].prefix)
-        ld_flags = 'LDFLAGS=-L{0.prefix.lib} {0.libs.rpath_flags}'.format(spec['readline'])
-
+        # To support prompt (not cross-compile) use readline + ncurses
         if 'ncurses' in spec:
-            options.extend(['CURSES_LIBS=%s' % spec['ncurses'].libs.ld_flags,
-                            'CURSES_CFLAGS=%s' % spec['ncurses'].prefix.include])
-            ld_flags += ' -L{0.prefix.lib} {0.libs.rpath_flags}'.format(spec['ncurses'])
-
-        options.append(ld_flags)
+            options.extend(['--with-readline=no',  # Use builtin readline
+                            'CURSES_LIBS={0.rpath_flags} {0.ld_flags}'.format(spec['ncurses'].libs),
+                            'CURSES_CFLAGS={}'.format(spec['ncurses'].prefix.include)])
 
         build = Executable('./build.sh')
         build()

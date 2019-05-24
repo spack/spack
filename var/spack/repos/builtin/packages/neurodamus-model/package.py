@@ -97,11 +97,8 @@ class NeurodamusModel(SimModel):
         python/ If neurodamus-core comes with python, create links
         """
         # base dest dirs already created by model install
-        arch = arch = spec.architecture.target
-        dst_libname = 'libnrnmech{}.so'.format(self._lib_suffix)
-        shutil.move(join_path(arch, 'special'), prefix.bin.join('special'))
-        shutil.move(arch + "/.libs/libnrnmech.so", prefix.lib.join(dst_libname))
-        self._patch_special(prefix, dst_libname)
+        # We install binaries normally, except lib has a suffix
+        self._install_binaries(lib_suffix=self._lib_suffix)
 
         if spec.satisfies('+coreneuron'):
             install = which('nrnivmech_install.sh', path=".")
@@ -124,6 +121,7 @@ class NeurodamusModel(SimModel):
         run_env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
         run_env.set('NEURON_INIT_MPI', "1")  # Always Init MPI (support python)
 
+	# TODO: This is very fragile. The vars only exist if we compiled.
         if hasattr(self, '_incflags'):
             run_env.set('ND_INCFLAGS', self._incflags)
             run_env.set('ND_LOADFLAGS', self._loadflags)

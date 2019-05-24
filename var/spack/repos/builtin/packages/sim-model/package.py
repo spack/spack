@@ -102,10 +102,7 @@ class SimModel(Package):
         mkdirp(prefix.lib)
         mkdirp(prefix.share.modc)
 
-        arch = spec.architecture.target
-        shutil.move(join_path(arch, 'special'), prefix.bin)
-        shutil.move(arch + "/.libs/libnrnmech.so", prefix.lib)
-        self._patch_special(prefix)
+        self._install_binaries()
 
         if spec.satisfies('+coreneuron'):
             install = which('nrnivmech_install.sh', path=".")
@@ -114,13 +111,27 @@ class SimModel(Package):
         if install_src:
             self._install_src(prefix)
 
-    @staticmethod
-    def _patch_special(prefix, libname='libnrnmech.so'):
-        """Patch bash-based special to point to nrnmech lib inside lib/
-        """
-        which('sed')('-i',
-                     's#-dll .*#-dll %s "$@"#' % prefix.lib.join(libname),
+    def _install_binaries(self, lib_suffix=''):
+        # Install special
+        arch = self.spec.architecture.target
+        prefix = self.prefix
+        shutil.copy(join_path(arch, 'special'), prefix.bin)
+
+        # Install libnrnmech - might have several links.
+        for f in find(arch + "/.libs", 'libnrnmech*.so*', recursive=False):
+            if not os.path.islink(f):
+                bname = os.path.basename(f)
+                lib_dst = prefix.lib.join(bname[:bname.find(".")] + lib_suffix + ".so")
+                shutil.move(f, lib_dst)
+                break
+        else:
+            raise Exception("No libnrnmech found")
+
+        # Patch special for the new libname
+        which('sed')('-i.bak',
+                     's#-dll .*#-dll %s "$@"#' % lib_dst,
                      prefix.bin.special)
+        os.remove(prefix.bin.join('special.bak'))
 
     def _install_src(self, prefix):
         """Copy original and translated c mods
