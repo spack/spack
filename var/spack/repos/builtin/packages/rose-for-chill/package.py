@@ -89,7 +89,7 @@ class RoseForChill(AutotoolsPackage):
         spec = self.spec
         cc = self.compiler.cc
         cxx = self.compiler.cxx
- 
+
         if spec.satisfies('@0.9.8:'):
             edg = '4.12'
         else:
