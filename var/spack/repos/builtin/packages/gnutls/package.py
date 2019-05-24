@@ -26,7 +26,7 @@ class Gnutls(AutotoolsPackage):
 
     def url_for_version(self, version):
         url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v{0}/gnutls-{1}.tar.xz"
-        return url.format(version.up_to(2), version)    
+        return url.format(version.up_to(2), version)
     
     variant('zlib', default=True, description='Enable zlib compression support')
 
