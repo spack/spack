@@ -1,0 +1,30 @@
+--- a/packages/kokkos/cmake/kokkos_settings.cmake
++++ b/packages/kokkos/cmake/kokkos_settings.cmake
+@@ -123,6 +123,7 @@
+   endif()
+ endforeach()
+ # Path env is : delimitted
++list(REMOVE_DUPLICATES addpath1)
+ string(REPLACE ";" ":" KOKKOS_INTERNAL_ADDTOPATH "${addpathl}")
+
+
+@@ -159,7 +160,18 @@ if (NOT "${KOKKOS_INTERNAL_PATHS}" STREQUAL "")
+   set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} ${KOKKOS_INTERNAL_PATHS})
+ endif()
+ if (NOT "${KOKKOS_INTERNAL_ADDTOPATH}" STREQUAL "")
+-  set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} "PATH=\"${KOKKOS_INTERNAL_ADDTOPATH}:$ENV{PATH}\"")
++  string( REPLACE ":" ";" pathlist "$ENV{PATH}")
++  list(REMOVE_DUPLICATES pathlist)
++  unset(tmp)
++  message("pathlist = ${pathlist}")
++  foreach( item ${pathlist} )
++    if( NOT "${item}" MATCHES "spack" )
++      list(APPEND tmp "${item}")
++      message("tmp = ${tmp}")
++    endif()
++  endforeach()
++  string( REPLACE ";" ":" spath "${tmp}")
++  set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} "PATH=\"${KOKKOS_INTERNAL_ADDTOPATH}:${spath}\"")
+ endif()
+
+ if (CMAKE_CXX_STANDARD)

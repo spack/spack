@@ -112,6 +112,9 @@ class Trilinos(CMakePackage):
         msg='Must enable CUDA to use rdc.')
     conflicts('+kokkos_enable_cuda_lambda', when='~cuda',
         msg='Must enable CUDA to use enable_lambda.')
+    # Tpetra+cuda requires these options to be enabled.
+    conflicts('~kokkos_enable_cuda_lambda', when='+cuda+tpetra')
+    conflicts('~kokkos_enable_cuda_uvm', when='+cuda+tpetra')
 
     # TPLs (alphabet order)
     variant('boost',        default=True,
@@ -355,6 +358,7 @@ class Trilinos(CMakePackage):
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
+    patch('kokkos.argtoolong.patch', when='@12.14.1')
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
@@ -385,6 +389,7 @@ class Trilinos(CMakePackage):
                 'ON' if '+shared' in spec else 'OFF'),
             '-DTrilinos_ENABLE_DEBUG:BOOL=%s' % (
                 'ON' if '+debug' in spec else 'OFF'),
+            '-DCMAKE_CXX_USE_RESPONSE_FILE_FOR_OBJECTS:BOOL=ON',
 
             # The following can cause problems on systems that don't have
             # static libraries available for things like dl and pthreads
@@ -741,12 +746,12 @@ class Trilinos(CMakePackage):
                 ])
             if '+muelu' in spec:
                 options.extend([
-                    '-DMueLu_ENABLE_Kokkos_Refactor_Use_By_Default:BOOL=ON'
+                    '-DMueLu_ENABLE_Kokkos_Refactor:BOOL=ON',
+                    '-DXpetra_ENABLE_Kokkos_Refactor:BOOL=ON'
                 ])
             if '+tpetra' in spec:
                 options.extend([
                     '-DTpetra_INST_CUDA:BOOL=ON',
-                    '-DTpetra_ASSUME_CUDA_AWARE_MPI:BOOL=ON',
                     '-DTpetra_ETI_SCALARS_KOKKOS:BOOL=ON',
                     '-DPanzer_ENABLE_FADTYPE:STRING=' +
                     'Sacado::Fad::DFad<RealType>'
@@ -807,6 +812,11 @@ class Trilinos(CMakePackage):
                 '-DTpetra_INST_COMPLEX_FLOAT=%s' % complex_float_s,
                 '-DTpetra_INST_FLOAT=%s' % float_s,
                 '-DTpetra_INST_SERIAL=ON'
+            ])
+
+        if '+explicit_template_instantiation' in spec and '+kokkos' in spec:
+            options.extend([
+                '-DKOKKOS_ENABLE_EXPLICIT_INSTANTIATION=ON'
             ])
 
         # disable due to compiler / config errors:
