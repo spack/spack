@@ -24,10 +24,6 @@ class Gnutls(AutotoolsPackage):
     version('3.5.9',  '0ab25eb6a1509345dd085bc21a387951')
     version('3.3.9',  'ff61b77e39d09f1140ab5a9cf52c58b6')
 
-    def url_for_version(self, version):
-        url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v{0}/gnutls-{1}.tar.xz"
-        return url.format(version.up_to(2), version)
-    
     variant('zlib', default=True, description='Enable zlib compression support')
 
     # Note that version 3.3.9 of gnutls doesn't support nettle 3.0.
