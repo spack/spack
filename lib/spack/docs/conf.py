@@ -150,7 +150,7 @@ release = spack.spack_version
 
 # Sphinx gettext settings
 gettext_compact = True
-gettext_uuid = True
+gettext_uuid = False
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
