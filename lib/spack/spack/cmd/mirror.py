@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 import os
 from datetime import datetime
 
@@ -205,6 +206,7 @@ def mirror_create(args):
         if error:
             tty.error("Failed downloads:")
             colify(s.cformat("{name}{@version}") for s in error)
+            sys.exit(1)
 
 
 def mirror(parser, args):
