@@ -243,7 +243,7 @@ function _spack_clone {
 function _spack_commands {
     if $list_options
     then
-        compgen -W "-h --help --format" -- "$cur"
+        compgen -W "-h --help --format --header --update" -- "$cur"
     fi
 }
 
@@ -664,7 +664,7 @@ function _spack_license_verify {
 function _spack_list {
     if $list_options
     then
-        compgen -W "-h --help -d --search-description --format
+        compgen -W "-h --help -d --search-description --format --update
                     -t --tags" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
