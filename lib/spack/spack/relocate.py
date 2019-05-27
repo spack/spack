@@ -596,4 +596,5 @@ def mime_type(file):
     tty.debug('[MIME_TYPE] {0} -> {1}'.format(file, output.strip()))
     if '/' not in output:
         output += '/'
-    return tuple(output.strip().split('/'))
+    split_by_slash = output.strip().split('/')
+    return (split_by_slash[0], "/".join(split_by_slash[1:]))
