@@ -99,7 +99,7 @@ class SimModel(Package):
         share/ <- neuron & coreneuron mod.c's (modc and modc_core)
         """
         mkdirp(prefix.bin)
-        mkdirp(prefix.lib)
+        mkdirp(prefix.lib.mod, prefix.lib.hoc)
         mkdirp(prefix.share.modc)
 
         self._install_binaries()
@@ -137,9 +137,8 @@ class SimModel(Package):
         """Copy original and translated c mods
         """
         arch = self.spec.architecture.target
-        shutil.move('mod', prefix.lib.mod)
-        shutil.move('hoc', prefix.lib.hoc)
-        shutil.move('common', prefix.lib.common)
+        copy_all('mod', prefix.lib.mod)
+        copy_all('hoc', prefix.lib.hoc)
 
         for cmod in find(arch, "*.c", recursive=False):
             shutil.move(cmod, prefix.share.modc)

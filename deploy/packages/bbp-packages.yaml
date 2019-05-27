@@ -89,8 +89,8 @@ packages:
       # - lapack
       - python
     specs:
-      - py-bluepymm@0.6.38 ^neuron~mpi
-      - py-bluepyopt@1.6.56 ^neuron~mpi
+      - py-bluepymm@0.6.38
+      - py-bluepyopt@1.6.56
       - py-efel@3.0.22
       - py-bglibpy
 

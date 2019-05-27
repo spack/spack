@@ -16,7 +16,7 @@ class PyBglibpy(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('neuron+python~mpi', type='run')
+    depends_on('neuron+python', type='run')
     depends_on('py-h5py~mpi@2.3:', type='run')
 
     depends_on('py-bluepy@0.13.2:', type='run')

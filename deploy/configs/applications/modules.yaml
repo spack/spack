@@ -65,6 +65,7 @@ modules:
         '^python@:2.99': '/python2'
         '^python@3:': '/python3'
         '+mpi': '/parallel'
+        '~mpi': '/serial'
       environment:
         set:
           '${PACKAGE}_ROOT': '${PREFIX}'
