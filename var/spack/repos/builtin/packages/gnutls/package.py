@@ -17,6 +17,7 @@ class Gnutls(AutotoolsPackage):
     homepage = "http://www.gnutls.org"
     url      = "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.5/gnutls-3.5.19.tar.xz"
 
+    version('3.6.8', sha256='aa81944e5635de981171772857e72be231a7e0f559ae0292d2737de475383e83')
     version('3.6.7.1', sha256='881b26409ecd8ea4c514fd3fbdb6fae5fab422ca7b71116260e263940a4bbbad')
     version('3.5.19', sha256='1936eb64f03aaefd6eb16cef0567457777618573826b94d03376bb6a4afadc44')
     version('3.5.13', '4fd41ad86572933c2379b4cc321a0959')
@@ -25,9 +26,11 @@ class Gnutls(AutotoolsPackage):
     version('3.3.9',  'ff61b77e39d09f1140ab5a9cf52c58b6')
 
     variant('zlib', default=True, description='Enable zlib compression support')
+    variant('guile', default=True, description='Enable Guile bindings')
 
     # Note that version 3.3.9 of gnutls doesn't support nettle 3.0.
     depends_on('nettle@3.4.1:', when='@3.6.7.1:')
+    depends_on('guile', when='+guile')
     depends_on('nettle@:2.9', when='@3.3.9')
     depends_on('nettle', when='@3.5:')
     depends_on('libidn2@:2.0.99', when='@:3.5.99')
@@ -58,6 +61,11 @@ class Gnutls(AutotoolsPackage):
             args.append('--with-zlib')
         else:
             args.append('--without-zlib')
+
+        if '+guile' in spec:
+            args.append('--enable-guile')
+        else:
+            args.append('--disable-guile')
 
         if self.run_tests:
             args.extend([
