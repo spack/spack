@@ -99,7 +99,7 @@ config:
   locks: true
 
 
-  # The tentative number of jobs to use when running `make` in parallel,
+  # The maximum number of jobs to use when running `make` in parallel,
   # always limited by the number of cores available. For instance:
   # - If set to 16 on a 4 cores machine `spack install` will run `make -j4`
   # - If set to 16 on a 18 cores machine `spack install` will run `make -j16`
