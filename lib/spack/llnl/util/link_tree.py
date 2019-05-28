@@ -5,6 +5,8 @@
 
 """LinkTree class for setting up trees of symbolic links."""
 
+from __future__ import print_function
+
 import os
 import shutil
 import filecmp
@@ -15,6 +17,16 @@ import llnl.util.tty as tty
 __all__ = ['LinkTree']
 
 empty_file_name = '.spack-empty'
+
+
+def remove_link(src, dest):
+    if not os.path.islink(dest):
+        raise ValueError("%s is not a link tree!" % dest)
+    # remove if dest is a hardlink/symlink to src; this will only
+    # be false if two packages are merged into a prefix and have a
+    # conflicting file
+    if filecmp.cmp(src, dest, shallow=True):
+        os.remove(dest)
 
 
 class LinkTree(object):
@@ -100,16 +112,28 @@ class LinkTree(object):
                 if os.path.exists(marker):
                     os.remove(marker)
 
-    def merge(self, dest_root, **kwargs):
+    def merge(self, dest_root, ignore_conflicts=False, ignore=None,
+              link=os.symlink, relative=False):
         """Link all files in src into dest, creating directories
            if necessary.
-           If ignore_conflicts is True, do not break when the target exists but
-           rather return a list of files that could not be linked.
-           Note that files blocking directories will still cause an error.
-        """
-        ignore_conflicts = kwargs.get("ignore_conflicts", False)
 
-        ignore = kwargs.get('ignore', lambda x: False)
+        Keyword Args:
+
+        ignore_conflicts (bool): if True, do not break when the target exists;
+            return a list of files that could not be linked
+
+        ignore (callable): callable that returns True if a file is to be
+            ignored in the merge (by default ignore nothing)
+
+        link (callable): function to create links with (defaults to os.symlink)
+
+        relative (bool): create all symlinks relative to the target
+            (default False)
+
+        """
+        if ignore is None:
+            ignore = lambda x: False
+
         conflict = self.find_conflict(
             dest_root, ignore=ignore, ignore_file_conflicts=ignore_conflicts)
         if conflict:
@@ -117,40 +141,31 @@ class LinkTree(object):
 
         self.merge_directories(dest_root, ignore)
         existing = []
-        merge_file = kwargs.get('merge_file', merge_link)
         for src, dst in self.get_file_map(dest_root, ignore).items():
             if os.path.exists(dst):
                 existing.append(dst)
+            elif relative:
+                abs_src = os.path.abspath(src)
+                dst_dir = os.path.dirname(os.path.abspath(dst))
+                rel = os.path.relpath(abs_src, dst_dir)
+                link(rel, dst)
             else:
-                merge_file(src, dst)
+                link(src, dst)
 
         for c in existing:
             tty.warn("Could not merge: %s" % c)
 
-    def unmerge(self, dest_root, **kwargs):
+    def unmerge(self, dest_root, ignore=None, remove_file=remove_link):
         """Unlink all files in dest that exist in src.
 
         Unlinks directories in dest if they are empty.
         """
-        remove_file = kwargs.get('remove_file', remove_link)
-        ignore = kwargs.get('ignore', lambda x: False)
+        if ignore is None:
+            ignore = lambda x: False
+
         for src, dst in self.get_file_map(dest_root, ignore).items():
             remove_file(src, dst)
         self.unmerge_directories(dest_root, ignore)
-
-
-def merge_link(src, dest):
-    os.symlink(src, dest)
-
-
-def remove_link(src, dest):
-    if not os.path.islink(dest):
-        raise ValueError("%s is not a link tree!" % dest)
-    # remove if dest is a hardlink/symlink to src; this will only
-    # be false if two packages are merged into a prefix and have a
-    # conflicting file
-    if filecmp.cmp(src, dest, shallow=True):
-        os.remove(dest)
 
 
 class MergeConflictError(Exception):

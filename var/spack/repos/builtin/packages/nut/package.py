@@ -13,12 +13,13 @@ class Nut(CMakePackage):
     and performance issues."""
 
     homepage = "https://github.com/lanl/NuT"
+    url      = "https://github.com/lanl/NuT/archive/0.1.0.tar.gz"
     git      = "https://github.com/lanl/NuT.git"
 
     tags = ['proxy-app']
 
-    version('serial', branch='master')
-    version('openmp', branch='openmp')
+    version('master', branch='master')
+    version('0.1.1', sha256='9f1dca4a9d7003b170fd57d6720228ff25471616cf884e033652e90c49c089bb')
 
     depends_on('cmake@3.0:')
     depends_on('random123')

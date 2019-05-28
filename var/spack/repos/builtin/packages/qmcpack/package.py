@@ -22,6 +22,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.7.0', tag='v3.7.0')
     version('3.6.0', tag='v3.6.0')
     version('3.5.0', tag='v3.5.0')
     version('3.4.0', tag='v3.4.0')
@@ -39,7 +40,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     variant('mixed', default=False,
             description='Build the mixed precision (mixture of single and '
                         'double precision) version for gpu and cpu')
-    variant('soa', default=False,
+    variant('soa', default=True,
             description='Build with Structure-of-Array instead of '
                         'Array-of-Structure code. Only for CPU code'
                         'and only in mixed precision')
@@ -50,7 +51,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
     variant('qe', default=True,
-            description='Install with patched Quantum Espresso 6.3.0')
+            description='Install with patched Quantum Espresso 6.4.0')
 
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
@@ -140,16 +141,16 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('py-matplotlib', when='+gui', type='run')
 
     # B-spline basis calculation require a patched version of
-    # Quantum Espresso 6.3 (see QMCPACK manual)
+    # Quantum Espresso 6.4 (see QMCPACK manual)
     # Building explicitly without ELPA due to issues in Quantum Espresso
     # Spack package
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
-    patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
-    depends_on('quantum-espresso@6.3~elpa+mpi hdf5=parallel',
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
+    patch_checksum = 'ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994'
+    depends_on('quantum-espresso@6.4~elpa+mpi hdf5=parallel',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                    when='+qe+mpi', type='run')
 
-    depends_on('quantum-espresso@6.3~elpa~scalapack~mpi hdf5=serial',
+    depends_on('quantum-espresso@6.4~elpa~scalapack~mpi hdf5=serial',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                    when='+qe~mpi', type='run')
 

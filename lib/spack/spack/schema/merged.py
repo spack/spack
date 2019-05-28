@@ -5,7 +5,7 @@
 
 """Schema for configuration merged into one file.
 
-.. literalinclude:: ../spack/schema/merged.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/merged.py
    :lines: 39-
 """
 from llnl.util.lang import union_dicts

@@ -81,8 +81,6 @@ class Trilinos(CMakePackage):
             description='Compile with Boost')
     variant('cgns',         default=False,
             description='Enable CGNS')
-    variant('exodus',       default=True,
-            description='Compile with Exodus from SEACAS')
     variant('gtest',        default=True,
             description='Compile with Gtest')
     variant('hdf5',         default=True,
@@ -119,10 +117,17 @@ class Trilinos(CMakePackage):
             description='Compile with Aztec')
     variant('belos',        default=True,
             description='Compile with Belos')
+    # chaco is disabled by default. As of 12.14.1 libchaco.so
+    # has the global symbol divide (and maybe others) that can
+    # lead to symbol clash.
+    variant('chaco',       default=False,
+            description='Compile with Chaco from SEACAS')
     variant('epetra',       default=True,
             description='Compile with Epetra')
     variant('epetraext',    default=True,
             description='Compile with EpetraExt')
+    variant('exodus',       default=True,
+            description='Compile with Exodus from SEACAS')
     variant('ifpack',       default=True,
             description='Compile with Ifpack')
     variant('ifpack2',      default=True,
@@ -478,6 +483,18 @@ class Trilinos(CMakePackage):
             options.extend([
                 '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
                 '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF'
+            ])
+
+        if '+chaco' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_SEACAS:BOOL=ON'
+                '-DTrilinos_ENABLE_SEACASChaco:BOOL=ON'
+            ])
+        else:
+            # don't disable SEACAS, could be needed elsewhere
+            options.extend([
+                '-DTrilinos_ENABLE_SEACASChaco:BOOL=OFF',
+                '-DTrilinos_ENABLE_SEACASNemslice=OFF'
             ])
 
         # ######################### TPLs #############################

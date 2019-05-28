@@ -38,7 +38,8 @@ class Paraview(CMakePackage):
     variant('hdf5', default=False, description="Use external HDF5")
 
     depends_on('python@2:2.8', when='+python')
-    depends_on('py-numpy', when='+python', type='run')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
     # Matplotlib >2.x requires Python 3
     depends_on('py-matplotlib@:2.99', when='+python', type='run')
     depends_on('mpi', when='+mpi')
@@ -49,7 +50,7 @@ class Paraview(CMakePackage):
     depends_on('mesa+osmesa', when='+osmesa')
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
-    depends_on('libxt', when='+qt')
+    depends_on('libxt', when='~osmesa platform=linux')
     conflicts('+qt', when='+osmesa')
 
     depends_on('bzip2')
@@ -167,6 +168,7 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
+            '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+python+mpi'),
             '-DVTK_USE_SYSTEM_NETCDF:BOOL=ON',
             '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',

@@ -4,3 +4,4 @@
 sphinx==2.0.1
 sphinxcontrib-programoutput==0.14
 sphinx-rtd-theme==0.4.3
+python-levenshtein

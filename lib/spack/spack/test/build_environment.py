@@ -279,3 +279,20 @@ def test_set_build_environment_variables(
 
     finally:
         delattr(dep_pkg, 'libs')
+
+
+def test_parallel_false_is_not_propagating(config, mock_packages):
+    class AttributeHolder(object):
+        pass
+
+    # Package A has parallel = False and depends on B which instead
+    # can be built in parallel
+    s = spack.spec.Spec('a foobar=bar')
+    s.concretize()
+
+    for spec in s.traverse():
+        expected_jobs = spack.config.get('config:build_jobs') \
+            if s.package.parallel else 1
+        m = AttributeHolder()
+        spack.build_environment._set_variables_for_single_module(s.package, m)
+        assert m.make_jobs == expected_jobs

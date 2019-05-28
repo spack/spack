@@ -50,10 +50,6 @@ def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
 
-    if args.jobs is not None:
-        if args.jobs <= 0:
-            tty.die("the -j option must be a positive integer")
-
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
         tty.die("spack diy only takes one spec.")
