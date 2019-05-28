@@ -21,6 +21,7 @@ class Dealii(CMakePackage, CudaPackage):
     transitive_rpaths = False
 
     version('develop', branch='master')
+    version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
     version('9.1.0', sha256='5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600')
     version('9.0.1', sha256='df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64')
     version('9.0.0', sha256='c918dc5c1a31d62f6eea7b524dcc81c6d00b3c378d4ed6965a708ab548944f08')
