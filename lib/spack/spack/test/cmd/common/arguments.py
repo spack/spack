@@ -20,14 +20,38 @@ def parser():
     yield p
     # Cleanup the command line scope if it was set during tests
     if 'command_line' in spack.config.config.scopes:
-        spack.config.config.remove_scope('command_line')
+        spack.config.config.scopes['command_line'].clear()
 
 
-@pytest.mark.parametrize('cli_args,expected', [
+@pytest.fixture(params=[1, 2, 4, 8, 16, 32])
+def ncores(monkeypatch, request):
+    """Mocks having a machine with n cores for the purpose of
+    computing config:build_jobs.
+    """
+    def _cpu_count():
+        return request.param
+
+    # Patch multiprocessing.cpu_count() to return the value we need
+    monkeypatch.setattr(multiprocessing, 'cpu_count', _cpu_count)
+    # Patch the configuration parts that have been cached already
+    monkeypatch.setitem(spack.config.config_defaults['config'],
+                        'build_jobs', min(16, request.param))
+    monkeypatch.setitem(
+        spack.config.config.scopes, '_builtin',
+        spack.config.InternalConfigScope(
+            '_builtin', spack.config.config_defaults
+        ))
+    return request.param
+
+
+@pytest.mark.parametrize('cli_args,requested', [
     (['-j', '24'], 24),
-    ([], multiprocessing.cpu_count())
+    # Here we report the default if we have enough cores, as the cap
+    # on the available number of cores will be taken care of in the test
+    ([], 16)
 ])
-def test_setting_parallel_jobs(parser, cli_args, expected):
+def test_setting_parallel_jobs(parser, cli_args, ncores, requested):
+    expected = min(requested, ncores)
     namespace = parser.parse_args(cli_args)
     assert namespace.jobs == expected
     assert spack.config.get('config:build_jobs') == expected
