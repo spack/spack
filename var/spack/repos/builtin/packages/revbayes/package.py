@@ -41,6 +41,8 @@ class Revbayes(CMakePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         if '+mpi' in spec:
-            install(join_path(self.build_directory, '..', 'rb-mpi'), prefix.bin)
+            install_path = join_path(self.build_directory, '..', 'rb-mpi')
+            install(install_path, prefix.bin)
         else:
-            install(join_path(self.build_directory, '..', 'rb'), prefix.bin)
+            install_path = join_path(self.build_directory, '..', 'rb')
+            install(install_path, prefix.bin)
