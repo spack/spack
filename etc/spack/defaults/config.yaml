@@ -99,10 +99,12 @@ config:
   locks: true
 
 
-  # The default number of jobs to use when running `make` in parallel.
-  # If set to 4, for example, `spack install` will run `make -j4`.
-  # If not set, all available cores are used by default.
-  # build_jobs: 4
+  # The maximum number of jobs to use when running `make` in parallel,
+  # always limited by the number of cores available. For instance:
+  # - If set to 16 on a 4 cores machine `spack install` will run `make -j4`
+  # - If set to 16 on a 18 cores machine `spack install` will run `make -j16`
+  # If not set, Spack will use all available cores up to 16.
+  # build_jobs: 16
 
 
   # If set to true, Spack will use ccache to cache C compiles.

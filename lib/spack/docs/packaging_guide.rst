@@ -1713,12 +1713,11 @@ RPATHs in Spack are handled in one of three ways:
 Parallel builds
 ---------------
 
-By default, Spack will invoke ``make()`` with a ``-j <njobs>``
-argument, so that builds run in parallel.  It figures out how many
-jobs to run by determining how many cores are on the host machine.
-Specifically, it uses the number of CPUs reported by Python's
-`multiprocessing.cpu_count()
-<http://docs.python.org/library/multiprocessing.html#multiprocessing.cpu_count>`_.
+By default, Spack will invoke ``make()``, or any other similar tool,
+with a ``-j <njobs>`` argument, so that builds run in parallel.
+The parallelism is determined by the value of the ``build_jobs`` entry
+in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
+how this value is computed).
 
 If a package does not build properly in parallel, you can override
 this setting by adding ``parallel = False`` to your package.  For
