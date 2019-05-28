@@ -29,6 +29,9 @@
 ### SPACK_SIGNING_KEY
 ###
 ### CDASH_BASE_URL
+### CDASH_PROJECT
+### CDASH_PROJECT_ENC
+### CDASH_BUILD_NAME
 ### ROOT_SPEC
 ### DEPENDENCIES
 ### MIRROR_URL
@@ -45,7 +48,7 @@ SPEC_DIR="${TEMP_DIR}/specs"
 LOCAL_MIRROR="${CI_PROJECT_DIR}/local_mirror"
 BUILD_CACHE_DIR="${LOCAL_MIRROR}/build_cache"
 SPACK_BIN_DIR="${CI_PROJECT_DIR}/bin"
-CDASH_UPLOAD_URL="${CDASH_BASE_URL}/submit.php?project=Spack"
+CDASH_UPLOAD_URL="${CDASH_BASE_URL}/submit.php?project=${CDASH_PROJECT_ENC}"
 DEP_JOB_RELATEBUILDS_URL="${CDASH_BASE_URL}/api/v1/relateBuilds.php"
 declare -a JOB_DEPS_PKG_NAMES
 
@@ -163,8 +166,9 @@ gen_full_specs_for_job_and_deps() {
     local pkgVersion="${PARTSARRAY[1]}"
     local compiler="${PARTSARRAY[2]}"
     local osarch="${PARTSARRAY[3]}"
+    local buildGroup="${PARTSARRAY[@]:4}" # get everything after osarch
 
-    JOB_SPEC_NAME="${pkgName}@${pkgVersion}%${compiler} arch=${osarch}"
+    JOB_GROUP="${buildGroup}"
     JOB_PKG_NAME="${pkgName}"
     SPEC_YAML_PATH="${SPEC_DIR}/${pkgName}.yaml"
     local root_spec_name="${ROOT_SPEC}"
@@ -185,7 +189,7 @@ begin_logging
 
 gen_full_specs_for_job_and_deps
 
-echo "Building package ${JOB_SPEC_NAME}, ${HASH}, ${MIRROR_URL}"
+echo "Building package ${CDASH_BUILD_NAME}, ${HASH}, ${MIRROR_URL}"
 
 # Finally, list the compilers spack knows about
 echo "Compiler Configurations:"
@@ -200,7 +204,7 @@ mkdir -p "${BUILD_CACHE_DIR}"
 # to fail.
 JOB_BUILD_CACHE_ENTRY_NAME=`spack -d buildcache get-buildcache-name --spec-yaml "${SPEC_YAML_PATH}"`
 if [[ $? -ne 0 ]]; then
-    echo "ERROR, unable to get buildcache entry name for job ${CI_JOB_NAME} (spec: ${JOB_SPEC_NAME})"
+    echo "ERROR, unable to get buildcache entry name for job ${CI_JOB_NAME} (spec: ${CDASH_BUILD_NAME})"
     exit 1
 fi
 
@@ -233,8 +237,16 @@ if [[ $? -ne 0 ]]; then
 
     # Install package, using the buildcache from the local mirror to
     # satisfy dependencies.
-    BUILD_ID_LINE=`spack -d -k -v install --use-cache --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${JOB_SPEC_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "Experimental" -f "${SPEC_YAML_PATH}" | grep "buildSummary\\.php"`
+    BUILD_ID_LINE=`spack -d -k -v install --use-cache --keep-stage --cdash-upload-url "${CDASH_UPLOAD_URL}" --cdash-build "${CDASH_BUILD_NAME}" --cdash-site "Spack AWS Gitlab Instance" --cdash-track "${JOB_GROUP}" -f "${SPEC_YAML_PATH}" | grep "buildSummary\\.php"`
     check_error $? "spack install"
+
+    # Copy some log files into an artifact location, once we have a way
+    # to provide a spec.yaml file to more spack commands (e.g. "location")
+    # stage_dir=$(spack location --stage-dir -f "${SPEC_YAML_PATH}")
+    # build_log_file=$(find -L "${stage_dir}" | grep "spack-build\\.out")
+    # config_log_file=$(find -L "${stage_dir}" | grep "config\\.log")
+    # cp "${build_log_file}" "${JOB_LOG_DIR}/"
+    # cp "${config_log_file}" "${JOB_LOG_DIR}/"
 
     # By parsing the output of the "spack install" command, we can get the
     # buildid generated for us by CDash
@@ -254,7 +266,7 @@ if [[ $? -ne 0 ]]; then
     spack -d upload-s3 spec --base-dir "${LOCAL_MIRROR}" --spec-yaml "${SPEC_YAML_PATH}"
     check_error $? "spack upload-s3 spec"
 else
-    echo "spec ${JOB_SPEC_NAME} is already up to date on remote mirror, downloading it"
+    echo "spec ${CDASH_BUILD_NAME} is already up to date on remote mirror, downloading it"
 
     # Configure remote mirror so we can download buildcache entry
     spack mirror add remote_binary_mirror ${MIRROR_URL}
@@ -287,8 +299,8 @@ if [ -f "${JOB_CDASH_ID_FILE}" ]; then
             if [ -f "${DEP_JOB_ID_FILE}" ]; then
                 DEP_JOB_CDASH_BUILD_ID=$(<${DEP_JOB_ID_FILE})
                 echo "File ${DEP_JOB_ID_FILE} contained value ${DEP_JOB_CDASH_BUILD_ID}"
-                echo "Relating builds -> ${JOB_SPEC_NAME} (buildid=${JOB_CDASH_BUILD_ID}) depends on ${DEP_PKG_NAME} (buildid=${DEP_JOB_CDASH_BUILD_ID})"
-                relateBuildsPostBody="$(get_relate_builds_post_data "Spack" ${JOB_CDASH_BUILD_ID} ${DEP_JOB_CDASH_BUILD_ID})"
+                echo "Relating builds -> ${CDASH_BUILD_NAME} (buildid=${JOB_CDASH_BUILD_ID}) depends on ${DEP_PKG_NAME} (buildid=${DEP_JOB_CDASH_BUILD_ID})"
+                relateBuildsPostBody="$(get_relate_builds_post_data "${CDASH_PROJECT}" ${JOB_CDASH_BUILD_ID} ${DEP_JOB_CDASH_BUILD_ID})"
                 relateBuildsResult=`curl "${DEP_JOB_RELATEBUILDS_URL}" -H "Content-Type: application/json" -H "Accept: application/json" -d "${relateBuildsPostBody}"`
                 echo "Result of curl request: ${relateBuildsResult}"
             else
