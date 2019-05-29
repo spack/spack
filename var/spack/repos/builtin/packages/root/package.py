@@ -501,6 +501,10 @@ class Root(CMakePackage):
                 self.spec['ftgl'].prefix))
             options.append('-DFTGL_INCLUDE_DIR={0}'.format(
                 self.spec['ftgl'].prefix.include))
+        
+        if '+python' in self.spec:
+            options.append('-DPYTHON_EXECUTABLE=%s/python' %
+                           self.spec['python'].prefix.bin)
 
         return options
 
