@@ -42,7 +42,7 @@ class Catalyst(CMakePackage):
     depends_on('python@2:2.8', when='+python', type=("build", "link", "run"))
     depends_on('python', when='~python', type=("build"))
     depends_on('gl@3.2', when='+rendering')
-    depends_on('mesa+osmesa', when='+rendering+osmesa')
+    depends_on('osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
     depends_on('cmake@3.3:', type='build')
 
