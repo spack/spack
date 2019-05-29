@@ -259,6 +259,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('ucx', when='fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
     depends_on('slurm', when='schedulers=slurm')
+    depends_on('lsf', when='schedulers=lsf')
     depends_on('binutils+libiberty', when='fabrics=mxm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
