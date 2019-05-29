@@ -79,7 +79,7 @@ class Xrootd(CMakePackage):
         # see https://github.com/spack/spack/pull/11581
         if '+python' in self.spec:
             options.append('-DPYTHON_EXECUTABLE=%s' %
-                           spec['python'].command.path
+                           spec['python'].command.path)
 
         return options
 
