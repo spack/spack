@@ -6,39 +6,70 @@
 from spack import *
 
 
-class Eman2(Package):
-    """EMAN2 is the successor to EMAN1. It is a broadly based greyscale
-       scientific image processing suite with a primary focus on processing
-       data from transmission electron microscopes."""
+class Eman2(CMakePackage):
+    """FIXME: Put a proper description of your package here."""
 
-    homepage = "https://blake.bcm.edu/emanwiki/EMAN2"
-    url      = "https://cryoem.bcm.edu/cryoem/static/software/release-2.3/eman2.3.linux64.sh"
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "http://www.example.com"
+    url      = "https://github.com/cryoem/eman2/archive/v2.3.tar.gz"
 
-    version('2.3', sha256='f3cdb956fc7b12dbdeee90c0276169d6cc55d8c75208f94e85655e5884d1e8c8',
-            expand=False)
+    version('2.3', sha256='e64b8c5d87dba8a77ac0ff7cb4441d39dd0786f6cc91498fd49b96585ce99001')
 
-    def url_for_version(self, version):
-        pfx = 'https://cryoem.bcm.edu/cryoem/static/software/'
-        sfx = 'release-{0}/eman{0}.linux64.sh'.format(version.dotted)
-        return '{0}{1}'.format(pfx, sfx)
+    depends_on('boost+python@1.32:1.64')
+    depends_on('fftw@3:')
+    depends_on('ftgl')
+    depends_on('gl@3:')
+    depends_on('gsl')
+    depends_on('hdf5')
+    depends_on('libpng')
+    depends_on('libtiff')
+    depends_on('mpi')
+    depends_on('python@2.7.1:2.7.99', type=('build', 'run'))
+    depends_on('py-future', type=('build', 'run'))
+    depends_on('py-ipython@:6.9', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        # interactive installer, questions:
-        # 1. installation prefix
+    def patch(self):
+        # remove conda test
+        filter_file('find_package(Conda REQUIRED)',
+                    'set(EMAN_PREFIX %s)' % self.prefix,
+                    'CMakeLists.txt', string=True)
 
-        # the installer complains if the directory already exists
-        # install to a temporary prefix, and then copy the tree
-        temp_prefix = join_path(self.stage.source_path, 'eman2')
+        # fix bad git command call
+        filter_file('${GIT_EXECUTABLE} describe --always --dirty',
+                    'echo nohash', 'programs/CMakeLists.txt', string=True)
 
-        config_filename = 'spack-config.in'
-        config_answers = [temp_prefix]
+    def setup_environment(self, spack_env, run_env):
+        sp_dir = join_path(self.prefix, 'lib/python2.7/site-packages')
+        spack_env.set('SP_DIR', sp_dir)
 
-        with open(config_filename, 'w') as f:
-            f.write('\n'.join(config_answers))
+    def cmake_args(self):
+        def fftw_path(p):
+            return join_path(self.spec['fftw'].prefix, p)
 
-        with open(config_filename, 'r') as f:
-            sh = which('sh')
-            sh(self.stage.archive_file, input=f)
+        def ftgl_path(p):
+            return join_path(self.spec['ftgl'].prefix, p)
 
-        # install to actual prefix
-        install_tree(temp_prefix, prefix)
+        def hdf5_path(p):
+            return join_path(self.spec['hdf5'].prefix, p)
+
+        # need to initialize a directory for python libraries
+        sp_dir = join_path(self.prefix, 'lib/python2.7/site-packages')
+        mkdirp(sp_dir)
+
+        args = []
+
+        return [
+            '-DFFTW3F_INCLUDE_PATH=%s' % fftw_path('include'),
+            '-DFFTW3F_LIBRARY=%s' % fftw_path('lib/libfftw3f.so'),
+            '-DFFTW3D_INCLUDE_PATH=%s' % fftw_path('include'),
+            '-DFFTW3D_LIBRARY=%s' % fftw_path('lib/libfftw3.so'),
+            '-DFFTW3F_THREADS_INCLUDE_PATH=%s' % fftw_path('include'),
+            '-DFFTW3F_THREADS_LIBRARY=%s' % fftw_path('lib/libfftw3f_threads.so'),
+            '-DFFTW3D_THREADS_INCLUDE_PATH=%s' % fftw_path('include'),
+            '-DFFTW3D_THREADS_LIBRARY=%s' % fftw_path('lib/libfftw3_threads.so'),
+            '-DFTGL_INCLUDE_PATH=%s' % ftgl_path('include'),
+            '-DFTGL_LIBRARY=%s' % ftgl_path('lib/libftgl.so'),
+            '-DHDF5_LIBRARY=%s' % hdf5_path('lib/libhdf5.so'),
+            '-DHDF5_INCLUDE_PATH=%s' % hdf5_path('include'),
+        ]
