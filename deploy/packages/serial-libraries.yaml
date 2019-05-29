@@ -51,6 +51,7 @@ packages:
       - architecture
       - compiler
     specs:
+      - assimp
       - boost
       - eigen
       - fmt

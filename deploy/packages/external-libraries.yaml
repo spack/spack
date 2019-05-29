@@ -34,11 +34,12 @@ packages:
       - libxslt@1.1.29
       - metis@5.1.0
       - ncurses@5.9
+      - ninja@1.8.2
       - openblas@0.3.3
       - python@2.7.15
       - python@3.6.5
       - qhull@2015.2
-      # - qt@5.10.0
+      - qt@5.11.2
       - readline@7.0
       - spark@2.4.0+hadoop
       - sqlite@3.23.1
