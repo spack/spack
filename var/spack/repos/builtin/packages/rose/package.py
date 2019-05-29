@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 # -----------------------------------------------------------------------------
-# Author: Justin Too 
+# Author: Justin Too
 # -----------------------------------------------------------------------------
 
 from spack import *
-import spack.build_environment
 
 
 class Rose(AutotoolsPackage):
@@ -103,7 +102,9 @@ class Rose(AutotoolsPackage):
     # ------------------------------------------------------------------------
     variant("codethorn", default=False, description="Enable the CodeThorn project")
     variant(
-        "autopar", default=False, description="Enable the autoParallelization project"
+        "autopar",
+        default=False,
+        description="Enable the autoParallelization project"
     )
     variant("polyopt", default=False, description="Enable the PolyOpt project")
 
@@ -284,7 +285,7 @@ class Rose(AutotoolsPackage):
                     bash = which("bash")
                     bash(
                         join_path(
-                            self.stage.source_path, "projects/PolyOpt2/install.sh"
+                            self.stage.source_path,
+                            "projects/PolyOpt2/install.sh"
                         )
                     )
-
