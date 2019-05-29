@@ -504,8 +504,8 @@ class Root(CMakePackage):
 
         # see https://github.com/spack/spack/pull/11579
         if '+python' in self.spec:
-            options.append('-DPYTHON_EXECUTABLE=%s/python' %
-                           self.spec['python'].prefix.bin)
+            options.append('-DPYTHON_EXECUTABLE=%s' %
+                           spec['python'].command.path)
 
         return options
 
