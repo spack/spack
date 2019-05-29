@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class PyCffi(PythonPackage):
 
     import_modules = ['cffi']
 
+    version('1.12.2', '4d7dcb6c7c738c15d2ece9bd4c5f86da')
     version('1.11.5', 'ac8492f4ad952360737413e82d661908')
     version('1.10.0', '2b5fa41182ed0edaf929a789e602a070')
     version('1.1.2',  'ca6e6c45b45caa87aee9adc7c796eaea')

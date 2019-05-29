@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,11 +29,12 @@ class Vtkm(CMakePackage, CudaPackage):
     # can overwhelm compilers with too many symbols
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant("shared", default=True, description="build shared libs")
     variant("cuda", default=False, description="build cuda support")
     variant("doubleprecision", default=True,
             description='enable double precision')
     variant("logging", default=False, description="build logging support")
-    variant("mpi", default=True, description="build mpi support")
+    variant("mpi", default=False, description="build mpi support")
     variant("openmp", default=False, description="build openmp support")
     variant("rendering", default=True, description="build rendering support")
     variant("tbb", default=True, description="build TBB support")
@@ -51,7 +52,11 @@ class Vtkm(CMakePackage, CudaPackage):
         with working_dir('spack-build', create=True):
             options = ["../",
                        "-DVTKm_ENABLE_TESTING:BOOL=OFF"]
-
+            # shared vs static libs
+            if "+shared" in spec:
+                options.append('-DBUILD_SHARED_LIBS=ON')
+            else:
+                options.append('-DBUILD_SHARED_LIBS=OFF')
             # cuda support
             if "+cuda" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")

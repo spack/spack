@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class RRjava(RPackage):
     url      = "https://cran.r-project.org/src/contrib/rJava_0.9-8.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/rJava"
 
+    version('0.9-11', sha256='c28ae131456a98f4d3498aa8f6eac9d4df48727008dacff1aa561fc883972c69')
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 
     depends_on('java')

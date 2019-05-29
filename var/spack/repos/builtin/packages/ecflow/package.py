@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,13 @@ from spack import *
 
 
 class Ecflow(CMakePackage):
-    '''ecFlow is a work flow package that enables users to run a large number
+    """ecFlow is a work flow package that enables users to run a large number
     of programs (with dependencies on each other and on time) in a controlled
     environment.
 
     It provides tolerance for hardware and software failures, combined with
     good restart capabilities.
-    '''
+    """
 
     homepage = 'https://confluence.ecmwf.int/display/ECFLOW/'
     url      = 'https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-4.11.1-Source.tar.gz'

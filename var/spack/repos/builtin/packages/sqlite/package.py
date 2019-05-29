@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,24 +14,35 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
-    version('3.25.3', '00ebf97be13928941940cc71de3d67e9f852698233cd98ce2d178fd08092f3dd',
-            url='https://www.sqlite.org/2018/sqlite-autoconf-3250300.tar.gz')
-    version('3.23.1', '0edbfd75ececb95e8e6448d6ff33df82774c9646',
-            url='https://www.sqlite.org/2018/sqlite-autoconf-3230100.tar.gz')
-    version('3.22.0', '2fb24ec12001926d5209d2da90d252b9825366ac',
-            url='https://www.sqlite.org/2018/sqlite-autoconf-3220000.tar.gz')
-    version('3.21.0', '7913de4c3126ba3c24689cb7a199ea31',
-            url='https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz')
-    version('3.20.0', 'e262a28b73cc330e7e83520c8ce14e4d',
-            url='https://www.sqlite.org/2017/sqlite-autoconf-3200000.tar.gz')
-    version('3.18.0', 'a6687a8ae1f66abc8df739aeadecfd0c',
-            url='https://www.sqlite.org/2017/sqlite-autoconf-3180000.tar.gz')
-    version('3.8.10.2', 'a18bfc015cd49a1e7a961b7b77bc3b37',
-            url='https://www.sqlite.org/2015/sqlite-autoconf-3081002.tar.gz')
-    version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
-            url='https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
+    version('3.28.0', sha256='d61b5286f062adfce5125eaf544d495300656908e61fca143517afcc0a89b7c3')
+    version('3.27.2', sha256='50c39e85ea28b5ecfdb3f9e860afe9ba606381e21836b2849efca6a0bfe6ef6e')
+    version('3.27.1', sha256='54a92b8ff73ff6181f89b9b0c08949119b99e8cccef93dbef90e852a8b10f4f8')
+    version('3.27.0', sha256='dbfb0fb4fc32569fa427d3658e888f5e3b84a0952f706ccab1fd7c62a54f10f0')
+    version('3.26.0', '9af2df1a6da5db6e2ecf3f463625f16740e036e9')
+    # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
+    # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
     depends_on('readline')
+
+    variant('functions', default=False,
+            description='Provide mathematical and string extension functions '
+                        'for SQL queries using the loadable extensions '
+                        'mechanism.')
+
+    variant('fts', default=True,
+            description='Enable FTS support '
+            '(unsafe for <3.26.0.0 due to Magellan).')
+
+    # See https://blade.tencent.com/magellan/index_en.html
+    conflicts('+fts', when='@:3.25.99.99')
+
+    resource(name='extension-functions',
+             url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
+             md5='3a32bfeace0d718505af571861724a43',
+             expand=False,
+             placement={'extension-functions.c?get=25':
+                        'extension-functions.c'},
+             when='+functions')
 
     # On some platforms (e.g., PPC) the include chain includes termios.h which
     # defines a macro B0. Sqlite has a shell.c source file that declares a
@@ -46,18 +57,30 @@ class Sqlite(AutotoolsPackage):
     # compiler is used.
     patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
 
-    variant('functions', default=False,
-            description='Provide mathematical and string extension functions '
-                        'for SQL queries using the loadable extensions '
-                        'mechanism.')
-
-    resource(name='extension-functions',
-             url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
-             md5='3a32bfeace0d718505af571861724a43',
-             expand=False,
-             placement={'extension-functions.c?get=25':
-                        'extension-functions.c'},
-             when='+functions')
+    def url_for_version(self, version):
+        full_version = list(version.version) + [0 * (4 - len(version.version))]
+        version_string\
+            = str(full_version[0]) + \
+            ''.join(['%02d' % v for v in full_version[1:]])
+        # See https://sqlite.org/chronology.html for version -> year
+        # correspondence.
+        if version >= Version('3.27.0'):
+            year = '2019'
+        elif version >= Version('3.22.0'):
+            year = '2018'
+        elif version >= Version('3.16.0'):
+            year = '2017'
+        elif version >= Version('3.10.0'):
+            year = '2016'
+        elif version >= Version('3.8.8'):
+            year = '2015'
+        elif version >= Version('3.8.3'):
+            year = '2014'
+        elif version >= Version('3.7.16'):
+            year = '2013'
+        else:
+            raise ValueError('Unsupported version {0}'.format(version))
+        return 'https://sqlite.org/{0}/sqlite-autoconf-{1}.tar.gz'.format(year, version_string)
 
     @property
     def libs(self):
@@ -73,6 +96,9 @@ class Sqlite(AutotoolsPackage):
 
         if self.get_arch() == 'ppc64le':
             args.append('--build=powerpc64le-redhat-linux-gnu')
+
+        if '+fts' not in self.spec:
+            args.extend(['--disable-fts4', '--disable-fts5'])
 
         return args
 

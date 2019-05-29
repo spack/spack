@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,3 +30,7 @@ class XkeyboardConfig(AutotoolsPackage):
     # gmsgfmt
     # perl@5.8.1:
     # perl XML::Parser
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)
+        run_env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)

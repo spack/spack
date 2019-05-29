@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,7 @@ class MesaGlu(AutotoolsPackage):
 
     version('9.0.0', 'bbc57d4fe3bd3fb095bdbef6fcb977c4')
 
-    variant('mesa', default=True,
-       description='Usually depends on mesa, disable for accelerated OpenGL')
-    depends_on('mesa', when='+mesa')
+    depends_on('gl@3:')
 
     provides('glu@1.3')
 

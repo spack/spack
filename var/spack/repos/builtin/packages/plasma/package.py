@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Plasma(CMakePackage):
     homepage = "https://bitbucket.org/icl/plasma/"
     url = "https://bitbucket.org/icl/plasma/downloads/plasma-18.11.0.tar.gz"
     hg = "https://luszczek@bitbucket.org/icl/plasma"
+    maintainers = ['luszczek']
 
     version("develop", hg=hg)
     version("18.11.1", sha256="0581cc8b1188932fd9c29bd258ffe2dc8fb26b1530c5dc3d91f8de369e44edbc")

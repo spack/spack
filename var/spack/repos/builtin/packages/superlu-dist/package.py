@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,11 @@ class SuperluDist(CMakePackage):
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
+    maintainers = ['xiaoye', 'gchavez2', 'balay']
+
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('6.1.1', '35d25cff592c724439870444ed45e1d1d15ca2c65f02ccd4b83a6d3c9d220bd1')
     version('6.1.0', '92c6d1424dd830ee2d1e7396a418a5f6645160aea8472e558c4e4bfe006593c4')
     version('6.0.0', 'ff6cdfa0263d595708bbb6d11fb780915d8cfddab438db651e246ea292f37ee4')
     version('5.4.0', '3ac238fe082106a2c4dbaf0c22af1ff1247308ffa8f053de9d78c3ec7dd0d801')
@@ -38,12 +41,12 @@ class SuperluDist(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
         args = [
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DCMAKE_INSTALL_LIBDIR:STRING=%s' % self.prefix.lib,
-            '-DTPL_BLAS_LIBRARIES=%s' % lapack_blas.ld_flags,
+            '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
+            '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
             '-DUSE_XSDK_DEFAULTS=YES',
             '-DTPL_PARMETIS_LIBRARIES=%s' % spec['parmetis'].libs.ld_flags +
             ';' + spec['metis'].libs.ld_flags,

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Libepoxy(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('meson')
-    depends_on('mesa')
+    depends_on('gl')
 
     def configure_args(self):
         # Disable egl, otherwise configure fails with:

@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -554,3 +554,12 @@ More examples can be found in the thousands of packages already added to
 Spack in ``$SPACK_ROOT/var/spack/repos/builtin/packages``.
 
 Good Luck!
+
+To ensure that future sections of the tutorial run properly, please
+uninstall mpileaks and remove the tutorial repo from your
+configuration.
+
+.. code-block: console
+
+   $ spack uninstall -ay mpileaks
+   $ spack repo remove tutorial

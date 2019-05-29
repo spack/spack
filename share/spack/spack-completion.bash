@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -243,7 +243,7 @@ function _spack_clone {
 function _spack_commands {
     if $list_options
     then
-        compgen -W "-h --help --format" -- "$cur"
+        compgen -W "-h --help --format --header --update" -- "$cur"
     fi
 }
 
@@ -664,7 +664,7 @@ function _spack_license_verify {
 function _spack_list {
     if $list_options
     then
-        compgen -W "-h --help -d --search-description --format
+        compgen -W "-h --help -d --search-description --format --update
                     -t --tags" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
@@ -1041,6 +1041,28 @@ function _spack_repo_rm {
     _spack_repo_remove
 }
 
+function _spack_resource {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "list show" -- "$cur"
+    fi
+}
+
+function _spack_resource_list {
+    compgen -W "-h --help --only-hashes" -- "$cur"
+}
+
+function _spack_resource_show {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_all_resource_hashes)" -- "$cur"
+    fi
+}
+
 function _spack_restage {
     if $list_options
     then
@@ -1159,7 +1181,7 @@ function _spack_use {
 function _spack_versions {
     if $list_options
     then
-        compgen -W "-h --help" -- "$cur"
+        compgen -W "-h --help -s --safe-only" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -1242,6 +1264,10 @@ function _subcommands {
 
 function _all_packages {
     spack list
+}
+
+function _all_resource_hashes {
+    spack resource list --only-hashes
 }
 
 function _installed_packages {

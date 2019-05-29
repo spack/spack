@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
+    version('5.2.0', '41f2c7cb20d69599fb47e2ad6f628f3798c429f49e72e757e70722680f70853f')
+    version('5.1.2', 'eb345cda145da9aea01b851d17e54e7eef08e16bfa148100ac1f7f046cd42ae9')
     version('5.1.1', 'f15c6b5dd8c71b1241004cd19818259d')
     version('5.0.2', '591bcb2c205dcb0283872608cdf04927')
     # Alternate location if main server is down.
@@ -51,6 +53,7 @@ class Mumps(Package):
     depends_on('mpi', when='+mpi')
 
     patch('examples.patch', when='@5.1.1%clang^spectrum-mpi')
+    patch('gfortran8.patch', when='@5.1.2')
 
     # this function is not a patch function because in case scalapack
     # is needed it uses self.spec['scalapack'].fc_link set by the
@@ -233,8 +236,8 @@ class Mumps(Package):
                 # When building libpord, read AR from Makefile.inc instead of
                 # going through the make command line - this prevents various
                 # problems with the substring "$$@".
-                filter_file(' AR="\$\(AR\)"', '', 'Makefile')
-                filter_file('^(INCLUDES = -I../include)',
+                filter_file(r' AR="\$\(AR\)"', '', 'Makefile')
+                filter_file(r'^(INCLUDES = -I../include)',
                             '\\1\ninclude ../../Makefile.inc',
                             join_path('PORD', 'lib', 'Makefile'))
 

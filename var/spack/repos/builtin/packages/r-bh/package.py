@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,5 +25,7 @@ class RBh(RPackage):
     homepage = "https://cran.r-project.org/web/packages/BH/index.html"
     url      = "https://cran.r-project.org/src/contrib/BH_1.65.0-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/BH"
+
+    version('1.69.0-1', sha256='a0fd4364b7e368f09c56dec030823f52c16da0787580af7e4615eddeb99baca2')
     version('1.65.0-1', '7d0402188e4af59f4103f36616d6ee55')
     version('1.60.0-2', 'b50fdc85285da05add4e9da664a2d551')

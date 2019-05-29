@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyPytorch(PythonPackage):
     homepage = "http://pytorch.org/"
     git      = "https://github.com/pytorch/pytorch.git"
 
+    version('1.0.0', tag='v1.0.0', submodules=True)
+    version('0.4.1', tag='v0.4.1', submodules=True)
     version('0.4.0', tag='v0.4.0', submodules=True)
     version('0.3.1', tag='v0.3.1', submodules=True)
 
@@ -35,8 +37,8 @@ class PyPytorch(PythonPackage):
     depends_on('py-pyyaml', type=('run', 'build'))
     depends_on('py-typing', when='@0.3.2:', type=('run', 'build'))
     depends_on('intel-mkl', when='+mkl')
-    depends_on('cuda', when='+cuda', type=('build', 'link', 'run'))
-    depends_on('cudnn', when='+cuda+cudnn')
+    depends_on('cuda@7.5:', when='+cuda', type=('build', 'link', 'run'))
+    depends_on('cudnn@6:', when='+cuda+cudnn')
     depends_on('nccl', when='+cuda+nccl')
     depends_on('magma+shared', when='+cuda+magma')
 

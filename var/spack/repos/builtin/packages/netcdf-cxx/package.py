@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,9 +19,27 @@ class NetcdfCxx(AutotoolsPackage):
 
     depends_on('netcdf')
 
+    variant(
+        'netcdf4', default=True, description='Compile with netCDF4 support')
+
     @property
     def libs(self):
         shared = True
         return find_libraries(
             'libnetcdf_c++', root=self.prefix, shared=shared, recursive=True
         )
+
+    def configure_args(self):
+        args = []
+        if '+netcdf4' in self.spec:
+            # There is no clear way to set this via configure, so set the flag
+            # explicitly
+            args.append('CPPFLAGS=-DUSE_NETCDF4')
+        # Add these to LDFLAGS explicitly, so the linker doesn't accidentally
+        # use system versions
+        ldflags = [
+            self.spec['netcdf'].libs.search_flags,
+            self.spec['hdf5'].libs.search_flags,
+        ]
+        args.append('LDFLAGS=' + ' '.join(ldflags))
+        return args

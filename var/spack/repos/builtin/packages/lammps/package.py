@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,6 +58,8 @@ class Lammps(CMakePackage):
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
             description='Build with mpi')
+    variant('exceptions', default=False,
+            description='Build with lammps exceptions')
 
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
@@ -102,6 +104,8 @@ class Lammps(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS={0}'.format(
                 'ON' if '+lib' in spec else 'OFF'),
+            '-DLAMMPS_EXCEPTIONS={0}'.format(
+                'ON' if '+exceptions' in spec else 'OFF'),
             '-D{0}_MPI={1}'.format(
                 mpi_prefix,
                 'ON' if '+mpi' in spec else 'OFF')

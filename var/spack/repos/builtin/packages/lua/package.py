@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Lua(Package):
     homepage = "http://www.lua.org"
     url = "http://www.lua.org/ftp/lua-5.3.4.tar.gz"
 
+    version('5.3.5', sha256='0c2eed3f960446e1a3e4b9a1ca2f3ff893b6ce41942cf54d5dd59ab4b3b058ac')
     version('5.3.4', '53a9c68bcc0eda58bdc2095ad5cdfc63')
     version('5.3.2', '33278c2ab5ee3c1a875be8d55c1ca2a1')
     version('5.3.1', '797adacada8d85761c079390ff1d9961')
@@ -58,7 +59,8 @@ class Lua(Package):
              'install')
 
         static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
-                                 arguments=['-lm'], version=self.version,
+                                 arguments=['-lm', '-ldl'],
+                                 version=self.version,
                                  compat_version=self.version.up_to(2))
 
         # compatibility with ax_lua.m4 from autoconf-archive

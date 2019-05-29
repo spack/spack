@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -210,9 +210,11 @@ def create(path, specs, **kwargs):
 
 
 def add_single_spec(spec, mirror_root, categories, **kwargs):
-    tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
+    tty.msg("Adding package {pkg} to mirror".format(
+        pkg=spec.format("{name}{@version}")
+    ))
     try:
-        spec.package.do_patch()
+        spec.package.do_fetch()
         spec.package.do_clean()
 
     except Exception as e:
@@ -220,7 +222,8 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
             sys.excepthook(*sys.exc_info())
         else:
             tty.warn(
-                "Error while fetching %s" % spec.cformat('$_$@'), e.message)
+                "Error while fetching %s" % spec.cformat('{name}{@version}'),
+                e.message)
         categories['error'].append(spec)
 
 

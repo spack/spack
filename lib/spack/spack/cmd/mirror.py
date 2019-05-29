@@ -1,8 +1,9 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 import os
 from datetime import datetime
 
@@ -162,7 +163,7 @@ def mirror_create(args):
         # If nothing is passed, use all packages.
         if not specs:
             specs = [Spec(n) for n in spack.repo.all_package_names()]
-            specs.sort(key=lambda s: s.format("$_$@").lower())
+            specs.sort(key=lambda s: s.format("{name}{@version}").lower())
 
         # If the user asked for dependencies, traverse spec DAG get them.
         if args.dependencies:
@@ -204,7 +205,8 @@ def mirror_create(args):
             "  %-4d failed to fetch." % e)
         if error:
             tty.error("Failed downloads:")
-            colify(s.cformat("$_$@") for s in error)
+            colify(s.cformat("{name}{@version}") for s in error)
+            sys.exit(1)
 
 
 def mirror(parser, args):

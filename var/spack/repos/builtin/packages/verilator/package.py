@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ class Verilator(AutotoolsPackage):
     version('3.904', '7d4dc8e61d5e0e564c3016a06f0b9d07')
 
     depends_on('bison', type='build')
-    depends_on('flex',  type='build')
+    depends_on('flex')
     depends_on('perl',  type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):

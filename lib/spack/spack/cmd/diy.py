@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,10 +49,6 @@ def setup_parser(subparser):
 def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
-
-    if args.jobs is not None:
-        if args.jobs <= 0:
-            tty.die("the -j option must be a positive integer")
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import os
 
 from spack.operating_systems.linux_distro import LinuxDistro
-from spack.util.module_cmd import get_module_cmd
+from spack.util.module_cmd import module
 
 
 class CrayFrontend(LinuxDistro):
@@ -41,10 +41,7 @@ class CrayFrontend(LinuxDistro):
             # into the PATH environment variable (i.e. the following modules:
             # 'intel', 'cce', 'gcc', etc.) will also be unloaded since they are
             # specified as prerequisites in the PrgEnv-* modulefiles.
-            modulecmd = get_module_cmd()
-            exec(compile(
-                modulecmd('unload', prg_env, output=str, error=os.devnull),
-                '<string>', 'exec'))
+            module('unload', prg_env)
 
         # Call the overridden method.
         clist = super(CrayFrontend, self).find_compilers(*paths)

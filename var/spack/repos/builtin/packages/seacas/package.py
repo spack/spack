@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,8 +67,8 @@ class Seacas(CMakePackage):
 
     # Everything should be compiled position independent (-fpic)
 
-    depends_on('netcdf@4.6.2+mpi+parallel-netcdf', when='+mpi')
-    depends_on('netcdf@4.6.2~mpi', when='~mpi')
+    depends_on('netcdf@4.6.2:+mpi+parallel-netcdf', when='+mpi')
+    depends_on('netcdf@4.6.2:~mpi', when='~mpi')
     depends_on('cgns@develop+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@develop~mpi+scoping', when='+cgns ~mpi')
     depends_on('matio', when='+matio')

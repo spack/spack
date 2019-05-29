@@ -1,23 +1,21 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Schema for env.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/env.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/env.py
    :lines: 36-
 """
 from llnl.util.lang import union_dicts
 
 import spack.schema.merged
-import spack.schema.modules
 
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'Spack environment file schema',
-    'definitions': spack.schema.modules.definitions,
     'type': 'object',
     'additionalProperties': False,
     'patternProperties': {
@@ -49,6 +47,9 @@ schema = {
                                 {'type': 'object'},
                             ]
                         }
+                    },
+                    'view': {
+                        'type': ['boolean', 'string']
                     }
                 }
             )

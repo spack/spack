@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,4 +17,5 @@ class Strace(AutotoolsPackage):
 
     conflicts('platform=darwin', msg='strace runs only on Linux.')
 
+    version('5.0', sha256='3b7ad77eb2b81dc6078046a9cc56eed5242b67b63748e7fc28f7c2daf4e647da')
     version('4.21', '785b679a75e9758ebeb66816f315b9fe')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import os
 import argparse
 import llnl.util.tty as tty
 
+import spack.environment as ev
 import spack.cmd
 import spack.environment
 import spack.paths
@@ -86,7 +87,8 @@ def location(parser, args):
 
         if args.install_dir:
             # install_dir command matches against installed specs.
-            spec = spack.cmd.disambiguate_spec(specs[0])
+            env = ev.get_env(args, 'location')
+            spec = spack.cmd.disambiguate_spec(specs[0], env)
             print(spec.prefix)
 
         else:

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,6 +45,9 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    # Tagged development version used by the laghos package:
+    version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
+
     version('3.4.0',
             '4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
             url='https://bit.ly/mfem-3-4', extension='.tar.gz',
@@ -54,7 +57,8 @@ class Mfem(Package):
             'b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
             url='https://goo.gl/Kd7Jk8', extension='.tar.gz')
 
-    version('laghos-v1.0', tag='laghos-v1.0')
+    # Tagged development version used by the laghos package:
+    version('3.3.1-laghos-v1.0', tag='laghos-v1.0')
 
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
@@ -178,7 +182,7 @@ class Mfem(Package):
     depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
-    depends_on('conduit@0.3.1:', when='+conduit')
+    depends_on('conduit@0.3.1:,master:', when='+conduit')
     depends_on('conduit+mpi', when='+conduit+mpi')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
@@ -424,16 +428,18 @@ class Mfem(Package):
                 copy(str(self.config_mk), 'config.mk')
                 shutil.copystat('config.mk.orig', 'config.mk')
 
+        prefix_share = join_path(prefix, 'share', 'mfem')
+
         if '+examples' in spec:
             make('examples')
-            install_tree('examples', join_path(prefix, 'examples'))
+            install_tree('examples', join_path(prefix_share, 'examples'))
 
         if '+miniapps' in spec:
             make('miniapps')
-            install_tree('miniapps', join_path(prefix, 'miniapps'))
+            install_tree('miniapps', join_path(prefix_share, 'miniapps'))
 
         if install_em:
-            install_tree('data', join_path(prefix, 'data'))
+            install_tree('data', join_path(prefix_share, 'data'))
 
     @property
     def suitesparse_components(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -203,8 +203,8 @@ class TestSpecSyntax(object):
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
 
         self.check_parse(
-            "x arch=test-redhat6-None "
-            " ^y arch=test-None-x86_64 "
+            "x arch=test-redhat6-None"
+            " ^y arch=test-None-x86_64"
             " ^z arch=linux-None-None",
 
             "x os=fe "
@@ -212,11 +212,11 @@ class TestSpecSyntax(object):
             "^z platform=linux")
 
         self.check_parse(
-            "x arch=test-debian6-x86_64 "
+            "x arch=test-debian6-x86_64"
             " ^y arch=test-debian6-x86_64",
 
-            "x os=default_os target=default_target "
-            "^y os=default_os target=default_target")
+            "x os=default_os target=default_target"
+            " ^y os=default_os target=default_target")
 
         self.check_parse("x ^y", "x@: ^y@:")
 

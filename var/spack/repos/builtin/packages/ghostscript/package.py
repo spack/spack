@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,11 @@ class Ghostscript(AutotoolsPackage):
         Note that this approach is also recommended by Linux from Scratch:
         http://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
         """
-        directories = ['freetype', 'jpeg', 'lcms2', 'libpng', 'zlib']
+        directories = ['freetype', 'jpeg', 'libpng', 'zlib']
+        if self.spec.satisfies('@:9.21'):
+            directories.append('lcms2')
+        else:
+            directories.append('lcms2mt')
         for directory in directories:
             shutil.rmtree(directory)
 

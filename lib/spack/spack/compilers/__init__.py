@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,17 @@ _cache_config_file = []
 
 #: cache of compilers constructed from config data, keyed by config entry id.
 _compiler_cache = {}
+
+_compiler_to_pkg = {
+    'clang': 'llvm+clang'
+}
+
+
+def pkg_spec_for_compiler(cspec):
+    """Return the spec of the package that provides the compiler."""
+    spec_str = '%s@%s' % (_compiler_to_pkg.get(cspec.name, cspec.name),
+                          cspec.versions)
+    return spack.spec.Spec(spec_str)
 
 
 def _auto_compiler_spec(function):
@@ -203,6 +214,17 @@ def find(compiler_spec, scope=None, init_config=True):
             if c.satisfies(compiler_spec)]
 
 
+@_auto_compiler_spec
+def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
+    """Return specs of available compilers that match the supplied
+       compiler spec.  Return an empty list if nothing found."""
+    return [c.spec for c in compilers_for_spec(compiler_spec,
+                                               arch_spec,
+                                               scope,
+                                               True,
+                                               init_config)]
+
+
 def all_compilers(scope=None):
     config = get_compiler_config(scope)
     compilers = list()
@@ -285,7 +307,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         # If an arch spec is given, confirm that this compiler
         # is for the given operating system
         os = items.get('operating_system', None)
-        if arch_spec and os != arch_spec.platform_os:
+        if arch_spec and os != arch_spec.os:
             continue
 
         # If an arch spec is given, confirm that this compiler
@@ -311,7 +333,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
 
     compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec)
     if len(compilers) < 1:
-        raise NoCompilerForSpecError(compiler_spec, arch_spec.platform_os)
+        raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
     if len(compilers) > 1:
         raise CompilerDuplicateError(compiler_spec, arch_spec)
     return compilers[0]

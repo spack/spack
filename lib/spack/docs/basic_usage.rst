@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,12 +39,15 @@ available.  You can see a list of available package names at the
 ``spack list``
 ^^^^^^^^^^^^^^
 
-The ``spack list`` command prints out a list of all of the packages
-Spack can install:
+The ``spack list`` command prints out a list of all of the packages Spack
+can install:
 
 .. command-output:: spack list
+   :ellipsis: 10
 
-The packages are listed by name in alphabetical order.
+There are thosands of them, so we've truncated the output above, but you
+can find a :ref:`full list here <package-list>`.
+Packages are listed by name in alphabetical order.
 A pattern to match with no wildcards, ``*`` or ``?``,
 will be treated as though it started and ended with
 ``*``, so ``util`` is equivalent to ``*util*``.  All patterns will be treated
@@ -673,10 +676,10 @@ compile line.
 Notice that the value of the compiler flags must be quoted if it
 contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
 ``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but
-``cppflags=-O3 -fPIC`` is not. Additionally, if they value of the
+``cppflags=-O3 -fPIC`` is not. Additionally, if the value of the
 compiler flags is not the last thing on the line, it must be followed
 by a space. The commmand ``spack install libelf cppflags="-O3"%intel``
-will be interpreted as an attempt to set `cppflags="-O3%intel"``.
+will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
 The six compiler flags are injected in the order of implicit make commands
 in GNU Autotools. If all flags are set, the order is

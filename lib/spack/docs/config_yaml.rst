@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ Spack's basic configuration options are set in ``config.yaml``.  You can
 see the default settings by looking at
 ``etc/spack/defaults/config.yaml``:
 
-.. literalinclude:: ../../../etc/spack/defaults/config.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
    :language: yaml
 
 These settings can be overridden in ``etc/spack/config.yaml`` or
@@ -39,7 +39,7 @@ default path uses the full 32 characters.
 Secondly, it is
 also possible to modify the entire installation scheme. By default
 Spack uses
-``${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}``
+``{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}``
 where the tokens that are available for use in this directive are the
 same as those understood by the ``Spec.format`` method. Using this parameter it
 is possible to use a different package layout or reduce the depth of
@@ -48,7 +48,7 @@ the installation paths. For example
      .. code-block:: yaml
 
        config:
-         install_path_scheme: '${PACKAGE}/${VERSION}/${HASH:7}'
+         install_path_scheme: '{name}/{version}/{hash:7}'
 
 would install packages into sub-directories using only the package
 name, version and a hash length of 7 characters.
@@ -96,7 +96,6 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
     - $tempdir
-    - /nfs/tmp2/$user
     - $spack/var/spack/stage
 
 This is an ordered list of paths that Spack should search when trying to
@@ -106,11 +105,10 @@ See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``, and it creates a symbolic link to that directory in
-``$spack/var/spack/stage``. This is used to track the stage.
-
-After a package is successfully installed, Spack deletes the temporary
-directory it used to build.  Unsuccessful builds are not deleted, but you
-can manually purge them with :ref:`spack clean --stage
+``$spack/var/spack/stage``. This is used to track the temporary
+directory.  After the package is successfully installed, Spack deletes
+the temporary directory it used to build.  Unsuccessful builds are not
+deleted, but you can manually purge them with :ref:`spack clean --stage
 <cmd-spack-clean>`.
 
 .. note::
@@ -180,16 +178,23 @@ set ``dirty`` to ``true`` to skip the cleaning step and make all builds
 "dirty" by default.  Be aware that this will reduce the reproducibility
 of builds.
 
+.. _build-jobs:
+
 --------------
 ``build_jobs``
 --------------
 
 Unless overridden in a package or on the command line, Spack builds all
-packages in parallel. For a build system that uses Makefiles, this means
-running ``make -j<build_jobs>``, where ``build_jobs`` is the number of
-threads to use.
+packages in parallel. The default parallelism is equal to the number of
+cores on your machine, up to 16. Parallelism cannot exceed the number of
+cores available on the host. For a build system that uses Makefiles, this
+means running:
 
-The default parallelism is equal to the number of cores on your machine.
+- ``make -j<build_jobs>``, when ``build_jobs`` is less than the number of
+  cores on the machine
+- ``make -j<ncores>``, when ``build_jobs`` is greater or equal to the
+  number of cores on the machine
+
 If you work on a shared login node or have a strict ulimit, it may be
 necessary to set the default to a lower value. By setting ``build_jobs``
 to 4, for example, commands like ``spack install`` will run ``make -j4``

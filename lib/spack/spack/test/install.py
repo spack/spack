@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 import pytest
 
+import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
@@ -96,18 +97,17 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
 
 
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
-    import sys
     dependency = Spec('dependency-install')
     dependency.concretize()
     dependency.package.do_install()
 
-    dependency.package.patches['dependency-install'] = [
-        sys.modules['spack.patch'].Patch.create(
-            None, 'file://fake.patch', sha256='unused-hash')]
-
     dependency_hash = dependency.dag_hash()
     dependent = Spec('dependent-install ^/' + dependency_hash)
     dependent.concretize()
+
+    dependency.package.patches['dependency-install'] = [
+        spack.patch.UrlPatch(
+            dependent.package, 'file://fake.patch', sha256='unused-hash')]
 
     assert dependent['dependency-install'] == dependency
 
@@ -123,6 +123,77 @@ def test_installed_dependency_request_conflicts(
         'conflicting-dependent ^/' + dependency_hash)
     with pytest.raises(spack.spec.UnsatisfiableSpecError):
         dependent.concretize()
+
+
+def test_installed_upstream_external(
+        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
+    """Check that when a dependency package is recorded as installed in
+       an upstream database that it is not reinstalled.
+    """
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    upstream_layout = gen_mock_layout('/a/')
+
+    dependency = spack.spec.Spec('externaltool')
+    dependency.concretize()
+    prepared_db.add(dependency, upstream_layout)
+
+    try:
+        original_db = spack.store.db
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        spack.store.db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        dependent = spack.spec.Spec('externaltest')
+        dependent.concretize()
+
+        new_dependency = dependent['externaltool']
+        assert new_dependency.external
+        assert new_dependency.prefix == '/path/to/external_tool'
+
+        dependent.package.do_install()
+
+        assert not os.path.exists(new_dependency.prefix)
+        assert os.path.exists(dependent.prefix)
+    finally:
+        spack.store.db = original_db
+
+
+def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
+                            gen_mock_layout):
+    """Check that when a dependency package is recorded as installed in
+       an upstream database that it is not reinstalled.
+    """
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    upstream_layout = gen_mock_layout('/a/')
+
+    dependency = spack.spec.Spec('dependency-install')
+    dependency.concretize()
+    prepared_db.add(dependency, upstream_layout)
+
+    try:
+        original_db = spack.store.db
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        spack.store.db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        dependent = spack.spec.Spec('dependent-install')
+        dependent.concretize()
+
+        new_dependency = dependent['dependency-install']
+        assert new_dependency.package.installed_upstream
+        assert (new_dependency.prefix ==
+                upstream_layout.path_for_spec(dependency))
+
+        dependent.package.do_install()
+
+        assert not os.path.exists(new_dependency.prefix)
+        assert os.path.exists(dependent.prefix)
+    finally:
+        spack.store.db = original_db
 
 
 @pytest.mark.disable_clean_stage_check

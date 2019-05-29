@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,12 +13,13 @@ class Nut(CMakePackage):
     and performance issues."""
 
     homepage = "https://github.com/lanl/NuT"
+    url      = "https://github.com/lanl/NuT/archive/0.1.0.tar.gz"
     git      = "https://github.com/lanl/NuT.git"
 
     tags = ['proxy-app']
 
-    version('serial', branch='master')
-    version('openmp', branch='openmp')
+    version('master', branch='master')
+    version('0.1.1', sha256='9f1dca4a9d7003b170fd57d6720228ff25471616cf884e033652e90c49c089bb')
 
     depends_on('cmake@3.0:')
     depends_on('random123')
@@ -37,8 +38,7 @@ class Nut(CMakePackage):
         install('README.md', prefix)
         mkdirp(prefix.bin)
         mkdirp(prefix.lib)
-        install('spack-build/test/nut_unittests', prefix.bin)
-        install('spack-build/apps/bh-3', prefix.bin)
-        install('spack-build/lib/libnut.a', prefix.lib)
+        install('../spack-build/apps/bh-3', prefix.bin)
+        install('../spack-build/lib/libnut.a', prefix.lib)
         install_tree('test/data', prefix.data)
         install_tree('lib', prefix.include)

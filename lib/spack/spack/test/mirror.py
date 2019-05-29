@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -160,7 +160,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         with open(os.path.join(expanded_path, 'test.patch'), 'w'):
             pass
 
-    def successful_apply(_class, stage):
+    def successful_apply(*args, **kwargs):
         pass
 
     with Stage('spack-mirror-test') as stage:
@@ -170,7 +170,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
                             successful_fetch)
         monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy,
                             'expand', successful_expand)
-        monkeypatch.setattr(spack.patch.Patch, 'apply', successful_apply)
+        monkeypatch.setattr(spack.patch, 'apply_patch', successful_apply)
         monkeypatch.setattr(spack.caches.MirrorCache, 'store', record_store)
 
         with spack.config.override('config:checksum', False):

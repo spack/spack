@@ -1,11 +1,11 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Schema for packages.yaml configuration files.
 
-.. literalinclude:: ../spack/schema/packages.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
    :lines: 13-
 """
 

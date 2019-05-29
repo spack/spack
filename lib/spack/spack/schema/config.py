@@ -1,11 +1,11 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Schema for config.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/config.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
 
@@ -25,6 +25,10 @@ properties = {
                     {'type': 'array',
                      'items': {'type': 'string'}}],
             },
+            'extensions': {
+                'type': 'array',
+                'items': {'type': 'string'}
+            },
             'template_dirs': {
                 'type': 'array',
                 'items': {'type': 'string'}
@@ -41,6 +45,7 @@ properties = {
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
             'verify_ssl': {'type': 'boolean'},
+            'install_missing_compilers': {'type': 'boolean'},
             'debug': {'type': 'boolean'},
             'checksum': {'type': 'boolean'},
             'locks': {'type': 'boolean'},

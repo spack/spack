@@ -1,10 +1,11 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import argparse
+import multiprocessing
 
 import spack.cmd
 import spack.config
@@ -72,6 +73,37 @@ class ConstraintAction(argparse.Action):
         return sorted(specs.values())
 
 
+class SetParallelJobs(argparse.Action):
+    """Sets the correct value for parallel build jobs.
+
+    The value is is set in the command line configuration scope so that
+    it can be retrieved using the spack.config API.
+    """
+    def __call__(self, parser, namespace, jobs, option_string):
+        # Jobs is a single integer, type conversion is already applied
+        # see https://docs.python.org/3/library/argparse.html#action-classes
+        if jobs < 1:
+            msg = 'invalid value for argument "{0}" '\
+                  '[expected a positive integer, got "{1}"]'
+            raise ValueError(msg.format(option_string, jobs))
+
+        jobs = min(jobs, multiprocessing.cpu_count())
+        spack.config.set('config:build_jobs', jobs, scope='command_line')
+
+        setattr(namespace, 'jobs', jobs)
+
+    @property
+    def default(self):
+        # This default is coded as a property so that look-up
+        # of this value is done only on demand
+        return min(spack.config.get('config:build_jobs'),
+                   multiprocessing.cpu_count())
+
+    @default.setter
+    def default(self, value):
+        pass
+
+
 _arguments['constraint'] = Args(
     'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,
     help='constraint to select a subset of installed packages')
@@ -111,17 +143,13 @@ _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='show full dependency hashes as well as versions')
 
-_arguments['jobs'] = Args(
-    '-j', '--jobs', action='store', type=int, dest='jobs',
-    help="explicitely set number of make jobs. default is #cpus")
-
 _arguments['tags'] = Args(
     '-t', '--tags', action='append',
     help='filter a package query by tags')
 
 _arguments['jobs'] = Args(
-    '-j', '--jobs', action='store', type=int, dest="jobs",
-    help="explicitly set number of make jobs, default is #cpus.")
+    '-j', '--jobs', action=SetParallelJobs, type=int, dest='jobs',
+    help='explicitly set number of parallel jobs')
 
 _arguments['install_status'] = Args(
     '-I', '--install-status', action='store_true', default=False,
@@ -131,4 +159,4 @@ _arguments['install_status'] = Args(
 
 _arguments['no_checksum'] = Args(
     '-n', '--no-checksum', action='store_true', default=False,
-    help="do not use checksums to verify downloadeded files (unsafe)")
+    help="do not use checksums to verify downloaded files (unsafe)")

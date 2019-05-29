@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,15 +38,19 @@ class Paraview(CMakePackage):
     variant('hdf5', default=False, description="Use external HDF5")
 
     depends_on('python@2:2.8', when='+python')
-    depends_on('py-numpy', when='+python', type='run')
-    depends_on('py-matplotlib', when='+python', type='run')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
+    # Matplotlib >2.x requires Python 3
+    depends_on('py-matplotlib@:2.99', when='+python', type='run')
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
     depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')
     depends_on('qt@:4', when='@:5.2.0+qt')
 
-    depends_on('mesa+swrender', when='+osmesa')
-    depends_on('libxt', when='+qt')
+    depends_on('mesa+osmesa', when='+osmesa')
+    depends_on('gl@3.2:', when='+opengl2')
+    depends_on('gl@1.2:', when='~opengl2')
+    depends_on('libxt', when='~osmesa platform=linux')
     conflicts('+qt', when='+osmesa')
 
     depends_on('bzip2')
@@ -59,7 +63,8 @@ class Paraview(CMakePackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('libxml2')
-    # depends_on('netcdf')
+    depends_on('netcdf')
+    depends_on('expat')
     # depends_on('netcdf-cxx')
     # depends_on('protobuf') # version mismatches?
     # depends_on('sqlite') # external version not supported
@@ -74,6 +79,9 @@ class Paraview(CMakePackage):
     # Broken installation (ui_pqExportStateWizard.h) - fixed in 5.2.0
     patch('ui_pqExportStateWizard.patch', when='@:5.1.2')
 
+    # Broken vtk-m config. Upstream catalyst changes
+    patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
+
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
         if version < Version('5.1.0'):
@@ -81,34 +89,55 @@ class Paraview(CMakePackage):
         else:
             return self._urlfmt.format(version.up_to(2), version, '')
 
+    @property
+    def paraview_subdir(self):
+        """The paraview subdirectory name as paraview-major.minor"""
+        return 'paraview-{0}'.format(self.spec.version.up_to(2))
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
-        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
+        spack_env.set('ParaView_DIR', self.prefix)
         spack_env.set('PARAVIEW_VTK_DIR',
-                      join_path(lib_dir, 'cmake', paraview_version))
+                      join_path(lib_dir, 'cmake', self.paraview_subdir))
 
     def setup_environment(self, spack_env, run_env):
+        # paraview 5.5 and later
+        # - cmake under lib/cmake/paraview-5.5
+        # - libs  under lib
+        # - python bits under lib/python2.8/site-packages
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
-        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
-        run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
-                             paraview_version))
+
+        run_env.set('ParaView_DIR', self.prefix)
         run_env.set('PARAVIEW_VTK_DIR',
-                    join_path(lib_dir, 'cmake', paraview_version))
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+
+        if self.spec.version <= Version('5.4.1'):
+            lib_dir = join_path(lib_dir, self.paraview_subdir)
+
+        run_env.prepend_path('LIBRARY_PATH', lib_dir)
+        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+
         if '+python' in self.spec:
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version))
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version, 'site-packages'))
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 paraview_version, 'site-packages', 'vtk'))
+            if self.spec.version <= Version('5.4.1'):
+                pv_pydir = join_path(lib_dir, 'site-packages')
+                run_env.prepend_path('PYTHONPATH', pv_pydir)
+                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir, 'vtk'))
+            else:
+                python_version = self.spec['python'].version.up_to(2)
+                pv_pydir = join_path(lib_dir,
+                                     'python{0}'.format(python_version),
+                                     'site-packages')
+                run_env.prepend_path('PYTHONPATH', pv_pydir)
+                # The Trilinos Catalyst adapter requires
+                # the vtkmodules directory in PYTHONPATH
+                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             'vtkmodules'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
@@ -139,9 +168,12 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
-            '-DVTK_USE_SYSTEM_NETCDF:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+python+mpi'),
+            '-DVTK_USE_SYSTEM_NETCDF:BOOL=ON',
+            '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
             '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
+            '-DOpenGL_GL_PREFERENCE:STRING=LEGACY'
         ]
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),

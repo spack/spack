@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,5 +36,5 @@ class Varscan(Package):
                     script, **kwargs)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('VARSCAN_HOME', self.prefix)
+        run_env.set('VARSCAN_HOME', self.prefix.jar)
         run_env.set('CLASSPATH', self.prefix.jar)

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,17 @@ class Llvm(CMakePackage):
 
     variant('clang', default=True,
             description="Build the LLVM C/C++/Objective-C compiler frontend")
+
+    # TODO: The current version of this package unconditionally disables CUDA.
+    #       Better would be to add a "cuda" variant that:
+    #        - Adds dependency on the "cuda" package when enabled
+    #        - Sets the necessary CMake flags when enabled
+    #        - Disables CUDA (as this current version does) only when the
+    #          variant is also disabled.
+
+    # variant('cuda', default=False,
+    #         description="Build the LLVM with CUDA features enabled")
+
     variant('lldb', default=True, description="Build the LLVM debugger")
     variant('lld', default=True, description="Build the LLVM linker")
     variant('internal_unwind', default=True,
@@ -49,7 +60,7 @@ class Llvm(CMakePackage):
     variant('link_dylib', default=False,
             description="Build and link the libLLVM shared library rather "
             "than static")
-    variant('all_targets', default=True,
+    variant('all_targets', default=False,
             description="Build all supported targets, default targets "
             "<current arch>,NVPTX,AMDGPU,CppBackend")
     variant('build_type', default='Release',
@@ -60,11 +71,15 @@ class Llvm(CMakePackage):
 
     # Build dependency
     depends_on('cmake@3.4.3:', type='build')
+    depends_on('python@2.7:2.8', when='@:4.999 ~python', type='build')
+    depends_on('python', when='@5: ~python', type='build')
 
     # Universal dependency
-    depends_on('python@2.7:2.8', when='@:4.999')
-    depends_on('python')
-    depends_on('py-lit', type=('build', 'run'))
+    depends_on('python@2.7:2.8', when='@:4.999+python')
+    depends_on('python', when='@5:+python')
+
+    # openmp dependencies
+    depends_on('perl-data-dumper', type=('build'))
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
@@ -161,6 +176,38 @@ class Llvm(CMakePackage):
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
                 'lld': 'http://llvm.org/svn/llvm-project/lld/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            }
+        },
+        {
+            'version': '8.0.0',
+            'md5': '74818f431563603515a62be1ee69a142',
+            'resources': {
+                'compiler-rt': '547893456e22c75d16189a13881bc866',
+                'openmp': 'b6f9bf1df85fe4b0ab9d273adcef6f6d',
+                'polly': '7643bba808becabf35785fbacc413ee5',
+                'libcxx': '214211a34baee2292fb79e868697a1aa',
+                'libcxxabi': 'aa8fab49faa65ebf0322d42520630df2',
+                'cfe': '988b59cdb372c5a4f44ae4c39df3de73',
+                'clang-tools-extra': 'acd22ccbd06bfc0054027fe2644af1e0',
+                'lldb': '9d319ed0f02a026242a85399938afed2',
+                'lld': 'c09fb102d4537a0c37a2e8e36a1dc6d2',
+                'libunwind': 'be6b89b5887c5c78dd67cb4e8520d41f'
+            }
+        },
+        {
+            'version': '7.0.1',
+            'md5': '79f1256f97d52a054da8660706deb5f6',
+            'resources': {
+                'compiler-rt': '697b70141ae7cc854e4fbde1a07b7287',
+                'openmp': 'd7d05ac0109df51a47099cba08cb43ec',
+                'polly': '287d7391438b5285265fede3b08e1e29',
+                'libcxx': 'aa9202ebb2aef2078fccfa24b3b1eed1',
+                'libcxxabi': 'c82a187e95744d15c040108bc2b8868f',
+                'cfe': '8583c9fb2af0ce61a7154fd9125363c1',
+                'clang-tools-extra': 'f0a94f63cc3d717f8f6662e0bf9c7330',
+                'lldb': '9ea3dc5cb9a1d9e390652d42ef1ccf41',
+                'lld': '9162cde32887cd33facead766645ef1f',
+                'libunwind': 'fe8c801dd79e087a6fa8d039390a47d0'
             }
         },
         {
@@ -441,6 +488,22 @@ class Llvm(CMakePackage):
             }
         },
         {
+            'version': '20180921',
+            'commit': 'd8b30082648dc869eba68f9e539605f437d7760c',
+            'resources': {
+                'flang-driver': 'dd7587310ae498c22514a33e1a2546b86af9cf25',
+                'openmp': 'd5aa29cb3bcf51289d326b4e565613db8aff65ef'
+            }
+        },
+        {
+            'version': 'ppc64le-20180921',
+            'commit': 'd8b30082648dc869eba68f9e539605f437d7760c',
+            'resources': {
+                'flang-driver': 'dd7587310ae498c22514a33e1a2546b86af9cf25',
+                'openmp': '29b515e1e6d26b5b0d32d47d28dcdb4b8a11470d'
+            }
+        },
+        {
             'version': '20180612',
             'commit': 'f26a3ece4ccd68a52f5aa970ec42837ee0743296',
             'resources': {
@@ -510,7 +573,8 @@ class Llvm(CMakePackage):
     conflicts('+lldb',        when='~clang')
 
     # LLVM 4 and 5 does not build with GCC 8
-    conflicts('%gcc@8:',      when='@:5')
+    conflicts('%gcc@8:',       when='@:5')
+    conflicts('%gcc@:5.0.999', when='@8:')
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
@@ -544,12 +608,21 @@ class Llvm(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-
         cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
+            '-DLLVM_ENABLE_RTTI:BOOL=ON',
+            '-DLLVM_ENABLE_EH:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
             '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
         ]
+
+        # TODO: Instead of unconditionally disabling CUDA, add a "cuda" variant
+        #       (see TODO above), and set the paths if enabled.
+        cmake_args.extend([
+            '-DCUDA_TOOLKIT_ROOT_DIR:PATH=IGNORE',
+            '-DCUDA_SDK_ROOT_DIR:PATH=IGNORE',
+            '-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE',
+            '-DLIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES:STRING=IGNORE'])
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
@@ -590,13 +663,12 @@ class Llvm(CMakePackage):
 
         if '+all_targets' not in spec:  # all is default on cmake
 
+            targets = ['NVPTX', 'AMDGPU']
             if spec.version < Version('3.9.0'):
-                targets = ['CppBackend', 'NVPTX', 'AMDGPU']
-            else:
                 # Starting in 3.9.0 CppBackend is no longer a target (see
                 # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
                 # the complete list of targets)
-                targets = ['NVPTX', 'AMDGPU']
+                targets.append('CppBackend')
 
             if 'x86' in spec.architecture.target.lower():
                 targets.append('X86')
@@ -611,7 +683,7 @@ class Llvm(CMakePackage):
                 targets.append('PowerPC')
 
             cmake_args.append(
-                '-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
+                '-DLLVM_TARGETS_TO_BUILD:STRING=' + ';'.join(targets))
 
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,6 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 import copy
 import os
-import re
 import sys
 import multiprocessing
 from contextlib import contextmanager
@@ -49,12 +48,14 @@ from llnl.util.filesystem import mkdirp
 
 import spack.paths
 import spack.architecture
+import spack.schema
 import spack.schema.compilers
 import spack.schema.mirrors
 import spack.schema.repos
 import spack.schema.packages
 import spack.schema.modules
 import spack.schema.config
+import spack.schema.upstreams
 from spack.error import SpackError
 
 # Hacked yaml for configuration files preserves line numbers.
@@ -69,6 +70,7 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
+    'upstreams': spack.schema.upstreams.schema
 }
 
 #: Builtin paths to configuration files in Spack
@@ -98,7 +100,7 @@ config_defaults = {
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
-        'build_jobs': multiprocessing.cpu_count(),
+        'build_jobs': min(16, multiprocessing.cpu_count()),
     }
 }
 
@@ -113,47 +115,6 @@ def first_existing(dictionary, keys):
         return next(k for k in keys if k in dictionary)
     except StopIteration:
         raise KeyError("None of %s is in dict!" % keys)
-
-
-def _extend_with_default(validator_class):
-    """Add support for the 'default' attr for properties and patternProperties.
-
-       jsonschema does not handle this out of the box -- it only
-       validates.  This allows us to set default values for configs
-       where certain fields are `None` b/c they're deleted or
-       commented out.
-
-    """
-    import jsonschema
-    validate_properties = validator_class.VALIDATORS["properties"]
-    validate_pattern_properties = validator_class.VALIDATORS[
-        "patternProperties"]
-
-    def set_defaults(validator, properties, instance, schema):
-        for property, subschema in iteritems(properties):
-            if "default" in subschema:
-                instance.setdefault(
-                    property, copy.deepcopy(subschema["default"]))
-        for err in validate_properties(
-                validator, properties, instance, schema):
-            yield err
-
-    def set_pp_defaults(validator, properties, instance, schema):
-        for property, subschema in iteritems(properties):
-            if "default" in subschema:
-                if isinstance(instance, dict):
-                    for key, val in iteritems(instance):
-                        if re.match(property, key) and val is None:
-                            instance[key] = copy.deepcopy(subschema["default"])
-
-        for err in validate_pattern_properties(
-                validator, properties, instance, schema):
-            yield err
-
-    return jsonschema.validators.extend(validator_class, {
-        "properties": set_defaults,
-        "patternProperties": set_pp_defaults
-    })
 
 
 class ConfigScope(object):
@@ -183,12 +144,12 @@ class ConfigScope(object):
     def write_section(self, section):
         filename = self.get_section_filename(section)
         data = self.get_section(section)
-        _validate(data, section_schemas[section])
+        validate(data, section_schemas[section])
 
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
-                _validate(data, section_schemas[section])
+                validate(data, section_schemas[section])
                 syaml.dump(data, stream=f, default_flow_style=False)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
@@ -274,7 +235,7 @@ class SingleFileScope(ConfigScope):
         return self.sections[section]
 
     def write_section(self, section):
-        _validate(self.sections, self.schema)
+        validate(self.sections, self.schema)
         try:
             parent = os.path.dirname(self.path)
             mkdirp(parent)
@@ -318,7 +279,7 @@ class InternalConfigScope(ConfigScope):
         if data:
             for section in data:
                 dsec = data[section]
-                _validate({section: dsec}, section_schemas[section])
+                validate({section: dsec}, section_schemas[section])
                 self.sections[section] = _mark_internal(
                     syaml.syaml_dict({section: dsec}), name)
 
@@ -336,7 +297,7 @@ class InternalConfigScope(ConfigScope):
         """This only validates, as the data is already in memory."""
         data = self.get_section(section)
         if data is not None:
-            _validate(data, section_schemas[section])
+            validate(data, section_schemas[section])
         self.sections[section] = _mark_internal(data, self.name)
 
     def __repr__(self):
@@ -687,7 +648,7 @@ def _validate_section_name(section):
             % (section, " ".join(section_schemas.keys())))
 
 
-def _validate(data, schema, set_defaults=True):
+def validate(data, schema, set_defaults=True):
     """Validate data read in from a Spack YAML file.
 
     Arguments:
@@ -697,17 +658,10 @@ def _validate(data, schema, set_defaults=True):
 
     This leverages the line information (start_mark, end_mark) stored
     on Spack YAML structures.
-
     """
     import jsonschema
-
-    if not hasattr(_validate, 'validator'):
-        default_setting_validator = _extend_with_default(
-            jsonschema.Draft4Validator)
-        _validate.validator = default_setting_validator
-
     try:
-        _validate.validator(schema).validate(data)
+        spack.schema.Validator(schema).validate(data)
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 
@@ -731,7 +685,7 @@ def _read_config_file(filename, schema):
             data = _mark_overrides(syaml.load(f))
 
         if data:
-            _validate(data, schema)
+            validate(data, schema)
         return data
 
     except MarkedYAMLError as e:

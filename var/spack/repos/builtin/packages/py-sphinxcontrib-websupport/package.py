@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class PySphinxcontribWebsupport(PythonPackage):
     #     'sphinxcontrib.websupport.storage', 'sphinxcontrib.websupport.search'
     # ]
 
+    version('1.1.0', sha256='9de47f375baf1ea07cdb3436ff39d7a9c76042c10a769c52353ec46e4e8fc3b9')
     version('1.0.1', '84df26463b1ba65b07f926dbe2055665')
 
     depends_on('py-setuptools', type='build')
