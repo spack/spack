@@ -15,4 +15,4 @@ class PyFlye(PythonPackage):
 
     version('2.4.2', sha256='5b74d4463b860c9e1614ef655ab6f6f3a5e84a7a4d33faf3b29c7696b542c51a')
 
-    depends_on('python@2.7.1:2.7.99', type=('build', 'run'))
+    depends_on('python@2.7:2.8', type=('build', 'run'))
