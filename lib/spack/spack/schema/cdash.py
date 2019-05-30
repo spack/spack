@@ -14,7 +14,6 @@
 properties = {
     'cdash': {
         'type': 'object',
-        'default': {},
         'additionalProperties': False,
         'required': ['build-group', 'url', 'project', 'site'],
         'patternProperties': {

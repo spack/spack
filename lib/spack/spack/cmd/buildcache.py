@@ -20,11 +20,8 @@ import spack.store
 import spack.config
 import spack.repo
 import spack.store
-
 from spack.error import SpecError
-from spack.paths import etc_path
 from spack.spec import Spec, save_dependency_spec_yamls
-from spack.spec_set import CombinatorialSpecSet
 
 from spack.cmd import display_specs
 
@@ -417,10 +414,9 @@ def check_binaries(args):
     if args.spec or args.spec_yaml:
         specs = [get_concrete_spec(args)]
     else:
-        release_specs_path = os.path.join(
-            etc_path, 'spack', 'defaults', 'release.yaml')
-        spec_set = CombinatorialSpecSet.from_file(release_specs_path)
-        specs = [spec for spec in spec_set]
+        env = ev.get_env(args, 'buildcache', required=True)
+        env.concretize()
+        specs = env.all_specs()
 
     if not specs:
         tty.msg('No specs provided, exiting.')
