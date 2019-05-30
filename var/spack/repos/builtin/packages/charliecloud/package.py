@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Charliecloud(MakefilePackage):
     """Lightweight user-defined software stacks for HPC."""
 
