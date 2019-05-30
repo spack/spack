@@ -207,7 +207,7 @@ function _spack_pathadd {
 
 # Export spack function so it is available in subshells (only works with bash)
 if [ -n "${BASH_VERSION:-}" ]; then
-	export -f spack
+    export -f spack
 fi
 
 #
@@ -223,14 +223,6 @@ if [ -z "$_sp_source_file" ]; then
         _sp_source_file="$0"
     fi
 fi
-
-#
-# Find root directory and add bin to path.
-#
-_sp_share_dir=$(cd "$(dirname $_sp_source_file)" && pwd)
-_sp_prefix=$(cd "$(dirname $(dirname $_sp_share_dir))" && pwd)
-_spack_pathadd PATH       "${_sp_prefix%/}/bin"
-export SPACK_ROOT=${_sp_prefix}
 
 #
 # Determine which shell is being used
@@ -250,6 +242,17 @@ function _spack_determine_shell() {
     fi
 }
 export SPACK_SHELL=$(_spack_determine_shell)
+
+#
+# Find root directory and add bin to path.
+#
+# We send cd output to /dev/null to avoid because a lot of users set up
+# their shell so that cd prints things out to the tty.
+#
+_sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
+_sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+_spack_pathadd PATH "${_sp_prefix%/}/bin"
+export SPACK_ROOT="${_sp_prefix}"
 
 #
 # Check whether a function of the given name is defined
