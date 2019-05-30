@@ -23,9 +23,9 @@ packages:
     specs:
       - brainbuilder@0.11.1
       - connectome-tools@0.3.2
-      - spykfunc@0.13.2
+      - spykfunc@0.14.1
       - psp-validation@0.1.12
-      - py-pytouchreader@1.4.2
+      - py-pytouchreader@1.4.3
       - py-basalt@0.2.4
 
   gnu-stable-parallel:
@@ -37,7 +37,7 @@ packages:
       - mpi
     specs:
       - functionalizer@3.12.1
-      - parquet-converters@0.3
+      - parquet-converters@0.4.1
       - synapsetool@0.4.1
       - touchdetector@4.4.2
       - brayns@0.8.0 +opendeck +brion ^brion+python
