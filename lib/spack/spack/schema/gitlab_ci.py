@@ -14,7 +14,6 @@
 properties = {
     'gitlab-ci': {
         'type': 'object',
-        'default': {},
         'additionalProperties': False,
         'required': ['mappings'],
         'patternProperties': {
@@ -25,7 +24,6 @@ properties = {
                 'patternProperties': {
                     r'[\w\d\-_\.]+': {
                         'type': 'object',
-                        'default': {},
                         'additionalProperties': False,
                         'required': ['match', 'runner-attributes'],
                         'properties': {
@@ -38,7 +36,6 @@ properties = {
                             },
                             'runner-attributes': {
                                 'type': 'object',
-                                'default': {},
                                 'additionalProperties': True,
                                 'required': ['tags'],
                                 'properties': {

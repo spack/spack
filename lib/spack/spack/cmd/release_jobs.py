@@ -4,17 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
-import sys
 
 from jsonschema import validate, ValidationError
 from six import iteritems
-from six.moves.urllib.request import build_opener, HTTPHandler, Request
+from six.moves.urllib.error import HTTPError, URLError
 from six.moves.urllib.parse import urlencode
+from six.moves.urllib.request import build_opener, HTTPHandler, Request
 
 import llnl.util.tty as tty
 
 import spack.environment as ev
 from spack.dependency import all_deptypes
+from spack.error import SpackError
 from spack.spec import Spec
 from spack.schema.specs_deps import schema as specs_deps_schema
 import spack.util.spack_yaml as syaml
@@ -42,7 +43,7 @@ def setup_parser(subparser):
         help="Print summary of staged jobs to standard output")
 
     subparser.add_argument(
-        '-c', '--cdash-credentials', default=None,
+        '--cdash-credentials', default=None,
         help="Path to file containing CDash authentication token")
 
 
@@ -59,9 +60,9 @@ def _create_buildgroup(opener, headers, url, project, group_name, group_type):
     response_code = response.getcode()
 
     if response_code != 200 and response_code != 201:
-        print('Creating buildgroup failed (response code = {0}'.format(
-            response_code))
-        return None
+        msg = 'Creating buildgroup failed (response code = {0}'.format(
+            response_code)
+        raise SpackError(msg)
 
     response_text = response.read()
     response_json = json.loads(response_text)
@@ -71,7 +72,7 @@ def _create_buildgroup(opener, headers, url, project, group_name, group_type):
 
 
 def populate_buildgroup(job_names, group_name, project, site,
-                        credentials, cdash_url, exit_on_fail=False):
+                        credentials, cdash_url):
     url = "{0}/api/v1/buildgroup.php".format(cdash_url)
 
     headers = {
@@ -88,8 +89,9 @@ def populate_buildgroup(job_names, group_name, project, site,
         'Latest')
 
     if not parent_group_id or not group_id:
-        print('Unable to create or retrieve the build groups')
-        sys.exit(1)
+        msg = 'Failed to create or retrieve buildgroups for {0}'.format(
+            group_name)
+        raise SpackError(msg)
 
     data = {
         'project': project,
@@ -107,10 +109,10 @@ def populate_buildgroup(job_names, group_name, project, site,
     response = opener.open(request)
     response_code = response.getcode()
 
-    if response_code != 200 and exit_on_fail:
-        print('Unexpected response ({0}) when populating buildgroup'.format(
-            response_code))
-        sys.exit(1)
+    if response_code != 200:
+        msg = 'Error response code ({0}) in populate_buildgroup'.format(
+            response_code)
+        raise SpackError(msg)
 
 
 def get_job_name(spec, osarch, build_group):
@@ -173,24 +175,12 @@ def get_spec_dependencies(specs, deps, spec_labels):
 
 
 def stage_spec_jobs(specs):
-    """Take a set of release specs along with a dictionary describing the
-        available docker containers and what compilers they have, and generate
-        a list of "stages", where the jobs in any stage are dependent only on
-        jobs in previous stages.  This allows us to maximize build parallelism
-        within the gitlab-ci framework.
+    """Take a set of release specs and generate a list of "stages", where the
+        jobs in any stage are dependent only on jobs in previous stages.  This
+        allows us to maximize build parallelism within the gitlab-ci framework.
 
     Arguments:
-        spec_set (CombinatorialSpecSet): Iterable containing all the specs
-            to build.
-        containers (dict): Describes the docker containers available to use
-            for concretizing specs (and also for the gitlab runners to use
-            for building packages).  The schema can be found at
-            "lib/spack/spack/schema/os_container_mapping.py"
-        current_system (string): If provided, this indicates not to use the
-            containers for concretizing the release specs, but rather just
-            assume the current system is in the "containers" dictionary.  A
-            SpackError will be raised if the current system is not in that
-            dictionary.
+        specs (Iterable): Specs to build
 
     Returns: A tuple of information objects describing the specs, dependencies
         and stages:
@@ -391,6 +381,8 @@ def release_jobs(parser, args):
     env = ev.get_env(args, 'release-jobs', required=True)
     env.concretize(force=args.force)
 
+    # FIXME: What's the difference between one that opens with 'spack'
+    # and one that opens with 'env'?  This will only handle the former.
     yaml_root = env.yaml['spack']
 
     if 'gitlab-ci' not in yaml_root:
@@ -514,8 +506,11 @@ def release_jobs(parser, args):
 
     # Use "all_job_names" to populate the build group for this set
     if cdash_auth_token:
-        populate_buildgroup(all_job_names, build_group, cdash_project,
-                            cdash_site, cdash_auth_token, cdash_url)
+        try:
+            populate_buildgroup(all_job_names, build_group, cdash_project,
+                                cdash_site, cdash_auth_token, cdash_url)
+        except (SpackError, HTTPError, URLError) as err:
+            tty.warn('Problem populating buildgroup: {0}'.format(err))
     else:
         tty.warn('Unable to populate buildgroup without CDash credentials')
 
