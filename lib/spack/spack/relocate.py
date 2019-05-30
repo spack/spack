@@ -443,9 +443,14 @@ def relocate_text(path_names, oldpath, newpath, oldprefix, newprefix):
     """
     Replace old path with new path in text file path_name
     """
-    fs.filter_file('%s' % oldpath, '%s' % newpath, *path_names, backup=False)
-    fs.filter_file('%s' % oldprefix, '%s' %
-                   newprefix, *path_names, backup=False)
+    fs.filter_file('%s' % oldpath, '%s' % newpath, *path_names,
+                   backup=False, string=True)
+    sbangre='#!/bin/bash %s/bin/sbang' % oldprefix
+    sbangnew='#!/bin/bash %s/bin/sbang' % newprefix
+    fs.filter_file(sbangre, sbangnew, *path_names,
+                   backup=False, string=True)
+    fs.filter_file(oldprefix, newprefix, *path_names,
+                   backup=False, string=True)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
