@@ -445,8 +445,8 @@ def relocate_text(path_names, oldpath, newpath, oldprefix, newprefix):
     """
     fs.filter_file('%s' % oldpath, '%s' % newpath, *path_names,
                    backup=False, string=True)
-    sbangre='#!/bin/bash %s/bin/sbang' % oldprefix
-    sbangnew='#!/bin/bash %s/bin/sbang' % newprefix
+    sbangre = '#!/bin/bash %s/bin/sbang' % oldprefix
+    sbangnew = '#!/bin/bash %s/bin/sbang' % newprefix
     fs.filter_file(sbangre, sbangnew, *path_names,
                    backup=False, string=True)
     fs.filter_file(oldprefix, newprefix, *path_names,
