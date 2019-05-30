@@ -5,7 +5,7 @@
 
 """Schema for configuration merged into one file.
 
-.. literalinclude:: ../spack/schema/merged.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/merged.py
    :lines: 39-
 """
 from llnl.util.lang import union_dicts
@@ -16,6 +16,7 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.upstreams
 
 
 #: Properties for inclusion in other schemas
@@ -25,7 +26,8 @@ properties = union_dicts(
     spack.schema.mirrors.properties,
     spack.schema.modules.properties,
     spack.schema.packages.properties,
-    spack.schema.repos.properties
+    spack.schema.repos.properties,
+    spack.schema.upstreams.properties
 )
 
 

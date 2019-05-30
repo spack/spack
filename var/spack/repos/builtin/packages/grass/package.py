@@ -13,9 +13,13 @@ class Grass(AutotoolsPackage):
        graphics and maps production, spatial modeling, and visualization."""
 
     homepage = "http://grass.osgeo.org"
-    url      = "https://grass.osgeo.org/grass74/source/grass-7.4.1.tar.gz"
 
+    version('7.6.1',    '9ca74f9010d013f735737a90c65d8a7f')
+    version('7.4.4',    '98ae22f8a97a83a4d99a537236639e9c')
+    version('7.4.3',    '4f4462af7a95fe84ee21f3dd585dcb05')
+    version('7.4.2',    'bb3fc005e707f762c8fee36095e1df7f')
     version('7.4.1',    'bf7add62cbeb05a3ed5ad832344ba524')
+    version('7.4.0',    '15b9eb019d6c132c1a65455b3283cf69')
 
     variant('cxx',       default=True,  description='Add c++ functionality')
     variant('tiff',      default=True,  description='Add TIFF functionality')
@@ -65,6 +69,12 @@ class Grass(AutotoolsPackage):
     depends_on('bzip2', when='+bzlib')
     depends_on('netcdf', when='+netcdf')
     depends_on('geos', when='+geos')
+
+    def url_for_version(self, version):
+        base = 'https://grass.osgeo.org'
+        return '{0}/grass{1}/source/grass-{2}.tar.gz'.format(
+            base, version.up_to(2).joined, version.dotted
+        )
 
     def configure_args(self):
         spec = self.spec

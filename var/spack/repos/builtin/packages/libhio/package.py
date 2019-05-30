@@ -21,8 +21,10 @@ class Libhio(AutotoolsPackage):
     # We don't include older versions since they are missing features
     # needed by current and future consumers of libhio
     #
-    version('1.4.1.2', '38c7d33210155e5796b16d536d1b5cfe')
-    version('1.4.1.0', '6ef566fd8cf31fdcd05fab01dd3fae44')
+    version('1.4.1.3', sha256='b6ad2354f1bc597e7e55fc989ff50944835d64149f4925c2f45df950919e4d08')
+    version('1.4.1.2', sha256='87a0f9b72b7aa69485c40d9bd36f02af653b70e8eed3eb0b50eaeb02ff0a9049')
+    version('1.4.1.1', sha256='5c65d18bf74357f9d9960bf6b9ad2432f8fc5a2b653e72befe4d1caabb9a2f7a')
+    version('1.4.1.0', sha256='963f4a8d365afd92a5593f80946e2c4c79f4185d897436a43fae61dae5567ac4')
 
     #
     # main users of libhio thru spack will want to use HFDF5 plugin,

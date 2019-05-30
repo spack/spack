@@ -603,3 +603,179 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     assert not test.specs_by_hash
     assert not test.concretized_order
     assert not test.user_specs
+
+
+def test_env_updates_view_install(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        add('mpileaks')
+        install('--fake')
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+
+def test_env_without_view_install(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    # Test enabling a view after installing specs
+    env('create', '--without-view', 'test')
+
+    test_env = ev.read('test')
+    with pytest.raises(spack.environment.SpackEnvironmentError):
+        test_env.view()
+
+    view_dir = tmpdir.mkdir('view')
+
+    with ev.read('test'):
+        add('mpileaks')
+        install('--fake')
+
+        env('view', 'enable', str(view_dir))
+
+    # After enabling the view, the specs should be linked into the environment
+    # view dir
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+
+def test_env_config_view_default(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    # This config doesn't mention whether a view is enabled
+    test_config = """\
+env:
+  specs:
+  - mpileaks
+"""
+
+    _env_create('test', StringIO(test_config))
+
+    with ev.read('test'):
+        install('--fake')
+
+    e = ev.read('test')
+    # Try retrieving the view object
+    view = e.view()
+    assert view.get_spec('mpileaks')
+
+
+def test_env_updates_view_install_package(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        install('--fake', 'mpileaks')
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+
+def test_env_updates_view_add_concretize(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    install('--fake', 'mpileaks')
+    with ev.read('test'):
+        add('mpileaks')
+        concretize()
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+
+def test_env_updates_view_uninstall(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        install('--fake', 'mpileaks')
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+    with ev.read('test'):
+        uninstall('-ay')
+
+    assert (not os.path.exists(str(view_dir.join('.spack'))) or
+            os.listdir(str(view_dir.join('.spack'))) == ['projections.yaml'])
+
+
+def test_env_updates_view_uninstall_referenced_elsewhere(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    install('--fake', 'mpileaks')
+    with ev.read('test'):
+        add('mpileaks')
+        concretize()
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+    with ev.read('test'):
+        uninstall('-ay')
+
+    assert (not os.path.exists(str(view_dir.join('.spack'))) or
+            os.listdir(str(view_dir.join('.spack'))) == ['projections.yaml'])
+
+
+def test_env_updates_view_remove_concretize(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    install('--fake', 'mpileaks')
+    with ev.read('test'):
+        add('mpileaks')
+        concretize()
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+    with ev.read('test'):
+        remove('mpileaks')
+        concretize()
+
+    assert (not os.path.exists(str(view_dir.join('.spack'))) or
+            os.listdir(str(view_dir.join('.spack'))) == ['projections.yaml'])
+
+
+def test_env_updates_view_force_remove(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        install('--fake', 'mpileaks')
+
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    # Check that dependencies got in too
+    assert os.path.exists(str(view_dir.join('.spack/libdwarf')))
+
+    with ev.read('test'):
+        remove('-f', 'mpileaks')
+
+    assert (not os.path.exists(str(view_dir.join('.spack'))) or
+            os.listdir(str(view_dir.join('.spack'))) == ['projections.yaml'])
+
+
+def test_env_activate_view_fails(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    """Sanity check on env activate to make sure it requires shell support"""
+    out = env('activate', 'test')
+    assert "To initialize spack's shell commands:" in out

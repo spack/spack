@@ -26,6 +26,7 @@ import sys
 import re
 import shutil
 import copy
+import xml.etree.ElementTree
 from functools import wraps
 from six import string_types, with_metaclass
 
@@ -238,7 +239,7 @@ class URLFetchStrategy(FetchStrategy):
         if not spack.config.get('config:verify_ssl'):
             curl_args.append('-k')
 
-        if sys.stdout.isatty():
+        if sys.stdout.isatty() and tty.msg_enabled():
             curl_args.append('-#')  # status bar when using a tty
         else:
             curl_args.append('-sS')  # just errors when not.
@@ -771,13 +772,9 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return self.revision
 
     def get_source_id(self):
-        output = self.svn('info', self.url, output=str)
-        if not output:
-            return None
-        lines = output.split('\n')
-        for line in lines:
-            if line.startswith('Revision:'):
-                return line.split()[-1]
+        output = self.svn('info', '--xml', self.url, output=str)
+        info = xml.etree.ElementTree.fromstring(output)
+        return info.find('entry/commit').get('revision')
 
     @_needs_stage
     def fetch(self):

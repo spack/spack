@@ -17,7 +17,10 @@ class SagaGis(AutotoolsPackage):
     git         = "git://git.code.sf.net/p/saga-gis/code"
 
     version('develop',  branch='master')
-    version('7.0.0',    branch='release-7.0.0', preferred=True)
+    version('7.3.0',    branch='release-7.3.0')
+    version('7.1.1',    branch='release-7.1.1')
+    version('7.1.0',    branch='release-7.1.0')
+    version('7.0.0',    branch='release-7.0.0')
     version('6.4.0',    branch='release-6.4.0')
     version('6.3.0',    branch='release-6.3.0')
     version('6.2.0',    branch='release-6.2.0')

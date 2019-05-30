@@ -14,6 +14,7 @@ class Eigen(CMakePackage):
     homepage = 'http://eigen.tuxfamily.org/'
     url      = 'https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2'
 
+    version('3.3.7', sha256='9f13cf90dedbe3e52a19f43000d71fdf72e986beb9a5436dddcd61ff9d77a3ce')
     version('3.3.5', 'e83549a79d1b721da0f8899ab34edf95')
     version('3.3.4', 'a7aab9f758249b86c93221ad417fbe18')
     version('3.3.3', 'b2ddade41040d9cf73b39b4b51e8775b')
@@ -23,13 +24,16 @@ class Eigen(CMakePackage):
     version('3.2.8', '64f4aef8012a424c7e079eaf0be71793ab9bc6e0')
     version('3.2.7', 'cc1bacbad97558b97da6b77c9644f184')
 
-    variant('metis', default=True, description='Enables metis backend')
-    variant('scotch', default=True, description='Enables scotch backend')
-    variant('fftw', default=True, description='Enables FFTW backend')
-    variant('suitesparse', default=True,
-            description='Enables SuiteSparse support')
-    variant('mpfr', default=True,
-            description='Enables support for multi-precisions FP via mpfr')
+    variant('metis', default=False,
+            description='Enables metis permutations in sparse algebra')
+    variant('scotch', default=False,
+            description='Enables scotch/pastix sparse factorization methods')
+    variant('fftw', default=False,
+            description='Enables FFTW backend for the FFT plugin')
+    variant('suitesparse', default=False,
+            description='Enables SuiteSparse sparse factorization methods')
+    variant('mpfr', default=False,
+            description='Enables the multi-precisions floating-point plugin')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -43,3 +47,13 @@ class Eigen(CMakePackage):
     depends_on('gmp', when='+mpfr')
 
     patch('find-ptscotch.patch', when='@3.3.4')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('CPATH',
+                             join_path(self.prefix, 'include', 'eigen3'))
+
+    @property
+    def headers(self):
+        headers = find_all_headers(self.prefix.include)
+        headers.directories = [self.prefix.include.eigen3]
+        return headers

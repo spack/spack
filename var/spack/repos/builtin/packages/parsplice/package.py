@@ -17,17 +17,23 @@ class Parsplice(CMakePackage):
     tags = ['ecp', 'ecp-apps']
 
     version('develop', branch='master')
+    version('multisplice', branch='multisplice')
     version('1.1', '3a72340d49d731a076e8942f2ae2f4e9')
 
     depends_on("cmake@3.1:", type='build')
     depends_on("berkeley-db")
     depends_on("nauty")
-    depends_on("boost")
+    depends_on("boost cxxstd=11")
     depends_on("mpi")
     depends_on("eigen@3:")
     depends_on("lammps+lib@20170901:")
+    depends_on("lammps+lib+exceptions", when="@multisplice")
 
     def cmake_args(self):
-        options = ['-DBUILD_SHARED_LIBS=ON']
+        spec = self.spec
+        if spec.satisfies('@multisplice'):
+            options = []
+        else:
+            options = ['-DBUILD_SHARED_LIBS=ON', '-DBoost_NO_BOOST_CMAKE=ON']
 
         return options

@@ -35,6 +35,7 @@ class Go(Package):
 
     extendable = True
 
+    version('1.11.5', 'bc1ef02bb1668835db1390a2e478dcbccb5dd16911691af9d75184bbe5aa943e')
     version('1.11.4', '4cfd42720a6b1e79a8024895fa6607b69972e8e32446df76d6ce79801bbadb15')
     version('1.11.2', '042fba357210816160341f1002440550e952eb12678f7c9e7e9d389437942550')
     version('1.11.1', '558f8c169ae215e25b81421596e8de7572bd3ba824b79add22fba6e284db1117')
@@ -81,10 +82,17 @@ class Go(Package):
 
     def install(self, spec, prefix):
         bash = which('bash')
-        with working_dir('src'):
+
+        wd = '.'
+
+        # 1.11.5 directory structure is slightly different
+        if self.version == Version('1.11.5'):
+            wd = 'go'
+
+        with working_dir(join_path(wd, 'src')):
             bash('{0}.bash'.format('all' if self.run_tests else 'make'))
 
-        install_tree('.', prefix)
+        install_tree(wd, prefix)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)

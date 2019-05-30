@@ -17,6 +17,8 @@ class Hypre(Package):
     url      = "https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/LLNL/hypre.git"
 
+    maintainers = ['ulrikeyang', 'osborn9', 'balay']
+
     version('develop', branch='master')
     version('2.15.1', '877002d49f38b6a1434955baf79eff35')
     version('2.15.0', '4645acc49141069cae1d53de96107a08')
@@ -38,6 +40,8 @@ class Hypre(Package):
     # SuperluDist have conflicting headers with those in Hypre
     variant('internal-superlu', default=True,
             description="Use internal Superlu routines")
+    variant('superlu-dist', default=False,
+            description='Activates support for SuperluDist')
     variant('int64', default=False,
             description="Use 64bit integers")
     variant('mpi', default=True, description='Enable MPI support')
@@ -50,10 +54,13 @@ class Hypre(Package):
     # Patch to build shared libraries on Darwin
     patch('darwin-shared-libs-for-hypre-2.13.0.patch', when='+shared@2.13.0 platform=darwin')
     patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0 platform=darwin')
+    patch('superlu-dist-link-2.15.0.patch', when='+superlu-dist @2.15:')
+    patch('superlu-dist-link-2.14.0.patch', when='+superlu-dist @:2.14.0')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
+    depends_on('superlu-dist', when='+superlu-dist+mpi')
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
@@ -99,6 +106,13 @@ class Hypre(Package):
             # MLI and FEI do not build without superlu on Linux
             configure_args.append("--without-mli")
             configure_args.append("--without-fei")
+
+        if 'superlu-dist' in self.spec:
+            configure_args.append('--with-dsuperlu-include=%s' %
+                                  spec['superlu-dist'].prefix.include)
+            configure_args.append('--with-dsuperlu-lib=%s' %
+                                  spec['superlu-dist'].libs)
+            configure_args.append('--with-dsuperlu')
 
         if '+debug' in self.spec:
             configure_args.append("--enable-debug")

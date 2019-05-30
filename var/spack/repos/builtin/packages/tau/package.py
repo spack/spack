@@ -23,9 +23,14 @@ class Tau(Package):
 
     version('develop', branch='master')
     version('2.28', '68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
+    version('2.27.2p1', 'b9cc42ee8afdcfefe5104ab0a8f23a23')
+    version('2.27.2', 'b264ab0df78112f9a529e59a5f4dc191')
     version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
-    version('2.27',   '76602d35fc96f546b5b9dcaf09158651')
+    version('2.27', '76602d35fc96f546b5b9dcaf09158651')
     version('2.26.3', '4ec14e85b8f3560b58628512c7b49e17')
+    version('2.26.2', '8a5908c35dac9406c9220b8098c70c1c')
+    version('2.26.1', 'cc13df9d6ad19bca9a8e55a9e7d0341e')
+    version('2.26', '2af91f02ad26d5bf0954146c56a8cdfa')
     version('2.25', '46cd48fa3f3c4ce0197017b3158a2b43')
     version('2.24.1', '6635ece6d1f08215b02f5d0b3c1e971b')
     version('2.24', '57ce33539c187f2e5ec68f0367c76db4')
@@ -34,41 +39,43 @@ class Tau(Package):
     variant('scorep', default=False, description='Activates SCOREP support')
     variant('openmp', default=False, description='Use OpenMP threads')
     variant('pthreads', default=True, description='Use POSIX threads')
-    variant('mpi', default=True, description='Specify use of TAU MPI wrapper library')
-    variant('phase', default=True, description='Generate phase based profiles')
-    variant('papi', default=True, description='Use PAPI for hardware counters')
-    variant('binutils', default=True, description='Use Binutils for address resolution')
-    variant('libunwind', default=True, description='Use Libunwind for call stack unwinding')
-    variant('otf2', default=True, description='Use OTF2 for trace format output')
+    variant('mpi', default=False, description='Specify use of TAU MPI wrapper library')
+    variant('phase', default=False, description='Generate phase based profiles')
+    variant('papi', default=True, description='Activates Performance API')
+    variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
+    variant('libunwind', default=True, description='Activates support of libunwind')
+    variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
-    variant('comm', default=True, description='Generate profiles with MPI communicator info')
-    variant('python', default=False, description='Include Python profiling support')
+    variant('comm', default=False, description=' Generate profiles with MPI communicator info')
+    variant('python', default=False, description='Activates Python support')
+    variant('likwid', default=False, description='Activates LIKWID support')
+    variant('ompt', default=False, description='Activates OMPT instrumentation')
+    variant('opari', default=False, description='Activates Opari2 instrumentation')
+    variant('shmem', default=False, description='Activates SHMEM support')
+    variant('gasnet', default=False, description='Activates GASNET support')
+    variant('cuda', default=False, description='Activates CUDA support')
 
     # Support cross compiling.
-    # A _reasonable_ subset of the full set of TAU architectures supported: 
-    # xt3|craycnl|bgp|bgq|bgl|ibm64|ibm64linux|sunx86_64
-    # nec-sx-aurora|crayxmt|solaris2-64|mips32|sgin32
-    # sgi64|sgio32|arm_linux|arm_android
+    # This is a _reasonable_ subset of the full set of TAU
+    # architectures supported:
     variant('craycnl', default=False, description='Build for Cray compute nodes')
     variant('bgq', default=False, description='Build for IBM BlueGene/Q compute nodes')
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
 
-    # TODO: need to add optional CUDA.
-    # TODO: need to add optional adios/adios2.
-    # TODO: need to add optional sos.
-    # Less important (for now):
-    # TODO: need to support SHMEM.
-    # TODO: need to add optional ROCm.
-
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
+    depends_on('otf2@2.1:', when='+otf2')
+    depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     # TAU requires the ELF header support, libiberty and demangle.
-    depends_on('binutils+libiberty+extras~nls', when='+binutils')
-    depends_on('libunwind', when='+libunwind')
-    depends_on('otf2', when='+otf2')
-    depends_on('mpi', when='+mpi')
+    depends_on('binutils+libiberty+headers~nls', when='+binutils')
     depends_on('python@2.7:', when='+python')
+    depends_on('libunwind', when='+libunwind')
+    depends_on('mpi', when='+mpi')
+    depends_on('cuda', when='+cuda')
+    depends_on('gasnet', when='+gasnet')
+
+    filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
     def set_compiler_options(self):
 
@@ -89,10 +96,13 @@ class Tau(Package):
         # PATH
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
-        compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
-                            '-cc=%s' % self.compiler.cc_names[0]]
+
+        compiler_options = ['-c++=%s' % self.compiler.cxx,
+                            '-cc=%s' % self.compiler.cc]
+
         if self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
+
         ##########
 
         # Construct the string of custom compiler flags and append it to
@@ -123,11 +133,17 @@ class Tau(Package):
         if '+pthreads' in spec:
             options.append('-pthread')
 
-        if '+openmp' in spec:
-            options.append('-openmp')
+        if '+likwid' in spec:
+            options.append("-likwid=%s" % spec['likwid'].prefix)
 
         if '+papi' in spec:
             options.append("-papi=%s" % spec['papi'].prefix)
+
+        if '+openmp' in spec:
+            options.append('-openmp')
+
+        if '+opari' in spec:
+            options.append('-opari')
 
         if '+binutils' in spec:
             options.append("-bfd=%s" % spec['binutils'].prefix)
@@ -143,42 +159,42 @@ class Tau(Package):
             if '+comm' in spec:
                 options.append('-PROFILECOMMUNICATORS')
 
+        if '+shmem' in spec:
+            options.append('-shmem')
+
+        if '+gasnet' in spec:
+            options.append('-gasnet=%s' % spec['gasnet'].prefix)
+
+        if '+cuda' in spec:
+            options.append("-cuda=%s" % spec['cuda'].prefix)
+
         if '+phase' in spec:
             options.append('-PROFILEPHASE')
-
-        if '+craycnl' in spec:
-            options.append('-arch=craycnl')
-
-        if '+bgq' in spec:
-            options.append('-arch=bgq')
-
-        if '+ppc64le' in spec:
-            options.append('-arch=ibm64linux')
 
         if '+python' in spec:
             options.append('-python')
             # find Python.h (i.e. include/python2.7/Python.h)
-            include_path=spec['python'].prefix.include
-            found=False
-            for root, dirnames, filenames in os.walk(spec['python'].prefix.include):
-                for filename in fnmatch.filter(filenames, 'Python.h'):
-                    include_path=root
+            include_path = spec['python'].prefix.include
+            found = False
+            for root, dirs, files in os.walk(spec['python'].prefix.include):
+                for filename in fnmatch.filter(files, 'Python.h'):
+                    include_path = root
                     break
-                    found=True
+                    found = True
                 if found:
                     break
             options.append("-pythoninc=%s" % include_path)
             # find libpython*.* (i.e. lib/python2.7/libpython2.7.so)
-            lib_path=spec['python'].prefix.lib
-            found=False
-            file_to_find='libpython*.so'
+            lib_path = spec['python'].prefix.lib
+            found = False
+            file_to_find = 'libpython*.so'
             if (platform.system() == "Darwin"):
-                file_to_find='libpython*.dylib'
-            for root, dirnames, filenames in os.walk(spec['python'].prefix.lib):
-                for filename in fnmatch.filter(filenames, file_to_find):
-                    lib_path=root
+                file_to_find = 'libpython*.dylib'
+            for root, dirs, files in os.walk(spec['python'].prefix.lib):
+                for filename in fnmatch.filter(files, file_to_find):
+                    lib_path = root
                     break
-                    found=True
+                    found = True
                 if found:
                     break
             options.append("-pythonlib=%s" % lib_path)
@@ -195,7 +211,7 @@ class Tau(Package):
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
             for d in ('bin', 'lib'):
-                src  = join_path(self.prefix, subdir, d)
+                src = join_path(self.prefix, subdir, d)
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)

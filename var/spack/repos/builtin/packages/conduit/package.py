@@ -38,6 +38,7 @@ class Conduit(Package):
     git      = "https://github.com/LLNL/conduit.git"
 
     version('master', branch='master', submodules=True, preferred=True)
+    version('0.4.0', sha256='c228e6f0ce5a9c0ffb98e0b3d886f2758ace1a4b40d00f3f118542c0747c1f52')
     version('0.3.1', 'b98d1476199a46bde197220cd9cde042')
     version('0.3.0', '6396f1d1ca16594d7c66d4535d4f898e')
     # note: checksums on github automatic release source tars changed ~9/17
@@ -60,6 +61,8 @@ class Conduit(Package):
     # variants for comm and i/o
     variant("mpi", default=True, description="Build Conduit MPI Support")
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
+    variant("hdf5_compat", default=True,
+            description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
 
@@ -97,8 +100,10 @@ class Conduit(Package):
     #
     # Use HDF5 1.8, for wider output compatibly
     # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8.999~cxx~mpi~fortran", when="+hdf5+shared")
-    depends_on("hdf5@1.8.19:1.8.999~shared~cxx~mpi~fortran", when="+hdf5~shared")
+    depends_on("hdf5@1.8.19:1.8.999~cxx~mpi~fortran", when="+hdf5+hdf5_compat+shared")
+    depends_on("hdf5@1.8.19:1.8.999~shared~cxx~mpi~fortran", when="+hdf5+hdf5_compat~shared")
+    depends_on("hdf5~cxx~mpi~fortran", when="+hdf5~hdf5_compat+shared")
+    depends_on("hdf5~shared~cxx~mpi~fortran", when="+hdf5~hdf5_compat~shared")
 
     # we are not using silo's fortran features
     depends_on("silo~fortran", when="+silo+shared")

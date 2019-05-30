@@ -14,12 +14,17 @@ class Ninja(Package):
 
     homepage = "https://ninja-build.org/"
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
+    git      = "https://github.com/Kitware/ninja.git"
 
+    version('kitware', branch='features-for-fortran')
+    version('1.9.0', sha256='5d7ec75828f8d3fd1a0c2f31b5b0cea780cdfe1031359228c428c1a48bfcd5b9')
     version('1.8.2', '5fdb04461cc7f5d02536b3bfc0300166')
     version('1.7.2', '7b482218757acbaeac4d4d54a3cd94e1')
     version('1.6.0', '254133059f2da79d8727f654d7198f43')
 
-    depends_on('python', type=('build', 'run'))
+    depends_on('python', type='build')
+
+    provides('ninja-fortran', when='@kitware')
 
     phases = ['configure', 'install']
 

@@ -7,6 +7,7 @@ import pytest
 import llnl.util.lang
 
 import spack.architecture
+import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec
@@ -130,9 +131,11 @@ class TestConcretize(object):
         concrete = check_concretize('mpileaks   ^mpich2@1.3.1:1.4')
         assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
-    def test_concretize_disable_compiler_existence_check(self):
-        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            check_concretize('dttop %gcc@100.100')
+    def test_concretize_enable_disable_compiler_existence_check(self):
+        with spack.concretize.concretizer.enable_compiler_existence_check():
+            with pytest.raises(
+                    spack.concretize.UnavailableCompilerVersionError):
+                check_concretize('dttop %gcc@100.100')
 
         with spack.concretize.concretizer.disable_compiler_existence_check():
             spec = check_concretize('dttop %gcc@100.100')
@@ -267,10 +270,13 @@ class TestConcretize(object):
         with pytest.raises(spack.spec.MultipleProviderError):
             s.concretize()
 
-    def test_no_matching_compiler_specs(self):
-        s = Spec('a %gcc@0.0.0')
-        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            s.concretize()
+    def test_no_matching_compiler_specs(self, mock_config):
+        # only relevant when not building compilers as needed
+        with spack.concretize.concretizer.enable_compiler_existence_check():
+            s = Spec('a %gcc@0.0.0')
+            with pytest.raises(
+                    spack.concretize.UnavailableCompilerVersionError):
+                s.concretize()
 
     def test_no_compilers_for_arch(self):
         s = Spec('a arch=linux-rhel0-x86_64')
@@ -520,3 +526,41 @@ class TestConcretize(object):
         t.concretize()
 
         assert s.dag_hash() == t.dag_hash()
+
+    @pytest.mark.parametrize('abstract_specs', [
+        # Establish a baseline - concretize a single spec
+        ('mpileaks',),
+        # When concretized together with older version of callpath
+        # and dyninst it uses those older versions
+        ('mpileaks', 'callpath@0.9', 'dyninst@8.1.1'),
+        # Handle recursive syntax within specs
+        ('mpileaks', 'callpath@0.9 ^dyninst@8.1.1', 'dyninst'),
+        # Test specs that have overlapping dependencies but are not
+        # one a dependency of the other
+        ('mpileaks', 'direct-mpich')
+    ])
+    def test_simultaneous_concretization_of_specs(self, abstract_specs):
+
+        abstract_specs = [Spec(x) for x in abstract_specs]
+        concrete_specs = spack.concretize.concretize_specs_together(
+            *abstract_specs
+        )
+
+        # Check there's only one configuration of each package in the DAG
+        names = set(
+            dep.name for spec in concrete_specs for dep in spec.traverse()
+        )
+        for name in names:
+            name_specs = set(
+                spec[name] for spec in concrete_specs if name in spec
+            )
+            assert len(name_specs) == 1
+
+        # Check that there's at least one Spec that satisfies the
+        # initial abstract request
+        for aspec in abstract_specs:
+            assert any(cspec.satisfies(aspec) for cspec in concrete_specs)
+
+        # Make sure the concrete spec are top-level specs with no dependents
+        for spec in concrete_specs:
+            assert not spec.dependents()

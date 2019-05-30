@@ -29,6 +29,7 @@ class Dbus(Package):
 
     depends_on('pkgconfig', type='build')
     depends_on('expat')
+    depends_on('glib')
 
     def install(self, spec, prefix):
         configure(

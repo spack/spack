@@ -13,6 +13,7 @@ class Vdt(CMakePackage):
     homepage = "https://github.com/dpiparo/vdt"
     url      = "https://github.com/dpiparo/vdt/archive/v0.3.9.tar.gz"
 
+    version('0.4.3', sha256='705674612ebb5c182b65a8f61f4d173eb7fe7cdeee2235b402541a492e08ace1')
     version('0.3.9', '80a2d73a82f7ef8257a8206ca22dd145')
     version('0.3.8', '25b07c72510aaa95fffc11e33579061c')
     version('0.3.7', 'd2621d4c489894fd1fe8e056d9a0a67c')

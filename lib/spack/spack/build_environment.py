@@ -45,6 +45,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
+from llnl.util.lang import dedupe
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -53,10 +54,11 @@ import spack.main
 import spack.paths
 import spack.store
 from spack.util.string import plural
-from spack.util.environment import EnvironmentModifications, validate
-from spack.util.environment import preserve_environment
-from spack.util.environment import env_flag, filter_system_paths, get_path
+from spack.util.environment import (
+    env_flag, filter_system_paths, get_path, is_system_path,
+    EnvironmentModifications, validate, preserve_environment)
 from spack.util.environment import system_dirs
+from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
 from spack.util.log_parse import parse_log_events, make_log_context
@@ -73,7 +75,9 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
-SPACK_DEPENDENCIES = 'SPACK_DEPENDENCIES'
+SPACK_INCLUDE_DIRS = 'SPACK_INCLUDE_DIRS'
+SPACK_LINK_DIRS = 'SPACK_LINK_DIRS'
+SPACK_RPATH_DIRS = 'SPACK_RPATH_DIRS'
 SPACK_RPATH_DEPS = 'SPACK_RPATH_DEPS'
 SPACK_LINK_DEPS = 'SPACK_LINK_DEPS'
 SPACK_PREFIX = 'SPACK_PREFIX'
@@ -257,10 +261,53 @@ def set_build_environment_variables(pkg, env, dirty):
     build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
+    link_dirs = []
+    include_dirs = []
+    rpath_dirs = []
+
+    # The top-level package is always RPATHed. It hasn't been installed yet
+    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
+    # not be created for the install).
+    for libdir in ['lib', 'lib64']:
+        lib_path = os.path.join(pkg.prefix, libdir)
+        rpath_dirs.append(lib_path)
+
+    # Set up link, include, RPATH directories that are passed to the
+    # compiler wrapper
+    for dep in link_deps:
+        if is_system_path(dep.prefix):
+            continue
+        query = pkg.spec[dep.name]
+        dep_link_dirs = list()
+        try:
+            dep_link_dirs.extend(query.libs.directories)
+        except NoLibrariesError:
+            tty.debug("No libraries found for {0}".format(dep.name))
+
+        for default_lib_dir in ['lib', 'lib64']:
+            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
+            if os.path.isdir(default_lib_prefix):
+                dep_link_dirs.append(default_lib_prefix)
+
+        link_dirs.extend(dep_link_dirs)
+        if dep in rpath_deps:
+            rpath_dirs.extend(dep_link_dirs)
+
+        try:
+            include_dirs.extend(query.headers.directories)
+        except NoHeadersError:
+            tty.debug("No headers found for {0}".format(dep.name))
+
+    link_dirs = list(dedupe(filter_system_paths(link_dirs)))
+    include_dirs = list(dedupe(filter_system_paths(include_dirs)))
+    rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
+
+    env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
+    env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
+    env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
+
     build_prefixes      = [dep.prefix for dep in build_deps]
-    link_prefixes       = [dep.prefix for dep in link_deps]
     build_link_prefixes = [dep.prefix for dep in build_link_deps]
-    rpath_prefixes      = [dep.prefix for dep in rpath_deps]
 
     # add run-time dependencies of direct build-time dependencies:
     for build_dep in build_deps:
@@ -273,25 +320,10 @@ def set_build_environment_variables(pkg, env, dirty):
     # contain hundreds of other packages installed in the same directory.
     # If these paths come first, they can overshadow Spack installations.
     build_prefixes      = filter_system_paths(build_prefixes)
-    link_prefixes       = filter_system_paths(link_prefixes)
     build_link_prefixes = filter_system_paths(build_link_prefixes)
-    rpath_prefixes      = filter_system_paths(rpath_prefixes)
-
-    # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    env.set_path(SPACK_DEPENDENCIES, build_link_prefixes)
-
-    # These variables control compiler wrapper behavior
-    env.set_path(SPACK_RPATH_DEPS, rpath_prefixes)
-    env.set_path(SPACK_LINK_DEPS, link_prefixes)
 
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
-
-    # Install prefix
-    env.set(SPACK_PREFIX, pkg.prefix)
-
-    # Install root prefix
-    env.set(SPACK_INSTALL, spack.store.root)
 
     # Set environment variables if specified for
     # the given compiler
@@ -350,7 +382,7 @@ def set_build_environment_variables(pkg, env, dirty):
     if spack.config.get('config:debug'):
         env.set(SPACK_DEBUG, 'TRUE')
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
-    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('{name}-{hash:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
 
     # Find ccache binary and hand it to build environment
@@ -372,12 +404,9 @@ def set_build_environment_variables(pkg, env, dirty):
 
 def _set_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
-    # number of jobs spack will build with.
-    jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
-    if not pkg.parallel:
-        jobs = 1
-    elif pkg.make_jobs:
-        jobs = pkg.make_jobs
+
+    jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
+    assert jobs is not None, "no default set for config:build_jobs"
 
     m = module
     m.make_jobs = jobs
@@ -655,6 +684,11 @@ def setup_package(pkg, dirty):
         dpkg = dspec.package
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
+
+    if (not dirty) and (not spack_env.is_unset('CPATH')):
+        tty.debug("A dependency has updated CPATH, this may lead pkg-config"
+                  " to assume that the package is part of the system"
+                  " includes and omit it when invoked with '--cflags'.")
 
     set_module_variables_for_package(pkg)
     pkg.setup_environment(spack_env, run_env)

@@ -336,7 +336,7 @@ class Arch(object):
         self.platform = plat
         if plat and os:
             os = self.platform.operating_system(os)
-        self.platform_os = os
+        self.os = os
         if plat and target:
             target = self.platform.target(target)
         self.target = target
@@ -349,16 +349,16 @@ class Arch(object):
     def concrete(self):
         return all((self.platform is not None,
                     isinstance(self.platform, Platform),
-                    self.platform_os is not None,
-                    isinstance(self.platform_os, OperatingSystem),
+                    self.os is not None,
+                    isinstance(self.os, OperatingSystem),
                     self.target is not None, isinstance(self.target, Target)))
 
     def __str__(self):
-        if self.platform or self.platform_os or self.target:
+        if self.platform or self.os or self.target:
             if self.platform.name == 'darwin':
-                os_name = self.platform_os.name if self.platform_os else "None"
+                os_name = self.os.name if self.os else "None"
             else:
-                os_name = str(self.platform_os)
+                os_name = str(self.os)
 
             return (str(self.platform) + "-" +
                     os_name + "-" + str(self.target))
@@ -371,7 +371,7 @@ class Arch(object):
     # TODO: make this unnecessary: don't include an empty arch on *every* spec.
     def __nonzero__(self):
         return (self.platform is not None or
-                self.platform_os is not None or
+                self.os is not None or
                 self.target is not None)
     __bool__ = __nonzero__
 
@@ -380,21 +380,21 @@ class Arch(object):
             platform = self.platform.name
         else:
             platform = self.platform
-        if isinstance(self.platform_os, OperatingSystem):
-            platform_os = self.platform_os.name
+        if isinstance(self.os, OperatingSystem):
+            os = self.os.name
         else:
-            platform_os = self.platform_os
+            os = self.os
         if isinstance(self.target, Target):
             target = self.target.name
         else:
             target = self.target
-        return (platform, platform_os, target)
+        return (platform, os, target)
 
     def to_dict(self):
         str_or_none = lambda v: str(v) if v else None
         d = syaml_dict([
             ('platform', str_or_none(self.platform)),
-            ('platform_os', str_or_none(self.platform_os)),
+            ('platform_os', str_or_none(self.os)),
             ('target', str_or_none(self.target))])
         return syaml_dict([('arch', d)])
 
@@ -430,13 +430,13 @@ def arch_for_spec(arch_spec):
     assert(arch_spec.concrete)
 
     arch_plat = get_platform(arch_spec.platform)
-    if not (arch_plat.operating_system(arch_spec.platform_os) and
+    if not (arch_plat.operating_system(arch_spec.os) and
             arch_plat.target(arch_spec.target)):
         raise ValueError(
             "Can't recreate arch for spec %s on current arch %s; "
             "spec architecture is too different" % (arch_spec, sys_type()))
 
-    return Arch(arch_plat, arch_spec.platform_os, arch_spec.target)
+    return Arch(arch_plat, arch_spec.os, arch_spec.target)
 
 
 @memoized
