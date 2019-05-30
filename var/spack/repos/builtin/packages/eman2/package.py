@@ -7,10 +7,11 @@ from spack import *
 
 
 class Eman2(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """EMAN2 is a broadly based greyscale scientific image processing suite
+       with a primary focus on processing data from transmission electron 
+       microscopes."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://blake.bcm.edu/emanwiki/EMAN2"
     url      = "https://github.com/cryoem/eman2/archive/v2.3.tar.gz"
 
     version('2.3', sha256='e64b8c5d87dba8a77ac0ff7cb4441d39dd0786f6cc91498fd49b96585ce99001')
