@@ -250,8 +250,7 @@ def strings_contains_installroot(path_name, root_dir):
     strings = Executable('strings')
     output = strings('%s' % path_name,
                      output=str, err=str)
-    spackprefix = "%s/bin/sbang" % spack.paths.prefix
-    return (root_dir in output or spackprefix in output)
+    return (root_dir in output or spack.paths.prefix in output)
 
 
 def modify_elf_object(path_name, new_rpaths):
@@ -440,11 +439,11 @@ def relocate_links(path_names, old_dir, new_dir):
         os.symlink(new_src, path_name)
 
 
-def relocate_text(path_names, olddir, newdir, oldprefix, newprefix):
+def relocate_text(path_names, oldpath, newpath, oldprefix, newprefix):
     """
     Replace old path with new path in text file path_name
     """
-    fs.filter_file('%s' % olddir, '%s' % newdir, *path_names, backup=False)
+    fs.filter_file('%s' % oldpath, '%s' % newpath, *path_names, backup=False)
     fs.filter_file('%s' % oldprefix, '%s' %
                    newprefix, *path_names, backup=False)
 
