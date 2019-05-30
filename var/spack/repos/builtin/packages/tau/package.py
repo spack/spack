@@ -155,6 +155,8 @@ class Tau(Package):
 
         if '+libdwarf' in spec:
             options.append("-dwarf=%s" % spec['libdwarf'].prefix)
+
+        if '+libelf' in spec:
             options.append("-elf=%s" % spec['libelf'].prefix)
 
         if '+libunwind' in spec:
