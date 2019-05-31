@@ -1141,7 +1141,14 @@ def find_headers(headers, root, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the headers
-    suffixes = ['h', 'hpp', 'mod']
+    suffixes = [
+        # C
+        'h',
+        # C++
+        'hpp', 'hh', 'H',
+        # Fortran
+        'mod', 'inc',
+    ]
 
     # List of headers we are searching with suffixes
     headers = ['{0}.{1}'.format(header, suffix) for header in headers
