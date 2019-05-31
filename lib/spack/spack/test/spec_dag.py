@@ -88,16 +88,21 @@ def test_installed_deps():
     default = ('build', 'link')
     build_only = ('build',)
 
+    e = MockPackage('e', [], [])
     d = MockPackage('d', [], [])
-    c_on_d_conditions = {
+    c_conditions = {
         d.name: {
             'c': 'd@2'
+        },
+        e.name: {
+            'c': 'e@2'
         }
     }
-    c = MockPackage('c', [d], [build_only], conditions=c_on_d_conditions)
-    b = MockPackage('b', [d], [default])
+    c = MockPackage('c', [d, e], [build_only, default],
+                    conditions=c_conditions)
+    b = MockPackage('b', [d, e], [default, default])
     a = MockPackage('a', [b, c], [default, default])
-    mock_repo = MockPackageMultiRepo([a, b, c, d])
+    mock_repo = MockPackageMultiRepo([a, b, c, d, e])
 
     with spack.repo.swap(mock_repo):
         c_spec = Spec('c')
@@ -105,13 +110,15 @@ def test_installed_deps():
         assert c_spec['d'].version == spack.version.Version('2')
 
         c_installed = spack.spec.Spec.from_dict(c_spec.to_dict(all_deps=False))
-        setattr(c_installed.package, 'installed', True)
+        for spec in c_installed.traverse():
+            setattr(spec.package, 'installed', True)
 
         a_spec = Spec('a')
         a_spec._add_dependency(c_installed, default)
         a_spec.concretize()
 
         assert a_spec['d'].version == spack.version.Version('3')
+        assert a_spec['e'].version == spack.version.Version('2')
 
 
 @pytest.mark.usefixtures('config')
