@@ -9,7 +9,7 @@
 from spack import *
 
 
-class Chill(Package):
+class Chill(AutotoolsPackage):
     """A polyheadral compiler for autotuning"""
 
     homepage = "http://github.com/CtopCsUtahEdu"
@@ -18,13 +18,18 @@ class Chill(Package):
 
     version('master', branch='master')
 
-    depends_on('rose-for-chill@0.9.10.0 +cxx11')
+    depends_on('rose@0.9.10.0 +cxx11')
     depends_on('iegenlib')
     depends_on('isl')
     depends_on('python')
 
+    @run_before('configure')
+    def bootstrap(self, spec, prefix):
+        bash = wich('bash')
+        bash('./bootstrap')
+
     def setup_environment(self, spack_env, run_env):
-        rose_home = self.spec['rose-for-chill'].prefix
+        rose_home = self.spec['rose'].prefix
         boost_home = self.spec['boost'].prefix
         iegen_home = self.spec['iegenlib'].prefix
 
@@ -35,14 +40,9 @@ class Chill(Package):
         spack_env.set('BOOSTHOME', boost_home)
         spack_env.set('IEGENHOME', iegen_home)
 
-    def install(self, spec, prefix):
-        bash = which('bash')
-        bash('./bootstrap')
+    def configure_args(self):
+        args = ['--with-rose={0}'.format(self.spec['rose'].prefix),
+                '--with-boost={0}'.format(self.spec['boost'].prefix),
+                '--with-iegen={0}'.format(self.sepc['iegenlib'].prefix)]
 
-        configure(
-            '--prefix={0}'.format(prefix),
-            '--with-rose={0}'.format(spec['rose'].prefix),
-            '--with-boost={0}'.format(spec['boost'].prefix),
-            '--with-iegen={0}'.format(spec['iegenlib'].prefix))
-        make()
-        make('install')
+        return args

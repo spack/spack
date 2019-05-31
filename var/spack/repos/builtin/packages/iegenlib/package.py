@@ -13,7 +13,7 @@
 from spack import *
 
 
-class Iegenlib(Package):
+class Iegenlib(AutotoolsPackage):
     """Inspector/Executor Generation Library for manipulating sets
        and relations with uninterpreted function symbols. """
 
@@ -25,8 +25,3 @@ class Iegenlib(Package):
     depends_on('cmake@2.6:', type='build')
     depends_on('isl')
     depends_on('texinfo', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix', prefix)
-        make()
-        make('install')
