@@ -101,6 +101,7 @@ class Python(AutotoolsPackage):
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
     variant('uuid',     default=False, description='Build uuid module')
+    variant('tix',      default=False, description='Build with Tix support')
 
     depends_on('pkgconfig@0.9.0:', type='build')
 
@@ -120,6 +121,7 @@ class Python(AutotoolsPackage):
     depends_on('libffi', when='+ctypes')
     depends_on('tk', when='+tkinter')
     depends_on('tcl', when='+tkinter')
+    depends_on('tix', when='+tix')
     depends_on('libuuid', when='+uuid')
 
     patch('tkinter.patch', when='@:2.8,3.3: platform=darwin')
