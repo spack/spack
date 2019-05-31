@@ -185,6 +185,16 @@ class Git(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
 
+    patch('patch/relocatable.patch', 0)
+
+    build_targets = ['NO_INSTALL_HARDLINKS=1',
+                     'ETC_GITATTRIBUTES=config',
+                     'ETC_GITCONFIG=config']
+    install_targets = ['NO_INSTALL_HARDLINKS=1',
+                       'ETC_GITATTRIBUTES=config',
+                       'ETC_GITCONFIG=config',
+                       'install']
+
     # See the comment in setup_environment re EXTLIBS.
     def patch(self):
         filter_file(r'^EXTLIBS =$',
@@ -208,6 +218,12 @@ class Git(AutotoolsPackage):
                 self.spec['gettext'].prefix.lib))
             spack_env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
+
+        run_env.set('GIT_EXEC_PATH', '%s/git-core' % self.spec.prefix.libexec)
+        run_env.set('GIT_TEMPLATE_DIR', '%s/git-core/templates' %
+                    self.spec.prefix.share)
+        run_env.set('GIT_HOME', '%s' % self.spec.prefix)
+        run_env.set('GITPERLLIB', '%s/perl5' % self.spec.prefix.share)
 
     def configure_args(self):
         spec = self.spec
