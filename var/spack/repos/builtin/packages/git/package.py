@@ -220,7 +220,8 @@ class Git(AutotoolsPackage):
                 self.spec['gettext'].prefix.include))
 
         run_env.set('GIT_EXEC_PATH', '%s/git-core' % self.spec.prefix.libexec)
-        run_env.set('GIT_TEMPLATE_DIR', '%s/git-core/templates' % self.spec.prefix.share)
+        run_env.set('GIT_TEMPLATE_DIR', '%s/git-core/templates' %
+                     self.spec.prefix.share)
         run_env.set('GIT_HOME', '%s' % self.spec.prefix)
         run_env.set('GITPERLLIB', '%s/perl5' % self.spec.prefix.share)
 
