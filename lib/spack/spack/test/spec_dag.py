@@ -85,6 +85,11 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 @pytest.mark.usefixtures('config')
 def test_installed_deps():
+    """Preinstall a package P with a constrained build dependency D, then
+    concretize a dependent package which also depends on P and D, specifying
+    that the installed instance of P should be used. In this case, D should
+    not be constrained by P since P is already built.
+    """
     default = ('build', 'link')
     build_only = ('build',)
 
