@@ -127,6 +127,31 @@ def test_installed_deps():
 
 
 @pytest.mark.usefixtures('config')
+def test_specify_preinstalled_dep():
+    """Specify the use of a preinstalled package during concretization with a
+    transitive dependency that is only supplied by the preinstalled package.
+    """
+    default = ('build', 'link')
+
+    c = MockPackage('c', [], [])
+    b = MockPackage('b', [c], [default])
+    a = MockPackage('a', [b], [default])
+    mock_repo = MockPackageMultiRepo([a, b, c])
+
+    with spack.repo.swap(mock_repo):
+        b_spec = Spec('b')
+        b_spec.concretize()
+        for spec in b_spec.traverse():
+            setattr(spec.package, 'installed', True)
+
+        a_spec = Spec('a')
+        a_spec._add_dependency(b_spec, default)
+        a_spec.concretize()
+
+        assert set(x.name for x in a_spec.traverse()) == set(['a', 'b', 'c'])
+
+
+@pytest.mark.usefixtures('config')
 def test_conditional_dep_with_user_constraints():
     """This sets up packages X->Y such that X depends on Y conditionally. It
     then constructs a Spec with X but with no constraints on X, so that the
