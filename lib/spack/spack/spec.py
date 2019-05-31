@@ -2073,8 +2073,9 @@ class Spec(object):
 
             if not copy:
                 for spec in flat_deps.values():
-                    spec._dependencies.clear()
-                    spec._dependents.clear()
+                    if not spec.concrete:
+                        spec._dependencies.clear()
+                        spec._dependents.clear()
                 self._dependencies.clear()
 
             return flat_deps
