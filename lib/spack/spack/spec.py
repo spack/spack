@@ -2282,6 +2282,11 @@ class Spec(object):
         # these may include build dependencies which are not needed for this
         # install (since this package is already installed).
         if self.concrete and self.package.installed:
+            # Mark all dependencies as visited: we may not visit them if we
+            # stop the recursive call here, and we know they are necessary
+            # since they are dependencies of the installed package (and that's
+            # what the visited datastructure is tracking).
+            visited.update(spec.name for spec in self.traverse())
             return False
 
         # Combine constraints from package deps with constraints from
