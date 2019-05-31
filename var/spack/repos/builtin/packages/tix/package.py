@@ -28,5 +28,5 @@ class Tix(AutotoolsPackage):
     def install(self, spec, prefix):
         make('install')
         with working_dir(self.prefix.lib):
-            symlink('Tix{0}/libTix{0}.so'.format(self.version),
-                    'libtix.so')
+            symlink('Tix{0}/libTix{0}.{1}'.format(self.version, dso_suffix),
+                    'libtix.{0}'.format(dso_suffix))

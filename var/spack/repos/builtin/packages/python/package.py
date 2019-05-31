@@ -101,7 +101,7 @@ class Python(AutotoolsPackage):
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
     variant('uuid',     default=False, description='Build uuid module')
-    variant('tix',      default=False, description='Build with Tix support')
+    variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
 

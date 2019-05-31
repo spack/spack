@@ -34,7 +34,7 @@ class Tk(AutotoolsPackage):
         with working_dir(self.build_directory):
             make('install')
 
-            # Some applications like Expect require private Tcl headers.
+            # Some applications like Expect require private Tk headers.
             make('install-private-headers')
 
             # Copy source to install tree
