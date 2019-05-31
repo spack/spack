@@ -1,3 +1,5 @@
+# Copied from  https://cdcvs.fnal.gov/redmine/projects/build-framework/repository/git-ssi-build/revisions/master/entry/patch/git.patch
+# curl -o relocatable.patch https://cdcvs.fnal.gov/redmine/projects/build-framework/repository/git-ssi-build/revisions/master/raw/patch/git.patch
 diff -Naur config.c config.c
 --- config.c	2015-07-15 14:31:07.000000000 -0500
 +++ config.c	2015-07-17 10:33:34.966072446 -0500
