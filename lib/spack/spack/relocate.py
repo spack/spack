@@ -19,6 +19,7 @@ class InstallRootStringException(spack.error.SpackError):
     """
     Raised when the relocated binary still has the install root string.
     """
+
     def __init__(self, file_path, root_path):
         super(InstallRootStringException, self).__init__(
             "\n %s \ncontains string\n %s \n"
@@ -249,7 +250,7 @@ def strings_contains_installroot(path_name, root_dir):
     strings = Executable('strings')
     output = strings('%s' % path_name,
                      output=str, err=str)
-    return (root_dir in output)
+    return (root_dir in output or spack.paths.prefix in output)
 
 
 def modify_elf_object(path_name, new_rpaths):
@@ -276,7 +277,7 @@ def needs_binary_relocation(m_type, m_subtype):
     """
     if m_type == 'application':
         if (m_subtype == 'x-executable' or m_subtype == 'x-sharedlib' or
-           m_subtype == 'x-mach-binary'):
+                m_subtype == 'x-mach-binary'):
             return True
     return False
 
@@ -334,7 +335,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
                     old_dir != new_dir and
-                    not file_is_relocatable(path_name)):
+                        not file_is_relocatable(path_name)):
                     raise InstallRootStringException(path_name, old_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
@@ -367,7 +368,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if (not allow_root and
-                not file_is_relocatable(cur_path, old_dir)):
+                    not file_is_relocatable(cur_path, old_dir)):
                 raise InstallRootStringException(cur_path, old_dir)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
@@ -390,13 +391,13 @@ def make_binary_placeholder(cur_path_names, allow_root):
     if platform.system() == 'Darwin':
         for cur_path in cur_path_names:
             if (not allow_root and
-                not file_is_relocatable(cur_path)):
+                    not file_is_relocatable(cur_path)):
                 raise InstallRootStringException(
                     cur_path, spack.store.layout.root)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
             if (not allow_root and
-                not file_is_relocatable(cur_path)):
+                    not file_is_relocatable(cur_path)):
                 raise InstallRootStringException(
                     cur_path, spack.store.layout.root)
     else:
@@ -438,11 +439,18 @@ def relocate_links(path_names, old_dir, new_dir):
         os.symlink(new_src, path_name)
 
 
-def relocate_text(path_names, old_dir, new_dir):
+def relocate_text(path_names, oldpath, newpath, oldprefix, newprefix):
     """
     Replace old path with new path in text file path_name
     """
-    fs.filter_file('%s' % old_dir, '%s' % new_dir, *path_names, backup=False)
+    fs.filter_file('%s' % oldpath, '%s' % newpath, *path_names,
+                   backup=False, string=True)
+    sbangre = '#!/bin/bash %s/bin/sbang' % oldprefix
+    sbangnew = '#!/bin/bash %s/bin/sbang' % newprefix
+    fs.filter_file(sbangre, sbangnew, *path_names,
+                   backup=False, string=True)
+    fs.filter_file(oldprefix, newprefix, *path_names,
+                   backup=False, string=True)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
@@ -530,7 +538,7 @@ def file_is_relocatable(file):
             set_of_strings.discard(rpaths.strip())
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':
-            rpaths, deps, idpath  = macho_get_paths(file)
+            rpaths, deps, idpath = macho_get_paths(file)
             set_of_strings.discard(set(rpaths))
             set_of_strings.discard(set(deps))
             if idpath is not None:
@@ -541,6 +549,13 @@ def file_is_relocatable(file):
         # meaning that this spec is not relocatable
         msg = 'Found "{0}" in {1} strings'
         tty.debug(msg.format(spack.store.layout.root, file))
+        return False
+
+    if any(spack.paths.prefix in x for x in set_of_strings):
+        # One binary has the root folder not in the RPATH,
+        # meaning that this spec is not relocatable
+        msg = 'Found "{0}" in {1} strings'
+        tty.debug(msg.format(spack.paths.prefix, file))
         return False
 
     return True
