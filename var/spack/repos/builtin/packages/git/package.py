@@ -187,6 +187,14 @@ class Git(AutotoolsPackage):
 
     patch('patch/relocatable.patch', 0)
 
+    build_targets = ['NO_INSTALL_HARDLINKS=1',
+                     'ETC_GITATTRIBUTES=config',
+                     'ETC_GITCONFIG=config']
+    install_targets = ['NO_INSTALL_HARDLINKS=1',
+                       'ETC_GITATTRIBUTES=config',
+                       'ETC_GITCONFIG=config',
+                       'install']
+
     # See the comment in setup_environment re EXTLIBS.
     def patch(self):
         filter_file(r'^EXTLIBS =$',
@@ -237,16 +245,6 @@ class Git(AutotoolsPackage):
         if sys.platform == 'darwin':
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r' -lrt$', '', 'Makefile')
-
-    @run_after('configure')
-    def make_opts(self):
-        self.build_targets = ['NO_INSTALL_HARDLINKS=1',
-                            'ETC_GITATTRIBUTES=config',
-                            'ETC_GITCONFIG=config']
-        self.install_targets = ['NO_INSTALL_HARDLINKS=1',
-                              'ETC_GITATTRIBUTES=config',
-                              'ETC_GITCONFIG=config',
-                              'install']
 
     def check(self):
         make('test')
