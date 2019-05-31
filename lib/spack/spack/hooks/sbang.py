@@ -9,6 +9,7 @@ import re
 import sys
 
 import llnl.util.tty as tty
+import llnl.util.filesystem as fs
 
 import spack.paths
 import spack.modules
@@ -42,7 +43,7 @@ def filter_shebang(path):
             original = original.decode('UTF-8')
 
     # This line will be prepended to file
-    new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.paths.prefix
+    new_sbang_line = '#!/bin/bash %s/sbang\n' % spack.store.layout.root
 
     # Skip files that are already using sbang.
     if original.startswith(new_sbang_line):
@@ -110,6 +111,10 @@ def post_install(spec):
     if spec.external:
         tty.debug('SKIP: shebang filtering [external package]')
         return
+
+    if not os.path.exists('%s/sbang' % spack.store.layout.root):
+        fs.install('%s/bin/sbang' % spack.paths.prefix,
+                   '%s/sbang' % spack.store.layout.root)
 
     for directory, _, filenames in os.walk(spec.prefix):
         filter_shebangs_in_directory(directory, filenames)
