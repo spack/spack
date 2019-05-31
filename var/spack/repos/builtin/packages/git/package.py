@@ -185,6 +185,8 @@ class Git(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
 
+    patch('patch/relocatable.patch',0)
+
     # See the comment in setup_environment re EXTLIBS.
     def patch(self):
         filter_file(r'^EXTLIBS =$',
