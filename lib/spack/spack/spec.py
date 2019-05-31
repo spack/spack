@@ -2273,9 +2273,15 @@ class Spec(object):
             return False
         visited.add(self.name)
 
-        # if we descend into a virtual spec, there's nothing more
+        # If we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
-        if self.virtual or self.external or self.concrete:
+        if self.virtual or self.external:
+            return False
+
+        # Avoid recursively adding constraints for already-installed packages:
+        # these may include build dependencies which are not needed for this
+        # install (since this package is already installed).
+        if self.concrete and self.package.installed:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -3729,6 +3735,7 @@ class SpecParser(spack.parse.Parser):
                             # We're finding a dependency by hash for an
                             # anonymous spec
                             dep = self.spec_by_hash()
+                            dep = dep.copy(deps=('link', 'run'))
                         else:
                             # We're adding a dependency to the last spec
                             self.expect(ID)
