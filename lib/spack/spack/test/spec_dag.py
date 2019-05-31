@@ -84,6 +84,37 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 
 @pytest.mark.usefixtures('config')
+def test_installed_deps():
+    default = ('build', 'link')
+    build_only = ('build',)
+
+    d = MockPackage('d', [], [])
+    c_on_d_conditions = {
+        d.name: {
+            'c': 'd@2'
+        }
+    }
+    c = MockPackage('c', [d], [build_only], conditions=c_on_d_conditions)
+    b = MockPackage('b', [d], [default])
+    a = MockPackage('a', [b, c], [default, default])
+    mock_repo = MockPackageMultiRepo([a, b, c, d])
+
+    with spack.repo.swap(mock_repo):
+        c_spec = Spec('c')
+        c_spec.concretize()
+        assert c_spec['d'].version == spack.version.Version('2')
+
+        c_installed = spack.spec.Spec.from_dict(c_spec.to_dict(all_deps=False))
+        setattr(c_installed.package, 'installed', True)
+
+        a_spec = Spec('a')
+        a_spec._add_dependency(c_installed, default)
+        a_spec.concretize()
+
+        assert a_spec['d'].version == spack.version.Version('3')
+
+
+@pytest.mark.usefixtures('config')
 def test_conditional_dep_with_user_constraints():
     """This sets up packages X->Y such that X depends on Y conditionally. It
     then constructs a Spec with X but with no constraints on X, so that the
