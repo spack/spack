@@ -24,12 +24,14 @@ packages:
       - cuda@9.0.176
       - cuda@9.2.88
       - cudnn@7.3
+      - freeimage@3.18.0
       - gmsh+oce~mpi@3.0.6
       - hdf5~mpi@1.10.4
       - highfive~mpi@2.0
       - intel-mkl@2018.1.163
       - jdk@1.8.0_191-b12
       - libjpeg@1.2.90
+      - libjpeg-turbo@1.5.90
       - libxml2@2.9.8
       - libxslt@1.1.29
       - metis@5.1.0

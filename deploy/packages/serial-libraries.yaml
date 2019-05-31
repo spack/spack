@@ -53,10 +53,12 @@ packages:
     specs:
       - assimp
       - boost
+      - deflect
       - eigen
       - fmt
       - gmsh
       - hdf5~mpi
       - highfive~mpi
       - pugixml
+      - rockets
       - rocksdb~static
