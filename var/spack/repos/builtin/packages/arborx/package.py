@@ -10,9 +10,11 @@ class Arborx(CMakePackage):
     """ArborX is a performance-portable library for geometric search"""
 
     homepage = "http://github.com/arborx/arborx"
+    url      = "https://github.com/arborx/arborx/archive/v0.8-beta.tar.gz"
     git      = "https://github.com/arborx/arborx.git"
 
     version('master', branch='master')
+    version('0.8-beta', sha256='d90254656df089b1321bf26d55f69d0db465fff12a972c446562ceaca5f090ad')
 
     variant('cuda', default=False, description='enable Cuda backend')
     variant('openmp', default=False, description='enable OpenMP backend')
@@ -34,17 +36,14 @@ class Arborx(CMakePackage):
         spec = self.spec
 
         options = [
-            '-DCMAKE_PREFIX_PATH=%s' % (spec['kokkos'].prefix),
+            '-DCMAKE_PREFIX_PATH=%s' % spec['kokkos'].prefix,
             '-DArborX_ENABLE_TESTS=OFF',
             '-DArborX_ENABLE_EXAMPLES=OFF',
             '-DArborX_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF')
         ]
 
         if '+cuda' in spec:
-            options.extend([
-                '-DCMAKE_CXX_COMPILER=%s' % (
-                    spec['kokkos'].prefix.bin.nvcc_wrapper
-                )
-            ])
+            nvcc_wrapper_path = spec['kokkos'].prefix.bin.nvcc_wrapper
+            options.append('-DCMAKE_CXX_COMPILER=%s' % nvcc_wrapper_path)
 
         return options
