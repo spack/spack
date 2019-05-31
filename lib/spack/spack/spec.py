@@ -2055,7 +2055,11 @@ class Spec(object):
            without modifying the spec it's called on.
 
            If copy is False, clears this spec's dependencies and
-           returns them.
+           returns them. This disconnects all dependency links including
+           transitive dependencies, except for concrete specs: if a spec
+           is concrete it will not be disconnected from its dependencies
+           (although a non-concrete spec with concrete dependencies will
+           be disconnected from those dependencies).
         """
         copy = kwargs.get('copy', True)
 
