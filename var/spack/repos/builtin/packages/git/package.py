@@ -240,10 +240,10 @@ class Git(AutotoolsPackage):
 
     @run_after('configure')
     def make_opts(self):
-        self.build_targets=['NO_INSTALL_HARDLINKS=1',
+        self.build_targets = ['NO_INSTALL_HARDLINKS=1',
                             'ETC_GITATTRIBUTES=config',
                             'ETC_GITCONFIG=config']
-        self.install_targets=['NO_INSTALL_HARDLINKS=1',
+        self.install_targets = ['NO_INSTALL_HARDLINKS=1',
                               'ETC_GITATTRIBUTES=config',
                               'ETC_GITCONFIG=config',
                               'install']
