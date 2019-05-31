@@ -462,7 +462,7 @@ def relocate_package(workdir, allow_root):
     new_path = spack.store.layout.root
     new_prefix = spack.paths.prefix
     old_path = buildinfo['buildpath']
-    old_prefix = buildinfo['spackprefix']
+    old_prefix = buildinfo.get('spackprefix', '/not/in/buildinfo/dictionary')
     rel = buildinfo.get('relative_rpaths', False)
     if rel:
         return
