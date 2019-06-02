@@ -697,6 +697,51 @@ Or it can be set permanently in your ``compilers.yaml``:
       fflags: -mismatch
     spec: nag@6.1
 
+^^^^^^^^^^^^^^^
+Troubleshooting
+^^^^^^^^^^^^^^^
+
+"""""""""""
+Extra rpath
+"""""""""""
+
+There has been reports of problems with external compilers while installing packages similar to this:
+
+.. code-block:: console
+
+    error while loading shared libraries: libimf.so: cannot open shared object file: No such file or directory
+
+This usually means that spack could not by itself figure where are all the needed libraries
+to link with the programs/libraries you're installing. 
+The solution is to give it an extra clue using the ``extra_rpath`` option of the ``compilers.yaml`` file.
+This option takes a list of directories where spack should look for the files it needs,
+which then spack adds to the `RPATH <https://spack.readthedocs.io/en/latest/features.html#packages-can-peacefully-coexist>`_ list.
+Take this Intel installation as an example:
+
+.. code-block:: yaml
+
+    extra_rpaths:
+    - /opt/intel/compilers_and_libraries_2019.3.199/linux/compiler/lib/intel64
+
+After editing, the instance will look similar to this:
+
+.. code-block:: yaml
+
+   - compiler:
+        environment: {}
+        extra_rpaths:
+        - /opt/intel/compilers_and_libraries_2019.3.199/linux/compiler/lib/intel64
+        flags: {}
+        modules:
+            - intel/2019.3
+        operating_system: centos7
+        paths:
+            cc: /opt/intel/compilers_and_libraries_2019.3.199/linux/bin/intel64/icc
+            cxx: /opt/intel/compilers_and_libraries_2019.3.199/linux/bin/intel64/icpc
+            f77: /opt/intel/compilers_and_libraries_2019.3.199/linux/bin/intel64/ifort
+            fc: /opt/intel/compilers_and_libraries_2019.3.199/linux/bin/intel64/ifort
+        spec: intel@19.0.3.199
+        target: x86_64 
 
 ---------------
 System Packages
