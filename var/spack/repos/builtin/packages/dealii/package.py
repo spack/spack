@@ -21,6 +21,8 @@ class Dealii(CMakePackage, CudaPackage):
     transitive_rpaths = False
 
     version('develop', branch='master')
+    version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
+    version('9.1.0', sha256='5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600')
     version('9.0.1', sha256='df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64')
     version('9.0.0', sha256='c918dc5c1a31d62f6eea7b524dcc81c6d00b3c378d4ed6965a708ab548944f08')
     version('8.5.1', sha256='d33e812c21a51f7e5e3d3e6af86aec343155650b611d61c1891fbc3cabce09ae')
@@ -41,7 +43,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
-    variant('ginkgo',   default=False, description='Compile with Ginkgo')
+    variant('ginkgo',   default=True, description='Compile with Ginkgo')
     variant('gmsh',     default=True,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
@@ -62,7 +64,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Sundials')
     variant('slepc',    default=True,
             description='Compile with Slepc (only with Petsc and MPI)')
-    variant('symengine', default=False,
+    variant('symengine', default=True,
             description='Compile with SymEngine')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
@@ -148,7 +150,15 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
-    depends_on('symengine@0.3:', when='@9.1:+symengine')
+    # Both Trilinos and SymEngine bundle the Teuchos RCP library.
+    # This leads to conflicts between macros defined in the included
+    # headers when they are not compiled in the same mode.
+    # See https://github.com/symengine/symengine/issues/1516
+    # FIXME: uncomment when the following is fixed
+    # https://github.com/spack/spack/issues/11160
+    # depends_on("symengine@0.4: build_type=Release", when="@9.1:+symengine+trilinos^trilinos~debug")  # NOQA: ignore=E501
+    # depends_on("symengine@0.4: build_type=Debug", when="@9.1:+symengine+trilinos^trilinos+debug")  # NOQA: ignore=E501
+    depends_on('symengine@0.4:', when='@9.1:+symengine')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
@@ -192,6 +202,10 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
                   'without petsc.')
+
+    conflicts('+adol-c', when='^trilinos+chaco',
+              msg='symbol clash between the ADOL-C library and '
+                  'Trilinos SEACAS Chaco.')
 
     # interfaces added in 8.5.0:
     for p in ['gsl', 'python']:

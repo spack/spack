@@ -31,6 +31,7 @@ class Qt(Package):
     version('5.3.2',  'febb001129927a70174467ecb508a682')
     version('5.2.1',  'a78408c887c04c34ce615da690e0b4c8')
     version('4.8.6',  '2edbe4d6c2eff33ef91732602f3518eb')
+    version('4.8.5',  '1864987bdbb2f58f8ae8b350dfdbe133')
     version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009')
 
     # Add patch for compile issues with qt3 found with use in the

@@ -67,12 +67,38 @@ class IntelTbb(Package):
     # Build and install CMake config files if we're new enough.
     depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
 
+    # Note: see issues #11371 and #8957 to understand why 2019.x patches are
+    # specified one at a time.  In a nutshell, it is currently impossible
+    # to patch `2019.1` without patching `2019`.  When #8957 is fixed, this
+    # can be simplified.
+
     # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=centos6')
-    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2018.99')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019:')
+    # one patch format for 2019.1 and after...
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=centos6')
+    # ...another patch file for 2019 and before
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=centos6')
+
+    # patch for pedantic warnings (#10836)
+    # one patch file for 2019.1 and after...
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.4')
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.3')
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.2')
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1')
+    # ...another patch file for 2019 and before
+    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')

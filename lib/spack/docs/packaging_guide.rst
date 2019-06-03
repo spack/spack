@@ -460,7 +460,7 @@ https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 In order to handle this, you can define a ``url_for_version()`` function
 like so:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/openmpi/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.url_for_version
 
 With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1``
@@ -1565,7 +1565,7 @@ handles ``RPATH``:
 
 .. _pyside-patch:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/py-pyside/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/py-pyside/package.py
    :pyobject: PyPyside.patch
    :linenos:
 
@@ -1713,12 +1713,11 @@ RPATHs in Spack are handled in one of three ways:
 Parallel builds
 ---------------
 
-By default, Spack will invoke ``make()`` with a ``-j <njobs>``
-argument, so that builds run in parallel.  It figures out how many
-jobs to run by determining how many cores are on the host machine.
-Specifically, it uses the number of CPUs reported by Python's
-`multiprocessing.cpu_count()
-<http://docs.python.org/library/multiprocessing.html#multiprocessing.cpu_count>`_.
+By default, Spack will invoke ``make()``, or any other similar tool,
+with a ``-j <njobs>`` argument, so that builds run in parallel.
+The parallelism is determined by the value of the ``build_jobs`` entry
+in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
+how this value is computed).
 
 If a package does not build properly in parallel, you can override
 this setting by adding ``parallel = False`` to your package.  For
@@ -2027,7 +2026,7 @@ properties to be used by dependents.
 
 The function declaration should look like this:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/qt/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
    :pyobject: Qt.setup_dependent_environment
    :linenos:
 
@@ -2047,7 +2046,7 @@ The arguments to this function are:
 
 A good example of using these is in the Python package:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
    :pyobject: Python.setup_dependent_environment
    :linenos:
 
@@ -2209,7 +2208,7 @@ same way that Python does.
 
 Let's look at Python's activate function:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
    :pyobject: Python.activate
    :linenos:
 
@@ -2221,7 +2220,7 @@ Python's setuptools.
 
 Deactivate behaves similarly to activate, but it unlinks files:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
    :pyobject: Python.deactivate
    :linenos:
 
@@ -2663,7 +2662,7 @@ docs at :py:mod:`~.spack.build_systems`, or using the ``spack info`` command:
 
 Typically, phases have default implementations that fit most of the common cases:
 
-.. literalinclude:: ../../../lib/spack/spack/build_systems/autotools.py
+.. literalinclude:: _spack_root/lib/spack/spack/build_systems/autotools.py
     :pyobject: AutotoolsPackage.configure
     :linenos:
 
@@ -2671,7 +2670,7 @@ It is thus just sufficient for a packager to override a few
 build system specific helper methods or attributes to provide, for instance,
 configure arguments:
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/m4/package.py
+.. literalinclude::  _spack_root/var/spack/repos/builtin/packages/m4/package.py
     :pyobject: M4.configure_args
     :linenos:
 
@@ -2846,7 +2845,7 @@ Shell command functions
 
 Recall the install method from ``libelf``:
 
-.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
+.. literalinclude::  _spack_root/var/spack/repos/builtin/packages/libelf/package.py
    :pyobject: Libelf.install
    :linenos:
 
@@ -3505,7 +3504,7 @@ the one passed to install, only the MPI implementations all set some
 additional properties on it to help you out.  E.g., in mvapich2, you'll
 find this:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/mvapich2/package.py
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/mvapich2/package.py
    :pyobject: Mvapich2.setup_dependent_package
 
 That code allows the mvapich2 package to associate an ``mpicc`` property
@@ -4017,32 +4016,36 @@ Spack provides the ``spack graph`` command for graphing dependencies.
 The command by default generates an ASCII rendering of a spec's
 dependency graph.  For example:
 
-.. command-output:: spack graph mpileaks
+.. command-output:: spack graph hdf5
 
 At the top is the root package in the DAG, with dependency edges emerging
 from it.  On a color terminal, the edges are colored by which dependency
 they lead to.
 
-.. command-output:: spack graph --deptype=all mpileaks
+.. command-output:: spack graph --deptype=link hdf5
 
 The ``deptype`` argument tells Spack what types of dependencies to graph.
 By default it includes link and run dependencies but not build
-dependencies.  Supplying ``--deptype=all`` will show the build
-dependencies as well.  This is equivalent to
-``--deptype=build,link,run``.  Options for ``deptype`` include:
+dependencies.  Supplying ``--deptype=link`` will show only link
+dependencies.  The default is ``--deptype=all``, which is equivalent to
+``--deptype=build,link,run,test``.  Options for ``deptype`` include:
 
-* Any combination of ``build``, ``link``, and ``run`` separated by
-  commas.
-* ``all`` or ``alldeps`` for all types of dependencies.
+* Any combination of ``build``, ``link``, ``run``, and ``test`` separated
+  by commas.
+* ``all`` for all types of dependencies.
 
 You can also use ``spack graph`` to generate graphs in the widely used
-`Dot <http://www.graphviz.org/doc/info/lang.html>`_ format.  For
-example:
+`Dot <http://www.graphviz.org/doc/info/lang.html>`_ format.  For example:
 
-.. command-output:: spack graph --dot mpileaks
+.. command-output:: spack graph --dot hdf5
 
 This graph can be provided as input to other graphing tools, such as
-those in `Graphviz <http://www.graphviz.org>`_.
+those in `Graphviz <http://www.graphviz.org>`_.  If you have graphviz
+installed, you can write straight to PDF like this:
+
+.. code-block:: console
+
+   $ spack graph --dot hdf5 | dot -Tpdf > hdf5.pdf
 
 .. _packaging-shell-support:
 

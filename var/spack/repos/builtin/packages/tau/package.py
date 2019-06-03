@@ -18,10 +18,11 @@ class Tau(Package):
     """
 
     homepage = "http://www.cs.uoregon.edu/research/tau"
-    url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.tar.gz"
+    url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.1.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
 
     version('develop', branch='master')
+    version('2.28.1', '4e48fb477250f201ab00381cb43afea6')
     version('2.28', '68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
     version('2.27.2p1', 'b9cc42ee8afdcfefe5104ab0a8f23a23')
     version('2.27.2', 'b264ab0df78112f9a529e59a5f4dc191')
@@ -43,6 +44,8 @@ class Tau(Package):
     variant('phase', default=False, description='Generate phase based profiles')
     variant('papi', default=True, description='Activates Performance API')
     variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
+    variant('libdwarf', default=True, description='Activates support of libdwarf')
+    variant('libelf', default=True, description='Activates support of libelf')
     variant('libunwind', default=True, description='Activates support of libunwind')
     variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
@@ -67,6 +70,8 @@ class Tau(Package):
     depends_on('otf2@2.1:', when='+otf2')
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
+    depends_on('libdwarf', when='+libdwarf')
+    depends_on('libelf', when='+libdwarf')
     # TAU requires the ELF header support, libiberty and demangle.
     depends_on('binutils+libiberty+headers~nls', when='+binutils')
     depends_on('python@2.7:', when='+python')
@@ -147,6 +152,12 @@ class Tau(Package):
 
         if '+binutils' in spec:
             options.append("-bfd=%s" % spec['binutils'].prefix)
+
+        if '+libdwarf' in spec:
+            options.append("-dwarf=%s" % spec['libdwarf'].prefix)
+
+        if '+libelf' in spec:
+            options.append("-elf=%s" % spec['libelf'].prefix)
 
         if '+libunwind' in spec:
             options.append("-unwind=%s" % spec['libunwind'].prefix)

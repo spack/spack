@@ -29,7 +29,8 @@ class Raja(CMakePackage):
 
     depends_on('cuda', when='+cuda')
 
-    depends_on('cmake@3.3:', type='build')
+    depends_on('cmake@3.8:', type='build')
+    depends_on('cmake@3.9:', when='+cuda', type='build')
 
     def cmake_args(self):
         spec = self.spec
