@@ -21,7 +21,6 @@ class Libsonata(CMakePackage):
     version('develop', branch='master', submodules=False)
     version('0.0.2', commit='3ebd44e802b5b46008b255ec0c1e2f0eabdf6ac6', submodules=False, preferred=True)
 
-
     variant('mpi', default=False, description="Enable MPI backend")
 
     depends_on('cmake@3.3:', type='build')

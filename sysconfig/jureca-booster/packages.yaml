@@ -16,13 +16,13 @@ packages:
         buildable: False
     binutils:
         paths:
-            binutils@2.30: /usr/local/software/jurecabooster/Stages/2018a/software/binutils/2.30-GCCcore-5.5.0/
+            binutils@2.30: /usr/local/software/jurecabooster/Stages/2019a/software/binutils/2.32-GCCcore-8.3.0
         version: [2.30]
         buildable: False
     cmake:
         paths:
-            cmake@3.9.4: /usr/local/software/jurecabooster/Stages/2017b/software/CMake/3.9.4-GCCcore-5.4.0/
-        version: [3.9.4]
+            cmake@3.9.4: /usr/local/software/jurecabooster/Stages/2019a/software/CMake/3.14.0-GCCcore-8.3.0
+        version: [3.13.0]
         buildable: False
     diffutils:
         paths:
@@ -31,7 +31,7 @@ packages:
         buildable: False
     flex:
         paths:
-            flex@2.6.4: /usr/local/software/jureca/Stages/2018a/software/flex/2.6.4-GCCcore-7.3.0
+            flex@2.6.4: /usr/local/software/jurecabooster/Stages/2019a/software/flex/2.6.4-GCCcore-8.3.0
         version: [2.6.4]
         buildable: False
     freetype:
@@ -43,27 +43,40 @@ packages:
         buildable: False
     hdf5:
         paths:
-            hdf5@1.8.20%intel: /usr/local/software/jurecabooster/Stages/2018a/software/HDF5/1.8.20-iimpi-2018a
-        variants: ~fortran ~cxx
-        version: [1.8.20]
+            hdf5@1.10.4%intel+mpi: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-ipsmpi-2019a-mt
+            hdf5@1.10.4%intel~mpi: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-iccifort-2019.3.199-GCC-8.3.0-serial
+            hdf5@1.10.4%gcc+mpi: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-gpsmpi-2019a
+            hdf5@1.10.4%gcc~mpi: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-GCCcore-8.3.0-serial
+        variants: ~fortran ~cxx +hl
+        version: [1.10.4]
         buildable: False
-    intel-mpi-external:
+    mpich:
         paths:
-            intel-mpi-external@5.5.0: /usr/local/software/jurecabooster/Stages/2018a/software/impi/2018.2.199-iccifort-2018.2.199-GCC-5.5.0/intel64
-        version: [5.5.0]
+            mpich@3.10: /usr/local/software/jurecabooster/Stages/2019a/software/psmpi/5.2.2-1-iccifort-2019.3.199-GCC-8.3.0-mt
+        version: [3.10]
         buildable: False
     intel-mkl:
         paths:
-            intel-mkl@2018.2.199: /usr/local/software/jurecabooster/Stages/2018a/software/imkl/2018.2.199-ipsmpi-2018a/
-        version: [2018.2.199]
+            intel-mkl@2019.1.144: /usr/local/software/jurecabooster/Stages/2019a/software/imkl/2019.3.199-ipsmpi-2019a-mt
+        version: [2019.1.144]
         buildable: False
     zeromq:
         version: [4.1.4]
         variants: ~libsodium
     libtool:
         paths:
-            libtool@2.4.6: /usr/local/software/jurecabooster/Stages/2018a/software/libtool/2.4.6-GCCcore-5.5.0
+            libtool@2.4.6: /usr/local/software/jurecabooster/Stages/2019a/software/libtool/2.4.6-GCCcore-8.3.0
         version: [2.4.6]
+        buildable: False
+    libxml2:
+        paths:
+            libxml2@2.9.9: /usr/local/software/jurecabooster/Stages/2019a/software/libxml2/2.9.9-GCCcore-8.3.0
+        version: [2.9.9]
+        buildable: False
+    libxslt:
+        paths:
+            libxslt@1.1.33: /usr/local/software/jurecabooster/Stages/2019a/software/libxslt/1.1.33-GCCcore-8.3.0
+        version: [1.1.33]
         buildable: False
     m4:
         paths:
@@ -72,8 +85,8 @@ packages:
         buildable: False
     ncurses:
         paths:
-            ncurses@6.0: /usr/local/software/jurecabooster/Stages/2018a/software/ncurses/6.0-GCCcore-5.5.0
-        version: [6.0]
+            ncurses@6.1: /usr/local/software/jurecabooster/Stages/2019a/software/ncurses/6.1-GCCcore-8.3.0
+        version: [6.1]
         buildable: False
     neuron:
         variants: ~binary
@@ -89,12 +102,44 @@ packages:
         paths:
             pkg-config@0.29.1: /usr
         version: [0.29.1]
+    python:
+        paths:
+            python@2.7.15: /usr/local/software/jurecabooster/Stages/2019a/software/Python/2.7.16-GCCcore-8.3.0
+        version: [2.7.15]
+        buildable: False
+    py-cython:
+        paths:
+            py-cython@0.29.6: /usr/local/software/jurecabooster/Stages/2019a/software/Python/2.7.16-GCCcore-8.3.0
+        version: [0.29.6]
+        buildable: False
+    py-ipyparallel:
+        paths:
+            py-ipyparallel@6.1.1: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
+        version: [6.1.1]
+        buildable: False
     py-matplotlib:
-        version: [2.0.2]
-        variants: ~tk
+        paths:
+            py-matplotlib@2.2.2: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
+        version: [2.2.2]
+        buildable: False
+    py-numpy:
+        paths:
+            py-numpy@1.14.2: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
+        version: [1.14.2]
+        buildable: False
+    py-pandas:
+        paths:
+            py-pandas@0.22.0: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
+        version: [0.22.0]
+        buildable: False
+    py-scipy:
+        paths:
+            py-scipy@1.2.1: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
+        version: [1.2.1]
+        buildable: False
     zlib:
         version: [1.2.8]
     all:
         compiler: [intel]
         providers:
-            mpi: [intel-mpi-external]
+            mpi: [mpich]

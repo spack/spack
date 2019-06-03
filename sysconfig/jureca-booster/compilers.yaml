@@ -6,11 +6,11 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc: /usr/local/software/jurecabooster/Stages/2018a/software/GCCcore/5.5.0/bin/gcc
-      cxx: /usr/local/software/jurecabooster/Stages/2018a/software/GCCcore/5.5.0/bin/g++
-      f77: /usr/local/software/jurecabooster/Stages/2018a/software/GCCcore/5.5.0/bin/gfortran
-      fc: /usr/local/software/jurecabooster/Stages/2018a/software/GCCcore/5.5.0/bin/gfortran
-    spec: gcc@5.5.0
+      cc: /usr/local/software/jurecabooster/Stages/2019a/software/GCCcore/8.3.0/bin/gcc
+      cxx: /usr/local/software/jurecabooster/Stages/2019a/software/GCCcore/8.3.0/bin/g++
+      f77: /usr/local/software/jurecabooster/Stages/2019a/software/GCCcore/8.3.0/bin/gfortran
+      fc: /usr/local/software/jurecabooster/Stages/2019a/software/GCCcore/8.3.0/bin/gfortran
+    spec: gcc@8.3.0
     target: x86_64
 - compiler:
     environment: {}
@@ -32,9 +32,9 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc: /usr/local/software/jurecabooster/Stages/2018a/software/icc/2018.2.199-GCC-5.5.0/compilers_and_libraries_2018.2.199/linux/bin/intel64/icc
-      cxx: /usr/local/software/jurecabooster/Stages/2018a/software/icc/2018.2.199-GCC-5.5.0/compilers_and_libraries_2018.2.199/linux/bin/intel64/icpc
-      f77: /usr/local/software/jurecabooster/Stages/2018a/software/ifort/2018.2.199-GCC-5.5.0/compilers_and_libraries_2018.2.199/linux/bin/intel64/ifort
-      fc: /usr/local/software/jurecabooster/Stages/2018a/software/ifort/2018.2.199-GCC-5.5.0/compilers_and_libraries_2018.2.199/linux/bin/intel64/ifort
-    spec: intel@18.0.2
+      cc: /usr/local/software/jurecabooster/Stages/2019a/software/icc/2019.3.199-GCC-8.3.0/compilers_and_libraries_2019.3.199/linux/bin/intel64/icc
+      cxx: /usr/local/software/jurecabooster/Stages/2019a/software/icc/2019.3.199-GCC-8.3.0/compilers_and_libraries_2019.3.199/linux/bin/intel64/icpc
+      f77: /usr/local/software/jurecabooster/Stages/2019a/software/ifort/2019.3.199-GCC-8.3.0/compilers_and_libraries_2019.3.199/linux/bin/intel64/ifort
+      fc: /usr/local/software/jurecabooster/Stages/2019a/software/ifort/2019.3.199-GCC-8.3.0/compilers_and_libraries_2019.3.199/linux/bin/intel64/ifort
+    spec: intel@19.0.3
     target: x86_64

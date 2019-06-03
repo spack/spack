@@ -39,7 +39,7 @@ class Flex(AutotoolsPackage):
 
     # Build issue for v2.6.4 when gcc@7.2.0: is used
     # See issue #219; https://github.com/westes/flex/issues/219
-    conflicts('%gcc@7.2.0:', when='@2.6.4')
+    conflicts('%gcc@7.2.0:7.3.0', when='@2.6.4')
 
     def url_for_version(self, version):
         url = "https://github.com/westes/flex"

@@ -152,7 +152,7 @@ class Neurodamus(NeurodamusBase):
         if os.path.exists(arch + "/.libs/libnrnmech.so"):
             shutil.move(arch + "/.libs/libnrnmech.so", prefix.lib)
             sed = which('sed')
-            sed('-i', 's#-dll .*#-dll %s#' % prefix.lib.join('libnrnmech.so'), prefix.bin.special)
+            sed('-i', 's#-dll .*#-dll %s "$@"#' % prefix.lib.join('libnrnmech.so'), prefix.bin.special)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.unset('LC_ALL')

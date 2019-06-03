@@ -27,3 +27,7 @@ class PyCython(PythonPackage):
     def command(self):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
+
+    def setup_environment(self, spack_env, run_env):
+        if self.spec.satisfies('%intel'):
+            spack_env.set('LDSHARED', '%s -shared' % spack_cc)

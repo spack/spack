@@ -26,14 +26,18 @@ modules:
       suffixes:
           '+profile': 'profile'
           '^coreneuron+knl': 'knl'
+          '~mpi': 'serial'
       filter:
         environment_blacklist: ['CPATH', 'LIBRARY_PATH']
     naming_scheme: '${PACKAGE}/${VERSION}'
     hash_length: 0
     whitelist:
       - 'neurodamus'
+      - 'neurodamus-hippocampus'
+      - 'neurodamus-neocortex'
       - 'neuron'
       - 'py-bluepyopt'
+      - 'py-bluepy'
     blacklist:
       - '%gcc'
       - '%intel'

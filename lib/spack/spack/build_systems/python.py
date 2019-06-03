@@ -210,7 +210,13 @@ class PythonPackage(PackageBase):
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""
-        args = ['--prefix={0}'.format(prefix)]
+        python_version = self.spec['python'].version.up_to(2)
+        python_string = 'python{0}'.format(python_version)
+        path_to_install_lib = os.path.join(
+            prefix, 'lib', python_string, 'site-packages')
+
+        args = ['--prefix={0}'.format(prefix),
+                '--install-lib={0}'.format(path_to_install_lib)]
 
         # This option causes python packages (including setuptools) NOT
         # to create eggs or easy-install.pth files.  Instead, they
