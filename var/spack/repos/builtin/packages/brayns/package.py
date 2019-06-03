@@ -6,7 +6,7 @@
 from spack import *
 
 class Brayns(CMakePackage):
-    """Blue Brain C++ File IO Library"""
+    """Visualizer for large-scale and interactive ray-tracing of neurons"""
 
     homepage = "https://github.com/BlueBrain/Brayns"
     git = "https://github.com/BlueBrain/Brayns.git"
@@ -22,6 +22,7 @@ class Brayns(CMakePackage):
     variant('net', default=True, description='Enable web interface')
     variant('opendeck', default=False, description='Enable OpenDeck support')
     variant('viewer', default=True, description='Build braynsViewer app')
+    variant('optix', default=False, description='Build Optix engine')
 
     depends_on('cmake@3.1:', type='build')
     depends_on('ispc', type='build')
@@ -38,6 +39,8 @@ class Brayns(CMakePackage):
     depends_on('ospray', when='+ospray')
     depends_on('rockets', when='+net')
     depends_on('vrpn', when='+opendeck')
+    depends_on('optix@5.0.1', when='+optix')
+    depends_on('cuda', when='+optix')
 
     def cmake_args(self):
         args = ['-DDISABLE_SUBPROJECTS=ON']
@@ -50,4 +53,7 @@ class Brayns(CMakePackage):
             args.append('-DBRAYNS_NETWORKING_ENABLED=ON')
         if '+deflect' in self.spec:
             args.append('-DBRAYNS_DEFLECT_ENABLED=ON')
+        if '+optix' in self.spec:
+            args.append('-DBRAYNS_OPTIX_ENABLED=ON')
+            args.append('-DBRAYNS_OPTIX_TESTS_ENABLED=ON')
         return args
