@@ -20,37 +20,38 @@ class Elsi(CMakePackage):
 
     # Variants (translation of cmake options)
     variant(
-      'add_underscore', default=True,
-      description="Suffix C functions with an underscore"
+        'add_underscore', default=True,
+        description="Suffix C functions with an underscore"
     )
     variant(
-      'elpa2_kernel', default="none", description="ELPA2 Kernel",
-      values=('BGQ', 'AVX', 'AVX2', 'AVX512'), multi=False
+        'elpa2_kernel', default="none", description="ELPA2 Kernel",
+        values=('BGQ', 'AVX', 'AVX2', 'AVX512'), multi=False
     )
     variant(
-      'enable_pexsi', default=False, description='Enable PEXSI support'
+        'enable_pexsi', default=False, description='Enable PEXSI support'
     )
     variant(
-      'enable_sips', default=False, description='Enable SLEPc-SIPs support'
+        'enable_sips', default=False, description='Enable SLEPc-SIPs support'
     )
     variant(
-      'use_external_elpa', default=False, description="Build ELPA using SPACK"
+        'use_external_elpa', default=False,
+        description="Build ELPA using SPACK"
     )
     variant(
-      'use_external_ntpoly', default=False,
-      description="Build NTPoly using SPACK"
+        'use_external_ntpoly', default=False,
+        description="Build NTPoly using SPACK"
     )
     variant(
-      'use_external_omm', default=False,
-      description="Use external libOMM and MatrixSwitch"
+        'use_external_omm', default=False,
+        description="Use external libOMM and MatrixSwitch"
     )
     variant(
-      'use_external_superlu', default=False,
-      description="Use external SuperLU DIST"
+        'use_external_superlu', default=False,
+        description="Use external SuperLU DIST"
     )
     variant(
-      'use_mpi_iallgather', default=True,
-      description="Use non-blocking collective MPI functions"
+        'use_mpi_iallgather', default=True,
+        description="Use non-blocking collective MPI functions"
     )
 
     # Basic dependencies
@@ -81,8 +82,10 @@ class Elsi(CMakePackage):
         # Handle the various variants
         if "-add_underscore" in self.spec:
             args += ["-DADD_UNDERSCORE=OFF"]
-        if "elpa2_kernel" in self.spec and self.spec["elpa2_kernel"] != "none":
-            args += ["-DELPA2_KERNEL=" + self.spec["elpa2_kernel"]]
+        if "elpa2_kernel" in self.spec.variants and \
+                self.spec.variants["elpa2_kernel"].value != "none":
+            kernel = self.spec.variants["elpa2_kernel"].value
+            args += ["-DELPA2_KERNEL=" + kernel]
         if '+enable_pexsi' in self.spec:
             args += ["-DENABLE_PEXSI=ON"]
         if '+enable_sips' in self.spec:
