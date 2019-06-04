@@ -6,14 +6,14 @@
 
 import os
 from spack import *
-import spack.architecture
 
 
 class Prrte(AutotoolsPackage):
     """PRRTE is the Reference RunTime Environment implementation for PMIx.
        It is capable of operating within a host SMS. The reference RTE
        therefore provides an easy way of exploring PMIx capabilities and
-       testing PMIx-based applications outside of a PMIx-enabled environment."""
+       testing PMIx-based applications outside of a PMIx-enabled
+       environment."""
 
     homepage = "https://pmix.org"
     url      = "https://github.com/pmix/prrte/archive/dev.tar.gz"
