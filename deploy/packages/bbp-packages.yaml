@@ -40,7 +40,7 @@ packages:
       - parquet-converters@0.4.1
       - synapsetool@0.4.1
       - touchdetector@4.4.2
-      - touchdetector@5.0.0
+      - touchdetector@5.0.1
       - brayns@0.8.0 +opendeck +brion ^brion+python
 
   gnu-stable-parallel-python:
