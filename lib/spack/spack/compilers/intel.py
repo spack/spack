@@ -66,6 +66,26 @@ class Intel(Compiler):
             return "-std=c++14"
 
     @property
+    def c99_flag(self):
+        if self.version < ver('12'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C99 standard",
+                                          "c99_flag",
+                                          "< 12")
+        else:
+            return "-std=c99"
+
+    @property
+    def c11_flag(self):
+        if self.version < ver('16'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C11 standard",
+                                          "c11_flag",
+                                          "< 16")
+        else:
+            return "-std=c1x"
+
+    @property
     def pic_flag(self):
         return "-fPIC"
 
