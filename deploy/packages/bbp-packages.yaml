@@ -23,7 +23,7 @@ packages:
     specs:
       - brainbuilder@0.11.1
       - connectome-tools@0.3.2
-      - spykfunc@0.14.2
+      - spykfunc@0.14.3
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
       - py-basalt@0.2.4
