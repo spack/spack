@@ -1,12 +1,12 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.compiler
+from spack.compiler import Compiler, get_compiler_version
 
 
-class Cce(spack.compiler.Compiler):
+class Cce(Compiler):
     """Cray compiler environment compiler."""
     # Subclasses use possible names of C compiler
     cc_names = ['cc']
@@ -26,22 +26,24 @@ class Cce(spack.compiler.Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'cce'
 
-    link_paths = {'cc': 'cce/cc',
-                  'cxx': 'cce/case-insensitive/CC',
-                  'f77': 'cce/ftn',
-                  'fc': 'cce/ftn'}
+    link_paths = {'cc': 'cc',
+                  'cxx': 'c++',
+                  'f77': 'f77',
+                  'fc': 'fc'}
 
-    version_argument = '-V'
-    version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
+    @classmethod
+    def default_version(cls, comp):
+        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
 
     @property
     def openmp_flag(self):
-        return "-h omp"
+        return "-fopenmp"
 
     @property
     def cxx11_flag(self):
-        return "-h std=c++11"
+        return "--std=c++11"
 
     @property
     def pic_flag(self):
-        return "-h PIC"
+        return "-fPIC"
+
