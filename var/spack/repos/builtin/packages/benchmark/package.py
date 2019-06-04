@@ -17,6 +17,7 @@ class Benchmark(CMakePackage):
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
 
     version('develop', branch='master')
+    version('1.5.0', sha256='3c6a165b6ecc948967a1ead710d4a181d7b0fbcaa183ef7ea84604994966221a')
     version('1.4.1', sha256='f8e525db3c42efc9c7f3bc5176a8fa893a9a9920bbd08cef30fb56a51854d60d')
     version('1.4.0', 'ccfaf2cd93ae20191b94f730b945423e')
     version('1.3.0', '19ce86516ab82d6ad3b17173cf307aac')
@@ -30,7 +31,8 @@ class Benchmark(CMakePackage):
                     'MinSizeRel', 'Coverage'))
 
     depends_on("cmake@2.8.11:", type="build", when="@:1.1.0")
-    depends_on("cmake@2.8.12:", type="build", when="@1.2.0:")
+    depends_on("cmake@2.8.12:", type="build", when="@1.2.0:1.4")
+    depends_on("cmake@3.5.1:",  type="build", when="@1.5.0:")
 
     def cmake_args(self):
         # No need for testing for the install
