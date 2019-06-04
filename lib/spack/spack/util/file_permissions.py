@@ -16,19 +16,22 @@ def set_permissions_by_spec(path, spec):
         perms = pp.get_package_dir_permissions(spec)
     else:
         perms = pp.get_package_permissions(spec)
+    group = pp.get_package_group(spec)
 
+    set_permissions(path, perms, group)
+
+
+def set_permissions(path, perms, group=None):
     # Preserve higher-order bits of file permissions
     perms |= os.stat(path).st_mode & (st.S_ISUID | st.S_ISGID | st.S_ISVTX)
 
     # Do not let users create world writable suid binaries
-    if perms & st.S_ISUID and perms & st.S_IWGWP:
+    if perms & st.S_ISUID and perms & st.S_IWGRP:
         raise InvalidPermissionsError(
             "Attepting to set suid with world writable")
 
     fs.chmod_x(path, perms)
 
-    # Set group for spec
-    group = pp.get_package_group(spec)
     if group:
         fs.chgrp(path, group)
 
