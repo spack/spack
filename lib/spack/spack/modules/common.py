@@ -47,6 +47,7 @@ import spack.util.path
 import spack.util.environment
 import spack.error
 import spack.util.spack_yaml as syaml
+import spack.util.file_permissions as fp
 
 #: config section for this file
 configuration = spack.config.get('modules')
@@ -749,6 +750,10 @@ class BaseModuleFileWriter(object):
         # Write it to file
         with open(self.layout.filename, 'w') as f:
             f.write(text)
+
+        # Set the file permissions of the module to match that of the package
+        if os.path.exists(self.layout.filename):
+            fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
     def remove(self):
         """Deletes the module file."""
