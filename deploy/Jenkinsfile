@@ -4,7 +4,7 @@ def build_and_deploy_docker() {
     def rev = "--build-arg revision=${sha1}"
     if (pull == null) {
         sh "docker build -f docker/Dockerfile ${proxy} ${rev} -t bluebrain/spack ."
-        sh "docker push docker.io/bluebrain/spack"
+        // sh "docker push docker.io/bluebrain/spack"
     } else {
         def pr = "--build-arg pr=${env.ghprbPullId}"
         sh "docker build -f docker/Dockerfile ${proxy} ${rev} ${pr} -t bluebrain/spack ."
