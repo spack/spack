@@ -4,7 +4,39 @@ Official documentation [below](#-spack).
 For the development documentation of the deployment stack, see
 [`deploy/README.md`](deploy/README.md).
 
-## Building software with Spack at BlueBrain
+## Building software on Ubuntu 18.04
+
+We build Docker images based on Ubuntu 18.04, and the same settings can be
+used to set Spack up on the desktops:
+
+    $ git clone https://github.com/BlueBrain/spack.git
+    $ mkdir ~/.spack
+    $ cp spack/sysconfig/ubuntu-18.04/*.yaml ~/.spack
+    $ sed -e 's/#.*//g' spack/sysconfig/ubuntu-18.04/packages|xargs -r sudo apt-get install
+    $ spack compiler find
+    $ . spack/share/spack/setup-env.sh
+
+Now to build software, i.e., MVDTool:
+
+    $ git clone git@github.com:BlueBrain/MVDTool.git
+    $ cd MVDTool
+    $ spack setup mvdtool@develop
+    $ cd build
+    $ ../spconfig.py ..
+    $ make
+
+Alternatively, to quickly install software based on a local source
+checkout:
+
+    $ git clone git@github.com:BlueBrain/MVDTool.git
+    $ cd MVDTool
+    $ spack diy -y --test=root mvdtool@my-custom-version
+
+This version of MVDTool can now be re-used by Spack to build other
+software, when `^mvdtool@my-custom-version` is appended to the appropriate
+spec.
+
+## Building software on BlueBrain5
 
 On BB5, clone this repository to get started using Spack.
 The following commands are a good way to get started:

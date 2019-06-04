@@ -1,3 +1,16 @@
+def build_and_deploy_docker() {
+    def pull = env.ghprbPullId
+    def proxy = "--build-arg proxy=http://bbpproxy.epfl.ch:80"
+    def rev = "--build-arg revision=${sha1}"
+    if (pull == null) {
+        sh "docker build -f docker/Dockerfile ${proxy} ${rev} -t bluebrain/spack ."
+        sh "docker push bluebrain/spack"
+    } else {
+        def pr = "--build-arg pr=${env.ghprbPullId}"
+        sh "docker build -f docker/Dockerfile ${proxy} ${rev} ${pr} -t bluebrain/spack ."
+    }
+}
+
 def deployment_directory(parent) {
     def pull = env.ghprbPullId
     if (parent || pull == null) {
@@ -81,6 +94,7 @@ pipeline {
         DEPLOYMENT_UPSTREAM = deployment_directory(true)
         DEPLOYMENT_ROOT = deployment_directory(false)
         BASEDIR = "${DEPLOYMENT_ROOT}/spack/deploy"
+        DOCKERDIR = "${DEPLOYMENT_ROOT}/spack/docker"
     }
 
     triggers {
@@ -126,7 +140,7 @@ pipeline {
                                       branches: [[name: "FETCH_HEAD"]],
                                       extensions: [[$class: 'LocalBranch']],
                                       userRemoteConfigs: [[
-                                            refspec: "+refs/pull/${env.ghprbPullId}/head:refs/remotes/origin/pull/${env.ghprbPullId}", 
+                                            refspec: "+refs/pull/${env.ghprbPullId}/head:refs/remotes/origin/pull/${env.ghprbPullId}",
                                             url: "https://github.com/BlueBrain/spack.git"
                                       ]]])
 
@@ -291,6 +305,16 @@ pipeline {
                 stage('Documentation') {
                     steps {
                         sh "ls"
+                    }
+                }
+
+                stage('Docker') {
+                    agent {
+                        label 'docker'
+                    }
+
+                    steps {
+                        build_and_deploy_docker()
                     }
                 }
 

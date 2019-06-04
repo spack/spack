@@ -1,0 +1,108 @@
+packages:
+    autoconf:
+        paths:
+            autoconf@2.69: /usr
+        version: [2.69]
+    automake:
+        paths:
+            automake@1.15.1: /usr
+        version: [1.15.1]
+    bison:
+        paths:
+            bison@3.0.4: /usr
+        version: [3.0.4]
+    boost:
+        paths:
+            boost@1.65.1: /usr
+        version: [1.65.1]
+    bzip2:
+        paths:
+            bzip2@1.0.6: /usr
+        version: [1.0.6]
+    cmake:
+        paths:
+            cmake@3.10.2: /usr
+        version: [3.10.2]
+    diffutils:
+        paths:
+            diffutils@3.6: /usr
+        version: [3.6]
+    findutils:
+        paths:
+            findutils@4.6.0: /usr
+        version: [4.6.0]
+    flex:
+        paths:
+            flex@2.6.2: /usr
+        version: [2.6.2]
+    hdf5:
+        paths:
+            hdf5@1.10~mpi: /usr/lib/x86_64-linux-gnu/hdf5/serial
+            hdf5@1.10+mpi: /usr/lib/x86_64-linux-gnu/hdf5/openmpi
+        version: [1.10]
+    libpciaccess:
+        paths:
+            libpciaccess@0.14: /usr
+    libtool:
+        paths:
+            libtool@2.4.6: /usr
+        version: [2.4.6]
+    libxml2:
+        paths:
+            libxml2@2.9.4: /usr
+        version: [2.9.4]
+    m4:
+        paths:
+            m4@1.4.18: /usr
+        version: [1.4.18]
+    mvapich2:
+        variants: fabrics=nemesis
+        version: [2.3]
+    ncurses:
+        paths:
+            ncurses@6.1: /usr
+        version: [6.1]
+    numactl:
+        paths:
+            numactl@2.0.11: /usr
+        version: [2.0.11]
+    openmpi:
+        paths:
+            openmpi@2.1.1: /usr
+        version: [3.3]
+    openssl:
+        paths:
+            openssl@1.1.0g: /usr
+        version: [1.1.0g]
+    perl:
+        paths:
+            perl@5.26.1: /usr
+        version: [5.26.1]
+    pkg-config:
+        paths:
+            pkg-config@0.29.1: /usr
+        version: [0.29.1]
+    python:
+        paths:
+            python@2.7.15: /usr
+        version: [2.7.15]
+    py-cython:
+        paths:
+            py-cython@0.26.1: /usr
+        version: [0.26.1]
+    py-numpy:
+        paths:
+            py-numpy@1.13.3: /usr
+        version: [1.13.3]
+    readline:
+        paths:
+            readline@7.0: /usr
+        version: [7.0]
+    tcl:
+        paths:
+            tcl@8.6: /usr
+        version: [8.6]
+    all:
+        providers:
+            mpi: [openmpi]
+            compiler: [gcc]
