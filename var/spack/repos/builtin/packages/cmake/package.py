@@ -70,6 +70,7 @@ class Cmake(Package):
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
+    variant('gnutls',  default=False, description="Enables CMake's gnutls features")
 
     depends_on('curl',           when='~ownlibs')
     depends_on('expat',          when='~ownlibs')
@@ -88,7 +89,7 @@ class Cmake(Package):
     depends_on('openssl', when='+openssl')
     depends_on('openssl@:1.0.99', when='@:3.6.9+openssl')
     depends_on('ncurses',        when='+ncurses')
-    depends_on('gnutls')
+    depends_on('gnutls',         when='+gnutls')
 
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
