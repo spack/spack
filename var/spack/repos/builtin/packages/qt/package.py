@@ -93,6 +93,11 @@ class Qt(Package):
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
 
+    # https://bugreports.qt.io/browse/QTBUG-74196
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89585
+    patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
+    patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
+
     depends_on("pkgconfig", type='build')
     # Use system openssl for security.
     depends_on("openssl@:1.0", when='@:5.9')
