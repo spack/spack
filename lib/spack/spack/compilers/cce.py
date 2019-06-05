@@ -43,5 +43,9 @@ class Cce(spack.compiler.Compiler):
         return "-h std=c++11"
 
     @property
+    def c99_flag(self):
+        return "-h c99"
+
+    @property
     def pic_flag(self):
         return "-h PIC"
