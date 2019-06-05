@@ -34,7 +34,7 @@ class Amber(Package, CudaPackage):
     depends_on('cuda@7.5.18', when='+cuda')
 
     depends_on('netcdf-fortran')
-    depends_on('python+tkinter', type=('build', 'run'))
+    depends_on('python+tkinter@2.7:2.8', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib@:2.9', type=('build', 'run'))
