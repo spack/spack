@@ -7,8 +7,8 @@ import os
 import pytest
 import stat
 
-from spack.hooks.permissions_setters import (
-    chmod_real_entries, InvalidPermissionsError
+from spack.util.file_permissions import (
+    set_permissions, InvalidPermissionsError
 )
 import llnl.util.filesystem as fs
 
@@ -20,7 +20,7 @@ def test_chmod_real_entries_ignores_suid_sgid(tmpdir):
     mode = os.stat(path).st_mode  # adds a high bit we aren't concerned with
 
     perms = stat.S_IRWXU
-    chmod_real_entries(path, perms)
+    set_permissions(path, perms)
 
     assert os.stat(path).st_mode == mode | perms & ~stat.S_IXUSR
 
@@ -32,4 +32,4 @@ def test_chmod_rejects_group_writable_suid(tmpdir):
 
     perms = stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO
     with pytest.raises(InvalidPermissionsError):
-        chmod_real_entries(path, perms)
+        set_permissions(path, perms)

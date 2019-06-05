@@ -44,6 +44,14 @@ class Xl(Compiler):
             return "-qlanglvl=extended0x"
 
     @property
+    def c99_flag(self):
+        return '-std=c99'
+
+    @property
+    def c11_flag(self):
+        return '-std=c11'
+
+    @property
     def pic_flag(self):
         return "-qpic"
 

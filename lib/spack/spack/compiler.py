@@ -195,6 +195,24 @@ class Compiler(object):
                                       "the C++17 standard",
                                       "cxx17_flag")
 
+    # This property should be overridden in the compiler subclass if
+    # C99 is supported by that compiler
+    @property
+    def c99_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        raise UnsupportedCompilerFlag(self,
+                                      "the C99 standard",
+                                      "c99_flag")
+
+    # This property should be overridden in the compiler subclass if
+    # C11 is supported by that compiler
+    @property
+    def c11_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        raise UnsupportedCompilerFlag(self,
+                                      "the C11 standard",
+                                      "c11_flag")
+
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.

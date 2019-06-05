@@ -35,6 +35,7 @@ import spack.paths
 import spack.store
 import spack.compilers
 import spack.directives
+import spack.dependency
 import spack.directory_layout
 import spack.error
 import spack.fetch_strategy as fs
@@ -60,10 +61,6 @@ from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
-
-
-"""Allowed URL schemes for spack packages."""
-_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
 
 class InstallPhase(object):
@@ -228,6 +225,19 @@ class PackageMeta(
     def fullname(self):
         """Name of this package, including the namespace"""
         return '%s.%s' % (self.namespace, self.name)
+
+    @property
+    def name(self):
+        """The name of this package.
+
+        The name of a package is the name of its Python module, without
+        the containing module names.
+        """
+        if not hasattr(self, '_name'):
+            self._name = self.module.__name__
+            if '.' in self._name:
+                self._name = self._name[self._name.rindex('.') + 1:]
+        return self._name
 
 
 def run_before(*phases):
@@ -472,12 +482,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # this determines how the package should be built.
         self.spec = spec
 
-        # Name of package is the name of its module, without the
-        # containing module names.
-        self.name = self.module.__name__
-        if '.' in self.name:
-            self.name = self.name[self.name.rindex('.') + 1:]
-
         # Allow custom staging paths for packages
         self.path = None
 
@@ -525,40 +529,68 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return self._installed_upstream
 
+    @classmethod
     def possible_dependencies(
-            self, transitive=True, expand_virtuals=True, visited=None):
-        """Return set of possible dependencies of this package.
-
-        Note: the set returned *includes* the package itself.
+            cls, transitive=True, expand_virtuals=True, deptype='all',
+            visited=None):
+        """Return dict of possible dependencies of this package.
 
         Args:
             transitive (bool): return all transitive dependencies if True,
                 only direct dependencies if False.
             expand_virtuals (bool): expand virtual dependencies into all
                 possible implementations.
+            deptype (str or tuple): dependency types to consider
             visited (set): set of names of dependencies visited so far.
-        """
-        if visited is None:
-            visited = set([self.name])
 
-        for i, name in enumerate(self.dependencies):
+        Returns:
+            (dict): dictionary mapping dependency names to *their*
+                immediate dependencies
+
+        Each item in the returned dictionary maps a (potentially
+        transitive) dependency of this package to its possible
+        *immediate* dependencies. If ``expand_virtuals`` is ``False``,
+        virtual package names wil be inserted as keys mapped to empty
+        sets of dependencies.  Virtuals, if not expanded, are treated as
+        though they have no immediate dependencies
+
+        Note: the returned dict *includes* the package itself.
+
+        """
+        deptype = spack.dependency.canonical_deptype(deptype)
+
+        if visited is None:
+            visited = {cls.name: set()}
+
+        for name, conditions in cls.dependencies.items():
+            # check whether this dependency could be of the type asked for
+            types = [dep.type for cond, dep in conditions.items()]
+            types = set.union(*types)
+            if not any(d in types for d in deptype):
+                continue
+
+            # expand virtuals if enabled, otherwise just stop at virtuals
             if spack.repo.path.is_virtual(name):
                 if expand_virtuals:
                     providers = spack.repo.path.providers_for(name)
                     dep_names = [spec.name for spec in providers]
                 else:
-                    visited.add(name)
+                    visited.setdefault(name, set())
                     continue
             else:
                 dep_names = [name]
 
+            # add the dependency names to the visited dict
+            visited.setdefault(cls.name, set()).update(set(dep_names))
+
+            # recursively traverse dependencies
             for dep_name in dep_names:
                 if dep_name not in visited:
-                    visited.add(dep_name)
+                    visited.setdefault(dep_name, set())
                     if transitive:
-                        pkg = spack.repo.get(dep_name)
-                        pkg.possible_dependencies(
-                            transitive, expand_virtuals, visited)
+                        dep_cls = spack.repo.path.get_pkg_class(dep_name)
+                        dep_cls.possible_dependencies(
+                            transitive, expand_virtuals, deptype, visited)
 
         return visited
 
@@ -583,6 +615,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def fullname(self):
         """Name of this package, including namespace: namespace.name."""
         return type(self).fullname
+
+    @property
+    def name(self):
+        """Name of this package (the module without parent modules)."""
+        return type(self).name
 
     @property
     def global_license_dir(self):
