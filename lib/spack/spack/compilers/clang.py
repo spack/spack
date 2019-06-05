@@ -158,6 +158,20 @@ class Clang(Compiler):
                 return "-std=c++17"
 
     @property
+    def c99_flag(self):
+        return '-std=c99'
+
+    @property
+    def c11_flag(self):
+        if self.version < ver('6.1.0'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C11 standard",
+                                          "c11_flag",
+                                          "< 3.3")
+        else:
+            return "-std=c11"
+
+    @property
     def pic_flag(self):
         return "-fPIC"
 
