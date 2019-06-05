@@ -151,7 +151,7 @@ class Clang(Compiler):
                 raise UnsupportedCompilerFlag(self,
                                               "the C++17 standard",
                                               "cxx17_flag",
-                                              "< 5.0")
+                                              "< 3.5")
             elif self.version < ver('5.0'):
                 return "-std=c++1z"
             else:
@@ -167,7 +167,7 @@ class Clang(Compiler):
             raise UnsupportedCompilerFlag(self,
                                           "the C11 standard",
                                           "c11_flag",
-                                          "< 3.3")
+                                          "< 6.1.0")
         else:
             return "-std=c11"
 
