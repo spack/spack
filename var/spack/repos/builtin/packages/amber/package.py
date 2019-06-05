@@ -21,7 +21,7 @@ class Amber(Package, CudaPackage):
 
     version('16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d')
 
-    variant('mpi', description='Build MPI executables', default=False)
+    variant('mpi', description='Build MPI executables', default=True)
 
     resource(
         name='AmberTools',
