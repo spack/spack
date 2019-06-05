@@ -141,6 +141,8 @@ class Python(AutotoolsPackage):
         when='+optimizations',
         msg='+optimizations is incompatible with +shared in python@2.X'
     )
+    conflicts('+tix', when='~tkinter',
+              msg='python+tix requires python+tix+tkinter')
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
