@@ -7,14 +7,14 @@ ENV CURRENTLY_BUILDING_DOCKER_IMAGE=1
 
 MASK PUSH
 MASK [[ $DISTRO == centos ]]
-RUN yum update -y                                          \
- && yum install -y gmp-devel libmpc-devel mpfr-devel which \
- && rm -rf /var/cache/yum                                  \
+RUN yum update -y                                                      \
+ && yum install -y gmp-devel libmpc-devel mpfr-devel which vim-minimal \
+ && rm -rf /var/cache/yum                                              \
  && yum clean all
 
 MASK [[ $DISTRO == ubuntu ]]
-RUN apt-get -yqq update                                     \
- && apt-get -yqq install clang g++-5 gcc-5 gfortran-5 unzip \
+RUN apt-get -yqq update                                              \
+ && apt-get -yqq install clang g++-5 gcc-5 gfortran-5 unzip vim-tiny \
  && rm -rf /var/lib/apt/lists/*
 
 
