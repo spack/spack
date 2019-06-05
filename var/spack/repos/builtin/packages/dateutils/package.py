@@ -17,8 +17,3 @@ class Dateutils(AutotoolsPackage):
     version('0.4.5', sha256='16d6a0fe7b7d49ddbb303f33538dd7304a0d4af5a0369bcbf275db6a5060cbde')
 
     build_directory = 'spack-build'
-
-    depends_on('texinfo')
-    depends_on('gperf')
-    depends_on('flex')
-    depends_on('bison')
