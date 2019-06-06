@@ -16,7 +16,7 @@ class JsonC(AutotoolsPackage):
     version('0.11',   'aa02367d2f7a830bf1e3376f77881e98')
 
     depends_on('autoconf', type='build')
-    depends_on('perl@5.16.3')
+    depends_on('perl@5.16.3:')
 
     parallel = False
 
