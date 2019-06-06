@@ -28,6 +28,7 @@ import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 
+_source_path_subdir = 'src'
 _stage_prefix = 'spack-stage-'
 
 
@@ -46,8 +47,9 @@ def _first_accessible_path(paths):
             # return it if successful.
             return path
 
-        except OSError:
-            tty.debug('OSError while checking temporary path: %s' % path)
+        except OSError as e:
+            tty.debug('OSError while checking temporary path %s: %s' % (
+                      path, str(e)))
             continue
 
     return None
@@ -78,7 +80,7 @@ def get_tmp_root():
             _use_tmp_stage = False
             return None
 
-        # ensure that any temp path is unique per user, so users don't
+        # Ensure that any temp path is unique per user, so users don't
         # fight over shared temporary space.
         user = getpass.getuser()
         if user not in path:
@@ -292,13 +294,18 @@ class Stage(object):
     def expected_archive_files(self):
         """Possible archive file paths."""
         paths = []
-        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.default_fetcher.url)))
+        roots = [self.path]
+        if self.expanded:
+            roots.insert(0, self.source_path)
 
-        if self.mirror_path:
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.mirror_path)))
+        for path in roots:
+            if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+                paths.append(os.path.join(
+                    path, os.path.basename(self.default_fetcher.url)))
+
+            if self.mirror_path:
+                paths.append(os.path.join(
+                    path, os.path.basename(self.mirror_path)))
 
         return paths
 
@@ -321,27 +328,14 @@ class Stage(object):
             return None
 
     @property
+    def expanded(self):
+        """Returns True if source path expanded; else False."""
+        return os.path.exists(self.source_path)
+
+    @property
     def source_path(self):
-        """Returns the path to the expanded/checked out source code.
-
-        To find the source code, this method searches for the first
-        subdirectory of the stage that it can find, and returns it.
-        This assumes nothing besides the archive file will be in the
-        stage path, but it has the advantage that we don't need to
-        know the name of the archive or its contents.
-
-        If the fetch strategy is not supposed to expand the downloaded
-        file, it will just return the stage path. If the archive needs
-        to be expanded, it will return None when no archive is found.
-        """
-        if isinstance(self.fetcher, fs.URLFetchStrategy):
-            if not self.fetcher.expand_archive:
-                return self.path
-
-        for p in [os.path.join(self.path, f) for f in os.listdir(self.path)]:
-            if os.path.isdir(p):
-                return p
-        return None
+        """Returns the well-known source directory path."""
+        return os.path.join(self.path, _source_path_subdir)
 
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
@@ -441,8 +435,7 @@ class Stage(object):
         """Changes to the stage directory and attempt to expand the downloaded
         archive.  Fail if the stage is not set up or if the archive is not yet
         downloaded."""
-        archive_dir = self.source_path
-        if not archive_dir:
+        if not self.expanded:
             self.fetcher.expand()
             tty.msg("Created stage in %s" % self.path)
         else:
@@ -633,12 +626,6 @@ class DIYStage(object):
 
     def cache_local(self):
         tty.msg("Sources for DIY stages are not cached")
-
-
-def _get_mirrors():
-    """Get mirrors from spack configuration."""
-    config = spack.config.get('mirrors')
-    return [val for name, val in iteritems(config)]
 
 
 def ensure_access(file=spack.paths.stage_path):
