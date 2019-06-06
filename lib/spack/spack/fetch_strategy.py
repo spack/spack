@@ -1082,11 +1082,13 @@ def from_list_url(pkg):
 
                 # construct a fetcher
                 return URLFetchStrategy(url_from_list, checksum)
-            except KeyError:
+            except KeyError as e:
+                tty.debug(e)
                 tty.msg("Cannot find version %s in url_list" % pkg.version)
 
-        except BaseException:
+        except BaseException as e:
             # TODO: Don't catch BaseException here! Be more specific.
+            tty.debug(e)
             tty.msg("Could not determine url from list_url.")
 
 
