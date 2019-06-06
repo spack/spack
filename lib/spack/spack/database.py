@@ -606,8 +606,7 @@ class Database(object):
                 except Exception as e:
                     # Something went wrong, so the spec was not restored
                     # from old data
-                    tty.debug(e.message)
-                    pass
+                    tty.debug(e)
 
             self._check_ref_counts()
 
@@ -659,7 +658,8 @@ class Database(object):
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
-        except BaseException:
+        except BaseException as e:
+            tty.debug(e)
             # Clean up temp file if something goes wrong.
             if os.path.exists(temp_file):
                 os.remove(temp_file)

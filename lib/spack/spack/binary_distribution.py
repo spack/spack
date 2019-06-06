@@ -321,7 +321,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
 
-    # optinally make the paths in the binaries relative to each other
+    # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if rel:
         try:
@@ -329,14 +329,14 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
-            tty.die(str(e))
+            tty.die(e)
     else:
         try:
             make_package_placeholder(workdir, spec.prefix, allow_root)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
-            tty.die(str(e))
+            tty.die(e)
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
@@ -521,7 +521,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
                 Gpg.verify('%s.asc' % specfile_path, specfile_path)
             except Exception as e:
                 shutil.rmtree(tmpdir)
-                tty.die(str(e))
+                tty.die(e)
         else:
             shutil.rmtree(tmpdir)
             raise NoVerifyException(
@@ -575,7 +575,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         relocate_package(workdir, allow_root)
     except Exception as e:
         shutil.rmtree(workdir)
-        tty.die(str(e))
+        tty.die(e)
     # Delay creating spec.prefix until verification is complete
     # and any relocation has been done.
     else:
@@ -809,7 +809,8 @@ def _download_buildcache_entry(mirror_root, descriptions):
 
         try:
             stage.fetch()
-        except fs.FetchError:
+        except fs.FetchError as e:
+            tty.debug(e)
             if fail_if_missing:
                 tty.error('Failed to download required url {0}'.format(url))
                 return False

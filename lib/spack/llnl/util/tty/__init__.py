@@ -141,6 +141,9 @@ def msg(message, *args, **kwargs):
     if not msg_enabled():
         return
 
+    if isinstance(message, Exception):
+        message = "%s: %s" % (message.__class__.__name__, str(message))
+
     newline = kwargs.get('newline', True)
     st_text = ""
     if _stacktrace:
@@ -156,6 +159,9 @@ def msg(message, *args, **kwargs):
 
 
 def info(message, *args, **kwargs):
+    if isinstance(message, Exception):
+        message = "%s: %s" % (message.__class__.__name__, str(message))
+
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
     wrap = kwargs.get('wrap', False)

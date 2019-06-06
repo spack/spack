@@ -490,7 +490,8 @@ class Stage(object):
         # Make sure we don't end up in a removed directory
         try:
             os.getcwd()
-        except OSError:
+        except OSError as e:
+            tty.debug(e)
             os.chdir(os.path.dirname(self.path))
 
         # mark as destroyed
@@ -530,6 +531,7 @@ class ResourceStage(Stage):
         try:
             os.makedirs(target_path)
         except OSError as err:
+            tty.debug(err)
             if err.errno == errno.EEXIST and os.path.isdir(target_path):
                 pass
             else:
