@@ -22,3 +22,6 @@ class Nettle(AutotoolsPackage):
 
     depends_on('gmp')
     depends_on('m4', type='build')
+
+    def configure_args(self):
+        return ['CFLAGS={0}'.format(self.compiler.c99_flag)]
