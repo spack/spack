@@ -577,6 +577,10 @@ class StageComposite:
         return self[0].source_path
 
     @property
+    def expanded(self):
+        return self[0].expanded
+
+    @property
     def path(self):
         return self[0].path
 
