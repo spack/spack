@@ -505,6 +505,7 @@ class SpackCommand(object):
             self.returncode = e.code
 
         except BaseException as e:
+            tty.debug(e)
             self.error = e
             if fail_on_error:
                 raise
@@ -695,12 +696,13 @@ def main(argv=None):
             return _invoke_command(command, parser, args, unknown)
 
     except SpackError as e:
+        tty.debug(e)
         e.die()  # gracefully die on any SpackErrors
 
     except Exception as e:
         if spack.config.get('config:debug'):
             raise
-        tty.die(str(e))
+        tty.die(e)
 
     except KeyboardInterrupt:
         sys.stderr.write('\n')

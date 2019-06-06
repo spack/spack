@@ -304,6 +304,7 @@ def refresh(module_type, specs, args):
         try:
             x.write(overwrite=True)
         except Exception as e:
+            tty.debug(e)
             msg = 'Could not write module file [{0}]'
             tty.warn(msg.format(x.layout.filename))
             tty.warn('\t--> {0} <--'.format(str(e)))

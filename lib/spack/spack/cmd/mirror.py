@@ -142,6 +142,7 @@ def _read_specs_from_file(filename):
                 s.package
                 specs.append(s)
             except SpackError as e:
+                tty.debug(e)
                 tty.die("Parse error in %s, line %d:" % (filename, i + 1),
                         ">>> " + string, str(e))
     return specs

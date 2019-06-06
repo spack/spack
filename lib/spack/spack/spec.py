@@ -1723,6 +1723,7 @@ class Spec(object):
             data = sjson.load(stream)
             return Spec.from_dict(data)
         except Exception as e:
+            tty.debug(e)
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
     def _concretize_helper(self, presets=None, visited=None):

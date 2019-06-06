@@ -218,6 +218,7 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
         spec.package.do_clean()
 
     except Exception as e:
+        tty.debug(e)
         if spack.config.get('config:debug'):
             sys.excepthook(*sys.exc_info())
         else:
