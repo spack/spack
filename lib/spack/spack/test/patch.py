@@ -63,9 +63,9 @@ def test_url_patch(mock_stage, filename, sha256, archive_sha256):
         # TODO: there is probably a better way to mock this.
         stage.mirror_path = mock_stage  # don't disrupt the spack install
 
-        # fake a source path
+        # Fake a source path and ensure the directory exists
         with working_dir(stage.path):
-            mkdirp('spack-expanded-archive')
+            mkdirp(spack.stage._source_path_subdir)
 
         with working_dir(stage.source_path):
             # write a file to be patched
