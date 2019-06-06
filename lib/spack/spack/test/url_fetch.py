@@ -10,8 +10,10 @@ from llnl.util.filesystem import working_dir, is_exe
 
 import spack.repo
 import spack.config
+from spack.fetch_strategy import FailedDownloadError
 from spack.fetch_strategy import from_list_url, URLFetchStrategy
 from spack.spec import Spec
+from spack.stage import Stage
 from spack.version import ver
 import spack.util.crypto as crypto
 
@@ -19,6 +21,27 @@ import spack.util.crypto as crypto
 @pytest.fixture(params=list(crypto.hashes.keys()))
 def checksum_type(request):
     return request.param
+
+
+def test_urlfetchstrategy_sans_url():
+    """Ensure constructor with no URL fails."""
+    with pytest.raises(ValueError):
+        with URLFetchStrategy(None):
+            pass
+
+
+def test_urlfetchstrategy_bad_url(tmpdir):
+    """Ensure fetch with bad URL fails as expected."""
+    testpath = str(tmpdir)
+
+    with pytest.raises(FailedDownloadError):
+        fetcher = URLFetchStrategy(url='file:///does-not-exist')
+        assert fetcher is not None
+
+        with Stage(fetcher, path=testpath) as stage:
+            assert stage is not None
+            assert fetcher.archive_file is None
+            fetcher.fetch()
 
 
 @pytest.mark.parametrize('secure', [True, False])
@@ -135,3 +158,15 @@ def test_hash_detection(checksum_type):
 def test_unknown_hash(checksum_type):
     with pytest.raises(ValueError):
         crypto.Checker('a')
+
+
+def test_url_extra_fetch(tmpdir, mock_archive):
+    """Ensure a fetch after downloading is effectively a no-op."""
+    testpath = str(tmpdir)
+
+    fetcher = URLFetchStrategy(mock_archive.url)
+    with Stage(fetcher, path=testpath) as stage:
+        assert fetcher.archive_file is None
+        stage.fetch()
+        assert fetcher.archive_file is not None
+        fetcher.fetch()
