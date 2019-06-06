@@ -17,6 +17,7 @@ class Pfunit(CMakePackage):
 
     maintainers = ['citibeth']
 
+    # Currently investigating build fails for v 4.0.0. See discussion in PR #11642.
     # version('4.0.0',  sha256='b8b6470f2b1e2b19c164c244c10e803bd69c8da9a6a5a65ba7c479fb8b92a1e1')
     version('3.3.3',  sha256='9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5')
     version('3.3.2',  sha256='b1cc2e109ba602ea71bccefaa3c4a06e7ab1330db9ce6c08db89cfde497b8ab8')
