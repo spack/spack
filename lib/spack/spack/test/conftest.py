@@ -519,12 +519,12 @@ def mock_archive(tmpdir_factory):
     tar = spack.util.executable.which('tar', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-archive-dir')
-    expanded_archive_basedir = 'mock-archive-repo'
-    tmpdir.ensure(expanded_archive_basedir, dir=True)
-    repodir = tmpdir.join(expanded_archive_basedir)
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
 
     # Create the configure script
-    configure_path = str(tmpdir.join(expanded_archive_basedir, 'configure'))
+    configure_path = str(tmpdir.join(spack.stage._source_path_subdir,
+                                     'configure'))
     with open(configure_path, 'w') as f:
         f.write(
             "#!/bin/sh\n"
@@ -541,8 +541,8 @@ def mock_archive(tmpdir_factory):
 
     # Archive it
     with tmpdir.as_cwd():
-        archive_name = '{0}.tar.gz'.format(expanded_archive_basedir)
-        tar('-czf', archive_name, expanded_archive_basedir)
+        archive_name = '{0}.tar.gz'.format(spack.stage._source_path_subdir)
+        tar('-czf', archive_name, spack.stage._source_path_subdir)
 
     Archive = collections.namedtuple('Archive',
                                      ['url', 'path', 'archive_file',
@@ -554,7 +554,7 @@ def mock_archive(tmpdir_factory):
         url=('file://' + archive_file),
         archive_file=archive_file,
         path=str(repodir),
-        expanded_archive_basedir=expanded_archive_basedir)
+        expanded_archive_basedir=spack.stage._source_path_subdir)
 
 
 @pytest.fixture(scope='session')
@@ -565,9 +565,8 @@ def mock_git_repository(tmpdir_factory):
     git = spack.util.executable.which('git', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
-    expanded_archive_basedir = 'mock-git-repo'
-    tmpdir.ensure(expanded_archive_basedir, dir=True)
-    repodir = tmpdir.join(expanded_archive_basedir)
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
 
     # Initialize the repository
     with repodir.as_cwd():
@@ -639,9 +638,8 @@ def mock_hg_repository(tmpdir_factory):
     hg = spack.util.executable.which('hg', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-hg-repo-dir')
-    expanded_archive_basedir = 'mock-hg-repo'
-    tmpdir.ensure(expanded_archive_basedir, dir=True)
-    repodir = tmpdir.join(expanded_archive_basedir)
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
 
     get_rev = lambda: hg('id', '-i', output=str).strip()
 
@@ -685,9 +683,8 @@ def mock_svn_repository(tmpdir_factory):
     svnadmin = spack.util.executable.which('svnadmin', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-svn-stage')
-    expanded_archive_basedir = 'mock-svn-repo'
-    tmpdir.ensure(expanded_archive_basedir, dir=True)
-    repodir = tmpdir.join(expanded_archive_basedir)
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
     url = 'file://' + str(repodir)
 
     # Initialize the repository

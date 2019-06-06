@@ -107,7 +107,7 @@ def location(parser, args):
                     print(pkg.stage.path)
 
                 else:  # args.build_dir is the default.
-                    if not pkg.stage.source_path:
+                    if not pkg.stage.expanded:
                         tty.die("Build directory does not exist yet. "
                                 "Run this to create it:",
                                 "spack stage " + " ".join(args.spec))
