@@ -158,20 +158,31 @@ def parse_specs(args, **kwargs):
             msg += e.long_message
         err_msg = msg
 
+    # In the block above, we tried to treat the specs as abstract cli specs,
+    # and if that failed in one of a couple specific ways, then it could be
+    # the case that instead of cli specs, what we got were paths to spec.yaml
+    # files.  This next block tries to handle them as such.
     if err_msg:
         try:
             specs = []
             for arg in args:
-                with open(arg, 'r') as fd:
+                with open(arg) as fd:
                     specs.append(spack.spec.Spec.from_yaml(fd))
             return specs
-        except EnvironmentError:
-            # If we were unable to find, open, read file, etc probably just
-            # means the string wasn't a file path to begin with.  Any other
-            # exception at this point would indicate the spec *was* provided
-            # as a file path, and we should fail through so the user can see
-            # the underlying issue.
-            pass
+        except EnvironmentError as e:
+            # At this point it's hard to know what the problem might be.  We
+            # could have been given something that was supposed to be a path
+            # but the file didn't exist.  Or the previous block could have
+            # failed because it got an invalid clispec.
+
+            # If every argument has a path separator in it, then it's likely
+            # the user intended to pass all paths to spec.yaml files.  Else
+            # whatever error/exception from the previous block landed us in
+            # here is probably the one we want to raise.
+            if all([os.path.sep in arg for arg in args]):
+                raise e
+            else:
+                raise SpackError(err_msg)
         except spack.spec.SpecParseError as e:
             msg = e.message + "\n" + str(e.string) + "\n"
             msg += (e.pos + 2) * " " + "^"

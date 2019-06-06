@@ -35,7 +35,7 @@ def setup_parser(subparser):
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
     create_parser.add_argument('-d', '--directory', default=None,
                                help="directory in which to create mirror")
-    arguments.add_common_arguments(subparser, ['specs'])
+    arguments.add_common_arguments(create_parser, ['specs'])
     create_parser.add_argument(
         '-f', '--file', help="file with specs of packages to put in mirror")
     create_parser.add_argument(

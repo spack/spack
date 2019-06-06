@@ -332,6 +332,21 @@ def test_install_clispec_as_yaml_path(spec, tmpdir):
     assert install.returncode == 0
 
 
+@pytest.mark.usefixtures('noop_install', 'config')
+def test_install_combine_clispec_and_yaml_fails(mock_packages, tmpdir):
+    s = Spec('archive-files')
+    s.concretize()
+
+    specfile = tmpdir.join('spec.yaml')
+
+    with specfile.open('w') as f:
+        f.write(s.to_yaml(all_deps=True))
+
+    # Make sure combining yaml path and clispecs failes
+    with pytest.raises(SpackError):
+        install(str(specfile), 'libdwarf')
+
+
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.usefixtures(
     'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
