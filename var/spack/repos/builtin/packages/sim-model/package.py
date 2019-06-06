@@ -113,7 +113,7 @@ class SimModel(Package):
 
     def _install_binaries(self, lib_suffix=''):
         # Install special
-        arch = self.spec.architecture.target
+        arch = os.path.basename(self.neuron_archdir)
         prefix = self.prefix
         shutil.copy(join_path(arch, 'special'), prefix.bin)
 
@@ -136,7 +136,7 @@ class SimModel(Package):
     def _install_src(self, prefix):
         """Copy original and translated c mods
         """
-        arch = self.spec.architecture.target
+        arch = os.path.basename(self.neuron_archdir)
         copy_all('mod', prefix.lib.mod)
         copy_all('hoc', prefix.lib.hoc)
 

@@ -85,6 +85,7 @@ class Synapsetool(CMakePackage):
                 '-DSYNTOOL_WITH_MPI:BOOL=ON',
                 '-DSYNTOOL_UNIT_TESTS=OFF'
             ])
+
         if spec.satisfies('~shared'):
             args.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
 

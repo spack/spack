@@ -32,6 +32,8 @@ modules:
     hash_length: 0
     whitelist:
       - 'neurodamus'
+      - 'neurodamus-neocortex'
+      - 'neurodamus-hippocampus'
       - 'neuron'
     blacklist:
       - '%gcc'

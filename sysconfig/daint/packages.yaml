@@ -44,14 +44,20 @@ packages:
             cmake@3.8.1: /apps/common/UES/jenkins/SLES12/easybuild/software/CMake/3.8.1
         buildable: False
         version: [3.8.1]
+    boost:
+        modules:
+            boost@1.67.0: Boost/1.67.0-CrayGNU-18.08
+        buildable: False
+        version: [1.67.0]
     ncurses:
         paths:
             ncurses@6.0: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/ncurses/6.1-CrayGNU-18.08
         buildable: False
         version: [6.1]
     hdf5:
-        modules:
-            hdf5@1.8.16 arch=cray-cnl6-haswell: cray-hdf5/1.8.16
+        paths:
+            hdf5@1.8.16~mpi arch=cray-cnl6-haswell: /opt/cray/pe/hdf5/1.8.16/GNU/5.1
+            hdf5@1.8.16+mpi arch=cray-cnl6-haswell: /opt/cray/pe/hdf5-parallel/1.8.16/GNU/5.1
         buildable: False
         version: [1.8.16]
     zlib:
