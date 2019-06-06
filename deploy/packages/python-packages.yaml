@@ -21,6 +21,7 @@ packages:
       - python
     blacklist:
       - 'py-bb5 ^python@2.7.15'
+      - 'py-munkres ^python@2.7.15'
     specs:
       - py-argcomplete
       - py-argparse

@@ -27,6 +27,7 @@ modules:
     verbose: True
     hash_length: 0
     whitelist:
+      - archngv
       - brainbuilder
       - brayns
       - connectome-tools
