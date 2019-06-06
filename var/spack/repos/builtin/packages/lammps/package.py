@@ -59,6 +59,7 @@ class Lammps(CMakePackage):
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
             description='Build with mpi')
+    variant('openmp', default=True, description='Build with OpenMP')
     variant('exceptions', default=False,
             description='Build with lammps exceptions')
 
@@ -109,7 +110,9 @@ class Lammps(CMakePackage):
                 'ON' if '+exceptions' in spec else 'OFF'),
             '-D{0}_MPI={1}'.format(
                 mpi_prefix,
-                'ON' if '+mpi' in spec else 'OFF')
+                'ON' if '+mpi' in spec else 'OFF'),
+            '-DBUILD_OMP={0}'.format(
+                'ON' if '+openmp' in spec else 'OFF'),
         ]
 
         if spec.satisfies('@20180629:+lib'):
