@@ -1145,7 +1145,7 @@ def find_headers(headers, root, recursive=False):
         # C
         'h',
         # C++
-        'hpp', 'hxx', 'hh', 'H',
+        'hpp', 'hxx', 'hh', 'H', 'txx', 'tcc',
         # Fortran
         'mod', 'inc',
     ]
