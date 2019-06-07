@@ -185,19 +185,19 @@ def all_compiler_specs(scope=None, init_config=True):
             for s in all_compilers_config(scope, init_config)]
 
 
-def find_compilers(*path_hints):
+def find_compilers(path_hints=None):
     """Returns the list of compilers found in the paths given as arguments.
 
     Args:
-        *path_hints: list of path hints where to look for. If none is
-            given a sensible default based on the ``PATH`` environment
-            variable will be used
+        path_hints (list or None): list of path hints where to look for.
+            A sensible default based on the ``PATH`` environment variable
+            will be used if the value is None
 
     Returns:
         List of compilers found
     """
-    # Turn the path hints into real paths that are to be searched
-    path_hints = path_hints or get_path('PATH')
+    if path_hints is None:
+        path_hints = get_path('PATH')
     default_paths = fs.search_paths_for_executables(*path_hints)
 
     # To detect the version of the compilers, we dispatch a certain number

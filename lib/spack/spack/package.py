@@ -1385,7 +1385,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dep.concretize()
             dep.package.do_install(**kwargs)
             spack.compilers.add_compilers_to_config(
-                spack.compilers.find_compilers(dep.prefix)
+                spack.compilers.find_compilers([dep.prefix])
             )
 
     def do_install(self, **kwargs):
