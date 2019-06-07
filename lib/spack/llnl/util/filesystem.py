@@ -9,7 +9,6 @@ import hashlib
 import fileinput
 import glob
 import grp
-import itertools
 import numbers
 import os
 import pwd
@@ -1400,16 +1399,15 @@ def search_paths_for_executables(*path_hints):
         A list containing the real path of every existing directory
         in `path_hints` and its `bin` subdirectory if it exists.
     """
-    # Select the realpath of existing directories
-    existing_paths = filter(os.path.isdir, map(os.path.realpath, path_hints))
+    executable_paths = []
+    for path in path_hints:
+        if not os.path.isdir(path):
+            continue
 
-    # Adding their 'bin' subdirectory
-    def maybe_add_bin(path):
-        bin_subdirectory = os.path.realpath(os.path.join(path, 'bin'))
-        if os.path.isdir(bin_subdirectory):
-            return [path, bin_subdirectory]
-        return [path]
+        executable_paths.append(path)
 
-    return list(
-        itertools.chain.from_iterable(map(maybe_add_bin, existing_paths))
-    )
+        bin_dir = os.path.join(path, 'bin')
+        if os.path.isdir(bin_dir):
+            executable_paths.append(bin_dir)
+
+    return executable_paths
