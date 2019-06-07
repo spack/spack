@@ -97,7 +97,7 @@ class Catalyst(CMakePackage):
         super(Catalyst, self).do_stage(mirror_only)
 
         # extract the catalyst part
-        paraview_dir = os.path.join(self.stage.path,
+        paraview_dir = os.path.join(self.stage.source_path,
                                     'ParaView-v' + str(self.version))
         catalyst_script = os.path.join(paraview_dir, 'Catalyst', 'catalyze.py')
         editions_dir = os.path.join(paraview_dir, 'Catalyst', 'Editions')
@@ -113,10 +113,10 @@ class Catalyst(CMakePackage):
         if not os.path.isdir(catalyst_source_dir):
             os.mkdir(catalyst_source_dir)
             subprocess.check_call(command)
-            tty.msg("Generated catalyst source in %s" % self.stage.path)
+            tty.msg("Generated catalyst source in %s" % self.stage.source_path)
         else:
             tty.msg("Already generated %s in %s" % (self.name,
-                                                    self.stage.path))
+                                                    self.stage.source_path))
 
     def setup_environment(self, spack_env, run_env):
         # paraview 5.5 and later
@@ -152,7 +152,8 @@ class Catalyst(CMakePackage):
 
         :return: directory containing CMakeLists.txt
         """
-        return os.path.join(self.stage.path, 'Catalyst-v' + str(self.version))
+        return os.path.join(self.stage.source_path,
+                            'Catalyst-v' + str(self.version))
 
     @property
     def build_directory(self):

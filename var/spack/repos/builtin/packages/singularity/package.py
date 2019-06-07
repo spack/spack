@@ -42,23 +42,24 @@ class Singularity(MakefilePackage):
 
     @property
     def sylabs_gopath_dir(self):
-        return join_path(self.gopath, 'src/github.com/sylabs/')
+        return join_path(self.stage.source_path, 'github.com/sylabs/')
 
     @property
     def singularity_gopath_dir(self):
         return join_path(self.sylabs_gopath_dir, 'singularity')
 
-    # Unpack the tarball as usual, then move the src dir into
-    # its home within GOPATH.
+    # Unpack the tarball as usual but ensure it lands in its home within
+    # GOPATH.
     def do_stage(self, mirror_only=False):
         super(Singularity, self).do_stage(mirror_only)
-        source_path = self.stage.source_path
         if not os.path.exists(self.singularity_gopath_dir):
+            go_source_path = join_path(self.stage.path, 'go')
+            tty.debug("Temporarily moving {0} to {1}".format(
+                self.stage.source_path, go_source_path))
+            shutil.move(self.stage.source_path, go_source_path)
             tty.debug("Moving {0} to {1}".format(
-                source_path, self.singularity_gopath_dir))
-            mkdirp(self.sylabs_gopath_dir)
-            shutil.move(source_path,
-                        self.singularity_gopath_dir)
+                go_source_path, self.singularity_gopath_dir))
+            shutil.move(go_source_path, self.singularity_gopath_dir)
 
     # MakefilePackage's stages use this via working_dir()
     @property
