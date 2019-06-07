@@ -32,12 +32,17 @@ class Paraview(CMakePackage):
     variant('plugins', default=True,
             description='Install include files for plugins support')
     variant('python', default=False, description='Enable Python support')
+    variant('python3', default=False, description='Enable Python3 support')
     variant('mpi', default=True, description='Enable MPI support')
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt (gui) support')
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
+
+    conflicts('+python', when='+python3')
+    conflicts('+python', when='@5.6:')
+    conflicts('+python3', when='@:5.5')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -48,22 +53,19 @@ class Paraview(CMakePackage):
     # paraview requires python version 3:, but spec asked for 2.7.16
     # for `spack spec paraview+python`
     # see spack pull request #11539
-    # extends('python', when='+python')
-    extends('python', when='@:5.5+python')
-    extends('python', when='@5.6:+python')
+    extends('python', when='+python')
+    extends('python', when='+python3')
 
-    depends_on('python@2.7:2.8', when='@:5.5+python', type=('build', 'link', 'run'))
-    depends_on('python@3:', when='@5.6:+python', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
+    depends_on('python@3:', when='+python3', type=('build', 'run'))
 
-    # depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('py-numpy', when='@:5.5+python', type=('build', 'run'))
-    depends_on('py-numpy', when='@5.6:+python', type=('build', 'run'))
-    # depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
-    depends_on('py-mpi4py', when='@:5.5+python+mpi', type=('build', 'run'))
-    depends_on('py-mpi4py', when='@5.6:+python+mpi', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python3', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
 
     depends_on('py-matplotlib@:2', when='@:5.5+python', type='run')
-    depends_on('py-matplotlib@3:', when='@5.6:+python', type='run')
+    depends_on('py-matplotlib@3:', when='@5.6:+python3', type='run')
 
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
