@@ -71,6 +71,11 @@ class Repeatmasker(Package):
                                self.spec['ncbi-rmblastn'].prefix.bin,
                                'Y'])
 
+        # set non-default HMMER search
+        config_answers.extend(['3',
+                               self.spec['hmmer'].prefix,
+                               'N'])
+
         # end configuration
         config_answers.append('5')
 
