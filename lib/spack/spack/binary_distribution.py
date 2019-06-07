@@ -274,12 +274,13 @@ def generate_package_index(build_cache_dir):
     tmpdir = tempfile.mkdtemp()
     try:
         index_html_path = os.path.join(tmpdir, 'index.html')
-        yaml_list = (
+        file_list = (
                 entry
                 for entry in list_url(build_cache_dir)
-                if entry.endswith('.yaml'))
+                if (entry.endswith('.yaml')
+                    or entry.endswith('.key')))
 
-        _generate_html_index(yaml_list, index_html_path)
+        _generate_html_index(file_list, index_html_path)
 
         push_to_url(
                 index_html_path,
@@ -707,8 +708,6 @@ def get_keys(install=False, trust=False, force=False):
     keys = set()
 
     for _, fetch_url, _ in iter_mirrors():
-        url = urljoin(fetch_url, _build_cache_relative_path, tarball)
-
         fetch_url_build_cache = urljoin(fetch_url, _build_cache_relative_path)
 
         if fetch_url_build_cache.startswith('file://'):
@@ -726,6 +725,7 @@ def get_keys(install=False, trust=False, force=False):
             for link in links:
                 if re.search(r'\.key', link):
                     keys.add(link)
+
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:
                 if os.path.exists(stage.save_filename) and force:

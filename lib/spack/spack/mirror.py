@@ -26,6 +26,7 @@ import spack.fetch_strategy as fs
 from spack.spec import Spec
 from spack.version import VersionList
 from spack.util.compression import allowed_archive
+from spack.util.url import parse as url_parse
 
 
 def mirror_archive_filename(spec, fetcher, resource_id=None):
@@ -169,9 +170,12 @@ def create(path, specs, **kwargs):
     it creates specs for those versions.  If the version satisfies any spec
     in the specs list, it is downloaded and added to the mirror.
     """
+    parsed = url_parse(path)
+    is_file_scheme = (parsed.scheme == 'file')
+
     # Make sure nothing is in the way.
-    if os.path.isfile(path):
-        raise MirrorError("%s already exists and is a file." % path)
+    if is_file_scheme and os.path.isfile(parsed.path):
+        raise MirrorError("%s already exists and is a file." % parsed.path)
 
     # automatically spec-ify anything in the specs array.
     specs = [s if isinstance(s, Spec) else Spec(s) for s in specs]
@@ -183,8 +187,8 @@ def create(path, specs, **kwargs):
         s.concretize()
 
     # Get the absolute path of the root before we start jumping around.
-    mirror_root = os.path.abspath(path)
-    if not os.path.isdir(mirror_root):
+    mirror_root = parsed.path
+    if is_file_scheme and not os.path.isdir(mirror_root):
         try:
             mkdirp(mirror_root)
         except OSError as e:
@@ -198,12 +202,12 @@ def create(path, specs, **kwargs):
         'error': []
     }
 
-    mirror_cache = spack.caches.MirrorCache(mirror_root)
+    mirror_cache = spack.caches.MirrorCache(parsed)
     try:
         spack.caches.mirror_cache = mirror_cache
         # Iterate through packages and download all safe tarballs for each
         for spec in version_specs:
-            add_single_spec(spec, mirror_root, categories, **kwargs)
+            add_single_spec(spec, parsed, categories, **kwargs)
     finally:
         spack.caches.mirror_cache = None
 

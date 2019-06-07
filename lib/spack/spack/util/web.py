@@ -117,7 +117,7 @@ def read_from_url(url, accept_content_type=None):
                         parsed_url.netloc, scheme='https').scheme == 'https')))
 
     if __UNABLE_TO_VERIFY_SSL and user_expects_verify_ssl():
-        tty.warn("Spack will not check SSL certificates. You need to update"
+        tty.warn("Spack will not check SSL certificates. You need to update "
                  "your Python to enable certificate verification.")
     else:
         # without a defined context, urlopen will not verify the ssl cert for
@@ -182,7 +182,7 @@ def push_to_url(local_path, remote_path, **kwargs):
                         remote_url.netloc, scheme='https').scheme == 'https')))
 
     if __UNABLE_TO_VERIFY_SSL and user_expects_verify_ssl():
-        tty.warn("Spack will not check SSL certificates. You need to update"
+        tty.warn("Spack will not check SSL certificates. You need to update "
                  "your Python to enable certificate verification.")
 
     if remote_url.scheme == 'file':

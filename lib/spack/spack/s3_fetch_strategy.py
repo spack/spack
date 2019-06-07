@@ -19,7 +19,6 @@ from llnl.util import tty
 import spack
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.url import parse as urlparse
-from spack.util.web import read_from_url
 
 
 def _needs_stage(fun):
@@ -50,6 +49,9 @@ class S3FetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
+        # delay import to avoid circular imports
+        from spack.util.web import read_from_url
+
         if self.archive_file:
             tty.msg("Already downloaded %s" % self.archive_file)
             return

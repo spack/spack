@@ -14,6 +14,8 @@ import spack.config
 import spack.fetch_strategy
 import spack.util.file_cache
 from spack.util.path import canonicalize_path
+from spack.util.url import join as url_join, parse as url_parse
+from spack.util.web import url_exists
 
 
 def _misc_cache():
@@ -50,7 +52,7 @@ def _fetch_cache():
 
 class MirrorCache(object):
     def __init__(self, root):
-        self.root = os.path.abspath(root)
+        self.root = url_parse(root)
         self.new_resources = set()
         self.existing_resources = set()
 
@@ -58,12 +60,14 @@ class MirrorCache(object):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
 
-        dst = os.path.join(self.root, relative_dest)
-        if os.path.exists(dst):
+        dst = url_parse(url_join(self.root, relative_dest))
+
+        if url_exists(dst):
             self.existing_resources.add(relative_dest)
         else:
             self.new_resources.add(relative_dest)
-            mkdirp(os.path.dirname(dst))
+            if dst.scheme == 'file':
+                mkdirp(os.path.dirname(dst.path))
             fetcher.archive(dst)
 
 

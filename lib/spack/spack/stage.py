@@ -26,7 +26,7 @@ import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
 import spack.util.path as sup
 from spack.util.crypto import prefix_bits, bit_length
-from spack.util.url import join as urljoin
+from spack.util.url import join as url_join
 from spack.util.config import iter_mirrors
 
 # TODO(opadron): get rid of this once s3_fetch_strategy is merged into FS.py
@@ -401,7 +401,7 @@ class Stage(object):
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
         if self.mirror_path:
-            urls = [urljoin(fetch_url, self.mirror_path)
+            urls = [url_join(fetch_url, self.mirror_path)
                 for _, fetch_url, _ in iter_mirrors()]
 
             # If this archive is normally fetched from a tarball URL,

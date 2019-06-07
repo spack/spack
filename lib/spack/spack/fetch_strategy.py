@@ -450,7 +450,9 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        shutil.copyfile(self.archive_file, destination)
+        # delay import to avoid circular imports
+        from spack.util.web import push_to_url
+        push_to_url(self.archive_file, destination)
 
     @_needs_stage
     def check(self):

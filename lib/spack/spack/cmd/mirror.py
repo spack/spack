@@ -21,8 +21,10 @@ import spack.environment as ev
 import spack.util.path
 from spack.spec import Spec
 from spack.error import SpackError
+from spack.util.config import lookup_mirror
 from spack.util.spack_yaml import syaml_dict
-from spack.util.url import format as urlformat
+from spack.util.url import format as url_format
+from spack.util.web import url_exists
 
 description = "manage mirrors (source and binary)"
 section = "config"
@@ -281,13 +283,13 @@ def mirror_create(args):
             tty.msg(msg.format(spec.cshort_spec))
 
         # Default name for directory is spack-mirror-<DATESTAMP>
-        directory = args.directory
-        if not directory:
-            directory = spack.util.path.canonicalize_path(
-                    spack.config.get('config:source_cache'))
+        _, directory = lookup_mirror(
+                args.directory or spack.config.get('config:source_cache'))
+
+        directory = url_format(directory)
 
         # Make sure nothing is in the way.
-        existed = os.path.isdir(directory)
+        existed = url_exists(directory)
 
         # Actually do the work to create the mirror
         present, mirrored, error = spack.mirror.create(
