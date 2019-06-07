@@ -53,10 +53,18 @@ class Singularity(MakefilePackage):
     def do_stage(self, mirror_only=False):
         super(Singularity, self).do_stage(mirror_only)
         if not os.path.exists(self.singularity_gopath_dir):
+            # Now that the files have been `staged` to `self.stage.source_path`
+            # (i.e., the well-known stage source directory called `src`), they
+            # must be moved to the expected go subdirectory.  Since a directory
+            # cannot be moved to a decendant subdirectory, temporarily move/
+            # rename it.
             go_source_path = join_path(self.stage.path, 'go')
             tty.debug("Temporarily moving {0} to {1}".format(
                 self.stage.source_path, go_source_path))
             shutil.move(self.stage.source_path, go_source_path)
+
+            # Now move/rename the temporary directory to the expected
+            # gopath `src`-based subdirectory.
             tty.debug("Moving {0} to {1}".format(
                 go_source_path, self.singularity_gopath_dir))
             shutil.move(go_source_path, self.singularity_gopath_dir)
