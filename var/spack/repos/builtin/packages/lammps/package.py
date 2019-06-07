@@ -88,6 +88,7 @@ class Lammps(CMakePackage):
     conflicts('+user-misc', when='~manybody')
     conflicts('+user-phonon', when='~kspace')
     conflicts('+user-misc', when='~manybody')
+    conflicts('%gcc@9:', when='+openmp')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
