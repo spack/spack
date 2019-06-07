@@ -210,8 +210,10 @@ def find_compilers(*path_hints):
 
     # Here we map the function arguments to the corresponding calls
     tp = multiprocessing.pool.ThreadPool()
-    detected_versions = tp.map(detect_version, arguments)
-    tp.close()
+    try:
+        detected_versions = tp.map(detect_version, arguments)
+    finally:
+        tp.close()
 
     def valid_version(item):
         value, error = item
