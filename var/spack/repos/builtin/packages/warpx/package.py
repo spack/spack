@@ -18,7 +18,6 @@ class Warpx(MakefilePackage):
     url      = "https://github.com/ECP-WarpX/WarpX"
 
     version('master', git='https://github.com/ECP-WarpX/WarpX.git', tag='master')
-    version('dev', git='https://github.com/ECP-WarpX/WarpX.git', tag='dev')
 
     depends_on('mpi')
 
@@ -38,7 +37,7 @@ class Warpx(MakefilePackage):
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
-             tag='development',
+             tag='master',
              destination='.')
 
     resource(name='picsar',
@@ -68,8 +67,12 @@ class Warpx(MakefilePackage):
                         'USE_PSATD = {0}'.format(torf('+psatd')))
         makefile.filter('DO_ELECTROSTATIC .*',
                         'DO_ELECTROSTATIC = %s' % torf('+do_electrostatic'))
+        if spec.architecture.platform == 'darwin':
+            use_omp = 'FALSE'
+        else:
+            use_omp = torf('+openmp')
         makefile.filter('USE_OMP .*',
-                        'USE_OMP = {0}'.format(torf('+openmp')))
+                        'USE_OMP = {0}'.format(use_omp))
         makefile.filter('DEBUG .*',
                         'DEBUG = {0}'.format(torf('+debug')))
         makefile.filter('TINY_PROFILE .*',
