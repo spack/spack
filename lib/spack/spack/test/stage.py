@@ -19,7 +19,7 @@ import spack.stage
 import spack.util.executable
 
 from spack.resource import Resource
-from spack.stage import Stage, StageComposite, ResourceStage
+from spack.stage import Stage, StageComposite, ResourceStage, DIYStage
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = 'test-files'
@@ -699,3 +699,81 @@ class TestStage(object):
         testpath = str(tmpdir)
         with Stage('file:///does-not-exist', path=testpath) as stage:
             assert stage.path == testpath
+
+    def test_diystage_path_none(self):
+        """Ensure DIYStage for path=None behaves as expected."""
+        stage = DIYStage(None)
+        assert stage.path is None
+        assert stage.source_path is None
+
+        # Order doesn't really matter for DIYStage
+        stage.create()  # Only sets the flag value
+        assert stage.created
+
+        stage.cache_local()  # Only outputs a message
+        stage.fetch()  # Only outputs a message
+        stage.check()  # Only outputs a message
+        stage.expand_archive()  # Only outputs a message
+
+        with pytest.raises(TypeError):
+            assert stage.expanded  # os.path.exists() fails on None
+
+        with pytest.raises(SystemExit):
+            stage.restage()  # Calls tty.die()
+
+        stage.destroy()  # A no-op
+
+        assert stage.path is None
+        assert stage.source_path is None
+
+    def test_diystage_path_invalid(self):
+        """Ensure DIYStage for an invalid path behaves as expected."""
+        path = '/path/does/not/exist'
+        stage = DIYStage(path)
+        assert stage.path == path
+        assert stage.source_path == path
+
+        # Order doesn't really matter for DIYStage
+        stage.create()  # Only sets the flag value
+        assert stage.created
+
+        stage.cache_local()  # Only outputs a message
+        stage.fetch()  # Only outputs a message
+        stage.check()  # Only outputs a message
+        stage.expand_archive()  # Only outputs a message
+
+        assert not stage.expanded  # The path/source_path don't exist
+
+        with pytest.raises(SystemExit):
+            stage.restage()  # Calls tty.die()
+
+        stage.destroy()  # A no-op
+
+        assert stage.path == path
+        assert stage.source_path == path
+
+    def test_diystage_path_valid(self, tmpdir):
+        """Ensure DIYStage for a valid path behaves as expected."""
+        path = str(tmpdir)
+        stage = DIYStage(path)
+        assert stage.path == path
+        assert stage.source_path == path
+
+        # Order doesn't really matter for DIYStage
+        stage.create()  # Only sets the flag value
+        assert stage.created
+
+        stage.cache_local()  # Only outputs a message
+        stage.fetch()  # Only outputs a message
+        stage.check()  # Only outputs a message
+        stage.expand_archive()  # Only outputs a message
+
+        assert stage.expanded  # The path/source_path does exist
+
+        with pytest.raises(SystemExit):
+            stage.restage()  # Calls tty.die()
+
+        stage.destroy()  # A no-op
+
+        assert stage.path == path
+        assert stage.source_path == path

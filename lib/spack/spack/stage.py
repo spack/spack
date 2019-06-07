@@ -618,6 +618,11 @@ class DIYStage(object):
     def expand_archive(self):
         tty.msg("Using source directory: %s" % self.source_path)
 
+    @property
+    def expanded(self):
+        """Returns True if source path exists; else False."""
+        return os.path.exists(self.source_path)
+
     def restage(self):
         tty.die("Cannot restage DIY stage.")
 
