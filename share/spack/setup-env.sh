@@ -140,6 +140,13 @@ function spack {
             done
 
             _sp_spec=("$@")
+            _sp_arch=$(spack arch)
+            _sp_arch_match=".*arch.*"
+
+            # Automatically add current arch to spec if none specified.
+            if [[ ! " ${_sp_spec[@]} " =~ ${_sp_arch_match}  ]]; then
+              _sp_spec=("${_sp_spec[@]}" "arch=$_sp_arch")
+            fi
 
             # Here the user has run use or unuse with a spec.  Find a matching
             # spec using 'spack module find', then use the appropriate module
