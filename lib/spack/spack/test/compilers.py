@@ -5,6 +5,8 @@
 
 import pytest
 
+import sys
+
 from copy import copy
 from six import iteritems
 
@@ -23,7 +25,29 @@ import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.compilers.fj
 
-from spack.compiler import _get_versioned_tuple, Compiler
+from spack.compiler import Compiler
+
+
+@pytest.fixture()
+def make_args_for_version(monkeypatch):
+
+    def _factory(version, path='/usr/bin/gcc'):
+        class MockOs(object):
+            pass
+
+        compiler_name = 'gcc'
+        compiler_cls = compilers.class_for_compiler_name(compiler_name)
+        monkeypatch.setattr(compiler_cls, 'cc_version', lambda x: version)
+
+        compiler_id = compilers.CompilerID(
+            os=MockOs, compiler_name=compiler_name, version=None
+        )
+        variation = compilers.NameVariation(prefix='', suffix='')
+        return compilers.DetectVersionArgs(
+            id=compiler_id, variation=variation, language='cc', path=path
+        )
+
+    return _factory
 
 
 def test_get_compiler_duplicates(config):
@@ -45,17 +69,22 @@ def test_all_compilers(config):
     assert len(filtered) == 1
 
 
-def test_version_detection_is_empty():
-    no_version = lambda x: None
-    compiler_check_tuple = ('/usr/bin/gcc', '', r'\d\d', no_version)
-    assert not _get_versioned_tuple(compiler_check_tuple)
+@pytest.mark.skipif(
+    sys.version_info[0] == 2, reason='make_args_for_version requires python 3'
+)
+@pytest.mark.parametrize('input_version,expected_version,expected_error', [
+    (None, None,  "Couldn't get version for compiler /usr/bin/gcc"),
+    ('4.9', '4.9', None)
+])
+def test_version_detection_is_empty(
+        make_args_for_version, input_version, expected_version, expected_error
+):
+    args = make_args_for_version(version=input_version)
+    result, error = compilers.detect_version(args)
+    if not error:
+        assert result.id.version == expected_version
 
-
-def test_version_detection_is_successful():
-    version = lambda x: '4.9'
-    compiler_check_tuple = ('/usr/bin/gcc', '', r'\d\d', version)
-    assert _get_versioned_tuple(compiler_check_tuple) == (
-        '4.9', '', r'\d\d', '/usr/bin/gcc')
+    assert error == expected_error
 
 
 def test_compiler_flags_from_config_are_grouped():

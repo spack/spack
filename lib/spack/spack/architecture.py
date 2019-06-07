@@ -56,18 +56,15 @@ set. The user can set the front-end and back-end operating setting by the class
 attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
-import os
 import inspect
-import platform as py_platform
 
-import llnl.util.multiproc as mp
 import llnl.util.tty as tty
 from llnl.util.lang import memoized, list_modules, key_ordering
 
+import spack.compiler
 import spack.paths
 import spack.error as serr
 from spack.util.naming import mod_to_class
-from spack.util.environment import get_path
 from spack.util.spack_yaml import syaml_dict
 
 
@@ -229,100 +226,13 @@ class OperatingSystem(object):
         return self.__str__()
 
     def _cmp_key(self):
-        return (self.name, self.version)
-
-    def find_compilers(self, *paths):
-        """
-        Return a list of compilers found in the supplied paths.
-        This invokes the find() method for each Compiler class,
-        and appends the compilers detected to a list.
-        """
-        if not paths:
-            paths = get_path('PATH')
-        # Make sure path elements exist, and include /bin directories
-        # under prefixes.
-        filtered_path = []
-        for p in paths:
-            # Eliminate symlinks and just take the real directories.
-            p = os.path.realpath(p)
-            if not os.path.isdir(p):
-                continue
-            filtered_path.append(p)
-
-            # Check for a bin directory, add it if it exists
-            bin = os.path.join(p, 'bin')
-            if os.path.isdir(bin):
-                filtered_path.append(os.path.realpath(bin))
-
-        # Once the paths are cleaned up, do a search for each type of
-        # compiler.  We can spawn a bunch of parallel searches to reduce
-        # the overhead of spelunking all these directories.
-        # NOTE: we import spack.compilers here to avoid init order cycles
-        import spack.compilers
-        types = spack.compilers.all_compiler_types()
-        compiler_lists = mp.parmap(
-            lambda cmp_cls: self.find_compiler(cmp_cls, *filtered_path),
-            types)
-
-        # ensure all the version calls we made are cached in the parent
-        # process, as well.  This speeds up Spack a lot.
-        clist = [comp for cl in compiler_lists for comp in cl]
-        return clist
-
-    def find_compiler(self, cmp_cls, *path):
-        """Try to find the given type of compiler in the user's
-           environment. For each set of compilers found, this returns
-           compiler objects with the cc, cxx, f77, fc paths and the
-           version filled in.
-
-           This will search for compilers with the names in cc_names,
-           cxx_names, etc. and it will group them if they have common
-           prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
-           be grouped with g++-mp-4.7 and gfortran-mp-4.7.
-        """
-        dicts = mp.parmap(
-            lambda t: cmp_cls._find_matches_in_path(*t),
-            [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(path),
-             (cmp_cls.cxx_names, cmp_cls.cxx_version) + tuple(path),
-             (cmp_cls.f77_names, cmp_cls.f77_version) + tuple(path),
-             (cmp_cls.fc_names,  cmp_cls.fc_version)  + tuple(path)])
-
-        all_keys = set()
-        for d in dicts:
-            all_keys.update(d)
-
-        compilers = {}
-        for k in all_keys:
-            ver, pre, suf = k
-
-            # Skip compilers with unknown version.
-            if ver == 'unknown':
-                continue
-
-            paths = tuple(pn[k] if k in pn else None for pn in dicts)
-            spec = spack.spec.CompilerSpec(cmp_cls.name, ver)
-
-            if ver in compilers:
-                prev = compilers[ver]
-
-                # prefer the one with more compilers.
-                prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
-                newcount = len([p for p in paths if p is not None])
-                prevcount = len([p for p in prev_paths if p is not None])
-
-                # Don't add if it's not an improvement over prev compiler.
-                if newcount <= prevcount:
-                    continue
-
-            compilers[ver] = cmp_cls(spec, self, py_platform.machine(), paths)
-
-        return list(compilers.values())
+        return self.name, self.version
 
     def to_dict(self):
-        d = {}
-        d['name'] = self.name
-        d['version'] = self.version
-        return d
+        return {
+            'name': self.name,
+            'version': self.version
+        }
 
 
 @key_ordering

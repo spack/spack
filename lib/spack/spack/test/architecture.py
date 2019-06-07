@@ -141,3 +141,10 @@ def test_user_input_combination(config):
         )
     res = all(results)
     assert res
+
+
+def test_operating_system_conversion_to_dict():
+    operating_system = spack.architecture.OperatingSystem('os', '1.0')
+    assert operating_system.to_dict() == {
+        'name': 'os', 'version': '1.0'
+    }
