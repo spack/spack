@@ -51,7 +51,7 @@ class Paraview(CMakePackage):
     #     version: [3, 2]
     # without this you'll get:
     # paraview requires python version 3:, but spec asked for 2.7.16
-    # for `spack spec paraview+python`
+    # for `spack spec paraview+python+osmesa`
     # see spack pull request #11539
     extends('python', when='+python')
     extends('python', when='+python3')
@@ -64,8 +64,8 @@ class Paraview(CMakePackage):
     depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
 
-    depends_on('py-matplotlib@:2', when='@:5.5+python', type='run')
-    depends_on('py-matplotlib@3:', when='@5.6:+python3', type='run')
+    depends_on('py-matplotlib@:2', when='+python', type='run')
+    depends_on('py-matplotlib@3:', when='+python3', type='run')
 
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')

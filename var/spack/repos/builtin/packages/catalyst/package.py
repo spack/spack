@@ -32,11 +32,17 @@ class Catalyst(CMakePackage):
     version('4.4.0', 'fa1569857dd680ebb4d7ff89c2227378')
 
     variant('python', default=False, description='Enable Python support')
+    variant('python3', default=False, description='Enable Python3 support')
     variant('essentials', default=False, description='Enable Essentials support')
     variant('extras', default=False, description='Enable Extras support. Implies Essentials.')
     variant('rendering', default=True, description='Enable Rendering support. Implies Extras and Essentials.')
     variant('osmesa', default=True, description='Use offscreen rendering')
     conflicts('+osmesa', when='~rendering')
+
+    conflicts('+python', when='+python3')
+    conflicts('+python', when='@5.6:')
+    conflicts('+python3', when='@:5.5')
+
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -48,13 +54,13 @@ class Catalyst(CMakePackage):
     # for `spack spec paraview+python`
     # see spack pull request #11539
     # extends('python', when='+python')
-    extends('python', when='@:5.5+python')
-    extends('python', when='@5.6:+python')
+    extends('python', when='+python')
+    extends('python', when='+python3')
 
     depends_on('git', type='build')
     depends_on('mpi')
-    depends_on('python@2.7:2.8', when='@:5.5+python', type=('build', 'link', 'run'))
-    depends_on('python@3:', when='@5.6:+python', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8', when='+python', type=('build', 'link', 'run'))
+    depends_on('python@3:', when='+python3', type=('build', 'link', 'run'))
     depends_on('gl@3.2:', when='+rendering')
     depends_on('mesa+osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
