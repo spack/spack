@@ -45,6 +45,15 @@ def test_list_format_name_only():
 
 
 @pytest.mark.maybeslow
+def test_list_format_version_json():
+    output = list('--format', 'version_json')
+    assert '  {"name": "cloverleaf3d",' in output
+    assert '  {"name": "hdf5",' in output
+    import json
+    json.loads(output)
+
+
+@pytest.mark.maybeslow
 def test_list_format_html():
     output = list('--format', 'html')
     assert '<div class="section" id="cloverleaf3d">' in output
