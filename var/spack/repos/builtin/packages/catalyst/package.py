@@ -38,19 +38,23 @@ class Catalyst(CMakePackage):
     variant('osmesa', default=True, description='Use offscreen rendering')
     conflicts('+osmesa', when='~rendering')
 
-    # If you get this error:
-    # paraview requires python version 3:, but spec asked for 2.7.16
-    # for `spack spec catalyst+python`
-    # add to your packages.yaml
+    # Workaround for
+    # adding the following to your packages.yaml
     # packages:
     #   python:
     #     version: [3, 2]
-    extends('python', when='+python')
+    # without this you'll get:
+    # paraview requires python version 3:, but spec asked for 2.7.16
+    # for `spack spec paraview+python`
+    # see spack pull request #11539
+    # extends('python', when='+python')
+    extends('python', when='@:5.5+python')
+    extends('python', when='@5.6:+python')
 
     depends_on('git', type='build')
     depends_on('mpi')
-    depends_on('python@3:', when='@5.6:+python', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8', when='@:5.5+python', type=('build', 'link', 'run'))
+    depends_on('python@3:', when='@5.6:+python', type=('build', 'link', 'run'))
     depends_on('gl@3.2:', when='+rendering')
     depends_on('mesa+osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')

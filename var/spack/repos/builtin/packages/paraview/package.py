@@ -39,20 +39,28 @@ class Paraview(CMakePackage):
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
 
-    # If you get this error:
-    # paraview requires python version 3:, but spec asked for 2.7.16
-    # for `spack spec paraview+python`
-    # add to your packages.yaml
+    # Workaround for
+    # adding the following to your packages.yaml
     # packages:
     #   python:
     #     version: [3, 2]
-    extends('python', when='+python')
+    # without this you'll get:
+    # paraview requires python version 3:, but spec asked for 2.7.16
+    # for `spack spec paraview+python`
+    # see spack pull request #11539
+    # extends('python', when='+python')
+    extends('python', when='@:5.5+python')
+    extends('python', when='@5.6:+python')
 
-    depends_on('python@3:', when='@5.6:+python', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8', when='@:5.5+python', type=('build', 'link', 'run'))
+    depends_on('python@3:', when='@5.6:+python', type=('build', 'link', 'run'))
 
-    depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
+    # depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='@:5.5+python', type=('build', 'run'))
+    depends_on('py-numpy', when='@5.6:+python', type=('build', 'run'))
+    # depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='@:5.5+python+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='@5.6:+python+mpi', type=('build', 'run'))
 
     depends_on('py-matplotlib@:2', when='@:5.5+python', type='run')
     depends_on('py-matplotlib@3:', when='@5.6:+python', type='run')
