@@ -25,6 +25,11 @@ class OpaPsm2(MakefilePackage):
 
     depends_on('numactl')
 
+    # patch to prevent opa-psm2 from adding an additional "usr/"
+    #   subdirectory within the installation prefix, which breaks paths for
+    #   dependent packages like libfabric
+    patch('opa-psm2-install-prefix.patch', when='@11.2.68:') 
+
     def setup_environment(self, spack_env, run_env):
         spack_env.set('DESTDIR', self.prefix)
 
