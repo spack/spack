@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import math
+import json
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -20,6 +21,7 @@ from llnl.util.tty.colify import colify
 import spack.dependency
 import spack.repo
 import spack.cmd.common.arguments as arguments
+from spack.version import VersionList
 
 description = "list and search available packages"
 section = "basic"
@@ -114,6 +116,46 @@ def rows_for_ncols(elts, ncols):
             i = c * clen + r
             row.append(elts[i] if i < len(elts) else None)
         yield row
+
+
+def get_dependencies(pkg):
+    all_deps = {}
+    for deptype in spack.dependency.all_deptypes:
+        deps = pkg.dependencies_of_type(deptype)
+        all_deps[deptype] = [d for d in deps]
+
+    return all_deps
+
+
+@formatter
+def version_json(pkg_names, out):
+    """Print all packages with their latest versions."""
+    pkgs = [spack.repo.get(name) for name in pkg_names]
+
+    out.write('[\n')
+
+    # output name and latest version for each package
+    pkg_latest = ",\n".join([
+        '  {{"name": "{0}",\n'
+        '   "latest_version": "{1}",\n'
+        '   "versions": {2},\n'
+        '   "homepage": "{3}",\n'
+        '   "file": "{4}",\n'
+        '   "maintainers": {5},\n'
+        '   "dependencies": {6}'
+        '}}'.format(
+            pkg.name,
+            VersionList(pkg.versions).preferred(),
+            json.dumps([str(v) for v in reversed(sorted(pkg.versions))]),
+            pkg.homepage,
+            github_url(pkg),
+            json.dumps(pkg.maintainers),
+            json.dumps(get_dependencies(pkg))
+        ) for pkg in pkgs
+    ])
+    out.write(pkg_latest)
+    # important: no trailing comma in JSON arrays
+    out.write('\n]\n')
 
 
 @formatter
