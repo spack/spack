@@ -14,8 +14,6 @@ import re
 import sys
 import math
 
-from six import StringIO
-
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -107,14 +105,6 @@ def github_url(pkg):
     return url.format(pkg.name)
 
 
-def rst_table(elts):
-    """Print out a RST-style table."""
-    cols = StringIO()
-    ncol, widths = colify(elts, output=cols, tty=True)
-    header = ' '.join('=' * (w - 1) for w in widths)
-    return '%s\n%s%s' % (header, cols.getvalue(), header)
-
-
 def rows_for_ncols(elts, ncols):
     """Print out rows in a table with ncols of elts laid out vertically."""
     clen = int(math.ceil(len(elts) / ncols))
@@ -124,68 +114,6 @@ def rows_for_ncols(elts, ncols):
             i = c * clen + r
             row.append(elts[i] if i < len(elts) else None)
         yield row
-
-
-@formatter
-def rst(pkg_names, out):
-    """Print out information on all packages in restructured text."""
-
-    pkgs = [spack.repo.get(name) for name in pkg_names]
-
-    out.write('.. _package-list:\n')
-    out.write('\n')
-    out.write('============\n')
-    out.write('Package List\n')
-    out.write('============\n')
-    out.write('\n')
-    out.write('This is a list of things you can install using Spack.  It is\n')
-    out.write(
-        'automatically generated based on the packages in the latest Spack\n')
-    out.write('release.\n')
-    out.write('\n')
-    out.write('Spack currently has %d mainline packages:\n' % len(pkgs))
-    out.write('\n')
-    out.write(rst_table('`%s`_' % p for p in pkg_names))
-    out.write('\n')
-    out.write('\n')
-
-    # Output some text for each package.
-    for pkg in pkgs:
-        out.write('-----\n')
-        out.write('\n')
-        out.write('.. _%s:\n' % pkg.name)
-        out.write('\n')
-        # Must be at least 2 long, breaks for single letter packages like R.
-        out.write('-' * max(len(pkg.name), 2))
-        out.write('\n')
-        out.write(pkg.name)
-        out.write('\n')
-        out.write('-' * max(len(pkg.name), 2))
-        out.write('\n\n')
-        out.write('Homepage:\n')
-        out.write(
-            '  * `%s <%s>`__\n' % (cgi.escape(pkg.homepage), pkg.homepage))
-        out.write('\n')
-        out.write('Spack package:\n')
-        out.write('  * `%s/package.py <%s>`__\n' % (pkg.name, github_url(pkg)))
-        out.write('\n')
-        if pkg.versions:
-            out.write('Versions:\n')
-            out.write('  ' + ', '.join(str(v) for v in
-                                       reversed(sorted(pkg.versions))))
-            out.write('\n\n')
-
-        for deptype in spack.dependency.all_deptypes:
-            deps = pkg.dependencies_of_type(deptype)
-            if deps:
-                out.write('%s Dependencies\n' % deptype.capitalize())
-                out.write('  ' + ', '.join('%s_' % d if d in pkg_names
-                                           else d for d in deps))
-                out.write('\n\n')
-
-        out.write('Description:\n')
-        out.write(pkg.format_doc(indent=2))
-        out.write('\n\n')
 
 
 @formatter

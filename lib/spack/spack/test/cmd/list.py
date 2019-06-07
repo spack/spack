@@ -45,13 +45,6 @@ def test_list_format_name_only():
 
 
 @pytest.mark.maybeslow
-def test_list_format_rst():
-    output = list('--format', 'rst')
-    assert '.. _cloverleaf3d:' in output
-    assert '.. _hdf5:' in output
-
-
-@pytest.mark.maybeslow
 def test_list_format_html():
     output = list('--format', 'html')
     assert '<div class="section" id="cloverleaf3d">' in output
