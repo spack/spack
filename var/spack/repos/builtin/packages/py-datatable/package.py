@@ -27,5 +27,5 @@ mimic its core algorithms and API.
     depends_on('py-pandas',     type=('build', 'run'))
     depends_on('py-psutil',     type=('build', 'run'))
     depends_on('py-xlrd',       type=('build', 'run'))
-    # depends_on('py-blessed',    type=('build', 'run'))
-    # depends_on('py-typesentry', type=('build', 'run'))
+    depends_on('py-blessed',    type=('build', 'run'))
+    depends_on('py-typesentry', type=('build', 'run'))
