@@ -2056,7 +2056,11 @@ class Spec(object):
            without modifying the spec it's called on.
 
            If copy is False, clears this spec's dependencies and
-           returns them.
+           returns them. This disconnects all dependency links including
+           transitive dependencies, except for concrete specs: if a spec
+           is concrete it will not be disconnected from its dependencies
+           (although a non-concrete spec with concrete dependencies will
+           be disconnected from those dependencies).
         """
         copy = kwargs.get('copy', True)
 
@@ -2074,8 +2078,9 @@ class Spec(object):
 
             if not copy:
                 for spec in flat_deps.values():
-                    spec._dependencies.clear()
-                    spec._dependents.clear()
+                    if not spec.concrete:
+                        spec._dependencies.clear()
+                        spec._dependents.clear()
                 self._dependencies.clear()
 
             return flat_deps
@@ -2274,9 +2279,15 @@ class Spec(object):
             return False
         visited.add(self.name)
 
-        # if we descend into a virtual spec, there's nothing more
+        # If we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
         if self.virtual or self.external:
+            return False
+
+        # Avoid recursively adding constraints for already-installed packages:
+        # these may include build dependencies which are not needed for this
+        # install (since this package is already installed).
+        if self.concrete and self.package.installed:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -3730,6 +3741,7 @@ class SpecParser(spack.parse.Parser):
                             # We're finding a dependency by hash for an
                             # anonymous spec
                             dep = self.spec_by_hash()
+                            dep = dep.copy(deps=('link', 'run'))
                         else:
                             # We're adding a dependency to the last spec
                             self.expect(ID)

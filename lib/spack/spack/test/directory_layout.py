@@ -145,7 +145,7 @@ def test_read_and_write_spec(
             read_separately = Spec.from_yaml(spec_file.read())
 
         # TODO: revise this when build deps are in dag_hash
-        norm = read_separately.normalized().copy(deps=stored_deptypes)
+        norm = read_separately.copy(deps=stored_deptypes)
         assert norm == spec_from_file
         assert norm.eq_dag(spec_from_file)
 
