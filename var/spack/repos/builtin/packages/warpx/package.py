@@ -45,6 +45,13 @@ class Warpx(MakefilePackage):
              tag='master',
              destination='.')
 
+    @property
+    def build_targets(self):
+        if self.spec.satisfies('%clang'):
+            return ['CXXFLAGS=-std=c++11']
+        else:
+            return []
+
     def edit(self, spec, prefix):
 
         comp = 'gcc'
