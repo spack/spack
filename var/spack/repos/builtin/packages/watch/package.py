@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Watch(Package):
+class Watch(AutotoolsPackage):
     """Executes a program periodically, showing output fullscreen."""
 
     homepage = "https://gitlab.com/procps-ng/procps"
@@ -23,16 +23,15 @@ class Watch(Package):
 
     depends_on('gettext')
 
-    phases = ['autogen', 'install']
+    build_targets = ['watch']
 
-    def autogen(self, spec, prefix):
-        autogen = Executable('./autogen.sh')
-        autogen('-fiv')
+    def configure_args(self):
+        return [
+            '--disable-dependency-tracking',
+            '--disable-nls'
+        ]
 
     def install(self, spec, prefix):
-        configure('--disable-dependency-tracking',
-                  '--disable-nls',
-                  '--prefix=%s' % self.spec.prefix)
         make('watch')
         mkdir(prefix.bin)
-        install('watch', prefix.bin)
+        install('watch', prefix)
