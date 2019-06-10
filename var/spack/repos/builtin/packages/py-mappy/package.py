@@ -14,4 +14,5 @@ class PyMappy(PythonPackage):
 
     version('2.2', 'dfc2aefe98376124beb81ce7dcefeccb')
 
+    depends_on('python@:3.6.8')
     depends_on('zlib')
