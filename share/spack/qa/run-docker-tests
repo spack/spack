@@ -37,10 +37,14 @@ for config in share/spack/docker/config/* ; do
     ./share/spack/docker/build-image.sh;
 done
 
+spack list --format version_json > packages.json
+./share/spack/packages/build-image.sh
+
 if [ "$TEST_SUITE" '=' "docker" -a \
      "$TRAVIS_EVENT_TYPE" != "pull_request" ] && ensure_docker_login ; then
     for config in share/spack/docker/config/* ; do
         source "$config"
         ./share/spack/docker/push-image.sh
     done
+    ./share/spack/packages/push-image.sh
 fi
