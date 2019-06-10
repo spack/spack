@@ -32,6 +32,5 @@ class Watch(AutotoolsPackage):
         ]
 
     def install(self, spec, prefix):
-        make('watch')
         mkdir(prefix.bin)
-        install('watch', prefix)
+        install('watch', prefix.bin)
