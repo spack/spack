@@ -24,8 +24,6 @@ class Ninja(Package):
 
     depends_on('python', type='build')
 
-    provides('ninja-fortran', when='@kitware')
-
     phases = ['configure', 'install']
 
     def configure(self, spec, prefix):
