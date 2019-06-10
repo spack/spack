@@ -43,7 +43,6 @@ class Catalyst(CMakePackage):
     conflicts('+python', when='@5.6:')
     conflicts('+python3', when='@:5.5')
 
-
     # Workaround for
     # adding the following to your packages.yaml
     # packages:
