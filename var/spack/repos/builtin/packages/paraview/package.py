@@ -211,7 +211,7 @@ class Paraview(CMakePackage):
                 '-DGIT_EXECUTABLE=FALSE'
             ])
 
-        # A bug that has been found in vtk causes an error for 
+        # A bug that has been found in vtk causes an error for
         # intel builds for version 5.6.  This should be revisited
         # with later versions of Paraview to see if the issues still
         # arises.
