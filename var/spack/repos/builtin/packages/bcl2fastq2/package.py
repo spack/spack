@@ -69,19 +69,30 @@ class Bcl2fastq2(Package):
     def unpack_it(self, f):
         def wrap():
             f()                 # call the original expand_archive()
+
+            # The tarfile should now reside in the "well known" source
+            # directory (i.e., self.stage.source_path).
             with working_dir(self.stage.path):
                 files = glob.glob(os.path.join('src', 'bcl2fastq2*.tar.gz'))
                 if len(files) == 1:
+                    # Rename the tarball so it resides in self.stage.path
+                    # alongside the original zip file before unpacking it.
                     tarball = files[0]
                     basename = os.path.basename(tarball)
                     os.rename(tarball, basename)
                     tty.msg("Unpacking bcl2fastq2 tarball")
                     tar = which('tar')
                     tar('-xf', basename)
+
+                    # Rename the unpacked directory to 'src' so the files
+                    # reside in the "well known" source directory.
                     os.rename('bcl2fastq', 'src')
                     tty.msg("Finished unpacking bcl2fastq2 tarball")
+
                 elif self.stage.expanded:
-                    tty.msg("The tarball has already been unpacked")
+                    # The unpacked files already reside in the "well known"
+                    # source directory (i.e., self.stage.source_path).
+                    tty.msg("The tarball has already been unpacked.")
 
         return wrap
 
