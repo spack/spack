@@ -139,14 +139,16 @@ def version_json(pkg_names, out):
         '  {{"name": "{0}",\n'
         '   "latest_version": "{1}",\n'
         '   "versions": {2},\n'
-        '   "homepage": "{3}",\n'
-        '   "file": "{4}",\n'
-        '   "maintainers": {5},\n'
-        '   "dependencies": {6}'
+        '   "variants": {3},\n'
+        '   "homepage": "{4}",\n'
+        '   "file": "{5}",\n'
+        '   "maintainers": {6},\n'
+        '   "dependencies": {7}'
         '}}'.format(
             pkg.name,
             VersionList(pkg.versions).preferred(),
             json.dumps([str(v) for v in reversed(sorted(pkg.versions))]),
+            json.dumps([str(v) for v in reversed(sorted(pkg.variants))]),
             pkg.homepage,
             github_url(pkg),
             json.dumps(pkg.maintainers),
@@ -232,6 +234,14 @@ def html(pkg_names, out):
             out.write('<dd>\n')
             out.write(', '.join(
                 str(v) for v in reversed(sorted(pkg.versions))))
+            out.write('\n')
+            out.write('</dd>\n')
+
+        if pkg.variants:
+            out.write('<dt>Variants:</dt>\n')
+            out.write('<dd>\n')
+            out.write(', '.join(
+                str(v) for v in reversed(sorted(pkg.variants))))
             out.write('\n')
             out.write('</dd>\n')
 
