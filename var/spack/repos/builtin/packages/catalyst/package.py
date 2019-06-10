@@ -97,7 +97,7 @@ class Catalyst(CMakePackage):
         """Transcribe spack variants into names of Catalyst Editions"""
         selected = ['Base']  # Always required
 
-        if '+python' in self.spec:
+        if '+python' in self.spec or '+python3' in self.spec:
             selected.append('Enable-Python')
 
         if '+essentials' in self.spec:
@@ -157,7 +157,7 @@ class Catalyst(CMakePackage):
         run_env.prepend_path('LIBRARY_PATH', lib_dir)
         run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
 
-        if '+python' in self.spec:
+        if '+python' in self.spec or '+python3' in self.spec:
             python_version = self.spec['python'].version.up_to(2)
             run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
                                  'python{0}'.format(python_version),
@@ -208,7 +208,7 @@ class Catalyst(CMakePackage):
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
             '-DPARAVIEW_ENABLE_PYTHON:BOOL=%s' % variant_bool('+python')
         ]
-        if '+python' in spec:
+        if '+python' in spec or '+python3' in spec:
             cmake_args.append(
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
                 spec['python'].command.path)

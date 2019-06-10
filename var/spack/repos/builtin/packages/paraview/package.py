@@ -148,7 +148,7 @@ class Paraview(CMakePackage):
         run_env.prepend_path('LIBRARY_PATH', lib_dir)
         run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
 
-        if '+python' in self.spec:
+        if '+python' in self.spec or '+python3' in self.spec:
             if self.spec.version <= Version('5.4.1'):
                 pv_pydir = join_path(lib_dir, 'site-packages')
                 run_env.prepend_path('PYTHONPATH', pv_pydir)
@@ -208,7 +208,7 @@ class Paraview(CMakePackage):
                 '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
             ])
 
-        if '+python' in spec:
+        if '+python' in spec or '+python3' in spec:
             cmake_args.extend([
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' % spec['python'].command.path
