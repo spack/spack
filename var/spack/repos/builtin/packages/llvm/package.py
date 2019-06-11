@@ -86,9 +86,8 @@ class Llvm(CMakePackage):
     variant('omp_tsan', default=False,
             description="Build with OpenMP capable thread sanitizer")
     variant('python', default=False, description="Install python bindings")
-    variant('flang', default='none',
-            description='Flang branch version, used by flang package',
-            values=('none', 'develop', '20180921', '20180612'))
+    variant('flang', default=False,
+            description='Build flang branch version instead')
 
     extends('python', when='+python')
 
@@ -120,44 +119,62 @@ class Llvm(CMakePackage):
     resource(name='flang-llvm',
              git='https://github.com/flang-compiler/llvm.git',
              branch='release_60',
-             placement='llvm',
-             when='flang=develop')
+             placement='llvm-flang',
+             when='llvm@develop+flang')
 
     resource(name='flang-llvm',
              git='https://github.com/flang-compiler/llvm.git',
              commit='d8b30082648dc869eba68f9e539605f437d7760c',
-             placement='llvm',
-             when='flang=20180921')
+             placement='llvm-flang',
+             when='@7.0.1+flang')
 
     resource(name='flang-llvm',
              git='https://github.com/flang-compiler/llvm.git',
              commit='f26a3ece4ccd68a52f5aa970ec42837ee0743296',
-             placement='llvm',
-             when='flang=20180612')
+             placement='llvm-flang',
+             when='@6.0.0+flang')
 
     resource(name='flang-driver',
              git='https://github.com/flang-compiler/flang-driver.git',
              branch='release_60',
+             destination='llvm-flang/tools',
              placement='clang',
-             when='flang=develop')
+             when='llvm@develop+flang')
 
     resource(name='flang-driver',
              git='https://github.com/flang-compiler/flang-driver.git',
              commit='dd7587310ae498c22514a33e1a2546b86af9cf25',
+             destination='llvm-flang/tools',
              placement='clang',
-             when='flang=20180921')
+             when='@7.0.1+flang')
 
     resource(name='flang-driver',
              git='https://github.com/flang-compiler/flang-driver.git',
              commit='e079fa68cb35a53c88c41a1939f90b94d539e984',
+             destination='llvm-flang/tools',
              placement='clang',
-             when='flang=20180612')
+             when='@6.0.0+flang')
+
+    resource(name='openmp',
+             git='https://github.com/llvm-mirror/openmp.git',
+             branch='release_60',
+             destination='llvm-flang/projects',
+             placement='openmp',
+             when='@develop+flang')
+
+    resource(name='openmp',
+             git='https://github.com/llvm-mirror/openmp.git',
+             commit='d5aa29cb3bcf51289d326b4e565613db8aff65ef',
+             destination='llvm-flang/projects',
+             placement='openmp',
+             when='@6:7.0.1+flang')
 
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
 
     # LLVM 4 and 5 does not build with GCC 8
     conflicts('%gcc@8:',      when='@:5')
+    conflicts('%gcc@:5.0.999', when='@8:')
 
     # OMP TSAN exists in > 5.x
     conflicts('+omp_tsan', when='@:5.99')
@@ -202,7 +219,13 @@ class Llvm(CMakePackage):
             env.set('CC', join_path(self.spec.prefix.bin, 'clang'))
             env.set('CXX', join_path(self.spec.prefix.bin, 'clang++'))
 
-    root_cmakelists_dir = 'llvm'
+    # When building flang we do not use the mono repo
+    @property
+    def root_cmakelists_dir(self):
+        if '+flang' in self.spec:
+            return 'llvm-flang'
+        else:
+            return 'llvm'
 
     def cmake_args(self):
         spec = self.spec
