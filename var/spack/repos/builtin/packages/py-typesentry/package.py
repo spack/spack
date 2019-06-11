@@ -14,6 +14,7 @@ class PyTypesentry(PythonPackage):
     homepage = "https://github.com/h2oai/typesentry"
     git = "https://github.com/h2oai/typesentry.git"
 
-    version('2018-10-12', commit='0ca8ed0e62d15ffe430545e7648c9a9b2547b49c')
+    # See the git history of __version__.py for versioning information
+    version('0.2.7', commit='0ca8ed0e62d15ffe430545e7648c9a9b2547b49c')
 
     depends_on('py-colorama@0.3.0:', type=('build', 'run'))
