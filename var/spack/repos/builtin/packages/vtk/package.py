@@ -42,7 +42,7 @@ class Vtk(CMakePackage):
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
     conflicts('+python', when='+python3')
-    conflicts('+python3', when='@:7')
+    conflicts('+python3', when='@:8.0')
 
     extends('python', when='+python')
     extends('python', when='+python3')
