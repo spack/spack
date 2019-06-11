@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 from spack import *
 from contextlib import contextmanager
 
@@ -43,6 +44,8 @@ class Neuron(Package):
     variant('pysetup',       default=True,  description="Build Python module with setup.py")
     variant('rx3d',          default=False, description="Enable cython translated 3-d rxd. Depends on pysetup")
 
+    variant('deployment_build', default='1',  description='Build number for re-builds')
+
     depends_on('autoconf',   type='build')
     depends_on('automake',   type='build')
     depends_on('bison',      type='build')
@@ -50,9 +53,15 @@ class Neuron(Package):
     depends_on('libtool',    type='build')
     depends_on('pkgconfig',  type='build')
 
+    # Readline became incompatible with Mac so we use neuron internal readline.
+    # HOWEVER, with the internal version there is a bug which makes Vector.as_numpy() not work!
+    depends_on('readline', when=sys.platform != 'darwin')
+
     depends_on('mpi',         when='+mpi')
     depends_on('ncurses',     when='~cross-compile')
     depends_on('python@2.6:', when='+python', type=('build', 'link', 'run'))
+    # Numpy is required for Vector.as_numpy()
+    # depends_on('py-numpy',    when='+python', type='run')
     depends_on('tau',         when='+profile')
 
     conflicts('~shared',  when='+python')
@@ -205,11 +214,21 @@ class Neuron(Package):
         options.extend(self.get_python_options(spec))
         options.extend(self.get_compilation_options(spec))
 
+        ld_flags = 'LDFLAGS='
+        if 'readline' in spec:
+            # Except in Mac we always depend on readline, which is anyway a python dependency
+            options.append('--with-readline=' + spec['readline'].prefix)
+            ld_flags += ' -L{0.prefix.lib} {0.libs.rpath_flags}'.format(spec['readline'])
+        else:
+            options.append('--with-readline=no')
+
         # To support prompt (not cross-compile) use readline + ncurses
         if 'ncurses' in spec:
-            options.extend(['--with-readline=no',  # Use builtin readline
-                            'CURSES_LIBS={0.rpath_flags} {0.ld_flags}'.format(spec['ncurses'].libs),
+            options.extend(['CURSES_LIBS={0.rpath_flags} {0.ld_flags}'.format(spec['ncurses'].libs),
                             'CURSES_CFLAGS={}'.format(spec['ncurses'].prefix.include)])
+            ld_flags += ' -L{0.prefix.lib} {0.libs.rpath_flags}'.format(spec['ncurses'])
+
+        options.append(ld_flags)
 
         build = Executable('./build.sh')
         build()
