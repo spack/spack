@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import os
 import argparse
-import llnl.util.tty as tty
 
 import spack.environment as ev
 import spack.cmd
@@ -69,7 +68,7 @@ def location(parser, args):
     elif args.env:
         path = spack.environment.root(args.env)
         if not os.path.isdir(path):
-            tty.die("no such environment: '%s'" % args.env)
+            raise BadEnvironmentError("No such environment: '%s'" % args.env)
         print(path)
 
     elif args.packages:
@@ -81,9 +80,10 @@ def location(parser, args):
     else:
         specs = spack.cmd.parse_specs(args.spec)
         if not specs:
-            tty.die("You must supply a spec.")
+            raise SpecificationError("You must supply a spec.")
         if len(specs) != 1:
-            tty.die("Too many specs.  Supply only one.")
+            raise SpecificationError("Only one spec, not %s (%s), is allowed" %
+                                     (len(specs), specs))
 
         if args.install_dir:
             # install_dir command matches against installed specs.
@@ -108,7 +108,23 @@ def location(parser, args):
 
                 else:  # args.build_dir is the default.
                     if not pkg.stage.expanded:
-                        tty.die("Build directory does not exist yet. "
-                                "Run this to create it:",
-                                "spack stage " + " ".join(args.spec))
+                        raise MissingBuildDirectoryError(
+                            "Build directory does not exist yet. Run this to "
+                            "create it: spack stage %s" % " ".join(args.spec))
                     print(pkg.stage.source_path)
+
+
+class LocationError(spack.error.SpackError):
+    """Top-most class for location command processing errors."""
+
+
+class BadEnvironmentError(LocationError):
+    """Error raised for an erroneous environment option."""
+
+
+class MissingBuildDirectoryError(LocationError):
+    """Error raised when the build directory is missing when needed."""
+
+
+class SpecificationError(LocationError):
+    """Error raised when there is an error in the provided spec."""
