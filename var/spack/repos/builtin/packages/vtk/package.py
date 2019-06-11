@@ -30,6 +30,7 @@ class Vtk(CMakePackage):
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('python', default=False, description='Enable Python support')
+    variant('python3', default=False, description='Enable Python3 support')
     variant('qt', default=False, description='Build with support for Qt')
     variant('xdmf', default=False, description='Build XDMF file support')
     variant('ffmpeg', default=False, description='Build with FFMPEG support')
@@ -40,10 +41,18 @@ class Vtk(CMakePackage):
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
+    conflicts('+python', when='+python3')
+    conflicts('+python3', when='@:8.0')
 
-    depends_on('python', when='+python')
-    depends_on('py-mpi4py', when='+mpi +python', type='run')
     extends('python', when='+python')
+    extends('python', when='+python3')
+
+    depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
+    depends_on('python@3:', when='+python3', type=('build', 'run'))
+
+    depends_on('py-mpi4py', when='+python+mpi', type='run')
+    depends_on('py-mpi4py', when='+python3+mpi', type='run')
+
     # python3.7 compatibility patch backported from upstream
     # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
     patch('python3.7-const-char.patch', when='@:8.1.1 ^python@3.7:')
@@ -133,7 +142,7 @@ class Vtk(CMakePackage):
             cmake_args.extend(['-DModule_vtkIOFFMPEG:BOOL=ON'])
 
         # Enable/Disable wrappers for Python.
-        if '+python' in spec:
+        if '+python' in spec or '+python3' in spec:
             cmake_args.extend([
                 '-DVTK_WRAP_PYTHON=ON',
                 '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
