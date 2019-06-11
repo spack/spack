@@ -253,4 +253,8 @@ class Vtk(CMakePackage):
                 self.compiler.version >= Version('5.1.0')):
                 cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
 
+            # A bug in tao pegtl causes build failures with intel compilers
+            if '%intel' in spec and spec.version >= Version('8.2'):
+                cmake_args.append(
+                    '-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF')
         return cmake_args

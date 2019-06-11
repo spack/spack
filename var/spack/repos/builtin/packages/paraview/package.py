@@ -236,4 +236,11 @@ class Paraview(CMakePackage):
                 '-DGIT_EXECUTABLE=FALSE'
             ])
 
+        # A bug that has been found in vtk causes an error for
+        # intel builds for version 5.6.  This should be revisited
+        # with later versions of Paraview to see if the issues still
+        # arises.
+        if '%intel' in spec and spec.version >= Version('5.6'):
+            cmake_args.append('-DPARAVIEW_ENABLE_MOTIONFX:BOOL=OFF')
+
         return cmake_args
