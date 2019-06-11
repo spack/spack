@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import codecs
+import errno
 import re
 import os
 import os.path
@@ -188,9 +189,18 @@ def push_to_url(local_path, remote_path, **kwargs):
     if remote_url.scheme == 'file':
         mkdirp(os.path.dirname(remote_url.path))
         if keep_original:
-            shutil.copy2(local_url.path, remote_url.path)
+            shutil.copy(local_url.path, remote_url.path)
         else:
-            os.rename(local_url.path, remote_url.path)
+            try:
+                os.rename(local_url.path, remote_url.path)
+            except OSError as e:
+                if e.errno == errno.EXDEV:
+                    # NOTE(opadron): The above move failed because it crosses
+                    # filesystem boundaries.  Copy the file (plus original
+                    # metadata), and then delete the original.  This operation
+                    # needs to be done in separate steps.
+                    shutil.copy2(local_url.path, remote_url.path)
+                    os.remove(local_url.path)
 
     elif remote_url.scheme == 's3':
         extra_args = kwargs.get('extra_args', {})

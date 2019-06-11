@@ -57,7 +57,10 @@ def parse(url, scheme='file'):
     extra_attrs = {}
 
     if scheme == 'file':
-        path = canonicalize_path(path)
+        path = canonicalize_path(netloc + path)
+        while path.startswith('//'):
+            path = path[1:]
+        netloc = ''
     elif scheme == 's3':
         if original_s3_attrs:
             extra_attrs.update(original_s3_attrs)

@@ -1216,9 +1216,20 @@ def from_url_scheme(url, *args, **kwargs):
     url = kwargs.get('url', url)
     parsed_url = urlparse(url)
 
+    scheme_mapping = (
+            kwargs.get('scheme_mapping') or
+            {
+                'file': 'url',
+                'http': 'url',
+                'https': 'url'
+            })
+
+    scheme = parsed_url.scheme
+    scheme = scheme_mapping.get(scheme, scheme)
+
     for fetcher in all_strategies:
         url_attr = getattr(fetcher, 'url_attr', None)
-        if url_attr and url_attr == parsed_url.scheme:
+        if url_attr and url_attr == scheme:
             return fetcher(url, *args, **kwargs)
 
     raise ValueError(
