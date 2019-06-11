@@ -15,6 +15,7 @@ class Bazel(Package):
     homepage = "https://www.bazel.io"
     url = "https://github.com/bazelbuild/bazel/releases/download/0.11.1/bazel-0.11.1-dist.zip"
 
+    version('0.19.2', '2f2d14a1f879a9ca17abdf9d9e5eee78')
     version('0.17.2', '9805c0593e781295126af6b8be8cc7a9')
     version('0.16.1', 'c333d903c5275286e79316eb19dd742d')
     version('0.15.0', 'fb6b928b62f068697bd66ad6d13aad53')

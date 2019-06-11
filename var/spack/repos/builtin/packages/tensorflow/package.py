@@ -28,7 +28,8 @@ class Tensorflow(Package):
     depends_on('swig',                          type='build')
 
     # old tensorflow needs old bazel
-    depends_on('bazel@0.15.0',                  type='build',          when='@1.12.0:')
+    depends_on('bazel@0.19.2',                  type='build',          when='@1.13.1')
+    depends_on('bazel@0.15.0',                  type='build',          when='@1.12.0')
     depends_on('bazel@0.10.0',                  type='build',          when='@1.8.0:1.9.0')
     depends_on('bazel@0.9.0',                   type='build',          when='@1.5.0:1.6.0')
     depends_on('bazel@0.4.5',                   type='build',          when='@1.2.0:1.3.0')
@@ -66,6 +67,8 @@ class Tensorflow(Package):
 
     variant('cuda', default=False,
             description='Enable CUDA Support')
+
+    variant('deployment_build', default='1',  description='Build number for re-builds')
 
     depends_on('cuda', when='+cuda')
     depends_on('cudnn', when='+cuda')
@@ -123,11 +126,12 @@ class Tensorflow(Package):
             filter_file('-lcrypto', '-lcrypto '+spec['openssl'].libs.search_flags, 'third_party/systemlibs/boringssl.BUILD')
 
         if '+cuda' in spec:
+            # Note : do not enable skylake yet, see https://github.com/easybuilders/easybuild-easyconfigs/issues/5936
             # get path for all dependent libraries to avoid issue with linking especially cuda and cudnn
             ld_lib_path = env.get('LD_LIBRARY_PATH')
-            bazel('-c', 'opt', '--config=cuda', '--action_env="LD_LIBRARY_PATH=%s"' % ld_lib_path,  '//tensorflow/tools/pip_package:build_pip_package')
+            bazel('-c', 'opt', '--copt=-mavx2', '--copt=-msse4.2', '--copt=-mfma', '--copt=-mavx', '--copt=-mfpmath=both', '--config=cuda', '--action_env="LD_LIBRARY_PATH=%s"' % ld_lib_path,  '//tensorflow/tools/pip_package:build_pip_package')
         else:
-            bazel('-c', 'opt', '--config=mkl', '//tensorflow/tools/pip_package:build_pip_package')
+            bazel('-c', 'opt', '--copt=-mavx2', '--copt=-msse4.2', '--copt=-mfma', '--copt=-mavx', '--copt=-mfpmath=both', '--config=mkl', '//tensorflow/tools/pip_package:build_pip_package')
 
         build_pip_package = Executable('bazel-bin/tensorflow/tools/pip_package/build_pip_package')
         build_pip_package('.')
@@ -151,10 +155,6 @@ class Tensorflow(Package):
         # add libcuda.so to LD_LIBRARY_PATH as build can be triggered on the node without cuda driver
         #if '+cuda' in spec:
         #    spack_env.prepend_path('LD_LIBRARY_PATH', spec['cuda'].prefix.lib64.stubs)
-
-        # Note : do not enable skylake yet, see https://github.com/easybuilders/easybuild-easyconfigs/issues/5936
-        opt_flags = "--copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-msse4.2 --copt=-mfpmath=both"
-        spack_env.set('CC_OPT_FLAGS', opt_flags)
 
         if '+gcp' in spec:
             spack_env.set('TF_NEED_GCP', '1')
