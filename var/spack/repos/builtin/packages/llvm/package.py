@@ -173,7 +173,7 @@ class Llvm(CMakePackage):
     conflicts('+lldb',        when='~clang')
 
     # LLVM 4 and 5 does not build with GCC 8
-    conflicts('%gcc@8:',      when='@:5')
+    conflicts('%gcc@8:',       when='@:5')
     conflicts('%gcc@:5.0.999', when='@8:')
 
     # OMP TSAN exists in > 5.x
