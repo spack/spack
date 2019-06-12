@@ -35,7 +35,6 @@ def update_kwargs_from_args(args, kwargs):
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'make_jobs': args.jobs,
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty,
@@ -153,11 +152,20 @@ Defaults to spec of the package to install."""
         help="""The site name that will be reported to CDash.
 Defaults to current system hostname."""
     )
-    subparser.add_argument(
+    cdash_subgroup = subparser.add_mutually_exclusive_group()
+    cdash_subgroup.add_argument(
         '--cdash-track',
         default='Experimental',
         help="""Results will be reported to this group on CDash.
 Defaults to Experimental."""
+    )
+    cdash_subgroup.add_argument(
+        '--cdash-buildstamp',
+        default=None,
+        help="""Instead of letting the CDash reporter prepare the
+buildstamp which, when combined with build name, site and project,
+uniquely identifies the build, provide this argument to identify
+the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
     )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
@@ -223,10 +231,6 @@ def install(parser, args, **kwargs):
         else:
             tty.die("install requires a package argument or a spack.yaml file")
 
-    if args.jobs is not None:
-        if args.jobs <= 0:
-            tty.die("The -j option must be a positive integer!")
-
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
@@ -258,6 +262,7 @@ def install(parser, args, **kwargs):
         specs = spack.cmd.parse_specs(
             args.package, concretize=True, tests=tests)
     except SpackError as e:
+        tty.debug(e)
         reporter.concretization_report(e.message)
         raise
 
@@ -283,36 +288,42 @@ def install(parser, args, **kwargs):
     reporter.specs = specs
     with reporter:
         if args.overwrite:
-            # If we asked to overwrite an existing spec we must ensure that:
-            # 1. We have only one spec
-            # 2. The spec is already installed
-            assert len(specs) == 1, \
-                "only one spec is allowed when overwriting an installation"
 
-            spec = specs[0]
-            t = spack.store.db.query(spec)
-            assert len(t) == 1, "to overwrite a spec you must install it first"
-
-            # Give the user a last chance to think about overwriting an already
-            # existing installation
+            installed = list(filter(lambda x: x,
+                                    map(spack.store.db.query_one, specs)))
             if not args.yes_to_all:
-                tty.msg('The following package will be reinstalled:\n')
-
                 display_args = {
                     'long': True,
                     'show_flags': True,
                     'variants': True
                 }
 
-                spack.cmd.display_specs(t, **display_args)
+                if installed:
+                    tty.msg('The following package specs will be '
+                            'reinstalled:\n')
+                    spack.cmd.display_specs(installed, **display_args)
+
+                not_installed = list(filter(lambda x: x not in installed,
+                                            specs))
+                if not_installed:
+                    tty.msg('The following package specs are not installed and'
+                            ' the --overwrite flag was given. The package spec'
+                            ' will be newly installed:\n')
+                    spack.cmd.display_specs(not_installed, **display_args)
+
+                # We have some specs, so one of the above must have been true
                 answer = tty.get_yes_or_no(
                     'Do you want to proceed?', default=False
                 )
                 if not answer:
                     tty.die('Reinstallation aborted.')
 
-            with fs.replace_directory_transaction(specs[0].prefix):
-                install_spec(args, kwargs, abstract_specs[0], specs[0])
+            for abstract, concrete in zip(abstract_specs, specs):
+                if concrete in installed:
+                    with fs.replace_directory_transaction(concrete.prefix):
+                        install_spec(args, kwargs, abstract, concrete)
+                else:
+                    install_spec(args, kwargs, abstract, concrete)
 
         else:
             for abstract, concrete in zip(abstract_specs, specs):

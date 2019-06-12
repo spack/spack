@@ -13,6 +13,7 @@ class PyPyfftw(PythonPackage):
     homepage = "http://hgomersall.github.com/pyFFTW"
     url      = "https://pypi.io/packages/source/p/pyFFTW/pyFFTW-0.10.4.tar.gz"
 
+    version('0.11.1', sha256='05ea28dede4c3aaaf5c66f56eb0f71849d0d50f5bc0f53ca0ffa69534af14926')
     version('0.10.4', '7fb59450308881bb48d9f178947d950e')
 
     depends_on('fftw')

@@ -13,6 +13,7 @@ class PyFlake8(PythonPackage):
     homepage = "https://github.com/PyCQA/flake8"
     url      = "https://github.com/PyCQA/flake8/archive/3.0.4.tar.gz"
 
+    version('3.7.7',  sha256='b3f76b02351008dc772276e74b09dd3d4b5c567ff8c6ab573352cb8fd7007444')
     version('3.5.0', '4e312803bbd8e4a1e566ffac887ae647')
     version('3.0.4', 'cf2a7d8c92070f7b62253404ffb54df7')
     version('2.5.4', '366dd1de6c300254c830b81e66979f06')
@@ -24,6 +25,12 @@ class PyFlake8(PythonPackage):
     # However, py-flake8 requires py-setuptools during runtime as well.
     depends_on('py-setuptools@30:', type=('build', 'run'))
 
+    # entrypoints >= 0.3.0, < 0.4.0
+    # FIXME @0.3.0:0.3.999 causes concretization to hang
+    depends_on('py-entrypoints@0.3', when='@3.7.7', type=('build', 'run'))
+
+    # pyflakes >= 2.1.0, < 2.2.0
+    depends_on('py-pyflakes@2.1.0:2.1.999', when='@3.7.7', type=('build', 'run'))
     # pyflakes >= 1.5.0, < 1.7.0
     depends_on('py-pyflakes@1.5.0:1.6.999', when='@3.5.0', type=('build', 'run'))
     # pyflakes >= 0.8.1, != 1.2.0, != 1.2.1, != 1.2.2, < 1.3.0
@@ -31,6 +38,8 @@ class PyFlake8(PythonPackage):
     # pyflakes >= 0.8.1, < 1.1
     depends_on('py-pyflakes@0.8.1:1.0.0', when='@2.5.4', type=('build', 'run'))
 
+    # pycodestyle >= 2.5.0, < 2.6.0
+    depends_on('py-pycodestyle@2.5.0:2.5.999', when='@3.7.7', type=('build', 'run'))
     # pycodestyle >= 2.3.0, < 2.4.0
     depends_on('py-pycodestyle@2.3.0:2.3.999', when='@3.5.0', type=('build', 'run'))
     # pycodestyle >= 2.0.0, < 2.1.0
@@ -39,7 +48,7 @@ class PyFlake8(PythonPackage):
     depends_on('py-pycodestyle@1.5.7,1.7.0:', when='@2.5.4', type=('build', 'run'))
 
     # mccabe >= 0.6.0, < 0.7.0
-    depends_on('py-mccabe@0.6.0:0.6.999', when='@3.5.0', type=('build', 'run'))
+    depends_on('py-mccabe@0.6.0:0.6.999', when='@3.5.0,3.7.7', type=('build', 'run'))
     # mccabe >= 0.5.0, < 0.6.0
     depends_on('py-mccabe@0.5.0:0.5.999', when='@3.0.4', type=('build', 'run'))
     # mccabe >= 0.2.1, < 0.5
@@ -53,6 +62,9 @@ class PyFlake8(PythonPackage):
     # module for Python versions 3.4 and later
     depends_on('py-enum34', when='^python@2.4:2.7.999,3.1:3.3.999',
                type=('build', 'run'))
+
+    depends_on('py-functools32', when='@3.7.7: ^python@:3.1.999', type=('build', 'run'))
+    depends_on('py-typing', when='@3.7.7: ^python@:3.4.999', type=('build', 'run'))
 
     depends_on('py-nose', type='test')
 

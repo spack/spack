@@ -8,10 +8,11 @@ import os
 import sys
 from shutil import copytree, ignore_patterns
 
+import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.paths
-from spack.compiler import Compiler, _version_cache, UnsupportedCompilerFlag
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
 
@@ -150,17 +151,32 @@ class Clang(Compiler):
                 raise UnsupportedCompilerFlag(self,
                                               "the C++17 standard",
                                               "cxx17_flag",
-                                              "< 5.0")
+                                              "< 3.5")
             elif self.version < ver('5.0'):
                 return "-std=c++1z"
             else:
                 return "-std=c++17"
 
     @property
+    def c99_flag(self):
+        return '-std=c99'
+
+    @property
+    def c11_flag(self):
+        if self.version < ver('6.1.0'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C11 standard",
+                                          "c11_flag",
+                                          "< 6.1.0")
+        else:
+            return "-std=c11"
+
+    @property
     def pic_flag(self):
         return "-fPIC"
 
     @classmethod
+    @llnl.util.lang.memoized
     def default_version(cls, comp):
         """The ``--version`` option works for clang compilers.
         On most platforms, output looks like this::
@@ -175,24 +191,26 @@ class Clang(Compiler):
             Target: x86_64-apple-darwin15.2.0
             Thread model: posix
         """
-        if comp not in _version_cache:
-            compiler = Executable(comp)
-            output = compiler('--version', output=str, error=str)
+        compiler = Executable(comp)
+        output = compiler('--version', output=str, error=str)
+        return cls.extract_version_from_output(output)
 
-            ver = 'unknown'
-            match = re.search(r'^Apple LLVM version ([^ )]+)', output)
-            if match:
-                # Apple's LLVM compiler has its own versions, so suffix them.
-                ver = match.group(1) + '-apple'
-            else:
-                # Normal clang compiler versions are left as-is
-                match = re.search(r'clang version ([^ )]+)', output)
-                if match:
-                    ver = match.group(1)
-
-            _version_cache[comp] = ver
-
-        return _version_cache[comp]
+    @classmethod
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
+        ver = 'unknown'
+        match = re.search(
+            # Apple's LLVM compiler has its own versions, so suffix them.
+            r'^Apple LLVM version ([^ )]+)|'
+            # Normal clang compiler versions are left as-is
+            r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+            r'clang version ([^ )]+)',
+            output
+        )
+        if match:
+            suffix = '-apple' if match.lastindex == 1 else ''
+            ver = match.group(match.lastindex) + suffix
+        return ver
 
     @classmethod
     def fc_version(cls, fc):

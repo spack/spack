@@ -19,6 +19,7 @@ class Laghos(MakefilePackage):
     git      = "https://github.com/CEED/Laghos.git"
 
     version('develop', branch='master')
+    version('2.0', sha256='dd3632d5558889beec2cd3c49eb60f633f99e6d886ac868731610dd006c44c14')
     version('1.1', sha256='53b9bfe2af263c63eb4544ca1731dd26f40b73a0d2775a9883db51821bf23b7f')
     version('1.0', '4c091e115883c79bed81c557ef16baff')
 
@@ -27,8 +28,13 @@ class Laghos(MakefilePackage):
     depends_on('mfem@develop+mpi+metis', when='@develop+metis')
     depends_on('mfem@develop+mpi~metis', when='@develop~metis')
 
-    depends_on('mfem@laghos-v1.0,3.3.2:+mpi+metis', when='@1.0:+metis')
-    depends_on('mfem@laghos-v1.0,3.3.2:+mpi~metis', when='@1.0:~metis')
+    # Recommended mfem version for laghos v2.0 is: ^mfem@3.4.1-laghos-v2.0
+    depends_on('mfem@3.4.0:+mpi+metis', when='@2.0+metis')
+    depends_on('mfem@3.4.0:+mpi~metis', when='@2.0~metis')
+
+    # Recommended mfem version for laghos v1.x is: ^mfem@3.3.1-laghos-v1.0
+    depends_on('mfem@3.3.1-laghos-v1.0:+mpi+metis', when='@1.0,1.1+metis')
+    depends_on('mfem@3.3.1-laghos-v1.0:+mpi~metis', when='@1.0,1.1~metis')
 
     @property
     def build_targets(self):

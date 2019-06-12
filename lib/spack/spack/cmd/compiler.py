@@ -79,7 +79,7 @@ def compiler_find(args):
     # Just let compiler_find do the
     # entire process and return an empty config from all_compilers
     # Default for any other process is init_config=True
-    compilers = [c for c in spack.compilers.find_compilers(*paths)]
+    compilers = [c for c in spack.compilers.find_compilers(paths)]
     new_compilers = []
     for c in compilers:
         arch_spec = ArchSpec(None, c.operating_system, c.target)

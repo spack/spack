@@ -15,6 +15,7 @@ from llnl.util import filesystem, tty
 import spack.cmd
 import spack.modules
 import spack.repo
+import spack.modules.common
 
 import spack.cmd.common.arguments as arguments
 
@@ -30,6 +31,11 @@ def setup_parser(subparser):
     refresh_parser.add_argument(
         '--delete-tree',
         help='delete the module file tree before refresh',
+        action='store_true'
+    )
+    refresh_parser.add_argument(
+        '--upstream-modules',
+        help='generate modules for packages installed upstream',
         action='store_true'
     )
     arguments.add_common_arguments(
@@ -125,10 +131,14 @@ def loads(module_type, specs, args, out=sys.stdout):
             )
 
     module_cls = spack.modules.module_types[module_type]
-    modules = [
-        (spec, module_cls(spec).layout.use_name)
-        for spec in specs if os.path.exists(module_cls(spec).layout.filename)
-    ]
+    modules = list()
+    for spec in specs:
+        if os.path.exists(module_cls(spec).layout.filename):
+            modules.append((spec, module_cls(spec).layout.use_name))
+        elif spec.package.installed_upstream:
+            tty.debug("Using upstream module for {0}".format(spec))
+            module = spack.modules.common.upstream_module(spec, module_type)
+            modules.append((spec, module.use_name))
 
     module_commands = {
         'tcl': 'module load ',
@@ -153,43 +163,24 @@ def loads(module_type, specs, args, out=sys.stdout):
 
 
 def find(module_type, specs, args):
-    """Returns the module file "use" name if there's a single match. Raises
-    error messages otherwise.
-    """
+    """Retrieve paths or use names of module files"""
 
-    spec = one_spec_or_raise(specs)
+    single_spec = one_spec_or_raise(specs)
 
-    # Check if the module file is present
-    def module_exists(spec):
-        writer = spack.modules.module_types[module_type](spec)
-        return os.path.isfile(writer.layout.filename)
-
-    if not module_exists(spec):
-        msg = 'Even though {1} is installed, '
-        msg += 'no {0} module has been generated for it.'
-        tty.die(msg.format(module_type, spec))
-
-    # Check if we want to recurse and load all dependencies. In that case
-    # modify the list of specs adding all the dependencies in post order
     if args.recurse_dependencies:
-        specs = [
-            item for item in spec.traverse(order='post', cover='nodes')
-            if module_exists(item)
-        ]
+        specs_to_retrieve = list(
+            single_spec.traverse(order='post', cover='nodes',
+                                 deptype=('link', 'run')))
+    else:
+        specs_to_retrieve = [single_spec]
 
-    # ... and if it is print its use name or full-path if requested
-    def module_str(specs):
-        modules = []
-        for x in specs:
-            writer = spack.modules.module_types[module_type](x)
-            if args.full_path:
-                modules.append(writer.layout.filename)
-            else:
-                modules.append(writer.layout.use_name)
-
-        return ' '.join(modules)
-
-    print(module_str(specs))
+    try:
+        modules = [spack.modules.common.get_module(module_type, spec,
+                                                   args.full_path)
+                   for spec in specs_to_retrieve]
+    except spack.modules.common.ModuleNotFoundError as e:
+        tty.die(e.message)
+    print(' '.join(modules))
 
 
 def rm(module_type, specs, args):
@@ -231,6 +222,9 @@ def refresh(module_type, specs, args):
     if not specs:
         tty.msg('No package matches your query')
         return
+
+    if not args.upstream_modules:
+        specs = list(s for s in specs if not s.package.installed_upstream)
 
     if not args.yes_to_all:
         msg = 'You are about to regenerate {types} module files for:\n'
@@ -276,6 +270,7 @@ def refresh(module_type, specs, args):
 
     # If we arrived here we have at least one writer
     module_type_root = writers[0].layout.dirname()
+    spack.modules.common.generate_module_index(module_type_root, writers)
     # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=module_type))
     if os.path.isdir(module_type_root) and args.delete_tree:
@@ -285,6 +280,7 @@ def refresh(module_type, specs, args):
         try:
             x.write(overwrite=True)
         except Exception as e:
+            tty.debug(e)
             msg = 'Could not write module file [{0}]'
             tty.warn(msg.format(x.layout.filename))
             tty.warn('\t--> {0} <--'.format(str(e)))
@@ -325,7 +321,9 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
     except MultipleSpecsMatch:
         msg = "the constraint '{query}' matches multiple packages:\n"
         for s in specs:
-            msg += '\t' + s.cformat(format_string='$/ $_$@$+$%@+$+$=') + '\n'
+            spec_fmt = '{hash:7} {name}{@version}{%compiler}'
+            spec_fmt += '{compiler_flags}{variants}{arch=architecture}'
+            msg += '\t' + s.cformat(spec_fmt) + '\n'
         tty.error(msg.format(query=args.constraint))
         tty.die('In this context exactly **one** match is needed: please specify your constraints better.')  # NOQA: ignore=E501
 

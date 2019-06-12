@@ -5,6 +5,8 @@
 
 from spack import *
 from glob import glob
+from llnl.util.filesystem import LibraryList
+import os
 
 
 class Cuda(Package):
@@ -58,3 +60,22 @@ class Cuda(Package):
             '--toolkit',        # install CUDA Toolkit
             '--toolkitpath=%s' % prefix
         )
+
+    @property
+    def libs(self):
+        prefix = self.prefix
+        search_paths = [(prefix.lib, False), (prefix.lib64, False),
+                        (prefix, True)]
+        for search_root, recursive in search_paths:
+            libs = find_libraries(
+                'libcuda', root=search_root, shared=True, recursive=recursive)
+            if libs:
+                break
+
+        filtered_libs = []
+        # CUDA 10.0 provides Compatability libraries for running newer versions
+        # of CUDA with older drivers. These do not work with newer drivers.
+        for lib in libs:
+            if 'compat' not in lib.split(os.sep):
+                filtered_libs.append(lib)
+        return LibraryList(filtered_libs)

@@ -7,12 +7,12 @@ tcl:
         - CMAKE_PREFIX_PATH
     environment:
       set:
-        '${PACKAGE}_ROOT_${PREFIX}': '${PREFIX}'
+        '{name}_ROOT_{prefix}': '{prefix}'
 
   'platform=test target=x86_64':
     environment:
       set:
-        FOO_${OPTIONS}: 'foo'
+        FOO_{variants}: 'foo'
       unset:
         - BAR
 

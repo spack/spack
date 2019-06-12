@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import inspect
+
 from spack import *
 from multiprocessing import cpu_count
 from spack.util.environment import env_flag
@@ -90,8 +92,9 @@ class Bazel(Package):
                 return super(BazelExecutable, self).__call__(*args, **kwargs)
 
         jobs = cpu_count()
+        dependent_module = inspect.getmodule(dependent_spec.package)
         if not dependent_spec.package.parallel:
             jobs = 1
-        elif dependent_spec.package.make_jobs:
-            jobs = dependent_spec.package.make_jobs
+        elif dependent_module.make_jobs:
+            jobs = dependent_module.make_jobs
         module.bazel = BazelExecutable('bazel', 'build', jobs)

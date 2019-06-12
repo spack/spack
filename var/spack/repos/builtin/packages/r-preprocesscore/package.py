@@ -13,5 +13,6 @@ class RPreprocesscore(RPackage):
     git      = "https://git.bioconductor.org/packages/preprocessCore.git"
 
     version('1.38.1', commit='c58cb4c720eda0f1c733b989b14912093a7c5fbc')
+    version('1.44.0', branch='RELEASE_3_8')
 
     depends_on('r@3.4.0:3.4.9', when='@1.38.1')

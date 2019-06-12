@@ -15,6 +15,7 @@ class PyMatplotlib(PythonPackage):
     homepage = "https://pypi.python.org/pypi/matplotlib"
     url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-2.0.2.tar.gz"
 
+    version('3.0.2', 'd6af3dfae557ea4046fef96cf617fa24')
     version('3.0.0', '39c7f44c8fa0f24cbf684137371ce4ae')
     version('2.2.3', '403b0bddd751d71187416f20d4cff100')
     version('2.2.2', 'dd1e49e041309a7fd4e32be8bf17c3b6')

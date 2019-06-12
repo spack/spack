@@ -35,4 +35,4 @@ class Kripke(CMakePackage):
         # Kripke does not provide install target, so we have to copy
         # things into place.
         mkdirp(prefix.bin)
-        install('spack-build/kripke', prefix.bin)
+        install('../spack-build/kripke', prefix.bin)

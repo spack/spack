@@ -15,10 +15,9 @@ class Xsdk(Package):
     """
 
     homepage = "http://xsdk.info"
-
-    # Dummy url since Spack complains if I don't list something, will be
-    # removed when metapackage is available
     url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
+
+    maintainers = ['balay', 'luszczek']
 
     version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
     version('0.4.0', 'a52dc710c744afa0b71429b8ec9425bc')
@@ -30,12 +29,12 @@ class Xsdk(Package):
     variant('omega-h', default=True, description='Enable omega-h package build')
     variant('dealii', default=True, description='Enable dealii package build')
 
-    depends_on('hypre@develop~internal-superlu', when='@develop')
+    depends_on('hypre@develop~internal-superlu+superlu-dist+shared', when='@develop')
     depends_on('hypre@2.15.1~internal-superlu', when='@0.4.0')
     depends_on('hypre@2.12.1~internal-superlu', when='@0.3.0')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
 
-    depends_on('mfem@develop+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
+    depends_on('mfem@develop+mpi+hypre+superlu-dist+petsc~sundials+examples+miniapps', when='@develop')
     depends_on('mfem@3.4.0+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.4.0')
     depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0')
 
@@ -44,9 +43,9 @@ class Xsdk(Package):
     depends_on('superlu-dist@5.2.2', when='@0.3.0')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
 
-    depends_on('trilinos@master+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
+    depends_on('trilinos@develop+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
                when='@develop')
-    depends_on('trilinos@12.14.0-rc1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
+    depends_on('trilinos@12.14.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
                when='@0.4.0')
     depends_on('trilinos@12.12.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
                when='@0.3.0')
@@ -62,8 +61,8 @@ class Xsdk(Package):
     depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@xsdk-0.2.0')
 
-    depends_on('dealii@develop~assimp~python~doc~slepc~gmsh+petsc+mpi+trilinos~int64+hdf5~netcdf+metis', when='@develop +dealii')
-    depends_on('dealii@9.0.1~assimp~python~doc~slepc~gmsh+petsc+mpi+trilinos~int64+hdf5~netcdf+metis', when='@0.4.0 +dealii')
+    depends_on('dealii@develop~assimp~python~doc~gmsh+petsc+slepc+mpi+trilinos~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine', when='@develop +dealii')
+    depends_on('dealii@9.0.1~assimp~python~doc~gmsh+petsc~slepc+mpi+trilinos~int64+hdf5~netcdf+metis~ginkgo~symengine', when='@0.4.0 +dealii')
 
     depends_on('pflotran@develop', when='@develop')
     depends_on('pflotran@xsdk-0.4.0', when='@0.4.0')
@@ -75,7 +74,7 @@ class Xsdk(Package):
     depends_on('alquimia@xsdk-0.3.0', when='@0.3.0')
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
 
-    depends_on('sundials@3.2.1~int64+hypre', when='@develop')
+    depends_on('sundials@4.1.0~int64+hypre', when='@develop')
     depends_on('sundials@3.2.1~int64+hypre', when='@0.4.0')
     depends_on('sundials@3.1.0~int64+hypre', when='@0.3.0')
 
@@ -86,8 +85,8 @@ class Xsdk(Package):
     depends_on('magma@2.4.0', when='@0.4.0 +cuda')
     depends_on('magma@2.2.0', when='@0.3.0 +cuda')
 
-    depends_on('amrex@develop', when='@develop %intel')
-    depends_on('amrex@develop', when='@develop %gcc')
+    depends_on('amrex@develop+sundials', when='@develop %intel')
+    depends_on('amrex@develop+sundials', when='@develop %gcc')
     depends_on('amrex@18.10.1', when='@0.4.0 %intel')
     depends_on('amrex@18.10.1', when='@0.4.0 %gcc')
 

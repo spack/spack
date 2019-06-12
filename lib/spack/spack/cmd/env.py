@@ -5,6 +5,7 @@
 
 import os
 import sys
+from collections import namedtuple
 
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs
@@ -20,6 +21,7 @@ import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.util.string as string
 
+
 description = "manage virtual environments"
 section = "environments"
 level = "short"
@@ -34,6 +36,7 @@ subcommands = [
     ['list', 'ls'],
     ['status', 'st'],
     'loads',
+    'view',
 ]
 
 
@@ -49,10 +52,20 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to activate the environment")
-    shells.add_argument(
+
+    view_options = subparser.add_mutually_exclusive_group()
+    view_options.add_argument(
+        '-v', '--with-view', action='store_const', dest='with_view',
+        const=True, default=True,
+        help="update PATH etc. with associated view")
+    view_options.add_argument(
+        '-V', '--without-view', action='store_const', dest='with_view',
+        const=False, default=True,
+        help="do not update PATH etc. with associated view")
+
+    subparser.add_argument(
         '-d', '--dir', action='store_true', default=False,
         help="force spack to treat env as a directory, not a name")
-
     subparser.add_argument(
         '-p', '--prompt', action='store_true', default=False,
         help="decorate the command line prompt when activating")
@@ -93,25 +106,13 @@ def env_activate(args):
     if spack_env == os.environ.get('SPACK_ENV'):
         tty.die("Environment %s is already active" % args.activate_env)
 
-    if args.shell == 'csh':
-        # TODO: figure out how to make color work for csh
-        sys.stdout.write('setenv SPACK_ENV %s;\n' % spack_env)
-        sys.stdout.write('alias despacktivate "spack env deactivate";\n')
-        if args.prompt:
-            sys.stdout.write('if (! $?SPACK_OLD_PROMPT ) '
-                             'setenv SPACK_OLD_PROMPT "${prompt}";\n')
-            sys.stdout.write('set prompt="%s ${prompt}";\n' % env_prompt)
-
-    else:
-        if 'color' in os.environ['TERM']:
-            env_prompt = colorize('@G{%s} ' % env_prompt, color=True)
-
-        sys.stdout.write('export SPACK_ENV=%s;\n' % spack_env)
-        sys.stdout.write("alias despacktivate='spack env deactivate';\n")
-        if args.prompt:
-            sys.stdout.write('if [ -z "${SPACK_OLD_PS1}" ]; then\n')
-            sys.stdout.write('export SPACK_OLD_PS1="${PS1}"; fi;\n')
-            sys.stdout.write('export PS1="%s ${PS1}";\n' % env_prompt)
+    active_env = ev.get_env(namedtuple('args', ['env'])(env),
+                            'activate')
+    cmds = ev.activate(
+        active_env, add_view=args.with_view, shell=args.shell,
+        prompt=env_prompt if args.prompt else None
+    )
+    sys.stdout.write(cmds)
 
 
 #
@@ -146,20 +147,8 @@ def env_deactivate(args):
     if 'SPACK_ENV' not in os.environ:
         tty.die('No environment is currently active.')
 
-    if args.shell == 'csh':
-        sys.stdout.write('unsetenv SPACK_ENV;\n')
-        sys.stdout.write('if ( $?SPACK_OLD_PROMPT ) '
-                         'set prompt="$SPACK_OLD_PROMPT" && '
-                         'unsetenv SPACK_OLD_PROMPT;\n')
-        sys.stdout.write('unalias despacktivate;\n')
-
-    else:
-        sys.stdout.write('unset SPACK_ENV; export SPACK_ENV;\n')
-        sys.stdout.write('unalias despacktivate;\n')
-        sys.stdout.write('if [ -n "$SPACK_OLD_PS1" ]; then\n')
-        sys.stdout.write('export PS1="$SPACK_OLD_PS1";\n')
-        sys.stdout.write('unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n')
-        sys.stdout.write('fi;\n')
+    cmds = ev.deactivate(shell=args.shell)
+    sys.stdout.write(cmds)
 
 
 #
@@ -172,20 +161,40 @@ def env_create_setup_parser(subparser):
     subparser.add_argument(
         '-d', '--dir', action='store_true',
         help='create an environment in a specific directory')
+    view_opts = subparser.add_mutually_exclusive_group()
+    view_opts.add_argument(
+        '--without-view', action='store_true',
+        help='do not maintain a view for this environment')
+    view_opts.add_argument(
+        '--with-view',
+        help='specify that this environment should maintain a view at the'
+             ' specified path (by default the view is maintained in the'
+             ' environment directory)')
     subparser.add_argument(
         'envfile', nargs='?', default=None,
         help='optional init file; can be spack.yaml or spack.lock')
 
 
 def env_create(args):
+    if args.with_view:
+        with_view = args.with_view
+    elif args.without_view:
+        with_view = False
+    else:
+        # Note that 'None' means unspecified, in which case the Environment
+        # object could choose to enable a view by default. False means that
+        # the environment should not include a view.
+        with_view = None
     if args.envfile:
         with open(args.envfile) as f:
-            _env_create(args.create_env, f, args.dir)
+            _env_create(args.create_env, f, args.dir,
+                        with_view=with_view)
     else:
-        _env_create(args.create_env, None, args.dir)
+        _env_create(args.create_env, None, args.dir,
+                    with_view=with_view)
 
 
-def _env_create(name_or_path, init_file=None, dir=False):
+def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -196,11 +205,11 @@ def _env_create(name_or_path, init_file=None, dir=False):
             of a named environment
     """
     if dir:
-        env = ev.Environment(name_or_path, init_file)
+        env = ev.Environment(name_or_path, init_file, with_view)
         env.write()
         tty.msg("Created environment in %s" % env.path)
     else:
-        env = ev.create(name_or_path, init_file)
+        env = ev.create(name_or_path, init_file, with_view)
         env.write()
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
     return env
@@ -270,6 +279,50 @@ def env_list(args):
             tty.msg('%d environments' % len(names))
 
     colify(color_names, indent=4)
+
+
+class ViewAction(object):
+    regenerate = 'regenerate'
+    enable = 'enable'
+    disable = 'disable'
+
+    @staticmethod
+    def actions():
+        return [ViewAction.regenerate, ViewAction.enable, ViewAction.disable]
+
+
+#
+# env view
+#
+def env_view_setup_parser(subparser):
+    """manage a view associated with the environment"""
+    subparser.add_argument(
+        'action', choices=ViewAction.actions(),
+        help="action to take for the environment's view")
+    subparser.add_argument(
+        'view_path', nargs='?',
+        help="when enabling a view, optionally set the path manually"
+    )
+
+
+def env_view(args):
+    env = ev.get_env(args, 'env view')
+
+    if env:
+        if args.action == ViewAction.regenerate:
+            env.regenerate_view()
+        elif args.action == ViewAction.enable:
+            if args.view_path:
+                view_path = args.view_path
+            else:
+                view_path = env.default_view_path
+            env.update_view(view_path)
+            env.write()
+        elif args.action == ViewAction.disable:
+            env.update_view(None)
+            env.write()
+    else:
+        tty.msg("No active environment")
 
 
 #

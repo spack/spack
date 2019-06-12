@@ -15,6 +15,7 @@ class Pkgconf(AutotoolsPackage):
     homepage = "http://pkgconf.org/"
     url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.5.4.tar.xz"
 
+    version('1.6.0',  '6135a3abb576672ba54a899860442ba185063f0f90dae5892f64f7bae8e1ece5')
     version('1.5.4',  '9c5864a4e08428ef52f05a41c948529555458dec6d283b50f8b7d32463c54664')
     version('1.4.2',  '678d242b4eef1754bba6a58642af10bb')
     version('1.4.0',  'c509c0dad5a70aa4bc3210557b7eafce')

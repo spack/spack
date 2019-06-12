@@ -5,7 +5,7 @@
 
 """Schema for compilers.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/compilers.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/compilers.py
    :lines: 13-
 """
 

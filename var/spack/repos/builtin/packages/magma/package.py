@@ -15,7 +15,10 @@ class Magma(CMakePackage):
 
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
+    maintainers = ['luszczek']
 
+    version('2.5.1-alpha1', sha256='0576ddef07e049e2674fa87caca06ffe96f8d92134ed8aea387b9523be0d7c77')
+    version('2.5.0', sha256='4fd45c7e46bd9d9124253e7838bbfb9e6003c64c2c67ffcff02e6c36d2bcfa33')
     version('2.4.0', sha256='4eb839b1295405fd29c8a6f5b4ed578476010bf976af46573f80d1169f1f9a4f')
     version('2.3.0', sha256='010a4a057d7aa1e57b9426bffc0958f3d06913c9151463737e289e67dd9ea608')
     version('2.2.0', sha256='df5d4ace417e5bf52694eae0d91490c6bde4cde1b0da98e8d400c5c3a70d83a2')
@@ -32,9 +35,11 @@ class Magma(CMakePackage):
     conflicts('%gcc@6:', when='^cuda@:8')
     conflicts('%gcc@7:', when='^cuda@:9')
 
-    patch('ibm-xl.patch', when='@2.2:%xl')
-    patch('ibm-xl.patch', when='@2.2:%xl_r')
+    patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
+    patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
+    patch('magma-2.5.0.patch', when='@2.5.0')
+    patch('magma-2.5.0-cmake.patch', when='@2.5.0')
 
     def cmake_args(self):
         spec = self.spec
@@ -68,6 +73,11 @@ class Magma(CMakePackage):
                 options.extend(['-DGPU_TARGET=sm30'])
             else:
                 options.extend(['-DGPU_TARGET=sm_30'])
+
+        if '@2.5.0' in spec:
+            options.extend(['-DMAGMA_SPARSE=OFF'])
+            if spec.compiler.name in ['xl', 'xl_r']:
+                options.extend(['-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=TRUE'])
 
         return options
 

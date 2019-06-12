@@ -71,6 +71,8 @@ or refer to the full manual below.
    binary_caches
    command_index
    package_list
+   chain
+   extensions
 
 .. toctree::
    :maxdepth: 2
@@ -81,6 +83,11 @@ or refer to the full manual below.
    build_systems
    developer_guide
    docker_for_developers
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Docs
+
    Spack API Docs <spack>
    LLNL API Docs <llnl>
 

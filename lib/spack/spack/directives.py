@@ -51,6 +51,8 @@ __all__ = []
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches']
 
+_patch_order_index = 0
+
 
 class DirectiveMeta(type):
     """Flushes the directives that were temporarily stored in the staging
@@ -98,11 +100,6 @@ class DirectiveMeta(type):
         # that the directives are called on the class to set it up
 
         if 'spack.pkg' in cls.__module__:
-            # Package name as taken
-            # from llnl.util.lang.get_calling_module_name
-            pkg_name = cls.__module__.split('.')[-1]
-            setattr(cls, 'name', pkg_name)
-
             # Ensure the presence of the dictionaries associated
             # with the directives
             for d in DirectiveMeta._directive_names:
@@ -267,8 +264,8 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         patches = [patches]
 
     # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, string_types)
-               else p for p in patches]
+    patches = [patch(p) if isinstance(p, string_types) else p
+               for p in patches]
     assert all(callable(p) for p in patches)
 
     # this is where we actually add the dependency to this package
@@ -422,12 +419,18 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
         if isinstance(pkg, Dependency):
             pkg = pkg.pkg
 
+        global _patch_order_index
+        ordering_key = (pkg.name, _patch_order_index)
+        _patch_order_index += 1
+
         if '://' in url_or_filename:
             patch = spack.patch.UrlPatch(
-                pkg, url_or_filename, level, working_dir, **kwargs)
+                pkg, url_or_filename, level, working_dir,
+                ordering_key=ordering_key, **kwargs)
         else:
             patch = spack.patch.FilePatch(
-                pkg, url_or_filename, level, working_dir)
+                pkg, url_or_filename, level, working_dir,
+                ordering_key=ordering_key)
 
         cur_patches.append(patch)
 

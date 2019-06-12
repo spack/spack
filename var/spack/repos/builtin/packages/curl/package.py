@@ -15,6 +15,7 @@ class Curl(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.60.0.tar.bz2"
 
+    version('7.63.0', sha256='9bab7ed4ecff77020a312d84cc5fb7eb02d58419d218f267477a724a17fd8dd8')
     version('7.60.0', 'bd2aabf78ded6a9aec8a54532fd6b5d7')
     version('7.59.0', 'a2192804f7c2636a09320416afcf888e')
     version('7.56.0', 'e0caf257103e0c77cee5be7e9ac66ca4')
@@ -36,6 +37,7 @@ class Curl(AutotoolsPackage):
     variant('libssh2',    default=False, description='enable libssh2 support')
     variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
     variant('darwinssl',  default=sys.platform == 'darwin', description="use Apple's SSL/TLS implementation")
+    variant('gssapi',     default=False, description='enable Kerberos support')
 
     conflicts('+libssh', when='@:7.57.99')
     # on OSX and --with-ssh the configure steps fails with
@@ -52,6 +54,7 @@ class Curl(AutotoolsPackage):
     depends_on('nghttp2', when='+nghttp2')
     depends_on('libssh2', when='+libssh2')
     depends_on('libssh', when='+libssh')
+    depends_on('krb5', when='+gssapi')
 
     def configure_args(self):
         spec = self.spec
@@ -61,6 +64,9 @@ class Curl(AutotoolsPackage):
             args.append('--with-darwinssl')
         else:
             args.append('--with-ssl={0}'.format(spec['openssl'].prefix))
+
+        if spec.satisfies('+gssapi'):
+            args.append('--with-gssapi={0}'.format(spec['krb5'].prefix))
 
         args += self.with_or_without('nghttp2')
         args += self.with_or_without('libssh2')

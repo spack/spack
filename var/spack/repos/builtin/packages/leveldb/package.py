@@ -13,7 +13,9 @@ class Leveldb(MakefilePackage):
 
     homepage = "https://github.com/google/leveldb"
     url      = "https://github.com/google/leveldb/archive/v1.20.tar.gz"
+    git      = "https://github.com/google/leveldb.git"
 
+    version('master', branch='master')
     version('1.20', '298b5bddf12c675d6345784261302252')
     version('1.18', '73770de34a2a5ab34498d2e05b2b7fa0')
 

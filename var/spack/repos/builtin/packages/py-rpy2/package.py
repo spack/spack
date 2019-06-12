@@ -16,6 +16,7 @@ class PyRpy2(PythonPackage):
     homepage = "https://pypi.python.org/pypi/rpy2"
     url = "https://pypi.io/packages/source/r/rpy2/rpy2-2.5.4.tar.gz"
 
+    version('3.0.0', '4ea39c4ff42f5bc611e338ff66d18c9f')
     version('2.9.4', '7df2562cdf43a0ccdd1e44ee1c16614f')
     version('2.8.6', '85046aa58ba586622f67271fbca05933')
     version('2.5.6', 'a36e758b633ce6aec6a5f450bfee980f')
