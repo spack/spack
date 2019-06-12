@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontBhLucidatypewriter100dpi(Package):
+class FontBhLucidatypewriter100dpi(AutotoolsPackage):
     """X.org bh-lucidatypewriter-100dpi font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/bh-lucidatypewriter-100dpi"
@@ -23,9 +23,6 @@ class FontBhLucidatypewriter100dpi(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

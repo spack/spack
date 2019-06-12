@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontMiscMeltho(Package):
+class FontMiscMeltho(AutotoolsPackage):
     """X.org misc-meltho font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/misc-meltho"
@@ -23,8 +23,6 @@ class FontMiscMeltho(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
         make('install')
 
         # `make install` copies the files to the font-util installation.

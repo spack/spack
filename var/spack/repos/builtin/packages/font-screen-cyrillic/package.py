@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontScreenCyrillic(Package):
+class FontScreenCyrillic(AutotoolsPackage):
     """X.org screen-cyrillic font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/screen-cyrillic"
@@ -23,9 +23,6 @@ class FontScreenCyrillic(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

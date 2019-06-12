@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontAlias(Package):
+class FontAlias(AutotoolsPackage):
     """X.org alias font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/alias"
@@ -20,8 +20,6 @@ class FontAlias(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
         make('install')
 
         # `make install` copies the files to the font-util installation.

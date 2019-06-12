@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontBitstream75dpi(Package):
+class FontBitstream75dpi(AutotoolsPackage):
     """X.org bitstream-75dpi font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/bitstream-75dpi"
@@ -23,9 +23,6 @@ class FontBitstream75dpi(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

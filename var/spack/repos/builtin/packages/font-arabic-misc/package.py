@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontArabicMisc(Package):
+class FontArabicMisc(AutotoolsPackage):
     """X.org arabic-misc font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/arabic-misc"
@@ -23,8 +23,6 @@ class FontArabicMisc(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
         make('install')
 
         # `make install` copies the files to the font-util installation.

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontIbmType1(Package):
+class FontIbmType1(AutotoolsPackage):
     """X.org ibm-type1 font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/ibm-type1"
@@ -23,8 +23,6 @@ class FontIbmType1(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
         make('install')
 
         # `make install` copies the files to the font-util installation.

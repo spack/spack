@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontBh100dpi(Package):
+class FontBh100dpi(AutotoolsPackage):
     """X.org bh-100dpi font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/bh-100dpi"
@@ -23,9 +23,6 @@ class FontBh100dpi(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

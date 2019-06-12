@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontSunMisc(Package):
+class FontSunMisc(AutotoolsPackage):
     """X.org sun-misc font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/sun-misc"
@@ -22,9 +22,6 @@ class FontSunMisc(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

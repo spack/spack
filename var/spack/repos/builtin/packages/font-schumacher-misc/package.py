@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontSchumacherMisc(Package):
+class FontSchumacherMisc(AutotoolsPackage):
     """X.org schumacher-misc font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/schumacher-misc"
@@ -23,9 +23,6 @@ class FontSchumacherMisc(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

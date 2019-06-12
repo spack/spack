@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontDecMisc(Package):
+class FontDecMisc(AutotoolsPackage):
     """X.org dec-misc font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/dec-misc"
@@ -23,9 +23,6 @@ class FontDecMisc(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

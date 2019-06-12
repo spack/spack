@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontWinitzkiCyrillic(Package):
+class FontWinitzkiCyrillic(AutotoolsPackage):
     """X.org winitzki-cyrillic font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/winitzki-cyrillic"
@@ -23,9 +23,6 @@ class FontWinitzkiCyrillic(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

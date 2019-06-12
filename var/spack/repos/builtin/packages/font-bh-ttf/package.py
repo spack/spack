@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontBhTtf(Package):
+class FontBhTtf(AutotoolsPackage):
     """X.org bh-ttf font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/bh-ttf"
@@ -23,8 +23,6 @@ class FontBhTtf(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
         make('install')
 
         # `make install` copies the files to the font-util installation.

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontXfree86Type1(Package):
+class FontXfree86Type1(AutotoolsPackage):
     """X.org xfree86-type1 font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/xfree86-type1"
@@ -23,8 +23,6 @@ class FontXfree86Type1(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
         make('install')
 
         # `make install` copies the files to the font-util installation.

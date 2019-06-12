@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontMicroMisc(Package):
+class FontMicroMisc(AutotoolsPackage):
     """X.org micro-misc font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/micro-misc"
@@ -23,9 +23,6 @@ class FontMicroMisc(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontCronyxCyrillic(Package):
+class FontCronyxCyrillic(AutotoolsPackage):
     """X.org cronyx-cyrillic font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/cronyx-cyrillic"
@@ -23,9 +23,6 @@ class FontCronyxCyrillic(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
         make('install')
 
         # `make install` copies the files to the font-util installation.

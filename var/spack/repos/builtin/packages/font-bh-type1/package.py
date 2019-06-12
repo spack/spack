@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontBhType1(Package):
+class FontBhType1(AutotoolsPackage):
     """X.org bh-type1 font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/bh-type1"
@@ -23,8 +23,6 @@ class FontBhType1(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
         make('install')
 
         # `make install` copies the files to the font-util installation.
