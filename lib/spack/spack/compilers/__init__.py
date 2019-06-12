@@ -34,6 +34,8 @@ _other_instance_vars = ['modules', 'operating_system', 'environment',
                         'extra_rpaths']
 _cache_config_file = []
 
+# TODO: Caches at module level make it difficult to mock configurations in
+# TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
 _compiler_cache = {}
 

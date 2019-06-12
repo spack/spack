@@ -17,21 +17,6 @@ import spack.tengine
 import spack.util.executable
 
 
-@pytest.fixture(autouse=True)
-def _skip_if_missing_executables(request):
-    """Permits to mark tests with 'require_executables' and skip the
-    tests if the executables passed as arguments are not found.
-    """
-    if request.node.get_marker('requires_executables'):
-        required_execs = request.node.get_marker('requires_executables').args
-        missings_execs = [
-            x for x in required_execs if spack.util.executable.which(x) is None
-        ]
-        if missings_execs:
-            msg = 'could not find executables: {0}'
-            pytest.skip(msg.format(', '.join(missings_execs)))
-
-
 @pytest.fixture(params=[True, False])
 def is_relocatable(request):
     return request.param
