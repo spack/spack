@@ -19,6 +19,7 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import remove_linked_tree
 
 import spack.architecture
+import spack.compilers
 import spack.config
 import spack.caches
 import spack.database
@@ -332,6 +333,10 @@ def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
         *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
     monkeypatch.setattr(spack.config, 'config', cfg)
+
+    # This is essential, otherwise the cache will create weird side effects
+    # that will compromise subsequent tests if compilers.yaml is modified
+    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
 
     yield spack.config.config
 

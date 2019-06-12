@@ -9,7 +9,6 @@ import os
 import os.path
 
 import spack.main
-import spack.compilers
 
 compiler = spack.main.SpackCommand('compiler')
 
@@ -24,10 +23,6 @@ def no_compilers_yaml(mutable_config, monkeypatch):
         )
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
-
-    # This is essential, otherwise the cache will create weird side effects
-    # that will compromise subsequent tests
-    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
 
 
 @pytest.mark.regression('11678')
