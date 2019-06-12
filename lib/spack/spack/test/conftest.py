@@ -202,6 +202,21 @@ def mock_fetch_cache(monkeypatch):
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
+@pytest.fixture(autouse=True)
+def _skip_if_missing_executables(request):
+    """Permits to mark tests with 'require_executables' and skip the
+    tests if the executables passed as arguments are not found.
+    """
+    if request.node.get_marker('requires_executables'):
+        required_execs = request.node.get_marker('requires_executables').args
+        missing_execs = [
+            x for x in required_execs if spack.util.executable.which(x) is None
+        ]
+        if missing_execs:
+            msg = 'could not find executables: {0}'
+            pytest.skip(msg.format(', '.join(missing_execs)))
+
+
 # FIXME: The lines below should better be added to a fixture with
 # FIXME: session-scope. Anyhow doing it is not easy, as it seems
 # FIXME: there's some weird interaction with compilers during concretization.
@@ -306,22 +321,20 @@ def config(configuration_dir):
 
 
 @pytest.fixture(scope='function')
-def mutable_config(tmpdir_factory, configuration_dir, config):
+def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
     """Like config, but tests can modify the configuration."""
     spack.package_prefs.PackagePrefs.clear_caches()
 
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
-    real_configuration = spack.config.config
-
-    spack.config.config = spack.config.Configuration(
+    cfg = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
+    monkeypatch.setattr(spack.config, 'config', cfg)
 
     yield spack.config.config
 
-    spack.config.config = real_configuration
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
