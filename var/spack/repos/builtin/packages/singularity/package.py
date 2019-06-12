@@ -38,36 +38,29 @@ class Singularity(MakefilePackage):
     # tree into the proper subdir in our overridden do_stage below.
     @property
     def gopath(self):
-        return join_path(self.stage.path)
+        return self.stage.path
 
     @property
     def sylabs_gopath_dir(self):
-        return join_path(self.stage.source_path, 'github.com/sylabs/')
+        return join_path(self.gopath, 'src/github.com/sylabs/')
 
     @property
     def singularity_gopath_dir(self):
         return join_path(self.sylabs_gopath_dir, 'singularity')
 
-    # Unpack the tarball as usual but ensure it lands in its home within
-    # GOPATH.
+    # Unpack the tarball as usual, then move the src dir into
+    # its home within GOPATH.
     def do_stage(self, mirror_only=False):
         super(Singularity, self).do_stage(mirror_only)
         if not os.path.exists(self.singularity_gopath_dir):
-            # Now that the files have been `staged` to `self.stage.source_path`
-            # (i.e., the well-known stage source directory called `src`), they
-            # must be moved to the expected go subdirectory.  Since a directory
-            # cannot be moved to a decendant subdirectory, temporarily move/
-            # rename it.
-            go_source_path = join_path(self.stage.path, 'go')
-            tty.debug("Temporarily moving {0} to {1}".format(
-                self.stage.source_path, go_source_path))
-            shutil.move(self.stage.source_path, go_source_path)
-
-            # Now move/rename the temporary directory to the expected
-            # gopath `src`-based subdirectory.
+            # Move the expanded source to its destination
             tty.debug("Moving {0} to {1}".format(
-                go_source_path, self.singularity_gopath_dir))
-            shutil.move(go_source_path, self.singularity_gopath_dir)
+                self.stage.source_path, self.singularity_gopath_dir))
+            shutil.move(self.stage.source_path, self.singularity_gopath_dir)
+
+            # The build process still needs access to the source path,
+            # so create a symlink.
+            force_symlink(self.singularity_gopath_dir, self.stage.source_path)
 
     # MakefilePackage's stages use this via working_dir()
     @property

@@ -28,7 +28,7 @@ import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 
-_source_path_subdir = 'src'
+_source_path_subdir = 'spack-src'
 _stage_prefix = 'spack-stage-'
 
 
