@@ -293,7 +293,10 @@ def configuration_dir(tmpdir_factory, linux_os):
     content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
     t.write(content)
-    return tmpdir
+    yield tmpdir
+
+    # Once done, cleanup the directory
+    shutil.rmtree(str(tmpdir))
 
 
 @pytest.fixture(scope='module')
