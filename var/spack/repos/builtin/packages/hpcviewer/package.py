@@ -58,7 +58,7 @@ class Hpcviewer(Package):
             version(ver, url=viewer_url(*key), sha256=viewer_sha[key])
 
             resource(name='hpctraceviewer', url=trace_url(*key),
-                     sha256=trace_sha[key], destination='TRACE',
+                     sha256=trace_sha[key], placement='TRACE',
                      when='@{0}'.format(ver))
 
     depends_on('java@8', type=('build', 'run'))
@@ -73,7 +73,7 @@ class Hpcviewer(Package):
         inst = Executable(join_path('.', 'install'))
         inst(*args)
 
-        cd(join_path('TRACE', 'hpctraceviewer'))
+        cd('TRACE')
 
         inst = Executable(join_path('.', 'install'))
         inst(*args)
