@@ -476,6 +476,8 @@ class TestStage(object):
         composite_stage.create()
         composite_stage.fetch()
         composite_stage.expand_archive()
+        assert composite_stage.expanded  # Archive is expanded
+
         assert os.path.exists(
             os.path.join(composite_stage.source_path, resource_dst_name))
 
@@ -491,6 +493,8 @@ class TestStage(object):
         composite_stage.create()
         composite_stage.fetch()
         composite_stage.expand_archive()
+
+        assert composite_stage.expanded  # Archive is expanded
 
         for fname in mock_expand_resource.files:
             file_path = os.path.join(
