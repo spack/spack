@@ -9,7 +9,7 @@ from spack import *
 
 class PyBlessed(PythonPackage):
     """Blessed is a thin, practical wrapper around terminal capabilities in
-	Python."""
+    Python."""
 
     homepage = "https://github.com/jquast/blessed"
     url      = "https://pypi.io/packages/source/b/blessed/blessed-1.15.0.tar.gz"
