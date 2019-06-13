@@ -191,7 +191,7 @@ def no_tmp_root_stage(monkeypatch):
 
 
 @pytest.fixture
-def non_user_path_for_stage():
+def non_user_path_for_stage(config):
     """
     Use a non-user path for staging.
 
@@ -206,7 +206,7 @@ def non_user_path_for_stage():
 
 
 @pytest.fixture
-def stage_path_for_stage():
+def stage_path_for_stage(config):
     """
     Use the basic stage_path for staging.
 
@@ -221,7 +221,7 @@ def stage_path_for_stage():
 
 
 @pytest.fixture
-def tmp_path_for_stage(tmpdir):
+def tmp_path_for_stage(tmpdir, config):
     """
     Use a built-in, temporary, test directory for staging.
 
@@ -248,7 +248,7 @@ def tmp_root_stage(monkeypatch):
 
 
 @pytest.fixture
-def tmpdir_for_stage(mock_stage_archive):
+def tmpdir_for_stage(config, mock_stage_archive):
     """
     Use the mock_stage_archive's temporary directory for staging.
 
@@ -266,7 +266,7 @@ def tmpdir_for_stage(mock_stage_archive):
 
 
 @pytest.fixture
-def tmp_build_stage_dir(tmpdir):
+def tmp_build_stage_dir(tmpdir, config):
     """Establish the temporary build_stage for the mock archive."""
     test_tmp_path = tmpdir.join('tmp')
 
