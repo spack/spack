@@ -48,6 +48,8 @@ class R(AutotoolsPackage):
             description='Enable X11 support (call configure --with-x)')
     variant('memory_profiling', default=False,
             description='Enable memory profiling')
+    variant('rmath', default=False,
+            description='Build standalone Rmath library')
 
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
@@ -86,6 +88,18 @@ class R(AutotoolsPackage):
     @property
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
+
+    @run_after('build')
+    def build_rmath(self):
+        if '+rmath' in self.spec:
+            with working_dir('src/nmath/standalone'):
+                make()
+
+    @run_after('install')
+    def install_rmath(self):
+        if '+rmath' in self.spec:
+            with working_dir('src/nmath/standalone'):
+                make('install')
 
     def configure_args(self):
         spec   = self.spec
