@@ -717,7 +717,9 @@ class TestStage(object):
         assert stage.path == path
         assert stage.source_path == path
 
-        # Order doesn't really matter for DIYStage
+        # Order doesn't really matter for DIYStage since they are
+        # basically NOOPs; however, call each since they are part
+        # of the normal stage usage and to ensure full test coverage.
         stage.create()  # Only sets the flag value
         assert stage.created
 
@@ -733,3 +735,23 @@ class TestStage(object):
 
         stage.destroy()  # A no-op
         assert stage.path == path  # Ensure can still access attributes
+        assert os.path.exists(stage.source_path)  # Ensure path still exists
+
+    def test_diystage_preserve_file(self, tmpdir):
+        """Ensure DIYStage preserves an existing file."""
+        # Write a file to the temporary directory
+        fn = tmpdir.join(_readme_fn)
+        fn.write(_readme_contents)
+
+        # Instantiate the DIYStage and ensure the above file is unchanged.
+        path = str(tmpdir)
+        stage = DIYStage(path)
+        assert os.path.isdir(path)
+        assert os.path.isfile(str(fn))
+
+        stage.create()  # Only sets the flag value
+
+        readmefn = str(fn)
+        assert os.path.isfile(readmefn)
+        with open(readmefn) as _file:
+            _file.read() == _readme_contents
