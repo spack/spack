@@ -600,7 +600,8 @@ class DIYStage(object):
         if path is None:
             raise ValueError("Cannot construct DIYStage without a path.")
         elif not os.path.isdir(path):
-            raise StagePathError("The stage path directory does not exist.")
+            raise StagePathError("The stage path directory does not exist:",
+                                 path)
 
         self.archive_file = None
         self.path = path
