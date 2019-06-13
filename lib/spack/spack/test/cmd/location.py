@@ -9,7 +9,7 @@ import pytest
 
 from llnl.util.filesystem import mkdirp
 import spack.environment as ev
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 import spack.paths
 
 
@@ -59,6 +59,16 @@ def test_location_build_dir_missing():
                "%s  spack stage %s" % (prefix, os.linesep, spec)
     out = location('--build-dir', spec, fail_on_error=False).strip()
     assert out == expected
+
+
+@pytest.mark.parametrize('options', [([]),
+                                     (['--build-dir', 'mpileaks']),
+                                     (['--env', 'missing-env']),
+                                     (['spec1', 'spec2'])])
+def test_location_cmd_error(options):
+    """Ensure the proper error is raised with problematic location options."""
+    with pytest.raises(SpackCommandError, match="Command exited with code 1"):
+        location(*options)
 
 
 def test_location_env(mock_test_env):
