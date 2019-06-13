@@ -19,7 +19,7 @@ import spack.stage
 import spack.util.executable
 
 from spack.resource import Resource
-from spack.stage import Stage, StageComposite, ResourceStage
+from spack.stage import Stage, StageComposite, ResourceStage, DIYStage
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = 'test-files'
@@ -699,3 +699,59 @@ class TestStage(object):
         testpath = str(tmpdir)
         with Stage('file:///does-not-exist', path=testpath) as stage:
             assert stage.path == testpath
+
+    def test_diystage_path_none(self):
+        """Ensure DIYStage for path=None behaves as expected."""
+        with pytest.raises(ValueError):
+            DIYStage(None)
+
+    def test_diystage_path_invalid(self):
+        """Ensure DIYStage for an invalid path behaves as expected."""
+        with pytest.raises(spack.stage.StagePathError):
+            DIYStage('/path/does/not/exist')
+
+    def test_diystage_path_valid(self, tmpdir):
+        """Ensure DIYStage for a valid path behaves as expected."""
+        path = str(tmpdir)
+        stage = DIYStage(path)
+        assert stage.path == path
+        assert stage.source_path == path
+
+        # Order doesn't really matter for DIYStage since they are
+        # basically NOOPs; however, call each since they are part
+        # of the normal stage usage and to ensure full test coverage.
+        stage.create()  # Only sets the flag value
+        assert stage.created
+
+        stage.cache_local()  # Only outputs a message
+        stage.fetch()  # Only outputs a message
+        stage.check()  # Only outputs a message
+        stage.expand_archive()  # Only outputs a message
+
+        assert stage.expanded  # The path/source_path does exist
+
+        with pytest.raises(spack.stage.RestageError):
+            stage.restage()
+
+        stage.destroy()  # A no-op
+        assert stage.path == path  # Ensure can still access attributes
+        assert os.path.exists(stage.source_path)  # Ensure path still exists
+
+    def test_diystage_preserve_file(self, tmpdir):
+        """Ensure DIYStage preserves an existing file."""
+        # Write a file to the temporary directory
+        fn = tmpdir.join(_readme_fn)
+        fn.write(_readme_contents)
+
+        # Instantiate the DIYStage and ensure the above file is unchanged.
+        path = str(tmpdir)
+        stage = DIYStage(path)
+        assert os.path.isdir(path)
+        assert os.path.isfile(str(fn))
+
+        stage.create()  # Only sets the flag value
+
+        readmefn = str(fn)
+        assert os.path.isfile(readmefn)
+        with open(readmefn) as _file:
+            _file.read() == _readme_contents

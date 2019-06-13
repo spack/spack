@@ -597,6 +597,12 @@ class DIYStage(object):
     """Simple class that allows any directory to be a spack stage."""
 
     def __init__(self, path):
+        if path is None:
+            raise ValueError("Cannot construct DIYStage without a path.")
+        elif not os.path.isdir(path):
+            raise StagePathError("The stage path directory does not exist:",
+                                 path)
+
         self.archive_file = None
         self.path = path
         self.source_path = path
@@ -618,8 +624,13 @@ class DIYStage(object):
     def expand_archive(self):
         tty.msg("Using source directory: %s" % self.source_path)
 
+    @property
+    def expanded(self):
+        """Returns True since the source_path must exist."""
+        return True
+
     def restage(self):
-        tty.die("Cannot restage DIY stage.")
+        raise RestageError("Cannot restage a DIY stage.")
 
     def create(self):
         self.created = True
@@ -648,6 +659,10 @@ def purge():
 
 class StageError(spack.error.SpackError):
     """"Superclass for all errors encountered during staging."""
+
+
+class StagePathError(StageError):
+    """"Error encountered with stage path."""
 
 
 class RestageError(StageError):
