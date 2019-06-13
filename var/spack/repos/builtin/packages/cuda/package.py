@@ -58,6 +58,7 @@ class Cuda(Package):
             '--verbose',        # create verbose log file
             '--override',       # override compiler version checks
             '--toolkit',        # install CUDA Toolkit
+            '--tmpdir=%s' % self.stage.path,
             '--toolkitpath=%s' % prefix
         )
 
