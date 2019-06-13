@@ -10,10 +10,10 @@ class Charliecloud(MakefilePackage):
     """Lightweight user-defined software stacks for HPC."""
 
     homepage = "https://hpc.github.io/charliecloud"
-    url = "https://github.com/hpc/charliecloud/releases/download/v{0}/charliecloud-{0}.tar.gz"
+    url = "https://github.com/hpc/charliecloud/archive/v0.2.4.tar.gz"
     git = "https://github.com/hpc/charliecloud.git"
 
-    version('0.9.10', sha256='44e821b62f9c447749d3ed0d2b2e44d374153058814704a5543e83f42db2a45a')
+    version('0.9.10', preferred=True, sha256='44e821b62f9c447749d3ed0d2b2e44d374153058814704a5543e83f42db2a45a')
     version('0.9.9', sha256='2624c5a0b19a01c9bca0acf873ceeaec401b9185a23e9108fadbcee0b9d74736')
     version('0.9.8', sha256='903bcce05b19501b5524ef57a929d2f4c6ddeacb0e8443fcb2fe6963e2f29229')
     version('0.9.7', sha256='ec80a4b9bef3a2161a783e11d99cc58e09a32dfbc8a6234c8f7ce7fa76e2f62d')
@@ -25,10 +25,10 @@ class Charliecloud(MakefilePackage):
     version('0.2.4', 'b112de661c2c360174b42c99022c1967')
 
     def url_for_version(self, version):
-        if self.version >= Version('0.9.9'):
-            url = "https://github.com/hpc/charliecloud/releases/download/v{0}/charliecloud-{0}.tar.gz"
+        if version >= Version('0.9.8'):
+            url = "https://github.com/hpc/charliecloud/releases/download/v0.9.10/charliecloud-0.9.10.tar.gz"
         else:
-            url = "https://github.com/hpc/charliecloud/archive/v{0}.tar.gz"
+            url = "https://github.com/hpc/charliecloud/archive/v0.2.4.tar.gz"
         return url.format(version)
 
     @property
