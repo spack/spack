@@ -1242,6 +1242,32 @@ class IntelPackage(PackageBase):
                 fh.write('-Xlinker -rpath={0}\n'.format(compilers_lib_dir))
 
     @run_after('install')
+    def configure_auto_dispatch(self):
+        if 'auto_dispatch=none' in self.spec:
+            return
+
+        # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-using-configuration-files
+        compilers_bin_dir = self.component_bin_dir('compiler')
+
+        for compiler_name in 'icc icpc ifort'.split():
+            f = os.path.join(compilers_bin_dir, compiler_name)
+            if not os.path.isfile(f):
+                raise InstallError(
+                    'Cannot find compiler command to configure '
+                    'auto_dispatch:\n\t' + f)
+
+            ad = []
+            for x in ('COMMON-AVX512', 'MIC-AVX512', 'CORE-AVX512',
+                      'CORE-AVX2', 'CORE-AVX-I', 'AVX', 'SSE4.2', 'SSE4.1',
+                      'SSSE3', 'SSE3', 'SSE2'):
+                if 'auto_dispatch={0}'.format(x) in self.spec:
+                    ad.append(x)
+
+            compiler_cfg = os.path.abspath(f + '.cfg')
+            with open(compiler_cfg, 'a') as fh:
+                fh.write('-ax{0}\n'.format(','.join(ad)))
+
+    @run_after('install')
     def filter_compiler_wrappers(self):
         if (('+mpi' in self.spec or self.provides('mpi')) and
                 '~newdtags' in self.spec):
