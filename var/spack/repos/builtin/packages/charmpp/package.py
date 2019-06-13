@@ -241,5 +241,5 @@ class Charmpp(Package):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-        make('-C', join_path(self.stage.path, 'charm/tests'),
+        make('-C', join_path(self.stage.source_path, 'charm/tests'),
              'test', parallel=False)

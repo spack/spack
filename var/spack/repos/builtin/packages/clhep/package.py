@@ -51,8 +51,7 @@ class Clhep(CMakePackage):
     def patch(self):
         filter_file('SET CMP0042 OLD',
                     'SET CMP0042 NEW',
-                    '%s/%s/CLHEP/CMakeLists.txt'
-                    % (self.stage.path, self.spec.version))
+                    '%s/CLHEP/CMakeLists.txt' % self.stage.source_path)
 
     def cmake_args(self):
         cmake_args = ['-DCLHEP_BUILD_CXXSTD=-std=c++{0}'.format(
