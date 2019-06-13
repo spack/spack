@@ -31,7 +31,7 @@ from functools import wraps
 from six import string_types, with_metaclass
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, mkdirp, join_path
+from llnl.util.filesystem import working_dir, mkdirp
 
 import spack.config
 import spack.error
@@ -390,7 +390,7 @@ class URLFetchStrategy(FetchStrategy):
             # but I think there was an issue with handling exploding tarballs
             os.makedirs(self.stage.source_path)
             for fname in non_hidden:
-                fpath = join_path(tarball_container, fname)
+                fpath = os.path.join(tarball_container, fname)
                 shutil.move(fpath, self.stage.source_path)
             os.rmdir(tarball_container)
 
