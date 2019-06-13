@@ -182,6 +182,8 @@ class Stage(object):
         # used for mirrored archives of repositories.
         self.skip_checksum_for_mirror = True
 
+        self.srcdir = None
+
         # TODO : this uses a protected member of tempfile, but seemed the only
         # TODO : way to get a temporary name besides, the temporary link name
         # TODO : won't be the same as the temporary stage area in tmp_root
@@ -512,9 +514,14 @@ class ResourceStage(Stage):
         """
         root_stage = self.root_stage
         resource = self.resource
-        placement = os.path.basename(self.source_path) \
-            if resource.placement is None \
-            else resource.placement
+
+        if resource.placement:
+            placement = resource.placement
+        elif self.srcdir:
+            placement = self.srcdir
+        else:
+            placement = self.source_path
+
         if not isinstance(placement, dict):
             placement = {'': placement}
 

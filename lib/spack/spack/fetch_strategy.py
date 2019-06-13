@@ -31,7 +31,7 @@ from functools import wraps
 from six import string_types, with_metaclass
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, mkdirp
+from llnl.util.filesystem import working_dir, mkdirp, join_path
 
 import spack.config
 import spack.error
@@ -371,6 +371,7 @@ class URLFetchStrategy(FetchStrategy):
         if len(non_hidden) == 1:
             src = os.path.join(tarball_container, non_hidden[0])
             if os.path.isdir(src):
+                self.stage.srcdir = non_hidden[0]
                 shutil.move(src, self.stage.source_path)
                 if len(files) > 1:
                     files.remove(non_hidden[0])
@@ -385,7 +386,13 @@ class URLFetchStrategy(FetchStrategy):
                 shutil.move(tarball_container, self.stage.source_path)
 
         else:
-            shutil.move(tarball_container, self.stage.source_path)
+            # TODO: note this is note specifically an issue with resources,
+            # but I think there was an issue with handling exploding tarballs
+            os.makedirs(self.stage.source_path)
+            for fname in non_hidden:
+                fpath = join_path(tarball_container, fname)
+                shutil.move(fpath, self.stage.source_path)
+            os.rmdir(tarball_container)
 
     def archive(self, destination):
         """Just moves this archive to the destination."""
