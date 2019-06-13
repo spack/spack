@@ -501,6 +501,31 @@ class TestStage(object):
                 root_stage.source_path, 'resource-dir', fname)
             assert os.path.exists(file_path)
 
+    @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_composite_stage_with_expand_resource_default_placement(
+            self, mock_stage_archive, mock_expand_resource,
+            composite_stage_with_expanding_resource):
+        """For a resource which refers to a compressed archive which expands
+        to a directory, check that by default the resource is placed in
+        the source_path of the root stage with the name of the decompressed
+        directory.
+        """
+
+        composite_stage, root_stage, resource_stage = (
+            composite_stage_with_expanding_resource)
+
+        resource_stage.resource.placement = None
+
+        composite_stage.create()
+        composite_stage.fetch()
+        composite_stage.expand_archive()
+
+        for fname in mock_expand_resource.files:
+            file_path = os.path.join(
+                root_stage.source_path, 'resource-expand', fname)
+            assert os.path.exists(file_path)
+
     def test_setup_and_destroy_no_name_without_tmp(self, mock_stage_archive):
         archive = mock_stage_archive()
         with Stage(archive.url) as stage:
