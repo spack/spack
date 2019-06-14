@@ -60,6 +60,12 @@ class Catalyst(CMakePackage):
     depends_on('mpi')
     depends_on('python@2.7:2.8', when='+python', type=('build', 'link', 'run'))
     depends_on('python@3:', when='+python3', type=('build', 'link', 'run'))
+
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python3', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
+
     depends_on('gl@3.2:', when='+rendering')
     depends_on('mesa+osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
