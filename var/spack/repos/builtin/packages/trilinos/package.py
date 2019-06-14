@@ -194,6 +194,7 @@ class Trilinos(CMakePackage):
              git='https://github.com/ornl-cees/DataTransferKit.git',
              branch='master',
              placement='DataTransferKit',
+             submodules=True,
              when='+dtk @develop')
     resource(name='fortrilinos',
              git='https://github.com/trilinos/ForTrilinos.git',
