@@ -302,19 +302,9 @@ pipeline {
 
         stage('Post-Mortem') {
             parallel {
-                stage('Documentation') {
+                stage('Build Documentation') {
                     steps {
                         sh "ls"
-                    }
-                }
-
-                stage('Docker') {
-                    agent {
-                        label 'docker'
-                    }
-
-                    steps {
-                        build_and_deploy_docker()
                     }
                 }
 
@@ -335,6 +325,24 @@ pipeline {
                                 rm -rf "\${p}"
                             done
                         """
+                    }
+                }
+
+                stage("Test Modules") {
+                    steps {
+                        build job: "hpc.module-testing", parameters: [
+                            string(name: "MODULE_SCRIPT_PATH", value: "${DEPLOYMENT_ROOT}/config/modules.sh")
+                        ]
+                    }
+                }
+
+                stage('Build Docker') {
+                    agent {
+                        label 'docker'
+                    }
+
+                    steps {
+                        build_and_deploy_docker()
                     }
                 }
             }
