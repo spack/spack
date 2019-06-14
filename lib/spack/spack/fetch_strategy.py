@@ -13,7 +13,8 @@ in order to build it.  They need to define the following methods:
         Apply a checksum to the downloaded source code, e.g. for an archive.
         May not do anything if the fetch method was safe to begin with.
     * expand()
-        Expand (e.g., an archive) downloaded file to source.
+        Expand (e.g., an archive) downloaded file to source, with the
+        standard stage source path as the destination directory.
     * reset()
         Restore original state of downloaded code.  Used by clean commands.
         This may just remove the expanded source and re-expand an archive,
@@ -111,7 +112,7 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
         """Checksum the archive fetched by this FetchStrategy."""
 
     def expand(self):
-        """Expand the downloaded archive."""
+        """Expand the downloaded archive into the stage source path."""
 
     def reset(self):
         """Revert to freshly downloaded state.
@@ -172,8 +173,10 @@ class FetchStrategyComposite(object):
 
 
 class URLFetchStrategy(FetchStrategy):
-    """FetchStrategy that pulls source code from a URL for an archive,
-       checks the archive against a checksum,and decompresses the archive.
+    """
+    FetchStrategy that pulls source code from a URL for an archive, check the
+    archive against a checksum, and decompresses the archive.  The destination
+    for the resulting file(s) is the standard stage source path.
     """
     enabled = True
     url_attr = 'url'
@@ -537,7 +540,10 @@ class GoFetchStrategy(VCSFetchStrategy):
        version('name',
                go='github.com/monochromegane/the_platinum_searcher/...')
 
-    Go get does not natively support versions, they can be faked with git
+    Go get does not natively support versions, they can be faked with git.
+
+    The fetched source will be moved to the standard stage sourcepath directory
+    during the expand step.
     """
     enabled = True
     url_attr = 'go'
@@ -614,6 +620,8 @@ class GitFetchStrategy(VCSFetchStrategy):
                       repository's default branch)
         * ``tag``: Particular tag to check out
         * ``commit``: Particular commit hash in the repo
+
+    Repositories are cloned into the standard stage source path directory.
     """
     enabled = True
     url_attr = 'git'
@@ -783,6 +791,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
            version('name', svn='http://www.example.com/svn/trunk',
                    revision='1641')
+
+    Repositories are checked out into the standard stage source path directory.
     """
     enabled = True
     url_attr = 'svn'
@@ -877,6 +887,8 @@ class HgFetchStrategy(VCSFetchStrategy):
     discouraged.
 
         * ``revision``: Particular revision, branch, or tag.
+
+    Repositories are cloned into the standard stage source path directory.
     """
     enabled = True
     url_attr = 'hg'
