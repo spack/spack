@@ -31,7 +31,8 @@ from functools import wraps
 from six import string_types, with_metaclass
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, mkdirp
+from llnl.util.filesystem import (
+    working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
 
 import spack.config
 import spack.error
@@ -526,8 +527,19 @@ class VCSFetchStrategy(FetchStrategy):
             for p in patterns:
                 tar.add_default_arg('--exclude=%s' % p)
 
-        with working_dir(self.stage.path):
-            tar('-czf', destination, os.path.basename(self.stage.source_path))
+        if self.stage.srcdir:
+            with temp_cwd() as cwd:
+                tmp_repo_path = os.path.join(cwd, self.stage.srcdir)
+                # Here we create an archive with the default repository name.
+                # The 'tar' command has options for changing the name of a
+                # directory that is included in the archive, but they differ
+                # based on OS, so we temporarily rename the repo
+                with temp_rename(self.stage.source_path, tmp_repo_path):
+                    tar('-czf', destination, self.stage.srcdir)
+        else:
+            with working_dir(self.stage.path):
+                tar('-czf', destination,
+                    os.path.basename(self.stage.source_path))
 
     def __str__(self):
         return "VCS: %s" % self.url
@@ -691,16 +703,22 @@ class GitFetchStrategy(VCSFetchStrategy):
         if self.commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
-            args = ['clone', self.url, self.stage.source_path]
-            if not spack.config.get('config:debug'):
-                args.insert(1, '--quiet')
-            git(*args)
+            debug = spack.config.get('config:debug')
+
+            clone_args = ['clone', self.url]
+            if not debug:
+                clone_args.insert(1, '--quiet')
+            with temp_cwd():
+                git(*clone_args)
+                repo_name = get_single_file('.')
+                self.stage.srcdir = repo_name
+                shutil.move(repo_name, self.stage.source_path)
 
             with working_dir(self.stage.source_path):
-                args = ['checkout', self.commit]
-                if not spack.config.get('config:debug'):
-                    args.insert(1, '--quiet')
-                git(*args)
+                checkout_args = ['checkout', self.commit]
+                if not debug:
+                    checkout_args.insert(1, '--quiet')
+                git(*checkout_args)
 
         else:
             # Can be more efficient if not checking out a specific commit.
@@ -719,21 +737,25 @@ class GitFetchStrategy(VCSFetchStrategy):
             if self.git_version > ver('1.7.10'):
                 args.append('--single-branch')
 
-            cloned = False
-            # Yet more efficiency, only download a 1-commit deep tree
-            if self.git_version >= ver('1.7.1'):
-                try:
-                    git(*(args + ['--depth', '1', self.url,
-                                  self.stage.source_path]))
-                    cloned = True
-                except spack.error.SpackError as e:
-                    # This will fail with the dumb HTTP transport
-                    # continue and try without depth, cleanup first
-                    tty.debug(e)
+            with temp_cwd():
+                cloned = False
+                # Yet more efficiency, only download a 1-commit deep tree
+                if self.git_version >= ver('1.7.1'):
+                    try:
+                        git(*(args + ['--depth', '1', self.url]))
+                        cloned = True
+                    except spack.error.SpackError as e:
+                        # This will fail with the dumb HTTP transport
+                        # continue and try without depth, cleanup first
+                        tty.debug(e)
 
-            if not cloned:
-                args.extend([self.url, self.stage.source_path])
-                git(*args)
+                if not cloned:
+                    args.extend([self.url])
+                    git(*args)
+
+                repo_name = get_single_file('.')
+                self.stage.srcdir = repo_name
+                shutil.move(repo_name, self.stage.source_path)
 
             with working_dir(self.stage.source_path):
                 # For tags, be conservative and check them out AFTER

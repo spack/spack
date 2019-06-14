@@ -605,6 +605,29 @@ def ancestor(dir, n=1):
     return parent
 
 
+def get_single_file(directory):
+    fnames = os.listdir(directory)
+    if len(fnames) != 1:
+        raise ValueError("Expected exactly 1 file, got {0}"
+                         .format(str(len(fnames))))
+    return fnames[0]
+
+
+@contextmanager
+def temp_cwd():
+    tmp_dir = tempfile.mkdtemp()
+    with working_dir(tmp_dir):
+        yield tmp_dir
+    shutil.rmtree(tmp_dir)
+
+
+@contextmanager
+def temp_rename(orig_path, temp_path):
+    shutil.move(orig_path, temp_path)
+    yield
+    shutil.move(temp_path, orig_path)
+
+
 def can_access(file_name):
     """True if we have read/write access to the file."""
     return os.access(file_name, os.R_OK | os.W_OK)
