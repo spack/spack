@@ -26,13 +26,14 @@ import os
 
 class Mutationpp(CMakePackage):
     """Mutation++ is an open-source library originally developed
-    at the von Karman Institute for Fluid Dynamics, designed to 
-    couple with conventional computational fluid dynamics codes 
-    to provide thermodynamic, transport, chemistry, and energy 
+    at the von Karman Institute for Fluid Dynamics, designed to
+    couple with conventional computational fluid dynamics codes
+    to provide thermodynamic, transport, chemistry, and energy
     transfer properties associated with subsonic to hypersonic flows."""
 
     homepage = "https://github.com/mutationpp/Mutationpp"
     url      = "https://github.com/mutationpp/Mutationpp/archive/v0.3.1.tar.gz"
+
     version('0.3.1', 'a6da2816e145ac9fcfbd8920595b7f65ce7bc8df0bec572b32647720758cbe69')
 
     variant('fortran', default=True)
@@ -40,7 +41,7 @@ class Mutationpp(CMakePackage):
     variant('examples', default=True)
 
     def cmake_args(self):
-        args=[]
+        args = []
         if '+fortran' in self.spec:
             args.append('-DBUILD_FORTRAN_WRAPPER=ON')
         return args
@@ -59,7 +60,7 @@ class Mutationpp(CMakePackage):
         run_env.set('MPP_DIRECTORY', self.prefix)
         if os.path.isdir(join_path(self.prefix, 'data')):
             run_env.set('MPP_DATA_DIRECTORY', join_path(self.prefix, 'data'))
-    
+
     def setup_dependent_environment(self, spack_env, run_env):
         spack_env.set('MPP_DIRECTORY', self.prefix)
         if os.path.isdir(join_path(self.prefix, 'data')):
