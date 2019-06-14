@@ -527,17 +527,15 @@ class VCSFetchStrategy(FetchStrategy):
             for p in patterns:
                 tar.add_default_arg('--exclude=%s' % p)
 
-        if self.stage.srcdir:
-            with temp_cwd() as cwd:
-                tmp_repo_path = os.path.join(cwd, self.stage.srcdir)
+        with working_dir(self.stage.path):
+            if self.stage.srcdir:
                 # Here we create an archive with the default repository name.
                 # The 'tar' command has options for changing the name of a
                 # directory that is included in the archive, but they differ
                 # based on OS, so we temporarily rename the repo
-                with temp_rename(self.stage.source_path, tmp_repo_path):
+                with temp_rename(self.stage.source_path, self.stage.srcdir):
                     tar('-czf', destination, self.stage.srcdir)
-        else:
-            with working_dir(self.stage.path):
+            else:
                 tar('-czf', destination,
                     os.path.basename(self.stage.source_path))
 
