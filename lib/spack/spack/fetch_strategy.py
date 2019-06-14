@@ -857,8 +857,13 @@ class SvnFetchStrategy(VCSFetchStrategy):
         args = ['checkout', '--force', '--quiet']
         if self.revision:
             args += ['-r', self.revision]
-        args.extend([self.url, self.stage.source_path])
-        self.svn(*args)
+        args.extend([self.url])
+
+        with temp_cwd():
+            self.svn(*args)
+            repo_name = get_single_file('.')
+            self.stage.srcdir = repo_name
+            shutil.move(repo_name, self.stage.source_path)
 
     def _remove_untracked_files(self):
         """Removes untracked files in an svn repository."""
@@ -966,8 +971,13 @@ class HgFetchStrategy(VCSFetchStrategy):
         if self.revision:
             args.extend(['-r', self.revision])
 
-        args.extend([self.url, self.stage.source_path])
-        self.hg(*args)
+        args.extend([self.url])
+
+        with temp_cwd():
+            self.hg(*args)
+            repo_name = get_single_file('.')
+            self.stage.srcdir = repo_name
+            shutil.move(repo_name, self.stage.source_path)
 
     def archive(self, destination):
         super(HgFetchStrategy, self).archive(destination, exclude='.hg')
