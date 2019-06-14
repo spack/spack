@@ -1243,7 +1243,8 @@ class IntelPackage(PackageBase):
 
     @run_after('install')
     def configure_auto_dispatch(self):
-        if 'auto_dispatch=none' in self.spec:
+        if ('auto_dispatch' not in self.spec or
+            'auto_dispatch=none' in self.spec):
             return
 
         # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-using-configuration-files
