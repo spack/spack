@@ -387,8 +387,6 @@ class URLFetchStrategy(FetchStrategy):
                 shutil.move(tarball_container, self.stage.source_path)
 
         else:
-            # TODO: note this is note specifically an issue with resources,
-            # but I think there was an issue with handling exploding tarballs
             os.makedirs(self.stage.source_path)
             for fname in non_hidden:
                 fpath = os.path.join(tarball_container, fname)
