@@ -455,8 +455,10 @@ def working_dir(dirname, **kwargs):
 
     orig_dir = os.getcwd()
     os.chdir(dirname)
-    yield
-    os.chdir(orig_dir)
+    try:
+        yield
+    finally:
+        os.chdir(orig_dir)
 
 
 @contextmanager
@@ -616,16 +618,20 @@ def get_single_file(directory):
 @contextmanager
 def temp_cwd():
     tmp_dir = tempfile.mkdtemp()
-    with working_dir(tmp_dir):
-        yield tmp_dir
-    shutil.rmtree(tmp_dir)
+    try:
+        with working_dir(tmp_dir):
+            yield tmp_dir
+    finally:
+        shutil.rmtree(tmp_dir)
 
 
 @contextmanager
 def temp_rename(orig_path, temp_path):
     shutil.move(orig_path, temp_path)
-    yield
-    shutil.move(temp_path, orig_path)
+    try:
+        yield
+    finally:
+        shutil.move(temp_path, orig_path)
 
 
 def can_access(file_name):
