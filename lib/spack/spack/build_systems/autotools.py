@@ -79,10 +79,10 @@ class AutotoolsPackage(PackageBase):
     # Tarball releases generally come with a generated `configure` script,
     # however, non-tarball versions need the following dependencies to
     # generate this `configure` script during the `autoreconf` phase.
-    depends_on('automake', when='@develop,master')
-    depends_on('autoconf', when='@develop,master')
-    depends_on('libtool', when='@develop,master')
-    depends_on('m4', when='@develop,master')
+    depends_on('automake', type='build', when='@develop,master')
+    depends_on('autoconf', type='build', when='@develop,master')
+    depends_on('libtool',  type='build', when='@develop,master')
+    depends_on('m4',       type='build', when='@develop,master')
 
     @property
     def archive_files(self):
