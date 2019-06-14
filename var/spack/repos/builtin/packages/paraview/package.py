@@ -210,7 +210,8 @@ class Paraview(CMakePackage):
         if '+python' in spec or '+python3' in spec:
             cmake_args.extend([
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
-                '-DPYTHON_EXECUTABLE:FILEPATH=%s' % spec['python'].command.path,
+                '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
+                spec['python'].command.path,
                 '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
             ])
         else:
