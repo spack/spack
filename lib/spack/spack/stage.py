@@ -296,18 +296,13 @@ class Stage(object):
     def expected_archive_files(self):
         """Possible archive file paths."""
         paths = []
-        roots = [self.path]
-        if self.expanded:
-            roots.insert(0, self.source_path)
+        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+            paths.append(os.path.join(
+                self.path, os.path.basename(self.default_fetcher.url)))
 
-        for path in roots:
-            if isinstance(self.default_fetcher, fs.URLFetchStrategy):
-                paths.append(os.path.join(
-                    path, os.path.basename(self.default_fetcher.url)))
-
-            if self.mirror_path:
-                paths.append(os.path.join(
-                    path, os.path.basename(self.mirror_path)))
+        if self.mirror_path:
+            paths.append(os.path.join(
+                self.path, os.path.basename(self.mirror_path)))
 
         return paths
 
