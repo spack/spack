@@ -14,6 +14,7 @@ from subprocess import check_call
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir, force_remove
+from spack.directives import depends_on
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
