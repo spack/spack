@@ -178,6 +178,16 @@ def get_stage_path(stage, stage_name):
 
 
 @pytest.fixture
+def no_path_for_stage(monkeypatch):
+    """Ensure there is no accessible path for staging."""
+    def _no_stage_path(paths):
+        return None
+
+    monkeypatch.setattr(spack.stage, '_first_accessible_path', _no_stage_path)
+    yield
+
+
+@pytest.fixture
 def no_tmp_root_stage(monkeypatch):
     """
     Disable use of a temporary root for staging.
@@ -670,6 +680,13 @@ class TestStage(object):
     def test_get_tmp_root_no_use(self, no_tmp_root_stage):
         """Ensure not using tmp root results in no path."""
         assert spack.stage.get_tmp_root() is None
+
+    def test_get_tmp_root_no_stage_path(self, tmp_root_stage,
+                                        no_path_for_stage):
+        """Ensure using tmp root with no stage path raises StageError."""
+        with pytest.raises(spack.stage.StageError,
+                           match="No accessible stage paths in"):
+            spack.stage.get_tmp_root()
 
     def test_get_tmp_root_non_user_path(self, tmp_root_stage,
                                         non_user_path_for_stage):
