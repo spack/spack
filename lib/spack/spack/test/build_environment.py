@@ -205,7 +205,7 @@ def test_spack_paths_before_module_paths(
     assert paths.index(spack_path) < paths.index(module_path)
 
 
-def test_package_inheritance_module_setup(config, mock_packages):
+def test_package_inheritance_module_setup(config, mock_packages, working_env):
     s = spack.spec.Spec('multimodule-inheritance')
     s.concretize()
     pkg = s.package
@@ -216,8 +216,6 @@ def test_package_inheritance_module_setup(config, mock_packages):
 
     assert pkg.use_module_variable() == 'test_module_variable'
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
-
-    os.environ.pop('TEST_MODULE_VAR')
 
 
 def test_set_build_environment_variables(
@@ -281,3 +279,20 @@ def test_set_build_environment_variables(
 
     finally:
         delattr(dep_pkg, 'libs')
+
+
+def test_parallel_false_is_not_propagating(config, mock_packages):
+    class AttributeHolder(object):
+        pass
+
+    # Package A has parallel = False and depends on B which instead
+    # can be built in parallel
+    s = spack.spec.Spec('a foobar=bar')
+    s.concretize()
+
+    for spec in s.traverse():
+        expected_jobs = spack.config.get('config:build_jobs') \
+            if s.package.parallel else 1
+        m = AttributeHolder()
+        spack.build_environment._set_variables_for_single_module(s.package, m)
+        assert m.make_jobs == expected_jobs

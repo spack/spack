@@ -25,7 +25,7 @@ class Gplates(CMakePackage):
     # Qt 5 does not support (at least) the Q_WS_* constants.
     depends_on('qt+opengl@4.4.0:4.99')
     depends_on('qwt@6.0.1:')
-    depends_on('mesa-glu')
+    depends_on('glu')
     depends_on('glew')
     # GDAL's OGRSFDriverRegistrar is not compatible anymore starting with 2.0.
     depends_on('gdal@1.3.2:1.99')

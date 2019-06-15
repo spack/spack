@@ -22,6 +22,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.7.0', tag='v3.7.0')
     version('3.6.0', tag='v3.6.0')
     version('3.5.0', tag='v3.5.0')
     version('3.4.0', tag='v3.4.0')
@@ -39,7 +40,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     variant('mixed', default=False,
             description='Build the mixed precision (mixture of single and '
                         'double precision) version for gpu and cpu')
-    variant('soa', default=False,
+    variant('soa', default=True,
             description='Build with Structure-of-Array instead of '
                         'Array-of-Structure code. Only for CPU code'
                         'and only in mixed precision')
@@ -50,7 +51,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
     variant('qe', default=True,
-            description='Install with patched Quantum Espresso 6.3.0')
+            description='Install with patched Quantum Espresso 6.4.0')
 
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
@@ -140,16 +141,16 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('py-matplotlib', when='+gui', type='run')
 
     # B-spline basis calculation require a patched version of
-    # Quantum Espresso 6.3 (see QMCPACK manual)
+    # Quantum Espresso 6.4 (see QMCPACK manual)
     # Building explicitly without ELPA due to issues in Quantum Espresso
     # Spack package
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
-    patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
-    depends_on('quantum-espresso@6.3~elpa+mpi hdf5=parallel',
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
+    patch_checksum = 'ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994'
+    depends_on('quantum-espresso@6.4~elpa+mpi hdf5=parallel',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                    when='+qe+mpi', type='run')
 
-    depends_on('quantum-espresso@6.3~elpa~scalapack~mpi hdf5=serial',
+    depends_on('quantum-espresso@6.4~elpa~scalapack~mpi hdf5=serial',
                patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
                    when='+qe~mpi', type='run')
 
@@ -169,6 +170,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     patch_checksum = 'c066c79901a612cf8848135e0d544efb114534cca70b90bfccc8ed989d3d9dde'
     patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
+    flag_handler = CMakePackage.build_system_flags
+
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
         # for libxml2, so we fix that.
@@ -180,16 +183,6 @@ class Qmcpack(CMakePackage, CudaPackage):
         spec = self.spec
         args = []
 
-        # This bit of code is needed in order to pass compiler.yaml flags
-        # into the QMCPACK's CMake. Probably the CMake base class in
-        # the code of Spack should be doing this instead. Otherwise, it
-        # it would need to be done on a per package basis which is
-        # problematic.
-        cflags = spec.compiler_flags['cflags']
-        cxxflags = spec.compiler_flags['cxxflags']
-        args.append('-DCMAKE_C_FLAGS=%s' % ' '.join(cflags))
-        args.append('-DCMAKE_CXX_FLAGS=%s' % ' '.join(cxxflags))
-
         # This issue appears specifically with the the Intel compiler,
         # but may be an issue with other compilers as well. The final fix
         # probably needs to go into QMCPACK's CMake instead of in Spack.
@@ -199,12 +192,6 @@ class Qmcpack(CMakePackage, CudaPackage):
         # add a libray from the Intel Fortran compiler.
         if '%intel' in spec:
             args.append('-DQMC_EXTRA_LIBS=-lifcore')
-
-        if '+mpi' in spec:
-            mpi = spec['mpi']
-            args.append('-DCMAKE_C_COMPILER={0}'.format(mpi.mpicc))
-            args.append('-DCMAKE_CXX_COMPILER={0}'.format(mpi.mpicxx))
-            args.append('-DMPI_BASE_DIR:PATH={0}'.format(mpi.prefix))
 
         # Currently FFTW_HOME and LIBXML2_HOME are used by CMake.
         # Any CMake warnings about other variables are benign.
@@ -318,10 +305,27 @@ class Qmcpack(CMakePackage, CudaPackage):
     # QMCPACK 3.6.0 release and later has a functional 'make install',
     # the Spack 'def install' is retained for backwards compatiblity.
     # Note that the two install methods differ in their directory
-    # structure.
+    # structure. Additionally, we follow the recommendation on the Spack
+    # website for defining the compilers to be the MPI compiler wrappers.
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html#compiler-wrappers
+    @when('@3.6.0:')
+    def install(self, spec, prefix):
+        if '+mpi' in spec:
+            env['CC'] = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+            env['F77'] = spec['mpi'].mpif77
+            env['FC'] = spec['mpi'].mpifc
+
+        with working_dir(self.build_directory):
+            make('install')
+
     @when('@:3.5.0')
     def install(self, spec, prefix):
-        """Make the install targets"""
+        if '+mpi' in spec:
+            env['CC'] = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+            env['F77'] = spec['mpi'].mpif77
+            env['FC'] = spec['mpi'].mpifc
 
         # QMCPACK 'make install' does nothing, which causes
         # Spack to throw an error.

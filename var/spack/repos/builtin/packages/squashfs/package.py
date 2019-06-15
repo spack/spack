@@ -22,6 +22,7 @@ class Squashfs(MakefilePackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
+    depends_on('zlib')
 
     def build(self, spec, prefix):
         with working_dir('squashfs-tools'):
@@ -29,4 +30,4 @@ class Squashfs(MakefilePackage):
 
     def install(self, spec, prefix):
         with working_dir('squashfs-tools'):
-            make('install', 'INSTALL_DIR=%s' % prefix, parallel=False)
+            make('install', 'INSTALL_DIR=%s' % prefix.bin, parallel=False)

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os.path
 
 
 class LuaLuafilesystem(Package):
@@ -19,6 +19,7 @@ class LuaLuafilesystem(Package):
     homepage = 'http://keplerproject.github.io/luafilesystem'
     url = 'https://github.com/keplerproject/luafilesystem/archive/v1_6_3.tar.gz'
 
+    version('1_7_0_2', sha256='23b4883aeb4fb90b2d0f338659f33a631f9df7a7e67c54115775a77d4ac3cc59')
     version('1_6_3', 'bed11874cfded8b4beed7dd054127b24')
 
     # The version constraint here comes from this post:
@@ -29,10 +30,19 @@ class LuaLuafilesystem(Package):
     depends_on('git@1.9.0:', type='build')
     extends('lua')
 
+    @property
+    def rockspec(self):
+        version = self.spec.version
+        semver = version[0:3]
+        tweak_level = version[3] if len(version) > 3 else 1
+        fmt = os.path.join(
+            self.stage.source_path,
+            'rockspecs',
+            'luafilesystem-{semver.dotted}-{tweak_level}.rockspec'
+        )
+        return fmt.format(
+            version=version, semver=semver, tweak_level=tweak_level
+        )
+
     def install(self, spec, prefix):
-        rockspec_fmt = join_path(self.stage.path,
-                                 'luafilesystem-{version.underscored}',
-                                 'rockspecs',
-                                 'luafilesystem-{version.dotted}-1.rockspec')
-        luarocks('--tree=' + prefix, 'install',
-                 rockspec_fmt.format(version=self.spec.version))
+        luarocks('--tree=' + prefix, 'install', self.rockspec)

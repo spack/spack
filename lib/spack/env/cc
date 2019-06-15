@@ -103,25 +103,25 @@ case "$command" in
     cpp)
         mode=cpp
         ;;
-    cc|c89|c99|gcc|clang|armclang|icc|pgcc|xlc|xlc_r)
+    cc|c89|c99|gcc|clang|armclang|icc|pgcc|xlc|xlc_r|fcc)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|pgc++|xlc++|xlc++_r)
+    c++|CC|g++|clang++|armclang++|icpc|pgc++|xlc++|xlc++_r|FCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         ;;
-    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|pgfortran|xlf90|xlf90_r|nagfor)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|pgfortran|xlf90|xlf90_r|nagfor|frt)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         ;;
-    f77|xlf|xlf_r|pgf77)
+    f77|xlf|xlf_r|pgf77|frt)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
@@ -381,6 +381,17 @@ case "$mode" in
     ld|ccld)
         flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
 esac
+
+# On macOS insert headerpad_max_install_names linker flag
+if [[ ($mode == ld || $mode == ccld) && "$SPACK_SHORT_SPEC" =~ "darwin" ]];
+then
+    case "$mode" in
+        ld)
+            flags=("${flags[@]}" -headerpad_max_install_names) ;;
+        ccld)
+            flags=("${flags[@]}" -Wl,-headerpad_max_install_names) ;;
+    esac
+fi
 
 # Prepend include directories
 IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"

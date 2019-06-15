@@ -37,6 +37,7 @@ class Curl(AutotoolsPackage):
     variant('libssh2',    default=False, description='enable libssh2 support')
     variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
     variant('darwinssl',  default=sys.platform == 'darwin', description="use Apple's SSL/TLS implementation")
+    variant('gssapi',     default=False, description='enable Kerberos support')
 
     conflicts('+libssh', when='@:7.57.99')
     # on OSX and --with-ssh the configure steps fails with
@@ -53,6 +54,7 @@ class Curl(AutotoolsPackage):
     depends_on('nghttp2', when='+nghttp2')
     depends_on('libssh2', when='+libssh2')
     depends_on('libssh', when='+libssh')
+    depends_on('krb5', when='+gssapi')
 
     def configure_args(self):
         spec = self.spec
@@ -62,6 +64,9 @@ class Curl(AutotoolsPackage):
             args.append('--with-darwinssl')
         else:
             args.append('--with-ssl={0}'.format(spec['openssl'].prefix))
+
+        if spec.satisfies('+gssapi'):
+            args.append('--with-gssapi={0}'.format(spec['krb5'].prefix))
 
         args += self.with_or_without('nghttp2')
         args += self.with_or_without('libssh2')

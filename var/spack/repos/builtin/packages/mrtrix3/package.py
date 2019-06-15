@@ -19,7 +19,7 @@ class Mrtrix3(Package):
 
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('mesa-glu')
+    depends_on('glu')
     depends_on('qt+opengl@4.7:')
     depends_on('eigen')
     depends_on('zlib')

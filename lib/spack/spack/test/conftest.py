@@ -9,7 +9,7 @@ import inspect
 import os
 import os.path
 import shutil
-import re
+import xml.etree.ElementTree
 
 import ordereddict_backport
 import py
@@ -19,6 +19,7 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import remove_linked_tree
 
 import spack.architecture
+import spack.compilers
 import spack.config
 import spack.caches
 import spack.database
@@ -142,7 +143,11 @@ def remove_whatever_it_is(path):
 def working_env():
     saved_env = os.environ.copy()
     yield
-    os.environ = saved_env
+    # os.environ = saved_env doesn't work
+    # it causes module_parsing::test_module_function to fail
+    # when it's run after any test using this fixutre
+    os.environ.clear()
+    os.environ.update(saved_env)
 
 
 @pytest.fixture(scope='function', autouse=True)
@@ -196,6 +201,21 @@ def mock_fetch_cache(monkeypatch):
             return "[mock fetch cache]"
 
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
+
+
+@pytest.fixture(autouse=True)
+def _skip_if_missing_executables(request):
+    """Permits to mark tests with 'require_executables' and skip the
+    tests if the executables passed as arguments are not found.
+    """
+    if request.node.get_marker('requires_executables'):
+        required_execs = request.node.get_marker('requires_executables').args
+        missing_execs = [
+            x for x in required_execs if spack.util.executable.which(x) is None
+        ]
+        if missing_execs:
+            msg = 'could not find executables: {0}'
+            pytest.skip(msg.format(', '.join(missing_execs)))
 
 
 # FIXME: The lines below should better be added to a fixture with
@@ -273,7 +293,10 @@ def configuration_dir(tmpdir_factory, linux_os):
     content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
     t.write(content)
-    return tmpdir
+    yield tmpdir
+
+    # Once done, cleanup the directory
+    shutil.rmtree(str(tmpdir))
 
 
 @pytest.fixture(scope='module')
@@ -284,7 +307,11 @@ def config(configuration_dir):
 
     real_configuration = spack.config.config
 
-    test_scopes = [
+    defaults = spack.config.InternalConfigScope(
+        '_builtin', spack.config.config_defaults
+    )
+    test_scopes = [defaults]
+    test_scopes += [
         spack.config.ConfigScope(name, str(configuration_dir.join(name)))
         for name in ['site', 'system', 'user']]
     test_scopes.append(spack.config.InternalConfigScope('command_line'))
@@ -298,22 +325,24 @@ def config(configuration_dir):
 
 
 @pytest.fixture(scope='function')
-def mutable_config(tmpdir_factory, configuration_dir, config):
+def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
     """Like config, but tests can modify the configuration."""
     spack.package_prefs.PackagePrefs.clear_caches()
 
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
-    real_configuration = spack.config.config
-
-    spack.config.config = spack.config.Configuration(
+    cfg = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
+    monkeypatch.setattr(spack.config, 'config', cfg)
+
+    # This is essential, otherwise the cache will create weird side effects
+    # that will compromise subsequent tests if compilers.yaml is modified
+    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
 
     yield spack.config.config
 
-    spack.config.config = real_configuration
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
@@ -511,12 +540,12 @@ def mock_archive(tmpdir_factory):
     tar = spack.util.executable.which('tar', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-archive-dir')
-    expanded_archive_basedir = 'mock-archive-repo'
-    tmpdir.ensure(expanded_archive_basedir, dir=True)
-    repodir = tmpdir.join(expanded_archive_basedir)
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
 
     # Create the configure script
-    configure_path = str(tmpdir.join(expanded_archive_basedir, 'configure'))
+    configure_path = str(tmpdir.join(spack.stage._source_path_subdir,
+                                     'configure'))
     with open(configure_path, 'w') as f:
         f.write(
             "#!/bin/sh\n"
@@ -533,8 +562,8 @@ def mock_archive(tmpdir_factory):
 
     # Archive it
     with tmpdir.as_cwd():
-        archive_name = '{0}.tar.gz'.format(expanded_archive_basedir)
-        tar('-czf', archive_name, expanded_archive_basedir)
+        archive_name = '{0}.tar.gz'.format(spack.stage._source_path_subdir)
+        tar('-czf', archive_name, spack.stage._source_path_subdir)
 
     Archive = collections.namedtuple('Archive',
                                      ['url', 'path', 'archive_file',
@@ -546,7 +575,7 @@ def mock_archive(tmpdir_factory):
         url=('file://' + archive_file),
         archive_file=archive_file,
         path=str(repodir),
-        expanded_archive_basedir=expanded_archive_basedir)
+        expanded_archive_basedir=spack.stage._source_path_subdir)
 
 
 @pytest.fixture(scope='session')
@@ -557,9 +586,8 @@ def mock_git_repository(tmpdir_factory):
     git = spack.util.executable.which('git', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
-    expanded_archive_basedir = 'mock-git-repo'
-    tmpdir.ensure(expanded_archive_basedir, dir=True)
-    repodir = tmpdir.join(expanded_archive_basedir)
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
 
     # Initialize the repository
     with repodir.as_cwd():
@@ -631,9 +659,8 @@ def mock_hg_repository(tmpdir_factory):
     hg = spack.util.executable.which('hg', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-hg-repo-dir')
-    expanded_archive_basedir = 'mock-hg-repo'
-    tmpdir.ensure(expanded_archive_basedir, dir=True)
-    repodir = tmpdir.join(expanded_archive_basedir)
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
 
     get_rev = lambda: hg('id', '-i', output=str).strip()
 
@@ -677,9 +704,8 @@ def mock_svn_repository(tmpdir_factory):
     svnadmin = spack.util.executable.which('svnadmin', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-svn-stage')
-    expanded_archive_basedir = 'mock-svn-repo'
-    tmpdir.ensure(expanded_archive_basedir, dir=True)
-    repodir = tmpdir.join(expanded_archive_basedir)
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
     url = 'file://' + str(repodir)
 
     # Initialize the repository
@@ -721,12 +747,9 @@ def mock_svn_repository(tmpdir_factory):
     }
 
     def get_rev():
-        output = svn('info', output=str)
-        assert "Revision" in output
-        for line in output.split('\n'):
-            match = re.match(r'Revision: (\d+)', line)
-            if match:
-                return match.group(1)
+        output = svn('info', '--xml', output=str)
+        info = xml.etree.ElementTree.fromstring(output)
+        return info.find('entry/commit').get('revision')
 
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t

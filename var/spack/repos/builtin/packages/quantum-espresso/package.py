@@ -20,6 +20,7 @@ class QuantumEspresso(Package):
     url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.3/q-e-qe-6.3.tar.gz'
     git = 'https://gitlab.com/QEF/q-e.git'
 
+    version('6.4', sha256='781366d03da75516fdcf9100a1caadb26ccdd1dedd942a6f8595ff0edca74bfe')
     version('6.3',   '1b67687d90d1d16781d566d44d14634c')
     version('6.2.1', '769cc973382156bffd35254c3dbaf453')
     version('6.2.0', '972176a58d16ae8cf0c9a308479e2b97')
@@ -216,13 +217,13 @@ class QuantumEspresso(Package):
             # Spec for elpa
             elpa = spec['elpa']
 
-            # Find where the Fortran module resides
-            elpa_module = find(elpa.prefix, 'elpa.mod')
-
             # Compute the include directory from there: versions
             # of espresso prior to 6.1 requires -I in front of the directory
             elpa_include = '' if '@6.1:' in spec else '-I'
-            elpa_include += os.path.dirname(elpa_module[0])
+            elpa_include += os.path.join(
+                elpa.headers.directories[0],
+                'modules'
+            )
 
             options.extend([
                 '--with-elpa-include={0}'.format(elpa_include),

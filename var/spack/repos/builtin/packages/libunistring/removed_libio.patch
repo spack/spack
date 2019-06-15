@@ -1,0 +1,21 @@
+--- a/lib/fseterr.c
++++ b/lib/fseterr.c
+@@ -32,13 +32,17 @@
+ 
+ #include "stdio-impl.h"
+ 
++/* This file is not used on systems that have the __fseterr function,
++   namely musl libc.  */
++
+ void
+ fseterr (FILE *fp)
+ {
+   /* Most systems provide FILE as a struct and the necessary bitmask in
+      <stdio.h>, because they need it for implementing getc() and putc() as
+      fast macros.  */
+-#if defined _IO_ftrylockfile || __GNU_LIBRARY__ == 1 /* GNU libc, BeOS, Haiku, Linux libc5 */
++#if defined _IO_EOF_SEEN || defined _IO_ftrylockfile || __GNU_LIBRARY__ == 1
++  /* GNU libc, BeOS, Haiku, Linux libc5 */
+   fp->_flags |= _IO_ERR_SEEN;
+ #elif defined __sferror || defined __DragonFly__ || defined __ANDROID__
+   /* FreeBSD, NetBSD, OpenBSD, DragonFly, Mac OS X, Cygwin, Minix 3, Android */

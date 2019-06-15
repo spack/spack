@@ -31,6 +31,7 @@ class Qt(Package):
     version('5.3.2',  'febb001129927a70174467ecb508a682')
     version('5.2.1',  'a78408c887c04c34ce615da690e0b4c8')
     version('4.8.6',  '2edbe4d6c2eff33ef91732602f3518eb')
+    version('4.8.5',  '1864987bdbb2f58f8ae8b350dfdbe133')
     version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009')
 
     # Add patch for compile issues with qt3 found with use in the
@@ -80,11 +81,15 @@ class Qt(Package):
     patch('qt4-gcc-and-webkit.patch', when='@4')
 
     # Fix build failure with newer versions of GCC
+    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch',
+          sha256='e10c871033568a9aed982628ed627356761f72f63c5fdaf11882dc147528e9ed',
+          working_dir='qtbase',
+          when='@5.10:5.12.0 %gcc@9:')
+
     # https://bugreports.qt.io/browse/QTBUG-74196
-    patch('https://github.com/qt/qtscript/commit/97ec1d1882a83c23c91f0f7daea48e05858d8c32.patch',
-          sha256='ae88481a3ff63ab058cf9da6f5ae4397a983903109d907fb2ce4fcf91f9ca5e6',
-          working_dir='qtscript',
-          when='@5.0:5.12 %gcc@8.3:')
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89585
+    patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
+    patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
 
     depends_on("pkgconfig", type='build')
     # Use system openssl for security.
@@ -103,7 +108,7 @@ class Qt(Package):
     depends_on("icu4c")
     depends_on("fontconfig", when=(sys.platform != 'darwin'))  # (Unix only)
     depends_on("freetype")
-    depends_on("sqlite")
+    depends_on("sqlite", type=('build', 'run'))
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("double-conversion", when='@5.7:')

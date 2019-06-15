@@ -11,8 +11,9 @@ class Revbayes(CMakePackage):
        and an interpreted language."""
 
     homepage = "https://revbayes.github.io"
-    url      = "https://github.com/revbayes/revbayes/archive/v1.0.10.tar.gz"
+    url      = "https://github.com/revbayes/revbayes/archive/v1.0.11.tar.gz"
 
+    version('1.0.11', sha256='7e81b1952e3a63cb84617fa632f4ccdf246b4d79e7d537a423540de047dadf50')
     version('1.0.10', sha256='95e9affe8ca8d62880cf46778b6ec9dd8726e62a185670ebcbadf2eb2bb79f93')
     version('1.0.4', '5d6de96bcb3b2686b270856de3555a58',
             url='https://github.com/revbayes/revbayes/archive/v1.0.4-release.tar.gz')
@@ -40,6 +41,8 @@ class Revbayes(CMakePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         if '+mpi' in spec:
-            install('rb-mpi', prefix.bin)
+            install_path = join_path(self.build_directory, '..', 'rb-mpi')
+            install(install_path, prefix.bin)
         else:
-            install('rb', prefix.bin)
+            install_path = join_path(self.build_directory, '..', 'rb')
+            install(install_path, prefix.bin)

@@ -21,6 +21,7 @@ class Lammps(CMakePackage):
     tags = ['ecp', 'ecp-apps']
 
     version('develop', branch='master')
+    version('20190605', sha256='c7b35090aef7b114d2b47a7298c1e8237dd811da87995c997bf7639cca743152')
     version('20181212', sha256='ccc5d2c21c4b62ce4afe7b3a0fe2f37b83e5a5e43819b7c2e2e255cce2ce0f24')
     version('20181207', sha256='d92104d008a7f1d0b6071011decc5c6dc8b936a3418b20bd34b055371302557f')
     version('20181127', sha256='c076b633eda5506f895de4c73103df8b995d9fec01be82c67c7608efcc345179')
@@ -58,6 +59,15 @@ class Lammps(CMakePackage):
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
             description='Build with mpi')
+    variant('jpeg', default=True,
+            description='Build with jpeg support')
+    variant('png', default=True,
+            description='Build with png support')
+    variant('ffmpeg', default=True,
+            description='Build with ffmpeg support')
+    variant('openmp', default=True, description='Build with OpenMP')
+    variant('exceptions', default=False,
+            description='Build with lammps exceptions')
 
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
@@ -75,6 +85,9 @@ class Lammps(CMakePackage):
     depends_on('mpi', when='+user-lb')
     depends_on('mpi', when='+user-h5md')
     depends_on('hdf5', when='+user-h5md')
+    depends_on('libjpeg', when='+jpeg')
+    depends_on('libpng', when='+png')
+    depends_on('ffmpeg', when='+ffmpeg')
 
     conflicts('+body', when='+poems@:20180628')
     conflicts('+latte', when='@:20170921')
@@ -84,6 +97,7 @@ class Lammps(CMakePackage):
     conflicts('+user-misc', when='~manybody')
     conflicts('+user-phonon', when='~kspace')
     conflicts('+user-misc', when='~manybody')
+    conflicts('%gcc@9:', when='+openmp')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
@@ -102,13 +116,24 @@ class Lammps(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS={0}'.format(
                 'ON' if '+lib' in spec else 'OFF'),
+            '-DLAMMPS_EXCEPTIONS={0}'.format(
+                'ON' if '+exceptions' in spec else 'OFF'),
             '-D{0}_MPI={1}'.format(
                 mpi_prefix,
-                'ON' if '+mpi' in spec else 'OFF')
+                'ON' if '+mpi' in spec else 'OFF'),
+            '-DBUILD_OMP={0}'.format(
+                'ON' if '+openmp' in spec else 'OFF'),
         ]
 
         if spec.satisfies('@20180629:+lib'):
             args.append('-DBUILD_LIB=ON')
+
+        args.append('-DWITH_JPEG={0}'.format(
+            'ON' if '+jpeg' in spec else 'OFF'))
+        args.append('-DWITH_PNG={0}'.format(
+            'ON' if '+png' in spec else 'OFF'))
+        args.append('-DWITH_FFMPEG={0}'.format(
+            'ON' if '+ffmpeg' in spec else 'OFF'))
 
         for pkg in self.supported_packages:
             opt = '-D{0}_{1}'.format(pkg_prefix, pkg.upper())

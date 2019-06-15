@@ -13,6 +13,7 @@ class Nco(AutotoolsPackage):
     homepage = "http://nco.sourceforge.net/"
     url      = "https://github.com/nco/nco/archive/4.6.7.tar.gz"
 
+    version('4.7.9', '048f6298bceb40913c3ae433f875dea1e9129b1c86019128e7271d08f274a879')
     version('4.6.7', 'b04c92aa715d3fad3ebebd1fd178ce32')
     version('4.6.6', 'df6fa47aaf6e41adfc0631912a7a341f')
     version('4.6.5', '2afd34a6bb5ff6c7ed39cf40c917b6e4')
@@ -23,7 +24,7 @@ class Nco(AutotoolsPackage):
     version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
 
     # https://github.com/nco/nco/issues/43
-    patch('NUL-0-NULL.patch')
+    patch('NUL-0-NULL.patch', when='@:4.6.7')
 
     variant('doc', default=False, description='Build/install NCO TexInfo-based documentation')
 
@@ -37,6 +38,8 @@ class Nco(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('texinfo@4.12:', type='build', when='+doc')
+
+    conflicts('%gcc@9:', when='@:4.7.8')
 
     def configure_args(self):
         spec = self.spec
