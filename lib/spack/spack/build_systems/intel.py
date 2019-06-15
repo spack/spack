@@ -1170,6 +1170,7 @@ class IntelPackage(PackageBase):
             'CONTINUE_WITH_OPTIONAL_ERROR':         'yes',
             'CONTINUE_WITH_INSTALLDIR_OVERWRITE':   'yes',
             'SIGNING_ENABLED':                      'no',
+            'INSTALL_MODE':                         'NONRPM',
 
             # Highly variable package specifics:
             'PSET_INSTALL_DIR':                     prefix,
