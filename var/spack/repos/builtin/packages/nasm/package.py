@@ -10,11 +10,12 @@ class Nasm(AutotoolsPackage):
     """NASM (Netwide Assembler) is an 80x86 assembler designed for
     portability and modularity. It includes a disassembler as well."""
 
-    homepage = "http://www.nasm.us"
-    url      = "http://www.nasm.us/pub/nasm/releasebuilds/2.13.03/nasm-2.13.03.tar.xz"
-    list_url = "http://www.nasm.us/pub/nasm/releasebuilds"
+    homepage = "https://www.nasm.us"
+    url      = "https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.xz"
+    list_url = "https://www.nasm.us/pub/nasm/releasebuilds"
     list_depth = 1
 
+    version('2.14.02', sha256='e24ade3e928f7253aa8c14aa44726d1edf3f98643f87c9d72ec1df44b26be8f5')
     version('2.13.03', 'd5ca2ad7121ccbae69dd606b1038532c')
     version('2.11.06', '2b958e9f5d200641e6fc9564977aecc5')
 
