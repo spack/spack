@@ -10,28 +10,31 @@ Tutorial: Spack 101
 =============================
 
 This is a full-day introduction to Spack with lectures and live demos.
-It was presented as a tutorial for staff at the `RIKEN Center for
-Computational Science (R-CCS)
-<http://www.riken.jp/en/research/labs/r-ccs/>`_.  You can use these
-materials to teach a course on Spack at your own site, or you can just
-skip ahead and read the live demo scripts to see how Spack is used in
-practice.
+It was last presented at the `International Supercomputing Conference
+<https://isc-hpc.com>`_ on June 16, 2019.  That instance was a half day
+tutorial, but the materials here include all the material you need for a
+full day.
+
+You can use these materials to teach a course on Spack at your own site,
+or you can just skip ahead and read the live demo scripts to see how
+Spack is used in practice.
 
 .. _sc16-slides:
 
 .. rubric:: Slides
 
 .. figure:: tutorial/sc16-tutorial-slide-preview.png
-   :target: https://spack.io/slides/Spack-RIKEN19-Tutorial.pdf
+   :target: https://spack.io/slides/Spack-ISC19-Tutorial.pdf
    :height: 72px
    :align: left
    :alt: Slide Preview
 
 `Download Slides <https://spack.io/slides/Spack-RIKEN19-Tutorial.pdf>`_.
 
-**Full citation:** Todd Gamblin, Gregory Becker, and Peter Scheibel.
-Managing HPC Software Complexity with Spack.  Tutorial presented at RIKEN
-Center for Computational Science. April 23, 2019.  Kobe, Japan.
+**Full citation:** Todd Gamblin, Gregory Becker, Massimiliano Culpo, and
+Michael Kuhn.  Managing HPC Software Complexity with Spack.  Tutorial
+presented at International Supercomputing Conference (ISC'19). June 16, 2019.
+Frankfurt, Germany.
 
 .. _sc16-live-demos:
 
