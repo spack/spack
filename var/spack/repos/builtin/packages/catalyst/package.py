@@ -212,9 +212,6 @@ class Catalyst(CMakePackage):
             '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
             '-DVTK_USE_OFFSCREEN:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
-            '-DPARAVIEW_ENABLE_PYTHON:BOOL=%s' %
-            'ON' if ('+python' in self.spec or '+python3' in self.spec)
-            else 'OFF'
         ]
         if '+python' in spec or '+python3' in spec:
             cmake_args.extend([
