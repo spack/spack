@@ -56,7 +56,7 @@ class PyMatplotlib(PythonPackage):
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')  # Patch to pick up correct freetype headers
 
     depends_on('py-numpy@1.6:', type=('build', 'run'))
-    depends_on('py-dateutil@1.1:', type=('build', 'run'))
+    depends_on('py-python-dateutil@1.1:', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'))
     depends_on('py-cycler@0.9:', type=('build', 'run'))
