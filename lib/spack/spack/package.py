@@ -1814,7 +1814,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.installed:
             return spack.store.layout.build_log_path(self.spec)
         else:
-            return os.path.join(self.stage.path, 'spack-build.txt')
+            return self.log_path
 
     @classmethod
     def inject_flags(cls, name, flags):
