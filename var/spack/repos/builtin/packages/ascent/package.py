@@ -90,8 +90,7 @@ class Ascent(Package):
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
-    # use old version of mpi4py to avoid build issues with cython
-    depends_on("py-mpi4py@2.0.0:2.9.999", when="+mpi+python+shared")
+    depends_on("py-mpi4py", when="+mpi+python+shared")
 
     #############################
     # TPLs for Runtime Features
