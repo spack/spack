@@ -627,7 +627,7 @@ def temp_cwd():
 
 @contextmanager
 def temp_rename(orig_path, temp_path):
-    same_path = os.path.abspath(orig_path) == os.path.abspath(temp_path)
+    same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
     if not same_path:
         shutil.move(orig_path, temp_path)
     try:
