@@ -3,7 +3,7 @@
 from spack import *
 import os
 import shutil
-
+import llnl.util.tty as tty
 
 class NeurodamusCore(Package):
     """Library of channels developed by Blue Brain Project, EPFL"""
@@ -11,9 +11,10 @@ class NeurodamusCore(Package):
     homepage = "ssh://bbpcode.epfl.ch/sim/neurodamus-core"
     git      = "ssh://bbpcode.epfl.ch/sim/neurodamus-core"
 
-    version('develop', git=git, branch='master')
-    version('2.3.3', git=git, tag='2.3.3', preferred=True)
-    version('2.2.1', git=git, tag='2.2.1')
+    version('develop', git=git, branch='master', clean=False)
+    version('2.3.4', git=git, tag='2.3.4', clean=False)
+    version('2.3.3', git=git, tag='2.3.3', clean=False)
+    version('2.2.1', git=git, tag='2.2.1', clean=False)
 
     variant('python', default=False, description="Enable Python Neurodamus")
     variant('common', default=False, description="Merge in synapse mechanisms hoc & mods")
@@ -45,6 +46,13 @@ class NeurodamusCore(Package):
             copy_all('resources/common/hoc', prefix.hoc)
             copy_all('resources/common/mod', prefix.mod)
 
+        filter_file(r'UNKNOWN_CORE_VERSION', r'%s' % spec.version, prefix.hoc.join('defvar.hoc'))
+
+        try:
+            commit_hash = self.fetcher[0].get_commit()
+            filter_file(r'UNKNOWN_CORE_HASH', r'\'%s\'' % commit_hash, prefix.hoc.join('defvar.hoc'))
+        except Exception as e:
+            tty.warn(e)
+
     def setup_environment(self, spack_env, run_env):
         run_env.set('HOC_LIBRARY_PATH', self.prefix.hoc)
-

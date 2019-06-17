@@ -4,6 +4,7 @@ from spack import *
 from spack.pkg.builtin.sim_model import SimModel
 import shutil
 import os
+import llnl.util.tty as tty
 
 # Definitions
 _CORENRN_MODLIST_FNAME = "coreneuron_modlist.txt"
@@ -126,6 +127,15 @@ class NeurodamusModel(SimModel):
             force_symlink('../../lib', py_dst.lib)
             for name in ('neurodamus', 'init.py', '_debug.py'):
                 force_symlink(py_src.join(name), py_dst.join(name))
+
+        filter_file(r'UNKNOWN_NEURODAMUS_MODEL', r'%s' % spec.name, prefix.lib.hoc.join('defvar.hoc'))
+        filter_file(r'UNKNOWN_NEURODAMUS_VERSION', r'%s' % spec.version, prefix.lib.hoc.join('defvar.hoc'))
+
+        try:
+            commit_hash = self.fetcher[0].get_commit()
+            filter_file(r'UNKNOWN_NEURODAMUS_HASH', r'\'%s\'' % commit_hash, prefix.lib.hoc.join('defvar.hoc'))
+        except Exception as e:
+            tty.warn(e)
 
     def setup_environment(self, spack_env, run_env):
         SimModel.setup_environment(self, spack_env, run_env)

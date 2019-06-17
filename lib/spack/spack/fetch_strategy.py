@@ -41,7 +41,6 @@ from spack.util.string import comma_and, quote
 from spack.version import Version, ver
 from spack.util.compression import decompressor_for, extension
 
-
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
 
@@ -711,6 +710,9 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
+
+    def get_commit(self):
+        return self.git('rev-parse', 'HEAD', output=str).strip()
 
     @_needs_stage
     def reset(self):
