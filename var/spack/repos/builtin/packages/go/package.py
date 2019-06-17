@@ -31,10 +31,14 @@ from spack import *
 class Go(Package):
     """The golang compiler and build environment"""
     homepage = "https://golang.org"
-    url = 'https://dl.google.com/go/go1.10.1.src.tar.gz'
+    url = 'https://dl.google.com/go/go1.12.6.src.tar.gz'
 
     extendable = True
 
+    version('1.12.6', sha256='c96c5ccc7455638ae1a8b7498a030fe653731c8391c5f8e79590bce72f92b4ca')
+    version('1.12.5', sha256='2aa5f088cbb332e73fc3def546800616b38d3bfe6b8713b8a6404060f22503e8')
+    version('1.11.11', sha256='1fff7c33ef2522e6dfaf6ab96ec4c2a8b76d018aae6fc88ce2bd40f2202d0f8c')
+    version('1.11.10', sha256='df27e96a9d1d362c46ecd975f1faa56b8c300f5c529074e9ea79bdd885493c1b')
     version('1.11.5', 'bc1ef02bb1668835db1390a2e478dcbccb5dd16911691af9d75184bbe5aa943e')
     version('1.11.4', '4cfd42720a6b1e79a8024895fa6607b69972e8e32446df76d6ce79801bbadb15')
     version('1.11.2', '042fba357210816160341f1002440550e952eb12678f7c9e7e9d389437942550')
