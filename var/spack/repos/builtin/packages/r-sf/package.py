@@ -25,4 +25,4 @@ class RSf(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('gdal@2.0.0:')
     depends_on('geos@3.3.0:')
-    depends_on('proj@4.8.0:')
+    depends_on('proj@4.8.0:5')
