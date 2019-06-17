@@ -37,7 +37,7 @@ class Ibmisc(CMakePackage):
 
     depends_on('eigen')
     depends_on('everytrace', when='+everytrace')
-    depends_on('proj@:5', when='+proj')
+    depends_on('proj@:4', when='+proj')
     depends_on('blitz', when='+blitz')
     depends_on('netcdf-cxx4', when='+netcdf')
     depends_on('udunits2', when='+udunits2')
