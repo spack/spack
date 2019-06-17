@@ -175,7 +175,6 @@ class Libmesh(AutotoolsPackage):
         else:
             options.append('--disable-blocked-storage')
 
-
         if '+hdf5' in self.spec:
             options.append('--with-hdf5=%s' % self.spec['hdf5'].prefix)
         else:
@@ -189,8 +188,8 @@ class Libmesh(AutotoolsPackage):
             options.append('--enable-metis')
             options.append('--enable-parmetis')
             if ('+petsc' in self.spec):
-            	options.append('--with-metis=PETSc')
-           	options.append('--with-parmetis=PETSc')
+                options.append('--with-metis=PETSc')
+                options.append('--with-parmetis=PETSc')
 
         if '+petsc' in self.spec or '+slepc' in self.spec:
             options.append('--enable-petsc=yes')
