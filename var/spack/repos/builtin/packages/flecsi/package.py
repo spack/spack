@@ -29,7 +29,7 @@ class Flecsi(CMakePackage):
             description='Build FleCSI Tutorials')
 
     depends_on("cmake@3.1:",  type='build')
-    #Requires cinch > 1.0 due to cinchlog installation issue
+    # Requires cinch > 1.0 due to cinchlog installation issue
     depends_on("cinch@1.01:", type='build')
     depends_on('mpi', when='backend=mpi')
     depends_on('mpi', when='backend=legion')
