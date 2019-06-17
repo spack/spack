@@ -16,5 +16,6 @@ class PyBlessed(PythonPackage):
 
     version('1.15.0', sha256='777b0b6b5ce51f3832e498c22bc6a093b6b5f99148c7cbf866d26e2dec51ef21')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-wcwidth@0.1.4:', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
