@@ -433,7 +433,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will
-    #: be copied in the same directory tree as build.env and build.out.
+    #: be copied in the same directory tree as build.env and build.txt.
     archive_files = []
 
     #
@@ -786,7 +786,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def log_path(self):
-        return os.path.join(self.stage.path, 'spack-build.out')
+        return os.path.join(self.stage.path, 'spack-build.txt')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1814,7 +1814,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.installed:
             return spack.store.layout.build_log_path(self.spec)
         else:
-            return os.path.join(self.stage.path, 'spack-build.out')
+            return os.path.join(self.stage.path, 'spack-build.txt')
 
     @classmethod
     def inject_flags(cls, name, flags):
