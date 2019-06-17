@@ -106,7 +106,7 @@ class Stage(object):
         with Stage() as stage:      # Context manager creates and destroys the
                                     # stage directory
             stage.fetch()           # Fetch a source archive into the stage.
-            stage.expand_archive()  # Expand the source archive.
+            stage.expand_archive()  # Expand the archive into source_path.
             <install>               # Build and install the archive.
                                     # (handled by user of Stage)
 
@@ -122,7 +122,7 @@ class Stage(object):
         try:
             stage.create()          # Explicitly create the stage directory.
             stage.fetch()           # Fetch a source archive into the stage.
-            stage.expand_archive()  # Expand the source archive.
+            stage.expand_archive()  # Expand the archive into source_path.
             <install>               # Build and install the archive.
                                     # (handled by user of Stage)
         finally:
@@ -594,7 +594,11 @@ class StageComposite:
 
 
 class DIYStage(object):
-    """Simple class that allows any directory to be a spack stage."""
+    """
+    Simple class that allows any directory to be a spack stage.  Consequently,
+    it does not expect or require that the source path adhere to the standard
+    directory naming convention.
+    """
 
     def __init__(self, path):
         if path is None:
