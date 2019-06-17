@@ -22,7 +22,7 @@ packages:
       - python
     specs:
       - archngv@0.0.0
-      - brainbuilder@0.11.1
+      - brainbuilder@0.11.3
       - connectome-tools@0.3.2
       - spykfunc@0.14.3
       - psp-validation@0.1.12
