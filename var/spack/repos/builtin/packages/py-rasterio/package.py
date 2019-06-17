@@ -22,6 +22,7 @@ class PyRasterio(PythonPackage):
     version('1.0.24', sha256='4839479621045211f66868ec49625979693450bc2e476f23e7e8ac4804eaf452')
     version('1.0a12', sha256='47d460326e04c64590ff56952271a184a6307f814efc34fb319c12e690585f3c')
 
+    depends_on('python@3:', type=('build', 'run'), when='@1.1:')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-affine', type=('build', 'run'))
