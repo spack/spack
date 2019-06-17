@@ -60,6 +60,12 @@ class Catalyst(CMakePackage):
     depends_on('mpi')
     depends_on('python@2.7:2.8', when='+python', type=('build', 'link', 'run'))
     depends_on('python@3:', when='+python3', type=('build', 'link', 'run'))
+
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python3', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
+
     depends_on('gl@3.2:', when='+rendering')
     depends_on('mesa+osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
@@ -206,12 +212,17 @@ class Catalyst(CMakePackage):
             '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
             '-DVTK_USE_OFFSCREEN:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
-            '-DPARAVIEW_ENABLE_PYTHON:BOOL=%s' % variant_bool('+python')
         ]
         if '+python' in spec or '+python3' in spec:
-            cmake_args.append(
+            cmake_args.extend([
+                '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
-                spec['python'].command.path)
+                spec['python'].command.path,
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
+            ])
+        else:
+            cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
+
         return cmake_args
 
     def cmake(self, spec, prefix):

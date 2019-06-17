@@ -193,7 +193,6 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
-            '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+python+mpi'),
             '-DVTK_USE_SYSTEM_NETCDF:BOOL=ON',
             '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
@@ -211,8 +210,12 @@ class Paraview(CMakePackage):
         if '+python' in spec or '+python3' in spec:
             cmake_args.extend([
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
-                '-DPYTHON_EXECUTABLE:FILEPATH=%s' % spec['python'].command.path
+                '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
+                spec['python'].command.path,
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
             ])
+        else:
+            cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
         if '+mpi' in spec:
             cmake_args.extend([
