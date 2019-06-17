@@ -34,3 +34,17 @@ def test_arch_target():
 
     arch('-t')
     arch('--target')
+
+
+def test_arch_frontend():
+    """Sanity check ``spack arch --frontend`` to make sure it works."""
+
+    arch('-f')
+    arch('--frontend')
+
+
+def test_arch_backend():
+    """Sanity check ``spack arch --backend`` to make sure it works."""
+
+    arch('-b')
+    arch('--backend')

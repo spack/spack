@@ -23,6 +23,12 @@ def setup_parser(subparser):
     parts.add_argument(
         '-t', '--target', action='store_true', default=False,
         help='print only the target')
+    parts.add_argument(
+        '-f', '--frontend', action='store_true', default=False,
+        help='print frontend')
+    parts.add_argument(
+        '-b', '--backend', action='store_true', default=False,
+        help='print backend')
 
 
 def arch(parser, args):
@@ -35,5 +41,11 @@ def arch(parser, args):
         print(arch.os)
     elif args.target:
         print(arch.target)
+    elif args.frontend:
+        print(str(arch.platform) + "-" + arch.platform.front_os + "-"
+              + arch.platform.front_end)
+    elif args.backend:
+        print(str(arch.platform) + "-" + arch.platform.back_os + "-"
+              + arch.platform.back_end)
     else:
         print(arch)
