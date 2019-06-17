@@ -73,7 +73,7 @@ def get_tmp_root():
 
         path = _first_accessible_path(candidates)
         if not path:
-            raise StageError("No accessible stage paths in %s", candidates)
+            raise StageError("No accessible stage paths in:", candidates)
 
         # Return None to indicate we're using a local staging area.
         if path == canonicalize_path(spack.paths.stage_path):
