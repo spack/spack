@@ -45,23 +45,23 @@ class Flecsi(CMakePackage):
 
     def cmake_args(self):
         options = ['-DCMAKE_BUILD_TYPE=debug']
-        options.extend(['-DCINCH_SOURCE_DIR=' + self.spec['cinch'].prefix])
+        options.append('-DCINCH_SOURCE_DIR=' + self.spec['cinch'].prefix)
 
         if self.spec.variants['backend'].value == 'legion':
-            options.extend(['-DFLECSI_RUNTIME_MODEL=legion'])
+            options.append('-DFLECSI_RUNTIME_MODEL=legion')
         elif self.spec.variants['backend'].value == 'mpi':
-            options.extend(['-DFLECSI_RUNTIME_MODEL=mpi'])
+            options.append('-DFLECSI_RUNTIME_MODEL=mpi')
         else:
-            options.extend(['-DFLECSI_RUNTIME_MODEL=serial'])
-            options.extend([
+            options.append('-DFLECSI_RUNTIME_MODEL=serial')
+            options.append(
                 '-DENABLE_MPI=OFF',
-            ])
+            )
 
         if '+tutorial' in self.spec:
-            options.extend(['-DENABLE_FLECSIT=ON'])
-            options.extend(['-DENABLE_FLECSI_TUTORIAL=ON'])
+            options.append('-DENABLE_FLECSIT=ON')
+            options.append('-DENABLE_FLECSI_TUTORIAL=ON')
         else:
-            options.extend(['-DENABLE_FLECSIT=OFF'])
-            options.extend(['-DENABLE_FLECSI_TUTORIAL=OFF'])
+            options.append('-DENABLE_FLECSIT=OFF')
+            options.append('-DENABLE_FLECSI_TUTORIAL=OFF')
 
         return options

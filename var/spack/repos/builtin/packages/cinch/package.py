@@ -16,13 +16,12 @@ class Cinch(Package):
     url = "https://github.com/laristra/cinch/archive/1.0.zip"
     git      = "https://github.com/laristra/cinch.git"
 
-    version('develop', branch='cinchLoggerPath', submodules=False)
+    version('develop', branch='master', submodules=False)
     version('1.0', sha256='98b73473829b478191481621d84c3d63c662da6e951321f858a032eae3ca07b7')
 
     def install(self, spec, prefix):
         # (CMake) Header Only library so just copy
         install_tree(self.stage.source_path, prefix)
-        return
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path('CMAKE_PREFIX_PATH', self.prefix)
