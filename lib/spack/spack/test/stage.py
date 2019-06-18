@@ -348,24 +348,6 @@ def mock_stage_archive(tmp_build_stage_dir, tmp_root_stage, request):
 
 
 @pytest.fixture
-def mock_exploding_archive(tmpdir):
-    files = ['f1', 'f2', 'f3']
-    for f in files:
-        tmpdir.ensure(f)
-
-    archive_name = 'resource.tar.gz'
-    archive = tmpdir.join(archive_name)
-    archive_url = 'file://' + str(archive)
-
-    with tmpdir.as_cwd():
-        tar = spack.util.executable.which('tar', required=True)
-        tar('czf', str(archive_name), *files)
-
-    Archive = collections.namedtuple('Archive', ['url', 'files'])
-    return Archive(url=archive_url, files=files)
-
-
-@pytest.fixture
 def mock_noexpand_resource(tmpdir):
     """Set up a non-expandable resource in the tmpdir prior to staging."""
     test_resource = tmpdir.join('resource-no-expand.sh')
@@ -472,19 +454,6 @@ class TestStage(object):
         with Stage(archive.url) as stage:
             check_setup(stage, None, archive)
         check_destroy(stage, None)
-
-    @pytest.mark.usefixtures('tmpdir_for_stage')
-    def test_stage_with_exploding_archive(self, mock_exploding_archive):
-        """For stage which refers to an archive that expands to a list of
-        files (i.e. an exploding tarball), check that the individual files
-        are placed in the source_path of the stage.
-        """
-        with Stage(mock_exploding_archive.url) as stage:
-            stage.fetch()
-            stage.expand_archive()
-            for f in mock_exploding_archive.files:
-                expected_path = os.path.join(stage.source_path, f)
-                assert os.path.exists(expected_path)
 
     @pytest.mark.disable_clean_stage_check
     @pytest.mark.usefixtures('tmpdir_for_stage')

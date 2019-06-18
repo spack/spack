@@ -387,11 +387,7 @@ class URLFetchStrategy(FetchStrategy):
                 shutil.move(tarball_container, self.stage.source_path)
 
         else:
-            os.makedirs(self.stage.source_path)
-            for fname in non_hidden:
-                fpath = os.path.join(tarball_container, fname)
-                shutil.move(fpath, self.stage.source_path)
-            os.rmdir(tarball_container)
+            shutil.move(tarball_container, self.stage.source_path)
 
     def archive(self, destination):
         """Just moves this archive to the destination."""
