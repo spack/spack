@@ -13,7 +13,7 @@ class Ospray(CMakePackage):
     generator = 'Ninja'
 
     version('1.8.5', tag='v1.8.5')
-    version('1.7.3', tag='v1.7.3', preferred=True)
+    version('1.7.3', tag='v1.7.3')
 
     depends_on('cmake@3.1:', type='build')
     depends_on('ispc', type='build')
