@@ -57,9 +57,15 @@ class OsuMicroBenchmarks(AutotoolsPackage):
         )
         run_env.prepend_path(
             'PATH',
-            join_path(self.prefix, 'libexec/osu-micro-benchmarks/mpi/one-sided')
+            join_path(
+                self.prefix,
+                'libexec/osu-micro-benchmarks/mpi/one-sided'
+            )
         )
         run_env.prepend_path(
             'PATH',
-            join_path(self.prefix, 'libexec/osu-micro-benchmarks/mpi/collective')
+            join_path(
+                self.prefix,
+                'libexec/osu-micro-benchmarks/mpi/collective'
+            )
         )
