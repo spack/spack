@@ -57,7 +57,7 @@ class SagaGis(AutotoolsPackage):
 
     depends_on('wx')
     depends_on('gdal')
-    depends_on('proj')
+    depends_on('proj@:5')
 
     depends_on('unixodbc', when='+odbc')
     # FIXME Saga-Gis uses a wrong include path
