@@ -1,48 +1,45 @@
-#!/usr/bin/env python
+#!/bin/sh
 #
 # Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
+SELF_PATH="$0"
 
-import os
-import sys
+if command -v readlink >/dev/null 2>&1
+then
+	SELF_PATH="$(readlink --canonicalize-existing -- "$0")"
+fi
 
-if sys.version_info[:2] < (2, 6):
-    v_info = sys.version_info[:3]
-    sys.exit("Spack requires Python 2.6 or higher."
-             "This is Python %d.%d.%d." % v_info)
+SELF_DIR="${SELF_PATH%/*}"
 
-# Find spack's location and its prefix.
-spack_file = os.path.realpath(os.path.expanduser(__file__))
-spack_prefix = os.path.dirname(os.path.dirname(spack_file))
+get_python_command ()
+{
+	local cmd='python'
 
-# Allow spack libs to be imported in our scripts
-spack_lib_path = os.path.join(spack_prefix, "lib", "spack")
-sys.path.insert(0, spack_lib_path)
+	for c in python3 python2
+	do
+		if command -v "${c}" >/dev/null 2>&1
+		then
+			cmd="${c}"
+			break
+		fi
+	done
 
-# Add external libs
-spack_external_libs = os.path.join(spack_lib_path, "external")
+	printf '%s' "${cmd}"
+}
 
-if sys.version_info[:2] == (2, 6):
-    sys.path.insert(0, os.path.join(spack_external_libs, 'py26'))
+get_spack_command ()
+{
+	local cmd='spack-real'
 
-sys.path.insert(0, spack_external_libs)
+	if test -n "${SELF_DIR}"
+	then
+		cmd="${SELF_DIR}/${cmd}"
+	fi
 
-# Here we delete ruamel.yaml in case it has been already imported from site
-# (see #9206 for a broader description of the issue).
-#
-# Briefly: ruamel.yaml produces a .pth file when installed with pip that
-# makes the site installed package the preferred one, even though sys.path
-# is modified to point to another version of ruamel.yaml.
-if 'ruamel.yaml' in sys.modules:
-    del sys.modules['ruamel.yaml']
+	printf '%s' "${cmd}"
+}
 
-if 'ruamel' in sys.modules:
-    del sys.modules['ruamel']
-
-# Once we've set up the system path, run the spack main method
-import spack.main  # noqa
-sys.exit(spack.main.main())
+/usr/bin/env "$(get_python_command)" "$(get_spack_command)" "$@"

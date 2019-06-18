@@ -127,7 +127,7 @@ def changed_files(args):
 
         for f in files:
             # Ignore non-Python files
-            if not (f.endswith('.py') or f == 'bin/spack'):
+            if not (f.endswith('.py') or f == 'bin/spack-real'):
                 continue
 
             # Ignore files in the exclude locations
