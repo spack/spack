@@ -14,6 +14,7 @@ class PyAttrs(PythonPackage):
 
     import_modules = ['attr']
 
+    version('19.1.0', '2be7bce157988928f5ff2bb50a0b510d')
     version('18.1.0', '3f3f3e0750dab74cfa1dc8b0fd7a5f86')
     version('16.3.0', '4ec003c49360853cf935113d1ae56151')
 

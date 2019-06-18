@@ -28,6 +28,8 @@ packages:
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
       - py-basalt@0.2.4
+      - py-entity-management@1.0.1
+      - py-entity-management@0.1.12
 
   gnu-stable-parallel:
     target_matrix:

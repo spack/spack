@@ -47,6 +47,7 @@ modules:
       - py-bluepymm
       - py-bluepyopt
       - py-efel
+      - py-entity-management
       - py-pytouchreader
       - reportinglib
       - spykfunc
