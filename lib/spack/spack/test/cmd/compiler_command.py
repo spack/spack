@@ -7,6 +7,7 @@ import pytest
 
 import os
 import os.path
+import platform
 
 import spack.main
 
@@ -30,4 +31,8 @@ def no_compilers_yaml(mutable_config, monkeypatch):
 def test_compiler_find_without_paths(no_compilers_yaml):
     output = compiler('find', '--scope=site')
 
-    assert 'gcc' in output
+    if platform.system() == 'Darwin':
+        # /usr/bin/gcc is secretly a clang compiler on Darwin
+        assert 'clang' in output
+    else:
+        assert 'gcc' in output
