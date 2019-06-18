@@ -111,7 +111,8 @@ class Phist(CMakePackage):
     # required a separate package
     conflicts('+fortran', when='@:1.6.99')
 
-    # older gcc's may produce incorrect SIMD code and fail to compile some OpenMP statements
+    # older gcc's may produce incorrect SIMD code and fail
+    # to compile some OpenMP statements
     conflicts('%gcc@:4.9.1')
 
     def cmake_args(self):
