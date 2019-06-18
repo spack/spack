@@ -126,6 +126,8 @@ class Boost(Package):
             description='Generate position-independent code (PIC), useful '
                         'for building static libraries')
 
+    variant('deployment_build', default='1',  description='Build number for re-builds')
+
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
