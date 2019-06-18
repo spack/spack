@@ -3130,6 +3130,7 @@ class Spec(object):
             cwrite(f, stream=out, color=color)
 
         def write_attribute(spec, attribute, color):
+            current = spec
             if attribute.startswith('^'):
                 attribute = attribute[1:]
                 dep, attribute = attribute.split('.', 1)
@@ -3140,7 +3141,6 @@ class Spec(object):
                     'Format string attributes must be non-empty')
             attribute = attribute.lower()
 
-            current = spec
             sig = ''
             if attribute[0] in '@%/':
                 # color sigils that are inside braces
