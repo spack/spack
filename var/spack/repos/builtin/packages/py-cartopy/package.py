@@ -21,7 +21,7 @@ class PyCartopy(PythonPackage):
     depends_on('py-pyshp@1.1.4:',   type=('build', 'run'))
     depends_on('py-six@1.3.0:',     type=('build', 'run'))
     depends_on('geos@3.3.3:')
-    depends_on('proj@4.9.0:')
+    depends_on('proj@4.9.0:5')
 
     # optional dependecies
     depends_on('py-matplotlib@1.5.1:', type=('build', 'run'))
