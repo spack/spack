@@ -43,6 +43,8 @@ class Gdl(CMakePackage):
     depends_on('plplot+wx', when='+wx@:5.11')
     depends_on('plplot+wx+wxold', when='+wx@5.12:')
     depends_on('plplot~wx', when='~wx')
+    # Too many dependencies to test if GDL supports PROJ.6,
+    # so restricting to old API
     depends_on('proj@:5', when='+proj')
     depends_on('py-numpy', type=('build', 'run'), when='+embed_python')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='+embed_python')
