@@ -27,12 +27,19 @@ class Qthreads(AutotoolsPackage):
     patch("restrict.patch", when="@:1.10")
     patch("trap.patch", when="@:1.10")
 
-    depends_on("hwloc")
+    variant(
+        'hwloc',
+        default=True,
+        description='hwloc support'
+    )
+
+    depends_on("hwloc@1.11.11", when="+hwloc")
 
     def configure_args(self):
         spec = self.spec
-        args = [
-            "--enable-guard-pages",
-            "--with-topology=hwloc",
-            "--with-hwloc=%s" % spec["hwloc"].prefix]
-        return args
+        if "+hwloc" in self.spec:
+            args = [
+                "--enable-guard-pages",
+                "--with-topology=hwloc",
+                "--with-hwloc=%s" % spec["hwloc"].prefix]
+            return args
