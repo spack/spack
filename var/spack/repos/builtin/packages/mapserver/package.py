@@ -29,6 +29,8 @@ class Mapserver(CMakePackage):
     depends_on('jpeg')
     depends_on('zlib')
     depends_on('proj')
+    depends_on('proj@:5', when='@:7.3')
+    depends_on('proj@6:', when='@7.4:')
     depends_on('curl', when='+curl')
     depends_on('geos')
     depends_on('libxml2')
