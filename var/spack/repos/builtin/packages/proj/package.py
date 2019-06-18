@@ -17,6 +17,9 @@ class Proj(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    # Version 6 removes projects.h, while version 7 removes proj_api.h.
+    # Many packages that depend on proj do not yet support the newer API.
+    # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
     version('6.1.0', sha256='676165c54319d2f03da4349cbd7344eb430b225fe867a90191d848dc64788008')
     version('6.0.0', sha256='4510a2c1c8f9056374708a867c51b1192e8d6f9a5198dd320bf6a168e44a3657')
     version('5.2.0', 'ad285c7d03cbb138d9246e10e1f3191c')
@@ -37,7 +40,7 @@ class Proj(AutotoolsPackage):
         placement='nad'
     )
 
-    # @6 appears to be the first version which makes use of sqlite at all.
+    # @6 appears to be the first version with dependencies
     depends_on('pkgconfig@0.9.0:', type='build', when='@6:')
     depends_on('sqlite@3.7:', when='@6:')
 
