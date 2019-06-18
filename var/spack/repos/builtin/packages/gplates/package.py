@@ -30,6 +30,8 @@ class Gplates(CMakePackage):
     # GDAL's OGRSFDriverRegistrar is not compatible anymore starting with 2.0.
     depends_on('gdal@1.3.2:1.99')
     depends_on('cgal@3.5:')
+    # The latest release of gplates came out before PROJ.6 was released,
+    # so I'm assuming it's not supported.
     depends_on('proj@4.6.0:5')
     # Boost's Python library has a different name starting with 1.67.
     # There were changes to Boost's optional in 1.61 that make the build fail.
