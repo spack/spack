@@ -17,9 +17,10 @@ class OsuMicroBenchmarks(AutotoolsPackage):
     homepage = "http://mvapich.cse.ohio-state.edu/benchmarks/"
     url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.3.tar.gz"
 
-    version('5.5', 'bcb970d5a1f3424e2c7302ff60611008')
-    version('5.4', '7e7551879b944d71b7cc60d476d5403b')
-    version('5.3', '42e22b931d451e8bec31a7424e4adfc2')
+    version('5,6,1', '0d2389d93ec2a0be60f21b0aecd14345')
+    version('5.5',   'bcb970d5a1f3424e2c7302ff60611008')
+    version('5.4',   '7e7551879b944d71b7cc60d476d5403b')
+    version('5.3',   '42e22b931d451e8bec31a7424e4adfc2')
 
     variant('cuda', default=False, description="Enable CUDA support")
 
@@ -44,3 +45,21 @@ class OsuMicroBenchmarks(AutotoolsPackage):
             config_args.append('LDFLAGS=-lrt')
 
         return config_args
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path(
+            'PATH',
+            join_path(self.prefix, 'libexec/osu-micro-benchmarks/mpi/startup')
+        )
+        run_env.prepend_path(
+            'PATH',
+            join_path(self.prefix, 'libexec/osu-micro-benchmarks/mpi/pt2pt')
+        )
+        run_env.prepend_path(
+            'PATH',
+            join_path(self.prefix, 'libexec/osu-micro-benchmarks/mpi/one-sided')
+        )
+        run_env.prepend_path(
+            'PATH',
+            join_path(self.prefix, 'libexec/osu-micro-benchmarks/mpi/collective')
+        )
