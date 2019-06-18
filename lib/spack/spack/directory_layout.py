@@ -190,7 +190,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'build.out'  # build log.
+        self.build_log_name      = 'build.txt'  # build log.
         self.build_env_name      = 'build.env'  # build environment
         self.packages_dir        = 'repos'      # archive of package.py files
 
