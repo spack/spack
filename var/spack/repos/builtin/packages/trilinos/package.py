@@ -197,9 +197,9 @@ class Trilinos(CMakePackage):
              when='+dtk @develop')
     resource(name='fortrilinos',
              git='https://github.com/trilinos/ForTrilinos.git',
-             tag='develop',
-             placement='packages/ForTrilinos',
-             when='+fortrilinos')
+             branch='master',
+             placement='ForTrilinos',
+             when='+fortrilinos @master')
 
     conflicts('+amesos2', when='~teuchos')
     conflicts('+amesos2', when='~tpetra')
@@ -256,8 +256,12 @@ class Trilinos(CMakePackage):
     # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,12.16.0:99,master')
     conflicts('+fortrilinos', when='~fortran')
-    conflicts('+fortrilinos', when='@:99')
-    conflicts('+fortrilinos', when='@master')
+    conflicts('+fortrilinos', when='~anasazi')
+    conflicts('+fortrilinos', when='~belos')
+    conflicts('+fortrilinos', when='~nox')
+    conflicts('+fortrilinos', when='~teuchos')
+    conflicts('+fortrilinos', when='~tpetra')
+    conflicts('+fortrilinos', when='@:99,develop')
     # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
@@ -470,6 +474,12 @@ class Trilinos(CMakePackage):
             options.extend([
                 '-DTrilinos_EXTRA_REPOSITORIES:STRING=DataTransferKit',
                 '-DTrilinos_ENABLE_DataTransferKit:BOOL=ON'
+            ])
+
+        if '+fortrilinos' in spec:
+            options.extend([
+                '-DTrilinos_EXTRA_REPOSITORIES:STRING=ForTrilinos',
+                '-DTrilinos_ENABLE_ForTrilinos:BOOL=ON'
             ])
 
         if '+exodus' in spec:
