@@ -228,7 +228,6 @@ class OperatingSystem(object):
     def _cmp_key(self):
         return (self.name, self.version)
 
-
     def to_dict(self):
         return {
             'name': self.name,
