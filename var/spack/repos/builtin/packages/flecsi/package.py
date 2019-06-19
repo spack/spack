@@ -20,31 +20,48 @@ class Flecsi(CMakePackage):
     homepage = "http://flecsi.lanl.gov/"
     git      = "https://github.com/laristra/flecsi.git"
 
-    version('develop', branch='master', submodules=True)
+    version('develop', branch='master', submodules=False)
+    variant('backend', default='mpi', values=('serial', 'mpi', 'legion'),
+            description="Backend to use for distributed memory")
+    variant('graphviz', default=False,
+            description='Enable GraphViz Support')
+    variant('tutorial', default=False,
+            description='Build FleCSI Tutorials')
 
-    variant('mpi', default=True,
-            description='Build on top of mpi conduit for mpi inoperability')
-    variant('legion', default=False)
-
-    depends_on("cmake@3.1:")
-    depends_on("mpi")
-    depends_on("gasnet~pshm")
-    depends_on("legion")
-    depends_on("legion+shared", when='~mpi')
-    depends_on("legion+shared+mpi", when='+mpi')
-    depends_on("boost@1.59.0 cxxstd=11 +program_options")
+    depends_on("cmake@3.1:",  type='build')
+    # Requires cinch > 1.0 due to cinchlog installation issue
+    depends_on("cinch@1.01:", type='build')
+    depends_on('mpi', when='backend=mpi')
+    depends_on('mpi', when='backend=legion')
+    depends_on("gasnet~pshm", when='backend=legion')
+    depends_on("legion+shared+mpi", when='backend=legion')
+    depends_on("boost@1.59.0: cxxstd=11 +program_options")
     depends_on("metis@5.1.0:")
     depends_on("parmetis@4.0.3:")
     depends_on("caliper")
     depends_on("gotcha")
-    depends_on("graphviz")
+    depends_on("graphviz", when='+graphviz')
+    depends_on('python@3.0:', when='+tutorial')
 
     def cmake_args(self):
-        options = ['-DCMAKE_BUILD_TYPE=debug -DFLECSI_RUNTIME_MODEL=mpi']
+        options = ['-DCMAKE_BUILD_TYPE=debug']
+        options.append('-DCINCH_SOURCE_DIR=' + self.spec['cinch'].prefix)
 
-        if '~mpi' in self.spec:
-            options.extend([
+        if self.spec.variants['backend'].value == 'legion':
+            options.append('-DFLECSI_RUNTIME_MODEL=legion')
+        elif self.spec.variants['backend'].value == 'mpi':
+            options.append('-DFLECSI_RUNTIME_MODEL=mpi')
+        else:
+            options.append('-DFLECSI_RUNTIME_MODEL=serial')
+            options.append(
                 '-DENABLE_MPI=OFF',
-            ])
+            )
+
+        if '+tutorial' in self.spec:
+            options.append('-DENABLE_FLECSIT=ON')
+            options.append('-DENABLE_FLECSI_TUTORIAL=ON')
+        else:
+            options.append('-DENABLE_FLECSIT=OFF')
+            options.append('-DENABLE_FLECSI_TUTORIAL=OFF')
 
         return options

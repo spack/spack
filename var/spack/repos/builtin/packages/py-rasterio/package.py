@@ -14,25 +14,30 @@ class PyRasterio(PythonPackage):
     arrays."""
 
     homepage = "https://github.com/mapbox/rasterio"
-    url      = "https://github.com/mapbox/rasterio/archive/1.0a12.zip"
+    url      = "https://pypi.io/packages/source/r/rasterio/rasterio-1.0.24.tar.gz"
 
-    version('1.0a12', 'e078ca02b3513b65a9be5bb3f528b4da')
+    maintainers = ['adamjstewart']
+    import_modules = ['rasterio', 'rasterio.rio']
 
-    variant('aws', default=False,
-        description='Enable testing with Amazon Web Services')
+    version('1.0.24', sha256='4839479621045211f66868ec49625979693450bc2e476f23e7e8ac4804eaf452')
+    version('1.0a12', sha256='47d460326e04c64590ff56952271a184a6307f814efc34fb319c12e690585f3c')
 
+    depends_on('python@3:', type=('build', 'run'), when='@1.1:')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
-    depends_on('py-enum34', type='run', when='^python@:2.7')
-    depends_on('py-attrs', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-cligj', type=('build', 'run'))
-    depends_on('py-click', type=('build', 'run'))
     depends_on('py-affine', type=('build', 'run'))
-    depends_on('py-snuggs', type=('build', 'run'))
-    depends_on('gdal')
+    depends_on('py-attrs', type=('build', 'run'))
+    depends_on('py-click@4:7', type=('build', 'run'))
+    depends_on('py-cligj@0.5:', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-snuggs@1.4.1:', type=('build', 'run'))
+    depends_on('py-click-plugins', type=('build', 'run'))
+    depends_on('py-enum34', type='run', when='^python@:3.3')
+    depends_on('gdal@1.11:')
     depends_on('jpeg')
-
-    # (Commented out for now: py-boto3 is not yet a Spack package)
-    # Some (optional) tests use py-boto3 for Amazon Web Services
-    # depends_on('py-boto3', type=('build', 'run'), when='+aws')
+    depends_on('py-pytest@2.8.2:', type='test')
+    depends_on('py-boto3@1.2.4:', type='test')
+    depends_on('py-packaging', type='test')
+    depends_on('py-hypothesis', type='test')
+    depends_on('py-futures', type='test', when='^python@:3.1')
+    depends_on('py-mock', type='test', when='^python@:3.1')

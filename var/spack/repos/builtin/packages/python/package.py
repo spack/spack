@@ -101,6 +101,7 @@ class Python(AutotoolsPackage):
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
     variant('uuid',     default=False, description='Build uuid module')
+    variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
 
@@ -120,6 +121,7 @@ class Python(AutotoolsPackage):
     depends_on('libffi', when='+ctypes')
     depends_on('tk', when='+tkinter')
     depends_on('tcl', when='+tkinter')
+    depends_on('tix', when='+tix')
     depends_on('libuuid', when='+uuid')
 
     patch('tkinter.patch', when='@:2.8,3.3: platform=darwin')
@@ -139,6 +141,8 @@ class Python(AutotoolsPackage):
         when='+optimizations',
         msg='+optimizations is incompatible with +shared in python@2.X'
     )
+    conflicts('+tix', when='~tkinter',
+              msg='python+tix requires python+tix+tkinter')
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'

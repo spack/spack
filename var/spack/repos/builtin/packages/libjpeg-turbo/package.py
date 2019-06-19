@@ -13,8 +13,9 @@ class LibjpegTurbo(Package):
        transcoding."""
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://libjpeg-turbo.org/"
-    url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/1.5.90.tar.gz"
+    url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.2.tar.gz"
 
+    version('2.0.2', sha256='b45255bd476c19c7c6b198c07c0487e8b8536373b82f2b38346b32b4fa7bb942')
     version('1.5.90', '85f7f9c377b70cbf48e61726097d4efa')
     version('1.5.3', '5b7549d440b86c98a517355c102d155e')
     version('1.5.0', 'eff98ac84de05eafc65ae96caa6e23e9')

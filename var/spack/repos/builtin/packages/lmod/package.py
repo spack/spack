@@ -51,7 +51,7 @@ class Lmod(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         stage_lua_path = join_path(
-            self.stage.path, 'Lmod-{version}', 'src', '?.lua')
+            self.stage.source_path, 'src', '?.lua')
         spack_env.append_path('LUA_PATH', stage_lua_path.format(
             version=self.version), separator=';')
 

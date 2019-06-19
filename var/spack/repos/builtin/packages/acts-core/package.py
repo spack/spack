@@ -33,12 +33,14 @@ class ActsCore(CMakePackage):
     git      = "https://gitlab.cern.ch/acts/acts-core.git"
 
     version('develop', branch='master')
-    version('0.9.2', commit='4e1f7fa73ffe07457080d787e206bf6466fe1680')
-    version('0.9.1', commit='69c451035516cb683b8f7bc0bab1a25893e9113d')
-    version('0.9.0', commit='004888b0a412f5bbaeef2ffaaeaf2aa182511494')
-    version('0.8.2', commit='c5d7568714e69e7344582b93b8d24e45d6b81bf9')
-    version('0.8.1', commit='289bdcc320f0b3ff1d792e29e462ec2d3ea15df6')
-    version('0.8.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9')  # Used by acts-framework
+    version('0.10.1', commit='0692dcf7824efbc504fb16f7aa00a50df395adbc')
+    version('0.10.0', commit='30ef843cb00427f9959b7de4d1b9843413a13f02')
+    version('0.09.2', commit='4e1f7fa73ffe07457080d787e206bf6466fe1680')
+    version('0.09.1', commit='69c451035516cb683b8f7bc0bab1a25893e9113d')
+    version('0.09.0', commit='004888b0a412f5bbaeef2ffaaeaf2aa182511494')
+    version('0.08.2', commit='c5d7568714e69e7344582b93b8d24e45d6b81bf9')
+    version('0.08.1', commit='289bdcc320f0b3ff1d792e29e462ec2d3ea15df6')
+    version('0.08.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9')
 
     # Variants that affect the core ACTS library
     variant('legacy', default=False, description='Build the Legacy package')

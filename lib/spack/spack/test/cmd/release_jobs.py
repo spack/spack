@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pytest
+
 import json
+import sys
 
 from jsonschema import validate
 
@@ -36,6 +39,11 @@ def test_specs_deps(tmpdir, config):
     validate(deps_object, specs_deps_schema)
 
 
+@pytest.mark.skipif(
+    sys.version_info[:2] < (2, 7),
+    reason="For some reason in Python2.6 we get a utf-32 string "
+           "that can't be parsed"
+)
 def test_specs_staging(config):
     """Make sure we achieve the best possible staging for the following
 spec DAG::

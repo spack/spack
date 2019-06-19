@@ -40,6 +40,9 @@ class M4(AutotoolsPackage):
         if spec.satisfies('%arm') and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
+        if spec.satisfies('%fj') and not spec.satisfies('platform=darwin'):
+            args.append('LDFLAGS=-rtlib=compiler-rt')
+
         if spec.satisfies('%intel'):
             args.append('CFLAGS=-no-gcc')
 

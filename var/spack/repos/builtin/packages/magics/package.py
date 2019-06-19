@@ -55,7 +55,7 @@ class Magics(CMakePackage):
     depends_on('perl-xml-parser', type='build')
 
     # Non-optional dependencies
-    depends_on('proj')
+    depends_on('proj@:5')
     depends_on('boost')
     depends_on('expat')
 

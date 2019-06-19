@@ -15,9 +15,9 @@ class PyPydv(PythonPackage):
 
     version('2.4.2', 'fff9560177387a258f765c2d900bb241')
 
-    depends_on('py-backports-functools-lru-cache')
-    depends_on('py-cycler')
-    depends_on('py-dateutil')
-    depends_on('py-matplotlib')
-    depends_on('py-pyside')
-    depends_on('py-scipy')
+    depends_on('py-backports-functools-lru-cache', type=('build', 'run'))
+    depends_on('py-cycler', type=('build', 'run'))
+    depends_on('py-python-dateutil', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-pyside', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))

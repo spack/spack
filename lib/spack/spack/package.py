@@ -433,7 +433,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will
-    #: be copied in the same directory tree as build.env and build.out.
+    #: be copied in the same directory tree as build.env and build.txt.
     archive_files = []
 
     #
@@ -786,7 +786,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def log_path(self):
-        return os.path.join(self.stage.path, 'spack-build.out')
+        return os.path.join(self.stage.path, 'spack-build.txt')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1067,7 +1067,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     patch.apply(self.stage)
                 tty.msg('Applied patch %s' % patch.path_or_url)
                 patched = True
-            except spack.error.SpackError:
+            except spack.error.SpackError as e:
+                tty.debug(e)
+
                 # Touch bad file if anything goes wrong.
                 tty.msg('Patch %s failed.' % patch.path_or_url)
                 touch(bad_file)
@@ -1088,7 +1090,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
                     tty.msg("No patches needed for %s" % self.name)
-            except spack.error.SpackError:
+            except spack.error.SpackError as e:
+                tty.debug(e)
+
+                # Touch bad file if anything goes wrong.
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
                 raise
@@ -1380,7 +1385,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dep.concretize()
             dep.package.do_install(**kwargs)
             spack.compilers.add_compilers_to_config(
-                spack.compilers.find_compilers(dep.prefix)
+                spack.compilers.find_compilers([dep.prefix])
             )
 
     def do_install(self, **kwargs):
@@ -1724,9 +1729,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         try:
             # log_install_path and env_install_path are inside this
             shutil.rmtree(packages_dir)
-        except Exception:
+        except Exception as e:
             # FIXME : this potentially catches too many things...
-            pass
+            tty.debug(e)
 
         # Archive the whole stdout + stderr for the package
         install(self.log_path, log_install_path)
@@ -1762,7 +1767,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         # copying a file in
                         mkdirp(os.path.dirname(target))
                         install(f, target)
-                    except Exception:
+                    except Exception as e:
+                        tty.debug(e)
+
                         # Here try to be conservative, and avoid discarding
                         # the whole install procedure because of copying a
                         # single file failed
@@ -1807,7 +1814,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.installed:
             return spack.store.layout.build_log_path(self.spec)
         else:
-            return os.path.join(self.stage.path, 'spack-build.out')
+            return self.log_path
 
     @classmethod
     def inject_flags(cls, name, flags):
