@@ -687,7 +687,7 @@ class Llvm(CMakePackage):
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:STRING=' + ';'.join(targets))
 
-        if '+omp_tsan' in spec:
+        if spec.satisfies('@6.0.0:') and '+omp_tsan' in spec:
             cmake_args.append('-DLIBOMP_TSAN_SUPPORT=ON')
 
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
