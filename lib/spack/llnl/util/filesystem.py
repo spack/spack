@@ -1415,6 +1415,6 @@ def search_paths_for_executables(*path_hints):
 
         bin_dir = os.path.join(path, 'bin')
         if os.path.isdir(bin_dir):
-            executable_paths.append(bin_dir)
+            executable_paths.append(os.path.abspath(bin_dir))
 
     return executable_paths
