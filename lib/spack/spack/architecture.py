@@ -244,7 +244,7 @@ class OperatingSystem(object):
         filtered_path = []
         for p in paths:
             # Eliminate symlinks and just take the real directories.
-            p = os.path.realpath(p)
+            p = os.path.abspath(os.path.realpath(p))
             if not os.path.isdir(p):
                 continue
             filtered_path.append(p)
