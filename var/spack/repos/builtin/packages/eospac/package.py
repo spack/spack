@@ -15,17 +15,17 @@ class Eospac(Package):
     homepage = "https://laws.lanl.gov/projects/data/eos.html"
     list_url = "https://laws.lanl.gov/projects/data/eos/eospacReleases.php"
 
-    version('6.4.0', 'ecee3abe9c7a3e4b32d68dc3177b088e',
+    version('6.4.0',       sha256='15a953beac735c68431afe86ffe33323d540d0fbbbec03ba79438dd29736051d',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0_612ea8c9b8ffa6d9175d9118955571d9107f1e3c.tgz")
-    version('6.4.0beta.4', 'd0875390d08538a3caa8ad1f43c6d789',
+    version('6.4.0beta.4', sha256='0ebfd8badff575ea77444aa978629dbdca3135a0b5eb373b8daba058773d4635',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.4_aff6429bb6868de31a980278bafa13487c2ce83f.tgz")
-    version('6.4.0beta.3', '672c16e522908281168815a74626ec66',
+    version('6.4.0beta.3', sha256='9f387ca5356519494c6f3f27adb0c165cf9f9e15e3355a67bf940a4a92eebdab',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.3_90ff265f62aa1780bfcd0a62dad807b6be6ed461.tgz")
-    version('6.4.0beta.2', '9b6e48090647221d5ffe7ec5f9ea4c71',
+    version('6.4.0beta.2', sha256='f9db46cd6c62a6f83960d802350f3e37675921af102969b293c02eb797558a53',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.2_69196eadbc77506561eef711f19d2f03b4ab0ffa.tgz")
-    version('6.4.0beta.1', 'e4e4beabf946f0b8953532832002afc2',
+    version('6.4.0beta.1', sha256='14c5c804e5f628f41e8ed80bcee5a80adeb6c6f3d130715421ca99a30c7eb7e2',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.1_r20171213193219.tgz")
-    version('6.3.1', '549fda008c4169a69b02ec2a9de1e434', preferred=True,
+    version('6.3.1',       sha256='aa1112c4251c9c3c2883a7ab2c7f2abff2c339f29dbbf8421ef88b0c9df904f8', preferred=True,
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.3.1_r20161202150449.tgz")
 
     # This patch allows the use of spack's compile wrapper 'flang'
