@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Encodings(Package):
+class Encodings(AutotoolsPackage):
     """X.org encodings font."""
 
     homepage = "http://cgit.freedesktop.org/xorg/font/encodings"
@@ -21,10 +21,6 @@ class Encodings(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')
-
         # `make install` copies the files to the font-util installation.
         # Create a fake directory to convince Spack that we actually
         # installed something.
