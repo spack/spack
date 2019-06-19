@@ -166,6 +166,7 @@ addons:
       - gcc
       - gnupg2
       - ccache
+    update: true
 
 # ~/.ccache needs to be cached directly as Travis is not taking care of it
 # (possibly because we use 'language: python' and not 'language: c')
