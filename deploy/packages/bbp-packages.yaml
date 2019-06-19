@@ -44,7 +44,7 @@ packages:
       - synapsetool@0.4.1
       - touchdetector@4.4.2
       - touchdetector@5.0.1
-      - brayns@0.8.0 +opendeck +brion ^brion+python ^boost@1.65.0 ^ospray@1.7.3
+      - brayns@0.8.0 +opendeck +brion ^boost@1.65.0 ^ospray@1.7.3
 
   gnu-stable-parallel-python:
     target_matrix:
