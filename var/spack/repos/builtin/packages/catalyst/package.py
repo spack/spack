@@ -19,6 +19,8 @@ class Catalyst(CMakePackage):
     _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
     _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
 
+    maintainers = ['chuckatkins', 'danlipsa']
+
     version('5.6.0', sha256='5b49cb96ab78eee0427e25200530ac892f9a3da7725109ce1790f8010cb5b377')
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')

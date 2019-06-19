@@ -16,6 +16,8 @@ class Paraview(CMakePackage):
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
 
+    maintainers = ['chuckatkins', 'danlipsa']
+
     version('develop', branch='master', submodules=True)
     version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
