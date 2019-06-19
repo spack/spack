@@ -16,20 +16,41 @@ class Xtensor(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('0.20.7', sha256='b45290d1bb0d6cef44771e7482f1553b2aa54dbf99ef9406fec3eb1e4d01d52b')
     version('0.15.1', 'c24ecc406003bd1ac22291f1f7cac29a')
     version('0.13.1', '80e7e33f05066d17552bf0f8b582dcc5')
 
     variant('xsimd', default=True,
             description='Enable SIMD intrinsics')
+    variant('tbb', default=True,
+            description='Enable TBB parallelization')
 
-    depends_on('xtl')
-    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1:')
+    depends_on('xtl', when='@develop')
+    depends_on('xtl@0.6.4:0.6.99', when='@0.20.7')
+    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1')
     depends_on('xtl@0.3.3:0.3.99', when='@0.13.1')
-    depends_on('xsimd@4.0.0', when='@0.15.1 +xsimd')
-    depends_on('xsimd@3.1.0', when='@0.13.1 +xsimd')
+    depends_on('xsimd', when='@develop')
+    depends_on('xsimd@7.2.3:7.99', when='@0.20.7 +xsimd')
+    depends_on('xsimd@4.0.0:4.99', when='@0.15.1 +xsimd')
+    depends_on('xsimd@3.1.0:3.99', when='@0.13.1 +xsimd')
+    depends_on('intel-tbb', when='+tbb')
 
     # C++14 support
     conflicts('%gcc@:4.8')
     conflicts('%clang@:3.5')
     # untested: conflicts('%intel@:15')
     # untested: conflicts('%pgi@:14')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        args = [
+            '-DBUILD_TESTS:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF'),
+            '-DXTENSOR_USE_XSIMD:BOOL={0}'.format(
+                'ON' if '+xsimd' in spec else 'OFF'),
+            '-DXTENSOR_USE_TBB:BOOL={0}'.format(
+                'ON' if '+tbb' in spec else 'OFF')
+        ]
+
+        return args
