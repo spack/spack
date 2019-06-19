@@ -20,6 +20,7 @@ class Qthreads(AutotoolsPackage):
     homepage = "http://www.cs.sandia.gov/qthreads/"
 
     url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
+    version("1.14", "3e6eb58baf78dc961b19a37b2dc4f9a5")
     version("1.12", "c857d175f8135eaa669f3f8fa0fb0c09")
     version("1.11", "68b5f9a41cfd1a2ac112cc4db0612326")
     version("1.10", "d1cf3cf3f30586921359f7840171e551")
