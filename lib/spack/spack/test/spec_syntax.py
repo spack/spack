@@ -105,6 +105,7 @@ class TestSpecSyntax(object):
         """Check that the provided spec parses to the provided token list."""
         spec = shlex.split(str(spec))
         lex_output = sp.SpecLexer().lex(spec)
+        assert len(tokens) == len(lex_output), "unexpected number of tokens"
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type == sp.ID or tok.type == sp.VAL:
                 assert tok == spec_tok
@@ -184,7 +185,7 @@ class TestSpecSyntax(object):
         self.check_parse(
             "mvapich_foo"
             " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
-            " ^stackwalker@8.1_1e arch=test-redhat6-x86_32")
+            " ^stackwalker@8.1_1e arch=test-redhat6-x86")
 
     def test_canonicalize(self):
         self.check_parse(
@@ -749,3 +750,16 @@ class TestSpecSyntax(object):
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
+
+    @pytest.mark.parametrize('expected_tokens,spec_string', [
+        ([Token(sp.ID, 'target'),
+          Token(sp.EQ, '='),
+          Token(sp.VAL, 'broadwell')],
+         'target=broadwell'),
+        ([Token(sp.ID, 'target'),
+          Token(sp.EQ, '='),
+          Token(sp.VAL, ':broadwell,icelake')],
+         'target=:broadwell,icelake')
+    ])
+    def test_target_tokenization(self, expected_tokens, spec_string):
+        self.check_lex(expected_tokens, spec_string)

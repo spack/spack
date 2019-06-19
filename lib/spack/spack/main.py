@@ -17,6 +17,7 @@ import inspect
 import pstats
 import argparse
 import traceback
+import warnings
 from six import StringIO
 
 import llnl.util.tty as tty
@@ -389,8 +390,16 @@ def make_argument_parser(**kwargs):
     return parser
 
 
+def send_warning_to_tty(message, *args):
+    """Redirects messages to tty.warn."""
+    tty.warn(message)
+
+
 def setup_main_options(args):
     """Configure spack globals based on the basic options."""
+    # Assign a custom function to show warnings
+    warnings.showwarning = send_warning_to_tty
+
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)

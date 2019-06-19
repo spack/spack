@@ -222,14 +222,6 @@ class Compiler(object):
     def fc_rpath_arg(self):
         return '-Wl,-rpath,'
 
-    @property
-    def isa_flag(self):
-        return '-march'
-
-    @property
-    def tuning_flag(self):
-        return '-mtune'
-
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
     # Name of module used to switch versions of this compiler
@@ -427,12 +419,6 @@ class Compiler(object):
     @classmethod
     def fc_version(cls, fc):
         return cls.default_version(fc)
-
-    def isa_name_for_target(self, target):
-        return str(target)
-
-    def tuning_name_for_target(self, target):
-        return str(target)
 
     @classmethod
     def search_regexps(cls, language):

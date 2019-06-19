@@ -10,6 +10,8 @@ import re
 import sys
 import argparse
 
+import six
+
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault, index_by
 from llnl.util.tty.colify import colify
@@ -132,7 +134,7 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get('tests', False)
 
     try:
-        sargs = args if isinstance(args, basestring) else ' '.join(args)
+        sargs = args if isinstance(args, six.string_types) else ' '.join(args)
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:

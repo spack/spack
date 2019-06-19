@@ -5,6 +5,11 @@
 
 from __future__ import print_function
 
+import collections
+
+import llnl.util.cpu
+import llnl.util.tty.colify as colify
+import llnl.util.tty.color as color
 import spack.architecture as architecture
 
 description = "print architecture information about this machine"
@@ -13,6 +18,10 @@ level = "short"
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '--known-targets', action='store_true',
+        help='show a list of all known targets and exit'
+    )
     parts = subparser.add_mutually_exclusive_group()
     parts2 = subparser.add_mutually_exclusive_group()
     parts.add_argument(
@@ -32,7 +41,41 @@ def setup_parser(subparser):
         help='print backend')
 
 
+def display_targets(targets):
+    """Prints a human readable list of the targets passed as argument."""
+    by_vendor = collections.defaultdict(list)
+    for _, target in targets.items():
+        by_vendor[target.vendor].append(target)
+
+    def display_target_group(header, target_group):
+        print(header)
+        colify.colify(target_group, indent=4)
+        print('')
+
+    generic_architectures = by_vendor.pop('generic', None)
+    if generic_architectures:
+        header = color.colorize(r'@*B{Generic architectures (families)}')
+        group = sorted(generic_architectures, key=lambda x: str(x))
+        display_target_group(header, group)
+
+    for vendor, vendor_targets in by_vendor.items():
+        by_family = collections.defaultdict(list)
+        for t in vendor_targets:
+            by_family[str(t.family)].append(t)
+
+        for family, group in by_family.items():
+            vendor = color.colorize(r'@*B{' + vendor + r'}')
+            family = color.colorize(r'@*B{' + family + r'}')
+            header = ' - '.join([vendor, family])
+            group = sorted(group, key=lambda x: len(x.ancestors))
+            display_target_group(header, group)
+
+
 def arch(parser, args):
+    if args.known_targets:
+        display_targets(llnl.util.cpu.targets)
+        return
+
     if args.frontend:
         arch = architecture.Arch(architecture.platform(),
                                  'frontend', 'frontend')
