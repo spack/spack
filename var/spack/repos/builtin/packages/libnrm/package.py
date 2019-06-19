@@ -12,7 +12,7 @@ class Libnrm(AutotoolsPackage):
 
     homepage = "https://xgitlab.cels.anl.gov/argo/libnrm"
     url = "https://www.mcs.anl.gov/research/projects/argo/downloads/libnrm-0.1.0.tar.gz"
-    version('0.1.0', '2edae952edce3df9f1562ea64d4ae201')
+    version('0.1.0', '9261a55e58fd6350d9382dd09001cfd4')
 
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')
