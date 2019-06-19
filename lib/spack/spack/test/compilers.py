@@ -70,7 +70,7 @@ def test_multiple_conflicting_compiler_definitions(mutable_config):
     compiler_config[0]['compiler']['paths']['f77'] = 'f77'
     mutable_config.update_config('compilers', compiler_config)
 
-    arch_spec = spack.spec.ArchSpec('test', 'test', 'test')
+    arch_spec = spack.spec.ArchSpec(('test', 'test', 'test'))
     cspec = compiler_config[0]['compiler']['spec']
     cmp = compilers.compiler_for_spec(cspec, arch_spec)
     assert cmp.f77 == 'f77'

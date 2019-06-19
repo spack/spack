@@ -200,23 +200,9 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
-    # Set the tuning parameters that the compiler will add
-    isa_target = compiler.isa_name_for_target(spec.architecture.target)
-    if spec.variants['tuning'].value == 'generic':
-        tuning_target = 'generic'
-    else:
-        tuning_target = compiler.tuning_name_for_target(
-            spec.architecture.target
-            )
-    if compiler.isa_flag and isa_target:
-        isa_arg = '{0}={1}'.format(compiler.isa_flag, isa_target)
-    else:
-        isa_arg = ''
-    if compiler.tuning_flag and tuning_target:
-        tuning_arg = '{0}={1}'.format(compiler.tuning_flag, tuning_target)
-    else:
-        tuning_arg = ''
-    env.set('SPACK_TARGET_ARGS', '{0} {1}'.format(isa_arg, tuning_arg))
+    # Set the target parameters that the compiler will add
+    isa_arg = spec.architecture.target.optimization_flags(compiler)
+    env.set('SPACK_TARGET_ARGS', isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
