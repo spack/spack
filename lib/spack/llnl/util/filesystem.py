@@ -455,8 +455,10 @@ def working_dir(dirname, **kwargs):
 
     orig_dir = os.getcwd()
     os.chdir(dirname)
-    yield
-    os.chdir(orig_dir)
+    try:
+        yield
+    finally:
+        os.chdir(orig_dir)
 
 
 @contextmanager
@@ -603,6 +605,36 @@ def ancestor(dir, n=1):
     for i in range(n):
         parent = os.path.dirname(parent)
     return parent
+
+
+def get_single_file(directory):
+    fnames = os.listdir(directory)
+    if len(fnames) != 1:
+        raise ValueError("Expected exactly 1 file, got {0}"
+                         .format(str(len(fnames))))
+    return fnames[0]
+
+
+@contextmanager
+def temp_cwd():
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        with working_dir(tmp_dir):
+            yield tmp_dir
+    finally:
+        shutil.rmtree(tmp_dir)
+
+
+@contextmanager
+def temp_rename(orig_path, temp_path):
+    same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
+    if not same_path:
+        shutil.move(orig_path, temp_path)
+    try:
+        yield
+    finally:
+        if not same_path:
+            shutil.move(temp_path, orig_path)
 
 
 def can_access(file_name):
