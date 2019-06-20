@@ -1411,10 +1411,10 @@ def search_paths_for_executables(*path_hints):
         if not os.path.isdir(path):
             continue
 
-        executable_paths.append(path)
+        executable_paths.append(os.path.abspath(path))
 
         bin_dir = os.path.join(path, 'bin')
         if os.path.isdir(bin_dir):
-            executable_paths.append(os.path.abspath(bin_dir))
+            executable_paths.append(bin_dir)
 
     return executable_paths
