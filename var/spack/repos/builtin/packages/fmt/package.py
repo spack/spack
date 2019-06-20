@@ -65,6 +65,9 @@ class Fmt(CMakePackage):
 
         args.append('-DCMAKE_CXX_STANDARD={0}'.format(
                     spec.variants['cxxstd'].value))
+        # Require standard at configure time to guarantee the
+        # compiler supports the selected standard.
+        args.append('-DCMAKE_CXX_STANDARD_REQUIRED=ON')
 
         # When cxxstd is 98, must disable FMT_USE_CPP11
         if 'cxxstd=98' in spec:
