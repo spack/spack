@@ -129,6 +129,12 @@ class Boost(Package):
             description='Generate position-independent code (PIC), useful '
                         'for building static libraries')
 
+    # https://boostorg.github.io/build/manual/develop/index.html#bbv2.builtin.features.visibility
+    variant('visibility', values=('global', 'protected', 'hidden'),
+            default='hidden', multi=False,
+            description='Default symbol visibility in compiled libraries '
+            '(1.69.0 or later)')
+
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
@@ -334,6 +340,10 @@ class Boost(Package):
 
         if cxxflags:
             options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))
+
+        # Visibility was added in 1.69.0.
+        if spec.satisfies('@1.69.0:'):
+            options.append('visibility=%s' % spec.variants['visibility'].value)
 
         return threading_opts
 
