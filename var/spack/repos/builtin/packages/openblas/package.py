@@ -110,6 +110,9 @@ class Openblas(MakefilePackage):
           sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
           when='@0.3.0:0.3.3')
 
+    # Fix for executing Makefile.prebuild with compiler flags
+    patch('openblas_fujitsu.patch', when='%fj')
+
     conflicts('%intel@16', when='@0.2.15:0.2.19')
 
     @property
@@ -151,6 +154,9 @@ class Openblas(MakefilePackage):
             'CC={0}'.format(spack_cc),
             'FC={0}'.format(spack_fc),
         ]
+        picflag = ''
+        spack_cflags = ''
+        spack_fflags = ''
 
         # force OpenBLAS to use externally defined parallel build
         if self.spec.version < Version('0.3'):
@@ -177,11 +183,19 @@ class Openblas(MakefilePackage):
             make_defs += ['NO_AVX2=1']
         if '~shared' in self.spec:
             if '+pic' in self.spec:
-                make_defs.extend([
-                    'CFLAGS={0}'.format(self.compiler.pic_flag),
-                    'FFLAGS={0}'.format(self.compiler.pic_flag)
-                ])
+                picflag = self.compiler.pic_flag
+                picflag = self.compiler.pic_flag
             make_defs += ['NO_SHARED=1']
+        # add spack flags when building Fujitsu compiler
+        if self.compiler.name == 'fj':
+            spack_cflags = env["SPACK_CFLAGS"]
+            spack_fflags = env["SPACK_FFLAGS"]
+
+        if picflag != '' or spack_cflags != '' or spack_fflags != '':
+            make_defs.extend([
+                'CFLAGS={0} {1}'.format(picflag, spack_cflags),
+                'FFLAGS={0} {1}'.format(picflag, spack_fflags)
+            ])
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']

@@ -1,0 +1,56 @@
+diff -ur OpenBLAS-0.3.6/Makefile.prebuild OpenBLAS-0.3.6_fix/Makefile.prebuild
+--- OpenBLAS-0.3.6/Makefile.prebuild	2019-04-30 02:22:19.000000000 +0900
++++ OpenBLAS-0.3.6_fix/Makefile.prebuild	2019-06-18 16:59:45.610233737 +0900
+@@ -42,9 +42,9 @@
+ 	./getarch_2nd  1 >> $(TARGET_CONF)
+ 
+ config.h : c_check f_check getarch
+-	perl ./c_check $(TARGET_MAKE) $(TARGET_CONF) $(CC) $(TARGET_FLAGS)
++	perl ./c_check $(TARGET_MAKE) $(TARGET_CONF) $(CC) $(TARGET_FLAGS) $(FJ_CFLAGS)
+ ifneq ($(ONLY_CBLAS), 1)
+-	perl ./f_check $(TARGET_MAKE) $(TARGET_CONF) $(FC) $(TARGET_FLAGS)
++	perl ./f_check $(TARGET_MAKE) $(TARGET_CONF) $(FC) $(TARGET_FLAGS) $(FJ_FFLAGS)
+ else
+ #When we only build CBLAS, we set NOFORTRAN=2
+ 	echo "NOFORTRAN=2" >> $(TARGET_MAKE)
+@@ -59,13 +59,13 @@
+ 
+ 
+ getarch : getarch.c cpuid.S dummy $(CPUIDEMU)
+-	$(HOSTCC) $(CFLAGS) $(EXFLAGS) -o $(@F) getarch.c cpuid.S $(CPUIDEMU)
++	$(HOSTCC) $(CFLAGS) $(EXFLAGS) -o $(@F) $(FJ_CFLAGS) getarch.c cpuid.S $(CPUIDEMU)
+ 
+ getarch_2nd : getarch_2nd.c config.h dummy
+ ifndef TARGET_CORE
+-	$(HOSTCC) -I. $(CFLAGS) -o $(@F) getarch_2nd.c
++	$(HOSTCC) -I. $(CFLAGS) -o $(@F) $(FJ_CFLAGS) getarch_2nd.c
+ else
+-	$(HOSTCC) -I. $(CFLAGS) -DBUILD_KERNEL -o $(@F) getarch_2nd.c
++	$(HOSTCC) -I. $(CFLAGS) -DBUILD_KERNEL -o $(@F) $(FJ_CFLAGS) getarch_2nd.c
+ endif
+ 
+ dummy:
+diff -ur OpenBLAS-0.3.6/Makefile.system OpenBLAS-0.3.6_fix/Makefile.system
+--- OpenBLAS-0.3.6/Makefile.system	2019-04-30 02:22:19.000000000 +0900
++++ OpenBLAS-0.3.6_fix/Makefile.system	2019-06-18 16:59:50.020697134 +0900
+@@ -200,7 +200,7 @@
+ export GOTOBLAS_MAKEFILE = 1
+ 
+ # Generating Makefile.conf and config.h
+-DUMMY := $(shell $(MAKE) -C $(TOPDIR) -f Makefile.prebuild CC="$(CC)" FC="$(FC)" HOSTCC="$(HOSTCC)" CFLAGS="$(GETARCH_FLAGS)" BINARY=$(BINARY) USE_OPENMP=$(USE_OPENMP) TARGET_CORE=$(TARGET_CORE) ONLY_CBLAS=$(ONLY_CBLAS) TARGET=$(TARGET) all)
++DUMMY := $(shell $(MAKE) -C $(TOPDIR) -f Makefile.prebuild CC="$(CC)" FC="$(FC)" HOSTCC="$(HOSTCC)" CFLAGS="$(GETARCH_FLAGS)" FJ_CFLAGS="$(CFLAGS)" FJ_FFLAGS="$(FFLAGS)"  BINARY=$(BINARY) USE_OPENMP=$(USE_OPENMP) TARGET_CORE=$(TARGET_CORE) ONLY_CBLAS=$(ONLY_CBLAS) TARGET=$(TARGET) all)
+ 
+ ifndef TARGET_CORE
+ include $(TOPDIR)/Makefile.conf
+diff -ur OpenBLAS-0.3.6/f_check OpenBLAS-0.3.6_fix/f_check
+--- OpenBLAS-0.3.6/f_check	2019-04-30 02:22:19.000000000 +0900
++++ OpenBLAS-0.3.6_fix/f_check	2019-06-18 16:59:53.031013421 +0900
+@@ -69,7 +69,7 @@
+ 	    $bu       = "_";
+ 	}
+ 
+-	if ($data =~ /GNU/) {
++	if ($data =~ /GNU/ && $data !~ /Fujitsu/) {
+ 
+ 	    $data =~ /(\d)\.(\d).(\d)/;
+ 	    $major = $1;
