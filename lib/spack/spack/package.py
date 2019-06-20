@@ -888,7 +888,6 @@ class PackageBase(PackageCore):
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
 
-
     @property
     def installed_upstream(self):
         if not hasattr(self, '_installed_upstream'):

@@ -81,7 +81,7 @@ class DependenciesPackageTemplate(object):
 
     url = ""  # There is NO URL for a dependencies package
 
-    body = "" # There is no body for a dependencies package
+    body = ""  # There is no body for a dependencies package
 
     def __init__(self, name, versions):
         self.name       = name
