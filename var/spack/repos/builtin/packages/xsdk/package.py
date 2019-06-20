@@ -8,14 +8,13 @@ import os
 from spack import *
 
 
-class Xsdk(Package):
+class Xsdk(DependenciesPackage):
     """Xsdk is a suite of Department of Energy (DOE) packages for numerical
        simulation. This is a Spack bundle package that installs the xSDK
        packages
     """
 
     homepage = "http://xsdk.info"
-    url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
 
     maintainers = ['balay', 'luszczek']
 
