@@ -8,14 +8,13 @@ import os
 from spack import *
 
 
-class Xsdk(Package):
+class Xsdk(DependenciesPackage):
     """Xsdk is a suite of Department of Energy (DOE) packages for numerical
        simulation. This is a Spack bundle package that installs the xSDK
        packages
     """
 
     homepage = "http://xsdk.info"
-    url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
 
     maintainers = ['balay', 'luszczek']
 
@@ -122,12 +121,3 @@ class Xsdk(Package):
 
     # How do we propagate debug flag to all depends on packages ?
     # If I just do spack install xsdk+debug will that propogate it down?
-
-    # Dummy install for now,  will be removed when metapackage is available
-    def install(self, spec, prefix):
-        # Prevent the error message
-        #      ==> Error: Install failed for xsdk.  Nothing was installed!
-        #      ==> Error: Installation process had nonzero exit code : 256
-        with open(os.path.join(spec.prefix, 'bundle-package.txt'), 'w') as out:
-            out.write('This is a bundle\n')
-            out.close()

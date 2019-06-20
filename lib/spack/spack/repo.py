@@ -1069,6 +1069,12 @@ class Repo(object):
                 # user the correct package.py where the syntax error is located
                 raise SyntaxError('invalid syntax in {0:}, line {1:}'
                                   ''.format(file_path, e.lineno))
+            except NameError as e:
+                desc = str(e).split()
+                raise NameError('{0} in:{1}    '
+                                '{2}'.format(' '.join(desc[1:]), os.linesep,
+                                             file_path))
+
             module.__package__ = self.full_namespace
             module.__loader__ = self
             self._modules[pkg_name] = module

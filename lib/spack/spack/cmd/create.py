@@ -57,8 +57,7 @@ class {class_name}({base_class_name}):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "{url}"
+    homepage = "http://www.example.com"{url}
 
 {versions}
 
@@ -68,25 +67,25 @@ class {class_name}({base_class_name}):
 '''
 
 
-class PackageTemplate(object):
-    """Provides the default values to be used for the package file template"""
+class DependenciesPackageTemplate(object):
+    """
+    Provides the default values to be used for the dependencies-only package
+    file template.
+    """
 
-    base_class_name = 'Package'
+    base_class_name = 'DependenciesPackage'
 
     dependencies = """\
     # FIXME: Add dependencies if required.
     # depends_on('foo')"""
 
-    body = """\
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')"""
+    url = ""  # There is NO URL for a dependencies package
 
-    def __init__(self, name, url, versions):
+    body = ""  # There is no body for a dependencies package
+
+    def __init__(self, name, versions):
         self.name       = name
         self.class_name = mod_to_class(name)
-        self.url        = url
         self.versions   = versions
 
     def write(self, pkg_path):
@@ -102,6 +101,28 @@ class PackageTemplate(object):
                 versions=self.versions,
                 dependencies=self.dependencies,
                 body=self.body))
+
+
+class PackageTemplate(DependenciesPackageTemplate):
+    """Provides the default values to be used for the package file template"""
+
+    base_class_name = 'Package'
+
+    body = """\
+    def install(self, spec, prefix):
+        # FIXME: Unknown build system
+        make()
+        make('install')"""
+
+    # Ensure the URL appears on the line after the homepage
+    url_line = """\
+
+    url      = {url}"""
+
+    def __init__(self, name, url, versions):
+        super(PackageTemplate, self).__init__(name, versions)
+
+        self.url = self.url_line.format(url=url)
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -351,22 +372,23 @@ class IntelPackageTemplate(PackageTemplate):
 
 
 templates = {
-    'autotools':  AutotoolsPackageTemplate,
-    'autoreconf': AutoreconfPackageTemplate,
-    'cmake':      CMakePackageTemplate,
-    'qmake':      QMakePackageTemplate,
-    'scons':      SconsPackageTemplate,
-    'waf':        WafPackageTemplate,
-    'bazel':      BazelPackageTemplate,
-    'python':     PythonPackageTemplate,
-    'r':          RPackageTemplate,
-    'perlmake':   PerlmakePackageTemplate,
-    'perlbuild':  PerlbuildPackageTemplate,
-    'octave':     OctavePackageTemplate,
-    'makefile':   MakefilePackageTemplate,
-    'intel':      IntelPackageTemplate,
-    'meson':      MesonPackageTemplate,
-    'generic':    PackageTemplate,
+    'autotools':    AutotoolsPackageTemplate,
+    'autoreconf':   AutoreconfPackageTemplate,
+    'cmake':        CMakePackageTemplate,
+    'dependencies': DependenciesPackageTemplate,
+    'qmake':        QMakePackageTemplate,
+    'scons':        SconsPackageTemplate,
+    'waf':          WafPackageTemplate,
+    'bazel':        BazelPackageTemplate,
+    'python':       PythonPackageTemplate,
+    'r':            RPackageTemplate,
+    'perlmake':     PerlmakePackageTemplate,
+    'perlbuild':    PerlbuildPackageTemplate,
+    'octave':       OctavePackageTemplate,
+    'makefile':     MakefilePackageTemplate,
+    'intel':        IntelPackageTemplate,
+    'meson':        MesonPackageTemplate,
+    'generic':      PackageTemplate,
 }
 
 
@@ -600,6 +622,9 @@ def get_build_system(args, guesser):
         else:
             msg = "This package looks like it uses the {0} build system"
             tty.msg(msg.format(template))
+    else:
+        template = 'dependencies'
+        tty.warn("No URL provided.  Using the dependencies package template.")
 
     return template
 
@@ -654,8 +679,11 @@ def create(parser, args):
     build_system = get_build_system(args, guesser)
 
     # Create the package template object
+    constr_args = [name, versions]
     package_class = templates[build_system]
-    package = package_class(name, url, versions)
+    if package_class != DependenciesPackageTemplate:
+        constr_args.insert(1, url)
+    package = package_class(*constr_args)
     tty.msg("Created template for {0} package".format(package.name))
 
     # Create a directory for the new package
