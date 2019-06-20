@@ -40,19 +40,16 @@ class Warpx(MakefilePackage):
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
              when='@master',
-             tag='master',
-             placement='amrex')
+             tag='master')
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
              when='@dev',
-             tag='development',
-             placement='amrex')
+             tag='development')
 
     resource(name='picsar',
              git='https://bitbucket.org/berkeleylab/picsar.git',
-             tag='master',
-             placement='picsar')
+             tag='master')
 
     @property
     def build_targets(self):
