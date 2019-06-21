@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
 from spack import *
 
 
-class Xsdk(DependenciesPackage):
+class Xsdk(BundlePackage):
     """Xsdk is a suite of Department of Energy (DOE) packages for numerical
        simulation. This is a Spack bundle package that installs the xSDK
        packages

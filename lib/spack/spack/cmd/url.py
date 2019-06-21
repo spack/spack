@@ -262,7 +262,7 @@ def url_stats(args):
         # TODO: so url stats total does not change?
         if not pkg.requires_url:
             for _ in pkg.versions:
-                inc('n/a', 'total')
+                inc('No source', 'total')
                 nvers += 1
             continue
 

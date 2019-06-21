@@ -356,7 +356,7 @@ class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
-    #: List of attributes which affect do not affect a package's content.
+    #: List of attributes which reflect a package's content.
     metadata_attrs = ['homepage']
 
     def __init__(self, spec):
@@ -365,8 +365,6 @@ class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # this determines how the package should be built.
         self.spec = spec
 
-        # TODO: Is it appropriate to process the version information here?
-        # (This is useful for getting the same url stats total.)
         # Check versions in the versions dict.
         for v in self.versions:
             assert (isinstance(v, Version))
@@ -715,10 +713,11 @@ class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
 
-class DependenciesPackage(PackageCore):
-    """Dependencies-only (aka Bundle, No-Source) installation package."""
-    #: The one and only phase
-    phases = ['install']
+class BundlePackage(PackageCore):
+    """
+    This package does not have anything of its own to install; rather, it
+    depends on other packages to ensure they are concretized together.
+    """
 
 
 class PackageBase(PackageCore):
@@ -861,11 +860,13 @@ class PackageBase(PackageCore):
     #: index of patches by sha256 sum, built lazily
     _patches_by_hash = None
 
+    #: List of attributes which reflect a package's content.
+    metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
+                      'make_jobs']
+
     def __init__(self, spec):
         super(PackageBase, self).__init__(spec)
 
-        self.metadata_attrs.extend(['url', 'list_url', 'extendable',
-                                    'parallel', 'make_jobs'])
 
         # Allow custom staging paths for packages
         self.path = None
