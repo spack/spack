@@ -465,6 +465,19 @@ class TestStage(object):
             check_setup(stage, None, archive)
         check_destroy(stage, None)
 
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_noexpand_stage_file(
+            self, mock_stage_archive, mock_noexpand_resource):
+        """When creating a stage with a nonexpanding URL, the 'archive_file'
+        property of the stage should refer to the path of that file.
+        """
+        test_noexpand_fetcher = spack.fetch_strategy.from_kwargs(
+            url='file://' + mock_noexpand_resource, expand=False)
+        with Stage(test_noexpand_fetcher) as stage:
+            stage.fetch()
+            stage.expand_archive()
+            assert os.path.exists(stage.archive_file)
+
     @pytest.mark.disable_clean_stage_check
     @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_composite_stage_with_noexpand_resource(
