@@ -190,9 +190,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'build.txt'  # build log.
-        self.build_env_name      = 'build.env'  # build environment
-        self.packages_dir        = 'repos'      # archive of package.py files
+        self.build_log_name      = 'build-out.txt'  # build log
+        self.build_env_name      = 'build-env.txt'  # build environment
+        self.packages_dir        = 'repos'          # archive of package.py files
 
     @property
     def hidden_file_paths(self):
@@ -237,15 +237,18 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.check_upstream = True
 
     def metadata_path(self, spec):
-        return os.path.join(spec.prefix, self.metadata_dir)
+        if spec is not None:
+            return os.path.join(spec.prefix, self.metadata_dir)
+        else:
+            return self.metadata_dir
 
-    def build_log_path(self, spec):
+    def build_log_path(self, spec=None):
         return os.path.join(self.metadata_path(spec), self.build_log_name)
 
-    def build_env_path(self, spec):
+    def build_env_path(self, spec=None):
         return os.path.join(self.metadata_path(spec), self.build_env_name)
 
-    def build_packages_path(self, spec):
+    def build_packages_path(self, spec=None):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
 
     def create_install_directory(self, spec):

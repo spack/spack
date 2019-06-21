@@ -63,6 +63,16 @@ from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
 
+# Filename for the unsuccessful Spack build log
+_spack_build_errfile = 'spack-build-err.txt'
+
+# Filename for the successful Spack build log
+_spack_build_logfile = 'spack-build-out.txt'
+
+# Filename for the Spack build environment file
+_spack_build_envfile = 'spack-build-env.txt'
+
+
 class InstallPhase(object):
     """Manages a single phase of the installation.
 
@@ -432,8 +442,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
-    #: Matching artifacts found at the end of the build process will
-    #: be copied in the same directory tree as build.env and build.txt.
+    #: Matching artifacts found at the end of the build process will be
+    #: copied in the same directory tree as build-env.txt and build-out.txt.
     archive_files = []
 
     #
@@ -782,11 +792,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def env_path(self):
-        return os.path.join(self.stage.path, 'spack-build.env')
+        """The Spack build environment file path."""
+        return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
     def log_path(self):
-        return os.path.join(self.stage.path, 'spack-build.txt')
+        """The Spack build log file path."""
+        return os.path.join(self.stage.path, _spack_build_errfile)
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1389,7 +1401,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             )
 
     def do_install(self, **kwargs):
-
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -1814,6 +1825,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.installed:
             return spack.store.layout.build_log_path(self.spec)
         else:
+            # TODO/TLD: Need to have error path if exists
             return self.log_path
 
     @classmethod
