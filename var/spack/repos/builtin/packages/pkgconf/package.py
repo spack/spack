@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Pkgconf(AutotoolsPackage):
+class Pkgconf(AutotoolsPackageBase):
     """pkgconf is a program which helps to configure compiler and linker
     flags for development frameworks. It is similar to pkg-config from
     freedesktop.org, providing additional functionality while also

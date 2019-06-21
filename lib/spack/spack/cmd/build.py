@@ -5,7 +5,9 @@
 
 import spack.cmd.configure as cfg
 
-from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.autotools import (
+    AutotoolsPackage, AutotoolsPackageBase
+)
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.scons import SConsPackage
@@ -21,6 +23,7 @@ level = "long"
 
 build_system_to_phase = {
     AutotoolsPackage: 'build',
+    AutotoolsPackageBase: 'build',
     CMakePackage: 'build',
     QMakePackage: 'build',
     SConsPackage: 'build',

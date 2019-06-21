@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libsigsegv(AutotoolsPackage):
+class Libsigsegv(AutotoolsPackageBase):
     """GNU libsigsegv is a library for handling page faults in user mode."""
 
     homepage = "https://www.gnu.org/software/libsigsegv/"

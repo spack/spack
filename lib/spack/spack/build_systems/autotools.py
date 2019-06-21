@@ -19,7 +19,7 @@ from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
 
-class AutotoolsPackage(PackageBase):
+class AutotoolsPackageBase(PackageBase):
     """Specialized class for packages built using GNU Autotools.
 
     This class provides four phases that can be overridden:
@@ -54,7 +54,7 @@ class AutotoolsPackage(PackageBase):
     phases = ['autoreconf', 'configure', 'build', 'install']
     #: This attribute is used in UI queries that need to know the build
     #: system base class
-    build_system_class = 'AutotoolsPackage'
+    build_system_class = 'AutotoolsPackageBase'
     #: Whether or not to update ``config.guess`` on old architectures
     patch_config_guess = True
 
@@ -75,14 +75,6 @@ class AutotoolsPackage(PackageBase):
     force_autoreconf = False
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
-
-    # Tarball releases generally come with a generated `configure` script,
-    # however, non-tarball versions need the following dependencies to
-    # generate this `configure` script during the `autoreconf` phase.
-    depends_on('automake', type='build', when='@develop,master')
-    depends_on('autoconf', type='build', when='@develop,master')
-    depends_on('libtool',  type='build', when='@develop,master')
-    depends_on('m4',       type='build', when='@develop,master')
 
     @property
     def archive_files(self):
@@ -464,3 +456,17 @@ class AutotoolsPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
+
+
+class AutotoolsPackage(AutotoolsPackageBase):
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
+    build_system_class = 'AutotoolsPackage'
+
+    # Tarball releases generally come with a generated `configure` script,
+    # however, non-tarball versions need the following dependencies to
+    # generate this `configure` script during the `autoreconf` phase.
+    depends_on('automake', type='build', when='@develop,master')
+    depends_on('autoconf', type='build', when='@develop,master')
+    depends_on('libtool',  type='build', when='@develop,master')
+    depends_on('m4',       type='build', when='@develop,master')

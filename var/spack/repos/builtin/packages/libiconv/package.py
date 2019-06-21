@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libiconv(AutotoolsPackage):
+class Libiconv(AutotoolsPackageBase):
     """GNU libiconv provides an implementation of the iconv() function
     and the iconv program for character set conversion."""
 

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Tar(AutotoolsPackage):
+class Tar(AutotoolsPackageBase):
     """GNU Tar provides the ability to create tar archives, as well as various
     other kinds of manipulation."""
 

@@ -9,7 +9,7 @@ from os.path import exists, join
 from os import makedirs
 
 
-class Ncurses(AutotoolsPackage):
+class Ncurses(AutotoolsPackageBase):
     """The ncurses (new curses) library is a free software emulation of
     curses in System V Release 4.0, and more. It uses terminfo format,
     supports pads and color and multiple highlights and forms

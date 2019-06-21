@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libtool(AutotoolsPackage):
+class Libtool(AutotoolsPackageBase):
     """libtool -- library building part of autotools."""
 
     homepage = 'https://www.gnu.org/software/libtool/'

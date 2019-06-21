@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Readline(AutotoolsPackage):
+class Readline(AutotoolsPackageBase):
     """The GNU Readline library provides a set of functions for use by
     applications that allow users to edit command lines as they are typed in.
     Both Emacs and vi editing modes are available. The Readline library

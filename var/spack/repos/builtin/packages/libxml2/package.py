@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libxml2(AutotoolsPackage):
+class Libxml2(AutotoolsPackageBase):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
        project (but usable outside of the Gnome platform), it is free
        software available under the MIT License."""

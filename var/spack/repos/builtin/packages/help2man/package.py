@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Help2man(AutotoolsPackage):
+class Help2man(AutotoolsPackageBase):
     """help2man produces simple manual pages from the '--help' and '--version'
     output of other commands."""
 

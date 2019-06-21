@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Gettext(AutotoolsPackage):
+class Gettext(AutotoolsPackageBase):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
     homepage = "https://www.gnu.org/software/gettext/"

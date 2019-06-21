@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libunistring(AutotoolsPackage):
+class Libunistring(AutotoolsPackageBase):
     """This library provides functions for manipulating Unicode strings
     and for manipulating C strings according to the Unicode standard."""
 

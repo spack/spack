@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Automake(AutotoolsPackage):
+class Automake(AutotoolsPackageBase):
     """Automake -- make file builder part of autotools"""
 
     homepage = 'http://www.gnu.org/software/automake/'

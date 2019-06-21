@@ -9,7 +9,9 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.install as inst
 
-from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.autotools import (
+    AutotoolsPackage, AutotoolsPackageBase
+)
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.waf import WafPackage
@@ -24,6 +26,7 @@ level = "long"
 
 build_system_to_phase = {
     AutotoolsPackage: 'configure',
+    AutotoolsPackageBase: 'configure',
     CMakePackage: 'cmake',
     QMakePackage: 'qmake',
     WafPackage: 'configure',

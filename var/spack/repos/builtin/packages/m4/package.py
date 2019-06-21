@@ -6,7 +6,7 @@
 from spack import *
 
 
-class M4(AutotoolsPackage):
+class M4(AutotoolsPackageBase):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
 
     homepage = "https://www.gnu.org/software/m4/m4.html"

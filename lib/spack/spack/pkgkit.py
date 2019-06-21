@@ -15,7 +15,9 @@ from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.package import inject_flags, env_flags, build_system_flags
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.aspell_dict import AspellDictPackage
-from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.autotools import (
+    AutotoolsPackage, AutotoolsPackageBase
+)
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.qmake import QMakePackage

@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Gdbm(AutotoolsPackage):
+class Gdbm(AutotoolsPackageBase):
     """GNU dbm (or GDBM, for short) is a library of database functions
     that use extensible hashing and work similar to the standard UNIX dbm.
     These routines are provided to a programmer needing to create and

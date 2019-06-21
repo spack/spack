@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Texinfo(AutotoolsPackage):
+class Texinfo(AutotoolsPackageBase):
     """Texinfo is the official documentation format of the GNU project.
 
     It was invented by Richard Stallman and Bob Chassell many years ago,
