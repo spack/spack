@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 
+
 class PyAstor(PythonPackage):
     """
     astor is designed to allow easy manipulation of Python source via the AST.
