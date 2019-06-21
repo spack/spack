@@ -192,7 +192,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.extension_file_name = 'extensions.yaml'
         self.build_log_name      = 'build-out.txt'  # build log
         self.build_env_name      = 'build-env.txt'  # build environment
-        self.packages_dir        = 'repos'          # archive of package.py files
+        self.packages_dir        = 'repos'  # archive of package.py files
 
     @property
     def hidden_file_paths(self):
