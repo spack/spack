@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mpe2(Package):
+class Mpe2(AutotoolsPackage):
     """Message Passing Extensions (MPE): Parallel, shared X window graphics"""
 
     homepage = "http://www.mcs.anl.gov/research/projects/perfvis/software/MPE/"
@@ -17,18 +17,17 @@ class Mpe2(Package):
     patch('mpe2.patch')
 
     depends_on("mpi")
+    depends_on("libx11")
 
     provides("mpe")
 
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--x-includes=/usr/X11R6/include",
-                  "--x-libraries=/usr/X11R6/lib",
-                  "--enable-mpe_graphics=yes",
-                  "--disable-f77",
-                  "--enable-viewers=no",
-                  "--enable-slog2=no",
-                  "--with-mpicc=mpicc")
+    def configure_args(self):
+        args = []
 
-        make()
-        make("install")
+        args.append('--enable-mpe_graphics=yes')
+        args.append('--disable-f77')
+        args.append('--enable-viewers=no')
+        args.append('--enable-slog2=no')
+        args.append('--with-mpicc=%s' % self.spec['mpi'].mpicc)
+
+        return args
