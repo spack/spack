@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mpileaks(Package):
+class Mpileaks(AutotoolsPackage):
     """Tool to detect and report leaked MPI objects like MPI_Requests and
        MPI_Datatypes."""
 
@@ -19,9 +19,10 @@ class Mpileaks(Package):
     depends_on("adept-utils")
     depends_on("callpath")
 
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--with-adept-utils=" + spec['adept-utils'].prefix,
-                  "--with-callpath=" + spec['callpath'].prefix)
-        make()
-        make("install")
+    def configure_args(self):
+        args = []
+
+        args.append("--with-adept-utils=%s" % self.spec['adept-utils'].prefix)
+        args.append("--with-callpath=%s" % self.spec['callpath'].prefix)
+
+        return args
