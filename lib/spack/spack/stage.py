@@ -296,13 +296,21 @@ class Stage(object):
     def expected_archive_files(self):
         """Possible archive file paths."""
         paths = []
+
+        fnames = []
+        expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.default_fetcher.url)))
+            expanded = self.default_fetcher.expand_archive
+            fnames.append(os.path.basename(self.default_fetcher.url))
 
         if self.mirror_path:
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.mirror_path)))
+            fnames.append(os.path.basename(self.mirror_path))
+
+        paths.extend(os.path.join(self.path, f) for f in fnames)
+        if not expanded:
+            # If the download file is not compressed, the "archive" is a
+            # single file placed in Stage.source_path
+            paths.extend(os.path.join(self.source_path, f) for f in fnames)
 
         return paths
 
