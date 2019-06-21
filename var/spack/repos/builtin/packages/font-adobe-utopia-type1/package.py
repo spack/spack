@@ -6,7 +6,7 @@
 from spack import *
 
 
-class FontAdobeUtopiaType1(Package):
+class FontAdobeUtopiaType1(AutotoolsPackage):
     """X.org adobe-utopia-type1 font."""
 
     homepage = "https://cgit.freedesktop.org/xorg/font/adobe-utopia-type1"
@@ -22,10 +22,6 @@ class FontAdobeUtopiaType1(Package):
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')
-
         # `make install` copies the files to the font-util installation.
         # Create a fake directory to convince Spack that we actually
         # installed something.
