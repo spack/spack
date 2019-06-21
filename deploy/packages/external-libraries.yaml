@@ -38,6 +38,7 @@ packages:
       - ncurses@5.9
       - ninja@1.8.2
       - openblas@0.3.3
+      - optix
       - python@2.7.15
       - python@3.6.5
       - qhull@2015.2

@@ -24,7 +24,7 @@ class Brion(CMakePackage):
     depends_on('py-numpy', type=('build', 'run'), when='+python')
     depends_on('boost +python', when='+python')
 
-    depends_on('boost')
+    depends_on('boost@1.65.0')
     depends_on('lunchbox')
     depends_on('vmmlib')
     depends_on('highfive@2.1: +boost ~mpi')
