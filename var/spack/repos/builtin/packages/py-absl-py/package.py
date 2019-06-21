@@ -4,10 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 
+
 class PyAbslPy(PythonPackage):
     """
-    This repository is a collection of Python library code for building Python applications. 
-    The code is collected from Google's own Python code base, and has been extensively tested and used in production.
+    This repository is a collection of Python library code for building 
+    Python applications.
+    
+    The code is collected from Google's own Python code base, and has been 
+    extensively tested and used in production.
     """
 
     homepage = "https://pypi.org/project/absl-py/"
