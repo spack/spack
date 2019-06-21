@@ -22,7 +22,7 @@ class Camellia(CMakePackage):
 
     depends_on('trilinos+amesos+amesos2+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+teuchos+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+pnetcdf@master,12.12.1:')
     depends_on('moab@:4', when='+moab')
-    depends_on('hdf5@:1.8')
+    depends_on('hdf5@:1.8.21')
     depends_on('mpi')
 
     def cmake_args(self):
