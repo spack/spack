@@ -645,7 +645,7 @@ class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not force:
             dependents = spack.store.db.installed_relatives(
                 spec, 'parents', True)
-            if dependents:
+            if len(dependents) > 0:
                 raise PackageStillNeededError(spec, dependents)
 
         # Try to get the package for the spec

@@ -11,7 +11,6 @@ import re
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.cmd
 import spack.util.web
 import spack.repo
 from spack.spec import Spec

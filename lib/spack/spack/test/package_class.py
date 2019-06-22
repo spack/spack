@@ -30,6 +30,15 @@ def test_possible_dependencies(mock_packages):
         'zmpi': set(['fake']),
     }
 
+    assert mpileaks.possible_dependencies(expand_virtuals=False) == {
+        'callpath': set(['dyninst']),
+        'dyninst': set(['libdwarf', 'libelf']),
+        'libdwarf': set(['libelf']),
+        'libelf': set(),
+        'mpi': set(),
+        'mpileaks': set(['callpath']),
+    }
+
 
 def test_possible_dependencies_with_deptypes(mock_packages):
     dtbuild1 = spack.repo.get('dtbuild1')

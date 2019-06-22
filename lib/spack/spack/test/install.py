@@ -6,6 +6,8 @@
 import os
 import pytest
 
+from spack.package import \
+    InstallError, PackageBase, PackageCore, PackageStillNeededError
 import spack.patch
 import spack.repo
 import spack.store
@@ -259,3 +261,63 @@ def test_failing_build(install_mockery, mock_fetch):
 
 class MockInstallError(spack.error.SpackError):
     pass
+
+
+def test_uninstall_by_spec_errors(mutable_database, monkeypatch):
+    """Test exceptional cases with the uninstall command."""
+
+    def _package(_):
+        raise spack.repo.UnknownEntityError('Mock error')
+
+    # Try to uninstall a spec that has not been installed
+    rec = mutable_database.get_record('zmpi')
+    with pytest.raises(InstallError, matches="not installed"):
+        PackageBase.uninstall_by_spec(rec.spec)
+
+    # Try uninstall -- without forcing -- a spec with dependencies
+    rec = mutable_database.get_record('mpich')
+
+    rpath_args = rec.spec.package.rpath_args
+    assert rpath_args.find('-rpath') > 0
+    assert rpath_args.rfind('mpich') > 0
+
+    with pytest.raises(PackageStillNeededError, matches="cannot uninstall"):
+        PackageBase.uninstall_by_spec(rec.spec)
+
+    # Try to uninstall a "package-less" spec
+    rec = mutable_database.get_record('externaltest')
+    rec.spec._package = None
+    actual_get = spack.repo.get
+    monkeypatch.setattr(spack.repo, 'get', _package)
+    with pytest.raises(spack.repo.UnknownEntityError):
+        PackageBase.uninstall_by_spec(rec.spec)
+
+    # Restore spack.repo here for teardown
+    monkeypatch.setattr(spack.repo, 'get', actual_get)
+
+
+class MockDoclessPackage(PackageCore):
+    def __init__(self, spec):
+        self.spec = spec
+
+
+class MockNoSourcePackage(PackageCore):
+    def __init__(self, spec):
+        self.spec = spec
+
+
+def test_mock_nosrc_pkg():
+    pkg = MockDoclessPackage(Spec("test"))
+    assert len(pkg.format_doc()) == 0
+
+    with pytest.raises(ValueError, matches="only install concrete"):
+        pkg.do_install()
+
+
+@pytest.mark.disable_clean_stage_check
+def test_nosource_pkg(install_mockery, mock_fetch, mock_packages):
+    spec = Spec('nosource').concretized()
+    pkg = spec.package
+
+    with pytest.raises(spack.build_environment.ChildError):
+        pkg.do_install()
