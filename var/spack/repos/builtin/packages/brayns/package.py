@@ -64,3 +64,7 @@ class Brayns(CMakePackage):
             args.append('-DBRAYNS_OPTIX_ENABLED=ON')
             args.append('-DBRAYNS_OPTIX_TESTS_ENABLED=ON')
         return args
+
+    def check(self):
+        with working_dir(self.build_directory):
+            ninja('tests')
