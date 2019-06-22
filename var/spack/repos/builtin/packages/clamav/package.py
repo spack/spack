@@ -28,8 +28,6 @@ class Clamav(AutotoolsPackage):
         args = [
             '--disable-dependency-tracking',
             '--disable-silent-rules',
-            #--libdir=#{lib}
-            #--sysconfdir=#{etc}/clamav
             '--disable-zlib-vcheck',
             '--enable-llvm=no',
             '--with-libjson=%s' % spec['json-c'].prefix,
