@@ -14,12 +14,13 @@ class Hypre(Package):
        unstructured grid problems."""
 
     homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
-    url      = "https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz"
-    git      = "https://github.com/LLNL/hypre.git"
+    url      = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
+    git      = "https://github.com/hypre-space/hypre.git"
 
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
     version('develop', branch='master')
+    version('2.16.0', sha256='33f8a27041e697343b820d0426e74694670f955e21bbf3fcb07ee95b22c59e90')
     version('2.15.1', '877002d49f38b6a1434955baf79eff35')
     version('2.15.0', '4645acc49141069cae1d53de96107a08')
     version('2.14.0', 'ecde5cc807ec45bfb647e9f28d2eaea1')
@@ -67,7 +68,9 @@ class Hypre(Package):
     conflicts("+shared@:2.12.99 platform=darwin")
 
     def url_for_version(self, version):
-        if version >= Version('2.12.0'):
+        if version >= Version('2.16.0'):
+            url = 'https://github.com/hypre-space/hypre/archive/v{0}.tar.gz'
+        elif version >= Version('2.12.0'):
             url = 'https://github.com/LLNL/hypre/archive/v{0}.tar.gz'
         else:
             url = 'http://computation.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
