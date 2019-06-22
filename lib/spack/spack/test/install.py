@@ -6,10 +6,27 @@
 import os
 import pytest
 
+from llnl.util.filesystem import mkdirp
+
 import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
+from spack.package import _spack_build_envfile, _spack_build_logfile, \
+    _spack_build_errfile
+
+
+@pytest.fixture
+def mock_log():
+    """Temporarily create the package build log file."""
+    def _create_log(path):
+        mkdirp(path)
+        fn = os.path.join(path, _spack_build_logfile)
+        with open(os.path.join(path, _spack_build_logfile), 'w'):
+            pass
+        return fn
+
+    return _create_log
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch):
@@ -259,3 +276,12 @@ def test_failing_build(install_mockery, mock_fetch):
 
 class MockInstallError(spack.error.SpackError):
     pass
+
+
+def test_pkg_build_paths(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    assert spec.package.log_path.endswith(_spack_build_logfile)
+    assert spec.package.err_path.endswith(_spack_build_errfile)
+    assert spec.package.env_path.endswith(_spack_build_envfile)

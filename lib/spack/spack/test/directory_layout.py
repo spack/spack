@@ -241,6 +241,10 @@ def test_yaml_directory_layout_build_paths(tmpdir, config):
     assert layout.build_log_path() == rel_path
     assert layout.build_log_path(spec) == os.path.join(spec.prefix, rel_path)
 
+    rel_path = os.path.join(layout.metadata_dir, layout.build_err_name)
+    assert layout.build_err_path() == rel_path
+    assert layout.build_err_path(spec) == os.path.join(spec.prefix, rel_path)
+
     rel_path = os.path.join(layout.metadata_dir, layout.build_env_name)
     assert layout.build_env_path() == rel_path
     assert layout.build_env_path(spec) == os.path.join(spec.prefix, rel_path)

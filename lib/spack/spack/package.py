@@ -796,9 +796,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
-    def log_path(self):
-        """The Spack build log file path."""
+    def err_path(self):
+        """The Spack unsuccesful build log file path."""
         return os.path.join(self.stage.path, _spack_build_errfile)
+
+    @property
+    def log_path(self):
+        """The Spack successful build log file path."""
+        return os.path.join(self.stage.path, _spack_build_logfile)
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1652,6 +1657,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if not keep_prefix:
                 self.remove_prefix()
 
+                # TODO: Isn't this where log file should be renamed?
+                # os.rename(self.log_path, self.err_path)
+
             # The subprocess *may* have removed the build stage. Mark it
             # not created so that the next time self.stage is invoked, we
             # check the filesystem for it.
@@ -1732,6 +1740,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def log(self):
         # Copy provenance into the install directory on success
         log_install_path = spack.store.layout.build_log_path(self.spec)
+        err_install_path = spack.store.layout.build_err_path(self.spec)
         env_install_path = spack.store.layout.build_env_path(self.spec)
         packages_dir = spack.store.layout.build_packages_path(self.spec)
 
@@ -1745,9 +1754,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.debug(e)
 
         # Archive the whole stdout + stderr for the package
-        install(self.log_path, log_install_path)
+        if os.path.exists(self.log_path):
+            install(self.log_path, log_install_path)
+        if os.path.exists(self.err_path):
+            install(self.err_path, err_install_path)
+
         # Archive the environment used for the build
         install(self.env_path, env_install_path)
+
         # Finally, archive files that are specific to each package
         with working_dir(self.stage.path):
             errors = StringIO()
@@ -1822,11 +1836,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def build_log_path(self):
+        path = self.log_path
         if self.installed:
-            return spack.store.layout.build_log_path(self.spec)
+            path = spack.store.layout.build_log_path(self.spec)
         else:
-            # TODO/TLD: Need to have error path if exists
-            return self.log_path
+            err_path = spack.store.layout.build_err_path(self.spec)
+            if os.path.exists(err_path):
+                path = err_path
+        return path
 
     @classmethod
     def inject_flags(cls, name, flags):
