@@ -16,9 +16,13 @@ class PyDatatable(PythonPackage):
     """
 
     homepage = "https://github.com/h2oai/datatable"
-    url      = "https://github.com/h2oai/datatable/archive/v0.8.0.tar.gz"
+    url      = "https://github.com/h2oai/datatable/"
+    git      = "https://github.com/h2oai/datatable.git"
 
-    version('0.8.0', sha256='42ecf2ca4f256c8e4c015af865cce5fec9566ceb3ed5c601de24697dd38642a6')
+    # Use the version of the package as of the following git commit
+    # as v0.8.0 yields a run time error. See the following ticket:
+    # https://github.com/h2oai/datatable/issues/1875#issuecomment-504695182
+    version('master', git=git, commit='b533b487e26519e586a0231641d82576f322a683')
 
     depends_on('python@3.5.0:')
     depends_on('py-setuptools', type='build')
