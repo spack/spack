@@ -30,7 +30,7 @@ class Hypre(Package):
     version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0', git='https://github.com/LLNL/hypre.git')
 
     # Versions 2.13.0 and later can be patched to build shared
     # libraries on Darwin; the patch for this capability does not
