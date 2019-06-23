@@ -17,6 +17,7 @@ class PyPytables(PythonPackage):
     version('3.2.2', '7cbb0972e4d6580f629996a5bed92441',
             url='https://github.com/PyTables/PyTables/archive/v.3.2.2.tar.gz')
 
+    depends_on('hdf5-blosc')
     depends_on('hdf5@1.8.0:1.8.999', when="@:3.3.99")
     depends_on('hdf5@1.8.0:1.10.999', when="@3.4.0:")
     depends_on('py-numpy@1.8.0:', type=('build', 'run'))
