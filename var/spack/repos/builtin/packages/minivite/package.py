@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 
-
 class Minivite(MakefilePackage):
     """miniVite is a proxy application that implements a single phase of
        Louvain method in distributed memory for graph community detection.
@@ -35,6 +34,7 @@ class Minivite(MakefilePackage):
     git      = "https://github.com/Exa-Graph/miniVite.git"
 
     version('develop', branch='master')
+    version('1.0', tag='v1.0')
     version('1.1', tag='v1.1')
 
     variant('openmp', default=True, description='Build with OpenMP support')
@@ -62,4 +62,7 @@ class Minivite(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('miniVite', prefix.bin)
+        if (self.version == Version('1.0')):
+            install('dspl', prefix.bin)
+        elif (self.version == Version('1.1')):
+            install('miniVite', prefix.bin)
