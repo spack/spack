@@ -111,7 +111,7 @@ class Openblas(MakefilePackage):
           when='@0.3.0:0.3.3')
 
     # Execute Makefile.prebuild with spack compiler flags
-    # If other compilers needed this collection, 
+    # If other compilers needed this collection,
     # please change 'when' syntax.
     patch('openblas_use_flags_for_prebuild.patch', when='%fj')
 
