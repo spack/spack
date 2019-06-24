@@ -1360,8 +1360,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return False
         tarball = binary_distribution.download_tarball(binary_spec)
         # see #10063 : install from source if tarball doesn't exist
-        if tarball == None:
-            tty.msg('%s exist in binary cache but with different dependencies' % self.name)
+        if tarball is None:
+            tty.msg('%s exist in binary cache but with different hash' %
+                    self.name)
             return False
         tty.msg('Installing %s from binary cache' % self.name)
         binary_distribution.extract_tarball(
