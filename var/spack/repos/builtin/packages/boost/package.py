@@ -197,7 +197,8 @@ class Boost(Package):
                     'clang++': 'clang',
                     'xlc++': 'xlcpp',
                     'xlc++_r': 'xlcpp',
-                    'pgc++': 'pgi'}
+                    'pgc++': 'pgi',
+                    'FCC': 'clang'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
