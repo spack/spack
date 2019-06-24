@@ -17,7 +17,16 @@ class PyPytables(PythonPackage):
     version('3.2.2', '7cbb0972e4d6580f629996a5bed92441',
             url='https://github.com/PyTables/PyTables/archive/v.3.2.2.tar.gz')
 
-    depends_on('hdf5-blosc')
+    variant('bzip2', default=False, description='Support for bzip2 compression')
+    variant('lzo', default=False, description='Support for lzo compression')
+
+    depends_on('bzip2', when='+bzip2')
+    depends_on('lzo', when='+lzo')
+
+    # Versions prior to 3.3 must build with the internal blosc due to a lock
+    # problem in a multithreaded environment.
+    depends_on('hdf5-blosc', when="@3.3.0:")
+
     depends_on('hdf5@1.8.0:1.8.999', when="@:3.3.99")
     depends_on('hdf5@1.8.0:1.10.999', when="@3.4.0:")
     depends_on('py-numpy@1.8.0:', type=('build', 'run'))
@@ -28,3 +37,9 @@ class PyPytables(PythonPackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('HDF5_DIR', self.spec['hdf5'].prefix)
+        if '+bzip2' in self.spec:
+            spack_env.set('BZIP2_DIR', self.spec['bzip2'].prefix)
+        if '+lzo' in self.spec:
+            spack_env.set('LZO_DIR', self.spec['lzo'].prefix)
+        if '+hdf5-blosc' in self.spec:
+            spack_env.set('BLOSC_DIR', self.spec['c-blosc'].prefix)
