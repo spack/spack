@@ -110,7 +110,12 @@ class Openblas(MakefilePackage):
           sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
           when='@0.3.0:0.3.3')
 
-    # Fix for executing Makefile.prebuild with compiler flags
+    # Execute Makefile.prebuild with spack compiler flags
+    # If other compilers needed this collection, 
+    # please change 'when' syntax.
+    patch('openblas_use_flags_for_prebuild.patch', when='%fj')
+
+    # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
@@ -186,7 +191,9 @@ class Openblas(MakefilePackage):
                 picflag = self.compiler.pic_flag
                 picflag = self.compiler.pic_flag
             make_defs += ['NO_SHARED=1']
-        # add spack flags when building Fujitsu compiler
+        # Execute Makefile.prebuild with spack compiler flags
+        # If other compilers needed this collection,
+        # please change Compiler's conditions.
         if self.compiler.name == 'fj':
             spack_cflags = env["SPACK_CFLAGS"]
             spack_fflags = env["SPACK_FFLAGS"]
