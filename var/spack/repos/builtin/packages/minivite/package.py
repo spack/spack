@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Minivite(MakefilePackage):
     """miniVite is a proxy application that implements a single phase of
        Louvain method in distributed memory for graph community detection.
@@ -62,7 +63,7 @@ class Minivite(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        if (self.version == Version('1.0')):
-            install('dspl', prefix.bin)
-        elif (self.version == Version('1.1')):
+        if (self.version >= Version('1.1')):
             install('miniVite', prefix.bin)
+        elif (self.version >= Version('1.0')):
+            install('dspl', prefix.bin)
