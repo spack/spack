@@ -18,7 +18,7 @@ class Chill(AutotoolsPackage):
 
     version('master', branch='master')
 
-    depends_on('rose@0.9.10.0 +cxx11')
+    depends_on('rose@0.9.10.0 +cxx11 ^boost@1.66.0 cxxstd=11')
     depends_on('iegenlib')
     depends_on('isl')
     depends_on('python')
@@ -34,7 +34,12 @@ class Chill(AutotoolsPackage):
         iegen_home = self.spec['iegenlib'].prefix
 
         spack_env.append_path('LD_LIBRARY_PATH', rose_home + '/lib')
+        spack_env.append_path('LD_LIBRARY_PATH', boost_home + '/lib')
+        spack_env.append_path('LD_LIBRARY_PATH', iegen_home + '/lib')
+        
+        run_env.append_path('LD_LIBRARY_PATH', rose_home + '/lib')
         run_env.append_path('LD_LIBRARY_PATH', boost_home + '/lib')
+        run_env.append_path('LD_LIBRARY_PATH', iegen_home + '/lib')
 
         spack_env.set('ROSEHOME', rose_home)
         spack_env.set('BOOSTHOME', boost_home)
