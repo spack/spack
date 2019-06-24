@@ -26,9 +26,6 @@ class Clamav(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = [
-            '--disable-dependency-tracking',
-            '--disable-silent-rules',
-            '--disable-zlib-vcheck',
             '--enable-llvm=no',
             '--with-libjson=%s' % spec['json-c'].prefix,
             '--with-openssl=%s' % spec['openssl'].prefix,
