@@ -35,7 +35,7 @@ class Minivite(MakefilePackage):
     git      = "https://github.com/Exa-Graph/miniVite.git"
 
     version('develop', branch='master')
-    version('1.0', tag='v1.0')
+    version('1.1', tag='v1.1')
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('opt', default=True, description='Optimization flags')
@@ -62,4 +62,4 @@ class Minivite(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('dspl', prefix.bin)
+        install('miniVite', prefix.bin)
