@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# Author: Derick Huth <derick.huth@utah.edu>
-# ----------------------------------------------------------------------------
 from spack import *
 
 
@@ -16,11 +13,16 @@ class Chill(AutotoolsPackage):
     url      = "https://github.com/CtopCsUtahEdu/chill/archive/v0.3.tar.gz"
     git      = "https://github.com/CtopCsUtahEdu/chill.git"
 
+    maintainers = ['dhuth']
+
     version('master', branch='master')
 
-    depends_on('rose@0.9.10.0 +cxx11 ^boost@1.66.0 cxxstd=11')
-    depends_on('iegenlib')
-    depends_on('isl')
+    depends_on('rose@0.9.10.0 +cxx11 ^boost@1.66.0 cxxstd=11', type='build')
+    depends_on('autoconf',  type='build')
+    depends_on('automake',  type='build')
+    depends_on('libtool',   type='build')
+    depends_on('m4',        type='build')
+    depends_on('iegenlib',  type='build')
     depends_on('python')
 
     @run_before('configure')
@@ -29,17 +31,17 @@ class Chill(AutotoolsPackage):
         bash('./bootstrap')
 
     def setup_environment(self, spack_env, run_env):
-        rose_home = self.spec['rose'].prefix
+        rose_home  = self.spec['rose'].prefix
         boost_home = self.spec['boost'].prefix
         iegen_home = self.spec['iegenlib'].prefix
 
-        spack_env.append_path('LD_LIBRARY_PATH', rose_home + '/lib')
-        spack_env.append_path('LD_LIBRARY_PATH', boost_home + '/lib')
-        spack_env.append_path('LD_LIBRARY_PATH', iegen_home + '/lib')
+        spack_env.append_path('LD_LIBRARY_PATH', rose_home.lib)
+        spack_env.append_path('LD_LIBRARY_PATH', boost_home.lib)
+        spack_env.append_path('LD_LIBRARY_PATH', iegen_home.lib)
 
-        run_env.append_path('LD_LIBRARY_PATH', rose_home + '/lib')
-        run_env.append_path('LD_LIBRARY_PATH', boost_home + '/lib')
-        run_env.append_path('LD_LIBRARY_PATH', iegen_home + '/lib')
+        run_env.append_path('LD_LIBRARY_PATH', rose_home.lib)
+        run_env.append_path('LD_LIBRARY_PATH', boost_home.lib)
+        run_env.append_path('LD_LIBRARY_PATH', iegen_home.lib)
 
         spack_env.set('ROSEHOME', rose_home)
         spack_env.set('BOOSTHOME', boost_home)

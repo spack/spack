@@ -3,10 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# -----------------------------------------------------------------------------
-# Author: Justin Too
-# -----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -18,6 +14,8 @@ class Rose(AutotoolsPackage):
     homepage = "http://rosecompiler.org/"
     # url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.7.0.tar.gz"
     url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.9.104.zip"
+    
+    maintainers = ['justintoo']
 
     # --------------------------------------------------------------------------
     # ROSE Versions
