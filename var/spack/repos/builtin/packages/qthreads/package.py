@@ -44,5 +44,5 @@ class Qthreads(AutotoolsPackage):
                 "--with-topology=hwloc",
                 "--with-hwloc=%s" % spec["hwloc"].prefix]
         else:
-            args=["--with-topology=no"]
+            args = ["--with-topology=no"]
         return args
