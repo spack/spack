@@ -9,13 +9,14 @@ from spack import *
 class Chill(AutotoolsPackage):
     """A polyheadral compiler for autotuning"""
 
-    homepage = "http://github.com/CtopCsUtahEdu"
+    homepage = "http://github.com/CtopCsUtahEdu/chill"
     url      = "https://github.com/CtopCsUtahEdu/chill/archive/v0.3.tar.gz"
     git      = "https://github.com/CtopCsUtahEdu/chill.git"
 
     maintainers = ['dhuth']
 
     version('master', branch='master')
+    version('0.3', sha256='574b622368a6bfaadbe9c1fa02fabefdc6c006069246f67d299f943b7e1d8aa3')
 
     depends_on('rose@0.9.10.0 +cxx11 ^boost@1.66.0 cxxstd=11', type='build')
     depends_on('autoconf',  type='build')
