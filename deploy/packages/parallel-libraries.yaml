@@ -25,6 +25,7 @@ packages:
       - ospray@1.7.3
       - ospray@1.8.5
       - parmetis@4.0.3
+      - mvdtool+mpi~python
 
   gnu-stable-python-parallel:
     target_matrix:

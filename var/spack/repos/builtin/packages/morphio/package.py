@@ -13,7 +13,8 @@ class Morphio(CMakePackage):
     url      = "https://github.com/BlueBrain/MorphIO.git"
 
     version('develop', git=url, submodules=True)
-    version('2.0.8', tag='v2.0.8', git=url, submodules=True, preferred=True)
+    version('2.1.2', tag='v2.1.2', git=url, submodules=True)
+    version('2.0.8', tag='v2.0.8', git=url, submodules=True)
 
     depends_on('cmake@3.2:', type='build')
     depends_on('hdf5')

@@ -61,6 +61,8 @@ packages:
       - gmsh
       - hdf5~mpi
       - highfive~mpi
+      - morphio
       - pugixml
+      - range-v3
       - rockets
       - rocksdb~static

@@ -72,6 +72,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-jprops', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))
     depends_on('py-lxml', type=('build', 'run'))
+    depends_on('py-morphio@2.1.2:', type=('build', 'run'), when='@0.14.4:')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-progress', type=('build', 'run'))
