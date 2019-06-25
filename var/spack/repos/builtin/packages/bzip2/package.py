@@ -46,6 +46,13 @@ class Bzip2(Package):
             filter_file('-Wall -Winline', '-Minform=inform', 'Makefile')
             filter_file('-Wall -Winline', '-Minform=inform', 'Makefile-libbz2_so')  # noqa
 
+
+        # The Makefiles use GCC flags that are incompatible with XL and nvcc
+        if self.compiler.name == 'xl':
+            filter_file('-fpic', '', 'Makefile')
+            filter_file('-fpic', '', 'Makefile-libbz2_so')
+            filter_file('bzip2.c libbz2.so.1.0.6', 'bzip2.c -L. -l:libbz2.so.1.0.6', 'Makefile-libbz2_so')
+
         # Patch the link line to use RPATHs on macOS
         if 'darwin' in self.spec.architecture:
             v = self.spec.version
