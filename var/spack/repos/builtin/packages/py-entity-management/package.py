@@ -7,12 +7,12 @@ from spack import *
 
 
 class PyEntityManagement(PythonPackage):
-    '''Pythonic Blue Brain Nexus access library'''
+    '''Pythonic Blue Brain Nexus access library.'''
 
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/entity-management'
     git      = 'ssh://bbpcode.epfl.ch/nse/entity-management'
 
-    version('1.0.1', tag='entity-management-v1.0.1', preferred=True)
+    version('1.0.5', tag='entity-management-v1.0.5', preferred=True)
     version('0.1.12', tag='entity-management-v0.1.12')
 
     depends_on('py-setuptools', type=('build'))
@@ -24,3 +24,5 @@ class PyEntityManagement(PythonPackage):
     depends_on('py-dateutil', type='run')
     depends_on('py-sparqlwrapper', type='run')
     depends_on('py-rdflib-jsonld', type='run')
+    depends_on('py-pyjwt', type='run')
+    depends_on('py-python-keycloak', type='run')

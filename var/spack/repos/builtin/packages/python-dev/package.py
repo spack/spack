@@ -11,9 +11,9 @@ class PythonDev(Package):
     """Meta package to bundle python packages for development"""
 
     homepage = "http://www.dummy.org/"
-    url      = "https://www.dummy.org/source/dummy-0.1.zip"
+    url      = "https://www.dummy.org/source/dummy-0.2.zip"
 
-    version('0.1')
+    version('0.2')
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-beautifulsoup4', type=('build', 'run'))
@@ -54,6 +54,7 @@ class PythonDev(Package):
         open(os.path.join(prefix, 'success.txt'), 'w').close()
 
     def setup_environment(self, spack_env, run_env):
-        deps = ['py-pip', 'py-ipython', 'py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark']
+        deps = ['py-pip', 'py-ipython', 'py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark',
+                'py-ipyparallel']
         for dep in deps:
             run_env.prepend_path('PATH', self.spec[dep].prefix.bin)
