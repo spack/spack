@@ -234,6 +234,10 @@ class Boost(Package):
         if '+python' in spec:
             options.append('--with-python=%s' % spec['python'].command.path)
 
+        spack_cxxflags = ''
+        if spec.satisfies('%xl'):
+            spack_cxxflags = '<cxxflags>-std=c++11'
+
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
@@ -243,10 +247,12 @@ class Boost(Package):
                 # error: duplicate initialization of intel-linux with the following parameters:  # noqa
                 # error: version = <unspecified>
                 # error: previous initialization at ./user-config.jam:1
-                # Also, specifies -std=c++11 flag when using XL, which is needed for boost.thread
+
+                # Specifies -std=c++11 flag when using XL, which is needed
+                # for boost.thread
                 f.write("using {0} : : {1} : {2} ;\n".format(boost_toolset_id,
                                                              spack_cxx,
-                                                             '<cxxflags>-std=c++11' if spec.satisfies('%xl') else ''))
+                                                             spack_cxxflags))
 
             if '+mpi' in spec:
                 # Use the correct mpi compiler.  If the compiler options are
