@@ -109,6 +109,10 @@ class Cmake(Package):
 
     phases = ['bootstrap', 'build', 'install']
 
+    def setup_environment(self, spack_env, run_env):
+        if self.compiler.name == 'fj':
+            spack_env.append_flags('CXXFLAGS', '-std=c++11')
+
     def bootstrap_args(self):
         spec = self.spec
         args = [
