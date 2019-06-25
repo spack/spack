@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Exonerate(Package):
+class Exonerate(AutotoolsPackage):
     """Pairwise sequence alignment of DNA and proteins"""
 
     homepage = "http://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate"
@@ -19,8 +19,10 @@ class Exonerate(Package):
 
     parallel = False
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix), '--disable-debug',
-                  '--disable-dependency-tracking')
-        make()
-        make('install')
+    def configure_args(self):
+        args = []
+
+        args.append('--disable-debug')
+        args.append('--disable-dependency-tracking')
+
+        return args
