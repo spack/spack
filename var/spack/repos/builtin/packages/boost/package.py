@@ -243,8 +243,10 @@ class Boost(Package):
                 # error: duplicate initialization of intel-linux with the following parameters:  # noqa
                 # error: version = <unspecified>
                 # error: previous initialization at ./user-config.jam:1
-                f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
-                                                       spack_cxx))
+                # Also, specifies -std=c++11 flag when using XL, which is needed for boost.thread
+                f.write("using {0} : : {1} : {2} ;\n".format(boost_toolset_id,
+                                                             spack_cxx,
+                                                             '<cxxflags>-std=c++11' if spec.satisfies('%xl') else ''))
 
             if '+mpi' in spec:
                 # Use the correct mpi compiler.  If the compiler options are
