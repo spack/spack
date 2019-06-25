@@ -111,7 +111,7 @@ class Cmake(Package):
 
     def setup_environment(self, spack_env, run_env):
         if self.compiler.name == 'fj':
-            spack_env.append_flags('CXXFLAGS', '-std=c++11')
+            spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
 
     def bootstrap_args(self):
         spec = self.spec
