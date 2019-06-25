@@ -17,14 +17,19 @@ class Portage(CMakePackage):
 
     # tarballs don't have submodules, so use git tags
     version('develop', branch='master', submodules=True)
+    version('1.2.2', tag='v1.2.2', submodules=True)
     version('1.1.1', tag='v1.1.1', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
+
+    patch('gcc-7.patch', when='@1.2.2 %gcc@7:')
+    patch('p_lapacke_config.patch', when='@1.2:')
 
     variant('mpi', default=True, description='Support MPI')
 
     depends_on("cmake@3.1:", type='build')
     depends_on('mpi', when='+mpi')
     depends_on('lapack')
+    depends_on('boost')
 
     def cmake_args(self):
         options = ['-DENABLE_UNIT_TESTS=ON', '-DENABLE_APP_TESTS=ON']
