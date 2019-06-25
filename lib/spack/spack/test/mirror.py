@@ -155,7 +155,8 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
             pass
 
     def successful_expand(_class):
-        expanded_path = os.path.join(_class.stage.path, 'expanded-dir')
+        expanded_path = os.path.join(_class.stage.path,
+                                     spack.stage._source_path_subdir)
         os.mkdir(expanded_path)
         with open(os.path.join(expanded_path, 'test.patch'), 'w'):
             pass

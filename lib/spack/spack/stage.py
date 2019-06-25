@@ -28,6 +28,7 @@ import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 
+_source_path_subdir = 'spack-src'
 _stage_prefix = 'spack-stage-'
 
 
@@ -46,8 +47,9 @@ def _first_accessible_path(paths):
             # return it if successful.
             return path
 
-        except OSError:
-            tty.debug('OSError while checking temporary path: %s' % path)
+        except OSError as e:
+            tty.debug('OSError while checking temporary path %s: %s' % (
+                      path, str(e)))
             continue
 
     return None
@@ -71,14 +73,14 @@ def get_tmp_root():
 
         path = _first_accessible_path(candidates)
         if not path:
-            raise StageError("No accessible stage paths in %s", candidates)
+            raise StageError("No accessible stage paths in:", candidates)
 
         # Return None to indicate we're using a local staging area.
         if path == canonicalize_path(spack.paths.stage_path):
             _use_tmp_stage = False
             return None
 
-        # ensure that any temp path is unique per user, so users don't
+        # Ensure that any temp path is unique per user, so users don't
         # fight over shared temporary space.
         user = getpass.getuser()
         if user not in path:
@@ -104,7 +106,7 @@ class Stage(object):
         with Stage() as stage:      # Context manager creates and destroys the
                                     # stage directory
             stage.fetch()           # Fetch a source archive into the stage.
-            stage.expand_archive()  # Expand the source archive.
+            stage.expand_archive()  # Expand the archive into source_path.
             <install>               # Build and install the archive.
                                     # (handled by user of Stage)
 
@@ -120,7 +122,7 @@ class Stage(object):
         try:
             stage.create()          # Explicitly create the stage directory.
             stage.fetch()           # Fetch a source archive into the stage.
-            stage.expand_archive()  # Expand the source archive.
+            stage.expand_archive()  # Expand the archive into source_path.
             <install>               # Build and install the archive.
                                     # (handled by user of Stage)
         finally:
@@ -179,6 +181,8 @@ class Stage(object):
         self.search_fn = search_fn
         # used for mirrored archives of repositories.
         self.skip_checksum_for_mirror = True
+
+        self.srcdir = None
 
         # TODO : this uses a protected member of tempfile, but seemed the only
         # TODO : way to get a temporary name besides, the temporary link name
@@ -292,13 +296,21 @@ class Stage(object):
     def expected_archive_files(self):
         """Possible archive file paths."""
         paths = []
+
+        fnames = []
+        expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.default_fetcher.url)))
+            expanded = self.default_fetcher.expand_archive
+            fnames.append(os.path.basename(self.default_fetcher.url))
 
         if self.mirror_path:
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.mirror_path)))
+            fnames.append(os.path.basename(self.mirror_path))
+
+        paths.extend(os.path.join(self.path, f) for f in fnames)
+        if not expanded:
+            # If the download file is not compressed, the "archive" is a
+            # single file placed in Stage.source_path
+            paths.extend(os.path.join(self.source_path, f) for f in fnames)
 
         return paths
 
@@ -321,27 +333,14 @@ class Stage(object):
             return None
 
     @property
+    def expanded(self):
+        """Returns True if source path expanded; else False."""
+        return os.path.exists(self.source_path)
+
+    @property
     def source_path(self):
-        """Returns the path to the expanded/checked out source code.
-
-        To find the source code, this method searches for the first
-        subdirectory of the stage that it can find, and returns it.
-        This assumes nothing besides the archive file will be in the
-        stage path, but it has the advantage that we don't need to
-        know the name of the archive or its contents.
-
-        If the fetch strategy is not supposed to expand the downloaded
-        file, it will just return the stage path. If the archive needs
-        to be expanded, it will return None when no archive is found.
-        """
-        if isinstance(self.fetcher, fs.URLFetchStrategy):
-            if not self.fetcher.expand_archive:
-                return self.path
-
-        for p in [os.path.join(self.path, f) for f in os.listdir(self.path)]:
-            if os.path.isdir(p):
-                return p
-        return None
+        """Returns the well-known source directory path."""
+        return os.path.join(self.path, _source_path_subdir)
 
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
@@ -441,8 +440,7 @@ class Stage(object):
         """Changes to the stage directory and attempt to expand the downloaded
         archive.  Fail if the stage is not set up or if the archive is not yet
         downloaded."""
-        archive_dir = self.source_path
-        if not archive_dir:
+        if not self.expanded:
             self.fetcher.expand()
             tty.msg("Created stage in %s" % self.path)
         else:
@@ -490,7 +488,8 @@ class Stage(object):
         # Make sure we don't end up in a removed directory
         try:
             os.getcwd()
-        except OSError:
+        except OSError as e:
+            tty.debug(e)
             os.chdir(os.path.dirname(self.path))
 
         # mark as destroyed
@@ -518,9 +517,14 @@ class ResourceStage(Stage):
         """
         root_stage = self.root_stage
         resource = self.resource
-        placement = os.path.basename(self.source_path) \
-            if resource.placement is None \
-            else resource.placement
+
+        if resource.placement:
+            placement = resource.placement
+        elif self.srcdir:
+            placement = self.srcdir
+        else:
+            placement = self.source_path
+
         if not isinstance(placement, dict):
             placement = {'': placement}
 
@@ -530,6 +534,7 @@ class ResourceStage(Stage):
         try:
             os.makedirs(target_path)
         except OSError as err:
+            tty.debug(err)
             if err.errno == errno.EEXIST and os.path.isdir(target_path):
                 pass
             else:
@@ -582,6 +587,10 @@ class StageComposite:
         return self[0].source_path
 
     @property
+    def expanded(self):
+        return self[0].expanded
+
+    @property
     def path(self):
         return self[0].path
 
@@ -595,9 +604,19 @@ class StageComposite:
 
 
 class DIYStage(object):
-    """Simple class that allows any directory to be a spack stage."""
+    """
+    Simple class that allows any directory to be a spack stage.  Consequently,
+    it does not expect or require that the source path adhere to the standard
+    directory naming convention.
+    """
 
     def __init__(self, path):
+        if path is None:
+            raise ValueError("Cannot construct DIYStage without a path.")
+        elif not os.path.isdir(path):
+            raise StagePathError("The stage path directory does not exist:",
+                                 path)
+
         self.archive_file = None
         self.path = path
         self.source_path = path
@@ -619,8 +638,13 @@ class DIYStage(object):
     def expand_archive(self):
         tty.msg("Using source directory: %s" % self.source_path)
 
+    @property
+    def expanded(self):
+        """Returns True since the source_path must exist."""
+        return True
+
     def restage(self):
-        tty.die("Cannot restage DIY stage.")
+        raise RestageError("Cannot restage a DIY stage.")
 
     def create(self):
         self.created = True
@@ -631,12 +655,6 @@ class DIYStage(object):
 
     def cache_local(self):
         tty.msg("Sources for DIY stages are not cached")
-
-
-def _get_mirrors():
-    """Get mirrors from spack configuration."""
-    config = spack.config.get('mirrors')
-    return [val for name, val in iteritems(config)]
 
 
 def ensure_access(file=spack.paths.stage_path):
@@ -655,6 +673,10 @@ def purge():
 
 class StageError(spack.error.SpackError):
     """"Superclass for all errors encountered during staging."""
+
+
+class StagePathError(StageError):
+    """"Error encountered with stage path."""
 
 
 class RestageError(StageError):

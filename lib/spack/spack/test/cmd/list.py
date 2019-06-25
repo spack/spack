@@ -45,10 +45,12 @@ def test_list_format_name_only():
 
 
 @pytest.mark.maybeslow
-def test_list_format_rst():
-    output = list('--format', 'rst')
-    assert '.. _cloverleaf3d:' in output
-    assert '.. _hdf5:' in output
+def test_list_format_version_json():
+    output = list('--format', 'version_json')
+    assert '  {"name": "cloverleaf3d",' in output
+    assert '  {"name": "hdf5",' in output
+    import json
+    json.loads(output)
 
 
 @pytest.mark.maybeslow

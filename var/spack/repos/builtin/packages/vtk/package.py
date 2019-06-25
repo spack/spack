@@ -18,6 +18,8 @@ class Vtk(CMakePackage):
     url      = "http://www.vtk.org/files/release/8.0/VTK-8.0.1.tar.gz"
     list_url = "http://www.vtk.org/download/"
 
+    maintainers = ['chuckatkins', 'danlipsa']
+
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.0.1', '692d09ae8fadc97b59d35cab429b261a')
@@ -30,6 +32,7 @@ class Vtk(CMakePackage):
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('python', default=False, description='Enable Python support')
+    variant('python3', default=False, description='Enable Python3 support')
     variant('qt', default=False, description='Build with support for Qt')
     variant('xdmf', default=False, description='Build XDMF file support')
     variant('ffmpeg', default=False, description='Build with FFMPEG support')
@@ -40,10 +43,18 @@ class Vtk(CMakePackage):
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
+    conflicts('+python', when='+python3')
+    conflicts('+python3', when='@:8.0')
 
-    depends_on('python', when='+python')
-    depends_on('py-mpi4py', when='+mpi +python', type='run')
     extends('python', when='+python')
+    extends('python', when='+python3')
+
+    depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
+    depends_on('python@3:', when='+python3', type=('build', 'run'))
+
+    depends_on('py-mpi4py', when='+python+mpi', type='run')
+    depends_on('py-mpi4py', when='+python3+mpi', type='run')
+
     # python3.7 compatibility patch backported from upstream
     # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
     patch('python3.7-const-char.patch', when='@:8.1.1 ^python@3.7:')
@@ -133,7 +144,7 @@ class Vtk(CMakePackage):
             cmake_args.extend(['-DModule_vtkIOFFMPEG:BOOL=ON'])
 
         # Enable/Disable wrappers for Python.
-        if '+python' in spec:
+        if '+python' in spec or '+python3' in spec:
             cmake_args.extend([
                 '-DVTK_WRAP_PYTHON=ON',
                 '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
@@ -253,4 +264,8 @@ class Vtk(CMakePackage):
                 self.compiler.version >= Version('5.1.0')):
                 cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
 
+            # A bug in tao pegtl causes build failures with intel compilers
+            if '%intel' in spec and spec.version >= Version('8.2'):
+                cmake_args.append(
+                    '-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF')
         return cmake_args

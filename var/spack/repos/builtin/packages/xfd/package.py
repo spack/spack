@@ -13,10 +13,12 @@ class Xfd(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xfd"
     url      = "https://www.x.org/archive/individual/app/xfd-1.1.2.tar.gz"
 
+    version('1.1.3', '4a1bd18f324c239b1a807ed4ccaeb172ba771d65a7307fb492d8dd8d27f01527')
     version('1.1.2', '12fe8f7c3e71352bf22124ad56d4ceaf')
 
-    depends_on('libxaw')
     depends_on('fontconfig')
+    depends_on('gettext')
+    depends_on('libxaw')
     depends_on('libxft')
     depends_on('libxrender')
     depends_on('libxmu')
@@ -25,3 +27,20 @@ class Xfd(AutotoolsPackage):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+
+    # Xfd requires libintl (gettext), but does not test for it
+    # correctly, so add it here.
+    def flag_handler(self, name, flags):
+        if name == 'ldlibs':
+            flags.append('-lintl')
+
+        return (flags, None, None)
+
+    def configure_args(self):
+        args = []
+
+        # Xkb only rings a bell, so just disable it.
+        if self.spec.satisfies('@1.1.3:'):
+            args.append('--without-xkb')
+
+        return args

@@ -21,7 +21,7 @@ from contextlib import contextmanager
 
 import six
 from llnl.util import tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 from spack.util.executable import Executable
 
 __all__ = [
@@ -455,8 +455,10 @@ def working_dir(dirname, **kwargs):
 
     orig_dir = os.getcwd()
     os.chdir(dirname)
-    yield
-    os.chdir(orig_dir)
+    try:
+        yield
+    finally:
+        os.chdir(orig_dir)
 
 
 @contextmanager
@@ -603,6 +605,36 @@ def ancestor(dir, n=1):
     for i in range(n):
         parent = os.path.dirname(parent)
     return parent
+
+
+def get_single_file(directory):
+    fnames = os.listdir(directory)
+    if len(fnames) != 1:
+        raise ValueError("Expected exactly 1 file, got {0}"
+                         .format(str(len(fnames))))
+    return fnames[0]
+
+
+@contextmanager
+def temp_cwd():
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        with working_dir(tmp_dir):
+            yield tmp_dir
+    finally:
+        shutil.rmtree(tmp_dir)
+
+
+@contextmanager
+def temp_rename(orig_path, temp_path):
+    same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
+    if not same_path:
+        shutil.move(orig_path, temp_path)
+    try:
+        yield
+    finally:
+        if not same_path:
+            shutil.move(temp_path, orig_path)
 
 
 def can_access(file_name):
@@ -1141,7 +1173,14 @@ def find_headers(headers, root, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the headers
-    suffixes = ['h', 'hpp', 'mod']
+    suffixes = [
+        # C
+        'h',
+        # C++
+        'hpp', 'hxx', 'hh', 'H', 'txx', 'tcc', 'icc',
+        # Fortran
+        'mod', 'inc',
+    ]
 
     # List of headers we are searching with suffixes
     headers = ['{0}.{1}'.format(header, suffix) for header in headers
@@ -1351,3 +1390,63 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
     return LibraryList(find(root, libraries, recursive))
+
+
+@memoized
+def can_access_dir(path):
+    """Returns True if the argument is an accessible directory.
+
+    Args:
+        path: path to be tested
+
+    Returns:
+        True if ``path`` is an accessible directory, else False
+    """
+    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
+
+
+@memoized
+def files_in(*search_paths):
+    """Returns all the files in paths passed as arguments.
+
+    Caller must ensure that each path in ``search_paths`` is a directory.
+
+    Args:
+        *search_paths: directories to be searched
+
+    Returns:
+        List of (file, full_path) tuples with all the files found.
+    """
+    files = []
+    for d in filter(can_access_dir, search_paths):
+        files.extend(filter(
+            lambda x: os.path.isfile(x[1]),
+            [(f, os.path.join(d, f)) for f in os.listdir(d)]
+        ))
+    return files
+
+
+def search_paths_for_executables(*path_hints):
+    """Given a list of path hints returns a list of paths where
+    to search for an executable.
+
+    Args:
+        *path_hints (list of paths): list of paths taken into
+            consideration for a search
+
+    Returns:
+        A list containing the real path of every existing directory
+        in `path_hints` and its `bin` subdirectory if it exists.
+    """
+    executable_paths = []
+    for path in path_hints:
+        if not os.path.isdir(path):
+            continue
+
+        executable_paths.append(path)
+
+        bin_dir = os.path.join(path, 'bin')
+        if os.path.isdir(bin_dir):
+            executable_paths.append(bin_dir)
+
+    return executable_paths

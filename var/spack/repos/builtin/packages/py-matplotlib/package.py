@@ -56,13 +56,15 @@ class PyMatplotlib(PythonPackage):
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')  # Patch to pick up correct freetype headers
 
     depends_on('py-numpy@1.6:', type=('build', 'run'))
-    depends_on('py-dateutil@1.1:', type=('build', 'run'))
+    depends_on('py-python-dateutil@1.1:', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'))
     depends_on('py-cycler@0.9:', type=('build', 'run'))
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
-    depends_on('py-functools32', type=('build', 'run'), when='^python@2.7')
+    depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')
     depends_on('py-kiwisolver', type=('build', 'run'), when='@2.2.0:')
+    depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
+               when='@2.1.0:2.999.999')
 
     # ------ Optional GUI frameworks
     depends_on('tk@8.3:', when='+tk')  # not 8.6.0 or 8.6.1
