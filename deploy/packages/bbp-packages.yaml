@@ -39,7 +39,7 @@ packages:
       - compiler
       - mpi
     specs:
-      - functionalizer@3.12.1
+      - functionalizer@3.12.2
       - parquet-converters@0.4.1
       - synapsetool@0.4.1
       - touchdetector@4.4.2

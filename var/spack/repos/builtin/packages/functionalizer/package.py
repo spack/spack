@@ -32,7 +32,8 @@ class Functionalizer(CMakePackage):
     git      = "ssh://bbpcode.epfl.ch/building/Functionalizer"
 
     version('develop', submodules=True)
-    version('3.12.1', tag='v3.12.1', submodules=True, preferred=True)
+    version('3.12.2', tag='v3.12.2', submodules=True)
+    version('3.12.1', tag='v3.12.1', submodules=True)
     version('3.12.0', tag='v3.12.0', submodules=True)
     version('3.11.0',
             commit='50c83265c100cec66a27eea9311b58a9b652cb5f',
