@@ -96,7 +96,8 @@ class FontUtil(AutotoolsPackage):
         autoreconf = which('autoreconf')
 
         for font in fonts:
-            with working_dir(join_path(font, 'spack-src')):
+            fontroot = find(font, '*', recursive=False)
+            with working_dir(join_path(font, fontroot[0])):
                 autoreconf(*autoconf_args)
                 configure = Executable("./configure")
                 configure('--prefix={0}'.format(self.prefix))
