@@ -25,6 +25,7 @@ packages:
       - cuda@9.2.88
       - cudnn@7.3
       - freeimage@3.18.0
+      - glew
       - gmsh+oce~mpi@3.0.6
       - hdf5~mpi@1.10.4
       - highfive~mpi@2.0
@@ -47,5 +48,6 @@ packages:
       - spark@2.4.0+hadoop
       - sqlite@3.23.1
       - symengine@0.3.0
+      - vrpn
       - zeromq@4.2.5
       - zlib@1.2.11
