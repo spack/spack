@@ -15,11 +15,11 @@ class Tcsh(AutotoolsPackage):
     syntax."""
 
     homepage = "http://www.tcsh.org/"
-    url      = "http://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/tcsh-6.21.00.tar.gz"
+    url      = "http://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/old/tcsh-6.20.00.tar.gz"
 
-    version('6.21.00', sha256='c438325448371f59b12a4c93bfd3f6982e6f79f8c5aef4bc83aac8f62766e972')
-    version('6.20.00', '59d40ef40a68e790d95e182069431834',
-            url='http://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/old/tcsh-6.20.00.tar.gz') 
+    version('6.21.00', sha256='c438325448371f59b12a4c93bfd3f6982e6f79f8c5aef4bc83aac8f62766e972',
+            url='http://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/tcsh-6.21.00.tar.gz')
+    version('6.20.00', sha256='59d40ef40a68e790d95e182069431834')
 
     def fedora_patch(commit, file, **kwargs):  # noqa
         prefix = 'https://src.fedoraproject.org/rpms/tcsh/raw/{0}/f/'.format(commit)
