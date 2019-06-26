@@ -33,7 +33,7 @@ class Flecsi(CMakePackage):
     depends_on("cinch@1.01:", type='build')
     depends_on('mpi', when='backend=mpi')
     depends_on('mpi', when='backend=legion')
-    depends_on("gasnet@1.32.0: ~pshm", when='backend=legion')
+    depends_on("gasnet@2019.3.0 ~pshm", when='backend=legion')
     depends_on("legion@19.04.0 +shared +mpi", when='backend=legion')
     depends_on("boost@1.59.0: cxxstd=11 +program_options")
     depends_on("metis@5.1.0:")
