@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 from spack import *
 
 
@@ -83,22 +82,22 @@ class FontUtil(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.prepend_path('PATH', self.prefix.bin)
+        spack_env.prepend_path('PKG_CONFIG_PATH',
+                               join_path(self.prefix.lib, 'pkgconfig'))
 
     @run_after('install')
     def font_install(self):
         autoconf_args = ['-ifv']
-        p = os.path.join(self.spec['util-macros'].prefix, 'share', 'aclocal')
+        p = join_path(self.spec['util-macros'].prefix, 'share', 'aclocal')
         autoconf_args.append('--include={0}'.format(p))
-        p = os.path.join(self.spec.prefix, 'share', 'aclocal')
+        p = join_path(self.spec.prefix, 'share', 'aclocal')
         autoconf_args.append('--include={0}'.format(p))
         fonts = self.spec.variants['fonts'].value
         autoreconf = which('autoreconf')
 
         for font in fonts:
-            with working_dir(os.path.join(font, 'spack-src')):
+            with working_dir(join_path(font, 'spack-src')):
                 autoreconf(*autoconf_args)
                 configure = Executable("./configure")
-                configure('--prefix={0}'.format(self.prefix),
-                          "PKG_CONFIG_PATH=%s/pkgconfig" %
-                          self.spec.prefix.lib)
+                configure('--prefix={0}'.format(self.prefix))
                 make('install')
