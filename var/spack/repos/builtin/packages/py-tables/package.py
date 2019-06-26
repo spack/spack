@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyPytables(PythonPackage):
+class PyTables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to
     efficiently and easily cope with extremely large amounts of data."""
     homepage = "http://www.pytables.org/"
