@@ -67,7 +67,12 @@ def get_tmp_root():
         return None
 
     if _tmp_root is None:
-        candidates = spack.config.get('config:build_stage')
+        if spack.config.get('config:shared'):
+            candidates = os.path.join(os.environ['SPACK_PATH'],
+                                      'var/spack/stage')
+        else:
+            candidates = spack.config.get('config:build_stage')
+
         if isinstance(candidates, string_types):
             candidates = [candidates]
 
@@ -196,6 +201,14 @@ class Stage(object):
         # If this is a named stage, then construct a named path.
         if path is not None:
             self.path = path
+        elif spack.config.get('config:shared'):
+            try:
+                os.mkdir(os.environ['SPACK_PATH'] + '/var/spack/stage')
+            except OSError:
+                pass
+            self.path = os.path.join(os.environ['SPACK_PATH'],
+                                     'var/spack/stage/',
+                                     self.name)
         else:
             self.path = os.path.join(spack.paths.stage_path, self.name)
 
@@ -210,7 +223,13 @@ class Stage(object):
             if self.name not in Stage.stage_locks:
                 sha1 = hashlib.sha1(self.name.encode('utf-8')).digest()
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-                stage_lock_path = os.path.join(spack.paths.stage_path, '.lock')
+
+                if spack.config.get('config:shared'):
+                    stage_lock_path = os.path.join(os.environ['SPACK_PATH'],
+                                                   'var/spack/stage', '.lock')
+                else:
+                    stage_lock_path = os.path.join(spack.paths.stage_path,
+                                                   '.lock')
 
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
                     stage_lock_path, lock_id, 1)
@@ -462,7 +481,10 @@ class Stage(object):
 
         """
         # Create the top-level stage directory
-        mkdirp(spack.paths.stage_path)
+        if spack.config.get('config:shared'):
+            mkdirp(os.path.join(os.environ['SPACK_PATH'], 'var/spack/stage'))
+        else:
+            mkdirp(spack.paths.stage_path)
         remove_if_dead_link(self.path)
 
         # If a tmp_root exists then create a directory there and then link it
