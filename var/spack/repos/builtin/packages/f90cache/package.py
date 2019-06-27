@@ -17,3 +17,5 @@ class F90cache(AutotoolsPackage):
     url      = "https://perso.univ-rennes1.fr/edouard.canot/f90cache/f90cache-0.99c.tar.gz"
 
     version('0.99c', sha256='13f8297ecba73671d43376b71ef0e453bd9d6677a901d1c95f01f16cc33776e1')
+    version('0.99', 'e4767ae876203ed4f3e118e22204cdec',
+            url='http://distfiles.exherbo.org/distfiles/f90cache-0.99.tar.bz2')
