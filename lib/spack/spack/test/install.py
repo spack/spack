@@ -283,3 +283,18 @@ def test_pkg_build_paths(install_mockery):
 
     assert spec.package.log_path.endswith(_spack_build_logfile)
     assert spec.package.env_path.endswith(_spack_build_envfile)
+
+
+def test_pkg_install_paths(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    rel_path = os.path.join('.spack', _spack_build_logfile)
+    assert spec.package.install_log_path(True) == rel_path
+    assert spec.package.install_log_path(False) == os.path.join(spec.prefix,
+                                                                rel_path)
+
+    rel_path = os.path.join('.spack', _spack_build_envfile)
+    assert spec.package.install_env_path(True) == rel_path
+    assert spec.package.install_env_path(False) == os.path.join(spec.prefix,
+                                                                rel_path)

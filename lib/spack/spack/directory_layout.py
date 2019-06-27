@@ -190,8 +190,6 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'spack-build-out.txt'  # build log (success)
-        self.build_env_name      = 'spack-build-env.txt'  # build environment
         self.packages_dir        = 'repos'  # archive of package.py files
 
     @property
@@ -241,12 +239,6 @@ class YamlDirectoryLayout(DirectoryLayout):
             return os.path.join(spec.prefix, self.metadata_dir)
         else:
             return self.metadata_dir
-
-    def build_log_path(self, spec=None):
-        return os.path.join(self.metadata_path(spec), self.build_log_name)
-
-    def build_env_path(self, spec=None):
-        return os.path.join(self.metadata_path(spec), self.build_env_name)
 
     def build_packages_path(self, spec=None):
         return os.path.join(self.metadata_path(spec), self.packages_dir)

@@ -31,9 +31,9 @@ class Mathematica(Package):
            '-selinux=y')
 
         # After the install phase completes, Spack tries to install
-        # build-out.txt into <prefix>/.spack, but the .spack dir will not
+        # spack-build-out.txt into <prefix>/.spack, but the .spack dir will not
         # exist, causing the build to fail. package.py:1690 seems to show
-        # that the dir is created right before writing build-out.txt
+        # that the dir is created right before writing spack-build-out.txt
         # -- possible bug?
 
         # creating the .spack dir right after installing prevents explosions

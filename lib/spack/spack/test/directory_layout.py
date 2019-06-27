@@ -236,16 +236,8 @@ def test_yaml_directory_layout_build_paths(tmpdir, config):
     spec.concretize()
 
     layout = YamlDirectoryLayout(str(tmpdir))
-
-    rel_path = os.path.join(layout.metadata_dir, layout.build_log_name)
-    assert layout.build_log_path() == rel_path
-    assert layout.build_log_path(spec) == os.path.join(spec.prefix, rel_path)
-
-    rel_path = os.path.join(layout.metadata_dir, layout.build_env_name)
-    assert layout.build_env_path() == rel_path
-    assert layout.build_env_path(spec) == os.path.join(spec.prefix, rel_path)
-
     rel_path = os.path.join(layout.metadata_dir, layout.packages_dir)
+
     assert layout.build_packages_path() == rel_path
     assert layout.build_packages_path(spec) == os.path.join(spec.prefix,
                                                             rel_path)
