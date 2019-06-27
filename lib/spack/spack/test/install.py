@@ -12,8 +12,7 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
-from spack.package import _spack_build_envfile, _spack_build_logfile, \
-    _spack_build_errfile
+from spack.package import _spack_build_envfile, _spack_build_logfile
 
 
 @pytest.fixture
@@ -283,5 +282,4 @@ def test_pkg_build_paths(install_mockery):
     spec = Spec('trivial-install-test-package').concretized()
 
     assert spec.package.log_path.endswith(_spack_build_logfile)
-    assert spec.package.err_path.endswith(_spack_build_errfile)
     assert spec.package.env_path.endswith(_spack_build_envfile)
