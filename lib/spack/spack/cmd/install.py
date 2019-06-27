@@ -176,7 +176,13 @@ def default_log_file(spec):
     """
     fmt = 'test-{x.name}-{x.version}-{hash}.xml'
     basename = fmt.format(x=spec, hash=spec.dag_hash())
-    dirname = fs.os.path.join(spack.paths.var_path, 'junit-report')
+
+    if spack.config.get('config:shared'):
+        dirname = fs.os.path.join(os.environ['SPACK_PATH'],
+                                  'var/',
+                                  'junit-report')
+    else:
+        dirname = fs.os.path.join(spack.paths.var_path, 'junit-report')
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)
 
