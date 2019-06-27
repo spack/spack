@@ -850,6 +850,9 @@ class Database(object):
             rec.installed = False
             return rec.spec
 
+        if self.is_upstream:
+            return rec.spec
+
         del self._data[key]
         for dep in rec.spec.dependencies(_tracked_deps):
             self._decrement_ref_count(dep)
