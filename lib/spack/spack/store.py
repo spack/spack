@@ -70,9 +70,13 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    root = spack.config.get('config:install_tree', default_root)
-    root = spack.util.path.canonicalize_path(root)
+    if spack.config.get('config:shared'):
+        root = os.path.join(os.environ["SPACK_PATH"], "opt/")
+    else:
+        root = spack.config.get('config:install_tree', default_root)
 
+    # Canonicalize Path for Root regardless of origin
+    root = spack.util.path.canonicalize_path(root)
     return Store(root,
                  spack.config.get('config:install_path_scheme'),
                  spack.config.get('config:install_hash_length'))
@@ -88,7 +92,13 @@ layout = llnl.util.lang.LazyReference(lambda: store.layout)
 
 
 def retrieve_upstream_dbs():
-    other_spack_instances = spack.config.get('upstreams', {})
+
+    other_spack_instances = spack.config.get('upstreams')
+
+    if spack.config.get('config:shared'):
+        path = spack.util.path.canonicalize_path("$spack/opt/spack")
+        other_spack_instances.update({'spack-root':
+                                     {'install_tree': path}})
 
     install_roots = []
     for install_properties in other_spack_instances.values():
