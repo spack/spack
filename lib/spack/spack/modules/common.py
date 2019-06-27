@@ -53,7 +53,17 @@ import spack.util.file_permissions as fp
 configuration = spack.config.get('modules')
 
 #: Root folders where the various module files should be written
-roots = spack.config.get('config:module_roots', {})
+if spack.config.get('config:shared') and 'SPACK_PATH' in os.environ:
+    roots = {'tcl':    os.environ['SPACK_PATH'] + '/share/spack/modules',
+             'lmod':   os.environ['SPACK_PATH'] + '/share/spack/lmod',
+             'dotkit': os.environ['SPACK_PATH'] + '/share/spack/lmod'}
+elif spack.config.get('config:shared') and 'SPACK_PATH' not in os.environ:
+    tty.info("""Shared mode enabled but,
+             $SPACK_PATH environment variable is undefined.""")
+    tty.info("Setting $SPACK_PATH to %s" % str(os.path.expanduser('~')))
+    os.environ['SPACK_PATH'] = str(os.path.expanduser('~'))
+else:
+    roots = spack.config.get('config:module_roots', {})
 
 #: Inspections that needs to be done on spec prefixes
 prefix_inspections = spack.config.get('modules:prefix_inspections', {})
