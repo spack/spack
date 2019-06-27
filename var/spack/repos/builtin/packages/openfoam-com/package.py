@@ -264,6 +264,8 @@ class OpenfoamCom(Package):
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')  # Needs credentials
+    version('1906', 'ab7017e262c0c0fceec55c31e2153180')
+    version('1812_190531', 'a4b416838a8a76fdec22706a33c96de3')
     version('1812', '6a315687b3601eeece7ff7c7aed3d9a5')
     version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
