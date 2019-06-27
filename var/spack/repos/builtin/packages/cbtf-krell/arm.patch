@@ -1,20 +1,8 @@
 diff --git a/core/collectors/io/wrappers.c b/core/collectors/io/wrappers.c
-index cf23473..c6a5398 100644
+index cf23473..aecba6b 100644
 --- a/core/collectors/io/wrappers.c
 +++ b/core/collectors/io/wrappers.c
-@@ -22,6 +22,11 @@
- #define __USE_GNU /* XXX for RTLD_NEXT on Linux */ 
- #endif /* !__USE_GNU */
- #define _XOPEN_SOURCE 500 /* for readlink */
-+#ifdef __aarch64__
-+#define __USE_ATFILE
-+#define _LARGEFILE64_SOURCE
-+#define _FILE_OFFSET_BITS 64
-+#endif
- 
- #ifdef HAVE_CONFIG_H
- #include "config.h"
-@@ -62,6 +67,7 @@ extern bool_t io_do_trace(const char*);
+@@ -62,6 +62,7 @@ extern bool_t io_do_trace(const char*);
  
  /* Start part 2 of 2 for Hack to get around inconsistent syscall definitions */
  #include <sys/syscall.h>
@@ -22,7 +10,7 @@ index cf23473..c6a5398 100644
  #ifdef __NR_pread64  /* Newer kernels renamed but it's the same.  */
  # ifndef __NR_pread
  # define __NR_pread __NR_pread64
-@@ -570,11 +576,20 @@ int ioopen(const char *pathname, int flags, mode_t mode)
+@@ -570,11 +571,20 @@ int ioopen(const char *pathname, int flags, mode_t mode)
  
  #if defined(EXTENDEDTRACE)
      event.retval = retval;
@@ -43,7 +31,7 @@ index cf23473..c6a5398 100644
  
      strncpy(currentpathname,pathname,strlen(pathname));
  #endif
-@@ -647,11 +662,20 @@ int ioopen64(const char *pathname, int flags, mode_t mode)
+@@ -647,11 +657,20 @@ int ioopen64(const char *pathname, int flags, mode_t mode)
      event.stop_time = CBTF_GetTime();
  
  #if defined(EXTENDEDTRACE)
@@ -64,7 +52,7 @@ index cf23473..c6a5398 100644
      event.retval = retval;
      strncpy(currentpathname,pathname,strlen(pathname));
  #endif
-@@ -919,10 +943,18 @@ int iodup2(int oldfd, int newfd)
+@@ -919,10 +938,18 @@ int iodup2(int oldfd, int newfd)
      event.stop_time = CBTF_GetTime();
  
  #if defined(EXTENDEDTRACE)
@@ -83,7 +71,7 @@ index cf23473..c6a5398 100644
      event.retval = retval;
  
      /* use that to get the path into /proc. */
-@@ -1009,10 +1041,19 @@ int iocreat(char *pathname, mode_t mode)
+@@ -1009,10 +1036,19 @@ int iocreat(char *pathname, mode_t mode)
  
  #if defined(EXTENDEDTRACE)
      event.retval = retval;
@@ -103,7 +91,7 @@ index cf23473..c6a5398 100644
  
      strncpy(currentpathname,pathname,strlen(pathname));
  #endif
-@@ -1084,10 +1125,19 @@ int iocreat64(char *pathname, mode_t mode)
+@@ -1084,10 +1120,19 @@ int iocreat64(char *pathname, mode_t mode)
      event.stop_time = CBTF_GetTime();
  
  #if defined(EXTENDEDTRACE)
@@ -123,7 +111,7 @@ index cf23473..c6a5398 100644
      event.retval = retval;
      strncpy(currentpathname,pathname,strlen(pathname));
  #endif
-@@ -1160,9 +1210,16 @@ int iopipe(int filedes[2])
+@@ -1160,9 +1205,16 @@ int iopipe(int filedes[2])
      event.stop_time = CBTF_GetTime();
  
  #if defined(EXTENDEDTRACE)
