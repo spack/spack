@@ -31,6 +31,16 @@ packages:
       - py-entity-management@1.0.5
       - py-entity-management@0.1.12
 
+  gnu-stable-outdated:
+    target_matrix:
+      - gnu-stable-py2
+    requires:
+      - architecture
+      - compiler
+      - python
+    specs:
+      - py-simwriter@0.4.3 ^py-rpy2@2.8.6 ^openjdk
+
   gnu-stable-parallel:
     target_matrix:
       - gnu-stable
