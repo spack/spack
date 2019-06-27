@@ -105,6 +105,8 @@ class CbtfKrell(CMakePackage):
 
     depends_on("gotcha")
 
+    patch('arm.patch')
+
     parallel = False
 
     build_directory = 'build_cbtf_krell'
