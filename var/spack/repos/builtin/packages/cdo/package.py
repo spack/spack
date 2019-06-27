@@ -29,11 +29,6 @@ class Cdo(AutotoolsPackage):
     version('1.8.2', '6a2e2f99b7c67ee9a512c40a8d4a7121', url='https://code.mpimet.mpg.de/attachments/download/14686/cdo-1.8.2.tar.gz')
     version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz')
 
-    # The build fails due to changes to OpenMP data sharing in GCC 9.
-    # See: https://gcc.gnu.org/gcc-9/porting_to.html#ompdatasharing
-    # See: https://code.mpimet.mpg.de/issues/9038 (not public)
-    patch('gcc9-openmp-1.9.7rc2.patch', when='@1.9.7rc2%gcc@9:')
-
     variant('netcdf', default=True, description='Enable NetCDF support')
     variant('grib2', default='eccodes', values=('eccodes', 'grib-api', 'none'),
             description='Specify GRIB2 backend')
