@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import argparse
+import copy
 
 import spack.cmd
 import spack.environment as ev
@@ -14,6 +15,7 @@ import spack.package
 import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.store
+import spack.spec
 
 from llnl.util import tty
 from llnl.util.tty.colify import colify
@@ -74,6 +76,16 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     Return:
         list of specs
     """
+
+    for spec in specs:
+        if isinstance(spec, spack.spec.Spec):
+            spec_name = str(spec)
+            spec_copy = (copy.deepcopy(spec))
+            spec_copy.concretize()
+            if spec_copy.package.installed_upstream:
+                tty.die("""{0} found upstream. Cannot be uninstalled
+                        from this instance of spack.""".format(spec_name))
+
     # constrain uninstall resolution to current environment if one is active
     hashes = env.all_hashes() if env else None
 
@@ -317,7 +329,7 @@ def uninstall_specs(args, specs):
     anything_to_do = set(uninstall_list).union(set(remove_list))
 
     if not anything_to_do:
-        tty.warn('There are no package to uninstall.')
+        tty.warn('There are no packages to uninstall.')
         return
 
     if not args.yes_to_all:
