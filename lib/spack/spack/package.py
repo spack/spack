@@ -440,7 +440,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will be
-    #: copied in the same directory tree as spack-build-env.txt and 
+    #: copied in the same directory tree as spack-build-env.txt and
     #: spack-build-out.txt.
     archive_files = []
 
