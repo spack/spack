@@ -19,7 +19,7 @@ class Launchmon(AutotoolsPackage):
     depends_on('autoconf', type='build', when='@master')
     depends_on('automake', type='build', when='@master')
     depends_on('libtool', type='build', when='@master')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libgcrypt')
     depends_on('libgpg-error')
     depends_on("elf", type='link')
