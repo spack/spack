@@ -91,6 +91,7 @@ class Gdal(AutotoolsPackage):
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
     depends_on('libgeotiff@1.2.1:')
+    depends_on('libgeotiff@:1.4', when='@:2.4')
     depends_on('libgeotiff@1.5:', when='@3:')
     depends_on('json-c', when='@2.3:')
     depends_on('json-c@0.12.1', when='@:2.2')
