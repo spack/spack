@@ -590,6 +590,12 @@ def print_setup_info(*info):
 
     other_spack_instances = spack.config.get(
         'upstreams') or {}
+
+    if spack.config.get('config:shared'):
+        path = spack.util.path.canonicalize_path("$spack/opt/spack")
+        other_spack_instances.update({'spack-root':
+                                     {'install_tree': path}})
+
     for install_properties in other_spack_instances.values():
         upstream_module_roots = install_properties.get('modules', {})
         for module_type, root in upstream_module_roots.items():
