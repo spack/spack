@@ -264,6 +264,8 @@ class OpenfoamCom(Package):
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')  # Needs credentials
+    version('1906', 'ab7017e262c0c0fceec55c31e2153180')
+    version('1812_190531', 'a4b416838a8a76fdec22706a33c96de3')
     version('1812', '6a315687b3601eeece7ff7c7aed3d9a5')
     version('1806', 'bb244a3bde7048a03edfccffc46c763f')
     version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
@@ -762,7 +764,7 @@ class OpenfoamArch(object):
     def __init__(self, spec, **kwargs):
         # Some user settings, to be adjusted manually or via variants
         self.compiler         = None   # <- %compiler
-        self.arch_option      = '64'   # (32/64-bit on x86_64)
+        self.arch_option      = ''     # Eg, -march=knl
         self.label_size       = None   # <- +int64
         self.precision_option = 'DP'   # <- +float32
         self.compile_option   = kwargs.get('compile-option', 'RpathOpt')
@@ -780,6 +782,10 @@ class OpenfoamArch(object):
         if '+float32' in spec:
             self.precision_option = 'SP'
 
+        # Processor/architecture-specific optimizations
+        if '+knl' in spec:
+            self.arch_option = '-march=knl'
+
         # spec.architecture.platform is like `uname -s`, but lower-case
         platform = spec.architecture.platform
 
@@ -787,13 +793,10 @@ class OpenfoamArch(object):
         target   = spec.architecture.target
 
         if platform == 'linux':
-            if target == 'i686':
-                self.arch_option = '32'  # Force consistency
-            elif target == 'x86_64':
-                if self.arch_option == '64':
-                    platform += '64'
+            if target == 'x86_64':
+                platform += '64'
             elif target == 'ia64':
-                platform += 'ia64'
+                platform += 'IA64'
             elif target == 'armv7l':
                 platform += 'ARM7'
             elif target == 'aarch64':
@@ -804,9 +807,7 @@ class OpenfoamArch(object):
                 platform += 'PPC64le'
         elif platform == 'darwin':
             if target == 'x86_64':
-                platform += 'Intel'
-                if self.arch_option == '64':
-                    platform += '64'
+                platform += '64'
         # ... and others?
 
         self.arch = platform
@@ -821,8 +822,6 @@ class OpenfoamArch(object):
             comp = self.compiler_mapping[comp]
         comp = comp.capitalize()
 
-        if '+knl' in spec:
-            comp += 'KNL'
         self.compiler = comp
         self.rule = self.arch + self.compiler
 
@@ -849,7 +848,6 @@ class OpenfoamArch(object):
         """Returns a dictionary for OpenFOAM prefs, bashrc, cshrc."""
         return dict([
             ('WM_COMPILER',    self.compiler),
-            ('WM_ARCH_OPTION', self.arch_option),
             ('WM_LABEL_SIZE',  self.label_size),
             ('WM_PRECISION_OPTION', self.precision_option),
             ('WM_COMPILE_OPTION', self.compile_option),
@@ -918,6 +916,10 @@ class OpenfoamArch(object):
                             if re.match(r'^\S+DBUG\s*=', line):
                                 outfile.write(' ')
                                 outfile.write(rpath)
+                            elif re.match(r'^\S+OPT\s*=', line):
+                                if self.arch_option:
+                                    outfile.write(' ')
+                                    outfile.write(self.arch_option)
                             outfile.write('\n')
 
             # MPI rules
