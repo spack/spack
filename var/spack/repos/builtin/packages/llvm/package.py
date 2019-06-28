@@ -525,32 +525,32 @@ class Llvm(CMakePackage):
         if release['version'] == 'develop':
             version(release['version'], svn=release['repo'])
 
-            for name, repo in release['resources'].items():
-                resource(name=name,
+            for rname, repo in release['resources'].items():
+                resource(name=rname,
                          svn=repo,
-                         destination=resources[name]['destination'],
+                         destination=resources[rname]['destination'],
                          when='@%s%s' % (release['version'],
-                                         resources[name].get('variant', "")),
-                         placement=resources[name].get('placement', None))
+                                         resources[rname].get('variant', "")),
+                         placement=resources[rname].get('placement', None))
         else:
             version(release['version'], release['md5'], url=llvm_url % release)
 
-            for name, md5 in release['resources'].items():
-                resource(name=name,
-                         url=resources[name]['url'] % release,
+            for rname, md5 in release['resources'].items():
+                resource(name=rname,
+                         url=resources[rname]['url'] % release,
                          md5=md5,
-                         destination=resources[name]['destination'],
+                         destination=resources[rname]['destination'],
                          when='@%s%s' % (release['version'],
-                                         resources[name].get('variant', "")),
-                         placement=resources[name].get('placement', None))
+                                         resources[rname].get('variant', "")),
+                         placement=resources[rname].get('placement', None))
 
     for release in flang_releases:
         if release['version'] == 'develop':
             version('flang-' + release['version'], git=flang_llvm_url, branch=release['branch'])
 
-            for name, branch in release['resources'].items():
-                flang_resource = flang_resources[name]
-                resource(name=name,
+            for rname, branch in release['resources'].items():
+                flang_resource = flang_resources[rname]
+                resource(name=rname,
                          git=flang_resource['git'],
                          branch=branch,
                          destination=flang_resource['destination'],
@@ -560,9 +560,9 @@ class Llvm(CMakePackage):
         else:
             version('flang-' + release['version'], git=flang_llvm_url, commit=release['commit'])
 
-            for name, commit in release['resources'].items():
-                flang_resource = flang_resources[name]
-                resource(name=name,
+            for rname, commit in release['resources'].items():
+                flang_resource = flang_resources[rname]
+                resource(name=rname,
                          git=flang_resource['git'],
                          commit=commit,
                          destination=flang_resource['destination'],
