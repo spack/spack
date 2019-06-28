@@ -4,10 +4,6 @@ MAINTAINER Matthias Wolf <matthias.wolf@epfl.ch>
 
 ENV DEBIAN_FRONTEND noninteractive
 
-ARG proxy
-ENV http_proxy=$proxy
-ENV https_proxy=$proxy
-
 # default software required
 RUN apt-get update
 RUN apt-get -y install software-properties-common

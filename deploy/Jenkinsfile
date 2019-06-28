@@ -1,13 +1,23 @@
+#!groovy
+
 def build_and_deploy_docker() {
+    def registry = "https://index.docker.io/v1/"
+    def credentials_id = ""
+
     def pull = env.ghprbPullId
-    def proxy = "--build-arg proxy=http://bbpproxy.epfl.ch:80"
     def rev = "--build-arg revision=${sha1}"
+
     if (pull == null) {
-        sh "docker build -f docker/Dockerfile ${proxy} ${rev} -t bluebrain/spack ."
-        // sh "docker push docker.io/bluebrain/spack"
+        def image = docker.build("bluebrain/spack", "-f docker/Dockerfile ${rev} .")
+        docker.withRegistry(registry, credentials_id) {
+            image.push("latest")
+        }
     } else {
         def pr = "--build-arg pr=${env.ghprbPullId}"
-        sh "docker build -f docker/Dockerfile ${proxy} ${rev} ${pr} -t bluebrain/spack ."
+        def image = docker.build("bluebrain/spack", "-f docker/Dockerfile ${rev} ${pr} .")
+        docker.withRegistry(registry, credentials_id) {
+            image.push("test-${env.ghprbPullId}")
+        }
     }
 }
 
@@ -338,7 +348,7 @@ pipeline {
 
                 stage('Build Docker') {
                     agent {
-                        label 'docker'
+                        label 'docker18'
                     }
 
                     steps {
