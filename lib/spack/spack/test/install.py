@@ -12,17 +12,27 @@ import spack.store
 from spack.spec import Spec
 
 
-def test_install_and_uninstall(install_mockery, mock_fetch):
+def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
 
     # Get the package
-    pkg = spack.repo.get(spec)
+    pkg = spec.package
+
+    def find_nothing(*args):
+        raise spack.repo.UnknownPackageError(
+            'Repo package access is disabled for test')
 
     try:
         pkg.do_install()
+
+        spec._package = None
+        monkeypatch.setattr(spack.repo, 'get', find_nothing)
+        with pytest.raises(spack.repo.UnknownPackageError):
+            spec.package
+
         pkg.do_uninstall()
     except Exception:
         pkg.remove_prefix()
