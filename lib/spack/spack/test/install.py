@@ -314,10 +314,6 @@ def test_mock_nosrc_pkg():
         pkg.do_install()
 
 
-@pytest.mark.disable_clean_stage_check
 def test_nosource_pkg(install_mockery, mock_fetch, mock_packages):
     spec = Spec('nosource').concretized()
-    pkg = spec.package
-
-    with pytest.raises(spack.build_environment.ChildError):
-        pkg.do_install()
+    spec.package.do_install()
