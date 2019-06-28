@@ -1,0 +1,8 @@
+--- a/lib/iris/etc/site.cfg	2017-06-01 19:54:28.000000000 +1000
++++ b/lib/iris/etc/site.cfg	1970-01-01 10:00:00.000000000 +1000
+@@ -1,5 +0,0 @@
+-[System]
+-udunits2_path = /home/h04/dkillick/usr/local/miniconda/envs/travis_env/lib/libudunits2.so
+-
+-[Resources]
+-test_data_dir = /home/h04/dkillick/git/iris-test-data/test_data
