@@ -25,6 +25,8 @@ class Likwid(Package):
     version('4.3.1', 'ff28250f622185688bf5e2e0975368ea')
     version('4.3.0', '7f8f6981d7d341fce2621554323f8c8b')
 
+    patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch', sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0', when='@4.3.4')
+
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
