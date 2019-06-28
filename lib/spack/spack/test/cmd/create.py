@@ -5,10 +5,7 @@
 
 import argparse
 import os
-import shutil
 import pytest
-
-import llnl.util.tty as tty
 
 import spack.cmd.create
 import spack.util.editor
