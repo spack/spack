@@ -14,16 +14,13 @@ share = SpackCommand('share')
 install = SpackCommand('install')
 
 
-@pytest.fixture()
-def local_tmpdir():
-    print("We be making them tmpdirs")
-
-
+@pytest.mark.test_activate
 def test_activate():
     share('activate')
     assert spack.config.get('config:shared') is True
 
 
+@pytest.mark.test_deactivate
 def test_deactivate():
     # Ensures that this test can be run individually
     # Activates shared mode so shared mode can be deactivated
