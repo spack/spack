@@ -9,7 +9,7 @@ class Powerapi(AutotoolsPackage):
     """This software is a reference implementation of the PowerAPI"""
 
     homepage = "https://powerapi.sandia.gov/"
-    git      = "https://github.com/pwrapi/pwrapi-ref/tree/v1.1.1.git"
+    git      = "https://github.com/pwrapi/pwrapi-ref.git"
 
     version('1.1.1', commit='93f66dfa29f014067823f2b790a1862e5841a11c', expand=False)
 
