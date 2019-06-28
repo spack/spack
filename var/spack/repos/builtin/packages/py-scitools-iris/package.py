@@ -15,8 +15,8 @@ class PyScitoolsIris(PythonPackage):
 
     version('2.2.0', sha256='1bf8853f5d7a210f711636d32a52ff62b84a56330fe159720ef56f36f3804ade')
 
-    depends_on('py-six', type='build')
-    depends_on('py-pyke', type='build')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-pyke', type=('build', 'run'))
     depends_on('py-cartopy', type=('build', 'run'))
     depends_on('proj@4:4.99')
     depends_on('py-cf-units', type=('build', 'run'))
