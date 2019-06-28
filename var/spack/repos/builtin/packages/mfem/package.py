@@ -45,13 +45,17 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('4.0.0',
+            'df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727',
+            url='https://bit.ly/mfem-4-0', extension='.tar.gz',
+            preferred=True)
+
     # Tagged development version used by the laghos package:
     version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
 
     version('3.4.0',
             '4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
-            url='https://bit.ly/mfem-3-4', extension='.tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-3-4', extension='.tar.gz')
 
     version('3.3.2',
             'b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
@@ -161,7 +165,7 @@ class Mfem(Package):
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
-    depends_on('lapack', when='+lapack')
+    depends_on('lapack@3.0:', when='+lapack')
 
     depends_on('sundials@2.7.0', when='@:3.3.0+sundials~mpi')
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
@@ -178,12 +182,17 @@ class Mfem(Package):
     # depends_on('petsc@3.8:+mpi+double+hypre+suite-sparse+mumps',
     #            when='+petsc')
     depends_on('mpfr', when='+mpfr')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf@4.1.3:', when='+netcdf')
     depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:,master:', when='+conduit')
     depends_on('conduit+mpi', when='+conduit+mpi')
+
+    # The MFEM 4.0.0 SuperLU interface fails when using hypre@2.16.0 and
+    # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
+    conflicts('+hypre+superlu-dist',
+              when='mfem@4.0.0 ^hypre@2.16.0 ^superlu-dist@6.1.1')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
