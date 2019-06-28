@@ -23,10 +23,14 @@ class Flecsi(CMakePackage):
     version('develop', branch='master', submodules=False)
     variant('backend', default='mpi', values=('serial', 'mpi', 'legion'),
             description='Backend to use for distributed memory')
+    variant('caliper', default=False,
+            description='Enable Caliper Support')
     variant('graphviz', default=False,
             description='Enable GraphViz Support')
     variant('tutorial', default=False,
             description='Build FleCSI Tutorials')
+    variant('flecstan', default=False,
+            description='Build FleCSI Static Analyzer')
 
     depends_on('cmake@3.1:',  type='build')
     # Requires cinch > 1.0 due to cinchlog installation issue
