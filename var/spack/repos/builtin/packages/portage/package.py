@@ -21,8 +21,8 @@ class Portage(CMakePackage):
     version('1.1.1', tag='v1.1.1', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
 
-    # fabs() needs math.h for gcc-7, got fixed in 
-    # versions above 1.2.2 
+    # fabs() needs math.h for gcc-7, got fixed in
+    # versions above 1.2.2
     patch('gcc-7.patch', when='@:1.2.2 %gcc@7:')
     # part of https://github.com/laristra/cinch/commit/f87f848269fac25aa5b8d0bd5d9c9b2d2d6fb0ad
     # fixed in version above 1.2.2
