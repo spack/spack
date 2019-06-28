@@ -68,3 +68,9 @@ class Brayns(CMakePackage):
     def check(self):
         with working_dir(self.build_directory):
             ninja('tests')
+
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory):
+            if '+optix' in self.spec:
+                ninja('braynsOptixEngine')
+            ninja()
