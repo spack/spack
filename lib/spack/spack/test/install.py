@@ -7,7 +7,7 @@ import os
 import pytest
 
 from spack.package import \
-    InstallError, PackageBase, PackageCore, PackageStillNeededError
+    BundlePackage, InstallError, PackageBase, PackageStillNeededError
 import spack.patch
 import spack.repo
 import spack.store
@@ -296,12 +296,12 @@ def test_uninstall_by_spec_errors(mutable_database, monkeypatch):
     monkeypatch.setattr(spack.repo, 'get', actual_get)
 
 
-class MockDoclessPackage(PackageCore):
+class MockDoclessPackage(BundlePackage):
     def __init__(self, spec):
         self.spec = spec
 
 
-class MockNoSourcePackage(PackageCore):
+class MockNoSourcePackage(BundlePackage):
     def __init__(self, spec):
         self.spec = spec
 

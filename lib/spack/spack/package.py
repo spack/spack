@@ -326,7 +326,7 @@ class PackageViewMixin(object):
             view.remove_file(src, dst)
 
 
-class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
+class BundlePackage(with_metaclass(PackageMeta, PackageViewMixin, object)):
     """
     This is the core functionality (and superclass) for all Spack packages,
     assuming a package may simply reflect a bundle of dependencies.
@@ -360,7 +360,7 @@ class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
     metadata_attrs = ['homepage']
 
     def __init__(self, spec):
-        super(PackageCore, self).__init__()
+        super(BundlePackage, self).__init__()
 
         # this determines how the package should be built.
         self.spec = spec
@@ -528,8 +528,8 @@ class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         self.last_phase = kwargs.pop('stop_at', None)
         if self.last_phase is not None and self.last_phase not in self.phases:
-            tty.die('\'{0}\' is not an allowed phase for package {1}'
-                    .format(self.last_phase, self.name))
+            raise InstallError('\'{0}\' is not an allowed phase for package '
+                               '{1}'.format(self.last_phase, self.name))
 
     def do_install(self, **kwargs):
         """Called by commands to install package dependencies.
@@ -678,7 +678,7 @@ class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def do_uninstall(self, force=False):
         """Uninstall this package by spec."""
         # delegate to instance-less method.
-        PackageCore.uninstall_by_spec(self.spec, force)
+        BundlePackage.uninstall_by_spec(self.spec, force)
 
     def format_doc(self, **kwargs):
         """Wrap doc string at 72 characters and format nicely"""
@@ -713,15 +713,10 @@ class PackageCore(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
 
-class BundlePackage(PackageCore):
+class PackageBase(BundlePackage):
     """
-    This package does not have anything of its own to install; rather, it
-    depends on other packages to ensure they are concretized together.
-    """
-
-
-class PackageBase(PackageCore):
-    """This is the parent class for all source-/URL-based Spack packages.
+    This is the parent class for all code-based Spack packages (i.e., for
+    downloading and installing code from binary or source.)
 
     ***The Package class***
 

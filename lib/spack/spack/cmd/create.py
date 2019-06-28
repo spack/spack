@@ -57,13 +57,13 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
-{url}
+{url_def}
 
 {versions}
 
 {dependencies}
 
-{body}
+{body_def}
 '''
 
 
@@ -78,8 +78,8 @@ class BundlePackageTemplate(object):
     # FIXME: Add dependencies if required.
     # depends_on('foo')"""
 
-    url = "    # There is no URL since there is no source to download."
-    body = "    # There is no need for install() since there is no source."
+    url_def = "    # There is no URL since there is no source to download."
+    body_def = "    # There is no need for install() since there is no source."
 
     def __init__(self, name, versions):
         self.name       = name
@@ -95,10 +95,10 @@ class BundlePackageTemplate(object):
                 name=self.name,
                 class_name=self.class_name,
                 base_class_name=self.base_class_name,
-                url=self.url,
+                url_def=self.url_def,
                 versions=self.versions,
                 dependencies=self.dependencies,
-                body=self.body))
+                body_def=self.body_def))
 
 
 class PackageTemplate(BundlePackageTemplate):
@@ -106,7 +106,7 @@ class PackageTemplate(BundlePackageTemplate):
 
     base_class_name = 'Package'
 
-    body = """\
+    body_def = """\
     def install(self, spec, prefix):
         # FIXME: Unknown build system
         make()
@@ -117,7 +117,7 @@ class PackageTemplate(BundlePackageTemplate):
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
 
-        self.url = self.url_line.format(url=url)
+        self.url_def = self.url_line.format(url=url)
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -410,6 +410,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true',
         help="overwrite any existing package file with the same name")
+    subparser.add_argument(
+        '--skip-editor', action='store_true',
+        help="skip the edit session for the package (e.g., testing)")
 
 
 class BuildSystemGuesser:
@@ -505,7 +508,7 @@ def get_name(args):
         # Try to guess the package name based on the URL
         try:
             name = parse_name(args.url)
-            tty.msg("This looks like a URL for {0}".format(name))
+            tty.msg("This looks like a valid package for {0}".format(name))
         except UndetectableNameError:
             tty.die("Couldn't guess a name for this package.",
                     "  Please report this bug. In the meantime, try running:",
@@ -619,7 +622,7 @@ def get_build_system(args, guesser):
             tty.msg(msg.format(template))
     else:
         template = 'bundle'
-        tty.warn("No URL provided.  Using the dependencies package template.")
+        tty.warn("No URL provided.  Using the bundle package template.")
 
     return template
 
@@ -673,6 +676,9 @@ def create(parser, args):
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
 
+    # .. Allow automated execution of template creation
+    skip_editor = True if args.skip_editor else False
+
     # Create the package template object
     constr_args = {'name': name, 'versions': versions}
     package_class = templates[build_system]
@@ -695,4 +701,5 @@ def create(parser, args):
     tty.msg("Created package file: {0}".format(pkg_path))
 
     # Open up the new package file in your $EDITOR
-    editor(pkg_path)
+    if not skip_editor:
+        editor(pkg_path)
