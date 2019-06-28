@@ -102,10 +102,11 @@ class BlastPlus(AutotoolsPackage):
             '--with-bin-release',
             '--without-debug',
             '--with-mt',
-            '--with-64',
             '--without-boost',
         ]
 
+        if 'aarch64' not in spec.architecture.target.lower():
+            config_args.append('--with-64')
         if '+static' in spec:
             config_args.append('--with-static')
             # FIXME
