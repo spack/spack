@@ -7,8 +7,9 @@ from spack import *
 
 
 class PyAntlr4Python3Runtime(PythonPackage):
-    """ANTLR (ANother Tool for Language Recognition) is a powerful parser generator
-for reading, processing, executing, or translating structured text or binary files.
+    """ANTLR (ANother Tool for Language Recognition) is a powerful
+parser generator for reading, processing, executing, or translating
+structured text or binary files.
 This package provides an ANTLR interface for python3."""
 
     homepage = "https://www.antlr.org"
