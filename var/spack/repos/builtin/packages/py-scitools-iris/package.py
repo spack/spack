@@ -17,6 +17,7 @@ class PyScitoolsIris(PythonPackage):
 
     patch('remove_site_cfg.patch', when='@2.2.0')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-pyke', type=('build', 'run'))
     depends_on('py-cartopy', type=('build', 'run'))
