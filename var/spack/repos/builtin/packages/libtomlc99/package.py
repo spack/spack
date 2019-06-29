@@ -14,6 +14,7 @@ class Libtomlc99(Package):
 
     # Since there is no official versioning, yet, just use the date and prefix
     # with '0.' to make switching to proper versioning easier later.
+    version('0.2019.06.24', commit='b701a09579200b1bd87081d1e6a284a89b5576c8')
     # Unfortunately, upstream Makefile does not build shared libaries, so use
     # local changes for now.
     version('0.2019.05.02', commit='35118431263dec2a2a7b55e4dd717a5f54992e3e',
