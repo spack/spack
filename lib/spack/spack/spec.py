@@ -128,7 +128,6 @@ from ruamel.yaml.error import MarkedYAMLError
 __all__ = [
     'Spec',
     'parse',
-    'parse_anonymous_spec',
     'SpecError',
     'SpecParseError',
     'DuplicateDependencyError',
@@ -2554,17 +2553,9 @@ class Spec(object):
         it.  If it's a string, tries to parse a string.  If that fails, tries
         to parse a local spec from it (i.e. name is assumed to be self's name).
         """
-        if isinstance(spec_like, spack.spec.Spec):
+        if isinstance(spec_like, Spec):
             return spec_like
-
-        try:
-            spec = spack.spec.Spec(spec_like)
-            if not spec.name:
-                raise SpecError(
-                    "anonymous package -- this will always be handled")
-            return spec
-        except SpecError:
-            return parse_anonymous_spec(spec_like, self.name)
+        return Spec(spec_like)
 
     def satisfies(self, other, deps=True, strict=False, strict_deps=False):
         """Determine if this spec satisfies all constraints of another.
@@ -2933,15 +2924,21 @@ class Spec(object):
         return value
 
     def __contains__(self, spec):
-        """True if this spec satisfies the provided spec, or if any dependency
-           does.  If the spec has no name, then we parse this one first.
+        """True if this spec or some dependency satisfies the spec.
+
+        Note: If ``spec`` is anonymous, we ONLY check whether the root
+        satisfies it, NOT dependencies.  This is because most anonymous
+        specs (e.g., ``@1.2``) don't make sense when applied across an
+        entire DAG -- we limit them to the root.
+
         """
         spec = self._autospec(spec)
-        for s in self.traverse():
-            if s.satisfies(spec, strict=True):
-                return True
 
-        return False
+        # if anonymous or same name, we only have to look at the root
+        if not spec.name or spec.name == self.name:
+            return self.satisfies(spec)
+        else:
+            return any(s.satisfies(spec) for s in self.traverse(root=False))
 
     def sorted_deps(self):
         """Return a list of all dependencies sorted by name."""
@@ -3943,41 +3940,6 @@ def parse(string):
        For creating one spec, see Spec() constructor.
     """
     return SpecParser().parse(string)
-
-
-def parse_anonymous_spec(spec_like, pkg_name):
-    """Allow the user to omit the package name part of a spec if they
-       know what it has to be already.
-
-       e.g., provides('mpi@2', when='@1.9:') says that this package
-       provides MPI-3 when its version is higher than 1.9.
-    """
-    if not isinstance(spec_like, (str, Spec)):
-        raise TypeError('spec must be Spec or spec string.  Found %s'
-                        % type(spec_like))
-
-    if isinstance(spec_like, str):
-        try:
-            anon_spec = Spec(spec_like)
-            if anon_spec.name != pkg_name:
-                raise SpecParseError(spack.parse.ParseError(
-                    "",
-                    "",
-                    "Expected anonymous spec for package %s but found spec for"
-                    "package %s" % (pkg_name, anon_spec.name)))
-        except SpecParseError:
-            anon_spec = Spec(pkg_name + ' ' + spec_like)
-            if anon_spec.name != pkg_name:
-                raise ValueError(
-                    "Invalid spec for package %s: %s" % (pkg_name, spec_like))
-    else:
-        anon_spec = spec_like.copy()
-
-    if anon_spec.name != pkg_name:
-        raise ValueError("Spec name '%s' must match package name '%s'"
-                         % (anon_spec.name, pkg_name))
-
-    return anon_spec
 
 
 def save_dependency_spec_yamls(

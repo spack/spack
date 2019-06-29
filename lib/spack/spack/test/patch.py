@@ -143,16 +143,16 @@ def test_nested_directives(mock_packages):
     # to Dependency objects.
     libelf_dep = next(iter(patcher.dependencies['libelf'].values()))
     assert len(libelf_dep.patches) == 1
-    assert len(libelf_dep.patches[Spec('libelf')]) == 1
+    assert len(libelf_dep.patches[Spec()]) == 1
 
     libdwarf_dep = next(iter(patcher.dependencies['libdwarf'].values()))
     assert len(libdwarf_dep.patches) == 2
-    assert len(libdwarf_dep.patches[Spec('libdwarf')]) == 1
-    assert len(libdwarf_dep.patches[Spec('libdwarf@20111030')]) == 1
+    assert len(libdwarf_dep.patches[Spec()]) == 1
+    assert len(libdwarf_dep.patches[Spec('@20111030')]) == 1
 
     fake_dep = next(iter(patcher.dependencies['fake'].values()))
     assert len(fake_dep.patches) == 1
-    assert len(fake_dep.patches[Spec('fake')]) == 2
+    assert len(fake_dep.patches[Spec()]) == 2
 
 
 def test_patched_dependency(
