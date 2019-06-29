@@ -825,15 +825,15 @@ class TestSpecSematics(object):
                 spec.format(fmt_str)
 
         bad_formats = [
-            '{}',
-            'name}',
-            '\{name}',  # NOQA: ignore=W605
-            '{name',
-            '{name\}',  # NOQA: ignore=W605
-            '{_concrete}',
-            '{dag_hash}',
-            '{foo}',
-            '{+variants.debug}'
+            r'{}',
+            r'name}',
+            r'\{name}',
+            r'{name',
+            r'{name\}',
+            r'{_concrete}',
+            r'{dag_hash}',
+            r'{foo}',
+            r'{+variants.debug}'
         ]
 
         for fmt_str in bad_formats:
