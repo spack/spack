@@ -665,13 +665,13 @@ class Llvm(CMakePackage):
 
             targets = ['NVPTX', 'AMDGPU']
             if (spec.version < Version('3.9.0')
-                and (str(spec.version)[:2] != 'fl')):
+                and spec.version[0] != 'flang'):
                 # Starting in 3.9.0 CppBackend is no longer a target (see
                 # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
                 # the complete list of targets)
 
                 # This also applies to the version of llvm used by flang
-                # hence the test to see if the version starts with "fl".
+                # hence the test to see if the version starts with "flang".
                 targets.append('CppBackend')
 
             if 'x86' in spec.architecture.target.lower():
