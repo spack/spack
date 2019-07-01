@@ -1,0 +1,19 @@
+commit 6f494384b0f00513d950b94a60c14ad1c20eb353
+Author: David Poliakoff <david.poliakoff@gmail.com>
+Date:   Thu Sep 20 10:59:54 2018 -0700
+
+    Pushed fix to help build on ARM systems
+
+diff --git a/src/libc_wrappers.c b/src/libc_wrappers.c
+index 504e31a..5937e5a 100644
+--- a/src/libc_wrappers.c
++++ b/src/libc_wrappers.c
+@@ -358,7 +358,7 @@ int gotcha_open(const char *pathname, int flags, ...)
+    }
+    va_end(args);
+ 
+-   result = syscall(SYS_open, pathname, flags, mode);
++   result = syscall(SYS_openat, AT_FDCWD, pathname, flags, mode);
+    if (result >= 0)
+       return (int) result;
+    
