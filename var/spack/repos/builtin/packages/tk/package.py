@@ -65,7 +65,9 @@ class Tk(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib)]
+        return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib),
+                '--x-includes={0}'.format(spec['libx11'].prefix.include),
+                '--x-libraries={0}'.format(spec['libx11'].prefix.lib)]
 
     @run_after('install')
     def symlink_wish(self):
