@@ -8,7 +8,7 @@ import spack.store
 from spack.main import SpackCommand, SpackCommandError
 
 uninstall = SpackCommand('uninstall')
-
+share = SpackCommand('share')
 
 class MockArgs(object):
 
@@ -31,7 +31,7 @@ def test_multiple_matches():
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 def test_installed_dependents():
-    """Test can't uninstall when ther are installed dependents."""
+    """Test can't uninstall when there are installed dependents."""
     with pytest.raises(SpackCommandError):
         uninstall('-y', 'libelf')
 
