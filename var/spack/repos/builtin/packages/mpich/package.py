@@ -33,6 +33,7 @@ class Mpich(AutotoolsPackage):
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
     variant('slurm', default=False, description='Enable SLURM support')
+    variant('wrapperrpath', default=True, description='Enable wrapper rpath')
     variant(
         'pmi',
         default='pmi',
@@ -172,7 +173,9 @@ spack package at this time.''',
             '--enable-shared',
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
-            '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
+            '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),
+            '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
+                                                spec else 'yes')
         ]
 
         if 'pmi=off' in spec:
