@@ -53,13 +53,11 @@ Spack is an open source project.  Questions, discussion, and
 contributions are welcome. Contributions can be anything from new
 packages to bugfixes, documentation, or even new core features.
 
-**Resources:**
+Resources:
 
 * **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
-  Open to anyone; visit
-  [spackpm.herokuapp.com](https://spackpm.herokuapp.com) to have an
-  invitation emailed to you automatically.
-* **Mailing list**: https://groups.google.com/d/forum/spack
+  To get an invitation, [**click here**](https://spackpm.herokuapp.com).
+* **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
 
