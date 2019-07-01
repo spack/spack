@@ -11,7 +11,7 @@ class Powerapi(AutotoolsPackage):
     homepage = "https://powerapi.sandia.gov/"
     git      = "https://github.com/pwrapi/pwrapi-ref.git"
 
-    version('1.1.1', commit='93f66dfa29f014067823f2b790a1862e5841a11c', expand=False)
+    version('1.1.1', commit='93f66dfa29f014067823f2b790a1862e5841a11c')
 
     variant('hwloc', default=False, description='Build hwloc support')
     variant('debug', default=False, description='Enable debug support')
