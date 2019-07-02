@@ -25,6 +25,11 @@ from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.build_environment import dso_suffix
 
+# Set the tuple for the auto dispatch variant. This is needed here so that the
+# iterator can access it in `configure_auto_dispatch`.
+auto_dispatch_options = ('COMMON-AVX512', 'MIC-AVX512', 'CORE-AVX512',
+                         'CORE-AVX2', 'CORE-AVX-I', 'AVX', 'SSE4.2', 'SSE4.1',
+                         'SSSE3', 'SSE3', 'SSE2')
 
 # A couple of utility functions that might be useful in general. If so, they
 # should really be defined elsewhere, unless deemed heretical.
@@ -1241,6 +1246,9 @@ class IntelPackage(PackageBase):
             with open(compiler_cfg, 'w') as fh:
                 fh.write('-Xlinker -rpath={0}\n'.format(compilers_lib_dir))
 
+    # Need a copy of the auto_dispatch_options to be used in the subclasses
+    auto_dispatch_options = auto_dispatch_options
+
     @run_after('install')
     def configure_auto_dispatch(self):
         if self._has_compilers:
@@ -1257,9 +1265,7 @@ class IntelPackage(PackageBase):
                         'auto_dispatch:\n\t' + f)
 
                 ad = []
-                for x in ('COMMON-AVX512', 'MIC-AVX512', 'CORE-AVX512',
-                          'CORE-AVX2', 'CORE-AVX-I', 'AVX', 'SSE4.2', 'SSE4.1',
-                          'SSSE3', 'SSE3', 'SSE2'):
+                for x in auto_dispatch_options:
                     if 'auto_dispatch={0}'.format(x) in self.spec:
                         ad.append(x)
 

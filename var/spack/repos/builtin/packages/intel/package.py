@@ -43,11 +43,10 @@ class Intel(IntelPackage):
 
     variant('rpath', default=True, description='Add rpath to .cfg files')
 
+    auto_dispatch_options = IntelPackage.auto_dispatch_options
     variant(
         'auto_dispatch',
-        values=any_combination_of('COMMON-AVX512', 'MIC-AVX512', 'CORE-AVX512',
-                                  'CORE-AVX2', 'CORE-AVX-I', 'AVX', 'SSE4.2',
-                                  'SSE4.1', 'SSSE3', 'SSE3', 'SSE2'),
+        values=any_combination_of(*auto_dispatch_options),
         description='Enable generation of multiple auto-dispatch code paths'
     )
 
