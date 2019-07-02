@@ -20,7 +20,7 @@ class Flecsi(CMakePackage):
     homepage = "http://flecsi.lanl.gov/"
     git      = "https://github.com/laristra/flecsi.git"
 
-    version('develop', branch='master', submodules=True)
+    version('develop', branch='master', submodules=False)
     variant('backend', default='mpi', values=('serial', 'mpi', 'legion'),
             description="Backend to use for distributed memory")
     variant('graphviz', default=False,
@@ -29,10 +29,12 @@ class Flecsi(CMakePackage):
             description='Build FleCSI Tutorials')
 
     depends_on("cmake@3.1:",  type='build')
+    # Requires cinch > 1.0 due to cinchlog installation issue
+    depends_on("cinch@1.01:", type='build')
     depends_on('mpi', when='backend=mpi')
     depends_on('mpi', when='backend=legion')
-    depends_on("gasnet~pshm", when='backend=legion')
-    depends_on("legion+shared+mpi", when='backend=legion')
+    depends_on("gasnet@2019.3.0 ~pshm", when='backend=legion')
+    depends_on("legion@19.04.0 +shared +mpi", when='backend=legion')
     depends_on("boost@1.59.0: cxxstd=11 +program_options")
     depends_on("metis@5.1.0:")
     depends_on("parmetis@4.0.3:")
@@ -43,22 +45,23 @@ class Flecsi(CMakePackage):
 
     def cmake_args(self):
         options = ['-DCMAKE_BUILD_TYPE=debug']
+        options.append('-DCINCH_SOURCE_DIR=' + self.spec['cinch'].prefix)
 
         if self.spec.variants['backend'].value == 'legion':
-            options.extend(['-DFLECSI_RUNTIME_MODEL=legion'])
+            options.append('-DFLECSI_RUNTIME_MODEL=legion')
         elif self.spec.variants['backend'].value == 'mpi':
-            options.extend(['-DFLECSI_RUNTIME_MODEL=mpi'])
+            options.append('-DFLECSI_RUNTIME_MODEL=mpi')
         else:
-            options.extend(['-DFLECSI_RUNTIME_MODEL=serial'])
-            options.extend([
+            options.append('-DFLECSI_RUNTIME_MODEL=serial')
+            options.append(
                 '-DENABLE_MPI=OFF',
-            ])
+            )
 
         if '+tutorial' in self.spec:
-            options.extend(['-DENABLE_FLECSIT=ON'])
-            options.extend(['-DENABLE_FLECSI_TUTORIAL=ON'])
+            options.append('-DENABLE_FLECSIT=ON')
+            options.append('-DENABLE_FLECSI_TUTORIAL=ON')
         else:
-            options.extend(['-DENABLE_FLECSIT=OFF'])
-            options.extend(['-DENABLE_FLECSI_TUTORIAL=OFF'])
+            options.append('-DENABLE_FLECSIT=OFF')
+            options.append('-DENABLE_FLECSI_TUTORIAL=OFF')
 
         return options

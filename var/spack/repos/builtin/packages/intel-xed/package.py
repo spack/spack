@@ -41,7 +41,7 @@ class IntelXed(Package):
         version(vers, commit=xed_hash)
         resource(name='mbuild',
                  git='https://github.com/intelxed/mbuild.git',
-                 commit=mbuild_hash, placement='mbuild',
+                 commit=mbuild_hash,
                  when='@{0}'.format(vers))
 
     variant('debug', default=False, description='Enable debug symbols')

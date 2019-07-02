@@ -1,0 +1,130 @@
+diff --git a/core/collectors/io/wrappers.c b/core/collectors/io/wrappers.c
+index cf23473..aecba6b 100644
+--- a/core/collectors/io/wrappers.c
++++ b/core/collectors/io/wrappers.c
+@@ -62,6 +62,7 @@ extern bool_t io_do_trace(const char*);
+ 
+ /* Start part 2 of 2 for Hack to get around inconsistent syscall definitions */
+ #include <sys/syscall.h>
++#include <linux/fcntl.h>
+ #ifdef __NR_pread64  /* Newer kernels renamed but it's the same.  */
+ # ifndef __NR_pread
+ # define __NR_pread __NR_pread64
+@@ -570,11 +571,20 @@ int ioopen(const char *pathname, int flags, mode_t mode)
+ 
+ #if defined(EXTENDEDTRACE)
+     event.retval = retval;
++#ifdef SYS_open
+     event.syscallno = SYS_open;
+     event.nsysargs = 3;
+     event.sysargs[0] = (long) pathname;
+     event.sysargs[1] = flags;
+     event.sysargs[2] = mode;
++#else
++    event.syscallno = SYS_openat;
++    event.nsysargs = 4;
++    event.sysargs[0] = AT_FDCWD;
++    event.sysargs[1] = (long) pathname;
++    event.sysargs[2] = flags;
++    event.sysargs[3] = mode;
++#endif
+ 
+     strncpy(currentpathname,pathname,strlen(pathname));
+ #endif
+@@ -647,11 +657,20 @@ int ioopen64(const char *pathname, int flags, mode_t mode)
+     event.stop_time = CBTF_GetTime();
+ 
+ #if defined(EXTENDEDTRACE)
++#ifdef SYS_open
+     event.syscallno = SYS_open;
+     event.nsysargs = 3;
+     event.sysargs[0] = (long) pathname;
+     event.sysargs[1] = flags;
+     event.sysargs[2] = mode;
++#else
++    event.syscallno = SYS_openat;
++    event.nsysargs = 4;
++    event.sysargs[0] = AT_FDCWD;
++    event.sysargs[1] = (long) pathname;
++    event.sysargs[2] = flags;
++    event.sysargs[3] = mode;
++#endif
+     event.retval = retval;
+     strncpy(currentpathname,pathname,strlen(pathname));
+ #endif
+@@ -919,10 +938,18 @@ int iodup2(int oldfd, int newfd)
+     event.stop_time = CBTF_GetTime();
+ 
+ #if defined(EXTENDEDTRACE)
++#ifdef SYS_dup2
+     event.syscallno = SYS_dup2;
+     event.nsysargs = 2;
+     event.sysargs[0] = oldfd;
+     event.sysargs[1] = newfd;
++#else
++    event.syscallno = SYS_dup3;
++    event.nsysargs = 3;
++    event.sysargs[0] = oldfd;
++    event.sysargs[1] = newfd;
++    event.sysargs[2] = 0;
++#endif
+     event.retval = retval;
+ 
+     /* use that to get the path into /proc. */
+@@ -1009,10 +1036,19 @@ int iocreat(char *pathname, mode_t mode)
+ 
+ #if defined(EXTENDEDTRACE)
+     event.retval = retval;
++#ifdef SYS_creat
+     event.syscallno = SYS_creat;
+     event.nsysargs = 2;
+     event.sysargs[0] = (long) pathname;
+     event.sysargs[1] = mode;
++#else
++    event.syscallno = SYS_openat;
++    event.nsysargs = 4;
++    event.sysargs[0] = AT_FDCWD;
++    event.sysargs[1] = (long) pathname;
++    event.sysargs[2] = O_CREAT;
++    event.sysargs[3] = mode;
++#endif
+ 
+     strncpy(currentpathname,pathname,strlen(pathname));
+ #endif
+@@ -1084,10 +1120,19 @@ int iocreat64(char *pathname, mode_t mode)
+     event.stop_time = CBTF_GetTime();
+ 
+ #if defined(EXTENDEDTRACE)
++#ifdef SYS_creat
+     event.syscallno = SYS_creat;
+     event.nsysargs = 2;
+     event.sysargs[0] = (long) pathname;
+     event.sysargs[1] = mode;
++#else
++    event.syscallno = SYS_openat;
++    event.nsysargs = 4;
++    event.sysargs[0] = AT_FDCWD;
++    event.sysargs[1] = (long) pathname;
++    event.sysargs[2] = O_CREAT;
++    event.sysargs[3] = mode;
++#endif
+     event.retval = retval;
+     strncpy(currentpathname,pathname,strlen(pathname));
+ #endif
+@@ -1160,9 +1205,16 @@ int iopipe(int filedes[2])
+     event.stop_time = CBTF_GetTime();
+ 
+ #if defined(EXTENDEDTRACE)
++#ifdef SYS_pipe
+     event.syscallno = SYS_pipe;
+     event.nsysargs = 1;
+     event.sysargs[0] = (long) filedes;
++#else
++    event.syscallno = SYS_pipe2;
++    event.nsysargs = 2;
++    event.sysargs[0] = (long) filedes;
++    event.sysargs[1] = (long) 0;
++#endif
+     event.retval = retval;
+ #endif
+ #endif

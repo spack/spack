@@ -15,9 +15,8 @@ class Relion(CMakePackage, CudaPackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
 
-    version('3.0_beta',
-            git='https://bitbucket.org/scheres/relion-3.0_beta.git')
-    version('2.1', preferred='true', tag='2.1')
+    version('3.0.6', preferred='true', tag='3.0.6')
+    version('2.1', tag='2.1')
     version('2.0.3', tag='2.0.3')
     # relion has no develop branch though pulling from master
     # should be considered the same as develop

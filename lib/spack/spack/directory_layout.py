@@ -78,10 +78,13 @@ class DirectoryLayout(object):
 
         if spec.external:
             return spec.external_path
-        if self.check_upstream and spec.package.installed_upstream:
-            raise SpackError(
-                "Internal error: attempted to call path_for_spec on"
-                " upstream-installed package.")
+        if self.check_upstream:
+            upstream, record = spack.store.db.query_by_spec_hash(
+                spec.dag_hash())
+            if upstream:
+                raise SpackError(
+                    "Internal error: attempted to call path_for_spec on"
+                    " upstream-installed package.")
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
@@ -190,7 +193,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'build.out'  # build log.
+        self.build_log_name      = 'build.txt'  # build log.
         self.build_env_name      = 'build.env'  # build environment
         self.packages_dir        = 'repos'      # archive of package.py files
 

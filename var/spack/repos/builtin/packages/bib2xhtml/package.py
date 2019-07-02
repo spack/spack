@@ -10,9 +10,9 @@ from glob import glob
 class Bib2xhtml(Package):
     """bib2xhtml is a program that converts BibTeX files into HTML."""
     homepage = "http://www.spinellis.gr/sw/textproc/bib2xhtml/"
-    url = 'http://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v3.0-15-gf506.tar.gz'
+    url = 'https://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v3.0-79-ge935.tar.gz'
 
-    version('3.0-15-gf506', 'a26ba02fe0053bbbf2277bdf0acf8645')
+    version('3.0-79-ge935', sha256='4a2d2d89dd2f3fed1c735055b806809b5cc1cde32dee1aa5987097ec5bf2181f')
 
     def install(self, spec, prefix):
         # Add the bst include files to the install directory
