@@ -185,6 +185,16 @@ deployment chain (all found in `spack/deploy/packages`):
 * `external-libraries` for packages that are seldomly changed and for which
   the dependency graph may be truncated by Spack (e.g., Spark, Python) - mainly dependencies for building
 
+To actually enable the generation of corresponding module files, new
+software has to be whitelisted in the module configuration for spack, e.g.
+by editing:
+
+    $ vim spack/deploy/configs/applications/modules.yaml
+
+Look for a key `whitelist`, and add the package. Packages listed in the
+module whitelist should be as generic as possible, i.e., not tied to
+specific versions.
+
 Commit the changes and file a pull request on Github.
 Jenkins will build the additional software required, with all output
 available in a separate directory:
