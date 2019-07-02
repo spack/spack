@@ -18,9 +18,9 @@ class Libtool(AutotoolsPackage):
     version('2.4.2', 'd2f3b7d4627e69e13514a40e72a24d50')
 
     depends_on('m4@1.4.6:', type='build')
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('help2man', type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@2.4.2,develop')
+    depends_on('automake', type='build', when='@2.4.2,develop')
+    depends_on('help2man', type='build', when='@2.4.2,develop')
     depends_on('xz', type='build', when='@develop')
     depends_on('texinfo', type='build', when='@develop')
 
@@ -30,7 +30,7 @@ class Libtool(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
-    @when('@develop')
+    @when('@2.4.2,develop')
     def autoreconf(self, spec, prefix):
         Executable('./bootstrap')()
 
