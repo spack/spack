@@ -34,7 +34,7 @@ class Arbor(CMakePackage):
     depends_on('py-mpi4py', when='+mpi+python', type=('build', 'run'))
 
     # when building documentation
-    #depends_on('py-sphinx')
+    # depends_on('py-sphinx')
 
     def patch(self):
         filter_file(
@@ -43,7 +43,7 @@ class Arbor(CMakePackage):
             'cmake/FindUnwind.cmake'
         )
         filter_file(
-            r'target_compile_definitions\(arbor-private-deps ARB_WITH_UNWIND\)',
+            r'target_compile_definitions\(arbor-private-deps ARB_WITH_UNWIND\)',      # noqa
             r'target_compile_definitions(arbor-private-deps INTERFACE WITH_UNWIND)',  # noqa
             'CMakeLists.txt'
         )
@@ -51,7 +51,7 @@ class Arbor(CMakePackage):
     def cmake_args(self):
         args = []
         args.extend([
-            '-DARB_VECTORIZE=' + ('ON' if '+vectorize' in self.spec else 'OFF'),
+            '-DARB_VECTORIZE=' + ('ON' if '+vectorize' in self.spec else 'OFF'),      # noqa
             '-DARB_WITH_GPU=' + ('ON' if '+gpu' in self.spec else 'OFF'),
             '-DARB_WITH_PYTHON=' + ('ON' if '+python' in self.spec else 'OFF'),
         ])
