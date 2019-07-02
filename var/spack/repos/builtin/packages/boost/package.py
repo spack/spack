@@ -234,9 +234,11 @@ class Boost(Package):
         if '+python' in spec:
             options.append('--with-python=%s' % spec['python'].command.path)
 
+        # -std=c++11 flag is needed for compiling boost.thread.
         spack_cxxflags = ''
         if spec.satisfies('%xl'):
-            spack_cxxflags = '<cxxflags>-std=c++11'
+            # XL does not turn on 11 by default.
+            spack_cxxflags = '<cxxflags>{0}'.format(self.compiler.cxx11_flag)
 
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
@@ -247,9 +249,6 @@ class Boost(Package):
                 # error: duplicate initialization of intel-linux with the following parameters:  # noqa
                 # error: version = <unspecified>
                 # error: previous initialization at ./user-config.jam:1
-
-                # -std=c++11 flag is needed for compiling boost.thread.
-                # Some compilers do not turn this on by default
                 f.write("using {0} : : {1} : {2} ;\n".format(boost_toolset_id,
                                                              spack_cxx,
                                                              spack_cxxflags))
