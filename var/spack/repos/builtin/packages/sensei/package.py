@@ -45,7 +45,7 @@ class Sensei(CMakePackage):
     variant('python', default=False, description='Enables Python bindings')
     variant('miniapps', default=True, description='Enable the parallel 3D and oscillators miniapp')
 
-    depends_on("paraview@5.5.0:5.6.0", when="+catalyst")
+    depends_on("paraview@5.5:5.6", when="+catalyst")
     depends_on("visit", when="+libsim")
     depends_on("vtk", when="+libsim")
     depends_on("vtk", when="+adios ~libsim ~catalyst")
@@ -69,39 +69,38 @@ class Sensei(CMakePackage):
             '-DCMAKE_C_FLAGS=-fPIC -Wall -Wextra -O3 -mtune=generic'
         ]
 
-        if (spec.variants['catalyst'].value):
+        if 'catalyst' in spec:
             args.append('-DENABLE_CATALYST:BOOL=ON')
             args.append('-DENABLE_CATALYST_PYTHON:BOOL=ON')
-            args.append('-DParaView_DIR:PATH=={0}'.format(spec['paraview'].prefix))
+            args.append('-DParaView_DIR:PATH={0}' % spec['paraview'].prefix)
+        else:
+            args.append('-DENABLE_CATALYST:BOOL=OFF')
 
-        if (spec.variants['libsim'].value):
+        if 'libsim' in spec:
             args.append('-DENABLE_LIBSIM:BOOL=ON')
-            #args.append('-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix))
-            args.append('-DVISIT_DIR:PATH={0}'.format(spec['visit'].prefix))
-            #vtk_dep = spec['visit'].get_dependency('vtk')
-            vtk_dep = self.spec.get_dependency('vtk')
-            args.append('-DVTK_DIR:PATH={0}'.format(vtk_dep.prefix))
-            #for dep in spec['visit'].traverse():
-            #if dep.name.startswith('vtk'):
+            args.append('-DVISIT_DIR:PATH={0}' % spec['visit'].prefix)
+            args.append('-DVTK_DIR:PATH={0}' % spec['vtk'].prefix)
+        else:
+            args.append('-DENABLE_LIBSIM:BOOL=OFF')
 
-        if (spec.variants['vtkio'].value):
-            args.append('-DENABLE_VTK_IO:BOOL=ON')
+        args.append('-DENABLE_VTK_IO:BOOL={0}' % str('vtkio' in spec))
         
-        if (spec.variants['adios'].value):
+        if spec.variants['adios'].value:
             args.append('-DENABLE_ADIOS:BOOL=ON')
-            if (not spec.variants['catalyst'].value and not spec.variants['libsim'].value):
-                args.append('-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix))
-            args.append('-DADIOS_DIR:PATH=={0}'.format(spec['adios'].prefix))
+            if not 'catalyst' in spec and not 'libsim' in spec:
+                args.append('-DVTK_DIR:PATH={0}' % spec['vtk'].prefix)
+            args.append('-DADIOS_DIR:PATH={0}' % spec['adios'].prefix)
             
-        if (spec.variants['python'].value):
+        if 'python' in spec:
             args.append('-DENABLE_PYTHON:BOOL=ON')
-            if (not spec.variants['catalyst'].value and not spec.variants['libsim'].value):
-                args.append('-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix))
+            if not 'catalyst' in spec and not 'libsim' in spec:
+                args.append('-DVTK_DIR:PATH={0}' % spec['vtk'].prefix)
         
-        if (spec.variants['miniapps'].value):
+        if 'miniapps' in spec:
             args.append('-DENABLE_PARALLEL3D:BOOL=ON')
             args.append('-DENABLE_OSCILLATORS:BOOL=ON')
-            
-            
+        else:
+            args.append('-DENABLE_PARALLEL3D:BOOL=OFF')
+            args.append('-DENABLE_OSCILLATORS:BOOL=OFF')
 
         return args
