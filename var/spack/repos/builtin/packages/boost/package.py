@@ -248,8 +248,8 @@ class Boost(Package):
                 # error: version = <unspecified>
                 # error: previous initialization at ./user-config.jam:1
 
-                # Specifies -std=c++11 flag when using XL, which is needed
-                # for boost.thread
+                # -std=c++11 flag is needed for compiling boost.thread.
+                # Some compilers do not turn this on by default
                 f.write("using {0} : : {1} : {2} ;\n".format(boost_toolset_id,
                                                              spack_cxx,
                                                              spack_cxxflags))
