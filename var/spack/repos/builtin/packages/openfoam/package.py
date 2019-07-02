@@ -37,7 +37,7 @@
 # - Combining +zoltan with +int64 has not been tested, but probably won't work.
 # - Combining +mgridgen with +int64 or +float32 probably won't work.
 #
-# The spack 'develop' version of openfoam-com retains the upstream
+# The spack 'develop' version of openfoam retains the upstream
 # WM_PROJECT_VERSION=plus naming internally.
 #
 ##############################################################################
@@ -64,7 +64,7 @@ __all__ = [
 
 def add_extra_files(foam_pkg, common, local, **kwargs):
     """Copy additional common and local files into the stage.source_path
-    from the openfoam-com/common and the package/assets directories,
+    from the openfoam/common and the package/assets directories,
     respectively
     """
     outdir = foam_pkg.stage.source_path
@@ -247,7 +247,7 @@ def mplib_content(spec, pre=None):
 
 # -----------------------------------------------------------------------------
 
-class OpenfoamCom(Package):
+class Openfoam(Package):
     """OpenFOAM is a GPL-opensource C++ CFD-toolbox.
     This offering is supported by OpenCFD Ltd,
     producer and distributor of the OpenFOAM software via www.openfoam.com,
@@ -263,7 +263,7 @@ class OpenfoamCom(Package):
     list_url = "https://sourceforge.net/projects/openfoamplus/files/"
     list_depth = 2
 
-    version('develop', branch='develop', submodules='True')  # Needs credentials
+    version('develop', branch='develop', submodules='True')
     version('1906', 'ab7017e262c0c0fceec55c31e2153180')
     version('1812_190531', 'a4b416838a8a76fdec22706a33c96de3')
     version('1812', '6a315687b3601eeece7ff7c7aed3d9a5')
@@ -296,7 +296,6 @@ class OpenfoamCom(Package):
     variant('source', default=True,
             description='Install library/application sources and tutorials')
 
-    provides('openfoam')
     depends_on('mpi')
 
     # After 1712, could suggest openmpi+thread_multiple for collated output
