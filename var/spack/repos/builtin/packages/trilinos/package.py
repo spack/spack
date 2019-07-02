@@ -464,21 +464,19 @@ class Trilinos(CMakePackage):
             ])
 
         if '+exodus' in spec:
-            # Currently these are fairly specific to the Nalu package
-            # They can likely change when necessary in the future
             options.extend([
                 '-DTrilinos_ENABLE_SEACAS:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASExodus:BOOL=ON',
+                '-DTrilinos_ENABLE_SEACASIoss:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASEpu:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASExodiff:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASNemspread:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASNemslice:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASIoss:BOOL=ON'
+                '-DTrilinos_ENABLE_SEACASNemslice:BOOL=ON'
             ])
         else:
             options.extend([
-                '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
-                '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF'
+                '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF',
+                '-DTrilinos_ENABLE_SEACASIoss:BOOL=OFF'
             ])
 
         if '+chaco' in spec:
