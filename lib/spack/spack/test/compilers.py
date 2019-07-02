@@ -50,6 +50,32 @@ def make_args_for_version(monkeypatch):
     return _factory
 
 
+def test_multiple_conflicting_compiler_definitions(mutable_config):
+    compiler_def = {
+        'compiler': {
+            'flags': {},
+            'modules': [],
+            'paths': {
+                'cc': 'cc',
+                'cxx': 'cxx',
+                'f77': 'null',
+                'fc': 'null'},
+            'extra_rpaths': [],
+            'operating_system': 'test',
+            'target': 'test',
+            'environment': {},
+            'spec': 'clang@0.0.0'}}
+
+    compiler_config = [compiler_def, compiler_def]
+    compiler_config[0]['compiler']['paths']['f77'] = 'f77'
+    mutable_config.update_config('compilers', compiler_config)
+
+    arch_spec = spack.spec.ArchSpec('test', 'test', 'test')
+    cspec = compiler_config[0]['compiler']['spec']
+    cmp = compilers.compiler_for_spec(cspec, arch_spec)
+    assert cmp.f77 == 'f77'
+
+
 def test_get_compiler_duplicates(config):
     # In this case there is only one instance of the specified compiler in
     # the test configuration (so it is not actually a duplicate), but the
