@@ -8,7 +8,8 @@ from spack import *
 
 class PyCfUnits(PythonPackage):
     """Units of measure as required by the Climate and Forecast (CF)
-metadata conventions."""
+    metadata conventions.
+    """
 
     homepage = "https://scitools.org.uk"
     url      = "https://pypi.io/packages/source/c/cf-units/cf-units-2.1.1.tar.gz"
