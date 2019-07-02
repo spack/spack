@@ -74,6 +74,8 @@ packages:
     specs:
       - hdf5+mpi@1.10.4
       - highfive+mpi@2.0
+      - ospray@1.7.3
+      - ospray@1.8.5
 
   intel-stable-parallel-python:
     target_matrix:

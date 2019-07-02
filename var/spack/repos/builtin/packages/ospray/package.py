@@ -15,14 +15,19 @@ class Ospray(CMakePackage):
     version('1.8.5', tag='v1.8.5')
     version('1.7.3', tag='v1.7.3')
 
+    variant('apps', default=False, description='Build example applications')
+
     depends_on('cmake@3.1:', type='build')
     depends_on('ispc', type='build')
     depends_on('ninja', type='build')
     depends_on('embree')
     depends_on('mpi')
+    depends_on('tbb')
 
     def cmake_args(self):
-        return ['-DOSPRAY_ENABLE_TUTORIALS=OFF', '-DOSPRAY_MODULE_MPI=ON',
-                '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-                '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx)]
+        return [
+            '-DOSPRAY_ENABLE_TUTORIALS=OFF',
+            '-DOSPRAY_ENABLE_APPS:BOOL={}'.format('ON' if '+apps' in self.spec else 'OFF'),
+            '-DOSPRAY_MODULE_MPI=ON'
+        ]
 

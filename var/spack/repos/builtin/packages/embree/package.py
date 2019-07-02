@@ -17,6 +17,7 @@ class Embree(CMakePackage):
     depends_on('cmake@2.8.11:', type='build')
     depends_on('ispc', type='build')
     depends_on('ninja', type='build')
+    depends_on('tbb')
 
     def cmake_args(self):
         return ['-DEMBREE_TUTORIALS=OFF']

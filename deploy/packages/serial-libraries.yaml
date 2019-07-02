@@ -61,8 +61,18 @@ packages:
       - gmsh
       - hdf5~mpi
       - highfive~mpi
+      - libarchive
       - morphio
       - pugixml
       - range-v3
       - rockets
       - rocksdb~static
+
+  intel-stable-serial:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - embree

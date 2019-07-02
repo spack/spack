@@ -33,6 +33,7 @@ class Brayns(CMakePackage):
     depends_on('deflect ~deflect-qt', when='+deflect')
     depends_on('freeimage')
     depends_on('glew', when='+viewer')
+    depends_on('libarchive')
     depends_on('libjpeg-turbo', when='+net')
     depends_on('libuv', when='+net')
     depends_on('opengl', when='+viewer')
