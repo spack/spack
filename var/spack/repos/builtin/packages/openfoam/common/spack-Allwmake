@@ -4,7 +4,7 @@ export FOAM_INST_DIR=$(cd .. && pwd -L)
 . $PWD/etc/bashrc ''                            # No arguments
 mkdir -p $FOAM_APPBIN $FOAM_LIBBIN 2>/dev/null  # Allow interrupt
 echo "Build openfoam with SPACK ($@)"
-echo WM_PROJECT_DIR = $WM_PROJECT_DIR
+echo "WM_PROJECT_DIR = $WM_PROJECT_DIR"
 
 # Prefer spack-specific Allwmake if it exists
 if [ -f Allwmake-spack ]
