@@ -20,7 +20,7 @@ class PyCfUnits(PythonPackage):
 
     depends_on('python@3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-six',        type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
     depends_on('py-cftime', type=('build', 'run'))
     depends_on('py-cython', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
