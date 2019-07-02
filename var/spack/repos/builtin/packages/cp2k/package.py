@@ -65,7 +65,7 @@ class Cp2k(MakefilePackage):
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
 
     # libint & libxc are always statically linked
-    depends_on('libint@1.1.4:1.2', when='@3.0:', type='build')
+    depends_on('libint@2:', when='@3.0:', type='build')
     depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
     depends_on('libxc@4.0.3:', when='+libxc@6.0:', type='build')
 
@@ -191,15 +191,6 @@ class Cp2k(MakefilePackage):
 
         if 'superlu-dist@4.3' in spec:
             ldflags.insert(0, '-Wl,--allow-multiple-definition')
-
-        # libint-1.x.y has to be linked statically to work around
-        # inconsistencies in its Fortran interface definition
-        # (short-int vs int) which otherwise causes segfaults at runtime
-        # due to wrong offsets into the shared library symbols.
-        libs.extend([
-            os.path.join(spec['libint'].libs.directories[0], 'libderiv.a'),
-            os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
-        ])
 
         if '+plumed' in self.spec:
             dflags.extend(['-D__PLUMED2'])
