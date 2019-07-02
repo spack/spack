@@ -35,6 +35,7 @@ auto_dispatch_options = ('COMMON-AVX512', 'MIC-AVX512', 'CORE-AVX512',
 # should really be defined elsewhere, unless deemed heretical.
 # (Or na"ive on my part).
 
+
 def debug_print(msg, *args):
     '''Prints a message (usu. a variable) and the callers' names for a couple
     of stack frames.
