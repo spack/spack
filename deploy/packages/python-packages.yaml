@@ -21,6 +21,7 @@ packages:
       - python
     blacklist:
       - 'py-bb5 ^python@2.7.15'
+      - 'py-mvdtool ^python@2.7.15'
       - 'py-munkres ^python@2.7.15'
     specs:
       - py-argcomplete
@@ -71,6 +72,7 @@ packages:
       - py-line-profiler
       - py-lxml
       - py-markdown
+      - py-mvdtool
       # - py-memory-profiler
       # - py-mpmath
       # - py-multiprocess
