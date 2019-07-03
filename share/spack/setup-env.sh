@@ -46,9 +46,12 @@ spack() {
         emulate -L sh
     fi
 
-    # accumulate initial flags for main spack command
+    # accumulate flags meant for the main spack command
+    # the loop condition is unreadable, but it means:
+    #     while $1 is set (while there are arguments)
+    #       and $1 starts with '-' (and the arguments are flags)
     _sp_flags=""
-    while [ "${1#-}" != "${1}" ]; do
+    while [ ! -z ${1+x} ] && [ "${1#-}" != "${1}" ]; do
         _sp_flags="$_sp_flags $1"
         shift
     done
@@ -62,8 +65,9 @@ spack() {
         return
     fi
 
+    # set the subcommand if there is one (if $1 is set)
     _sp_subcommand=""
-    if [ -n "$1" ]; then
+    if [ ! -z ${1+x} ]; then
         _sp_subcommand="$1"
         shift
     fi
@@ -102,7 +106,7 @@ spack() {
                 case $_sp_arg in
                     activate)
                         _a="$@"
-                        if [ -z "$1" ] || \
+                        if [ -z ${1+x} ] || \
                            [ "${_a#*--sh}" != "$_a" ] || \
                            [ "${_a#*--csh}" != "$_a" ] || \
                            [ "${_a#*-h}" != "$_a" ];
