@@ -224,8 +224,8 @@ class Ncl(Package):
             # Build GRIB2 support (optional) into NCL?
             'n\n',
             # Enter local library search path(s) :
-            self.spec['pixman'].prefix.lib64 + ' ' +
-            self.spec['bzip2'].prefix.lib64 + '\n',
+            self.spec['pixman'].prefix.lib + ' ' +
+            self.spec['bzip2'].prefix.lib + '\n',
             # Enter local include search path(s) :
             # All other paths will be passed by the Spack wrapper.
             join_path(self.spec['freetype'].prefix.include, 'freetype2') +
