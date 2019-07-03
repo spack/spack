@@ -176,9 +176,9 @@ class Ncl(Package):
             # Build NCL?
             'y\n',
             # Parent installation directory :
-            '\'' + self.spec.prefix + '\'\n',
+            self.spec.prefix + '\n',
             # System temp space directory   :
-            '\'' + tempfile.gettempdir() + '\'\n',
+            tempfile.gettempdir() + '\n',
             # Build NetCDF4 feature support (optional)?
             'y\n'
         ]
