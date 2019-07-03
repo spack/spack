@@ -163,6 +163,9 @@ unuse() {
 # Make sure no environment is active
 unset SPACK_ENV
 
+# fail with undefined variables
+set -u
+
 # Source setup-env.sh before tests
 .  share/spack/setup-env.sh
 
