@@ -96,6 +96,10 @@ schema = {
                                           'root': {
                                               'type': 'string'
                                           },
+                                          'link': {
+                                              'type': 'string',
+                                              'pattern': '(roots|all)',
+                                          },
                                           'select': {
                                               'type': 'array',
                                               'items': {

@@ -32,10 +32,9 @@ uninstall  = SpackCommand('uninstall')
 find       = SpackCommand('find')
 
 
-def check_mpileaks_install(viewdir):
+def check_mpileaks_and_deps_in_view(viewdir):
     """Check that the expected install directories exist."""
     assert os.path.exists(str(viewdir.join('.spack', 'mpileaks')))
-    # Check that dependencies got in too
     assert os.path.exists(str(viewdir.join('.spack', 'libdwarf')))
 
 
@@ -634,7 +633,7 @@ def test_env_updates_view_install(
         add('mpileaks')
         install('--fake')
 
-    check_mpileaks_install(view_dir)
+    check_mpileaks_and_deps_in_view(view_dir)
 
 
 def test_env_without_view_install(
@@ -656,7 +655,7 @@ def test_env_without_view_install(
 
     # After enabling the view, the specs should be linked into the environment
     # view dir
-    check_mpileaks_install(view_dir)
+    check_mpileaks_and_deps_in_view(view_dir)
 
 
 def test_env_config_view_default(
@@ -686,7 +685,7 @@ def test_env_updates_view_install_package(
     with ev.read('test'):
         install('--fake', 'mpileaks')
 
-    check_mpileaks_install(view_dir)
+    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
 
 
 def test_env_updates_view_add_concretize(
@@ -698,7 +697,7 @@ def test_env_updates_view_add_concretize(
         add('mpileaks')
         concretize()
 
-    check_mpileaks_install(view_dir)
+    check_mpileaks_and_deps_in_view(view_dir)
 
 
 def test_env_updates_view_uninstall(
@@ -708,7 +707,7 @@ def test_env_updates_view_uninstall(
     with ev.read('test'):
         install('--fake', 'mpileaks')
 
-    check_mpileaks_install(view_dir)
+    check_mpileaks_and_deps_in_view(view_dir)
 
     with ev.read('test'):
         uninstall('-ay')
@@ -725,7 +724,7 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
         add('mpileaks')
         concretize()
 
-    check_mpileaks_install(view_dir)
+    check_mpileaks_and_deps_in_view(view_dir)
 
     with ev.read('test'):
         uninstall('-ay')
@@ -742,7 +741,7 @@ def test_env_updates_view_remove_concretize(
         add('mpileaks')
         concretize()
 
-    check_mpileaks_install(view_dir)
+    check_mpileaks_and_deps_in_view(view_dir)
 
     with ev.read('test'):
         remove('mpileaks')
@@ -758,7 +757,7 @@ def test_env_updates_view_force_remove(
     with ev.read('test'):
         install('--fake', 'mpileaks')
 
-    check_mpileaks_install(view_dir)
+    check_mpileaks_and_deps_in_view(view_dir)
 
     with ev.read('test'):
         remove('-f', 'mpileaks')
@@ -1123,7 +1122,7 @@ env:
             install()
 
         test = ev.read('test')
-        for _, spec in test.concretized_specs():
+        for spec in test._get_environment_specs():
             assert os.path.exists(
                 os.path.join(viewdir, spec.name, '%s-%s' %
                              (spec.version, spec.compiler.name)))
@@ -1156,7 +1155,7 @@ env:
             install()
 
         test = ev.read('test')
-        for _, spec in test.concretized_specs():
+        for spec in test._get_environment_specs():
             if spec.satisfies('%gcc'):
                 assert os.path.exists(
                     os.path.join(viewdir, spec.name, '%s-%s' %
@@ -1194,7 +1193,7 @@ env:
             install()
 
         test = ev.read('test')
-        for _, spec in test.concretized_specs():
+        for spec in test._get_environment_specs():
             if not spec.satisfies('callpath'):
                 assert os.path.exists(
                     os.path.join(viewdir, spec.name, '%s-%s' %
@@ -1233,7 +1232,88 @@ env:
             install()
 
         test = ev.read('test')
-        for _, spec in test.concretized_specs():
+        for spec in test._get_environment_specs():
+            if spec.satisfies('%gcc') and not spec.satisfies('callpath'):
+                assert os.path.exists(
+                    os.path.join(viewdir, spec.name, '%s-%s' %
+                                 (spec.version, spec.compiler.name)))
+            else:
+                assert not os.path.exists(
+                    os.path.join(viewdir, spec.name, '%s-%s' %
+                                 (spec.version, spec.compiler.name)))
+
+
+def test_view_link_roots(tmpdir, mock_fetch, mock_packages, mock_archive,
+                         install_mockery):
+    filename = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - compilers: ['%%gcc', '%%clang']
+  specs:
+    - matrix:
+        - [$packages]
+        - [$compilers]
+
+  view:
+    combinatorial:
+      root: %s
+      select: ['%%gcc']
+      exclude: [callpath]
+      link: 'roots'
+      projections:
+        'all': '{name}/{version}-{compiler.name}'""" % viewdir)
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+        test = ev.read('test')
+        for spec in test._get_environment_specs():
+            if spec in test.roots() and (spec.satisfies('%gcc') and
+                                         not spec.satisfies('callpath')):
+                assert os.path.exists(
+                    os.path.join(viewdir, spec.name, '%s-%s' %
+                                 (spec.version, spec.compiler.name)))
+            else:
+                assert not os.path.exists(
+                    os.path.join(viewdir, spec.name, '%s-%s' %
+                                 (spec.version, spec.compiler.name)))
+
+
+def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
+                       install_mockery):
+    filename = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - compilers: ['%%gcc', '%%clang']
+  specs:
+    - matrix:
+        - [$packages]
+        - [$compilers]
+
+  view:
+    combinatorial:
+      root: %s
+      select: ['%%gcc']
+      exclude: [callpath]
+      link: 'all'
+      projections:
+        'all': '{name}/{version}-{compiler.name}'""" % viewdir)
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+        test = ev.read('test')
+        for spec in test._get_environment_specs():
             if spec.satisfies('%gcc') and not spec.satisfies('callpath'):
                 assert os.path.exists(
                     os.path.join(viewdir, spec.name, '%s-%s' %
@@ -1342,7 +1422,7 @@ env:
         assert os.path.join(default_viewdir, 'bin') in shell
 
         test = ev.read('test')
-        for _, spec in test.concretized_specs():
+        for spec in test._get_environment_specs():
             if not spec.satisfies('callpath%gcc'):
                 assert os.path.exists(
                     os.path.join(combin_viewdir, spec.name, '%s-%s' %
