@@ -16,9 +16,11 @@ class RGrbase(RPackage):
     version('1.8-3.4', sha256='d35f94c2fb7cbd4ce3991570424dfe6723a849658da32e13df29f53b6ea2cc2c')
 
     depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r-graph', type('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-rbgl', type=('build', 'run'))
     depends_on('r-rcpp@0.11.1:', type=('build', 'run'))
     depends_on('r-rcpparmadillo', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))
