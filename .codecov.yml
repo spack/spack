@@ -11,5 +11,7 @@ ignore:
   - lib/spack/spack/test/.*
   - lib/spack/docs/.*
   - lib/spack/external/.*
+  - share/spack/qa/.*
+  - share/spack/spack-completion.bash
 
 comment: off
