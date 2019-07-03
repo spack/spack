@@ -20,18 +20,24 @@ export SPACK_ROOT=$(realpath "$QA_DIR/../../..")
 coverage=""
 coverage_run=""
 
+# bash coverage depends on some other factors -- there are issues with
+# kcov for Python 2.6, unit tests, and build tests.
+if [[ $TEST_SUITE == unit &&   # kcov segfaults for the MPICH build test
+      $TRAVIS_OS_NAME == linux &&
+      $TRAVIS_PYTHON_VERSION != 2.6 ]];
+then
+    BASH_COVERAGE="true"
+else
+    BASH_COVERAGE="false"
+fi
+
 # Set up some variables for running coverage tests.
 if [[ "$COVERAGE" == "true" ]]; then
     # these set up coverage for Python
     coverage=coverage
     coverage_run="coverage run"
 
-    # make a coverage directory for kcov, and patch cc to use our bashcov
-    # script instead of plain bash
-    if [[ $TEST_SUITE == unit &&   # kcov segfaults for the MPICH build test
-          $TRAVIS_OS_NAME == linux &&
-          $TRAVIS_PYTHON_VERSION != 2.6 ]];
-    then
+    if [ "$BASH_COVERAGE" = true ]; then
         mkdir -p coverage
         cc_script="$SPACK_ROOT/lib/spack/env/cc"
         bashcov=$(realpath ${QA_DIR}/bashcov)
