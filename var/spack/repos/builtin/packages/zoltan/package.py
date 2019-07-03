@@ -6,11 +6,9 @@
 
 from spack import *
 import re
-import os
-import glob
 
 
-class Zoltan(Package):
+class Zoltan(AutotoolsPackage):
     """The Zoltan library is a toolkit of parallel combinatorial algorithms
        for parallel, unstructured, and/or adaptive scientific
        applications.  Zoltan's largest component is a suite of dynamic
@@ -45,13 +43,36 @@ class Zoltan(Package):
 
     conflicts('+parmetis', when='~mpi')
 
-    def install(self, spec, prefix):
+    build_directory = 'spack-build'
+
+    @property
+    def configure_directory(self):
+        spec = self.spec
+
         # FIXME: The older Zoltan versions fail to compile the F90 MPI wrappers
         # because of some complicated generic type problem.
         if spec.satisfies('@:3.6+fortran+mpi'):
             raise RuntimeError(('Cannot build Zoltan v{0} with +fortran and '
                                 '+mpi; please disable one of these features '
                                 'or upgrade versions.').format(self.version))
+        if spec.satisfies('@:3.6'):
+            zoltan_path = 'Zoltan_v{0}'.format(self.version)
+            return zoltan_path
+        return '.'
+
+    @property
+    def parallel(self):
+        # NOTE: Earlier versions of Zoltan cannot be built in parallel
+        # because they contain nested Makefile dependency bugs.
+        return not self.spec.satisfies('@:3.6+fortran')
+
+    def autoreconf(self, spec, prefix):
+        autoreconf = which('autoreconf')
+        with working_dir(self.configure_directory):
+            autoreconf('-ivf')
+
+    def configure_args(self):
+        spec = self.spec
 
         config_args = [
             self.get_config_flag('f90interface', 'fortran'),
@@ -102,36 +123,24 @@ class Zoltan(Package):
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
         # ability to descend directly into the package's source directory.
-        source_directory = self.stage.source_path
-        if spec.satisfies('@:3.6'):
-            zoltan_directory = 'Zoltan_v{0}'.format(self.version)
-            source_directory = join_path(source_directory, zoltan_directory)
+        config_args.append('--with-cflags={0}'
+                           .format(' '.join(config_cflags)))
+        config_args.append('--with-cxxflags={0}'.
+                           format(' '.join(config_cflags)))
+        config_args.append('--with-fcflags={0}'.
+                           format(' '.join(config_cflags)))
+        return config_args
 
-        build_directory = join_path(source_directory, 'build')
-        with working_dir(build_directory, create=True):
-            config = Executable(join_path(source_directory, 'configure'))
-            config(
-                '--prefix={0}'.format(prefix),
-                '--with-cflags={0}'.format(' '.join(config_cflags)),
-                '--with-cxxflags={0}'.format(' '.join(config_cflags)),
-                '--with-fcflags={0}'.format(' '.join(config_cflags)),
-                *config_args
-            )
-
-            # NOTE: Earlier versions of Zoltan cannot be built in parallel
-            # because they contain nested Makefile dependency bugs.
-            make(parallel=not spec.satisfies('@:3.6+fortran'))
-            make('install')
-
-        # NOTE: Unfortunately, Zoltan doesn't provide any configuration
-        # options for the extension of the output library files, so this
-        # script must change these extensions as a post-processing step.
-        if '+shared' in spec:
-            for lib_path in glob.glob(join_path(prefix, 'lib', '*.a')):
-                lib_static_name = os.path.basename(lib_path)
+    # NOTE: Unfortunately, Zoltan doesn't provide any configuration
+    # options for the extension of the output library files, so this
+    # script must change these extensions as a post-processing step.
+    @run_after('install')
+    def solib_install(self):
+        if '+shared' in self.spec:
+            for lib_path in find(self.spec.prefix.lib, 'lib*.a'):
                 lib_shared_name = re.sub(r'\.a$', '.{0}'.format(dso_suffix),
-                                         lib_static_name)
-                move(lib_path, join_path(prefix, 'lib', lib_shared_name))
+                                         lib_path)
+                move(lib_path, lib_shared_name)
 
     def get_config_flag(self, flag_name, flag_variant):
         flag_pre = 'en' if '+{0}'.format(flag_variant) in self.spec else 'dis'
