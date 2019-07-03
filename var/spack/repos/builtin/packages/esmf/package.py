@@ -101,10 +101,10 @@ class Esmf(MakefilePackage):
         # ESMF will simply not build with Intel using backing GCC 8, in that
         # case you need to point to something older, below is commented but is
         # an example
-        os.environ['ESMF_CXXCOMPILEOPTS'] = \
-            '-O2 -std=c++11 -gcc-name=/usr/bin/gcc'
-        os.environ['ESMF_F90COMPILEOPTS'] = \
-            '-O2 -gcc-name=/usr/bin/gcc'
+        # os.environ['ESMF_CXXCOMPILEOPTS'] = \
+        #     '-O2 -std=c++11 -gcc-name=/usr/bin/gcc'
+        # os.environ['ESMF_F90COMPILEOPTS'] = \
+        #     '-O2 -gcc-name=/usr/bin/gcc'
 
         ############
         # Compiler #
