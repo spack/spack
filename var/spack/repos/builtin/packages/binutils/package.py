@@ -11,7 +11,7 @@ class Binutils(AutotoolsPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
     homepage = "http://www.gnu.org/software/binutils/"
-    url      = "https://ftpmirror.gnu.org/binutils/binutils-2.28.tar.bz2"
+    url      = "http://ftp.jaist.ac.jp/pub/GNU/binutils/binutils-2.31.1.tar.bz2"
 
     version('2.31.1', 'ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0')
     version('2.29.1', '9af59a2ca3488823e453bb356fe0f113')
@@ -75,6 +75,10 @@ class Binutils(AutotoolsPackage):
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
         if spec.satisfies('platform=darwin'):
             configure_args.append('--program-prefix=g')
+
+        # To ignore the errors of narrowing conversions
+        if self.compiler.name == 'fj':
+            configure_args.append('CXXFLAGS=-Wno-narrowing')
 
         return configure_args
 
