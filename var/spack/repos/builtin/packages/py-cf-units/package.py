@@ -16,7 +16,7 @@ class PyCfUnits(PythonPackage):
     git      = "https://github.com/SciTools/cf-units.git"
 
     version('master', branch='master')
-    version('2.1.1', extension='tar.gz', sha256='fa0ef8efd84546e61088aa23e76ebbaf7043167dc3a7f35f34549c234b543530')
+    version('2.1.1', sha256='fa0ef8efd84546e61088aa23e76ebbaf7043167dc3a7f35f34549c234b543530')
 
     depends_on('python@3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
