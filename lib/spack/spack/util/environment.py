@@ -527,25 +527,27 @@ class EnvironmentModifications(object):
             raise RuntimeError(msg)
 
         # Prepare a whitelist and a blacklist of environment variable names
-        bl = kwargs.get('blacklist', [])
-        wl = kwargs.get('whitelist', [])
+        blacklist = kwargs.get('blacklist', [])
+        whitelist = kwargs.get('whitelist', [])
         clean = kwargs.get('clean', False)
 
         # Other variables unrelated to sourcing a file
-        bl.extend([
+        blacklist.extend([
             # Bash internals
-            'SHLVL', '_', 'PWD', 'OLDPWD', 'PS2', 'ENV',
+            'SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2', 'ENV',
             # Environment modules v4
             'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()', 'MODULEPATH',
             'MODULES_(.*)', r'(\w*)_mod(quar|share)'
         ])
 
         # Compute the environments before and after sourcing
-        before = sanitize(dict(os.environ), blacklist=bl, whitelist=wl)
+        before = sanitize(
+            dict(os.environ), blacklist=blacklist, whitelist=whitelist
+        )
         file_and_args = (filename,) + arguments
         after = sanitize(
             environment_after_sourcing_files(file_and_args, **kwargs),
-            blacklist=bl, whitelist=wl
+            blacklist=blacklist, whitelist=whitelist
         )
 
         # Delegate to the other factory
