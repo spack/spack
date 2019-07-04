@@ -41,6 +41,11 @@ class Zoltan(AutotoolsPackage):
     depends_on('parmetis@4:', when='+parmetis')
     depends_on('metis', when='+parmetis')
 
+    depends_on('perl@:5.21', type='build', when='@:3.6')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('m4', type='build')
+
     conflicts('+parmetis', when='~mpi')
 
     build_directory = 'spack-build'
