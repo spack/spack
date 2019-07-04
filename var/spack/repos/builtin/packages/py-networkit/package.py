@@ -9,7 +9,7 @@ from spack import *
 class PyNetworkit(PythonPackage):
     """NetworKit is a growing open-source toolkit for large-scale network analysis. Its aim is to provide tools for the analysis of large networks in the size range from thousands to billions of edges. For this purpose, it implements efficient graph algorithms, many of them parallel to utilize multicore architectures. These are meant to compute standard measures of network analysis, such as degree sequences, clustering coefficients, and centrality measures. In this respect, NetworKit is comparable to packages such as NetworkX, albeit with a focus on parallelism and scalability."""
 
-    homepage = "http://www.networkit.io"
+    homepage = "https://networkit.github.io/"
     url      = "https://pypi.python.org/packages/source/n/networkit/networkit-5.0.tar.gz"
 
     version('5.0', sha256='4fd9439a155cc569000ec039e13680804d8cc233c6d602c88cf0f63174b2babd')
