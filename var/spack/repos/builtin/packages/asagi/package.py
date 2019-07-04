@@ -16,11 +16,15 @@ class Asagi(CMakePackage):
     homepage = "https://github.com/TUM-I5/ASAGI"
     git = "https://github.com/TUM-I5/ASAGI.git"
 
-    version('f633f96', commit='f633f96931ae00805f599078d5a1a6a830881554',
+    version('1.0.1', commit='f633f96931ae00805f599078d5a1a6a830881554',
             submodules=True, preferred=True)
+    version('1.0', commit='f67250798b435c308b9a1e7516f916f7855534ec',
+            submodules=True)
 
-    variant('shared', default=True, description="enable shared libraries")
-    variant('static', default=False, description="enable static libraries")
+    variant('link_type', default='shared',
+            description='build shared and/or static libraries',
+            values=('static', 'shared'), multi=True)
+
     variant('fortran', default=True, description="enable fortran support")
     variant('maxDimensions', default=4,
             description="max. number of dimensions supported")
@@ -43,44 +47,24 @@ class Asagi(CMakePackage):
     depends_on('netcdf ~mpi', when="~mpi")
     depends_on('numactl', when="+numa")
 
+    conflicts('%gcc@5:', when='@:1.0.0')
+
     def cmake_args(self):
 
-        args = []
-
-        args.append('-DMAX_DIMENSIONS=' +
-                    self.spec.variants['maxDimensions'].value)
-
-        if '~shared' in self.spec:
-            args.append('-DSHARED_LIB=OFF')
-
-        if '+static' in self.spec:
-            args.append('-DSTATIC_LIB=ON')
-
-        if '~fortran' in self.spec:
-            args.append('-DFORTRAN_SUPPORT=OFF')
-
-        if '~threadsafe' in self.spec:
-            args.append('-DTHREADSAFE=OFF')
-
-        if '+threadsafeCounter' in self.spec:
-            args.append('-DTHREADSAFE_COUNTER=ON')
-
-        if '~threadsafeMPI' in self.spec:
-            args.append('-DTHREADSAFE_MPI=OFF')
-
-        if '~mpi' in self.spec:
-            args.append('-DNOMPI=ON')
-
-        if '~mpi3' in self.spec:
-            args.append('-DMPI3=OFF')
-
-        if '~numa' in self.spec:
-            args.append('-DNONUMA=ON')
-
-        if '+tests' in self.spec:
-            args.append('-DTESTS=ON')
-
-        if '+examples' in self.spec:
-            args.append('-DEXAMPLES=ON')
-
+        link_type = self.spec.variants['link_type'].value
+        spec = self.spec
+        args = ['-DMAX_DIMENSIONS=' + spec.variants['maxDimensions'].value,
+                '-DSHARED_LIB=' + ('ON' if 'shared' in link_type else 'OFF'),
+                '-DSTATIC_LIB=' + ('ON' if 'static' in link_type else 'OFF'),
+                '-DFORTRAN_SUPPORT=' + ('ON' if '+fortran' in spec else 'OFF'),
+                '-DTHREADSAFE=' + ('ON' if '+threadsafe' in spec else 'OFF'),
+                '-DNOMPI=' + ('ON' if '~mpi' in spec else 'OFF'),
+                '-DMPI3=' + ('ON' if '+mpi3' in spec else 'OFF'),
+                '-DNONUMA=' + ('ON' if '~numa' in spec else 'OFF'),
+                '-DTESTS=' + ('ON' if '+tests' in spec else 'OFF'),
+                '-DEXAMPLES=' + ('ON' if '+tests' in spec else 'OFF'),
+                '-DTHREADSAFE_COUNTER='
+                + ('ON' if '+threadsafeCounter' in spec else 'OFF'),
+                '-DTHREADSAFE_MPI='
+                + ('ON' if '+threadsafeMPI' in spec else 'OFF'), ]
         return args
