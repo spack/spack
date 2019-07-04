@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-#
 # Author: Gilbert Brietzke
 # Date: July 2, 2019
 
