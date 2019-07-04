@@ -7,7 +7,15 @@ from spack import *
 
 
 class PyNetworkit(PythonPackage):
-    """NetworKit is a growing open-source toolkit for large-scale network analysis. Its aim is to provide tools for the analysis of large networks in the size range from thousands to billions of edges. For this purpose, it implements efficient graph algorithms, many of them parallel to utilize multicore architectures. These are meant to compute standard measures of network analysis, such as degree sequences, clustering coefficients, and centrality measures. In this respect, NetworKit is comparable to packages such as NetworkX, albeit with a focus on parallelism and scalability."""
+    """NetworKit is a growing open-source toolkit for large-scale network analysis.
+       Its aim is to provide tools for the analysis of large networks in the
+       size range from thousands to billions of edges. For this purpose, it
+       implements efficient graph algorithms, many of them parallel to utilize
+       multicore architectures. These are meant to compute standard measures of
+       network analysis, such as degree sequences, clustering coefficients, and
+       centrality measures. In this respect, NetworKit is comparable to
+       packages such as NetworkX, albeit with a focus on parallelism
+       and scalability."""
 
     homepage = "https://networkit.github.io/"
     url      = "https://pypi.python.org/packages/source/n/networkit/networkit-5.0.tar.gz"
@@ -30,4 +38,3 @@ class PyNetworkit(PythonPackage):
     depends_on('py-ipython', when='~python3', type='run')
     depends_on('py-jupyter-console', type='run')
     depends_on('py-tabulate', type='run')
-
