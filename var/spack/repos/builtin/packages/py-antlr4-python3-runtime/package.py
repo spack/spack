@@ -8,7 +8,7 @@ from spack import *
 
 class PyAntlr4Python3Runtime(PythonPackage):
     """This package provides runtime libraries required to use
-    parsers generated for the Python3 language by version 4 of 
+    parsers generated for the Python3 language by version 4 of
     ANTLR (ANother Tool for Language Recognition).
     """
 
