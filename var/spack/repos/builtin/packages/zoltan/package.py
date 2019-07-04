@@ -84,8 +84,10 @@ class Zoltan(AutotoolsPackage):
         ]
 
         if '+shared' in spec:
-            config_args.append('RANLIB=echo')
-            config_args.append('--with-ar=$(CXX) -shared $(LDFLAGS) -o')
+            config_args.extend([
+                'RANLIB=echo',
+                '--with-ar=$(CXX) -shared $(LDFLAGS) -o'
+            ])
             config_cflags.append(self.compiler.pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs=-lgfortran')
@@ -93,42 +95,42 @@ class Zoltan(AutotoolsPackage):
                 config_args.append('--with-libs=-lifcore')
 
         if '+parmetis' in spec:
-            config_args.append('--with-parmetis')
-            config_args.append('--with-parmetis-libdir={0}'
-                               .format(spec['parmetis'].prefix.lib))
-            config_args.append('--with-parmetis-incdir={0}'
-                               .format(spec['parmetis'].prefix.include))
-            config_args.append('--with-incdirs=-I{0}'
-                               .format(spec['metis'].prefix.include))
-            config_args.append('--with-ldflags=-L{0}'
-                               .format(spec['metis'].prefix.lib))
+            parmetis_prefix = spec['parmetis'].prefix
+            config_args.extend([
+                '--with-parmetis',
+                '--with-parmetis-libdir={0}'.format(parmetis_prefix.lib),
+                '--with-parmetis-incdir={0}'.format(parmetis_prefix.include),
+                '--with-incdirs=-I{0}'.format(spec['metis'].prefix.include),
+                '--with-ldflags=-L{0}'.format(spec['metis'].prefix.lib)
+            ])
             if '+int64' in spec['metis']:
                 config_args.append('--with-id-type=ulong')
             else:
                 config_args.append('--with-id-type=uint')
 
         if '+mpi' in spec:
-            config_args.append('CC={0}'.format(spec['mpi'].mpicc))
-            config_args.append('CXX={0}'.format(spec['mpi'].mpicxx))
-            config_args.append('FC={0}'.format(spec['mpi'].mpifc))
+            config_args.extend([
+                'CC={0}'.format(spec['mpi'].mpicc),
+                'CXX={0}'.format(spec['mpi'].mpicxx),
+                'FC={0}'.format(spec['mpi'].mpifc),
+                '--with-mpi={0}'.format(spec['mpi'].prefix),
 
-            config_args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
-
-            # NOTE: Zoltan assumes that it's linking against an MPI library
-            # that can be found with '-lmpi' which isn't the case for many
-            # MPI packages. We rely on the MPI-wrappers to automatically add
-            # what is required for linking and thus pass an empty list of libs
-            config_args.append('--with-mpi-libs= ')
+                # NOTE: Zoltan assumes that it's linking against an MPI library
+                # that can be found with '-lmpi' which isn't the case for many
+                # MPI packages. We rely on the MPI-wrappers to automatically
+                # add what is required for linking and thus pass an empty
+                # list of libs
+                '--with-mpi-libs= '
+            ])
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
         # ability to descend directly into the package's source directory.
-        config_args.append('--with-cflags={0}'
-                           .format(' '.join(config_cflags)))
-        config_args.append('--with-cxxflags={0}'.
-                           format(' '.join(config_cflags)))
-        config_args.append('--with-fcflags={0}'.
-                           format(' '.join(config_cflags)))
+        config_args.extend([
+            '--with-cflags={0}'.format(' '.join(config_cflags)),
+            '--with-cxxflags={0}'.format(' '.join(config_cflags)),
+            '--with-fcflags={0}'.format(' '.join(config_cflags))
+        ])
         return config_args
 
     # NOTE: Unfortunately, Zoltan doesn't provide any configuration
