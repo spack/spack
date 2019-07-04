@@ -19,34 +19,28 @@ jobs:
   include:
     - stage: 'style checks'
       python: '2.7'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=flake8
     - stage: 'unit tests + documentation'
       python: '2.6'
       dist: trusty
-      sudo: required
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '2.7'
-      sudo: required
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.5'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.7'
-      sudo: required
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
@@ -69,7 +63,6 @@ jobs:
           - r-base-dev
 
     - python: '3.7'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=doc
@@ -119,7 +112,6 @@ jobs:
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
     - python: '3.6'
       stage: 'docker build'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=docker
@@ -138,7 +130,6 @@ stages:
 # Environment
 #=============================================================================
 # Use new Travis infrastructure (Docker can't sudo yet)
-sudo: false
 
 # Docs need graphviz to build
 addons:
