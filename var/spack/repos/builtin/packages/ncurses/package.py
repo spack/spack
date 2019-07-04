@@ -34,8 +34,8 @@ class Ncurses(AutotoolsPackage):
     patch('sed_pgi.patch',   when='@:6.0')
 
     def setup_environment(self, spack_env, run_env):
-            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
-            spack_env.append_flags('CXXFLAGS', self.compiler.pic_flag)
+        spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
+        spack_env.append_flags('CXXFLAGS', self.compiler.pic_flag)
 
     def configure(self, spec, prefix):
         opts = [
