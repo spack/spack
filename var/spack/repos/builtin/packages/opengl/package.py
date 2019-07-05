@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack import *
 
 
@@ -17,6 +19,9 @@ class Opengl(Package):
     provides('gl@:4.2', when='@4.2:')
     provides('gl@:4.1', when='@4.1:')
     provides('gl@:3.3', when='@3.3:')
+
+    if sys.platform != 'darwin':
+        provides('glx@1.4')
 
     # Override the fetcher method to throw a useful error message;
     # fixes GitHub issue (#7061) in which this package threw a

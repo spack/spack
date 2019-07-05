@@ -20,6 +20,7 @@ class Qthreads(AutotoolsPackage):
     homepage = "http://www.cs.sandia.gov/qthreads/"
 
     url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
+    version("1.14", "3e6eb58baf78dc961b19a37b2dc4f9a5")
     version("1.12", "c857d175f8135eaa669f3f8fa0fb0c09")
     version("1.11", "68b5f9a41cfd1a2ac112cc4db0612326")
     version("1.10", "d1cf3cf3f30586921359f7840171e551")
@@ -27,12 +28,21 @@ class Qthreads(AutotoolsPackage):
     patch("restrict.patch", when="@:1.10")
     patch("trap.patch", when="@:1.10")
 
-    depends_on("hwloc")
+    variant(
+        'hwloc',
+        default=True,
+        description='hwloc support'
+    )
+
+    depends_on("hwloc@1.0:1.99", when="+hwloc")
 
     def configure_args(self):
         spec = self.spec
-        args = [
-            "--enable-guard-pages",
-            "--with-topology=hwloc",
-            "--with-hwloc=%s" % spec["hwloc"].prefix]
+        if "+hwloc" in self.spec:
+            args = [
+                "--enable-guard-pages",
+                "--with-topology=hwloc",
+                "--with-hwloc=%s" % spec["hwloc"].prefix]
+        else:
+            args = ["--with-topology=no"]
         return args

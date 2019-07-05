@@ -9,7 +9,7 @@ import shlex
 import spack.store
 import spack.spec as sp
 from spack.parse import Token
-from spack.spec import Spec, parse, parse_anonymous_spec
+from spack.spec import Spec
 from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
 from spack.spec import DuplicateArchitectureError, DuplicateVariantError
@@ -203,8 +203,8 @@ class TestSpecSyntax(object):
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
 
         self.check_parse(
-            "x arch=test-redhat6-None "
-            " ^y arch=test-None-x86_64 "
+            "x arch=test-redhat6-None"
+            " ^y arch=test-None-x86_64"
             " ^z arch=linux-None-None",
 
             "x os=fe "
@@ -212,11 +212,11 @@ class TestSpecSyntax(object):
             "^z platform=linux")
 
         self.check_parse(
-            "x arch=test-debian6-x86_64 "
+            "x arch=test-debian6-x86_64"
             " ^y arch=test-debian6-x86_64",
 
-            "x os=default_os target=default_target "
-            "^y os=default_os target=default_target")
+            "x os=default_os target=default_target"
+            " ^y os=default_os target=default_target")
 
         self.check_parse("x ^y", "x@: ^y@:")
 
@@ -532,18 +532,3 @@ class TestSpecSyntax(object):
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
-
-
-@pytest.mark.parametrize('spec,anon_spec,spec_name', [
-    ('openmpi languages=go', 'languages=go', 'openmpi'),
-    ('openmpi @4.6:', '@4.6:', 'openmpi'),
-    ('openmpi languages=go @4.6:', 'languages=go @4.6:', 'openmpi'),
-    ('openmpi @4.6: languages=go', '@4.6: languages=go', 'openmpi'),
-])
-def test_parse_anonymous_specs(spec, anon_spec, spec_name):
-
-    expected = parse(spec)
-    spec = parse_anonymous_spec(anon_spec, spec_name)
-
-    assert len(expected) == 1
-    assert spec in expected

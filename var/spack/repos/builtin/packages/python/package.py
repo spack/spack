@@ -29,6 +29,7 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  '41b6595deb4147a1ed517a7d9a580271')
@@ -41,14 +42,17 @@ class Python(AutotoolsPackage):
     version('3.6.2', 'e1a36bfffdd1d3a780b1825daf16e56c')
     version('3.6.1', '2d0fc9f3a5940707590e07f03ecb08b9')
     version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
+    version('3.5.7', sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
     version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
     version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
     version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
+    version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d')
     version('3.4.3', '4281ff86778db65892c05151d5de738d')
     version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
     version('3.2.6', '23815d82ae706e9b781ca65865353d39')
     version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.15', '045fb3440219a1f6923fefdabde63342', preferred=True)
+    version('2.7.16', 'f1a2ace631068444831d01485466ece0', preferred=True)
+    version('2.7.15', '045fb3440219a1f6923fefdabde63342')
     version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724')
     version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700')
     version('2.7.12', '88d61f82e3616a4be952828b3694109d')
@@ -97,6 +101,7 @@ class Python(AutotoolsPackage):
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
     variant('uuid',     default=False, description='Build uuid module')
+    variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
 
@@ -116,6 +121,7 @@ class Python(AutotoolsPackage):
     depends_on('libffi', when='+ctypes')
     depends_on('tk', when='+tkinter')
     depends_on('tcl', when='+tkinter')
+    depends_on('tix', when='+tix')
     depends_on('libuuid', when='+uuid')
 
     patch('tkinter.patch', when='@:2.8,3.3: platform=darwin')
@@ -135,6 +141,8 @@ class Python(AutotoolsPackage):
         when='+optimizations',
         msg='+optimizations is incompatible with +shared in python@2.X'
     )
+    conflicts('+tix', when='~tkinter',
+              msg='python+tix requires python+tix+tkinter')
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'

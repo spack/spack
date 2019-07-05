@@ -25,7 +25,7 @@ class Tcl(AutotoolsPackage):
     version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
     version('8.6.4', 'd7cbb91f1ded1919370a30edd1534304')
     version('8.6.3', 'db382feca91754b7f93da16dc4cdad1f')
-    version('8.5.19', '0e6426a4ca9401825fbc6ecf3d89a326')
+    version('8.5.19', '4f4e1c919f6a6dbb37e9a12d429769a6')
 
     extendable = True
 

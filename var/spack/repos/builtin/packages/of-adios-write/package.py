@@ -20,7 +20,7 @@ import os
 import llnl.util.tty as tty
 
 from spack import *
-from spack.pkg.builtin.openfoam_com import add_extra_files
+from spack.pkg.builtin.openfoam import add_extra_files
 
 
 class OfAdiosWrite(Package):
@@ -44,9 +44,9 @@ class OfAdiosWrite(Package):
 
     variant('source', default=True, description='Install library source')
 
-    depends_on('openfoam-com@develop+source', when='@develop')
-    depends_on('openfoam-com@1706+source', when='@1706')
-    depends_on('openfoam-com@1612+source', when='@1612')
+    depends_on('openfoam@develop+source', when='@develop')
+    depends_on('openfoam@1706+source', when='@1706')
+    depends_on('openfoam@1612+source', when='@1612')
     depends_on('adios')
 
     # General patches
@@ -67,7 +67,9 @@ class OfAdiosWrite(Package):
         add_extra_files(self, self.common, self.assets)
         # Emit openfoam version immediately, if we resolved the wrong version
         # it takes a very long time to rebuild!
-        tty.info('Build for ' + self.spec['openfoam'].format('$_$@$%@+$+'))
+        tty.info('Build for ' + self.spec['openfoam'].format(
+            '{name}{@version}{%compiler}{compiler_flags}{variants}'
+        ))
 
     def configure(self, spec, prefix):
         """Generate spack-config.sh file."""

@@ -14,6 +14,7 @@ class CbtfArgonavis(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
 
     version('develop', branch='master')
+    version('1.9.3', branch='1.9.3')
     version('1.9.2', branch='1.9.2')
     version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
@@ -37,7 +38,7 @@ class CbtfArgonavis(CMakePackage):
     depends_on("elf", type="link")
 
     # For boost
-    depends_on("boost@1.66.0:")
+    depends_on("boost@1.66.0:1.69.0")
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')

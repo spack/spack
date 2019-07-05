@@ -71,6 +71,8 @@ or refer to the full manual below.
    binary_caches
    command_index
    package_list
+   chain
+   extensions
 
 .. toctree::
    :maxdepth: 2

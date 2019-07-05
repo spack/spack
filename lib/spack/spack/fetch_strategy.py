@@ -13,7 +13,8 @@ in order to build it.  They need to define the following methods:
         Apply a checksum to the downloaded source code, e.g. for an archive.
         May not do anything if the fetch method was safe to begin with.
     * expand()
-        Expand (e.g., an archive) downloaded file to source.
+        Expand (e.g., an archive) downloaded file to source, with the
+        standard stage source path as the destination directory.
     * reset()
         Restore original state of downloaded code.  Used by clean commands.
         This may just remove the expanded source and re-expand an archive,
@@ -26,11 +27,13 @@ import sys
 import re
 import shutil
 import copy
+import xml.etree.ElementTree
 from functools import wraps
 from six import string_types, with_metaclass
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, mkdirp
+from llnl.util.filesystem import (
+    working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
 
 import spack.config
 import spack.error
@@ -57,6 +60,13 @@ def _needs_stage(fun):
         return fun(self, *args, **kwargs)
 
     return wrapper
+
+
+def _ensure_one_stage_entry(stage_path):
+    """Ensure there is only one stage entry in the stage path."""
+    stage_entries = os.listdir(stage_path)
+    assert len(stage_entries) == 1
+    return os.path.join(stage_path, stage_entries[0])
 
 
 class FSMeta(type):
@@ -103,7 +113,7 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
         """Checksum the archive fetched by this FetchStrategy."""
 
     def expand(self):
-        """Expand the downloaded archive."""
+        """Expand the downloaded archive into the stage source path."""
 
     def reset(self):
         """Revert to freshly downloaded state.
@@ -164,8 +174,10 @@ class FetchStrategyComposite(object):
 
 
 class URLFetchStrategy(FetchStrategy):
-    """FetchStrategy that pulls source code from a URL for an archive,
-       checks the archive against a checksum,and decompresses the archive.
+    """
+    FetchStrategy that pulls source code from a URL for an archive, check the
+    archive against a checksum, and decompresses the archive.  The destination
+    for the resulting file(s) is the standard stage source path.
     """
     enabled = True
     url_attr = 'url'
@@ -301,6 +313,7 @@ class URLFetchStrategy(FetchStrategy):
             raise FailedDownloadError(self.url)
 
     @property
+    @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""
         return self.stage.archive_file
@@ -312,7 +325,13 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def expand(self):
         if not self.expand_archive:
-            tty.msg("Skipping expand step for %s" % self.archive_file)
+            tty.msg("Staging unexpanded archive %s in %s" % (
+                    self.archive_file, self.stage.source_path))
+            if not self.stage.expanded:
+                mkdirp(self.stage.source_path)
+            dest = os.path.join(self.stage.source_path,
+                                os.path.basename(self.archive_file))
+            shutil.move(self.archive_file, dest)
             return
 
         tty.msg("Staging archive: %s" % self.archive_file)
@@ -325,6 +344,10 @@ class URLFetchStrategy(FetchStrategy):
         if not self.extension:
             self.extension = extension(self.archive_file)
 
+        if self.stage.expanded:
+            tty.debug('Source already staged to %s' % self.stage.source_path)
+            return
+
         decompress = decompressor_for(self.archive_file, self.extension)
 
         # Expand all tarballs in their own directory to contain
@@ -336,26 +359,38 @@ class URLFetchStrategy(FetchStrategy):
         with working_dir(tarball_container):
             decompress(self.archive_file)
 
-        # Check for an exploding tarball, i.e. one that doesn't expand
-        # to a single directory.  If the tarball *didn't* explode,
-        # move contents up & remove the container directory.
+        # Check for an exploding tarball, i.e. one that doesn't expand to
+        # a single directory.  If the tarball *didn't* explode, move its
+        # contents to the staging source directory & remove the container
+        # directory.  If the tarball did explode, just rename the tarball
+        # directory to the staging source directory.
         #
-        # NOTE: The tar program on Mac OS X will encode HFS metadata
-        # in hidden files, which can end up *alongside* a single
-        # top-level directory.  We ignore hidden files to accomodate
-        # these "semi-exploding" tarballs.
+        # NOTE: The tar program on Mac OS X will encode HFS metadata in
+        # hidden files, which can end up *alongside* a single top-level
+        # directory.  We initially ignore presence of hidden files to
+        # accomodate these "semi-exploding" tarballs but ensure the files
+        # are copied to the source directory.
         files = os.listdir(tarball_container)
         non_hidden = [f for f in files if not f.startswith('.')]
         if len(non_hidden) == 1:
-            expanded_dir = os.path.join(tarball_container, non_hidden[0])
-            if os.path.isdir(expanded_dir):
-                for f in files:
-                    shutil.move(os.path.join(tarball_container, f),
-                                os.path.join(self.stage.path, f))
+            src = os.path.join(tarball_container, non_hidden[0])
+            if os.path.isdir(src):
+                self.stage.srcdir = non_hidden[0]
+                shutil.move(src, self.stage.source_path)
+                if len(files) > 1:
+                    files.remove(non_hidden[0])
+                    for f in files:
+                        src = os.path.join(tarball_container, f)
+                        dest = os.path.join(self.stage.path, f)
+                        shutil.move(src, dest)
                 os.rmdir(tarball_container)
+            else:
+                # This is a non-directory entry (e.g., a patch file) so simply
+                # rename the tarball container to be the source path.
+                shutil.move(tarball_container, self.stage.source_path)
 
-        if not files:
-            os.rmdir(tarball_container)
+        else:
+            shutil.move(tarball_container, self.stage.source_path)
 
     def archive(self, destination):
         """Just moves this archive to the destination."""
@@ -389,7 +424,7 @@ class URLFetchStrategy(FetchStrategy):
                 "Tried to reset URLFetchStrategy before fetching",
                 "Failed on reset() for URL %s" % self.url)
 
-        # Remove everythigng but the archive from the stage
+        # Remove everything but the archive from the stage
         for filename in os.listdir(self.stage.path):
             abspath = os.path.join(self.stage.path, filename)
             if abspath != self.archive_file:
@@ -490,7 +525,16 @@ class VCSFetchStrategy(FetchStrategy):
                 tar.add_default_arg('--exclude=%s' % p)
 
         with working_dir(self.stage.path):
-            tar('-czf', destination, os.path.basename(self.stage.source_path))
+            if self.stage.srcdir:
+                # Here we create an archive with the default repository name.
+                # The 'tar' command has options for changing the name of a
+                # directory that is included in the archive, but they differ
+                # based on OS, so we temporarily rename the repo
+                with temp_rename(self.stage.source_path, self.stage.srcdir):
+                    tar('-czf', destination, self.stage.srcdir)
+            else:
+                tar('-czf', destination,
+                    os.path.basename(self.stage.source_path))
 
     def __str__(self):
         return "VCS: %s" % self.url
@@ -507,7 +551,10 @@ class GoFetchStrategy(VCSFetchStrategy):
        version('name',
                go='github.com/monochromegane/the_platinum_searcher/...')
 
-    Go get does not natively support versions, they can be faked with git
+    Go get does not natively support versions, they can be faked with git.
+
+    The fetched source will be moved to the standard stage sourcepath directory
+    during the expand step.
     """
     enabled = True
     url_attr = 'go'
@@ -549,6 +596,15 @@ class GoFetchStrategy(VCSFetchStrategy):
         super(GoFetchStrategy, self).archive(destination, exclude='.git')
 
     @_needs_stage
+    def expand(self):
+        tty.debug(
+            "Source fetched with %s is already expanded." % self.url_attr)
+
+        # Move the directory to the well-known stage source path
+        repo_root = _ensure_one_stage_entry(self.stage.path)
+        shutil.move(repo_root, self.stage.source_path)
+
+    @_needs_stage
     def reset(self):
         with working_dir(self.stage.source_path):
             self.go('clean')
@@ -575,6 +631,8 @@ class GitFetchStrategy(VCSFetchStrategy):
                       repository's default branch)
         * ``tag``: Particular tag to check out
         * ``commit``: Particular commit hash in the repo
+
+    Repositories are cloned into the standard stage source path directory.
     """
     enabled = True
     url_attr = 'git'
@@ -633,8 +691,9 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         return '{0}{1}'.format(self.url, args)
 
+    @_needs_stage
     def fetch(self):
-        if self.stage.source_path:
+        if self.stage.expanded:
             tty.msg("Already fetched {0}".format(self.stage.source_path))
             return
 
@@ -644,17 +703,22 @@ class GitFetchStrategy(VCSFetchStrategy):
         if self.commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
-            with working_dir(self.stage.path):
-                if spack.config.get('config:debug'):
-                    git('clone', self.url)
-                else:
-                    git('clone', '--quiet', self.url)
+            debug = spack.config.get('config:debug')
+
+            clone_args = ['clone', self.url]
+            if not debug:
+                clone_args.insert(1, '--quiet')
+            with temp_cwd():
+                git(*clone_args)
+                repo_name = get_single_file('.')
+                self.stage.srcdir = repo_name
+                shutil.move(repo_name, self.stage.source_path)
 
             with working_dir(self.stage.source_path):
-                if spack.config.get('config:debug'):
-                    git('checkout', self.commit)
-                else:
-                    git('checkout', '--quiet', self.commit)
+                checkout_args = ['checkout', self.commit]
+                if not debug:
+                    checkout_args.insert(1, '--quiet')
+                git(*checkout_args)
 
         else:
             # Can be more efficient if not checking out a specific commit.
@@ -673,45 +737,50 @@ class GitFetchStrategy(VCSFetchStrategy):
             if self.git_version > ver('1.7.10'):
                 args.append('--single-branch')
 
-            with working_dir(self.stage.path):
+            with temp_cwd():
                 cloned = False
                 # Yet more efficiency, only download a 1-commit deep tree
                 if self.git_version >= ver('1.7.1'):
                     try:
                         git(*(args + ['--depth', '1', self.url]))
                         cloned = True
-                    except spack.error.SpackError:
+                    except spack.error.SpackError as e:
                         # This will fail with the dumb HTTP transport
                         # continue and try without depth, cleanup first
-                        pass
+                        tty.debug(e)
 
                 if not cloned:
-                    args.append(self.url)
+                    args.extend([self.url])
                     git(*args)
 
-                with working_dir(self.stage.source_path):
-                    # For tags, be conservative and check them out AFTER
-                    # cloning.  Later git versions can do this with clone
-                    # --branch, but older ones fail.
-                    if self.tag and self.git_version < ver('1.8.5.2'):
-                        # pull --tags returns a "special" error code of 1 in
-                        # older versions that we have to ignore.
-                        # see: https://github.com/git/git/commit/19d122b
-                        if spack.config.get('config:debug'):
-                            git('pull', '--tags', ignore_errors=1)
-                            git('checkout', self.tag)
-                        else:
-                            git('pull', '--quiet', '--tags', ignore_errors=1)
-                            git('checkout', '--quiet', self.tag)
+                repo_name = get_single_file('.')
+                self.stage.srcdir = repo_name
+                shutil.move(repo_name, self.stage.source_path)
 
-        with working_dir(self.stage.source_path):
-            # Init submodules if the user asked for them.
-            if self.submodules:
-                if spack.config.get('config:debug'):
-                    git('submodule', 'update', '--init', '--recursive')
-                else:
-                    git('submodule', '--quiet', 'update', '--init',
-                        '--recursive')
+            with working_dir(self.stage.source_path):
+                # For tags, be conservative and check them out AFTER
+                # cloning.  Later git versions can do this with clone
+                # --branch, but older ones fail.
+                if self.tag and self.git_version < ver('1.8.5.2'):
+                    # pull --tags returns a "special" error code of 1 in
+                    # older versions that we have to ignore.
+                    # see: https://github.com/git/git/commit/19d122b
+                    pull_args = ['pull', '--tags']
+                    co_args = ['checkout', self.tag]
+                    if not spack.config.get('config:debug'):
+                        pull_args.insert(1, '--quiet')
+                        co_args.insert(1, '--quiet')
+
+                    git(*pull_args, ignore_errors=1)
+                    git(*co_args)
+
+        # Init submodules if the user asked for them.
+        if self.submodules:
+            with working_dir(self.stage.source_path):
+                args = ['submodule', 'update', '--init', '--recursive']
+                if not spack.config.get('config:debug'):
+                    args.insert(1, '--quiet')
+                git(*args)
 
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
@@ -719,12 +788,14 @@ class GitFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def reset(self):
         with working_dir(self.stage.source_path):
+            co_args = ['checkout', '.']
+            clean_args = ['clean', '-f']
             if spack.config.get('config:debug'):
-                self.git('checkout', '.')
-                self.git('clean', '-f')
-            else:
-                self.git('checkout', '--quiet', '.')
-                self.git('clean', '--quiet', '-f')
+                co_args.insert(1, '--quiet')
+                clean_args.insert(1, '--quiet')
+
+            self.git(*co_args)
+            self.git(*clean_args)
 
     def __str__(self):
         return '[git] {0}'.format(self._repo_info())
@@ -741,6 +812,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
            version('name', svn='http://www.example.com/svn/trunk',
                    revision='1641')
+
+    Repositories are checked out into the standard stage source path directory.
     """
     enabled = True
     url_attr = 'svn'
@@ -771,17 +844,13 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return self.revision
 
     def get_source_id(self):
-        output = self.svn('info', self.url, output=str)
-        if not output:
-            return None
-        lines = output.split('\n')
-        for line in lines:
-            if line.startswith('Revision:'):
-                return line.split()[-1]
+        output = self.svn('info', '--xml', self.url, output=str)
+        info = xml.etree.ElementTree.fromstring(output)
+        return info.find('entry/commit').get('revision')
 
     @_needs_stage
     def fetch(self):
-        if self.stage.source_path:
+        if self.stage.expanded:
             tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
@@ -790,10 +859,13 @@ class SvnFetchStrategy(VCSFetchStrategy):
         args = ['checkout', '--force', '--quiet']
         if self.revision:
             args += ['-r', self.revision]
-        args.append(self.url)
+        args.extend([self.url])
 
-        with working_dir(self.stage.path):
+        with temp_cwd():
             self.svn(*args)
+            repo_name = get_single_file('.')
+            self.stage.srcdir = repo_name
+            shutil.move(repo_name, self.stage.source_path)
 
     def _remove_untracked_files(self):
         """Removes untracked files in an svn repository."""
@@ -841,6 +913,8 @@ class HgFetchStrategy(VCSFetchStrategy):
     discouraged.
 
         * ``revision``: Particular revision, branch, or tag.
+
+    Repositories are cloned into the standard stage source path directory.
     """
     enabled = True
     url_attr = 'hg'
@@ -884,7 +958,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        if self.stage.source_path:
+        if self.stage.expanded:
             tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
@@ -898,13 +972,16 @@ class HgFetchStrategy(VCSFetchStrategy):
         if not spack.config.get('config:verify_ssl'):
             args.append('--insecure')
 
-        args.append(self.url)
-
         if self.revision:
             args.extend(['-r', self.revision])
 
-        with working_dir(self.stage.path):
+        args.extend([self.url])
+
+        with temp_cwd():
             self.hg(*args)
+            repo_name = get_single_file('.')
+            self.stage.srcdir = repo_name
+            shutil.move(repo_name, self.stage.source_path)
 
     def archive(self, destination):
         super(HgFetchStrategy, self).archive(destination, exclude='.hg')
@@ -1085,11 +1162,13 @@ def from_list_url(pkg):
 
                 # construct a fetcher
                 return URLFetchStrategy(url_from_list, checksum)
-            except KeyError:
+            except KeyError as e:
+                tty.debug(e)
                 tty.msg("Cannot find version %s in url_list" % pkg.version)
 
-        except BaseException:
+        except BaseException as e:
             # TODO: Don't catch BaseException here! Be more specific.
+            tty.debug(e)
             tty.msg("Could not determine url from list_url.")
 
 

@@ -344,8 +344,10 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
         regexes.append(url_regex)
 
     # Build a dict version -> URL from any links that match the wildcards.
+    # Walk through archive_url links first.
+    # Any conflicting versions will be overwritten by the list_url links.
     versions = {}
-    for url in sorted(links):
+    for url in archive_urls + sorted(links):
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)

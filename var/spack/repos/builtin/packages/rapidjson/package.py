@@ -16,3 +16,7 @@ class Rapidjson(CMakePackage):
     version('1.0.2', '97cc60d01282a968474c97f60714828c')
     version('1.0.1', '48cc188df49617b859d13d31344a50b8')
     version('1.0.0', '08247fbfa464d7f15304285f04b4b228')
+
+    # released versions compile with -Werror and fail with gcc-7
+    # branch-fall-through warnings
+    patch('0001-turn-off-Werror.patch')

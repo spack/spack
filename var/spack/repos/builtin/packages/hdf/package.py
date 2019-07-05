@@ -10,11 +10,12 @@ class Hdf(AutotoolsPackage):
     """HDF4 (also known as HDF) is a library and multi-object
     file format for storing and managing data between machines."""
 
-    homepage = "https://support.hdfgroup.org/products/hdf4/"
-    url      = "https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.13/src/hdf-4.2.13.tar.gz"
-    list_url = "https://support.hdfgroup.org/ftp/HDF/releases"
+    homepage = "https://portal.hdfgroup.org/display/support"
+    url      = "https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.14/src/hdf-4.2.14.tar.gz"
+    list_url = "https://support.hdfgroup.org/ftp/HDF/releases/"
     list_depth = 2
 
+    version('4.2.14', sha256='2d383e87c8a0ca6a5352adbd1d5546e6cc43dc21ff7d90f93efa644d85c0b14a')
     version('4.2.13', 'a6aa950b3fce5162b96496d8ea0b82bf')
     version('4.2.12', '79fd1454c899c05e34a3da0456ab0c1c')
     version('4.2.11', '063f9928f3a19cc21367b71c3b8bbf19')

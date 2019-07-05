@@ -79,6 +79,9 @@ spack_fflags   = ['-w']
 spack_ldflags  = ['-L', 'foo']
 spack_ldlibs   = ['-lfoo']
 
+lheaderpad = ['-Wl,-headerpad_max_install_names']
+headerpad = ['-headerpad_max_install_names']
+
 
 @pytest.fixture(scope='session')
 def wrapper_environment():
@@ -451,6 +454,7 @@ def test_ld_deps_partial():
         check_args(
             ld, ['-r'] + test_args,
             ['ld'] +
+            headerpad +
             test_include_paths +
             test_library_paths +
             ['-Lxlib'] +
@@ -461,6 +465,7 @@ def test_ld_deps_partial():
 
 def test_ccache_prepend_for_cc():
     with set_env(SPACK_CCACHE_BINARY='ccache'):
+        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
         check_args(
             cc, test_args,
             ['ccache'] +  # ccache prepended in cc mode
@@ -469,13 +474,34 @@ def test_ccache_prepend_for_cc():
             test_library_paths +
             test_wl_rpaths +
             test_args_without_paths)
+        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
+        check_args(
+            cc, test_args,
+            ['ccache'] +  # ccache prepended in cc mode
+            [real_cc] +
+            lheaderpad +
+            test_include_paths +
+            test_library_paths +
+            test_wl_rpaths +
+            test_args_without_paths)
 
 
 def test_no_ccache_prepend_for_fc():
+    os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
     check_args(
         fc, test_args,
         # no ccache for Fortran
         [real_cc] +
+        test_include_paths +
+        test_library_paths +
+        test_wl_rpaths +
+        test_args_without_paths)
+    os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
+    check_args(
+        fc, test_args,
+        # no ccache for Fortran
+        [real_cc] +
+        lheaderpad +
         test_include_paths +
         test_library_paths +
         test_wl_rpaths +

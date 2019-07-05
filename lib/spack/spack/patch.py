@@ -107,12 +107,14 @@ class FilePatch(Patch):
         working_dir (str): path within the source directory where patch
             should be applied
     """
-    def __init__(self, pkg, relative_path, level, working_dir):
+    def __init__(self, pkg, relative_path, level, working_dir,
+                 ordering_key=None):
         self.relative_path = relative_path
         abs_path = os.path.join(pkg.package_dir, self.relative_path)
         super(FilePatch, self).__init__(pkg, abs_path, level, working_dir)
         self.path = abs_path
         self._sha256 = None
+        self.ordering_key = ordering_key
 
     @property
     def sha256(self):
@@ -136,10 +138,13 @@ class UrlPatch(Patch):
         working_dir (str): path within the source directory where patch
             should be applied
     """
-    def __init__(self, pkg, url, level=1, working_dir='.', **kwargs):
+    def __init__(self, pkg, url, level=1, working_dir='.', ordering_key=None,
+                 **kwargs):
         super(UrlPatch, self).__init__(pkg, url, level, working_dir)
 
         self.url = url
+
+        self.ordering_key = ordering_key
 
         self.archive_sha256 = kwargs.get('archive_sha256')
         if allowed_archive(self.url) and not self.archive_sha256:

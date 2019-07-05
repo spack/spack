@@ -26,8 +26,8 @@ class Jdk(Package):
     # http://stackoverflow.com/questions/10268583/how-to-automate-download-and-installation-of-java-jdk-on-linux
     curl_options = [
         '-j',  # junk cookies
-        '-H',  # specify required License Agreement cookie
-        'Cookie: oraclelicense=accept-securebackup-cookie'
+        '-b',  # specify required License Agreement cookie
+        'oraclelicense=accept-securebackup-cookie'
     ]
 
     # To add the latest version, go to the homepage listed above,
@@ -36,6 +36,8 @@ class Jdk(Package):
     # found in a link above. The build number can be deciphered from the URL.
     # Alternatively, run `bin/java -version` after extracting. Replace '+'
     # symbol in version with '_', otherwise it will be interpreted as a variant
+    version('12.0.1', sha256='9fd6dcdaf2cfca7da59e39b009a0f5bcd53bec2fb16105f7ca8d689cdab68d75', curl_options=curl_options,
+            url='https://download.oracle.com/otn-pub/java/jdk/12.0.1+12/69cfe15208a647278a19ef0990eea691/jdk-12.0.1_linux-x64_bin.tar.gz')
     version('11.0.2_9', sha256='7b4fd8ffcf53e9ff699d964a80e4abf9706b5bdb5644a765c2b96f99e3a2cdc8', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/11.0.2+9/f51449fcd52f4d52b93a989c5c56ed3c/jdk-11.0.2_linux-x64_bin.tar.gz')
     version('11.0.1_13', sha256='e7fd856bacad04b6dbf3606094b6a81fa9930d6dbb044bbd787be7ea93abc885', curl_options=curl_options,
@@ -65,6 +67,9 @@ class Jdk(Package):
     provides('java@9',  when='@9.0:9.999')
     provides('java@8',  when='@1.8.0:1.8.999')
     provides('java@7',  when='@1.7.0:1.7.999')
+
+    conflicts('target=ppc64', msg='jdk is only available for x86_64')
+    conflicts('target=ppc64le', msg='jdk is only available for x86_64')
 
     # FIXME:
     # 1. `extends('java')` doesn't work, you need to use `extends('jdk')`

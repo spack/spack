@@ -6,6 +6,7 @@
 
 import os
 import sys
+import llnl.util.tty as tty
 
 
 def _verbs_dir():
@@ -44,6 +45,18 @@ def _mxm_dir():
         return None
 
 
+def _tm_dir():
+    """Look for default directory where the PBS/TM package is
+    installed. Return None if not found.
+    """
+    # /opt/pbs from PBS 18+; make this more flexible in the future
+    paths_list = ("/opt/pbs", )
+    for path in paths_list:
+        if os.path.isdir(path) and os.path.isfile(path + "/include/tm.h"):
+            return path
+    return None
+
+
 class Openmpi(AutotoolsPackage):
     """An open source Message Passing Interface implementation.
 
@@ -65,19 +78,22 @@ class Openmpi(AutotoolsPackage):
     version('develop', branch='master')
 
     # Current
-    version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
+    version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
 
     # Still supported
-    version('3.1.3', preferred=True, sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
+    version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
+    version('3.1.4', preferred=True, sha256='957b5547bc61fd53d08af0713d0eaa5cd6ee3d58')  # libmpi.so.40.10.4
+    version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
     version('3.1.2', sha256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
     version('3.1.1', sha256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
     version('3.1.0', sha256='b25c044124cc859c0b4e6e825574f9439a51683af1950f6acda1951f5ccdf06c')  # libmpi.so.40.10.0
+    version('3.0.4', sha256='2ff4db1d3e1860785295ab95b03a2c0f23420cda7c1ae845c419401508a3c7b5')  # libmpi.so.40.00.5
     version('3.0.3', sha256='fb228e42893fe6a912841a94cd8a0c06c517701ae505b73072409218a12cf066')  # libmpi.so.40.00.4
     version('3.0.2', sha256='d2eea2af48c1076c53cabac0a1f12272d7470729c4e1cb8b9c2ccd1985b2fb06')  # libmpi.so.40.00.2
     version('3.0.1', sha256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
     version('3.0.0', sha256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
 
-    version('2.1.6', sha256='98b8e1b8597bbec586a0da79fcd54a405388190247aa04d48e8c40944d4ca86e')  # libmpi.20.20.10.3
+    version('2.1.6', sha256='98b8e1b8597bbec586a0da79fcd54a405388190247aa04d48e8c40944d4ca86e')  # libmpi.so.20.10.3
     version('2.1.5', sha256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
     version('2.1.4', sha256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
     version('2.1.3', sha256='285b3e2a69ed670415524474496043ecc61498f2c63feb48575f8469354d79e8')  # libmpi.so.20.10.2
@@ -181,18 +197,22 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
-    fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
     variant(
-        'fabrics', values=auto_or_any_combination_of(*fabrics).with_default(
-            'auto' if _verbs_dir() is None else 'verbs'
-        ),
-        description="List of fabrics that are enabled",
+        'fabrics',
+        values=disjoint_sets(
+            ('auto',), ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
+        ).with_non_feature_values('auto', 'none'),
+        description="List of fabrics that are enabled; "
+        "'auto' lets openmpi determine",
     )
 
-    schedulers = ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
     variant(
-        'schedulers', values=auto_or_any_combination_of(*schedulers),
-        description='List of schedulers for which support is enabled'
+        'schedulers',
+        values=disjoint_sets(
+            ('auto',), ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
+        ).with_non_feature_values('auto', 'none'),
+        description="List of schedulers for which support is enabled; "
+        "'auto' lets openmpi determine",
     )
 
     # Additional support options
@@ -251,6 +271,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('ucx', when='fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
     depends_on('slurm', when='schedulers=slurm')
+    depends_on('lsf', when='schedulers=lsf')
     depends_on('binutils+libiberty', when='fabrics=mxm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
@@ -259,6 +280,9 @@ class Openmpi(AutotoolsPackage):
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
+    conflicts('schedulers=loadleveler', when='@3.0.0:',
+              msg='The loadleveler scheduler is not supported with '
+              'openmpi(>=3.0.0).')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
@@ -332,7 +356,18 @@ class Openmpi(AutotoolsPackage):
             return '--without-{0}'.format(opt)
         line = '--with-{0}'.format(opt)
         path = _mxm_dir()
-        if (path is not None):
+        if path is not None:
+            line += '={0}'.format(path)
+        return line
+
+    def with_or_without_tm(self, activated):
+        opt = 'tm'
+        # If the option has not been activated return --without-tm
+        if not activated:
+            return '--without-{0}'.format(opt)
+        line = '--with-{0}'.format(opt)
+        path = _tm_dir()
+        if path is not None:
             line += '={0}'.format(path)
         return line
 
@@ -386,10 +421,18 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('@3.0.0:', strict=True):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
 
+        # some scientific packages ignore deprecated/remove symbols. Re-enable
+        # them for now, for discussion see
+        # https://github.com/open-mpi/ompi/issues/6114#issuecomment-446279495
+        if spec.satisfies('@4.0.1:'):
+            config_args.append('--enable-mpi1-compatibility')
+
         # Fabrics
-        config_args.extend(self.with_or_without('fabrics'))
+        if 'fabrics=auto' not in spec:
+            config_args.extend(self.with_or_without('fabrics'))
         # Schedulers
-        config_args.extend(self.with_or_without('schedulers'))
+        if 'schedulers=auto' not in spec:
+            config_args.extend(self.with_or_without('schedulers'))
 
         config_args.extend(self.enable_or_disable('memchecker'))
         if spec.satisfies('+memchecker', strict=True):
@@ -478,7 +521,17 @@ class Openmpi(AutotoolsPackage):
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
         if '@1.6: ~legacylaunchers schedulers=slurm' in self.spec:
-            os.remove(self.prefix.bin.mpirun)
-            os.remove(self.prefix.bin.mpiexec)
-            os.remove(self.prefix.bin.shmemrun)
-            os.remove(self.prefix.bin.oshrun)
+            exe_list = [self.prefix.bin.mpirun,
+                        self.prefix.bin.mpiexec,
+                        self.prefix.bin.shmemrun,
+                        self.prefix.bin.oshrun
+                        ]
+            script_stub = join_path(os.path.dirname(__file__),
+                                    "nolegacylaunchers.sh")
+            for exe in exe_list:
+                try:
+                    os.remove(exe)
+                except OSError:
+                    tty.debug("File not present: " + exe)
+                else:
+                    copy(script_stub, exe)

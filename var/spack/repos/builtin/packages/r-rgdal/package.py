@@ -26,4 +26,4 @@ class RRgdal(RPackage):
 
     depends_on('r-sp', type=('build', 'run'))
     depends_on('gdal')
-    depends_on('proj')
+    depends_on('proj@:5')

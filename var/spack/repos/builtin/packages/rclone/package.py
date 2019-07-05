@@ -17,6 +17,10 @@ class Rclone(Package):
 
     depends_on("go", type='build')
 
+    def setup_environment(self, spack_env, run_env):
+        # Point GOPATH at the top of the staging dir for the build step.
+        spack_env.prepend_path('GOPATH', self.stage.path)
+
     def install(self, spec, prefix):
         go('build')
         mkdirp(prefix.bin)

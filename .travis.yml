@@ -29,17 +29,12 @@ jobs:
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '2.7'
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
-    - python: '3.4'
-      sudo: required
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.5'
       sudo: required
       os: linux
@@ -54,33 +49,15 @@ jobs:
       sudo: required
       os: linux
       language: python
-      env: TEST_SUITE=unit
-      addons:
-        apt:
-          packages:
-          - cmake
-          - gfortran
-          - graphviz
-          - gnupg2
-          - kcov
-          - mercurial
-          - ninja-build
-          - perl
-          - perl-base
-          - realpath
-          - patchelf
-          - r-base
-          - r-base-core
-          - r-base-dev
-
-    - python: '3.6'
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
+    - python: '3.7'
       sudo: required
       os: linux
       language: python
       env: TEST_SUITE=doc
     - os: osx
       language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7 ]
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
@@ -130,8 +107,6 @@ jobs:
       env: TEST_SUITE=docker
   allow_failures:
     - env: TEST_SUITE=docker
-    # temporary Python 2.6 exception while we figure out why Travis is hanging
-    - python: '2.6'
 
 stages:
   - 'style checks'
@@ -166,6 +141,7 @@ addons:
       - r-base
       - r-base-core
       - r-base-dev
+      - zsh
   # for Mac builds, we use Homebrew
   homebrew:
     packages:
@@ -173,6 +149,9 @@ addons:
       - gcc
       - gnupg2
       - ccache
+      - dash
+      - kcov
+    update: true
 
 # ~/.ccache needs to be cached directly as Travis is not taking care of it
 # (possibly because we use 'language: python' and not 'language: c')
@@ -211,7 +190,7 @@ before_script:
   - git config --global user.name "Test User"
 
   # Need this to be able to compute the list of changed files
-  - git fetch origin develop:develop
+  - git fetch origin ${TRAVIS_BRANCH}:${TRAVIS_BRANCH}
 
   # Set up external deps for build tests, b/c they take too long to compile
   - if [[ "$TEST_SUITE" == "build" ]]; then
@@ -229,11 +208,13 @@ script:
 
 after_success:
   - ccache -s
-  - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
-        codecov --env PYTHON_VERSION
-                --required
-                --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
-    fi
+  - case "$TEST_SUITE" in
+        unit)
+            codecov --env PYTHON_VERSION
+                    --required
+                    --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
+            ;;
+    esac
 
 #=============================================================================
 # Notifications

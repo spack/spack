@@ -12,17 +12,27 @@ import spack.store
 from spack.spec import Spec
 
 
-def test_install_and_uninstall(install_mockery, mock_fetch):
+def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
 
     # Get the package
-    pkg = spack.repo.get(spec)
+    pkg = spec.package
+
+    def find_nothing(*args):
+        raise spack.repo.UnknownPackageError(
+            'Repo package access is disabled for test')
 
     try:
         pkg.do_install()
+
+        spec._package = None
+        monkeypatch.setattr(spack.repo, 'get', find_nothing)
+        with pytest.raises(spack.repo.UnknownPackageError):
+            spec.package
+
         pkg.do_uninstall()
     except Exception:
         pkg.remove_prefix()
@@ -123,6 +133,77 @@ def test_installed_dependency_request_conflicts(
         'conflicting-dependent ^/' + dependency_hash)
     with pytest.raises(spack.spec.UnsatisfiableSpecError):
         dependent.concretize()
+
+
+def test_installed_upstream_external(
+        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
+    """Check that when a dependency package is recorded as installed in
+       an upstream database that it is not reinstalled.
+    """
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    upstream_layout = gen_mock_layout('/a/')
+
+    dependency = spack.spec.Spec('externaltool')
+    dependency.concretize()
+    prepared_db.add(dependency, upstream_layout)
+
+    try:
+        original_db = spack.store.db
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        spack.store.db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        dependent = spack.spec.Spec('externaltest')
+        dependent.concretize()
+
+        new_dependency = dependent['externaltool']
+        assert new_dependency.external
+        assert new_dependency.prefix == '/path/to/external_tool'
+
+        dependent.package.do_install()
+
+        assert not os.path.exists(new_dependency.prefix)
+        assert os.path.exists(dependent.prefix)
+    finally:
+        spack.store.db = original_db
+
+
+def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
+                            gen_mock_layout):
+    """Check that when a dependency package is recorded as installed in
+       an upstream database that it is not reinstalled.
+    """
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    upstream_layout = gen_mock_layout('/a/')
+
+    dependency = spack.spec.Spec('dependency-install')
+    dependency.concretize()
+    prepared_db.add(dependency, upstream_layout)
+
+    try:
+        original_db = spack.store.db
+        downstream_db_root = str(
+            tmpdir_factory.mktemp('mock_downstream_db_root'))
+        spack.store.db = spack.database.Database(
+            downstream_db_root, upstream_dbs=[prepared_db])
+        dependent = spack.spec.Spec('dependent-install')
+        dependent.concretize()
+
+        new_dependency = dependent['dependency-install']
+        assert new_dependency.package.installed_upstream
+        assert (new_dependency.prefix ==
+                upstream_layout.path_for_spec(dependency))
+
+        dependent.package.do_install()
+
+        assert not os.path.exists(new_dependency.prefix)
+        assert os.path.exists(dependent.prefix)
+    finally:
+        spack.store.db = original_db
 
 
 @pytest.mark.disable_clean_stage_check

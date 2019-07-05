@@ -94,7 +94,9 @@ from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs, memoized
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
+import llnl.util.tty as tty
 
+import spack.paths
 import spack.architecture
 import spack.compiler
 import spack.compilers as compilers
@@ -107,7 +109,8 @@ import spack.util.spack_yaml as syaml
 
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.util.module_cmd import get_path_from_module, load_module
-from spack.error import SpackError, SpecError, UnsatisfiableSpecError
+from spack.error import NoLibrariesError, NoHeadersError
+from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
@@ -125,7 +128,6 @@ from ruamel.yaml.error import MarkedYAMLError
 __all__ = [
     'Spec',
     'parse',
-    'parse_anonymous_spec',
     'SpecError',
     'SpecParseError',
     'DuplicateDependencyError',
@@ -186,6 +188,10 @@ _any_version = VersionList([':'])
 #: Max integer helps avoid passing too large a value to cyaml.
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
+default_format = '{name}{@version}'
+default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
+default_format += '{variants}{arch=architecture}'
+
 
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
@@ -220,7 +226,7 @@ class ArchSpec(object):
     def __init__(self, *args):
         to_attr_string = lambda s: str(s) if s and s != "None" else None
 
-        self.platform, self.platform_os, self.target = (None, None, None)
+        self.platform, self.os, self.target = (None, None, None)
 
         if len(args) == 1:
             spec_like = args[0]
@@ -230,13 +236,13 @@ class ArchSpec(object):
                 spec_fields = spec_like.split("-")
 
                 if len(spec_fields) == 3:
-                    self.platform, self.platform_os, self.target = tuple(
+                    self.platform, self.os, self.target = tuple(
                         to_attr_string(f) for f in spec_fields)
                 else:
                     raise ValueError("%s is an invalid arch spec" % spec_like)
         elif len(args) == 3:
             self.platform = to_attr_string(args[0])
-            self.platform_os = to_attr_string(args[1])
+            self.os = to_attr_string(args[1])
             self.target = to_attr_string(args[2])
         elif len(args) != 0:
             raise TypeError("Can't make arch spec from %s" % args)
@@ -247,11 +253,11 @@ class ArchSpec(object):
         return ArchSpec(spec_like)
 
     def _cmp_key(self):
-        return (self.platform, self.platform_os, self.target)
+        return (self.platform, self.os, self.target)
 
     def _dup(self, other):
         self.platform = other.platform
-        self.platform_os = other.platform_os
+        self.os = other.os
         self.target = other.target
 
     @property
@@ -268,11 +274,11 @@ class ArchSpec(object):
         self._platform = value
 
     @property
-    def platform_os(self):
-        return self._platform_os
+    def os(self):
+        return self._os
 
-    @platform_os.setter
-    def platform_os(self, value):
+    @os.setter
+    def os(self, value):
         """ The OS of the architecture spec will update the platform field
             if the OS is set to one of the reserved OS types so that the
             default OS type can be resolved.  Since the reserved OS
@@ -294,7 +300,7 @@ class ArchSpec(object):
             spec_platform = spack.architecture.get_platform(self.platform)
             value = str(spec_platform.operating_system(value))
 
-        self._platform_os = value
+        self._os = value
 
     @property
     def target(self):
@@ -368,13 +374,13 @@ class ArchSpec(object):
         """Returns a dictionary that can be used for field comparison."""
         return dict([
             ('platform', self.platform),
-            ('platform_os', self.platform_os),
+            ('os', self.os),
             ('target', self.target)])
 
     def to_dict(self):
         d = syaml_dict([
             ('platform', self.platform),
-            ('platform_os', self.platform_os),
+            ('platform_os', self.os),
             ('target', self.target)])
         return syaml_dict([('arch', d)])
 
@@ -396,10 +402,13 @@ class ArchSpec(object):
             return ArchSpec('spack09', 'unknown', d['arch'])
 
         d = d['arch']
-        return ArchSpec(d['platform'], d['platform_os'], d['target'])
+        if 'platform_os' in d:
+            return ArchSpec(d['platform'], d['platform_os'], d['target'])
+        else:
+            return ArchSpec(d['platform'], d['os'], d['target'])
 
     def __str__(self):
-        return "%s-%s-%s" % (self.platform, self.platform_os, self.target)
+        return "%s-%s-%s" % (self.platform, self.os, self.target)
 
     def __repr__(self):
         return str(self)
@@ -834,10 +843,10 @@ class ForwardQueryToPackage(object):
         # properties defined and no default handler, or that all callbacks
         # raised AttributeError. In this case, we raise AttributeError with an
         # appropriate message.
-        fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
+        fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'
         fmt += '\tspec : \'{spec}\'\n'
         fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
-        fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
+        fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'
         message = fmt.format(
             name=pkg.name,
             query=self.attribute_name,
@@ -1003,11 +1012,11 @@ class Spec(object):
         if name == 'arch' or name == 'architecture':
             parts = tuple(value.split('-'))
             plat, os, tgt = parts if len(parts) == 3 else (None, None, value)
-            self._set_architecture(platform=plat, platform_os=os, target=tgt)
+            self._set_architecture(platform=plat, os=os, target=tgt)
         elif name == 'platform':
             self._set_architecture(platform=value)
         elif name == 'os' or name == 'operating_system':
-            self._set_architecture(platform_os=value)
+            self._set_architecture(os=value)
         elif name == 'target':
             self._set_architecture(target=value)
         elif name in valid_flags:
@@ -1025,7 +1034,7 @@ class Spec(object):
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
-        arch_attrs = ['platform', 'platform_os', 'target']
+        arch_attrs = ['platform', 'os', 'target']
         if self.architecture and self.architecture.concrete:
             raise DuplicateArchitectureError(
                 "Spec for '%s' cannot have two architectures." % self.name)
@@ -1257,17 +1266,29 @@ class Spec(object):
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
            instead of completely enumerated."""
-        return self.format('$_$@$%@$+$=$/')
+        spec_format = '{name}{@version}{%compiler}'
+        spec_format += '{variants}{arch=architecture}{/hash:7}'
+        return self.format(spec_format)
 
     @property
     def cshort_spec(self):
         """Returns an auto-colorized version of ``self.short_spec``."""
-        return self.cformat('$_$@$%@$+$=$/')
+        spec_format = '{name}{@version}{%compiler}'
+        spec_format += '{variants}{arch=architecture}{/hash:7}'
+        return self.cformat(spec_format)
 
     @property
     def prefix(self):
+        if not self._concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+
         if self._prefix is None:
-            self.prefix = spack.store.layout.path_for_spec(self)
+            upstream, record = spack.store.db.query_by_spec_hash(
+                self.dag_hash())
+            if record and record.path:
+                self.prefix = record.path
+            else:
+                self.prefix = spack.store.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
@@ -1701,6 +1722,7 @@ class Spec(object):
             data = sjson.load(stream)
             return Spec.from_dict(data)
         except Exception as e:
+            tty.debug(e)
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
     def _concretize_helper(self, presets=None, visited=None):
@@ -1913,6 +1935,9 @@ class Spec(object):
             raise InvalidDependencyError(
                 self.name + " does not depend on " + comma_or(extra))
 
+        # This dictionary will store object IDs rather than Specs as keys
+        # since the Spec __hash__ will change as patches are added to them
+        spec_to_patches = {}
         for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
@@ -1933,16 +1958,12 @@ class Spec(object):
             for cond, patch_list in s.package_class.patches.items():
                 if s.satisfies(cond):
                     for patch in patch_list:
-                        patches.append(patch.sha256)
+                        patches.append(patch)
             if patches:
-                mvar = s.variants.setdefault(
-                    'patches', MultiValuedVariant('patches', ())
-                )
-                mvar.value = patches
-                # FIXME: Monkey patches mvar to store patches order
-                mvar._patches_in_order_of_appearance = patches
+                spec_to_patches[id(s)] = patches
 
-        # Apply patches required on dependencies by depends_on(..., patch=...)
+        # Also record all patches required on dependencies by
+        # depends_on(..., patch=...)
         for dspec in self.traverse_edges(deptype=all,
                                          cover='edges', root=False):
             pkg_deps = dspec.parent.package_class.dependencies
@@ -1958,16 +1979,29 @@ class Spec(object):
                     for pcond, patch_list in dependency.patches.items():
                         if dspec.spec.satisfies(pcond):
                             for patch in patch_list:
-                                patches.append(patch.sha256)
+                                patches.append(patch)
             if patches:
-                mvar = dspec.spec.variants.setdefault(
-                    'patches', MultiValuedVariant('patches', ())
-                )
-                mvar.value = mvar.value + tuple(patches)
-                # FIXME: Monkey patches mvar to store patches order
-                p = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = list(
-                    dedupe(p + patches))
+                all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
+                all_patches.extend(patches)
+
+        for spec in self.traverse():
+            if id(spec) not in spec_to_patches:
+                continue
+
+            patches = list(dedupe(spec_to_patches[id(spec)]))
+            mvar = spec.variants.setdefault(
+                'patches', MultiValuedVariant('patches', ())
+            )
+            mvar.value = tuple(p.sha256 for p in patches)
+            # FIXME: Monkey patches mvar to store patches order
+            full_order_keys = list(tuple(p.ordering_key) + (p.sha256,) for p
+                                   in patches)
+            ordered_hashes = sorted(full_order_keys)
+            tty.debug("Ordered hashes [{0}]: ".format(spec.name) +
+                      ', '.join('/'.join(str(e) for e in t)
+                                for t in ordered_hashes))
+            mvar._patches_in_order_of_appearance = list(
+                t[-1] for t in ordered_hashes)
 
         for s in self.traverse():
             if s.external_module and not s.external_path:
@@ -2021,7 +2055,11 @@ class Spec(object):
            without modifying the spec it's called on.
 
            If copy is False, clears this spec's dependencies and
-           returns them.
+           returns them. This disconnects all dependency links including
+           transitive dependencies, except for concrete specs: if a spec
+           is concrete it will not be disconnected from its dependencies
+           (although a non-concrete spec with concrete dependencies will
+           be disconnected from those dependencies).
         """
         copy = kwargs.get('copy', True)
 
@@ -2039,8 +2077,9 @@ class Spec(object):
 
             if not copy:
                 for spec in flat_deps.values():
-                    spec._dependencies.clear()
-                    spec._dependents.clear()
+                    if not spec.concrete:
+                        spec._dependencies.clear()
+                        spec._dependents.clear()
                 self._dependencies.clear()
 
             return flat_deps
@@ -2239,9 +2278,15 @@ class Spec(object):
             return False
         visited.add(self.name)
 
-        # if we descend into a virtual spec, there's nothing more
+        # If we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
         if self.virtual or self.external:
+            return False
+
+        # Avoid recursively adding constraints for already-installed packages:
+        # these may include build dependencies which are not needed for this
+        # install (since this package is already installed).
+        if self.concrete and self.package.installed:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -2413,8 +2458,8 @@ class Spec(object):
             if sarch.platform is not None and oarch.platform is not None:
                 if sarch.platform != oarch.platform:
                     raise UnsatisfiableArchitectureSpecError(sarch, oarch)
-            if sarch.platform_os is not None and oarch.platform_os is not None:
-                if sarch.platform_os != oarch.platform_os:
+            if sarch.os is not None and oarch.os is not None:
+                if sarch.os != oarch.os:
                     raise UnsatisfiableArchitectureSpecError(sarch, oarch)
             if sarch.target is not None and oarch.target is not None:
                 if sarch.target != oarch.target:
@@ -2439,8 +2484,8 @@ class Spec(object):
         else:
             if sarch.platform is None or oarch.platform is None:
                 self.architecture.platform = sarch.platform or oarch.platform
-            if sarch.platform_os is None or oarch.platform_os is None:
-                sarch.platform_os = sarch.platform_os or oarch.platform_os
+            if sarch.os is None or oarch.os is None:
+                sarch.os = sarch.os or oarch.os
             if sarch.target is None or oarch.target is None:
                 sarch.target = sarch.target or oarch.target
         changed |= (str(self.architecture) != old)
@@ -2508,17 +2553,9 @@ class Spec(object):
         it.  If it's a string, tries to parse a string.  If that fails, tries
         to parse a local spec from it (i.e. name is assumed to be self's name).
         """
-        if isinstance(spec_like, spack.spec.Spec):
+        if isinstance(spec_like, Spec):
             return spec_like
-
-        try:
-            spec = spack.spec.Spec(spec_like)
-            if not spec.name:
-                raise SpecError(
-                    "anonymous package -- this will always be handled")
-            return spec
-        except SpecError:
-            return parse_anonymous_spec(spec_like, self.name)
+        return Spec(spec_like)
 
     def satisfies(self, other, deps=True, strict=False, strict_deps=False):
         """Determine if this spec satisfies all constraints of another.
@@ -2887,15 +2924,21 @@ class Spec(object):
         return value
 
     def __contains__(self, spec):
-        """True if this spec satisfies the provided spec, or if any dependency
-           does.  If the spec has no name, then we parse this one first.
+        """True if this spec or some dependency satisfies the spec.
+
+        Note: If ``spec`` is anonymous, we ONLY check whether the root
+        satisfies it, NOT dependencies.  This is because most anonymous
+        specs (e.g., ``@1.2``) don't make sense when applied across an
+        entire DAG -- we limit them to the root.
+
         """
         spec = self._autospec(spec)
-        for s in self.traverse():
-            if s.satisfies(spec, strict=True):
-                return True
 
-        return False
+        # if anonymous or same name, we only have to look at the root
+        if not spec.name or spec.name == self.name:
+            return self.satisfies(spec)
+        else:
+            return any(s.satisfies(spec) for s in self.traverse(root=False))
 
     def sorted_deps(self):
         """Return a list of all dependencies sorted by name."""
@@ -2989,10 +3032,245 @@ class Spec(object):
     def colorized(self):
         return colorize_spec(self)
 
-    def format(self, format_string='$_$@$%@+$+$=', **kwargs):
-        """Prints out particular pieces of a spec, depending on what is
+    def format(self, format_string=default_format, **kwargs):
+        r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
+        Using the ``{attribute}`` syntax, any field of the spec can be
+        selected.  Those attributes can be recursive. For example,
+        ``s.format({compiler.version})`` will print the version of the
+        compiler.
+
+        Commonly used attributes of the Spec for format strings include::
+
+            name
+            version
+            compiler
+            compiler.name
+            compiler.version
+            compiler_flags
+            variants
+            architecture
+            architecture.platform
+            architecture.os
+            architecture.target
+            prefix
+
+        Some additional special-case properties can be added::
+
+            hash[:len]    The DAG hash with optional length argument
+            spack_root    The spack root directory
+            spack_install The spack install directory
+
+        The ``^`` sigil can be used to access dependencies by name.
+        ``s.format({^mpi.name})`` will print the name of the MPI
+        implementation in the spec.
+
+        The ``@``, ``%``, ``arch=``, and ``/`` sigils
+        can be used to include the sigil with the printed
+        string. These sigils may only be used with the appropriate
+        attributes, listed below::
+
+            @        ``{@version}``, ``{@compiler.version}``
+            %        ``{%compiler}``, ``{%compiler.name}``
+            arch=    ``{arch=architecture}``
+            /        ``{/hash}``, ``{/hash:7}``, etc
+
+        The ``@`` sigil may also be used for any other property named
+        ``version``. Sigils printed with the attribute string are only
+        printed if the attribute string is non-empty, and are colored
+        according to the color of the attribute.
+
+        Sigils are not used for printing variants. Variants listed by
+        name naturally print with their sigil. For example,
+        ``spec.format('{variants.debug}')`` would print either
+        ``+debug`` or ``~debug`` depending on the name of the
+        variant. Non-boolean variants print as ``name=value``. To
+        print variant names or values independently, use
+        ``spec.format('{variants.<name>.name}')`` or
+        ``spec.format('{variants.<name>.value}')``.
+
+        Spec format strings use ``\`` as the escape character. Use
+        ``\{`` and ``\}`` for literal braces, and ``\\`` for the
+        literal ``\`` character. Also use ``\$`` for the literal ``$``
+        to differentiate from previous, deprecated format string
+        syntax.
+
+        The previous format strings are deprecated. They can still be
+        accessed by the ``old_format`` method. The ``format`` method
+        will call ``old_format`` if the character ``$`` appears
+        unescaped in the format string.
+
+
+        Args:
+            format_string (str): string containing the format to be expanded
+
+        Keyword Args:
+            color (bool): True if returned string is colored
+            transform (dict): maps full-string formats to a callable \
+                that accepts a string and returns another one
+
+        """
+        # If we have an unescaped $ sigil, use the deprecated format strings
+        if re.search(r'[^\\]*\$', format_string):
+            return self.old_format(format_string, **kwargs)
+
+        color = kwargs.get('color', False)
+        transform = kwargs.get('transform', {})
+
+        out = StringIO()
+
+        def write(s, c=None):
+            f = cescape(s)
+            if c is not None:
+                f = color_formats[c] + f + '@.'
+            cwrite(f, stream=out, color=color)
+
+        def write_attribute(spec, attribute, color):
+            current = spec
+            if attribute.startswith('^'):
+                attribute = attribute[1:]
+                dep, attribute = attribute.split('.', 1)
+                current = self[dep]
+
+            if attribute == '':
+                raise SpecFormatStringError(
+                    'Format string attributes must be non-empty')
+            attribute = attribute.lower()
+
+            sig = ''
+            if attribute[0] in '@%/':
+                # color sigils that are inside braces
+                sig = attribute[0]
+                attribute = attribute[1:]
+            elif attribute.startswith('arch='):
+                sig = ' arch='  # include space as separator
+                attribute = attribute[5:]
+
+            parts = attribute.split('.')
+            assert parts
+
+            # check that the sigil is valid for the attribute.
+            if sig == '@' and parts[-1] not in ('versions', 'version'):
+                raise SpecFormatSigilError(sig, 'versions', attribute)
+            elif sig == '%' and attribute not in ('compiler', 'compiler.name'):
+                raise SpecFormatSigilError(sig, 'compilers', attribute)
+            elif sig == '/' and not re.match(r'hash(:\d+)?$', attribute):
+                raise SpecFormatSigilError(sig, 'DAG hashes', attribute)
+            elif sig == ' arch=' and attribute not in ('architecture', 'arch'):
+                raise SpecFormatSigilError(sig, 'the architecture', attribute)
+
+            # find the morph function for our attribute
+            morph = transform.get(attribute, lambda s, x: x)
+
+            # Special cases for non-spec attributes and hashes.
+            # These must be the only non-dep component of the format attribute
+            if attribute == 'spack_root':
+                write(morph(spec, spack.paths.spack_root))
+                return
+            elif attribute == 'spack_install':
+                write(morph(spec, spack.store.layout.root))
+                return
+            elif re.match(r'hash(:\d)?', attribute):
+                col = '#'
+                if ':' in attribute:
+                    _, length = attribute.split(':')
+                    write(sig + morph(spec, spec.dag_hash(int(length))), col)
+                else:
+                    write(sig + morph(spec, spec.dag_hash()), col)
+                return
+
+            # Iterate over components using getattr to get next element
+            for idx, part in enumerate(parts):
+                if not part:
+                    raise SpecFormatStringError(
+                        'Format string attributes must be non-empty'
+                    )
+                if part.startswith('_'):
+                    raise SpecFormatStringError(
+                        'Attempted to format private attribute'
+                    )
+                else:
+                    if isinstance(current, VariantMap):
+                        # subscript instead of getattr for variant names
+                        current = current[part]
+                    else:
+                        # aliases
+                        if part == 'arch':
+                            part = 'architecture'
+                        elif part == 'version':
+                            # Version requires concrete spec, versions does not
+                            # when concrete, they print the same thing
+                            part = 'versions'
+                        try:
+                            current = getattr(current, part)
+                        except AttributeError:
+                            parent = '.'.join(parts[:idx])
+                            m = 'Attempted to format attribute %s.' % attribute
+                            m += 'Spec.%s has no attribute %s' % (parent, part)
+                            raise SpecFormatStringError(m)
+                        if isinstance(current, VersionList):
+                            if current == _any_version:
+                                # We don't print empty version lists
+                                return
+
+                    if callable(current):
+                        raise SpecFormatStringError(
+                            'Attempted to format callable object'
+                        )
+                    if not current:
+                        # We're not printing anything
+                        return
+
+            # Set color codes for various attributes
+            col = None
+            if 'variants' in parts:
+                col = '+'
+            elif 'architecture' in parts:
+                col = '='
+            elif 'compiler' in parts or 'compiler_flags' in parts:
+                col = '%'
+            elif 'version' in parts:
+                col = '@'
+
+            # Finally, write the ouptut
+            write(sig + morph(spec, str(current)), col)
+
+        attribute = ''
+        in_attribute = False
+        escape = False
+
+        for c in format_string:
+            if escape:
+                out.write(c)
+                escape = False
+            elif c == '\\':
+                escape = True
+            elif in_attribute:
+                if c == '}':
+                    write_attribute(self, attribute, color)
+                    attribute = ''
+                    in_attribute = False
+                else:
+                    attribute += c
+            else:
+                if c == '}':
+                    raise SpecFormatStringError(
+                        'Encountered closing } before opening {'
+                    )
+                elif c == '{':
+                    in_attribute = True
+                else:
+                    out.write(c)
+        if in_attribute:
+            raise SpecFormatStringError(
+                'Format string terminated while reading attribute.'
+                'Missing terminating }.'
+            )
+        return out.getvalue()
+
+    def old_format(self, format_string='$_$@$%@+$+$=', **kwargs):
+        """
         The format strings you can provide are::
 
             $_   Package name
@@ -3064,6 +3342,7 @@ class Spec(object):
         TODO: allow, e.g., ``$6#`` to customize short hash length
         TODO: allow, e.g., ``$//`` for full hash.
         """
+
         color = kwargs.get('color', False)
 
         # Dictionary of transformations for named tokens
@@ -3197,7 +3476,7 @@ class Spec(object):
                             platform = str(self.architecture.platform)
                             write(fmt % transform(self, platform), '=')
                         elif named_str == "OS":
-                            operating_sys = str(self.architecture.platform_os)
+                            operating_sys = str(self.architecture.os)
                             write(fmt % transform(self, operating_sys), '=')
                         elif named_str == "TARGET":
                             target = str(self.architecture.target)
@@ -3219,7 +3498,7 @@ class Spec(object):
                         hashlen = None
                     out.write(fmt % (self.dag_hash(hashlen)))
                 elif named_str == 'NAMESPACE':
-                    out.write(fmt % transform(self.namespace))
+                    out.write(fmt % transform(self, self.namespace))
                 elif named_str.startswith('DEP:'):
                     _, dep_name, dep_option = named_str.lower().split(':', 2)
                     dep_spec = self[dep_name]
@@ -3281,7 +3560,7 @@ class Spec(object):
         status_fn = kwargs.pop('status_fn', False)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
-        fmt = kwargs.pop('format', '$_$@$%@+$+$=')
+        fmt = kwargs.pop('format', default_format)
         prefix = kwargs.pop('prefix', None)
         show_types = kwargs.pop('show_types', False)
         deptypes = kwargs.pop('deptypes', 'all')
@@ -3302,7 +3581,9 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if status is None:
+                if node.package.installed_upstream:
+                    out += colorize("@g{[^]}  ", color=color)
+                elif status is None:
                     out += colorize("@K{ - }  ", color=color)  # not installed
                 elif status:
                     out += colorize("@g{[+]}  ", color=color)  # installed
@@ -3457,6 +3738,7 @@ class SpecParser(spack.parse.Parser):
                             # We're finding a dependency by hash for an
                             # anonymous spec
                             dep = self.spec_by_hash()
+                            dep = dep.copy(deps=('link', 'run'))
                         else:
                             # We're adding a dependency to the last spec
                             self.expect(ID)
@@ -3493,7 +3775,7 @@ class SpecParser(spack.parse.Parser):
         for spec in specs:
             for s in spec.traverse():
                 if s.architecture and not s.architecture.platform and \
-                        (s.architecture.platform_os or s.architecture.target):
+                        (s.architecture.os or s.architecture.target):
                     s._set_architecture(platform=platform_default)
         return specs
 
@@ -3660,41 +3942,6 @@ def parse(string):
     return SpecParser().parse(string)
 
 
-def parse_anonymous_spec(spec_like, pkg_name):
-    """Allow the user to omit the package name part of a spec if they
-       know what it has to be already.
-
-       e.g., provides('mpi@2', when='@1.9:') says that this package
-       provides MPI-3 when its version is higher than 1.9.
-    """
-    if not isinstance(spec_like, (str, Spec)):
-        raise TypeError('spec must be Spec or spec string.  Found %s'
-                        % type(spec_like))
-
-    if isinstance(spec_like, str):
-        try:
-            anon_spec = Spec(spec_like)
-            if anon_spec.name != pkg_name:
-                raise SpecParseError(spack.parse.ParseError(
-                    "",
-                    "",
-                    "Expected anonymous spec for package %s but found spec for"
-                    "package %s" % (pkg_name, anon_spec.name)))
-        except SpecParseError:
-            anon_spec = Spec(pkg_name + ' ' + spec_like)
-            if anon_spec.name != pkg_name:
-                raise ValueError(
-                    "Invalid spec for package %s: %s" % (pkg_name, spec_like))
-    else:
-        anon_spec = spec_like.copy()
-
-    if anon_spec.name != pkg_name:
-        raise ValueError("Spec name '%s' must match package name '%s'"
-                         % (anon_spec.name, pkg_name))
-
-    return anon_spec
-
-
 def save_dependency_spec_yamls(
         root_spec_as_yaml, output_directory, dependencies=None):
     """Given a root spec (represented as a yaml object), index it with a subset
@@ -3746,14 +3993,6 @@ class DuplicateDependencyError(SpecError):
 
 class DuplicateCompilerSpecError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
-
-
-class NoLibrariesError(SpackError):
-    """Raised when package libraries are requested but cannot be found"""
-
-
-class NoHeadersError(SpackError):
-    """Raised when package headers are requested but cannot be found"""
 
 
 class UnsupportedCompilerError(SpecError):
@@ -3854,7 +4093,9 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 
 class AmbiguousHashError(SpecError):
     def __init__(self, msg, *specs):
-        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$/')
+        spec_fmt = '{namespace}.{name}{@version}{%compiler}{compiler_flags}'
+        spec_fmt += '{variants}{arch=architecture}{/hash:7}'
+        specs_str = '\n  ' + '\n  '.join(spec.format(spec_fmt)
                                          for spec in specs)
         super(AmbiguousHashError, self).__init__(msg + specs_str)
 
@@ -3879,6 +4120,18 @@ class RedundantSpecError(SpecError):
             "Attempting to add %s to spec %s which is already concrete."
             " This is likely the result of adding to a spec specified by hash."
             % (addition, spec))
+
+
+class SpecFormatStringError(SpecError):
+    """Called for errors in Spec format strings."""
+
+
+class SpecFormatSigilError(SpecFormatStringError):
+    """Called for mismatched sigils and attributes in format strings"""
+    def __init__(self, sigil, requirement, used):
+        msg = 'The sigil %s may only be used for %s.' % (sigil, requirement)
+        msg += ' It was used with the attribute %s.' % used
+        super(SpecFormatSigilError, self).__init__(msg)
 
 
 class ConflictsInSpecError(SpecError, RuntimeError):

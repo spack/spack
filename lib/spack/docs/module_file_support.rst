@@ -355,14 +355,14 @@ list of environment modifications.
 
   with the following snippet:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
+  .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/r/package.py
      :pyobject: R.setup_environment
 
   The ``r`` package also knows which environment variable should be modified
   to make language extensions provided by other packages available, and modifies
   it appropriately in the override of the second method:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
+  .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/r/package.py
      :pyobject: R.setup_dependent_environment
 
 .. _modules-yaml:
@@ -374,7 +374,7 @@ Write a configuration file
 The configuration files that control module generation behavior
 are named ``modules.yaml``. The default configuration:
 
-.. literalinclude:: ../../../etc/spack/defaults/modules.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/modules.yaml
    :language: yaml
 
 activates the hooks to generate ``tcl`` and ``dotkit`` module files and inspects
@@ -535,10 +535,10 @@ most likely via the ``+blas`` variant specification.
 
        modules:
          tcl:
-           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+           naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
            all:
              conflict:
-               - '${PACKAGE}'
+               - '{name}'
                - 'intel/14.0.1'
 
      will create module files that will conflict with ``intel/14.0.1`` and with the
@@ -599,6 +599,9 @@ do so by using the environment blacklist:
 The configuration above will generate dotkit module files that will not contain
 modifications to either ``CPATH`` or ``LIBRARY_PATH`` and environment module
 files that instead will contain these modifications.
+
+
+.. _autoloading-dependencies:
 
 """""""""""""""""""""
 Autoload dependencies

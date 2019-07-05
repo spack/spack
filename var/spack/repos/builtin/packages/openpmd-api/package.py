@@ -16,6 +16,8 @@ class OpenpmdApi(CMakePackage):
 
     version('develop', branch='dev')
 
+    variant('shared', default=True,
+            description='Build a shared version of the library')
     variant('mpi', default=True,
             description='Enable parallel I/O')
     variant('hdf5', default=True,
@@ -43,8 +45,7 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios2@2.3.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.3.0: +mpi', when='+mpi +adios2')
     depends_on('nlohmann-json@3.5.0:', when='+json')
-    # ideally we want 2.3.0+ for full C++11 CT function signature support
-    depends_on('py-pybind11@2.2.4:', when='+python', type='link')
+    depends_on('py-pybind11@2.3.0:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
     depends_on('python@3.5:', when='+python', type=['link', 'test', 'run'])
@@ -55,6 +56,8 @@ class OpenpmdApi(CMakePackage):
         spec = self.spec
 
         args = [
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
             # variants
             '-DopenPMD_USE_MPI:BOOL={0}'.format(
                 'ON' if '+mpi' in spec else 'OFF'),

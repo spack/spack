@@ -5,7 +5,7 @@
 
 """Schema for env.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/env.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/env.py
    :lines: 36-
 """
 from llnl.util.lang import union_dicts
@@ -47,6 +47,9 @@ schema = {
                                 {'type': 'object'},
                             ]
                         }
+                    },
+                    'view': {
+                        'type': ['boolean', 'string']
                     }
                 }
             )

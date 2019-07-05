@@ -5,7 +5,7 @@
 
 """Schema for os-container-mapping.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/os_container_mapping.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/os_container_mapping.py
    :lines: 32-
 """
 

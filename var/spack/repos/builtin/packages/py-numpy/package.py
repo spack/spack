@@ -15,7 +15,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.15.1.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.16.4.zip"
 
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
@@ -26,9 +26,20 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('1.16.4', sha256='7242be12a58fec245ee9734e625964b97cf7e3f2f7d016603f9e56660ce479c7')
+    version('1.16.3', sha256='78a6f89da87eeb48014ec652a65c4ffde370c036d780a995edaeb121d3625621')
     version('1.16.2', sha256='6c692e3879dde0b67a9dc78f9bfb6f61c666b4562fd8619632d7043fb5b691b0')
+    version('1.16.1', sha256='31d3fe5b673e99d33d70cfee2ea8fe8dccd60f265c3ed990873a88647e3dd288')
+    version('1.16.0', sha256='cb189bd98b2e7ac02df389b6212846ab20661f4bafe16b5a70a6f1728c1cc7cb')
+    version('1.15.4', sha256='3d734559db35aa3697dadcea492a423118c5c55d176da2f3be9c98d4803fc2a7')
+    version('1.15.3', sha256='1c0c80e74759fa4942298044274f2c11b08c86230b25b8b819e55e644f5ff2b6')
+    version('1.15.2', sha256='27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1')
     version('1.15.2', sha256='27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1')
     version('1.15.1', '898004d5be091fde59ae353e3008fe9b')
+    version('1.15.0', sha256='f28e73cf18d37a413f7d5de35d024e6b98f14566a10d82100f9dc491a7d449f9')
+    version('1.14.6', sha256='1250edf6f6c43e1d7823f0967416bc18258bb271dc536298eb0ea00a9e45b80a')
+    version('1.14.5', sha256='a4a433b3a264dbc9aa9c7c241e87c0358a503ea6394f8737df1683c7c9a102ac')
+    version('1.14.4', sha256='2185a0f31ecaa0792264fa968c8e0ba6d96acf144b26e2e1d1cd5b77fc11a691')
     version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
     version('1.14.2', '080f01a19707cf467393e426382c7619')
     version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
@@ -38,10 +49,12 @@ class PyNumpy(PythonPackage):
     version('1.13.0', 'fd044f0b8079abeaf5e6d2e93b2c1d03')
     version('1.12.1', 'c75b072a984028ac746a6a332c209a91')
     version('1.12.0', '33e5a84579f31829bbbba084fe0a4300')
+    version('1.11.3', sha256='2e0fc5248246a64628656fe14fcab0a959741a2820e003bd15538226501b82f7')
     version('1.11.2', '8308cc97be154d2f64a2387ea863c2ac')
     version('1.11.1', '5caa3428b24aaa07e72c79d115140e46')
     version('1.11.0', '19ce5c4eb16d663a0713daf0018a3021')
     version('1.10.4', '510ffc322c635511e7be95d225b6bcbb')
+    version('1.9.3',  sha256='baa074bb1c7f9c822122fb81459b7caa5fc49267ca94cca69465c8dcfd63ac79')
     version('1.9.2',  'e80c19d2fb25af576460bb7dac31c59a')
     version('1.9.1',  '223532d8e1bdaff5d30936439701d6e1')
 

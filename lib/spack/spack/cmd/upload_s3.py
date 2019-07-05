@@ -158,7 +158,8 @@ def upload_spec(args):
         try:
             spec = Spec(args.spec)
             spec.concretize()
-        except Exception:
+        except Exception as e:
+            tty.debug(e)
             tty.error('Unable to concrectize spec from string {0}'.format(
                 args.spec))
             sys.exit(1)
@@ -166,7 +167,8 @@ def upload_spec(args):
         try:
             with open(args.spec_yaml, 'r') as fd:
                 spec = Spec.from_yaml(fd.read())
-        except Exception:
+        except Exception as e:
+            tty.debug(e)
             tty.error('Unable to concrectize spec from yaml {0}'.format(
                 args.spec_yaml))
             sys.exit(1)

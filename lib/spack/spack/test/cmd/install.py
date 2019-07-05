@@ -8,6 +8,7 @@ import os
 import filecmp
 import re
 from six.moves import builtins
+import time
 
 import pytest
 
@@ -124,7 +125,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     pkg = spec.package
     pkg.do_install(verbose=True)
 
-    log_file = os.path.join(spec.prefix, '.spack', 'build.out')
+    log_file = os.path.join(spec.prefix, '.spack', 'build.txt')
     with open(log_file) as f:
         out = f.read()
 
@@ -413,7 +414,9 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
     archive_dir = os.path.join(
         spack.store.layout.metadata_path(s), 'archived-files'
     )
-    config_log = os.path.join(archive_dir, 'config.log')
+    config_log = os.path.join(archive_dir,
+                              mock_archive.expanded_archive_basedir,
+                              'config.log')
     assert os.path.exists(config_log)
 
     errors_txt = os.path.join(archive_dir, 'errors.txt')
@@ -466,14 +469,13 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
-                install(
-                    '--log-file=cdash_reports',
-                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
-                    'a')
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                'a')
             report_dir = tmpdir.join('cdash_reports')
             assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('Build.xml')
+            report_file = report_dir.join('a_Build.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
             assert '</Build>' in content
@@ -485,22 +487,43 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
-                install(
-                    '--log-file=cdash_reports',
-                    '--cdash-build=my_custom_build',
-                    '--cdash-site=my_custom_site',
-                    '--cdash-track=my_custom_track',
-                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
-                    'a')
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                '--cdash-build=my_custom_build',
+                '--cdash-site=my_custom_site',
+                '--cdash-track=my_custom_track',
+                'a')
             report_dir = tmpdir.join('cdash_reports')
             assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('Build.xml')
+            report_file = report_dir.join('a_Build.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
-            assert 'Site BuildName="my_custom_build"' in content
+            assert 'Site BuildName="my_custom_build - a"' in content
             assert 'Name="my_custom_site"' in content
             assert '-my_custom_track' in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            cdash_track = 'some_mocked_track'
+            buildstamp_format = "%Y%m%d-%H%M-{0}".format(cdash_track)
+            buildstamp = time.strftime(buildstamp_format,
+                                       time.localtime(int(time.time())))
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                '--cdash-buildstamp={0}'.format(buildstamp),
+                'a')
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('a_Build.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert buildstamp in content
 
 
 @pytest.mark.disable_clean_stage_check
@@ -529,7 +552,7 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
 
             report_dir = tmpdir.join('cdash_reports')
             assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('Configure.xml')
+            report_file = report_dir.join('a_Configure.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
             import re
