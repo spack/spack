@@ -262,6 +262,7 @@ def install(parser, args, **kwargs):
         specs = spack.cmd.parse_specs(
             args.package, concretize=True, tests=tests)
     except SpackError as e:
+        tty.debug(e)
         reporter.concretization_report(e.message)
         raise
 

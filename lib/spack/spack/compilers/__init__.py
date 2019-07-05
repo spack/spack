@@ -6,9 +6,17 @@
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
+import collections
+import itertools
+import multiprocessing.pool
 import os
 
-from llnl.util.lang import list_modules
+import platform as py_platform
+import six
+
+import llnl.util.lang
+import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.paths
 import spack.error
@@ -16,6 +24,7 @@ import spack.spec
 import spack.config
 import spack.architecture
 import spack.util.imp as simp
+from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
 _imported_compilers_module = 'spack.compilers'
@@ -25,6 +34,8 @@ _other_instance_vars = ['modules', 'operating_system', 'environment',
                         'extra_rpaths']
 _cache_config_file = []
 
+# TODO: Caches at module level make it difficult to mock configurations in
+# TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
 _compiler_cache = {}
 
@@ -176,18 +187,55 @@ def all_compiler_specs(scope=None, init_config=True):
             for s in all_compilers_config(scope, init_config)]
 
 
-def find_compilers(*paths):
-    """Return a list of compilers found in the supplied paths.
-       This invokes the find_compilers() method for each operating
-       system associated with the host platform, and appends
-       the compilers detected to a list.
+def find_compilers(path_hints=None):
+    """Returns the list of compilers found in the paths given as arguments.
+
+    Args:
+        path_hints (list or None): list of path hints where to look for.
+            A sensible default based on the ``PATH`` environment variable
+            will be used if the value is None
+
+    Returns:
+        List of compilers found
     """
-    # Find compilers for each operating system class
-    oss = all_os_classes()
-    compiler_lists = []
-    for o in oss:
-        compiler_lists.extend(o.find_compilers(*paths))
-    return compiler_lists
+    if path_hints is None:
+        path_hints = get_path('PATH')
+    default_paths = fs.search_paths_for_executables(*path_hints)
+
+    # To detect the version of the compilers, we dispatch a certain number
+    # of function calls to different workers. Here we construct the list
+    # of arguments for each call.
+    arguments = []
+    for o in all_os_classes():
+        search_paths = getattr(o, 'compiler_search_paths', default_paths)
+        arguments.extend(arguments_to_detect_version_fn(o, search_paths))
+
+    # Here we map the function arguments to the corresponding calls
+    tp = multiprocessing.pool.ThreadPool()
+    try:
+        detected_versions = tp.map(detect_version, arguments)
+    finally:
+        tp.close()
+
+    def valid_version(item):
+        value, error = item
+        if error is None:
+            return True
+        try:
+            # This will fail on Python 2.6 if a non ascii
+            # character is in the error
+            tty.debug(error)
+        except UnicodeEncodeError:
+            pass
+        return False
+
+    def remove_errors(item):
+        value, _ = item
+        return value
+
+    return make_compiler_list(
+        map(remove_errors, filter(valid_version, detected_versions))
+    )
 
 
 def supported_compilers():
@@ -196,8 +244,8 @@ def supported_compilers():
        See available_compilers() to get a list of all the available
        versions of supported compilers.
     """
-    return sorted(
-        name for name in list_modules(spack.paths.compilers_path))
+    return sorted(name for name in
+                  llnl.util.lang.list_modules(spack.paths.compilers_path))
 
 
 @_auto_compiler_spec
@@ -358,6 +406,7 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
     return cfg_file_to_duplicates
 
 
+@llnl.util.lang.memoized
 def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
     assert(supported(compiler_name))
@@ -388,6 +437,192 @@ def all_os_classes():
 
 def all_compiler_types():
     return [class_for_compiler_name(c) for c in supported_compilers()]
+
+
+#: Gathers the attribute values by which a detected compiler is considered
+#: unique in Spack.
+#:
+#:  - os: the operating system
+#:  - compiler_name: the name of the compiler (e.g. 'gcc', 'clang', etc.)
+#:  - version: the version of the compiler
+#:
+CompilerID = collections.namedtuple(
+    'CompilerID', ['os', 'compiler_name', 'version']
+)
+
+#: Variations on a matched compiler name
+NameVariation = collections.namedtuple('NameVariation', ['prefix', 'suffix'])
+
+#: Groups together the arguments needed by `detect_version`. The four entries
+#: in the tuple are:
+#:
+#: - id: An instance of the CompilerID named tuple (version can be set to None
+#:       as it will be detected later)
+#: - variation: a NameVariation for file being tested
+#: - language: compiler language being tested (one of 'cc', 'cxx', 'fc', 'f77')
+#: - path: full path to the executable being tested
+#:
+DetectVersionArgs = collections.namedtuple(
+    'DetectVersionArgs', ['id', 'variation', 'language', 'path']
+)
+
+
+def arguments_to_detect_version_fn(operating_system, paths):
+    """Returns a list of DetectVersionArgs tuples to be used in a
+    corresponding function to detect compiler versions.
+
+    The ``operating_system`` instance can customize the behavior of this
+    function by providing a method called with the same name.
+
+    Args:
+        operating_system (OperatingSystem): the operating system on which
+            we are looking for compilers
+        paths: paths to search for compilers
+
+    Returns:
+        List of DetectVersionArgs tuples. Each item in the list will be later
+        mapped to the corresponding function call to detect the version of the
+        compilers in this OS.
+    """
+    def _default(search_paths):
+        command_arguments = []
+        files_to_be_tested = fs.files_in(*search_paths)
+        for compiler_name in spack.compilers.supported_compilers():
+
+            compiler_cls = class_for_compiler_name(compiler_name)
+
+            for language in ('cc', 'cxx', 'f77', 'fc'):
+
+                # Select only the files matching a regexp
+                for (file, full_path), regexp in itertools.product(
+                        files_to_be_tested,
+                        compiler_cls.search_regexps(language)
+                ):
+                    match = regexp.match(file)
+                    if match:
+                        compiler_id = CompilerID(
+                            operating_system, compiler_name, None
+                        )
+                        detect_version_args = DetectVersionArgs(
+                            id=compiler_id,
+                            variation=NameVariation(*match.groups()),
+                            language=language, path=full_path
+                        )
+                        command_arguments.append(detect_version_args)
+
+        # Reverse it here so that the dict creation (last insert wins)
+        # does not spoil the intended precedence.
+        return reversed(command_arguments)
+
+    fn = getattr(
+        operating_system, 'arguments_to_detect_version_fn', _default
+    )
+    return fn(paths)
+
+
+def detect_version(detect_version_args):
+    """Computes the version of a compiler and adds it to the information
+    passed as input.
+
+    As this function is meant to be executed by worker processes it won't
+    raise any exception but instead will return a (value, error) tuple that
+    needs to be checked by the code dispatching the calls.
+
+    Args:
+        detect_version_args (DetectVersionArgs): information on the
+            compiler for which we should detect the version.
+
+    Returns:
+        A ``(DetectVersionArgs, error)`` tuple. If ``error`` is ``None`` the
+        version of the compiler was computed correctly and the first argument
+        of the tuple will contain it. Otherwise ``error`` is a string
+        containing an explanation on why the version couldn't be computed.
+    """
+    def _default(fn_args):
+        compiler_id = fn_args.id
+        language = fn_args.language
+        compiler_cls = class_for_compiler_name(compiler_id.compiler_name)
+        path = fn_args.path
+
+        # Get compiler names and the callback to detect their versions
+        callback = getattr(compiler_cls, '{0}_version'.format(language))
+
+        try:
+            version = callback(path)
+            if version and six.text_type(version).strip() \
+                    and version != 'unknown':
+                value = fn_args._replace(
+                    id=compiler_id._replace(version=version)
+                )
+                return value, None
+
+            error = "Couldn't get version for compiler {0}".format(path)
+        except spack.util.executable.ProcessError as e:
+            error = "Couldn't get version for compiler {0}\n".format(path) + \
+                    six.text_type(e)
+        except Exception as e:
+            # Catching "Exception" here is fine because it just
+            # means something went wrong running a candidate executable.
+            error = "Error while executing candidate compiler {0}" \
+                    "\n{1}: {2}".format(path, e.__class__.__name__,
+                                        six.text_type(e))
+        return None, error
+
+    operating_system = detect_version_args.id.os
+    fn = getattr(operating_system, 'detect_version', _default)
+    return fn(detect_version_args)
+
+
+def make_compiler_list(detected_versions):
+    """Process a list of detected versions and turn them into a list of
+    compiler specs.
+
+    Args:
+        detected_versions (list): list of DetectVersionArgs containing a
+            valid version
+
+    Returns:
+        list of Compiler objects
+    """
+    # We don't sort on the path of the compiler
+    sort_fn = lambda x: (x.id, x.variation, x.language)
+    compilers_s = sorted(detected_versions, key=sort_fn)
+
+    # Gather items in a dictionary by the id, name variation and language
+    compilers_d = {}
+    for sort_key, group in itertools.groupby(compilers_s, key=sort_fn):
+        compiler_id, name_variation, language = sort_key
+        by_compiler_id = compilers_d.setdefault(compiler_id, {})
+        by_name_variation = by_compiler_id.setdefault(name_variation, {})
+        by_name_variation[language] = next(x.path for x in group)
+
+    # For each unique compiler id select the name variation with most entries
+    # i.e. the one that supports most languages
+    compilers = []
+
+    def _default(cmp_id, paths):
+        operating_system, compiler_name, version = cmp_id
+        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
+        spec = spack.spec.CompilerSpec(compiler_cls.name, version)
+        paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        compiler = compiler_cls(
+            spec, operating_system, py_platform.machine(), paths
+        )
+        return [compiler]
+
+    for compiler_id, by_compiler_id in compilers_d.items():
+        _, selected_name_variation = max(
+            (len(by_compiler_id[variation]), variation)
+            for variation in by_compiler_id
+        )
+
+        # Add it to the list of compilers
+        selected = by_compiler_id[selected_name_variation]
+        operating_system, _, _ = compiler_id
+        make_compilers = getattr(operating_system, 'make_compilers', _default)
+        compilers.extend(make_compilers(compiler_id, selected))
+
+    return compilers
 
 
 class InvalidCompilerConfigurationError(spack.error.SpackError):

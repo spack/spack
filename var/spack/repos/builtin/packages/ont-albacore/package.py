@@ -25,7 +25,7 @@ class OntAlbacore(Package):
     depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
     depends_on('py-setuptools',        type=('build', 'run'))
     depends_on('py-numpy@1.13.0',      type=('build', 'run'))
-    depends_on('py-dateutil',          type=('build', 'run'))
+    depends_on('py-python-dateutil',   type=('build', 'run'))
     depends_on('py-h5py',              type=('build', 'run'))
     depends_on('py-ont-fast5-api',     type=('build', 'run'))
     depends_on('py-pip',               type=('build'))

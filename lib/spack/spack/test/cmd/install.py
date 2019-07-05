@@ -125,7 +125,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     pkg = spec.package
     pkg.do_install(verbose=True)
 
-    log_file = os.path.join(spec.prefix, '.spack', 'build.out')
+    log_file = os.path.join(spec.prefix, '.spack', 'build.txt')
     with open(log_file) as f:
         out = f.read()
 

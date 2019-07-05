@@ -76,6 +76,11 @@ class Xrootd(CMakePackage):
             format('ON' if '+readline' in spec else 'OFF'),
             '-DENABLE_CEPH:BOOL=OFF'
         ]
+        # see https://github.com/spack/spack/pull/11581
+        if '+python' in self.spec:
+            options.append('-DPYTHON_EXECUTABLE=%s' %
+                           spec['python'].command.path)
+
         return options
 
     def setup_environment(self, spack_env, run_env):

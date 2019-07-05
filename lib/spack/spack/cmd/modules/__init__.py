@@ -15,6 +15,7 @@ from llnl.util import filesystem, tty
 import spack.cmd
 import spack.modules
 import spack.repo
+import spack.modules.common
 
 import spack.cmd.common.arguments as arguments
 
@@ -162,49 +163,24 @@ def loads(module_type, specs, args, out=sys.stdout):
 
 
 def find(module_type, specs, args):
-    """Returns the module file "use" name if there's a single match. Raises
-    error messages otherwise.
-    """
+    """Retrieve paths or use names of module files"""
 
-    spec = one_spec_or_raise(specs)
+    single_spec = one_spec_or_raise(specs)
 
-    if spec.package.installed_upstream:
-        module = spack.modules.common.upstream_module(spec, module_type)
-        if module:
-            print(module.path)
-        return
-
-    # Check if the module file is present
-    def module_exists(spec):
-        writer = spack.modules.module_types[module_type](spec)
-        return os.path.isfile(writer.layout.filename)
-
-    if not module_exists(spec):
-        msg = 'Even though {1} is installed, '
-        msg += 'no {0} module has been generated for it.'
-        tty.die(msg.format(module_type, spec))
-
-    # Check if we want to recurse and load all dependencies. In that case
-    # modify the list of specs adding all the dependencies in post order
     if args.recurse_dependencies:
-        specs = [
-            item for item in spec.traverse(order='post', cover='nodes')
-            if module_exists(item)
-        ]
+        specs_to_retrieve = list(
+            single_spec.traverse(order='post', cover='nodes',
+                                 deptype=('link', 'run')))
+    else:
+        specs_to_retrieve = [single_spec]
 
-    # ... and if it is print its use name or full-path if requested
-    def module_str(specs):
-        modules = []
-        for x in specs:
-            writer = spack.modules.module_types[module_type](x)
-            if args.full_path:
-                modules.append(writer.layout.filename)
-            else:
-                modules.append(writer.layout.use_name)
-
-        return ' '.join(modules)
-
-    print(module_str(specs))
+    try:
+        modules = [spack.modules.common.get_module(module_type, spec,
+                                                   args.full_path)
+                   for spec in specs_to_retrieve]
+    except spack.modules.common.ModuleNotFoundError as e:
+        tty.die(e.message)
+    print(' '.join(modules))
 
 
 def rm(module_type, specs, args):
@@ -304,6 +280,7 @@ def refresh(module_type, specs, args):
         try:
             x.write(overwrite=True)
         except Exception as e:
+            tty.debug(e)
             msg = 'Could not write module file [{0}]'
             tty.warn(msg.format(x.layout.filename))
             tty.warn('\t--> {0} <--'.format(str(e)))

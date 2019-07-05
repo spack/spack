@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import glob
 
 
 class Repeatmasker(Package):
@@ -71,6 +72,11 @@ class Repeatmasker(Package):
                                self.spec['ncbi-rmblastn'].prefix.bin,
                                'Y'])
 
+        # set non-default HMMER search
+        config_answers.extend(['3',
+                               self.spec['hmmer'].prefix,
+                               'N'])
+
         # end configuration
         config_answers.append('5')
 
@@ -82,5 +88,10 @@ class Repeatmasker(Package):
         with open(config_answers_filename, 'r') as f:
             perl = which('perl')
             perl('configure', input=f)
+
+        # fix perl paths
+        # every sbang points to perl, so a regex will suffice
+        for f in glob.glob('*.pm'):
+            filter_file('#!.*', '#!%s' % spec['perl'].command, f)
 
         install_tree('.', prefix.bin)

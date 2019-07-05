@@ -34,14 +34,14 @@ class IntelXed(Package):
     version('develop', branch='master')
     resource(name='mbuild',
              git='https://github.com/intelxed/mbuild.git',
-             branch='master', destination='',
+             branch='master', placement='mbuild',
              when='@develop')
 
     for (vers, xed_hash, mbuild_hash) in version_list:
         version(vers, commit=xed_hash)
         resource(name='mbuild',
                  git='https://github.com/intelxed/mbuild.git',
-                 commit=mbuild_hash, destination='',
+                 commit=mbuild_hash,
                  when='@{0}'.format(vers))
 
     variant('debug', default=False, description='Enable debug symbols')
@@ -65,7 +65,7 @@ class IntelXed(Package):
         python_path = os.getenv('PYTHONPATH', '')
         os.environ['PYTHONPATH'] = mbuild_dir + ':' + python_path
 
-        mfile = Executable('./mfile.py')
+        mfile = Executable(join_path('.', 'mfile.py'))
 
         args = ['-j', str(make_jobs),
                 '--cc=%s' % spack_cc,

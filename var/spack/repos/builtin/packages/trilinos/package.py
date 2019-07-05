@@ -81,6 +81,8 @@ class Trilinos(CMakePackage):
             description='Compile with Boost')
     variant('cgns',         default=False,
             description='Enable CGNS')
+    variant('adios2',         default=False,
+            description='Enable ADIOS2')
     variant('gtest',        default=True,
             description='Compile with Gtest')
     variant('hdf5',         default=True,
@@ -192,6 +194,7 @@ class Trilinos(CMakePackage):
              git='https://github.com/ornl-cees/DataTransferKit.git',
              branch='master',
              placement='DataTransferKit',
+             submodules=True,
              when='+dtk @develop')
     resource(name='fortrilinos',
              git='https://github.com/trilinos/ForTrilinos.git',
@@ -276,7 +279,9 @@ class Trilinos(CMakePackage):
         '+shared', when='+stk platform=darwin',
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
-
+    # ADIOS2 was only added after v12.14.1
+    conflicts('+adios2', when='@:12.14.1')
+    conflicts('+adios2', when='@xsdk-0.2.0')
     # ###################### Dependencies ##########################
 
     # Everything should be compiled position independent (-fpic)
@@ -297,6 +302,7 @@ class Trilinos(CMakePackage):
     depends_on('parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
     depends_on('cgns', when='+cgns')
+    depends_on('adios2', when='+adios2')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
     # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
@@ -674,6 +680,7 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_CGNS:BOOL=OFF'
             ])
 
+        options.append('-DTPL_ENABLE_ADIOS2:BOOL=' + str('+adios2' in spec))
         # ################# Miscellaneous Stuff ######################
 
         # OpenMP

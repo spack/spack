@@ -41,7 +41,7 @@ class Cuda(Package):
         run_env.set('CUDA_HOME', self.prefix)
 
     def install(self, spec, prefix):
-        runfile = glob(join_path(self.stage.path, 'cuda*_linux*'))[0]
+        runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
         runfile = which(runfile)

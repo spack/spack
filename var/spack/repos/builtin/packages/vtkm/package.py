@@ -50,8 +50,7 @@ class Vtkm(CMakePackage, CudaPackage):
         spec = self.spec
         options = []
         with working_dir('spack-build', create=True):
-            options = ["../",
-                       "-DVTKm_ENABLE_TESTING:BOOL=OFF"]
+            options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
             # shared vs static libs
             if "+shared" in spec:
                 options.append('-DBUILD_SHARED_LIBS=ON')

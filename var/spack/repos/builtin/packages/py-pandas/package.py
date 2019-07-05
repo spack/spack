@@ -29,7 +29,7 @@ class PyPandas(PythonPackage):
     version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
     version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
 
-    depends_on('py-dateutil', type=('build', 'run'))
+    depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')

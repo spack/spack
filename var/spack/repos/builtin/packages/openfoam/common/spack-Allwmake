@@ -1,0 +1,37 @@
+#!/bin/bash
+# Build wrapper script - FOAM_INST_DIR is only required by foam-extend
+export FOAM_INST_DIR=$(cd .. && pwd -L)
+. $PWD/etc/bashrc ''                            # No arguments
+mkdir -p $FOAM_APPBIN $FOAM_LIBBIN 2>/dev/null  # Allow interrupt
+echo "Build openfoam with SPACK ($@)"
+echo "WM_PROJECT_DIR = $WM_PROJECT_DIR"
+
+# Prefer spack-specific Allwmake if it exists
+if [ -f Allwmake-spack ]
+then
+    ./Allwmake-spack $@   # Pass arguments
+else
+    ./Allwmake $@         # Pass arguments
+
+    # Generate manpages
+    if [ -x bin/tools/foamCreateManpage ]
+    then
+        bin/tools/foamCreateManpage -gzip || \
+            echo "ignore problems generating manpages"
+    fi
+fi
+
+
+# Link non-dummy MPI_FOAM type to parent-dir, where rpath can find it
+if [ "${FOAM_MPI:=dummy}" != dummy -a -d "$FOAM_LIBBIN/$FOAM_MPI" ]
+then
+(
+    cd "$FOAM_LIBBIN" || exit 1
+    for i in $FOAM_MPI/lib*.so
+    do
+        [ -f $i ] && ln -sf $i "${i##*/}"
+    done
+)
+fi
+
+# -----------------------------------------------------------------------------

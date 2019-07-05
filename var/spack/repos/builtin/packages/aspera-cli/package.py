@@ -21,7 +21,7 @@ class AsperaCli(Package):
         run_env.prepend_path('PATH', self.prefix.cli.bin)
 
     def install(self, spec, prefix):
-        runfile = glob(join_path(self.stage.path, 'aspera-cli*.sh'))[0]
+        runfile = glob(join_path(self.stage.source_path, 'aspera-cli*.sh'))[0]
         # Update destination path
         filter_file('INSTALL_DIR=~/.aspera',
                     'INSTALL_DIR=%s' % prefix,

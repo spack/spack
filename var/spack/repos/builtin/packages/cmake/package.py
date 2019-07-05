@@ -71,9 +71,15 @@ class Cmake(Package):
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
+    # Really this should conflict since it's enabling or disabling openssl for
+    # CMake's internal copy of curl.  Ideally we'd want a way to have the
+    # openssl variant disabled when ~ownlibs but there's not really a way to
+    # tie the values of those togethor, so for now we're just going to ignore
+    # the openssl variant entirely when ~ownlibs
+    # conflicts('~ownlibs', when='+openssl')
+
     depends_on('curl',           when='~ownlibs')
     depends_on('expat',          when='~ownlibs')
-    # depends_on('jsoncpp',        when='~ownlibs')  # circular dependency
     depends_on('zlib',           when='~ownlibs')
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
@@ -88,7 +94,6 @@ class Cmake(Package):
     depends_on('openssl', when='+openssl')
     depends_on('openssl@:1.0.99', when='@:3.6.9+openssl')
     depends_on('ncurses',        when='+ncurses')
-    depends_on('gnutls')
 
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
@@ -132,9 +137,9 @@ class Cmake(Package):
             args.append('--sphinx-html')
             args.append('--sphinx-man')
 
-        if '+openssl' in spec:
+        if '+ownlibs' in spec:
             args.append('--')
-            args.append('-DCMAKE_USE_OPENSSL=ON')
+            args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
 
         return args
 

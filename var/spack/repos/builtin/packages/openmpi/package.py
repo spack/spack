@@ -45,6 +45,18 @@ def _mxm_dir():
         return None
 
 
+def _tm_dir():
+    """Look for default directory where the PBS/TM package is
+    installed. Return None if not found.
+    """
+    # /opt/pbs from PBS 18+; make this more flexible in the future
+    paths_list = ("/opt/pbs", )
+    for path in paths_list:
+        if os.path.isdir(path) and os.path.isfile(path + "/include/tm.h"):
+            return path
+    return None
+
+
 class Openmpi(AutotoolsPackage):
     """An open source Message Passing Interface implementation.
 
@@ -259,6 +271,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('ucx', when='fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
     depends_on('slurm', when='schedulers=slurm')
+    depends_on('lsf', when='schedulers=lsf')
     depends_on('binutils+libiberty', when='fabrics=mxm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
@@ -343,7 +356,18 @@ class Openmpi(AutotoolsPackage):
             return '--without-{0}'.format(opt)
         line = '--with-{0}'.format(opt)
         path = _mxm_dir()
-        if (path is not None):
+        if path is not None:
+            line += '={0}'.format(path)
+        return line
+
+    def with_or_without_tm(self, activated):
+        opt = 'tm'
+        # If the option has not been activated return --without-tm
+        if not activated:
+            return '--without-{0}'.format(opt)
+        line = '--with-{0}'.format(opt)
+        path = _tm_dir()
+        if path is not None:
             line += '={0}'.format(path)
         return line
 

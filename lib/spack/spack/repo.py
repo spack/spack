@@ -893,8 +893,10 @@ class Repo(object):
         except spack.error.SpackError:
             # pass these through as their error messages will be fine.
             raise
-        except Exception:
-            # make sure other errors in constructors hit the error
+        except Exception as e:
+            tty.debug(e)
+
+            # Make sure other errors in constructors hit the error
             # handler by wrapping them
             if spack.config.get('config:debug'):
                 sys.excepthook(*sys.exc_info())

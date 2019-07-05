@@ -17,7 +17,15 @@ class Pfunit(CMakePackage):
 
     maintainers = ['citibeth']
 
-    version('3.2.9', 'e13d8362284b13b7c863e2fe769a9d5c')
+    # Currently investigating build fails for v 4.0.0.
+    # See discussion in PR #11642.
+    # version('4.0.0',  sha256='b8b6470f2b1e2b19c164c244c10e803bd69c8da9a6a5a65ba7c479fb8b92a1e1') # noqa: E501
+    version('3.3.3',  sha256='9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5')
+    version('3.3.2',  sha256='b1cc2e109ba602ea71bccefaa3c4a06e7ab1330db9ce6c08db89cfde497b8ab8')
+    version('3.3.1',  sha256='f8f4bea7de991a518a0371b4c70b19e492aa9a0d3e6715eff9437f420b0cdb45')
+    version('3.3.0',  sha256='4036ab448b821b500fbe8be5e3d5ab3e419ebae8be82f7703bcf84ab1a0ff862')
+    version('3.2.10', sha256='b9debba6d0e31b682423ffa756531e9728c10acde08c4d8e1609b4554f552b1a')
+    version('3.2.9',  sha256='403f9a150865700c8b4240fd033162b8d3e8aeefa265c50c5a6fe14c455fbabc')
 
     variant('shared', default=True,
             description='Build shared library in addition to static')
@@ -49,7 +57,7 @@ class Pfunit(CMakePackage):
 
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
-                         '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
+                         '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
         else:
             args.append('-DMPI=NO')
         return args

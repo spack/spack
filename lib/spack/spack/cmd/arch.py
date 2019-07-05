@@ -14,6 +14,7 @@ level = "short"
 
 def setup_parser(subparser):
     parts = subparser.add_mutually_exclusive_group()
+    parts2 = subparser.add_mutually_exclusive_group()
     parts.add_argument(
         '-p', '--platform', action='store_true', default=False,
         help='print only the platform')
@@ -23,11 +24,24 @@ def setup_parser(subparser):
     parts.add_argument(
         '-t', '--target', action='store_true', default=False,
         help='print only the target')
+    parts2.add_argument(
+        '-f', '--frontend', action='store_true', default=False,
+        help='print frontend')
+    parts2.add_argument(
+        '-b', '--backend', action='store_true', default=False,
+        help='print backend')
 
 
 def arch(parser, args):
-    arch = architecture.Arch(
-        architecture.platform(), 'default_os', 'default_target')
+    if args.frontend:
+        arch = architecture.Arch(architecture.platform(),
+                                 'frontend', 'frontend')
+    elif args.backend:
+        arch = architecture.Arch(architecture.platform(),
+                                 'backend', 'backend')
+    else:
+        arch = architecture.Arch(architecture.platform(),
+                                 'default_os', 'default_target')
 
     if args.platform:
         print(arch.platform)

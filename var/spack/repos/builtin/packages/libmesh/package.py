@@ -15,6 +15,10 @@ class Libmesh(AutotoolsPackage):
     url      = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
     git      = "https://github.com/libMesh/libmesh.git"
 
+    version('master', branch='master', submodules=True)
+
+    version('1.4.1', sha256='67eb7d5a9c954d891ca1386b70f138333a87a141d9c44213449ca6be69a66414')
+    version('1.4.0', sha256='62d7fce89096c950d1b38908484856ea63df57754b64cde6582e7ac407c8c81d')
     version('1.3.1', sha256='638cf30d05c249315760f16cbae4804964db8857a04d5e640f37617bef17ab0f')
     version('1.3.0', sha256='a8cc2cd44f42b960989dba10fa438b04af5798c46db0b4ec3ed29591b8359786')
     version('1.2.1', sha256='11c22c7d96874a17de6b8c74caa45d6745d40bf3610e88b2bd28fd3381f5ba70')
@@ -30,6 +34,8 @@ class Libmesh(AutotoolsPackage):
     variant('laspack', default=False, description='Compile with the bundled laspack interative solver library')
     variant('libhilbert', default=False, description='Compile with the bundled libHilbert partitioning library')
     variant('metaphysicl', default=False, description='Compile with the bundled metaphysicl AD library')
+    variant('perflog', default=False, description='Compile with performance logging support')
+    variant('blocked', default=False, description='Compile with support for blocked storage')
     variant('metis', default=False, description='Compile with the bundled METIS graph partitioning library')
     variant('nanoflann', default=False, description='Compile with the bundled nanoflann graph library')
     variant('nemesis', default=False, description='Compile with the bundled nemesis IO library')
@@ -154,6 +160,21 @@ class Libmesh(AutotoolsPackage):
         else:
             options.append('--enable-eigen=no')
 
+        if '+metaphysicl' in self.spec:
+            options.append('--enable-metaphysicl')
+        else:
+            options.append('--disable-metaphysicl')
+
+        if '+perflog' in self.spec:
+            options.append('--enable-perflog')
+        else:
+            options.append('--disable-perflog')
+
+        if '+blocked' in self.spec:
+            options.append('--enable-blocked-storage')
+        else:
+            options.append('--disable-blocked-storage')
+
         if '+hdf5' in self.spec:
             options.append('--with-hdf5=%s' % self.spec['hdf5'].prefix)
         else:
@@ -164,7 +185,11 @@ class Libmesh(AutotoolsPackage):
                 options.append('--disable-netcdf-4')
 
         if '+metis' in self.spec:
-            options.append('--with-metis=PETSc')
+            options.append('--enable-metis')
+            options.append('--enable-parmetis')
+            if ('+petsc' in self.spec):
+                options.append('--with-metis=PETSc')
+                options.append('--with-parmetis=PETSc')
 
         if '+petsc' in self.spec or '+slepc' in self.spec:
             options.append('--enable-petsc=yes')

@@ -11,8 +11,9 @@ class PyCligj(PythonPackage):
     line programs"""
 
     homepage = "https://github.com/mapbox/cligj"
-    url      = "https://github.com/mapbox/cligj/archive/0.4.0.zip"
+    url      = "https://github.com/mapbox/cligj/archive/0.5.0.zip"
 
+    version('0.5.0', sha256='ad158722a3f512f7eb33526479acf5cb53d9e59ca15cd494556440839783f106')
     version('0.4.0', 'fe5376068b84c5ed01e2d3adf553e226')
 
     depends_on('py-setuptools', type='build')
