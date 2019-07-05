@@ -13,6 +13,7 @@ class Cmake(Package):
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz'
     maintainers = ['chuckatkins']
 
+    version('3.14.5', sha256='505ae49ebe3c63c595fa5f814975d8b72848447ee13b6613b0f8b96ebda18c06')
     version('3.14.4', sha256='00b4dc9b0066079d10f16eed32ec592963a44e7967371d2f5077fd1670ff36d9')
     version('3.14.3', sha256='215d0b64e81307182b29b63e562edf30b3875b834efdad09b3fcb5a7d2f4b632')
     version('3.14.2', sha256='a3cbf562b99270c0ff192f692139e98c605f292bfdbc04d70da0309a5358e71e')
