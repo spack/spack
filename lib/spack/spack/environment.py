@@ -145,8 +145,12 @@ def activate(
         cmds += 'export SPACK_ENV=%s;\n' % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
-            cmds += 'if [ -z "${SPACK_OLD_PS1}" ]; then\n'
-            cmds += 'export SPACK_OLD_PS1="${PS1}"; fi;\n'
+            cmds += 'if [ -z ${SPACK_OLD_PS1+x} ]; then\n'
+            cmds += '    if [ -z ${PS1+x} ]; then\n'
+            cmds += "        PS1='$$$$';\n"
+            cmds += '    fi;\n'
+            cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
+            cmds += 'fi;\n'
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
 
     if add_view and default_view_name in env.views:
@@ -184,11 +188,17 @@ def deactivate(shell='sh'):
         cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
         cmds += 'unalias despacktivate;\n'
     else:
+        cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
+        cmds += 'fi;\n'
         cmds += 'unalias despacktivate;\n'
-        cmds += 'if [ -n "$SPACK_OLD_PS1" ]; then\n'
-        cmds += 'export PS1="$SPACK_OLD_PS1";\n'
-        cmds += 'unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
+        cmds += 'if [ ! -z ${SPACK_OLD_PS1+x} ]; then\n'
+        cmds += '    if [ "$SPACK_OLD_PS1" = \'$$$$\' ]; then\n'
+        cmds += '        unset PS1; export PS1;\n'
+        cmds += '    else\n'
+        cmds += '        export PS1="$SPACK_OLD_PS1";\n'
+        cmds += '    fi;\n'
+        cmds += '    unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
         cmds += 'fi;\n'
 
     if default_view_name in _active_environment.views:

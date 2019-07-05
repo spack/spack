@@ -766,7 +766,7 @@ def test_env_updates_view_force_remove(
 
 
 def test_env_activate_view_fails(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate):
     """Sanity check on env activate to make sure it requires shell support"""
     out = env('activate', 'test')
     assert "To initialize spack's shell commands:" in out
@@ -1431,3 +1431,41 @@ env:
                 assert not os.path.exists(
                     os.path.join(combin_viewdir, spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
+
+
+def test_env_activate_sh_prints_shell_output(
+        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate
+):
+    """Check the shell commands output by ``spack env activate --sh``.
+
+    This is a cursory check; ``share/spack/qa/setup-env-test.sh`` checks
+    for correctness.
+    """
+    env('create', 'test', add_view=True)
+
+    out = env('activate', '--sh', 'test')
+    assert "export SPACK_ENV=" in out
+    assert "export PS1=" not in out
+    assert "alias despacktivate=" in out
+
+    out = env('activate', '--sh', '--prompt', 'test')
+    assert "export SPACK_ENV=" in out
+    assert "export PS1=" in out
+    assert "alias despacktivate=" in out
+
+
+def test_env_activate_csh_prints_shell_output(
+        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate
+):
+    """Check the shell commands output by ``spack env activate --csh``."""
+    env('create', 'test', add_view=True)
+
+    out = env('activate', '--csh', 'test')
+    assert "setenv SPACK_ENV" in out
+    assert "setenv set prompt" not in out
+    assert "alias despacktivate" in out
+
+    out = env('activate', '--csh', '--prompt', 'test')
+    assert "setenv SPACK_ENV" in out
+    assert "set prompt=" in out
+    assert "alias despacktivate" in out
