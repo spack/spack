@@ -23,13 +23,14 @@ class Brayns(CMakePackage):
     variant('opendeck', default=False, description='Enable OpenDeck support')
     variant('viewer', default=True, description='Build braynsViewer app')
     variant('optix', default=False, description='Build Optix engine')
+    variant('test', default=False, description='Enable extra tests')
 
     depends_on('cmake@3.1:', type='build')
     depends_on('ispc', type='build')
     depends_on('ninja', type='build')
 
     depends_on('assimp', when='+assimp')
-    depends_on('bbptestdata',type='test')
+    depends_on('bbptestdata', type='test', when='+test')
     depends_on('brion', when='+brion')
     depends_on('deflect ~deflect-qt', when='+deflect')
     depends_on('freeimage')
