@@ -80,6 +80,9 @@ class Tau(Package):
     depends_on('cuda', when='+cuda')
     depends_on('gasnet', when='+gasnet')
 
+    conflicts('+libelf', when='@:2.28.0')  # Elf only required from 2.28.1 on
+    conflicts('+libdwarf', when='@:2.28.0')  # Dwarf only required from 2.28.1 on
+         
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
     def set_compiler_options(self):
