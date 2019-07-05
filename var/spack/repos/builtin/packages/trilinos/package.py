@@ -197,10 +197,35 @@ class Trilinos(CMakePackage):
              submodules=True,
              when='+dtk @develop')
     resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos.git',
-             tag='develop',
+             url='https://github.com/trilinos/ForTrilinos/archive/trilinos-release-12-12-1.tar.gz',
+             md5='6870ee51e8cad7dee055ca61252724a8',
              placement='packages/ForTrilinos',
-             when='+fortrilinos')
+             when='@12.12.1+fortrilinos')
+    resource(name='fortrilinos',
+             url='https://github.com/trilinos/ForTrilinos/archive/trilinos-release-12-10-1.tar.gz',
+             md5='6fb1ffc378a81a359e4fbeb9ec0bf8d1',
+             placement='packages/ForTrilinos',
+             when='@12.10.1+fortrilinos')
+    resource(name='fortrilinos',
+             url='https://github.com/trilinos/ForTrilinos/archive/trilinos-release-12-8-1.tar.gz',
+             md5='346e81f29470ef465ed2c5ff71b0fd70',
+             placement='packages/ForTrilinos',
+             when='@12.8.1+fortrilinos')
+    resource(name='fortrilinos',
+             url='https://github.com/trilinos/ForTrilinos/archive/trilinos-release-12-6-4.tar.gz',
+             md5='2d7d588d5843724fa13f55bbce8b1f1f',
+             placement='packages/ForTrilinos',
+             when='@12.6.4+fortrilinos')
+    resource(name='fortrilinos',
+             url='https://github.com/trilinos/ForTrilinos/archive/trilinos-release-12-6-3.tar.gz',
+             md5='1cd3308ddc256d9c52946f1fdf6457d1',
+             placement='packages/ForTrilinos',
+             when='@12.6.3+fortrilinos')
+    resource(name='fortrilinos',
+             url='https://github.com/trilinos/ForTrilinos/archive/trilinos-release-12-6-2.tar.gz',
+             md5='7f3508cfbb8f4957481a2d91862198f3',
+             placement='packages/ForTrilinos',
+             when='@12.6.2+fortrilinos')
 
     conflicts('+amesos2', when='~teuchos')
     conflicts('+amesos2', when='~tpetra')
@@ -257,7 +282,7 @@ class Trilinos(CMakePackage):
     # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,12.16.0:99,master')
     conflicts('+fortrilinos', when='~fortran')
-    conflicts('+fortrilinos', when='@:99')
+    conflicts('+fortrilinos', when='@:12.6.1,12.6.5:12.7.99,12.8.2:12.9.99,12.10.2:12.11.99,12.12.2:')
     conflicts('+fortrilinos', when='@master')
     # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
@@ -396,6 +421,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+epetra' in spec else 'OFF'),
             '-DTrilinos_ENABLE_EpetraExt:BOOL=%s' % (
                 'ON' if '+epetraext' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_ForTrilinos:BOOL=%s' % (
+                'ON' if '+fortrilinos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Ifpack:BOOL=%s' % (
                 'ON' if '+ifpack' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Ifpack2:BOOL=%s' % (
