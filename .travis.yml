@@ -129,7 +129,6 @@ stages:
 #=============================================================================
 # Environment
 #=============================================================================
-# Use new Travis infrastructure (Docker can't sudo yet)
 
 # Docs need graphviz to build
 addons:
