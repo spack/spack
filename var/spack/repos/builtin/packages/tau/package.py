@@ -83,7 +83,7 @@ class Tau(Package):
     # Elf only required from 2.28.1 on
     conflicts('+libelf', when='@:2.28.0')
     conflicts('+libdwarf', when='@:2.28.0')
-         
+
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
     def set_compiler_options(self):
