@@ -10,14 +10,14 @@ etc.).  Only methods like ``possible_dependencies()`` that deal with the
 static DSL metadata for packages.
 """
 
+import pytest
 import spack.repo
 
 
-def test_possible_dependencies(mock_packages):
-    mpileaks = spack.repo.get('mpileaks')
+@pytest.fixture
+def mpileaks_possible_deps(mock_packages):
     mpi_names = [spec.name for spec in spack.repo.path.providers_for('mpi')]
-
-    assert mpileaks.possible_dependencies(expand_virtuals=True) == {
+    possible = {
         'callpath': set(['dyninst'] + mpi_names),
         'dyninst': set(['libdwarf', 'libelf']),
         'fake': set(),
@@ -29,6 +29,13 @@ def test_possible_dependencies(mock_packages):
         'multi-provider-mpi': set(),
         'zmpi': set(['fake']),
     }
+    return possible
+
+
+def test_possible_dependencies(mock_packages, mpileaks_possible_deps):
+    mpileaks = spack.repo.get('mpileaks')
+    assert (mpileaks.possible_dependencies(expand_virtuals=True) ==
+            mpileaks_possible_deps)
 
     assert mpileaks.possible_dependencies(expand_virtuals=False) == {
         'callpath': set(['dyninst']),
@@ -59,3 +66,17 @@ def test_possible_dependencies_with_deptypes(mock_packages):
         'dtbuild1': set(['dtlink2']),
         'dtlink2': set(),
     }
+
+
+def test_possible_dependencies_with_multiple_classes(
+        mock_packages, mpileaks_possible_deps):
+    pkgs = ['dt-diamond', 'mpileaks']
+    expected = mpileaks_possible_deps.copy()
+    expected.update({
+        'dt-diamond': set(['dt-diamond-left', 'dt-diamond-right']),
+        'dt-diamond-left': set(['dt-diamond-bottom']),
+        'dt-diamond-right': set(['dt-diamond-bottom']),
+        'dt-diamond-bottom': set(),
+    })
+
+    assert spack.package.possible_dependencies(*pkgs) == expected
