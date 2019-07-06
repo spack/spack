@@ -2663,6 +2663,34 @@ def dump_packages(spec, path):
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
 
 
+def possible_dependencies(*pkg_or_spec, **kwargs):
+    """Get the possible dependencies of a number of packages.
+
+    See ``PackageBase.possible_dependencies`` for details.
+    """
+    transitive = kwargs.get('transitive', True)
+    expand_virtuals = kwargs.get('expand_virtuals', True)
+    deptype = kwargs.get('deptype', 'all')
+
+    packages = []
+    for pos in pkg_or_spec:
+        if isinstance(pos, PackageMeta):
+            pkg = pos
+        elif isinstance(pos, spack.spec.Spec):
+            pkg = pos.package
+        else:
+            pkg = spack.spec.Spec(pos).package
+
+        packages.append(pkg)
+
+    visited = {}
+    for pkg in packages:
+        pkg.possible_dependencies(
+            transitive, expand_virtuals, deptype, visited)
+
+    return visited
+
+
 def print_pkg(message):
     """Outputs a message with a package icon."""
     from llnl.util.tty.color import cwrite
