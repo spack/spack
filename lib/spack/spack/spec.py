@@ -2017,13 +2017,18 @@ class Spec(object):
 
         # Now that the spec is concrete we should check if
         # there are declared conflicts
+        #
+        # TODO: this needs rethinking, as currently we can only express
+        # TODO: internal configuration conflicts within one package.
         matches = []
         for x in self.traverse():
             for conflict_spec, when_list in x.package_class.conflicts.items():
                 if x.satisfies(conflict_spec, strict=True):
                     for when_spec, msg in when_list:
                         if x.satisfies(when_spec, strict=True):
-                            matches.append((x, conflict_spec, when_spec, msg))
+                            when = when_spec.copy()
+                            when.name = x.name
+                            matches.append((x, conflict_spec, when, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
 
