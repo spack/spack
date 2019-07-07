@@ -28,6 +28,7 @@ class Xsdk(Package):
     variant('cuda', default=False, description='Enable CUDA dependent packages')
     variant('omega-h', default=True, description='Enable omega-h package build')
     variant('dealii', default=True, description='Enable dealii package build')
+    variant('phist', default=True, description='Enable phist package build')
 
     depends_on('hypre@develop~internal-superlu+superlu-dist+shared', when='@develop')
     depends_on('hypre@2.15.1~internal-superlu', when='@0.4.0')
@@ -112,8 +113,8 @@ class Xsdk(Package):
     # these are type='build' dependencies, but spack reports a conflict anyway.
     # This will be fixed once the new concretizer becomes available
     # (says @adamjsteward)
-    depends_on('phist@develop kernel_lib=tpetra ~fortran ~scamac ~openmp ~host', when='@develop')
-    depends_on('phist@1.7.5 kernel_lib=tpetra ~fortran ~scamac ~openmp ~host', when='@0.4.0')
+    depends_on('phist@develop kernel_lib=tpetra ~fortran ~scamac ~openmp ~host', when='@develop +phist')
+    depends_on('phist@1.7.5 kernel_lib=tpetra ~fortran ~scamac ~openmp ~host', when='@0.4.0 +phist')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
