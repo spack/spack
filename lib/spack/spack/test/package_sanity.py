@@ -56,6 +56,20 @@ def test_packages_are_pickleable():
             pickle.dumps(pkg)
 
 
+def test_repo_getpkg_names_and_classes():
+    """Ensure that all_packages/names/classes are consistent."""
+    names = spack.repo.path.all_package_names()
+    print(names)
+    classes = spack.repo.path.all_package_classes()
+    print(list(classes))
+    pkgs = spack.repo.path.all_packages()
+    print(list(pkgs))
+
+    for name, cls, pkg in zip(names, classes, pkgs):
+        assert cls.name == name
+        assert pkg.name == name
+
+
 def test_get_all_mock_packages():
     """Get the mock packages once each too."""
     db = spack.repo.RepoPath(spack.paths.mock_packages_path)

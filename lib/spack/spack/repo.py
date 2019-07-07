@@ -537,6 +537,10 @@ class RepoPath(object):
         for name in self.all_package_names():
             yield self.get(name)
 
+    def all_package_classes(self):
+        for name in self.all_package_names():
+            yield self.get_pkg_class(name)
+
     @property
     def provider_index(self):
         """Merged ProviderIndex from all Repos in the RepoPath."""
@@ -1014,6 +1018,14 @@ class Repo(object):
         """
         for name in self.all_package_names():
             yield self.get(name)
+
+    def all_package_classes(self):
+        """Iterator over all package *classes* in the repository.
+
+        Use this with care, because loading packages is slow.
+        """
+        for name in self.all_package_names():
+            yield self.get_pkg_class(name)
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
