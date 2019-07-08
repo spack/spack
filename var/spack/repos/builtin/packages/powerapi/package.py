@@ -36,7 +36,7 @@ class Powerapi(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = ['--prefix={0}'.format(self.prefix)]
-        
+
         if '+hwloc' in spec:
             args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
 
@@ -48,7 +48,7 @@ class Powerapi(AutotoolsPackage):
             '--with%s-gnu-ld' % ('' if '+gnu-ld' in spec else 'out'),
             '--%sable-debug' % ('en' if '+debug' in spec else 'dis')
         ])
-        
+
         return args
 
     def install(self, spec, prefix):
