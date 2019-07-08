@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.spec import ConflictsInSpecError
+
+
+yaml_cpp_tests_libcxx_error_msg = 'yaml-cpp tests incompatible with libc++'
 
 
 class YamlCpp(CMakePackage):
@@ -21,6 +24,8 @@ class YamlCpp(CMakePackage):
             description='Enable build of shared libraries')
     variant('pic',   default=True,
             description='Build with position independent code')
+    variant('tests', default=False,
+            description='Build yaml-cpp tests using internal gtest')
 
     depends_on('boost@:1.66.99', when='@:0.5.3')
 
@@ -32,6 +37,25 @@ class YamlCpp(CMakePackage):
     conflicts('%intel@:11.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     conflicts('%xl@:13.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     conflicts('%xl_r@:13.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%clang cxxflags="-stdlib=libc++"', when='+tests',
+              msg=yaml_cpp_tests_libcxx_error_msg)
+
+    def flag_handler(self, name, flags):
+        # We cannot catch all conflicts with the conflicts directive because
+        # the user can add arbitrary strings to the flags. Here we can at least
+        # fail early.
+        # We'll include cppflags in case users mistakenly put c++ flags there.
+        spec = self.spec
+        if name in ('cxxflags', 'cppflags') and spec.satisfies('+tests'):
+            if '-stdlib=libc++' in flags:
+                raise ConflictsInSpecError(
+                    spec,
+                    [(spec,
+                      spec.compiler_flags[name],
+                      spec.variants['tests'],
+                      yaml_cpp_tests_libcxx_error_msg)]
+                )
+        return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec
@@ -42,6 +66,8 @@ class YamlCpp(CMakePackage):
                 'ON' if '+shared' in spec else 'OFF'),
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
                 'ON' if '+pic' in spec else 'OFF'),
+            '-DYAML_CPP_BUILD_TESTS:BOOL=%s' % (
+                'ON' if '+tests' in spec else 'OFF'),
         ])
 
         return options

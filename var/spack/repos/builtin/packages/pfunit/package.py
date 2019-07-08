@@ -57,7 +57,7 @@ class Pfunit(CMakePackage):
 
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
-                         '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
+                         '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
         else:
             args.append('-DMPI=NO')
         return args

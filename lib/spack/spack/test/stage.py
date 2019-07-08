@@ -465,6 +465,19 @@ class TestStage(object):
             check_setup(stage, None, archive)
         check_destroy(stage, None)
 
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_noexpand_stage_file(
+            self, mock_stage_archive, mock_noexpand_resource):
+        """When creating a stage with a nonexpanding URL, the 'archive_file'
+        property of the stage should refer to the path of that file.
+        """
+        test_noexpand_fetcher = spack.fetch_strategy.from_kwargs(
+            url='file://' + mock_noexpand_resource, expand=False)
+        with Stage(test_noexpand_fetcher) as stage:
+            stage.fetch()
+            stage.expand_archive()
+            assert os.path.exists(stage.archive_file)
+
     @pytest.mark.disable_clean_stage_check
     @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_composite_stage_with_noexpand_resource(
@@ -509,6 +522,31 @@ class TestStage(object):
         for fname in mock_expand_resource.files:
             file_path = os.path.join(
                 root_stage.source_path, 'resource-dir', fname)
+            assert os.path.exists(file_path)
+
+    @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_composite_stage_with_expand_resource_default_placement(
+            self, mock_stage_archive, mock_expand_resource,
+            composite_stage_with_expanding_resource):
+        """For a resource which refers to a compressed archive which expands
+        to a directory, check that by default the resource is placed in
+        the source_path of the root stage with the name of the decompressed
+        directory.
+        """
+
+        composite_stage, root_stage, resource_stage = (
+            composite_stage_with_expanding_resource)
+
+        resource_stage.resource.placement = None
+
+        composite_stage.create()
+        composite_stage.fetch()
+        composite_stage.expand_archive()
+
+        for fname in mock_expand_resource.files:
+            file_path = os.path.join(
+                root_stage.source_path, 'resource-expand', fname)
             assert os.path.exists(file_path)
 
     def test_setup_and_destroy_no_name_without_tmp(self, mock_stage_archive):

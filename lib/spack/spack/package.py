@@ -1380,8 +1380,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         binary_spec._mark_concrete()
         if binary_spec not in specs:
             return False
-        tty.msg('Installing %s from binary cache' % self.name)
         tarball = binary_distribution.download_tarball(binary_spec)
+        # see #10063 : install from source if tarball doesn't exist
+        if tarball is None:
+            tty.msg('%s exist in binary cache but with different hash' %
+                    self.name)
+            return False
+        tty.msg('Installing %s from binary cache' % self.name)
         binary_distribution.extract_tarball(
             binary_spec, tarball, allow_root=False,
             unsigned=False, force=False)

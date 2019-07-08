@@ -289,6 +289,31 @@ def needs_text_relocation(m_type, m_subtype):
     return (m_type == "text")
 
 
+def replace_prefix_bin(path_name, old_dir, new_dir):
+    """
+    Attempt to replace old install prefix with new install prefix
+    in binary files by replacing with null terminated string
+    that is the same length unless the old path is shorter
+    """
+
+    def replace(match):
+        occurances = match.group().count(old_dir)
+        padding = (len(old_dir) - len(new_dir)) * occurances
+        if padding < 0:
+            return data
+        return match.group().replace(old_dir, new_dir) + b'\0' * padding
+
+    with open(path_name, 'rb+') as f:
+        data = f.read()
+        f.seek(0)
+        original_data_len = len(data)
+        pat = re.compile(re.escape(old_dir) + b'([^\0]*?)\0')
+        data = pat.sub(replace, data)
+        assert(len(data) == original_data_len)
+        f.write(data)
+        f.truncate()
+
+
 def relocate_binary(path_names, old_dir, new_dir, allow_root):
     """
     Change old_dir to new_dir in RPATHs of elf or mach-o files
@@ -317,10 +342,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-            if (not allow_root and
-                old_dir != new_dir and
-                    not file_is_relocatable(path_name)):
-                raise InstallRootStringException(path_name, old_dir)
+            replace_prefix_bin(path_name, old_dir, new_dir)
 
     elif platform.system() == 'Linux':
         for path_name in path_names:
@@ -333,10 +355,7 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                 new_rpaths = substitute_rpath(n_rpaths,
                                               old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
-                if (not allow_root and
-                    old_dir != new_dir and
-                        not file_is_relocatable(path_name)):
-                    raise InstallRootStringException(path_name, old_dir)
+                replace_prefix_bin(path_name, old_dir, new_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
