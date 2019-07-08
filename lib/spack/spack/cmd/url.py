@@ -258,8 +258,6 @@ def url_stats(args):
     for pkg in spack.repo.path.all_packages():
         npkgs += 1
 
-        # TODO: Is it correct to count the number of no-source versions
-        # TODO: so url stats total does not change?
         if not pkg.requires_url:
             for _ in pkg.versions:
                 inc('No source', 'total')
