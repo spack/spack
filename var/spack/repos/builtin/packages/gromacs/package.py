@@ -59,11 +59,17 @@ class Gromacs(CMakePackage):
                     'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
+    variant('subcounters', default=False, description='Enable wallcycle subcounters')
+    variant('own_fftw', default=True, description='Build own FFTW')
+    variant('omp_max_threads', default='auto', description='Max number of OpenMP threads',
+            values=('auto', '32', '64', '128', '256'))
+    variant('static', default=False, description='Prefer static libraries')
+    variant('mdrun_only', default=False, description='Build only mdrun')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
-    depends_on('fftw')
+    depends_on('fftw', when='-own_fftw')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
@@ -85,6 +91,9 @@ class Gromacs(CMakePackage):
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
 
+        if '+static' in self.spec:
+            options.append('-DGMX_PREFER_STATIC_LIB:BOOL=ON')
+
         if '+cuda' in self.spec:
             options.append('-DGMX_GPU:BOOL=ON')
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
@@ -104,5 +113,20 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
         else:
             options.append('-DGMX_USE_RDTSCP:BOOL=ON')
+
+        if '+subcounters' in self.spec:
+            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')
+            
+        if '+own_fftw' in self.spec:
+            options.append('-DGMX_BUILD_OWN_FFTW:BOOL=ON')
+            
+        if '+mdrun_only' in self.spec:
+            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
+
+        omp_max_threads_value = self.spec.variants['omp_max_threads'].value
+        if omp_max_threads_value == 'auto':
+            pass
+        else:
+            options.append('-DDGMX_OPENMP_MAX_THREADS:STRING=%s' % omp_max_threads_value)
 
         return options
