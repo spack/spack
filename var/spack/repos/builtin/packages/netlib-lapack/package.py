@@ -98,10 +98,11 @@ class NetlibLapack(CMakePackage):
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
-        search_paths = [self.prefix.lib, self.prefix.lib64, self.prefix]
-        for path in search_paths:
+        prefix = self.prefix
+        search_paths = [(prefix.lib, False), (prefix.lib64, False), (prefix, True)]
+        for path, recursive in search_paths:
             libs = find_libraries(
-                name, root=path, shared=shared, recursive=True
+                name, root=path, shared=shared, recursive=recursive
             )
             if libs:
                 return libs
@@ -125,10 +126,11 @@ class NetlibLapack(CMakePackage):
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
-        search_paths = [self.prefix.lib, self.prefix.lib64, self.prefix]
-        for path in search_paths:
+        prefix = self.prefix
+        search_paths = [(prefix.lib, False), (prefix.lib64, False), (prefix, True)]
+        for path, recursive in search_paths:
             libs = find_libraries(
-                name, root=path, shared=shared, recursive=True
+                name, root=path, shared=shared, recursive=recursive
             )
             if libs:
                 return libs
