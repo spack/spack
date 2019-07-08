@@ -165,6 +165,24 @@ def pkg_rules(pkg):
     # versions
     pkg_version_rules(pkg)
 
+    # variants
+    for name, variant in pkg.variants.items():
+        asp._rule(asp.variant(pkg.name, name),
+                  asp.node(pkg.name))
+
+        single_value = not variant.multi
+        single = asp.variant_single_value(pkg.name, name)
+        if single_value:
+            asp._rule(single, asp.node(pkg.name))
+            asp._rule(asp.variant_value(pkg.name, name, variant.default),
+                      asp._not(asp.variant_set(pkg.name, name)))
+        else:
+            asp._rule(asp._not(single), asp.node(pkg.name))
+            defaults = variant.default.split(',')
+            for val in defaults:
+                asp._rule(asp.variant_value(pkg.name, name, val),
+                          asp._not(asp.variant_set(pkg.name, name)))
+
     # dependencies
     for name, conditions in pkg.dependencies.items():
         for cond, dep in conditions.items():
@@ -210,6 +228,10 @@ _generate = """\
 { arch_platform(P, A) : arch_platform(P, A) } = 1 :- node(P).
 { arch_os(P, A) : arch_os(P, A) } = 1             :- node(P).
 { arch_target(P, T) : arch_target(P, T) } = 1     :- node(P).
+
+% one variant value for single-valued variants.
+{ variant_value(P, V, X) : variant_value(P, V, X) } = 1
+    :- node(P), variant(P, V), not variant_single_value(P, V).
 """
 
 #: define the rules of Spack concretization
@@ -221,6 +243,13 @@ node(D) :- node(P), depends_on(P, D).
 arch_platform(D, A) :- node(D), depends_on(P, D), arch_platform(P, A).
 arch_os(D, A) :- node(D), depends_on(P, D), arch_os(P, A).
 arch_target(D, A) :- node(D), depends_on(P, D), arch_target(P, A).
+
+% if a variant is set to anything, it is considered "set".
+variant_set(P, V) :- variant_set(P, V, _).
+
+% variant_set is an explicitly set variant value. If it's not "set",
+% we revert to the default value. If it is set, we force the set value
+variant_value(P, V, X) :- node(P), variant(P, V), variant_set(P, V, X).
 """
 
 #: what parts of the model to display to read models back in
@@ -228,6 +257,7 @@ _display = """\
 #show node/1.
 #show depends_on/2.
 #show version/2.
+#show variant_value/3.
 #show arch_platform/2.
 #show arch_os/2.
 #show arch_target/2.
