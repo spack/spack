@@ -16,7 +16,6 @@ class Powerapi(AutotoolsPackage):
     variant('hwloc', default=False, description='Build hwloc support')
     variant('debug', default=False, description='Enable debug support')
     variant('mpi',   default=False, description='Enable MPI support')
-    variant('package', default=False, description='Enable package support')
     variant('gnu-ld', default=False, description='Assume GNU compiled uses gnu-ld')
 
     depends_on('autoconf')
@@ -42,7 +41,6 @@ class Powerapi(AutotoolsPackage):
             args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
 
         args.extend([
-            '--with-PACKAGE=%s' % ('yes' if '+package' in spec else 'no'),
             '--with%s-gnu-ld' % ('' if '+gnu-ld' in spec else 'out'),
             '--%sable-debug' % ('en' if '+debug' in spec else 'dis')
         ])
