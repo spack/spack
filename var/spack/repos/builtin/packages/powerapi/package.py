@@ -32,26 +32,22 @@ class Powerapi(AutotoolsPackage):
         bash('./autogen.sh')
 
     def configure_args(self):
-        config_args = ['--prefix={0}'.format(self.prefix)]
-
-        if '+package' in self.spec:
-            config_args.append('--with-PACKAGE=yes')
-
-        if '+gnu-ld' in self.spec:
-            config_args.append('--with-gnu-ld')
+        self = self.spec
+        args = []
 
         if '+hwloc' in self.spec:
-            config_args.append('--with-hwloc={0}'
-                               .format(self.spec['hwloc'].prefix))
+            args.append('--with-hwloc={0}'.format(self['hwloc'].prefix))
 
         if '+mpi' in self.spec:
-            config_args.append('--with-mpi={0}'
-                               .format(self.spec['mpi'].prefix))
+            args.append('--with-mpi={0}'.format(self['mpi'].prefix))
 
-        if '+debug' in self.spec:
-            config_args.append('--enable-debug')
+        args.extend([
+            '--with-PACKAGE=%' % ('yes' if '+package' in spec else 'no'),
+            '--with%-gnu-ld' % ('' if '+gnu-ld' in spec else 'out'),
+            '--%able-debug' % ('en' if '+debug' in spec else 'dis')
+        ])
 
-        return config_args
+        return args
 
     def install(self, spec, prefix):
         make('install')
