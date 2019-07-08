@@ -27,27 +27,31 @@ class Powerapi(AutotoolsPackage):
     depends_on('hwloc', when='+hwloc')
     depends_on('mpi', when='+mpi')
 
+    """
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
+    """
 
     def configure_args(self):
-        self = self.spec
-        args = []
+        spec = self.spec
+        args = ['--prefix={0}'.format(self.prefix)]
+        
+        if '+hwloc' in spec:
+            args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
 
-        if '+hwloc' in self.spec:
-            args.append('--with-hwloc={0}'.format(self['hwloc'].prefix))
-
-        if '+mpi' in self.spec:
-            args.append('--with-mpi={0}'.format(self['mpi'].prefix))
+        if '+mpi' in spec:
+            args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
 
         args.extend([
-            '--with-PACKAGE=%' % ('yes' if '+package' in spec else 'no'),
-            '--with%-gnu-ld' % ('' if '+gnu-ld' in spec else 'out'),
-            '--%able-debug' % ('en' if '+debug' in spec else 'dis')
+            '--with-PACKAGE=%s' % ('yes' if '+package' in spec else 'no'),
+            '--with%s-gnu-ld' % ('' if '+gnu-ld' in spec else 'out'),
+            '--%sable-debug' % ('en' if '+debug' in spec else 'dis')
         ])
-
+        
         return args
 
     def install(self, spec, prefix):
-        make('install')
+        autoreconf()
+        configure()
+        install()
