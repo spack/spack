@@ -31,7 +31,7 @@ uninstall  = SpackCommand('uninstall')
 find       = SpackCommand('find')
 
 
-def check_install(viewdir):
+def check_mpileaks_install(viewdir):
     """Check that the expected install directories exist."""
     assert os.path.exists(str(viewdir.join('.spack', 'mpileaks')))
     # Check that dependencies got in too
@@ -626,7 +626,7 @@ def test_env_updates_view_install(
         add('mpileaks')
         install('--fake')
 
-    check_install(view_dir)
+    check_mpileaks_install(view_dir)
 
 
 def test_env_without_view_install(
@@ -648,7 +648,7 @@ def test_env_without_view_install(
 
     # After enabling the view, the specs should be linked into the environment
     # view dir
-    check_install(view_dir)
+    check_mpileaks_install(view_dir)
 
 
 def test_env_config_view_default(
@@ -678,7 +678,7 @@ def test_env_updates_view_install_package(
     with ev.read('test'):
         install('--fake', 'mpileaks')
 
-    check_install(view_dir)
+    check_mpileaks_install(view_dir)
 
 
 def test_env_updates_view_add_concretize(
@@ -690,7 +690,7 @@ def test_env_updates_view_add_concretize(
         add('mpileaks')
         concretize()
 
-    check_install(view_dir)
+    check_mpileaks_install(view_dir)
 
 
 def test_env_updates_view_uninstall(
@@ -700,7 +700,7 @@ def test_env_updates_view_uninstall(
     with ev.read('test'):
         install('--fake', 'mpileaks')
 
-    check_install(view_dir)
+    check_mpileaks_install(view_dir)
 
     with ev.read('test'):
         uninstall('-ay')
@@ -717,7 +717,7 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
         add('mpileaks')
         concretize()
 
-    check_install(view_dir)
+    check_mpileaks_install(view_dir)
 
     with ev.read('test'):
         uninstall('-ay')
@@ -734,7 +734,7 @@ def test_env_updates_view_remove_concretize(
         add('mpileaks')
         concretize()
 
-    check_install(view_dir)
+    check_mpileaks_install(view_dir)
 
     with ev.read('test'):
         remove('mpileaks')
@@ -750,7 +750,7 @@ def test_env_updates_view_force_remove(
     with ev.read('test'):
         install('--fake', 'mpileaks')
 
-    check_install(view_dir)
+    check_mpileaks_install(view_dir)
 
     with ev.read('test'):
         remove('-f', 'mpileaks')
