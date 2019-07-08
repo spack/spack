@@ -12,6 +12,7 @@ class OpaPsm2(MakefilePackage):
     homepage = "http://github.com/intel/opa-psm2"
     url      = "https://github.com/intel/opa-psm2/archive/PSM2_10.3-8.tar.gz"
 
+    version('11.2.77', sha256='5cc33d1e19d871a5861efe0bb897526f404b4bf2b88ac58bb277db96ac5ecb54')
     version('11.2.68', sha256='42e16a14fc8c90b50855dcea46af3315bee32fb1ae89d83060f9b2ebdce1ec26')
     version('10.3-37',  '9bfca04f29b937b3856f893e1f8b1b60')
     version('10.3-17',  'e7263eb449939cb87612e2c7623ca21c')
@@ -24,6 +25,11 @@ class OpaPsm2(MakefilePackage):
     variant('avx2', default=True, description='Enable AVX2 instructions')
 
     depends_on('numactl')
+
+    # patch to prevent opa-psm2 from adding an additional "usr/"
+    #   subdirectory within the installation prefix, which breaks paths for
+    #   dependent packages like libfabric
+    patch('opa-psm2-install-prefix.patch', when='@11.2.68:') 
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('DESTDIR', self.prefix)

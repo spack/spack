@@ -37,7 +37,6 @@ packages:
       mpi: [openmpi, mpich]
       mysql-client: [mysql, mariadb-c-client]
       opencl: [pocl]
-      openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
