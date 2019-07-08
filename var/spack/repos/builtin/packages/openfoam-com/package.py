@@ -723,7 +723,7 @@ class OpenfoamCom(Package):
         # Make build log visible - it contains OpenFOAM-specific information
         with working_dir(self.projectdir):
             os.symlink(
-                join_path(self.install_log_path(True)),
+                join_path(os.path.relpath(self.install_log_path)),
                 join_path('log.' + str(self.foam_arch)))
 
         if not self.config['link']:

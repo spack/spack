@@ -793,10 +793,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """The Spack build environment file path."""
         return os.path.join(self.stage.path, _spack_build_envfile)
 
-    def install_env_path(self, relative=False):
-        """Return the optionally relative path to the install env file."""
-        spec = self.spec if not relative else None
-        return os.path.join(spack.store.layout.metadata_path(spec),
+    @property
+    def install_env_path(self):
+        """Return the path to the install env file."""
+        return os.path.join(spack.store.layout.metadata_path(self.spec),
                             _spack_build_envfile)
 
     @property
@@ -804,10 +804,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """The Spack build log file path."""
         return os.path.join(self.stage.path, _spack_build_logfile)
 
-    def install_log_path(self, relative=False):
-        """Return the optionally relative path to the install log file."""
-        spec = self.spec if not relative else None
-        return os.path.join(spack.store.layout.metadata_path(spec),
+    @property
+    def install_log_path(self):
+        """Return the path to the install log file."""
+        return os.path.join(spack.store.layout.metadata_path(self.spec),
                             _spack_build_logfile)
 
     def _make_fetcher(self):
@@ -1753,9 +1753,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.debug(e)
 
         # Archive the whole stdout + stderr for the package
-        install(self.log_path, self.install_log_path())
+        install(self.log_path, self.install_log_path)
+
         # Archive the environment used for the build
-        install(self.env_path, self.install_env_path())
+        install(self.env_path, self.install_env_path)
+
         # Finally, archive files that are specific to each package
         with working_dir(self.stage.path):
             errors = StringIO()
@@ -1834,7 +1836,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Return the (expected) path to the build log file, which depends on
         the installation state
         """
-        return self.install_log_path() if self.installed else self.log_path
+        return self.install_log_path if self.installed else self.log_path
 
     @classmethod
     def inject_flags(cls, name, flags):
