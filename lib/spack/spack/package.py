@@ -359,6 +359,10 @@ class BundlePackage(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of attributes which reflect a package's content.
     metadata_attrs = ['homepage']
 
+    #: This attribute is used in UI queries that require to know which
+    #: build-system class we are using
+    build_system_class = 'BundlePackage'
+
     def __init__(self, spec):
         super(BundlePackage, self).__init__()
 
