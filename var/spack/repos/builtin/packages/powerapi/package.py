@@ -27,11 +27,9 @@ class Powerapi(AutotoolsPackage):
     depends_on('hwloc', when='+hwloc')
     depends_on('mpi', when='+mpi')
 
-    """
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
-    """
 
     def configure_args(self):
         spec = self.spec
@@ -52,6 +50,4 @@ class Powerapi(AutotoolsPackage):
         return args
 
     def install(self, spec, prefix):
-        autoreconf()
-        configure()
-        install()
+        make('install')
