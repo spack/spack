@@ -98,9 +98,13 @@ class NetlibLapack(CMakePackage):
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
-        return find_libraries(
-            libraries, root=self.prefix, shared=shared, recursive=True
-        )
+        search_paths = [self.prefix.lib, self.prefix.lib64, self.prefix]
+        for path in search_paths:
+            libs = find_libraries(
+                name, root=path, shared=shared, recursive=True
+            )
+            if libs:
+                return libs
 
     @property
     def lapack_libs(self):
@@ -121,9 +125,13 @@ class NetlibLapack(CMakePackage):
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
-        return find_libraries(
-            libraries, root=self.prefix, shared=shared, recursive=True
-        )
+        search_paths = [self.prefix.lib, self.prefix.lib64, self.prefix]
+        for path in search_paths:
+            libs = find_libraries(
+                name, root=path, shared=shared, recursive=True
+            )
+            if libs:
+                return libs
 
     @property
     def headers(self):
