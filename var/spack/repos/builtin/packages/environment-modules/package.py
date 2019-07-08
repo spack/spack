@@ -16,6 +16,7 @@ class EnvironmentModules(Package):
 
     maintainers = ['xdelaruelle']
 
+    version('4.2.5', sha256='3375b454568e7bbec7748cd6173516ef9f30a3d8e13c3e99c02794a6a3bc3c8c')
     version('4.2.4', sha256='416dda94141e4778356e2aa9ba8687e6522a1eb197b3caf00a82e5fa2707709a')
     version('4.2.3', sha256='f667134cca8e2c75e12a00b50b5605d0d8068efa5b821f5b3c3f0df06fd79411')
     version('4.2.2', sha256='481fe8d03eec6806c1b401d764536edc2c233ac9d82091a10094de6101867afc')
