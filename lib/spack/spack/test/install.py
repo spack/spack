@@ -352,3 +352,31 @@ def test_pkg_install_paths(install_mockery):
 
     # Cleanup
     shutil.rmtree(log_dir)
+
+
+def test_pkg_install_log(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    # Attempt installing log without the build log file
+    with pytest.raises(IOError, match="No such file or directory"):
+        spec.package.log()
+
+    # Set up mock build files and try again
+    log_path = spec.package.log_path
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        touch(log_path)
+        touch(spec.package.env_path)
+
+    install_path = os.path.dirname(spec.package.install_log_path)
+    mkdirp(install_path)
+
+    spec.package.log()
+
+    assert os.path.exists(spec.package.install_log_path)
+    assert os.path.exists(spec.package.install_env_path)
+
+    # Cleanup
+    shutil.rmtree(log_dir)
