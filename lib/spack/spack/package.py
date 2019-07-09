@@ -1666,6 +1666,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 if mode != perms:
                     os.chmod(self.prefix, perms)
 
+                # Ensure the metadata path exists as well
+                mkdirp(spack.store.layout.metadata_path(self.spec), mode=perms)
+
             # Fork a child to do the actual installation
             # we preserve verbosity settings across installs.
             PackageBase._verbose = spack.build_environment.fork(

@@ -29,12 +29,3 @@ class Mathematica(Package):
            '-targetdir={0}'.format(prefix),
            '-execdir={0}'.format(prefix.bin),
            '-selinux=y')
-
-        # After the install phase completes, Spack tries to install
-        # spack-build-out.txt into <prefix>/.spack, but the .spack dir will not
-        # exist, causing the build to fail. package.py:1690 seems to show
-        # that the dir is created right before writing spack-build-out.txt
-        # -- possible bug?
-
-        # creating the .spack dir right after installing prevents explosions
-        mkdirp(join_path(prefix, '.spack'))
