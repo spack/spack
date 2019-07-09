@@ -32,6 +32,8 @@ class CBlosc(CMakePackage):
     depends_on('zstd')
     depends_on('lz4')
 
+    patch('gcc.patch')
+
     def cmake_args(self):
         args = []
 
