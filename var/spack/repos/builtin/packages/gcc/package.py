@@ -323,6 +323,15 @@ class Gcc(AutotoolsPackage):
     def nvptx_install(self):
         spec = self.spec
         prefix = self.prefix
+        if 'isl' in spec:
+            # the gcc build process runs a self test during build that will
+            # fail with, "error while loading shared libraries: libisl.so.19:
+            # cannot open shared object file: No such file or directory" if
+            # we do not add the appropriate path to LD_LIBRARY_PATH
+            oldpath = os.environ.get('LD_LIBRARY_PATH')
+            os.environ['LD_LIBRARY_PATH'] = spec['isl'].prefix.lib
+            if oldpath is not None:
+                os.environ['LD_LIBRARY_PATH'] += os.pathsep + oldpath
 
         if not spec.satisfies('+nvptx'):
             return
