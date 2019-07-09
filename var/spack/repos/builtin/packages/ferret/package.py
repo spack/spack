@@ -15,13 +15,15 @@ class Ferret(Package):
     homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
     url      = "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz"
 
+    version('7.2', '21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095')
     version('6.96', '51722027c864369f41bab5751dfff8cc')
 
-    depends_on("hdf5~mpi~fortran")
-    depends_on("netcdf~mpi")
+    depends_on("hdf5+hl")
+    depends_on("netcdf")
     depends_on("netcdf-fortran")
     depends_on("readline")
     depends_on("zlib")
+    depends_on("libx11")
 
     def url_for_version(self, version):
         return "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v{0}.tar.gz".format(
@@ -57,36 +59,27 @@ class Ferret(Package):
         filter_file(r'-lm',
                     '-lgfortran -lm',
                     'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdff.a',
+                    "-L%s -lnetcdff" % self.spec['netcdf-fortran'].prefix.lib,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdf.a',
+                    "-L%s -lnetcdf" % self.spec['netcdf'].prefix.lib,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'\$\(HDF5_DIR\)/lib64/libhdf5_hl.a',
+                    "-L%s -lhdf5_hl" % self.spec['hdf5'].prefix.lib,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'\$\(HDF5_DIR\)/lib64/libhdf5.a',
+                    "-L%s -lhdf5" % self.spec['hdf5'].prefix.lib,
+                    'FERRET/platform_specific.mk.x86_64-linux')
 
     def install(self, spec, prefix):
-        hdf5_prefix = spec['hdf5'].prefix
-        netcdff_prefix = spec['netcdf-fortran'].prefix
-        netcdf_prefix = spec['netcdf'].prefix
-        libz_prefix = spec['zlib'].prefix
-        ln = which('ln')
-        ln('-sf',
-           hdf5_prefix + '/lib',
-           hdf5_prefix + '/lib64')
-        ln('-sf',
-           netcdff_prefix + '/lib',
-           netcdff_prefix + '/lib64')
-        ln('-sf',
-           netcdf_prefix + '/lib/libnetcdf.a',
-           netcdff_prefix + '/lib/libnetcdf.a')
-        ln('-sf',
-           netcdf_prefix + '/lib/libnetcdf.la',
-           netcdff_prefix + '/lib/libnetcdf.la')
-        ln('-sf',
-           libz_prefix + '/lib',
-           libz_prefix + '/lib64')
-
         if 'LDFLAGS' in env and env['LDFLAGS']:
             env['LDFLAGS'] += ' ' + '-lquadmath'
         else:
             env['LDFLAGS'] = '-lquadmath'
 
         with working_dir('FERRET', create=False):
-            os.environ['LD_X11'] = '-L/usr/lib/X11 -lX11'
+            os.environ['LD_X11'] = '-L%s -lX11' % spec['libx11'].prefix.lib
             os.environ['HOSTTYPE'] = 'x86_64-linux'
             make(parallel=False)
             make("install")
