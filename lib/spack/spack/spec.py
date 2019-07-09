@@ -90,7 +90,7 @@ from six import StringIO
 from six import string_types
 from six import iteritems
 
-from llnl.util.filesystem import find_headers, find_libraries, is_exe
+from llnl.util.filesystem import find_headers, find_libraries_in_prefix, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs, memoized
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
@@ -709,28 +709,20 @@ def _libs_default_handler(descriptor, spec, cls):
         NoLibrariesError: If no libraries are found
     """
 
-    # Variable 'name' is passed to function 'find_libraries', which supports
-    # glob characters. For example, we have a package with a name 'abc-abc'.
-    # Now, we don't know if the original name of the package is 'abc_abc'
-    # (and it generates a library 'libabc_abc.so') or 'abc-abc' (and it
-    # generates a library 'libabc-abc.so'). So, we tell the function
-    # 'find_libraries' to give us anything that matches 'libabc?abc' and it
-    # gives us either 'libabc-abc.so' or 'libabc_abc.so' (or an error)
-    # depending on which one exists (there is a possibility, of course, to
-    # get something like 'libabcXabc.so, but for now we consider this
-    # unlikely).
+    # Variable 'name' is passed to function 'find_libraries_in_prefix', which
+    # supports glob characters. For example, we have a package with a name
+    # 'abc-abc'. Now, we don't know if the original name of the package is
+    # 'abc_abc' (and it generates a library 'libabc_abc.so') or 'abc-abc' (and
+    # it generates a library 'libabc-abc.so'). So, we tell the function
+    # 'find_libraries_in_prefix' to give us anything that matches 'libabc?abc'
+    # and it gives us either 'libabc-abc.so' or 'libabc_abc.so' (or an error)
+    # depending on which one exists (there is a possibility, of course, to get
+    # something like 'libabcXabc.so, but for now we consider this unlikely).
     name = spec.name.replace('-', '?')
 
     # Avoid double 'lib' for packages whose names already start with lib
     if not name.startswith('lib'):
         name = 'lib' + name
-
-    # To speedup the search for external packages configured e.g. in /usr,
-    # perform first non-recursive search in prefix.lib then in prefix.lib64 and
-    # finally search all of prefix recursively. The search stops when the first
-    # match is found.
-    prefix = spec.prefix
-    search_paths = [(prefix.lib, False), (prefix.lib64, False), (prefix, True)]
 
     # If '+shared' search only for shared library; if '~shared' search only for
     # static library; otherwise, first search for shared and then for static.
@@ -738,15 +730,12 @@ def _libs_default_handler(descriptor, spec, cls):
         ([False] if ('~shared' in spec) else [True, False])
 
     for shared in search_shared:
-        for path, recursive in search_paths:
-            libs = find_libraries(
-                name, root=path, shared=shared, recursive=recursive
-            )
-            if libs:
-                return libs
+        libs = find_libraries_in_prefix(name, spec.prefix, shared=shared)
+        if libs:
+            return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
-    raise NoLibrariesError(msg.format(spec.name, prefix))
+    raise NoLibrariesError(msg.format(spec.name, spec.prefix))
 
 
 class ForwardQueryToPackage(object):
