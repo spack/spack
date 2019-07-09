@@ -76,10 +76,6 @@ class Binutils(AutotoolsPackage):
         if spec.satisfies('platform=darwin'):
             configure_args.append('--program-prefix=g')
 
-        # To ignore the errors of narrowing conversions
-        if self.compiler.name == 'fj':
-            configure_args.append('CXXFLAGS=-Wno-narrowing')
-
         return configure_args
 
     @run_after('install')
@@ -95,3 +91,9 @@ class Binutils(AutotoolsPackage):
             for current_file in glob.glob(join_path(self.build_directory,
                                                     'bfd', '*.h')):
                 install(current_file, extradir)
+
+    def flag_handler(self, name, flags):
+        # To ignore the errors of narrowing conversions for the Fujitsu compiler
+        if name == 'cxxflags' and self.compiler.name == 'fj':
+            flags.append('-Wno-narrowing')
+        return (flags, None, None)
