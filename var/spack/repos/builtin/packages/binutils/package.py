@@ -93,7 +93,9 @@ class Binutils(AutotoolsPackage):
                 install(current_file, extradir)
 
     def flag_handler(self, name, flags):
-        # To ignore the errors of narrowing conversions for the Fujitsu compiler
-        if name == 'cxxflags' and self.compiler.name == 'fj':
+        # To ignore the errors of narrowing conversions for
+        # the Fujitsu compiler
+        if name == 'cxxflags' and self.compiler.name == 'fj'\
+           and self.version <= ver('2.31.1'):
             flags.append('-Wno-narrowing')
         return (flags, None, None)
