@@ -63,10 +63,10 @@ from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
 
-# Filename for the successful Spack build log
+# Filename for the Spack build/install log.
 _spack_build_logfile = 'spack-build-out.txt'
 
-# Filename for the Spack build environment file
+# Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
 
 
@@ -440,8 +440,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will be
-    #: copied in the same directory tree as spack-build-env.txt and
-    #: spack-build-out.txt.
+    #: copied in the same directory tree as _spack_build_logfile and
+    #: _spack_build_envfile.
     archive_files = []
 
     #
@@ -791,24 +791,52 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def env_path(self):
         """The Spack build environment file path."""
-        return os.path.join(self.stage.path, _spack_build_envfile)
+        # Backward compatibility: Return the name of an existing log path;
+        # otherwise, return the current install env path name.
+        old_filename = os.path.join(self.stage.path, 'spack-build.env')
+        if os.path.exists(old_filename):
+            return old_filename
+        else:
+            return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
     def install_env_path(self):
         """Return the path to the install env file."""
-        return os.path.join(spack.store.layout.metadata_path(self.spec),
-                            _spack_build_envfile)
+        install_path = spack.store.layout.metadata_path(self.spec)
+
+        # Backward compatibility: Return the name of an existing log path;
+        # otherwise, return the current install env path name.
+        old_filename = os.path.join(install_path, 'build.env')
+        if os.path.exists(old_filename):
+            return old_filename
+        else:
+            return os.path.join(install_path, _spack_build_envfile)
 
     @property
     def log_path(self):
         """The Spack build log file path."""
+        # Backward compatibility: Return the name of an existing log path.
+        for filename in ['spack-build.out', 'spack-build.txt']:
+            old_log = os.path.join(self.stage.path, filename)
+            if os.path.exists(old_log):
+                return old_log
+
+        # Otherwise, return the current log path name.
         return os.path.join(self.stage.path, _spack_build_logfile)
 
     @property
     def install_log_path(self):
         """Return the path to the install log file."""
-        return os.path.join(spack.store.layout.metadata_path(self.spec),
-                            _spack_build_logfile)
+        install_path = spack.store.layout.metadata_path(self.spec)
+
+        # Backward compatibility: Return the name of an existing install log.
+        for filename in ['build.out', 'build.txt']:
+            old_log = os.path.join(install_path, filename)
+            if os.path.exists(old_log):
+                return old_log
+
+        # Otherwise, return the current install log path name.
+        return os.path.join(install_path, _spack_build_logfile)
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least

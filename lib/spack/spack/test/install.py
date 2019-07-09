@@ -5,8 +5,9 @@
 
 import os
 import pytest
+import shutil
 
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.patch
 import spack.repo
@@ -291,16 +292,63 @@ def test_pkg_build_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
 
-    assert spec.package.log_path.endswith(_spack_build_logfile)
-    assert spec.package.env_path.endswith(_spack_build_envfile)
+    log_path = spec.package.log_path
+    assert log_path.endswith(_spack_build_logfile)
+
+    env_path = spec.package.env_path
+    assert env_path.endswith(_spack_build_envfile)
+
+    # Backward compatibility checks
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        # Start with the older of the previous log filenames
+        older_log = 'spack-build.out'
+        touch(older_log)
+        assert spec.package.log_path.endswith(older_log)
+
+        # Now check the newer log filename
+        last_log = 'spack-build.txt'
+        os.rename(older_log, last_log)
+        assert spec.package.log_path.endswith(last_log)
+
+        # Check the old environment file
+        last_env = 'spack-build.env'
+        os.rename(last_log, last_env)
+        assert spec.package.env_path.endswith(last_env)
+
+    # Cleanup
+    shutil.rmtree(log_dir)
 
 
 def test_pkg_install_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
 
-    rel_path = os.path.join('.spack', _spack_build_logfile)
-    assert spec.package.install_log_path == os.path.join(spec.prefix, rel_path)
+    log_path = os.path.join(spec.prefix, '.spack', _spack_build_logfile)
+    assert spec.package.install_log_path == log_path
 
-    rel_path = os.path.join('.spack', _spack_build_envfile)
-    assert spec.package.install_env_path == os.path.join(spec.prefix, rel_path)
+    env_path = os.path.join(spec.prefix, '.spack', _spack_build_envfile)
+    assert spec.package.install_env_path == env_path
+
+    # Backward compatibility checks
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        # Start with the older of the previous install log filenames
+        older_log = 'build.out'
+        touch(older_log)
+        assert spec.package.install_log_path.endswith(older_log)
+
+        # Now check the newer install log filename
+        last_log = 'build.txt'
+        os.rename(older_log, last_log)
+        assert spec.package.install_log_path.endswith(last_log)
+
+        # Check the old install environment file
+        last_env = 'build.env'
+        os.rename(last_log, last_env)
+        assert spec.package.install_env_path.endswith(last_env)
+
+    # Cleanup
+    shutil.rmtree(log_dir)
