@@ -54,6 +54,7 @@ def set_up_license(pkg):
                 raise EnvironmentError(
                     'No text editor found! Please set the VISUAL and/or EDITOR'
                     ' environment variable(s) to your preferred text editor.')
+
             def editor_wrapper(exe, args):
                 editor_exe(license_path)
             editor(license_path, _exec_func=editor_wrapper)
