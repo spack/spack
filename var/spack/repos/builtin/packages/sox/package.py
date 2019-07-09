@@ -14,7 +14,7 @@ class Sox(AutotoolsPackage):
 
     version('14.4.2', 'ba804bb1ce5c71dd484a102a5b27d0dd')
 
-    variant('lame',
+    variant('mp3',
             default=False,
             description='Build with mp3 support')
 
@@ -23,4 +23,5 @@ class Sox(AutotoolsPackage):
     depends_on('id3lib')
     depends_on('libvorbis')
     depends_on('opus')
-    depends_on('lame', when='+lame')
+    depends_on('lame', when='+mp3')
+    depends_on('libmad', when='+mp3')
