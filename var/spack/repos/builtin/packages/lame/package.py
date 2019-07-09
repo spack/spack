@@ -11,7 +11,7 @@ class Lame(AutotoolsPackage):
     under the LGPL."""
 
     homepage = "http://lame.sourceforge.net/"
-    url      = "https://netcologne.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
+    url      = "https://download.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 
     version('3.100', sha256='ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e')
 
