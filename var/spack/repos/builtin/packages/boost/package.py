@@ -234,11 +234,8 @@ class Boost(Package):
         if '+python' in spec:
             options.append('--with-python=%s' % spec['python'].command.path)
 
-        # -std=c++11 flag is needed for compiling boost.thread.
-        spack_cxxflags = ''
-        if spec.satisfies('%xl'):
-            # XL does not turn on 11 by default.
-            spack_cxxflags = '<cxxflags>{0}'.format(self.compiler.cxx11_flag)
+        # C++11 is required for boost libraries with some compilers.
+        spack_cxxflags = '<cxxflags>{0}'.format(self.compiler.cxx11_flag)
 
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
