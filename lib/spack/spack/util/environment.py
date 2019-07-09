@@ -879,15 +879,17 @@ def environment_after_sourcing_files(*files, **kwargs):
 
         return environment
 
-    kwargs.setdefault('env', dict(os.environ))
+    current_environment = kwargs.get('env', dict(os.environ))
     for f in files:
         # Normalize the input to the helper function
         if isinstance(f, six.string_types):
             f = [f]
 
-        kwargs['env'] = _source_single_file(f, environment=kwargs['env'])
+        current_environment = _source_single_file(
+            f, environment=current_environment
+        )
 
-    return kwargs['env']
+    return current_environment
 
 
 def sanitize(environment, blacklist, whitelist):
