@@ -52,8 +52,8 @@ def set_up_license(pkg):
                 editor_exe = which('vim', 'vi', 'emacs', 'nano')
             if editor_exe is None:
                 raise EnvironmentError(
-                    'No text editor found! Please set the VISUAL and/or EDITOR '
-                    'environment variable(s) to your preferred text editor.')
+                    'No text editor found! Please set the VISUAL and/or EDITOR'
+                    ' environment variable(s) to your preferred text editor.')
             def editor_wrapper(exe, args):
                 editor_exe(license_path)
             editor(license_path, _exec_func=editor_wrapper)
