@@ -282,26 +282,6 @@ def test_uninstall_by_spec_errors(mutable_database):
         PackageBase.uninstall_by_spec(rec.spec)
 
 
-def test_uninstall_unknown_entity(mutable_database, monkeypatch):
-    """Test that attempts to uninstall a "package-less" spec."""
-    def _package(_):
-        raise spack.repo.UnknownEntityError('Mock error')
-
-    rec = mutable_database.get_record('externaltest')
-    rec.spec._package = None
-    actual_get = spack.repo.get
-    monkeypatch.setattr(spack.repo, 'get', _package)
-
-    try:
-        PackageBase.uninstall_by_spec(rec.spec)
-        pytest.fail("Expected uninstall_by_spec to fail")
-    except spack.repo.UnknownEntityError:
-        pass
-    finally:
-        # Ensure restore spack.repo for teardown
-        monkeypatch.setattr(spack.repo, 'get', actual_get)
-
-
 class MockDoclessPackage(BundlePackage):
     def __init__(self, spec):
         self.spec = spec
