@@ -213,16 +213,14 @@ def do_uninstall(env, specs, force):
         if env:
             _remove_from_env(item, env)
 
-    # Sort packages to be uninstalled by the number of installed dependents
-    # This ensures we do things in the right order
-    def num_installed_deps(pkg):
-        dependents = spack.store.db.installed_relatives(
-            pkg.spec, 'parents', True)
-        return len(dependents)
-
-    packages.sort(key=num_installed_deps)
-    for item in packages:
-        item.do_uninstall(force=force)
+    is_ready = lambda x: not spack.store.db.query_by_spec_hash(x)[1].ref_count
+    while packages:
+        ready = [x for x in packages if is_ready(x.spec.dag_hash())]
+        if not ready:
+            raise RuntimeError('cannot proceed uninstalling specs')
+        packages = [x for x in packages if x not in ready]
+        for item in ready:
+            item.do_uninstall(force=force)
 
     # write any changes made to the active environment
     if env:
