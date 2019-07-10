@@ -35,16 +35,22 @@ class Extrae(Package):
        OpenMP, CUDA, OpenCL, pthread, OmpSs"""
     homepage = "https://tools.bsc.es/extrae"
     url      = "https://ftp.tools.bsc.es/extrae/extrae-3.4.1-src.tar.bz2"
+    version('3.7.1', sha256='95810b057f95e91bfc89813eb8bd320dfe40614fc8e98c63d95c5101c56dd213', preferred=True)
     version('3.4.1', '69001f5cfac46e445d61eeb567bc8844')
 
     depends_on("mpi")
-    depends_on("dyninst")
     depends_on("libunwind")
     depends_on("boost")
     depends_on("libdwarf")
     depends_on("papi")
     depends_on("elf", type="link")
     depends_on("libxml2")
+
+    variant('dyninst', default=False, description="Use dyninst for dynamic code installation")
+    depends_on('dyninst@:9.9.99', type=('build', 'link'), when='+dyninst')
+
+    variant('papi', default=True, description="Use PAPI to collect performance counters")
+    depends_on('papi', type=('build', 'link'), when='+papi')
 
     # gettext dependency added to find -lintl
     # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
@@ -59,30 +65,35 @@ class Extrae(Package):
         elif 'mvapich2' in spec:
             mpi = spec['mvapich2']
 
-        extra_config_args = []
+        config_args = ["--prefix=%s" % prefix,
+                       "--with-mpi=%s" % mpi.prefix,
+                       "--with-unwind=%s" % spec['libunwind'].prefix,
+                       "--with-boost=%s" % spec['boost'].prefix,
+                       "--with-dwarf=%s" % spec['libdwarf'].prefix,
+                       "--with-elf=%s" % spec['elf'].prefix,
+                       "--with-xml-prefix=%s" % spec['libxml2'].prefix,
+                       "--with-binutils=%s" % spec['binutils'].prefix]
 
-        # This was added due to configure failure
-        # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
-        extra_config_args.append('LDFLAGS=-lintl')
+        config_args += (["--with-papi=%s" % spec['papi'].prefix]
+                        if '+papi' in self.spec else
+                        ["--without-papi"])
+
+        config_args += (["--with-dyninst=%s" % spec['dyninst'].prefix,
+                         "--with-dyninst-headers=%s" %
+                         spec['dyninst'].prefix.include,
+                         "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib]
+                        if '+dyninst' in self.spec else
+                        ["--without-dyninst"])
 
         if spec.satisfies("^dyninst@9.3.0:"):
             make.add_default_arg('CXXFLAGS=-std=c++11')
-            extra_config_args.append('CXXFLAGS=-std=c++11')
+            config_args.append('CXXFLAGS=-std=c++11')
 
-        configure("--prefix=%s" % prefix,
-                  "--with-mpi=%s" % mpi.prefix,
-                  "--with-unwind=%s" % spec['libunwind'].prefix,
-                  "--with-dyninst=%s" % spec['dyninst'].prefix,
-                  "--with-boost=%s" % spec['boost'].prefix,
-                  "--with-dwarf=%s" % spec['libdwarf'].prefix,
-                  "--with-papi=%s" % spec['papi'].prefix,
-                  "--with-dyninst-headers=%s" % spec[
-                      'dyninst'].prefix.include,
-                  "--with-elf=%s" % spec['elf'].prefix,
-                  "--with-xml-prefix=%s" % spec['libxml2'].prefix,
-                  "--with-binutils=%s" % spec['binutils'].prefix,
-                  "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib,
-                  *extra_config_args)
+        # This was added due to configure failure
+        # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
+        config_args.append('LDFLAGS=-lintl')
+
+        configure(*config_args)
 
         make()
         make("install", parallel=False)
