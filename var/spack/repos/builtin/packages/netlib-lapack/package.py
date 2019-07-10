@@ -98,7 +98,7 @@ class NetlibLapack(CMakePackage):
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
-        return find_libraries_in_prefix(libraries, self.prefix, shared=shared)
+        return find_libraries(libraries, self.prefix, shared=shared)
 
     @property
     def lapack_libs(self):
@@ -119,7 +119,7 @@ class NetlibLapack(CMakePackage):
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
-        return find_libraries_in_prefix(libraries, self.prefix, shared=shared)
+        return find_libraries(libraries, self.prefix, shared=shared)
 
     @property
     def headers(self):

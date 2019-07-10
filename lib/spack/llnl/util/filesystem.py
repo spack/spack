@@ -39,7 +39,6 @@ __all__ = [
     'find_all_headers',
     'find_libraries',
     'find_system_libraries',
-    'find_libraries_in_prefix',
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
@@ -1390,34 +1389,15 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # List of libraries we are searching with suffixes
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
-    return LibraryList(find(root, libraries, recursive))
-
-
-def find_libraries_in_prefix(libraries, prefix, shared=True):
-    """Returns an iterable of full paths to libraries found in prefix.
-
-    To speedup the search for external packages configured e.g. in /usr,
-    perform first non-recursive search in prefix/lib then in prefix/lib64 and
-    finally search all of prefix recursively. The search stops when the first
-    match is found.
-
-    Args:
-        libraries (str or list of str): Library name(s) to search for
-        prefix (str): The prefix to search.
-        shared (bool, optional): if True searches for shared libraries,
-            otherwise for static. Defaults to True.
-
-    Returns:
-        LibraryList: The libraries that have been found
-
-    """
     for subdir in ('lib', 'lib64'):
         root = join_path(prefix, subdir)
-        libs = find_libraries(libraries, root=root, shared=shared, recursive=False)
-        if libs:
-            return libs
+        found_libs = find(root, libraries, False)
+        if found_libs:
+            break
     else:
-        return find_libraries(libraries, root=prefix, shared=shared, recursive=True)
+        found_libs = find(prefix, libraries, True)
+
+    return LibraryList(found_libs)
 
 
 @memoized
