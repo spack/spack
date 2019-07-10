@@ -58,10 +58,13 @@ class Gromacs(CMakePackage):
                     'AVX2_128', 'AVX2_256', 'AVX_512', 'AVX_512_KNL',
                     'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
-    variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
-    variant('subcounters', default=False, description='Enable wallcycle subcounters')
+    variant('rdtscp', default=True,
+            description='Enable RDTSCP instruction usage')
+    variant('subcounters', default=False,
+            description='Enable wallcycle subcounters')
     variant('own_fftw', default=True, description='Build own FFTW')
-    variant('omp_max_threads', default='auto', description='Max number of OpenMP threads',
+    variant('omp_max_threads', default='auto',
+            description='Max number of OpenMP threads',
             values=('auto', '32', '64', '128', '256'))
     variant('static', default=False, description='Prefer static libraries')
     variant('mdrun_only', default=False, description='Build only mdrun')
@@ -116,10 +119,10 @@ class Gromacs(CMakePackage):
 
         if '+subcounters' in self.spec:
             options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')
-            
+
         if '+own_fftw' in self.spec:
             options.append('-DGMX_BUILD_OWN_FFTW:BOOL=ON')
-            
+
         if '+mdrun_only' in self.spec:
             options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
 
@@ -127,6 +130,7 @@ class Gromacs(CMakePackage):
         if omp_max_threads_value == 'auto':
             pass
         else:
-            options.append('-DDGMX_OPENMP_MAX_THREADS:STRING=%s' % omp_max_threads_value)
+            options.append('-DDGMX_OPENMP_MAX_THREADS:STRING=%s'
+                           % omp_max_threads_value)
 
         return options
