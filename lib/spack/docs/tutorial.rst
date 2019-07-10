@@ -23,7 +23,7 @@ Spack is used in practice.
 .. rubric:: Slides
 
 .. figure:: tutorial/sc16-tutorial-slide-preview.png
-   :target: https://spack.io/slides/Spack-ISC19-Tutorial.pdf
+   :target: https://spack.io/slides/Spack-DOE-NSF-Tutorial-2019.pdf
    :height: 72px
    :align: left
    :alt: Slide Preview
