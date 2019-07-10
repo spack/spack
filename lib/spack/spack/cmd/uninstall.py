@@ -126,9 +126,10 @@ def installed_dependents(specs, env):
 
     env_hashes = set(env.all_hashes()) if env else set()
 
+    all_specs_in_db = spack.store.db.query()
+
     for spec in specs:
-        installed = spack.store.db.installed_relatives(
-            spec, direction='parents', transitive=True)
+        installed = [x for x in all_specs_in_db if spec in x]
 
         # separate installed dependents into dpts in this environment and
         # dpts that are outside this environment
@@ -332,5 +333,5 @@ def uninstall(parser, args):
                 '  Use `spack uninstall --all` to uninstall ALL packages.')
 
     # [any] here handles the --all case by forcing all specs to be returned
-    uninstall_specs(
-        args, spack.cmd.parse_specs(args.packages) if args.packages else [any])
+    specs = spack.cmd.parse_specs(args.packages) if args.packages else [any]
+    uninstall_specs(args, specs)
