@@ -65,7 +65,7 @@ class Bowtie2(Package):
             filter_file(match, substitute, *files, **kwargs)
 
     def install(self, spec, prefix):
-        make_arg =  []
+        make_arg = []
         if self.spec.satisfies('target=aarch64'):
             make_arg.append('POPCNT_CAPABILITY=0')
         make(*make_arg)
