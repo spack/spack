@@ -2304,6 +2304,10 @@ class Package(PackageBase):
     run_after('install')(PackageBase.sanity_check_prefix)
 
 
+# Note this is a feature required for external packages maintained by at least
+# one site.
+#
+# TODO: Why is unused pkg one of the arguments?
 def install_dependency_symlinks(pkg, spec, prefix):
     """Execute a dummy install and flatten dependencies"""
     flatten_dependencies(spec, prefix)
@@ -2317,6 +2321,8 @@ def use_cray_compiler_names():
     os.environ['F77'] = 'ftn'
 
 
+# Note this is a feature required for external packages maintained by at least
+# one site.
 def flatten_dependencies(spec, flat_dir):
     """Make each dependency of spec present in dir via symlink."""
     for dep in spec.traverse(root=False):

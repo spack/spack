@@ -135,6 +135,24 @@ def test_installed_dependency_request_conflicts(
         dependent.concretize()
 
 
+def test_install_dependency_symlinks(
+        install_mockery, mock_fetch, mutable_mock_packages):
+    dependent = Spec('dependent-install')
+    dependent.concretize()
+    pkg = dependent.package
+    pkg.do_install()
+
+    # Ensure dependency directory appears only after the symlinks call
+    dependency_name = 'dependency-install'
+    assert dependency_name not in os.listdir(pkg.prefix)
+
+    spack.package.install_dependency_symlinks(pkg, dependent, pkg.prefix)
+    assert dependency_name in os.listdir(pkg.prefix)
+
+    dependency_dir = os.path.join(pkg.prefix, dependency_name)
+    assert os.path.isdir(dependency_dir)
+
+
 def test_installed_upstream_external(
         tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
     """Check that when a dependency package is recorded as installed in
