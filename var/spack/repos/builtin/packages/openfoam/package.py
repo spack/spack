@@ -258,9 +258,9 @@ class Openfoam(Package):
 
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
-    url      = "https://sourceforge.net/projects/openfoamplus/files/v1706/OpenFOAM-v1706.tgz"
+    url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
-    list_url = "https://sourceforge.net/projects/openfoamplus/files/"
+    list_url = "https://sourceforge.net/projects/openfoam/files/"
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')
