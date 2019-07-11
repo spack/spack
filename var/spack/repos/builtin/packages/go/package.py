@@ -134,6 +134,6 @@ class Go(Package):
         # This *MUST* be first, this is where new code is installed
         spack_env.set('GOPATH', ':'.join(path_components))
 
-        # Allow packages to find this when using module or dotkit
+        # Allow packages to find this when using module files
         run_env.prepend_path('GOPATH', ':'.join(
             [dependent_spec.prefix] + path_components))

@@ -135,7 +135,7 @@ properties = {
                 'default': [],
                 'items': {
                     'type': 'string',
-                    'enum': ['tcl', 'dotkit', 'lmod']}},
+                    'enum': ['tcl', 'lmod']}},
             'lmod': {
                 'allOf': [
                     # Base configuration
@@ -154,13 +154,6 @@ properties = {
                     # Base configuration
                     module_type_configuration,
                     {}  # Specific tcl extensions
-                ]
-            },
-            'dotkit': {
-                'allOf': [
-                    # Base configuration
-                    module_type_configuration,
-                    {}  # Specific dotkit extensions
                 ]
             },
         },

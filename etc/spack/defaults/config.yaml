@@ -32,7 +32,6 @@ config:
   module_roots:
     tcl:    $spack/share/spack/modules
     lmod:   $spack/share/spack/lmod
-    dotkit: $spack/share/spack/dotkit
 
 
   # Temporary locations Spack can try to use for builds.

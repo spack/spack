@@ -38,8 +38,7 @@ properties = {
                 'additionalProperties': False,
                 'properties': {
                     'tcl': {'type': 'string'},
-                    'lmod': {'type': 'string'},
-                    'dotkit': {'type': 'string'},
+                    'lmod': {'type': 'string'}
                 },
             },
             'source_cache': {'type': 'string'},
