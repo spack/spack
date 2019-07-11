@@ -27,7 +27,7 @@ class Pgi(Compiler):
                   'fc': 'pgi/pgfortran'}
 
     PrgEnv = 'PrgEnv-pgi'
-    PrgEnv_compiler = 'pgi'
+    modules = 'pgi'
 
     version_argument = '-V'
     version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '

@@ -27,7 +27,7 @@ class Intel(Compiler):
                   'fc': 'intel/ifort'}
 
     PrgEnv = 'PrgEnv-intel'
-    PrgEnv_compiler = 'intel'
+    modules = 'intel'
 
     version_argument = '--version'
     version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'

@@ -110,7 +110,7 @@ class Compiler(object):
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
     # Name of module used to switch versions of this compiler
-    PrgEnv_compiler = None
+    modules = None
 
     def __init__(self, cspec, operating_system, target,
                  paths, modules=[], alias=None, environment=None,

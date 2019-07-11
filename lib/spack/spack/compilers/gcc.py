@@ -36,7 +36,7 @@ class Gcc(Compiler):
                   'fc': 'gcc/gfortran'}
 
     PrgEnv = 'PrgEnv-gnu'
-    PrgEnv_compiler = 'gcc'
+    modules = 'gcc'
 
     @property
     def openmp_flag(self):

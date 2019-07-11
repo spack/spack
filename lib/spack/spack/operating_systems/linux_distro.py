@@ -5,7 +5,8 @@
 
 import re
 from spack.architecture import OperatingSystem
-
+import platform
+from spack.util.module_cmd import module
 
 class LinuxDistro(OperatingSystem):
     """ This class will represent the autodetected operating system
@@ -16,6 +17,7 @@ class LinuxDistro(OperatingSystem):
     """
 
     def __init__(self):
+        self.modulecmd = module
         try:
             # This will throw an error if imported on a non-Linux platform.
             from external.distro import linux_distribution
@@ -37,3 +39,54 @@ class LinuxDistro(OperatingSystem):
             version = version[0]
 
         super(LinuxDistro, self).__init__(distname, version)
+
+    def arguments_to_detect_version_fn(self, paths):
+        import spack.compilers
+
+        command_arguments = []
+        for compiler_name in spack.compilers.supported_compilers():
+            cmp_cls = spack.compilers.class_for_compiler_name(compiler_name)
+
+            if cmp_cls.modules is None:
+                continue
+
+            compiler_id = spack.compilers.CompilerID(self, compiler_name, None)
+            detect_version_args = spack.compilers.DetectVersionArgs(
+                id=compiler_id, variation=(None, None),
+                language='cc', path='cc'
+            )
+            command_arguments.append(detect_version_args)
+        return command_arguments
+
+    def detect_version(self, detect_version_args):
+        import spack.compilers
+        modulecmd = self.modulecmd
+        compiler_name = detect_version_args.id.compiler_name
+        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
+        output = modulecmd('avail', compiler_cls.modules)
+        version_regex = r'(%s)/([\d\.]+[\d])' % compiler_cls.modules
+        matches = re.findall(version_regex, output)
+        version = tuple(version for _, version in matches)
+        compiler_id = detect_version_args.id
+        value = detect_version_args._replace(
+            id=compiler_id._replace(version=version)
+        )
+        return value, None
+
+    def make_compilers(self, compiler_id, paths):
+        import spack.spec
+        name = compiler_id.compiler_name
+        cmp_cls = spack.compilers.class_for_compiler_name(name)
+        compilers = []
+        for v in compiler_id.version:
+            comp = cmp_cls(
+                spack.spec.CompilerSpec(name + '@' + v),
+                self, platform.machine(),
+                [cmp_cls.cc_names[0],
+                 cmp_cls.cxx_names[0],
+                 cmp_cls.f77_names[0],
+                 cmp_cls.fc_names[0]],
+                [name + '/' + v])
+
+            compilers.append(comp)
+        return compilers

@@ -25,7 +25,7 @@ class Cce(Compiler):
     suffixes = [r'-mp-\d\.\d']
 
     PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
+    modules = 'cce'
 
     link_paths = {'cc': 'cce/cc',
                   'cxx': 'cce/case-insensitive/CC',
