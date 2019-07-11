@@ -1390,12 +1390,14 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
     for subdir in ('lib', 'lib64'):
-        root = join_path(prefix, subdir)
-        found_libs = find(root, libraries, False)
+        dirname = join_path(root, subdir)
+        if not os.path.isdir(dirname):
+            continue
+        found_libs = find(dirname, libraries, False)
         if found_libs:
             break
     else:
-        found_libs = find(prefix, libraries, True)
+        found_libs = find(root, libraries, True)
 
     return LibraryList(found_libs)
 
