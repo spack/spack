@@ -1485,24 +1485,26 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # module from the upstream Spack instance.
             return
 
-        partial = self.check_for_unfinished_installation(keep_prefix, restage)
+        if self.is_code_pkg:
+            # Ensure package source is not already installed
+            partial = self.check_for_unfinished_installation(keep_prefix,
+                                                             restage)
 
-        # Ensure package is not already installed
-        layout = spack.store.layout
-        with spack.store.db.prefix_read_lock(self.spec):
-            if partial:
-                tty.msg(
-                    "Continuing from partial install of %s" % self.name)
-            elif layout.check_installed(self.spec):
-                msg = '{0.name} is already installed in {0.prefix}'
-                tty.msg(msg.format(self))
-                rec = spack.store.db.get_record(self.spec)
-                # In case the stage directory has already been created,
-                # this ensures it's removed after we checked that the spec
-                # is installed
-                if keep_stage is False:
-                    self.stage.destroy()
-                return self._update_explicit_entry_in_db(rec, explicit)
+            layout = spack.store.layout
+            with spack.store.db.prefix_read_lock(self.spec):
+                if partial:
+                    tty.msg(
+                        "Continuing from partial install of %s" % self.name)
+                elif layout.check_installed(self.spec):
+                    msg = '{0.name} is already installed in {0.prefix}'
+                    tty.msg(msg.format(self))
+                    rec = spack.store.db.get_record(self.spec)
+                    # In case the stage directory has already been created,
+                    # this ensures it's removed after we checked that the spec
+                    # is installed
+                    if keep_stage is False:
+                        self.stage.destroy()
+                    return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
 
