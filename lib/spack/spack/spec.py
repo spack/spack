@@ -730,7 +730,7 @@ def _libs_default_handler(descriptor, spec, cls):
         ([False] if ('~shared' in spec) else [True, False])
 
     for shared in search_shared:
-        libs = find_libraries(name, spec.prefix, shared=shared)
+        libs = find_libraries(name, spec.prefix, shared=shared, recursive=True)
         if libs:
             return libs
 
