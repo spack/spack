@@ -6,8 +6,7 @@
 import os
 import pytest
 
-from spack.package import \
-    BundlePackage, InstallError, PackageBase, PackageStillNeededError
+from spack.package import BundlePackage
 import spack.patch
 import spack.repo
 import spack.store
