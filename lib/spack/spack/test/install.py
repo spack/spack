@@ -6,6 +6,8 @@
 import os
 import pytest
 
+from spack.package import \
+    BundlePackage, InstallError, PackageBase, PackageStillNeededError
 import spack.patch
 import spack.repo
 import spack.store
@@ -269,3 +271,22 @@ def test_failing_build(install_mockery, mock_fetch):
 
 class MockInstallError(spack.error.SpackError):
     pass
+
+
+class MockNoSourcePackage(BundlePackage):
+    def __init__(self, spec):
+        self.spec = spec
+
+
+def test_nosource_pkg(install_mockery, mock_fetch, mock_packages):
+    spec = Spec('nosource').concretized()
+    spec.package.do_install()
+
+    with pytest.raises(ValueError, match="with a URL"):
+        spec.package.do_fetch()
+
+    with pytest.raises(ValueError, match="with a URL"):
+        spec.package.do_stage()
+
+    with pytest.raises(ValueError, match="with a URL"):
+        spec.package.do_patch()

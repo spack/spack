@@ -331,11 +331,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     ***The Package class***
 
-    A package defines how to fetch, verify (via, e.g., sha256), build,
-    and install a piece of software.  A Package also defines what other
-    packages it depends on, so that dependencies can be installed along
-    with the package itself.  Packages are written in pure python by
-    users of Spack.
+    At its core, a package consists of a set of software to be installed.
+    A package may focus on a piece of software and its associated software
+    dependencies or it may simply be a set, or bundle, of software.  The
+    former requires defining how to fetch, verify (via, e.g., sha256), build,
+    and install that software and the packages it depends on, so that
+    dependencies can be installed along with the package itself.   The latter,
+    sometimes referred to as a ``no-source`` package, requires only defining
+    the packages to be built.
+
+    Packages are written in pure Python by users of Spack.
 
     There are two main parts of a Spack package:
 
@@ -346,12 +351,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
          used as input to the concretizer.
 
       2. **Package instances**. Once instantiated, a package is
-         essentially an installer for a particular piece of
-         software. Spack calls methods like ``do_install()`` on the
-         ``Package`` object, and it uses those to drive user-implemented
-         methods like ``patch()``, ``install()``, and other build steps.
-         To install software, An instantiated package needs a *concrete*
-         spec, which guides the behavior of the various install methods.
+         essentially a software installer.  Spack calls methods like
+         ``do_install()`` on the ``Package`` object, and it uses those to
+         drive user-implemented methods like ``patch()``, ``install()``, and
+         other build steps.  To install software, an instantiated package
+         needs a *concrete* spec, which guides the behavior of the various
+         install methods.
 
     Packages are imported from repos (see ``repo.py``).
 
@@ -364,7 +369,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     **Package Lifecycle**
 
-    A package's lifecycle over a run of Spack looks something like this:
+    A code, or source-based, package's lifecycle over a run of Spack looks
+    something like this:
 
     .. code-block:: python
 
@@ -385,15 +391,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                  # re-expands the archive.
 
     The convention used here is that a ``do_*`` function is intended to be
-    called internally by Spack commands (in spack.cmd).  These aren't for
+    called internally by Spack commands (in ``spack.cmd``).  These aren't for
     package writers to override, and doing so may break the functionality
     of the Package class.
 
     Package creators have a lot of freedom, and they could technically
     override anything in this class.  That is not usually required.
 
-    For most use cases.  Package creators typically just add attributes
-    like ``url`` and ``homepage``, or functions like ``install()``.
+    For most use cases.  Package creators typically just add attributes like
+    ``homepage`` and, for a code or source package, ``url``, or functions
+    like ``install()``.
     There are many custom ``Package`` subclasses in the
     ``spack.build_systems`` package that make things even easier for
     specific build systems.
@@ -474,7 +481,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
-    #: List of attributes which affect do not affect a package's content.
+    #: List of required and optional attributes affecting a package's content.
     metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
                       'make_jobs']
 
@@ -762,6 +769,21 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return composite_stage
 
     @property
+    def is_code_pkg(self):
+        """
+        Return True if the package is a code/source package; False otherwise.
+
+        Most packages are code/source based so the default is to always return
+        True.
+        """
+        # Note: Automating the detection of URLs based on fetch strategy URL
+        # attributes presents backward compatibility challenges as dozens of
+        # existing built-in packages override url_for_version() instead of
+        # specifying a URL.  Additionally, in some cases, the URL for different
+        # versions reside at different sites (e.g., py-basemap).
+        return True
+
+    @property
     def stage(self):
         """Get the build staging area for this package.
 
@@ -976,6 +998,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only fetch concrete packages.")
 
+        if not self.is_code_pkg:
+            raise ValueError("Can only fetch package with a URL.")
+
         start_time = time.time()
         checksum = spack.config.get('config:checksum')
         if checksum and self.version not in self.versions:
@@ -1013,6 +1038,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
+        if not self.is_code_pkg:
+            raise ValueError("Can only stage package with a URL.")
+
         self.do_fetch(mirror_only)     # this will create the stage
         self.stage.expand_archive()
 
@@ -1023,6 +1051,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Applies patches if they haven't been applied already."""
         if not self.spec.concrete:
             raise ValueError("Can only patch concrete packages.")
+
+        if not self.is_code_pkg:
+            raise ValueError("Can only patch package with a URL.")
 
         # Kick off the stage first.  This creates the stage.
         self.do_stage()
@@ -1492,7 +1523,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     dep.package.bootstrap_compiler(**comp_kwargs)
                 dep.package.do_install(**dep_kwargs)
 
-        # Then, install the package proper
+        # There's nothing left to do for a bundle (or no-source) package
+        if not self.is_code_pkg:
+            return
+
+        # Otherwise, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
         if kwargs.get('use_cache', True):
@@ -2288,6 +2323,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 inject_flags = PackageBase.inject_flags
 env_flags = PackageBase.env_flags
 build_system_flags = PackageBase.build_system_flags
+
+
+class BundlePackage(PackageBase):
+    """General purpose bundle, or no-source, package class."""
+    #: This attribute is used in UI queries that require to know which
+    #: build-system class we are using
+    build_system_class = 'BundlePackage'
+
+    @property
+    def is_code_pkg(self):
+        """
+        Return False since bundle packages are not code/source-based.
+        """
+        return False
 
 
 class Package(PackageBase):

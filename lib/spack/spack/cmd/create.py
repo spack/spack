@@ -11,7 +11,6 @@ import re
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.cmd
 import spack.util.web
 import spack.repo
 from spack.spec import Spec
@@ -58,35 +57,33 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
-    url      = "{url}"
+{url_def}
 
 {versions}
 
 {dependencies}
 
-{body}
+{body_def}
 '''
 
 
-class PackageTemplate(object):
-    """Provides the default values to be used for the package file template"""
+class BundlePackageTemplate(object):
+    """
+    Provides the default values to be used for a bundle package file template.
+    """
 
-    base_class_name = 'Package'
+    base_class_name = 'BundlePackage'
 
     dependencies = """\
     # FIXME: Add dependencies if required.
     # depends_on('foo')"""
 
-    body = """\
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')"""
+    url_def = "    # There is no URL since there is no source to download."
+    body_def = "    # There is no need for install() since there is no source."
 
-    def __init__(self, name, url, versions):
+    def __init__(self, name, versions):
         self.name       = name
         self.class_name = mod_to_class(name)
-        self.url        = url
         self.versions   = versions
 
     def write(self, pkg_path):
@@ -98,10 +95,29 @@ class PackageTemplate(object):
                 name=self.name,
                 class_name=self.class_name,
                 base_class_name=self.base_class_name,
-                url=self.url,
+                url_def=self.url_def,
                 versions=self.versions,
                 dependencies=self.dependencies,
-                body=self.body))
+                body_def=self.body_def))
+
+
+class PackageTemplate(BundlePackageTemplate):
+    """Provides the default values to be used for the package file template"""
+
+    base_class_name = 'Package'
+
+    body_def = """\
+    def install(self, spec, prefix):
+        # FIXME: Unknown build system
+        make()
+        make('install')"""
+
+    url_line = """    url      = {url}"""
+
+    def __init__(self, name, url, versions):
+        super(PackageTemplate, self).__init__(name, versions)
+
+        self.url_def = self.url_line.format(url=url)
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -354,6 +370,7 @@ templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
     'cmake':      CMakePackageTemplate,
+    'bundle':     BundlePackageTemplate,
     'qmake':      QMakePackageTemplate,
     'scons':      SconsPackageTemplate,
     'waf':        WafPackageTemplate,
@@ -488,7 +505,7 @@ def get_name(args):
         # Try to guess the package name based on the URL
         try:
             name = parse_name(args.url)
-            tty.msg("This looks like a URL for {0}".format(name))
+            tty.msg("This looks like a valid package for {0}".format(name))
         except UndetectableNameError:
             tty.die("Couldn't guess a name for this package.",
                     "  Please report this bug. In the meantime, try running:",
@@ -600,6 +617,9 @@ def get_build_system(args, guesser):
         else:
             msg = "This package looks like it uses the {0} build system"
             tty.msg(msg.format(template))
+    else:
+        template = 'bundle'
+        tty.warn("No URL provided.  Using the bundle package template.")
 
     return template
 
@@ -654,8 +674,11 @@ def create(parser, args):
     build_system = get_build_system(args, guesser)
 
     # Create the package template object
+    constr_args = {'name': name, 'versions': versions}
     package_class = templates[build_system]
-    package = package_class(name, url, versions)
+    if package_class != BundlePackageTemplate:
+        constr_args['url'] = url
+    package = package_class(**constr_args)
     tty.msg("Created template for {0} package".format(package.name))
 
     # Create a directory for the new package
