@@ -238,12 +238,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.check_upstream = True
 
     def metadata_path(self, spec):
-        if spec is not None:
-            return os.path.join(spec.prefix, self.metadata_dir)
-        else:
-            return self.metadata_dir
+        return os.path.join(spec.prefix, self.metadata_dir)
 
-    def build_packages_path(self, spec=None):
+    def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
 
     def create_install_directory(self, spec):

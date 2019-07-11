@@ -16,19 +16,6 @@ from spack.spec import Spec
 from spack.package import _spack_build_envfile, _spack_build_logfile
 
 
-@pytest.fixture
-def mock_log():
-    """Temporarily create the package build log file."""
-    def _create_log(path):
-        mkdirp(path)
-        fn = os.path.join(path, _spack_build_logfile)
-        with open(os.path.join(path, _spack_build_logfile), 'w'):
-            pass
-        return fn
-
-    return _create_log
-
-
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')

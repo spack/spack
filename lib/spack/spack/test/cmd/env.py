@@ -38,7 +38,7 @@ def check_mpileaks_install(viewdir):
     assert os.path.exists(str(viewdir.join('.spack', 'libdwarf')))
 
 
-def check_removal(viewdir):
+def check_viewdir_removal(viewdir):
     """Check that the uninstall/removal worked."""
     assert (not os.path.exists(str(viewdir.join('.spack'))) or
             os.listdir(str(viewdir.join('.spack'))) == ['projections.yaml'])
@@ -705,7 +705,7 @@ def test_env_updates_view_uninstall(
     with ev.read('test'):
         uninstall('-ay')
 
-    check_removal(view_dir)
+    check_viewdir_removal(view_dir)
 
 
 def test_env_updates_view_uninstall_referenced_elsewhere(
@@ -722,7 +722,7 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
     with ev.read('test'):
         uninstall('-ay')
 
-    check_removal(view_dir)
+    check_viewdir_removal(view_dir)
 
 
 def test_env_updates_view_remove_concretize(
@@ -740,7 +740,7 @@ def test_env_updates_view_remove_concretize(
         remove('mpileaks')
         concretize()
 
-    check_removal(view_dir)
+    check_viewdir_removal(view_dir)
 
 
 def test_env_updates_view_force_remove(
@@ -755,7 +755,7 @@ def test_env_updates_view_force_remove(
     with ev.read('test'):
         remove('-f', 'mpileaks')
 
-    check_removal(view_dir)
+    check_viewdir_removal(view_dir)
 
 
 def test_env_activate_view_fails(

@@ -230,14 +230,12 @@ def test_find(layout_and_dir, config, mock_packages):
         assert found_specs[name].eq_dag(spec)
 
 
-def test_yaml_directory_layout_build_paths(tmpdir, config):
-    """This tests build path methods."""
+def test_yaml_directory_layout_build_path(tmpdir, config):
+    """This tests build path method."""
     spec = Spec('python')
     spec.concretize()
 
     layout = YamlDirectoryLayout(str(tmpdir))
     rel_path = os.path.join(layout.metadata_dir, layout.packages_dir)
-
-    assert layout.build_packages_path() == rel_path
     assert layout.build_packages_path(spec) == os.path.join(spec.prefix,
                                                             rel_path)
