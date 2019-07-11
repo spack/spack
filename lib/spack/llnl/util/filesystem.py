@@ -1397,7 +1397,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         if found_libs:
             break
     else:
-        found_libs = find(root, libraries, True)
+        found_libs = find(root, libraries, recursive)
 
     return LibraryList(found_libs)
 
