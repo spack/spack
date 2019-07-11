@@ -201,9 +201,12 @@ class YamlFilesystemView(FilesystemView):
                 # Write projections file to new view
                 # Not strictly necessary as the empty file is the empty
                 # projection but it makes sense for consistency
-                mkdirp(os.path.dirname(projections_path))
-                with open(projections_path, 'w') as f:
-                    f.write(s_yaml.dump({'projections': self.projections}))
+                try:
+                    mkdirp(os.path.dirname(projections_path))
+                    with open(projections_path, 'w') as f:
+                        f.write(s_yaml.dump({'projections': self.projections}))
+                except OSError:
+                    pass
         elif not os.path.exists(projections_path):
             # Write projections file to new view
             mkdirp(os.path.dirname(projections_path))
