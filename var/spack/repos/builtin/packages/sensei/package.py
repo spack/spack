@@ -38,19 +38,21 @@ class Sensei(CMakePackage):
     version('1.0.0', sha256='bdcb03c56b51f2795ec5a7e85a5abb01d473d192fac50f2a8bf2608cc3564ff8')
 
     variant('build_type', default='RelWithDebInfo', description='CMake build type', values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant('sencore', default=True, description='Enables the SENSEI core library')
     variant('catalyst', default=True, description='Build with ParaView-Catalyst support')
     variant('libsim', default=False, description='Build with VisIt-Libsim support')
     variant('vtkio', default=True, description='Enable adaptors to write to VTK XML format')
     variant('adios', default=False, description='Enable ADIOS adaptors and endpoints')
-    variant('python', default=False, description='Enables Python bindings')
-    variant('miniapps', default=True, description='Enable the parallel 3D and oscillators miniapp')
+    variant('python', default=False, description='Enable Python bindings')
+    variant('miniapps', default=True, description='Enable the parallel 3D and oscillators miniapps')
 
     depends_on("paraview@5.5:5.6", when="+catalyst")
     depends_on("visit", when="+libsim")
     depends_on("vtk", when="+libsim")
     depends_on("vtk", when="+adios ~libsim ~catalyst")
-    depends_on("adios", when="+adios")
+    depends_on("vtk", when="+sencore ~catalyst")
     depends_on("vtk", when="+python ~libsim ~catalyst")
+    depends_on("adios", when="+adios")
     depends_on("python", when="+python")
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
@@ -69,34 +71,39 @@ class Sensei(CMakePackage):
             '-DCMAKE_C_FLAGS=-fPIC -Wall -Wextra -O3 -mtune=generic'
         ]
 
-        if 'catalyst' in spec:
+        args.append('-DENABLE_SENSEI:BOOL={0}'.format('ON' if '+sencore' in spec else 'OFF'))
+        
+        vtk_dir_needed = True
+
+        if '+catalyst' in spec:
             args.append('-DENABLE_CATALYST:BOOL=ON')
             args.append('-DENABLE_CATALYST_PYTHON:BOOL=ON')
-            args.append('-DParaView_DIR:PATH={0}' % spec['paraview'].prefix)
+            args.append('-DParaView_DIR:PATH={0}'.format(spec['paraview'].prefix))
+            vtk_dir_needed = False
         else:
             args.append('-DENABLE_CATALYST:BOOL=OFF')
 
-        if 'libsim' in spec:
+        if '+libsim' in spec:
             args.append('-DENABLE_LIBSIM:BOOL=ON')
-            args.append('-DVISIT_DIR:PATH={0}' % spec['visit'].prefix)
-            args.append('-DVTK_DIR:PATH={0}' % spec['vtk'].prefix)
+            args.append('-DVISIT_DIR:PATH={0}'.format(spec['visit'].prefix))
+            args.append('-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix))
+            vtk_dir_needed = False
         else:
             args.append('-DENABLE_LIBSIM:BOOL=OFF')
 
-        args.append('-DENABLE_VTK_IO:BOOL={0}' % str('vtkio' in spec))
+        args.append('-DENABLE_VTK_IO:BOOL={0}'.format('ON' if '+vtkio' in spec else 'OFF'))
+        args.append('-DENABLE_PYTHON:BOOL={0}'.format('ON' if '+python' in spec else 'OFF'))
         
-        if spec.variants['adios'].value:
+        if '+adios' in spec:
             args.append('-DENABLE_ADIOS:BOOL=ON')
-            if not 'catalyst' in spec and not 'libsim' in spec:
-                args.append('-DVTK_DIR:PATH={0}' % spec['vtk'].prefix)
-            args.append('-DADIOS_DIR:PATH={0}' % spec['adios'].prefix)
-            
-        if 'python' in spec:
-            args.append('-DENABLE_PYTHON:BOOL=ON')
-            if not 'catalyst' in spec and not 'libsim' in spec:
-                args.append('-DVTK_DIR:PATH={0}' % spec['vtk'].prefix)
+            args.append('-DADIOS_DIR:PATH={0}'.format(spec['adios'].prefix))
+        else:
+            args.append('-DENABLE_ADIOS:BOOL=OFF')
+
+        if vtk_dir_needed:
+            args.append('-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix))
         
-        if 'miniapps' in spec:
+        if '+miniapps' in spec:
             args.append('-DENABLE_PARALLEL3D:BOOL=ON')
             args.append('-DENABLE_OSCILLATORS:BOOL=ON')
         else:
