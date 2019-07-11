@@ -1389,6 +1389,14 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # List of libraries we are searching with suffixes
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
+    if not recursive:
+        # If not recursive, look for the libraries directly in root
+        return LibraryList(find(root, libraries, False))
+
+    # To speedup the search for external packages configured e.g. in /usr,
+    # perform first non-recursive search in root/lib then in root/lib64 and
+    # finally search all of root recursively. The search stops when the first
+    # match is found.
     for subdir in ('lib', 'lib64'):
         dirname = join_path(root, subdir)
         if not os.path.isdir(dirname):
@@ -1397,7 +1405,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         if found_libs:
             break
     else:
-        found_libs = find(root, libraries, recursive)
+        found_libs = find(root, libraries, True)
 
     return LibraryList(found_libs)
 
