@@ -993,7 +993,7 @@ class ChildError(InstallError):
 
         if self.build_log and os.path.exists(self.build_log):
             out.write('See build log for details:\n')
-            out.write('  %s' % self.build_log)
+            out.write('  %s\n' % self.build_log)
 
         return out.getvalue()
 
