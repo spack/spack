@@ -17,6 +17,7 @@ from spack.package import \
     _spack_build_envfile, _spack_build_logfile, \
     install_dependency_symlinks
 
+
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
