@@ -45,12 +45,14 @@ class Libxsmm(MakefilePackage):
     version('1.4.1',  'c19be118694c9b4e9a61ef4205b1e1a7e0c400c07f9bce65ae430d2dc2be5fe1')
     version('1.4',    'cf483a370d802bd8800c06a12d14d2b4406a745c8a0b2c8722ccc992d0cd72dd')
 
+    variant('shared', default=False,
+            description='With shared libraries (and static libraries).')
     variant('debug', default=False,
-            description='Unoptimized with call-trace (LIBXSMM_TRACE).')
+            description='With call-trace (LIBXSMM_TRACE); unoptimized.')
     variant('header-only', default=False,
-            description='Produce header-only installation')
+            description='With header-only installation')
     variant('generator', default=False,
-            description='build generator executables')
+            description='With generator executable(s)')
     conflicts('+header-only', when='@:1.6.2',
               msg='Header-only is available since v1.6.2!')
 
@@ -73,9 +75,6 @@ class Libxsmm(MakefilePackage):
             'SYM=1'
         ]
 
-        if '+header-only' in spec:
-            make_args += ['header-only']
-
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
 #       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
 
@@ -84,11 +83,11 @@ class Libxsmm(MakefilePackage):
             make_args += ['DBG=1']
             make_args += ['TRACE=1']
 
-        make(*make_args)
+        if '+shared' in spec:
+            make(*(make_args + ['STATIC=0']))
 
-        if '+generator' in spec:
-            make_args += ['generator']
-            make(*make_args)
+        # builds static libraries by default
+        make(*make_args)
 
     def install(self, spec, prefix):
         install_tree('include', prefix.include)
@@ -99,10 +98,11 @@ class Libxsmm(MakefilePackage):
             os.rename(pcfile, os.path.join('lib/pkgconfig',
                                            os.path.basename(pcfile)))
 
+        # always install libraries
+        install_tree('lib', prefix.lib)
+
         if '+header-only' in spec:
             install_tree('src', prefix.src)
-        else:
-            install_tree('lib', prefix.lib)
 
         if '+generator' in spec:
             install_tree('bin', prefix.bin)
