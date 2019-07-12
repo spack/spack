@@ -213,7 +213,12 @@ def do_uninstall(env, specs, force):
         if env:
             _remove_from_env(item, env)
 
+    # A package is ready to be uninstalled when nothing else references it,
+    # unless we are requested to force uninstall it.
     is_ready = lambda x: not spack.store.db.query_by_spec_hash(x)[1].ref_count
+    if force:
+        is_ready = lambda x: True
+
     while packages:
         ready = [x for x in packages if is_ready(x.spec.dag_hash())]
         if not ready:

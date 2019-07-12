@@ -67,3 +67,17 @@ def test_uninstall_spec_with_multiple_roots(
 
     all_specs = spack.store.layout.all_specs()
     assert len(all_specs) == expected_number_of_specs
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('mutable_database')
+@pytest.mark.parametrize('constraint,expected_number_of_specs', [
+    ('dyninst', 13), ('libelf', 13)
+])
+def test_force_uninstall_spec_with_ref_count_not_zero(
+        constraint, expected_number_of_specs
+):
+    uninstall('-f', '-y', constraint)
+
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == expected_number_of_specs
