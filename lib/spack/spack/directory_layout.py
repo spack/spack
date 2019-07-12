@@ -253,18 +253,20 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def _mkdirp(self, absolute_path, mode):
         """
-        A wrapper for mkdirp that sets permissions to all non-existing nested folders.
+        This mkdirp wrapper sets permissions to non-existing nested folders.
 
-        Nested folders are the ones which absolute_path prefix is self.root (excluded)
+        Nested folders are the ones which absolute_path prefix
+        is self.root (excluded)
 
         e.g. absolute_path=self.root/a/b/c
-            If a path in set {a,b,c} does not exists, it will create it and set permissions,
-            otherwise it doesn't even touch it.
-            If self.root/a already exists, it will just create and set permissions for b and c
+            If a path in set {a,b,c} does not exists, it will create it and
+            set permissions, otherwise it doesn't even touch it.
+            If self.root/a already exists, it will just create and
+            set permissions for b and c
 
         Argument:
-            - absolute_path:
-                absolute path of the folder hierarcy to create (its prefix must be be self.root)
+            - absolute_path: (prefix must be be self.root)
+                absolute path of the folder hierarcy to create
             - mode:
                 permissions to set to all non existing nested folders
         """
@@ -278,16 +280,20 @@ class YamlDirectoryLayout(DirectoryLayout):
             nested_path, nested_folder = os.path.split(nested_path)
             nested_folders.append(os.path.join(nested_path, nested_folder))
 
-            # but if the upper nested_path already exists, there's nothing to do from now on
+            # but if the upper nested_path already exists,
+            # there's nothing to do from now on
             if os.path.exists(os.path.join(self.root, nested_path)):
                 break
 
         # loop over nested folders from highest level to the lowest one,
         # in order to add a single folder level at a time
         for nested_relative_path in reversed(nested_folders):
-            absolute_nested_path = os.path.join(self.root, nested_relative_path)
+            absolute_nested_path = os.path.join(
+                self.root,
+                nested_relative_path)
 
-            mkdirp(absolute_nested_path, mode=mode) # TODO it would be ok to replace mkdirp with mkdir
+            # TODO it would be ok to replace mkdirp with mkdir
+            mkdirp(absolute_nested_path, mode=mode)
 
     def create_install_directory(self, spec):
         _check_concrete(spec)
