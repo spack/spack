@@ -1443,6 +1443,7 @@ def search_paths_for_executables(*path_hints):
         if not os.path.isdir(path):
             continue
 
+        path = os.path.abspath(path)
         executable_paths.append(path)
 
         bin_dir = os.path.join(path, 'bin')
