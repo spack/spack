@@ -27,6 +27,14 @@ def setup_parser(subparser):
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
 
+    cache_group = subparser.add_mutually_exclusive_group()
+    cache_group.add_argument(
+        '--use-cache', action='store_true', dest='use_cache', default=True,
+        help="check for pre-built Spack packages in mirrors (default)")
+    cache_group.add_argument(
+        '--no-cache', action='store_false', dest='use_cache', default=True,
+        help="do not check for pre-built Spack packages in mirrors")
+
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
@@ -37,7 +45,8 @@ def bootstrap(parser, args, **kwargs):
         'keep_stage': args.keep_stage,
         'install_deps': 'dependencies',
         'verbose': args.verbose,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'use_cache': args.use_cache
     })
 
     # Define requirement dictionary defining general specs which need
