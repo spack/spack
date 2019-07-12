@@ -9,6 +9,7 @@ import argparse
 
 import spack.cmd
 import spack.environment as ev
+import spack.error
 import spack.package
 import spack.cmd.common.arguments as arguments
 import spack.repo
@@ -222,7 +223,11 @@ def do_uninstall(env, specs, force):
     while packages:
         ready = [x for x in packages if is_ready(x.spec.dag_hash())]
         if not ready:
-            raise RuntimeError('cannot proceed uninstalling specs')
+            msg = 'unexpected error [cannot proceed uninstalling specs with' \
+                  ' remaining dependents {0}]'
+            msg = msg.format(', '.join(x.name for x in packages))
+            raise spack.error.SpackError(msg)
+
         packages = [x for x in packages if x not in ready]
         for item in ready:
             item.do_uninstall(force=force)
