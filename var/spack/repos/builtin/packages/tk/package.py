@@ -23,10 +23,17 @@ class Tk(AutotoolsPackage):
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
     version('8.5.19', 'e89df710447cce0fc0bde65667c12f85')
 
+    variant('xft', default=True,
+            description='Enable X FreeType')
+    variant('xss', default=True,
+            description='Enable X Screen Saver')
+
     extends('tcl')
 
     depends_on('tcl@8.6:', when='@8.6:')
     depends_on('libx11')
+    depends_on('libxft', when='+xft')
+    depends_on('libxscrnsaver', when='+xss')
 
     configure_directory = 'unix'
 
@@ -65,9 +72,15 @@ class Tk(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib),
-                '--x-includes={0}'.format(spec['libx11'].prefix.include),
-                '--x-libraries={0}'.format(spec['libx11'].prefix.lib)]
+        config_args = [
+            '--with-tcl={0}'.format(spec['tcl'].prefix.lib),
+            '--x-includes={0}'.format(spec['libx11'].prefix.include),
+            '--x-libraries={0}'.format(spec['libx11'].prefix.lib)
+        ]
+        config_args += self.enable_or_disable('xft')
+        config_args += self.enable_or_disable('xss')
+
+        return config_args
 
     @run_after('install')
     def symlink_wish(self):
