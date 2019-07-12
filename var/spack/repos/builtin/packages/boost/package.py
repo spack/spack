@@ -201,6 +201,7 @@ class Boost(Package):
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang',
+                    'armclang++': 'clang',
                     'xlc++': 'xlcpp',
                     'xlc++_r': 'xlcpp',
                     'pgc++': 'pgi'}
@@ -228,7 +229,12 @@ class Boost(Package):
 
     def determine_bootstrap_options(self, spec, with_libs, options):
         boost_toolset_id = self.determine_toolset(spec)
-        options.append('--with-toolset=%s' % boost_toolset_id)
+
+        # Arm compiler bootstraps with 'gcc' (but builds as 'clang')
+        if spec.satisfies('%arm'):
+            options.append('--with-toolset=gcc')
+        else:
+            options.append('--with-toolset=%s' % boost_toolset_id)
         options.append("--with-libraries=%s" % ','.join(with_libs))
 
         if '+python' in spec:
