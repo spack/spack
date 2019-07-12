@@ -88,7 +88,7 @@ required_command_properties = ['level', 'section', 'description']
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
-
+spack_ld_library_path = os.environ['LD_LIBRARY_PATH']
 
 def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
