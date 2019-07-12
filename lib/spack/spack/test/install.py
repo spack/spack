@@ -10,6 +10,7 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
+from spack.package import install_dependency_symlinks
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
@@ -146,7 +147,7 @@ def test_install_dependency_symlinks(
     dependency_name = 'dependency-install'
     assert dependency_name not in os.listdir(pkg.prefix)
 
-    spack.package.install_dependency_symlinks(pkg, dependent, pkg.prefix)
+    install_dependency_symlinks(pkg, dependent, pkg.prefix)
     assert dependency_name in os.listdir(pkg.prefix)
 
     dependency_dir = os.path.join(pkg.prefix, dependency_name)
