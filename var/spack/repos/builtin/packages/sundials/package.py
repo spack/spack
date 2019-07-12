@@ -500,12 +500,9 @@ class Sundials(CMakePackage):
             # Q: should the result be ordered by dependency?
         else:
             sun_libs = ['libsundials_' + p for p in query_parameters]
-        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
-                        [self.prefix, True]]
         is_shared = '+shared' in self.spec
-        for path, recursive in search_paths:
-            libs = find_libraries(sun_libs, root=path, shared=is_shared,
-                                  recursive=recursive)
-            if libs:
-                return libs
-        return None  # Raise an error
+
+        libs = find_libraries(sun_libs, root=self.prefix, shared=is_shared,
+                              recursive=True)
+
+        return libs or None  # Raise an error if no libs are found
