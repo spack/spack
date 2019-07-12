@@ -323,15 +323,6 @@ class Gcc(AutotoolsPackage):
     def nvptx_install(self):
         spec = self.spec
         prefix = self.prefix
-        if 'isl' in spec:
-            # the gcc build process runs a self test during build that will
-            # fail with, "error while loading shared libraries: libisl.so.19:
-            # cannot open shared object file: No such file or directory" if
-            # we do not add the appropriate path to LD_LIBRARY_PATH
-            oldpath = os.environ.get('LD_LIBRARY_PATH')
-            os.environ['LD_LIBRARY_PATH'] = spec['isl'].prefix.lib
-            if oldpath is not None:
-                os.environ['LD_LIBRARY_PATH'] += os.pathsep + oldpath
 
         if not spec.satisfies('+nvptx'):
             return
@@ -424,8 +415,15 @@ class Gcc(AutotoolsPackage):
         set_install_permissions(specs_file)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('CC', join_path(self.spec.prefix.bin, 'gcc'))
-        run_env.set('CXX', join_path(self.spec.prefix.bin, 'g++'))
-        run_env.set('FC', join_path(self.spec.prefix.bin, 'gfortran'))
-        run_env.set('F77', join_path(self.spec.prefix.bin, 'gfortran'))
-        run_env.set('F90', join_path(self.spec.prefix.bin, 'gfortran'))
+        spec = self.spec
+        if 'isl' in spec:
+            # the gcc build process runs a self test during build that will
+            # fail with, "error while loading shared libraries: libisl.so.19:
+            # cannot open shared object file: No such file or directory" if
+            # we do not add the appropriate path to LD_LIBRARY_PATH
+            spack_env.prepend_path('LD_LIBRARY_PATH', spec['isl'].prefix.lib)
+        run_env.set('CC', join_path(spec.prefix.bin, 'gcc'))
+        run_env.set('CXX', join_path(spec.prefix.bin, 'g++'))
+        run_env.set('FC', join_path(spec.prefix.bin, 'gfortran'))
+        run_env.set('F77', join_path(spec.prefix.bin, 'gfortran'))
+        run_env.set('F90', join_path(spec.prefix.bin, 'gfortran'))
