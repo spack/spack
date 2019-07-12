@@ -233,15 +233,10 @@ _spack_pathadd() {
 # Determine which shell is being used
 #
 _spack_determine_shell() {
-    # This logic is derived from the cea-hpc/modules profile.sh example at
-    # https://github.com/cea-hpc/modules/blob/master/init/profile.sh.in
-    #
-    # The objective is to correctly detect the shell type even when setup-env
-    # is sourced within a script itself rather than a login terminal.
     if [ -n "${BASH:-}" ]; then
-        echo ${BASH##*/}
+        echo bash
     elif [ -n "${ZSH_NAME:-}" ]; then
-        echo $ZSH_NAME
+        echo zsh
     else
         PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
     fi
