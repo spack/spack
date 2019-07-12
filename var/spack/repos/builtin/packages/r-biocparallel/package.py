@@ -7,18 +7,28 @@ from spack import *
 
 
 class RBiocparallel(RPackage):
-    """This package provides modified versions and novel implementation of
+    """Bioconductor facilities for parallel evaluation
+
+       This package provides modified versions and novel implementation of
        functions for parallel evaluation, tailored to use with Bioconductor
        objects."""
 
-    homepage = "https://bioconductor.org/packages/BiocParallel/"
+    homepage = "https://bioconductor.org/packages/BiocParallel"
     git      = "https://git.bioconductor.org/packages/BiocParallel.git"
 
+    version('1.18.0', commit='0f8a2c6ebaf477299673faeb7b2f491ec45c0455')
+    version('1.16.6', commit='7f7a54c47f4949b600b9fd568289a519496bc4d4')
     version('1.14.2', commit='1d5a44960b19e9dbbca04c7290c8c58b0a7fc299')
+    version('1.12.0', commit='2143a9addceed0151a27b95c70aadd2add5cbace')
     version('1.10.1', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
 
-    depends_on('r-futile-logger', type=('build', 'run'))
-    depends_on('r-snow', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'link', 'run'), when='@1.14.2:')
-    depends_on('r@3.4.0:3.4.9', when='@1.10.1', type=('build', 'run'))
+    depends_on('r@3.6.0:3.6.9', when='@1.18.0', type=('build', 'run'))
+    depends_on('r@3.5.0:3.5.9', when='@1.16.6', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.14.2', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.12.0', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.10.1', type=('build', 'run'))
+
+    depends_on('r-futile-logger', when='@1.10.1:', type=('build', 'run'))
+    depends_on('r-snow', when='@1.10.1:', type=('build', 'run'))
+
+    depends_on('r-bh', when='@1.12.0:', type=('build', 'run'))
