@@ -5,10 +5,12 @@
 
 
 import inspect
+import fileinput
 import os
 import os.path
 import shutil
 import stat
+import sys
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -56,6 +58,8 @@ class AutotoolsPackage(PackageBase):
     build_system_class = 'AutotoolsPackage'
     #: Whether or not to update ``config.guess`` on old architectures
     patch_config_guess = True
+    #: Whether or not to update ``libtool`` (currently only for Arm compiler)
+    patch_libtool = True
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`
     #: phase
@@ -146,6 +150,25 @@ class AutotoolsPackage(PackageBase):
                 tty.debug(e)
 
         raise RuntimeError('Failed to find suitable config.guess')
+
+    @run_after('configure')
+    def _do_patch_libtool(self):
+        """Some packages ship with older configure/config.guess scripts
+        which leads to a libtool script that does not work with newer
+        compilers (such as Arm). Add the missing flags to libtool."""
+
+        libtool = os.path.join(self.build_directory, "libtool")
+        if (self.patch_libtool and
+            self.spec.satisfies('%arm') and
+            os.path.exists(libtool)):
+            for line in fileinput.input(libtool, inplace=True):
+                # Replace empty linker and pic flags with values for Arm
+                # compiler
+                if line == 'wl=""\n':
+                    line = 'wl="-Wl,"\n'
+                if line == 'pic_flag=""\n':
+                    line = 'pic_flag="-fPIC -DPIC"\n'
+                sys.stdout.write(line)
 
     @property
     def configure_directory(self):
