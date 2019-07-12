@@ -352,7 +352,7 @@ function _spack_create {
     if $list_options
     then
         compgen -W "-h --help --keep-stage -n --name -t --template -r --repo
-                    -N --namespace -f --force" -- "$cur"
+                    -N --namespace -f --force --skip-editor" -- "$cur"
     fi
 }
 
