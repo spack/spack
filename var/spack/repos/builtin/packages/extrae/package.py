@@ -54,7 +54,6 @@ class Extrae(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
-
     variant('dyninst', default=False, description="Use dyninst for dynamic code installation")
     depends_on('dyninst@:9', when='+dyninst')
 
@@ -62,9 +61,7 @@ class Extrae(AutotoolsPackage):
     depends_on('papi', when='+papi')
 
     def configure_args(self):
-        spec=self.spec
-        prefix=self.prefix
-
+        spec = self.spec
         args = ["--with-mpi=%s" % spec['mpi'].prefix,
                 "--with-unwind=%s" % spec['libunwind'].prefix,
                 "--with-boost=%s" % spec['boost'].prefix,
@@ -74,12 +71,12 @@ class Extrae(AutotoolsPackage):
                 "--with-binutils=%s" % spec['binutils'].prefix]
 
         args += (["--with-papi=%s" % spec['papi'].prefix]
-                  if '+papi' in self.spec else
-                  ["--without-papi"])
+                 if '+papi' in self.spec else
+                 ["--without-papi"])
 
         args += (["--with-dyninst=%s" % spec['dyninst'].prefix]
                  if '+dyninst' in self.spec else
-                  ["--without-dyninst"])
+                 ["--without-dyninst"])
 
         if spec.satisfies("^dyninst@9.3.0:"):
             make.add_default_arg('CXXFLAGS=-std=c++11')
