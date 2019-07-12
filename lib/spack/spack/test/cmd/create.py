@@ -31,8 +31,6 @@ repo:
     with spack.repo.swap(db):
         yield repodir
 
-    # shutil.rmtree(str(repodir))
-
 
 @pytest.fixture(scope='module')
 def parser():
@@ -40,15 +38,6 @@ def parser():
     prs = argparse.ArgumentParser()
     spack.cmd.create.setup_parser(prs)
     return prs
-
-
-@pytest.fixture
-def mock_editor(monkeypatch):
-    def _editor(*args, **kwargs):
-        return
-
-    monkeypatch.setattr(spack.util.editor, 'editor', _editor)
-    yield
 
 
 def test_create_template(parser, cmd_create_repo):
