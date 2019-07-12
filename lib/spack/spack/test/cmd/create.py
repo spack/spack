@@ -27,9 +27,9 @@ repo:
     namespace: cmd_create_repo
 """)
 
-    db = spack.repo.RepoPath(str(repodir))
-    with spack.repo.swap(db):
-        yield repodir
+    repo = spack.repo.RepoPath(str(repodir))
+    with spack.repo.swap(repo):
+        yield repo, repodir
 
 
 @pytest.fixture(scope='module')
@@ -42,14 +42,13 @@ def parser():
 
 def test_create_template(parser, cmd_create_repo):
     """Test template creation."""
-    repodir = cmd_create_repo
+    repo, repodir = cmd_create_repo
 
     name = 'test-package'
     args = parser.parse_args(['--skip-editor', name])
     spack.cmd.create.create(parser, args)
 
-    filename = str(repodir.join(spack.repo.packages_dir_name, name,
-                                spack.repo.package_file_name))
+    filename = repo.filename_for_package_name(name)
     assert os.path.exists(filename)
 
     with open(filename, 'r') as package_file:
