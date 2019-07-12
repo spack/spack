@@ -251,6 +251,44 @@ class YamlDirectoryLayout(DirectoryLayout):
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
 
+    def _mkdirp(self, absolute_path, mode):
+        """
+        A wrapper for mkdirp that sets permissions to all non-existing nested folders.
+
+        Nested folders are the ones which absolute_path prefix is self.root (excluded)
+
+        e.g. absolute_path=self.root/a/b/c
+            If a path in set {a,b,c} does not exists, it will create it and set permissions,
+            otherwise it doesn't even touch it.
+            If self.root/a already exists, it will just create and set permissions for b and c
+
+        Argument:
+            - absolute_path:
+                absolute path of the folder hierarcy to create (its prefix must be be self.root)
+            - mode:
+                permissions to set to all non existing nested folders
+        """
+        assert(os.path.commonprefix([self.root, absolute_path]) == self.root)
+
+        nested_path = os.path.relpath(absolute_path, self.root)
+
+        nested_folders = []
+        # by removing the lowest level each time, populate nested_folders list
+        while nested_path:
+            nested_path, nested_folder = os.path.split(nested_path)
+            nested_folders.append(os.path.join(nested_path, nested_folder))
+
+            # but if the upper nested_path already exists, there's nothing to do from now on
+            if os.path.exists(os.path.join(self.root, nested_path)):
+                break
+
+        # loop over nested folders from highest level to the lowest one,
+        # in order to add a single folder level at a time
+        for nested_relative_path in reversed(nested_folders):
+            absolute_nested_path = os.path.join(self.root, nested_relative_path)
+
+            mkdirp(absolute_nested_path, mode=mode) # TODO it would be ok to replace mkdirp with mkdir
+
     def create_install_directory(self, spec):
         _check_concrete(spec)
 
@@ -264,13 +302,15 @@ class YamlDirectoryLayout(DirectoryLayout):
         from spack.package_prefs import get_package_group
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
-        mkdirp(spec.prefix, mode=perms)
+
+        self._mkdirp(spec.prefix, perms)
         if group:
             chgrp(spec.prefix, group)
             # Need to reset the sticky group bit after chgrp
             os.chmod(spec.prefix, perms)
 
-        mkdirp(self.metadata_path(spec), mode=perms)
+        self._mkdirp(self.metadata_path(spec), perms)
+
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):
