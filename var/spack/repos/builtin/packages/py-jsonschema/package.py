@@ -10,8 +10,9 @@ class PyJsonschema(PythonPackage):
     """Jsonschema: An(other) implementation of JSON Schema for Python."""
 
     homepage = "http://github.com/Julian/jsonschema"
-    url      = "https://pypi.io/packages/source/j/jsonschema/jsonschema-2.5.1.tar.gz"
+    url      = "https://pypi.io/packages/source/j/jsonschema/jsonschema-2.6.0.tar.gz"
 
+    version('2.6.0', sha256='6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02')
     version('2.5.1', '374e848fdb69a3ce8b7e778b47c30640')
 
     depends_on('py-setuptools', type='build')
