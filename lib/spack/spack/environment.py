@@ -20,11 +20,13 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
 import spack.error
+import spack.hash_types as ht
 import spack.repo
 import spack.schema.env
 import spack.spec
 import spack.util.spack_json as sjson
 import spack.config
+
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.environment import EnvironmentModifications
 import spack.architecture as architecture
@@ -884,7 +886,7 @@ class Environment(object):
             # spec might be in the user_specs, but not installed.
             # TODO: Redo name-based comparison for old style envs
             spec = next(s for s in self.user_specs if s.satisfies(user_spec))
-            concrete = self.specs_by_hash.get(spec.dag_hash(all_deps=True))
+            concrete = self.specs_by_hash.get(spec.build_hash())
             if not concrete:
                 concrete = spec.concretized()
                 self._add_concrete_spec(spec, concrete)
@@ -996,7 +998,7 @@ class Environment(object):
         # update internal lists of specs
         self.concretized_user_specs.append(spec)
 
-        h = concrete.dag_hash(all_deps=True)
+        h = concrete.build_hash()
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
@@ -1111,9 +1113,9 @@ class Environment(object):
         concrete_specs = {}
         for spec in self.specs_by_hash.values():
             for s in spec.traverse():
-                dag_hash_all = s.dag_hash(all_deps=True)
+                dag_hash_all = s.build_hash()
                 if dag_hash_all not in concrete_specs:
-                    spec_dict = s.to_node_dict(all_deps=True)
+                    spec_dict = s.to_node_dict(hash=ht.build_hash)
                     spec_dict[s.name]['hash'] = s.dag_hash()
                     concrete_specs[dag_hash_all] = spec_dict
 
@@ -1172,7 +1174,7 @@ class Environment(object):
         self.specs_by_hash = {}
         for _, spec in specs_by_hash.items():
             dag_hash = spec.dag_hash()
-            build_hash = spec.dag_hash(all_deps=True)
+            build_hash = spec.build_hash()
             if dag_hash in root_hashes:
                 old_hash_to_new[dag_hash] = build_hash
 
