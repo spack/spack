@@ -12,6 +12,7 @@ class PyScikitLearn(PythonPackage):
     homepage = "https://pypi.python.org/pypi/scikit-learn"
     url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.21.2.tar.gz"
 
+    maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
     import_modules = [
