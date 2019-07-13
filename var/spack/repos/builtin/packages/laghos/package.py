@@ -14,7 +14,7 @@ class Laghos(MakefilePackage):
     """
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "https://computation.llnl.gov/projects/co-design/laghos"
+    homepage = "https://computing.llnl.gov/projects/co-design/laghos"
     url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
     git      = "https://github.com/CEED/Laghos.git"
 

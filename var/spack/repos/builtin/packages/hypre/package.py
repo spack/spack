@@ -13,7 +13,7 @@ class Hypre(Package):
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
 
-    homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
+    homepage = "http://computing.llnl.gov/project/linear_solvers/software.php"
     url      = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/hypre-space/hypre.git"
 
@@ -71,7 +71,7 @@ class Hypre(Package):
         if version >= Version('2.12.0'):
             url = 'https://github.com/hypre-space/hypre/archive/v{0}.tar.gz'
         else:
-            url = 'http://computation.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
+            url = 'http://computing.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
 
         return url.format(version)
 
