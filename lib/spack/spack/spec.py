@@ -725,28 +725,18 @@ def _libs_default_handler(descriptor, spec, cls):
     if not name.startswith('lib'):
         name = 'lib' + name
 
-    # To speedup the search for external packages configured e.g. in /usr,
-    # perform first non-recursive search in prefix.lib then in prefix.lib64 and
-    # finally search all of prefix recursively. The search stops when the first
-    # match is found.
-    prefix = spec.prefix
-    search_paths = [(prefix.lib, False), (prefix.lib64, False), (prefix, True)]
-
     # If '+shared' search only for shared library; if '~shared' search only for
     # static library; otherwise, first search for shared and then for static.
     search_shared = [True] if ('+shared' in spec) else \
         ([False] if ('~shared' in spec) else [True, False])
 
     for shared in search_shared:
-        for path, recursive in search_paths:
-            libs = find_libraries(
-                name, root=path, shared=shared, recursive=recursive
-            )
-            if libs:
-                return libs
+        libs = find_libraries(name, spec.prefix, shared=shared, recursive=True)
+        if libs:
+            return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
-    raise NoLibrariesError(msg.format(spec.name, prefix))
+    raise NoLibrariesError(msg.format(spec.name, spec.prefix))
 
 
 class ForwardQueryToPackage(object):
