@@ -12,8 +12,10 @@ import os
 
 from collections import Iterable, Mapping
 
+import spack.hash_types as ht
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+
 from spack import repo
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.spack_yaml import syaml_dict
@@ -231,7 +233,7 @@ def test_save_dependency_spec_yamls_subset(tmpdir, config):
         spec_a.concretize()
         b_spec = spec_a['b']
         c_spec = spec_a['c']
-        spec_a_yaml = spec_a.to_yaml(all_deps=True)
+        spec_a_yaml = spec_a.to_yaml(hash=ht.build_hash)
 
         save_dependency_spec_yamls(spec_a_yaml, output_path, ['b', 'c'])
 

@@ -10,8 +10,10 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.hash_types as ht
 import spack.modules
 import spack.environment as ev
+
 from spack.cmd.env import _env_create
 from spack.spec import Spec
 from spack.main import SpackCommand
@@ -643,7 +645,8 @@ def create_v1_lockfile_dict(roots, all_specs):
         # Version one lockfiles use the dag hash without build deps as keys,
         # but they write out the full node dict (including build deps)
         "concrete_specs": dict(
-            (s.dag_hash(), s.to_node_dict(all_deps=True)) for s in all_specs
+            (s.dag_hash(), s.to_node_dict(hash=ht.build_hash))
+            for s in all_specs
         )
     }
     return test_lockfile_dict
@@ -676,8 +679,8 @@ def test_read_old_lock_and_write_new(tmpdir):
         # When the lockfile is rewritten, it should adopt the new hash scheme
         # which accounts for all dependencies, including build dependencies
         assert hashes == set([
-            x.dag_hash(all_deps=True),
-            y.dag_hash(all_deps=True)])
+            x.build_hash(),
+            y.build_hash()])
 
 
 @pytest.mark.usefixtures('config')
