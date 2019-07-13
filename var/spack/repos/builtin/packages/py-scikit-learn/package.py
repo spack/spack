@@ -57,11 +57,11 @@ class PyScikitLearn(PythonPackage):
     depends_on('py-pytest@3.3.0:', type='test')
     depends_on('py-pandas', type='test')
     depends_on('py-setuptools', type='build')
-    depends_on('llvm-openmp-ompt+standalone', when='%clang platform=darwin')
+    depends_on('llvm-openmp-ompt+standalone', when='@0.21: %clang platform=darwin')
 
     def setup_environment(self, spack_env, run_env):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#mac-osx
-        if self.spec.satisfies('%clang platform=darwin'):
+        if self.spec.satisfies('@0.21: %clang platform=darwin'):
             spack_env.append_flags(
                 'CPPFLAGS', '-Xpreprocessor -fopenmp')
             spack_env.append_flags(
