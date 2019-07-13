@@ -59,6 +59,8 @@ class {class_name}({base_class_name}):
     homepage = "http://www.example.com"
 {url_def}
 
+{list_url}
+
 {versions}
 
 {dependencies}
@@ -73,6 +75,11 @@ class BundlePackageTemplate(object):
     """
 
     base_class_name = 'BundlePackage'
+
+    list_url = """\
+    # FIXME: Set list_url when source tarballs are retrieved and/or listed
+    # FIXME: from a link different from that set in url
+    # list_url = \"https://www.example.com\""""
 
     dependencies = """\
     # FIXME: Add dependencies if required.
@@ -96,6 +103,7 @@ class BundlePackageTemplate(object):
                 class_name=self.class_name,
                 base_class_name=self.base_class_name,
                 url_def=self.url_def,
+                list_url=self.list_url,
                 versions=self.versions,
                 dependencies=self.dependencies,
                 body_def=self.body_def))
@@ -264,6 +272,10 @@ class PythonPackageTemplate(PackageTemplate):
 class RPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for R extensions"""
     base_class_name = 'RPackage'
+
+    list_url = """\
+    # FIXME: Set list_url for R packages from CRAN
+    # list_url = \"https://cran.r-project.org/src/contrib/Archive/\""""
 
     dependencies = """\
     # FIXME: Add dependencies if required.
