@@ -10,7 +10,7 @@ class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 
     homepage = "https://pypi.python.org/pypi/scikit-learn"
-    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.21.1.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.21.2.tar.gz"
 
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
@@ -30,6 +30,7 @@ class PyScikitLearn(PythonPackage):
         'sklearn.ensemble._hist_gradient_boosting'
     ]
 
+    version('0.21.2', sha256='0aafc312a55ebf58073151b9308761a5fcfa45b7f7730cea4b1f066f824c72db')
     version('0.21.1', sha256='228d0611e69e5250946f8cd7bbefec75347950f0ca426d0c518db8f06583f660')
     version('0.20.2', sha256='bc5bc7c7ee2572a1edcb51698a6caf11fae554194aaab9a38105d9ec419f29e6')
     version('0.20.0', sha256='97d1d971f8ec257011e64b7d655df68081dd3097322690afa1a71a1d755f8c18')
@@ -55,7 +56,7 @@ class PyScikitLearn(PythonPackage):
     depends_on('py-pytest@3.3.0:', type='test')
     depends_on('py-pandas', type='test')
     depends_on('py-setuptools', type='build')
-    depends_on('ompt-openmp', when='%clang platform=darwin')
+    depends_on('llvm-openmp-ompt+standalone', when='%clang platform=darwin')
 
     def setup_environment(self, spack_env, run_env):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#mac-osx

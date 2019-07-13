@@ -62,3 +62,7 @@ class LlvmOpenmpOmpt(CMakePackage):
                     ['-DLIBOMP_OMP_VERSION=50'])
 
         return cmake_args
+
+    @property
+    def libs(self):
+        return find_libraries('libomp', root=self.prefix)
