@@ -57,7 +57,9 @@ class PyScikitLearn(PythonPackage):
     depends_on('py-pytest@3.3.0:', type='test')
     depends_on('py-pandas', type='test')
     depends_on('py-setuptools', type='build')
-    depends_on('llvm-openmp-ompt+standalone', when='@0.21: %clang platform=darwin')
+    # Technically not correct, but currently no way to check if we
+    # are using Apple Clang or not.
+    depends_on('llvm-openmp', when='@0.21: %clang platform=darwin')
 
     def setup_environment(self, spack_env, run_env):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#mac-osx
@@ -65,25 +67,25 @@ class PyScikitLearn(PythonPackage):
             spack_env.append_flags(
                 'CPPFLAGS', '-Xpreprocessor -fopenmp')
             spack_env.append_flags(
-                'CFLAGS', self.spec['llvm-openmp-ompt'].headers.include_flags)
+                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
             spack_env.append_flags(
                 'CXXFLAGS',
-                self.spec['llvm-openmp-ompt'].headers.include_flags)
+                self.spec['llvm-openmp'].headers.include_flags)
             spack_env.append_flags(
-                'LDFLAGS', self.spec['llvm-openmp-ompt'].libs.ld_flags)
+                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
             spack_env.append_flags(
                 'DYLD_LIBRARY_PATH',
-                self.spec['llvm-openmp-ompt'].libs.directories[0])
+                self.spec['llvm-openmp'].libs.directories[0])
 
             run_env.append_flags(
                 'DYLD_LIBRARY_PATH',
-                self.spec['llvm-openmp-ompt'].libs.directories[0])
+                self.spec['llvm-openmp'].libs.directories[0])
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if self.spec.satisfies('@0.21: %clang platform=darwin'):
             spack_env.append_flags(
                 'DYLD_LIBRARY_PATH',
-                self.spec['llvm-openmp-ompt'].libs.directories[0])
+                self.spec['llvm-openmp'].libs.directories[0])
 
     def install_test(self):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#testing

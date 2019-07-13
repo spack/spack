@@ -26,4 +26,4 @@ class OmptOpenmp(CMakePackage):
 
     @property
     def libs(self):
-        return find_libraries('libomp', root=self.prefix)
+        return find_libraries('libomp', root=self.prefix, recursive=True)
