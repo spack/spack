@@ -65,24 +65,25 @@ class PyScikitLearn(PythonPackage):
             spack_env.append_flags(
                 'CPPFLAGS', '-Xpreprocessor -fopenmp')
             spack_env.append_flags(
-                'CFLAGS', self.spec['ompt-openmp'].headers.include_flags)
+                'CFLAGS', self.spec['llvm-openmp-ompt'].headers.include_flags)
             spack_env.append_flags(
-                'CXXFLAGS', self.spec['ompt-openmp'].headers.include_flags)
+                'CXXFLAGS',
+                self.spec['llvm-openmp-ompt'].headers.include_flags)
             spack_env.append_flags(
-                'LDFLAGS', self.spec['ompt-openmp'].libs.ld_flags)
+                'LDFLAGS', self.spec['llvm-openmp-ompt'].libs.ld_flags)
             spack_env.append_flags(
                 'DYLD_LIBRARY_PATH',
-                self.spec['ompt-openmp'].libs.directories[0])
+                self.spec['llvm-openmp-ompt'].libs.directories[0])
 
             run_env.append_flags(
                 'DYLD_LIBRARY_PATH',
-                self.spec['ompt-openmp'].libs.directories[0])
+                self.spec['llvm-openmp-ompt'].libs.directories[0])
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if self.spec.satisfies('%clang platform=darwin'):
+        if self.spec.satisfies('@0.21: %clang platform=darwin'):
             spack_env.append_flags(
                 'DYLD_LIBRARY_PATH',
-                self.spec['ompt-openmp'].libs.directories[0])
+                self.spec['llvm-openmp-ompt'].libs.directories[0])
 
     def install_test(self):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#testing
