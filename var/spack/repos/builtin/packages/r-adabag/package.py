@@ -13,6 +13,7 @@ class RAdabag(RPackage):
     url      = "https://cran.r-project.org/src/contrib/adabag_4.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/adabag"
 
+    version('4.2', sha256='47019eb8cefc8372996fbb2642f64d4a91d7cedc192690a8d8be6e7e03cd3c81')
     version('4.1', '2e019f053d49f62ebb3b1697bbb50afa')
 
     depends_on('r-rpart', type=('build', 'run'))

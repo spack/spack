@@ -16,6 +16,7 @@ class RAer(RPackage):
     url      = "https://cran.r-project.org/src/contrib/AER_1.2-5.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/AER"
 
+    version('1.2-6', sha256='653c3a2d253819e0ce8c2cf12cff2ab222bf3d19dbf382b7c4b4c3d762469474')
     version('1.2-5', '419df9dc8ee6e5edd79678fee06719ae')
 
     depends_on('r@2.13.0:', type=('build', 'run'))

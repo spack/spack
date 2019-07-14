@@ -16,4 +16,5 @@ class RAbind(RPackage):
     url      = "https://cran.r-project.org/src/contrib/abind_1.4-3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/abind"
 
+    version('1.4-5', sha256='3a3ace5afbcb86e56889efcebf3bf5c3bb042a282ba7cc4412d450bb246a3f2c')
     version('1.4-3', '10fcf80c677b991bf263d38be35a1fc5')
