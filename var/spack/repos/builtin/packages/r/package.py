@@ -100,6 +100,7 @@ class R(AutotoolsPackage):
             '--enable-R-shlib',
             '--enable-BLAS-shlib',
             '--enable-R-framework=no',
+            '--without-recommended-packages',
             '--with-tcl-config={0}'.format(tcl_config_path),
             'LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(join_path(prefix, 'rlib',
                                                             'R', 'lib')),
