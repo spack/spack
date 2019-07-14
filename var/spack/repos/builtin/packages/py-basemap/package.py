@@ -22,6 +22,7 @@ class PyBasemap(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-pyproj@:1.99', type=('build', 'run'), when='@:1.2.0')
     depends_on('py-pyproj', type=('build', 'run'))
     depends_on('py-pyshp', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
