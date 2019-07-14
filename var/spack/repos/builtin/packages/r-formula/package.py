@@ -15,5 +15,6 @@ class RFormula(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/Formula_1.2-2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/Formula"
 
+    version('1.2-3', sha256='1411349b20bd09611a9fd0ee6d15f780c758ad2b0e490e908facb49433823872')
     version('1.2-2', 'c69bb0522811cf8eb9f1cc6c3d182b6e')
     version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')

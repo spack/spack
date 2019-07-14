@@ -17,6 +17,7 @@ class RRcppcctz(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RcppCCTZ_0.2.3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/RcppCCTZ"
 
+    version('0.2.4', sha256='98b6867d38abe03957fe803e88b6cc2d122b85a68ef07fa86f7e1009d6c00819')
     version('0.2.3', '7635014a1cc696a3f00a7619fb5d7008')
 
     depends_on('r-rcpp', type=('build', 'run'))

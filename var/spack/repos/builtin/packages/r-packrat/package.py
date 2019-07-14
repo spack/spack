@@ -14,5 +14,6 @@ class RPackrat(RPackage):
     url      = "https://cran.r-project.org/src/contrib/packrat_0.4.7-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/packrat"
 
+    version('0.4.9-3', sha256='87299938a751defc54eb00a029aecd3522d6349d900aaa8b3e1aa6bf31e98234')
     version('0.4.8-1', '14e82feba55fcda923396282fc490038')
     version('0.4.7-1', '80c2413269b292ade163a70ba5053e84')

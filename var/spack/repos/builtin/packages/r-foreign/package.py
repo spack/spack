@@ -15,4 +15,5 @@ class RForeign(RPackage):
     url      = "https://cran.r-project.org/src/contrib/foreign_0.8-66.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/foreign"
 
+    version('0.8-70.2', sha256='ae82fad68159860b8ca75b49538406ef3d2522818e649d7ccc209c18085ef179')
     version('0.8-66', 'ff12190f4631dca31e30ca786c2c8f62')

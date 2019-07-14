@@ -18,6 +18,7 @@ class RSelectr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/selectr_0.3-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/selectr"
 
+    version('0.4-0', sha256='40cd51bfe499954b300742c49f92167a68964b974268a7f47ca8864f32020ece')
     version('0.3-1', '7190fcdea1823ad7ef429cab6938e960')
 
     depends_on('r-testthat', type=('build', 'run'))

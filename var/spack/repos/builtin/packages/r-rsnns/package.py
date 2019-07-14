@@ -20,6 +20,7 @@ class RRsnns(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RSNNS_0.4-7.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/RSNNS"
 
+    version('0.4-10.1', sha256='38bb3d172390bd01219332ec834744274b87b01f94d23b29a9d818c2bca04071')
     version('0.4-7', 'ade7736611c456effb5f72e0ce0a1e6f')
 
     depends_on('r-rcpp', type=('build', 'run'))

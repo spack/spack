@@ -13,6 +13,7 @@ class RGwmodel(RPackage):
     url      = "https://cran.r-project.org/src/contrib/GWmodel_2.0-9.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/GWmodel"
 
+    version('2.1-1', sha256='91241b4e26d423a54c7c6784ef5159759058a5dafdff18a1ea8451faf979d1f3')
     version('2.0-9', sha256='b479af2c19d4aec30f1883d00193d52e342c609c1badcb51cc0344e4404cffa7')
 
     depends_on('r@3.0.0:', type=('build', 'run'))

@@ -19,6 +19,7 @@ class RNp(RPackage):
     url      = "https://cran.r-project.org/src/contrib/np_0.60-2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/np"
 
+    version('0.60-8', sha256='924c342feb2a862fa3871a45db5f8434dbbfb900cfc40c001a0872108a3a069e')
     version('0.60-2', 'e094d52ddff7280272b41e6cb2c74389')
 
     depends_on('r-boot', type=('build', 'run'))

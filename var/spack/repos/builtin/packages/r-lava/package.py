@@ -13,6 +13,7 @@ class RLava(RPackage):
     url      = "https://cran.r-project.org/src/contrib/lava_1.4.7.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/lava"
 
+    version('1.6.4', sha256='41c6eeb96eaef9e1bfb04b31f7203e250a5ea7e7860be4d95f7f96f2a8644718')
     version('1.4.7', '28039248a7039ba9281d172e4dbf9543')
 
     depends_on('r@3.0:')

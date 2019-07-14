@@ -18,6 +18,7 @@ class RUnits(RPackage):
     url      = "https://cran.r-project.org/src/contrib/units_0.4-6.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/units"
 
+    version('0.6-2', sha256='5e286775d0712c8e15b6ae3a533d4c4349b0f6410c2d9d897ca519c3d0e5f170')
     version('0.4-6', '0bb90dde5dad7608fa6feb1599381bf2')
 
     depends_on('r-udunits2', type=('build', 'run'))

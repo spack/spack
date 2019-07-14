@@ -15,6 +15,7 @@ class RCluster(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.7-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
 
+    version('2.1.0', sha256='eaf955bef8f616ea563351ec7f597c445aec43e65991ca975e382ef1fd70aa14')
     version('2.0.7-1', 'a37add21b91d3e4f3883d005331e0d45')
     version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
     version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')

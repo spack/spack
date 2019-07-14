@@ -16,6 +16,7 @@ class RGgmap(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ggmap_2.6.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ggmap"
 
+    version('2.6.2', sha256='4e9cf53ab108fc70805d971dadb69b26fe67ea289c23c38adf6e30b198379d90')
     version('2.6.1', '25ad414a3a1c6d59a227a9f22601211a')
 
     depends_on('r-ggplot2', type=('build', 'run'))

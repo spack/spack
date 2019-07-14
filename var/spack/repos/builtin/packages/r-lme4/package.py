@@ -16,6 +16,7 @@ class RLme4(RPackage):
     url      = "https://cran.r-project.org/src/contrib/lme4_1.1-12.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/lme4"
 
+    version('1.1-20', sha256='44f45f5cd20ec6a50bf96a939b1db44b1a180dbc871a5e3042baf7a107016b2c')
     version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
 
     depends_on('r-matrix', type=('build', 'run'))

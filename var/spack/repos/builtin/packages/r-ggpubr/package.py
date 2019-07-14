@@ -13,6 +13,7 @@ class RGgpubr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ggpubr_0.1.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ggpubr"
 
+    version('0.2', sha256='06c3075d8c452840662f5d041c3d966494b87254a52a858c849b9e1e96647766')
     version('0.1.2', '42a5749ae44121597ef511a7424429d1')
 
     depends_on('r@3.1.0:')

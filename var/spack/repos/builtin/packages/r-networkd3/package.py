@@ -14,6 +14,7 @@ class RNetworkd3(RPackage):
     url      = "https://cran.r-project.org/src/contrib/networkD3_0.2.12.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/networkD3"
 
+    version('0.3', sha256='6f9d6b35bb1562883df734bef8fbec166dd365e34c6e656da7be5f8a8d42343c')
     version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
 
     depends_on('r-htmlwidgets', type=('build', 'run'))

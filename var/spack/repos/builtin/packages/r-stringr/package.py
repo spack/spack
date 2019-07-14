@@ -17,6 +17,7 @@ class RStringr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/stringr_1.1.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/stringr"
 
+    version('1.3.1', sha256='7a8b8ea038e45978bd797419b16793f44f10c5355ad4c64b74d15276fef20343')
     version('1.2.0', '9054b1de91c578cc5cf454d656e9c697')
     version('1.1.0', '47973a33944c6d5db9524b1e835b8a5d')
     version('1.0.0', '5ca977c90351f78b1b888b379114a7b4')

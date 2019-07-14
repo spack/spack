@@ -28,6 +28,7 @@ class RPsych(RPackage):
     url      = "https://cran.r-project.org/src/contrib/psych_1.7.8.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/psych"
 
+    version('1.8.10', sha256='e8901ddab14729bfccbd82a8824fbb6523c10c2cd8fb7199b1ca56a7ffcb6e58')
     version('1.7.8', 'db37f2f85ff5470ee40bbc0a58ebe22b')
 
     depends_on('r-mnormt', type=('build', 'run'))

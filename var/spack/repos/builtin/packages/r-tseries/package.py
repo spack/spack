@@ -13,6 +13,7 @@ class RTseries(RPackage):
     url      = "https://cran.r-project.org/src/contrib/tseries_0.10-42.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/tseries"
 
+    version('0.10-46', sha256='12940afd1d466401160e46f993ed4baf28a42cef98d3757b66ee15e916e07222')
     version('0.10-42', '3feaa5c463bc967d749323163d9bc836')
 
     depends_on('r-quadprog', type=('build', 'run'))

@@ -13,6 +13,7 @@ class RDendextend(RPackage):
     url      = "https://cran.r-project.org/src/contrib/dendextend_1.5.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/dendextend"
 
+    version('1.10.0', sha256='88f0fb3362d69144daf4f35d0ea09f32c2df1adf614e040327a42552a8fd3224')
     version('1.5.2', '1134869d94005727c63cf3037e2f1bbf')
 
     depends_on('r@3.0.0:')

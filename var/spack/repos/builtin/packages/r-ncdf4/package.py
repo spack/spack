@@ -26,6 +26,7 @@ class RNcdf4(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ncdf4"
 
+    version('1.16', sha256='edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253')
     version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
 
     depends_on('netcdf')

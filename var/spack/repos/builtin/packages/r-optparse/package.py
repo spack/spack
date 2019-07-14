@@ -15,6 +15,7 @@ class ROptparse(RPackage):
     url      = "https://cran.r-project.org/src/contrib/optparse_1.6.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/optparse"
 
+    version('1.6.1', sha256='819be3eff54cb7f3f18703eed9714fc655290ab8e169f87605433d069b597e13')
     version('1.6.0', '8d0bd89b2e25cc1580437cdeeb1faac2')
 
     depends_on('r@2.9.0:', type=('build', 'run'))

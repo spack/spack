@@ -17,6 +17,7 @@ class RRobustbase(RPackage):
     url      = "https://cran.r-project.org/src/contrib/robustbase_0.92-7.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/robustbase"
 
+    version('0.93-4', sha256='ea9e03d484ef52ea805803477ffc48881e4c8c86ffda4eea56109f8b23f0a6e0')
     version('0.92-7', 'db3c8d12f9729b35bad17abf09e80b72')
 
     depends_on('r-deoptimr', type=('build', 'run'))

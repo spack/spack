@@ -19,6 +19,7 @@ class RBroom(RPackage):
     homepage = "http://github.com/tidyverse/broom"
     url      = "https://cran.r-project.org/src/contrib/broom_0.4.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/broom"
+    version('0.5.1', sha256='da9e6bf7cb8f960b83309cf107743976cc32b54524675f6471982abe3d1aae2e')
     version('0.4.2', '6eabab1f2eaec10f93cf9aa56d6a61de')
 
     depends_on('r-plyr', type=('build', 'run'))

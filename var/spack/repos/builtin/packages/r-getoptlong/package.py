@@ -16,6 +16,7 @@ class RGetoptlong(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/GetoptLong_0.1.6.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/GetoptLong"
 
+    version('0.1.7', sha256='b9a98881db407eae9b711c4fa9170168fd5f3be1f8485cd8f28d0a60ace083ba')
     version('0.1.6', 'e4b964d0817cb6c6a707297b21405749')
 
     depends_on('r-rjson', type=('build', 'run'))

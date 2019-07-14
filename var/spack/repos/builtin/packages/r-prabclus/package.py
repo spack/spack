@@ -14,6 +14,7 @@ class RPrabclus(RPackage):
     url      = "https://cran.r-project.org/src/contrib/prabclus_2.2-6.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/prabclus"
 
+    version('2.2-7.1', sha256='2c5bf3bbb0d225e04c53bb0e11e9c2a6809f0e46d95b8f6dc14b9dd6a2452975')
     version('2.2-6', '7f835dcc113243e1db74aad28ce93d11')
 
     depends_on('r@2.1.0:')

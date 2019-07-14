@@ -15,6 +15,7 @@ class RCoin(RPackage):
     url      = "https://cran.r-project.org/src/contrib/coin_1.1-3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/coin"
 
+    version('1.2-2', sha256='d518065d3e1eb00121cb4e0200e1e4ae6b68eca6e249afc38bbffa35d24105bb')
     version('1.1-3', '97d3d21f1e4a5762e36dd718dd2d0661')
 
     depends_on('r@2.14.0:')

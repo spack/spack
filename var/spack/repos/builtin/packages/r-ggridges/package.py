@@ -14,6 +14,7 @@ class RGgridges(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ggridges_0.4.1.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/ggridges"
 
+    version('0.5.0', sha256='124bc84044e56728fa965682f8232fc868f2af7d3eb7276f6b0df53be8d2dbfe')
     version('0.4.1', '21d53b3f7263beb17f629f0ebfb7b67a')
     version('0.4.0', 'da94ed1ee856a7fa5fb87712c84ec4c9')
 

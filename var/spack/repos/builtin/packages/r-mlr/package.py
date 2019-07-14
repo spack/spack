@@ -22,6 +22,7 @@ class RMlr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/mlr_2.12.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/mlr"
 
+    version('2.13', sha256='e8729be7acddc1ea124c44f9493a8b903c5f54b97e09c714366553aed733011d')
     version('2.12.1', 'abddfc9dfe95f290a233ecd97969a4ec')
     version('2.12', '94ee7495aeafb432c8af5a8bdd26c25f')
 

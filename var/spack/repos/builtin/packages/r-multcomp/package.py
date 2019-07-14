@@ -17,6 +17,7 @@ class RMultcomp(RPackage):
     url      = "https://cran.r-project.org/src/contrib/multcomp_1.4-6.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/multcomp"
 
+    version('1.4-8', sha256='a20876619312310e9523d67e9090af501383ce49dc6113c6b4ca30f9c943a73a')
     version('1.4-6', 'f1353ede2ed78b23859a7f1f1f9ebe88')
 
     depends_on('r-mvtnorm@1.0-3:', type=('build', 'run'))

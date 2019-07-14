@@ -15,6 +15,7 @@ class RFnn(RPackage):
     url      = "https://cran.r-project.org/src/contrib/FNN_1.1.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/FNN"
 
+    version('1.1.2.2', sha256='b51a60fbbeff58c48cc90c2023c48972d5082d68efd02284c17ccd9820986326')
     version('1.1',   '8ba8f5b8be271785593e13eae7b8c393')
     version('1.0',   'e9a47dc69d1ba55165be0877b8443fe0')
     version('0.6-4', '1c105df9763ceb7b13989cdbcb542fcc')

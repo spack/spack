@@ -18,3 +18,5 @@ class RAdabag(RPackage):
     depends_on('r-rpart', type=('build', 'run'))
     depends_on('r-mlbench', type=('build', 'run'))
     depends_on('r-caret', type=('build', 'run'))
+    depends_on('r-foreach', type=('build', 'run'))
+    depends_on('r-doparallel', type=('build', 'run'))

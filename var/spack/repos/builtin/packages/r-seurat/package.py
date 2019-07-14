@@ -14,6 +14,7 @@ class RSeurat(RPackage):
     url      = "https://cran.r-project.org/src/contrib/Seurat_2.1.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/Seurat"
 
+    version('3.0.1', sha256='8c467bdbfdb9aff51bde6a897ff98a7389941f688639d8f1d36c71dde076a257')
     version('2.1.0', '46427837bb739883f9b7addd08fccee5')
     version('2.0.1', 'a77794891e93b9fa1ef41735fe8424ea')
 

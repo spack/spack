@@ -16,6 +16,7 @@ class RPacman(RPackage):
     url      = "https://cran.r-project.org/src/contrib/pacman_0.4.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/pacman"
 
+    version('0.5.0', sha256='61294757212ab0aa0153219d7d031f58be6f30ead88d84859001d58caa76603d')
     version('0.4.1', 'bf18fe6d1407d31e00b337d9b07fb648')
 
     depends_on('r@3.0.2:')

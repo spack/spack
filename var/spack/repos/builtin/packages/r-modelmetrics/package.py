@@ -14,6 +14,7 @@ class RModelmetrics(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ModelMetrics_1.1.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ModelMetrics"
 
+    version('1.2.0', sha256='3021ae88733695a35d66e279e8e61861431f14c9916a341f0a562f675cf6ede9')
     version('1.1.0', 'd43175001f0531b8810d2802d76b7b44')
 
     depends_on('r@3.2.2:')

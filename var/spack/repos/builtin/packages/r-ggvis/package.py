@@ -15,6 +15,7 @@ class RGgvis(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/ggvis_0.4.3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ggvis"
 
+    version('0.4.4', sha256='1332ea122b768688c8a407a483be80febc4576de0ec8929077738421b27cafaf')
     version('0.4.3', '30297d464278a7974fb125bcc7d84e77')
     version('0.4.2', '039f45e5c7f1e0652779163d7d99f922')
 

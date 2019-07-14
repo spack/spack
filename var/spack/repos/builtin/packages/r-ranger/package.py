@@ -14,6 +14,7 @@ class RRanger(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ranger_0.8.0.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/ranger"
 
+    version('0.11.1', sha256='999fb114602e27601ff0fe8ab461c39d667c6f5e8434e7feb3d21c7caf0dcffb')
     version('0.8.0', '1501380f418e784a6159bc1fb06fd32c')
     version('0.7.0', 'c7fbcbab7c195bc8e65b1ceb3baeb87f')
     version('0.6.0', '047ad26289c9b528b7476aa4811b4111')

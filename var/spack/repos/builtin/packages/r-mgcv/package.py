@@ -16,6 +16,7 @@ class RMgcv(RPackage):
     url      = "https://cran.r-project.org/src/contrib/mgcv_1.8-16.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/mgcv"
 
+    version('1.8-27', sha256='c88b99fb518decd7e9cd17a4c267e74f98a78172f056784194b5b127ca0f7d1b')
     version('1.8-22', 'b42079b33b46de784f293a74c824b877')
     version('1.8-21', 'aae8262a07c8698ca8d6213065c4983f')
     version('1.8-20', '58eb94404aad7ff8a0cf11a2f098f8bf')

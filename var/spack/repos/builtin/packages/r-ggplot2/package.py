@@ -19,6 +19,7 @@ class RGgplot2(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ggplot2_2.2.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ggplot2"
 
+    version('3.1.1', sha256='bfde297f3b4732e7f560078f4ce131812a70877e6b5b1d41a772c394939e0c79')
     version('2.2.1', '14c5a3507bc123c6e7e9ad3bef7cee5c')
     version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
 

@@ -19,6 +19,7 @@ class RReprex(RPackage):
     url      = "https://cran.r-project.org/src/contrib/reprex_0.1.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/reprex"
 
+    version('0.2.1', sha256='5d234ddfbcadc5a5194a58eb88973c51581e7e2e231f146974af8f42747b45f3')
     version('0.1.1', 'fcd89995d7b35a2ddd4269973937bde3')
 
     depends_on('r-callr', type=('build', 'run'))

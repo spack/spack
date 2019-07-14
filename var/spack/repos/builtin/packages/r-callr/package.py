@@ -15,6 +15,7 @@ class RCallr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/callr_1.0.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/callr/"
 
+    version('3.2.0', sha256='4bb47b1018e8eb5c683a86c05d0d9b8b25848db1f1b30e92cfebedc0ce14b0e8')
     version('3.0.0', sha256='e36361086c65660a6ecbbc09b5ecfcddee6b59caf75e983e48b21d3b8defabe7')
     version('1.0.0', 'd9af99bb95696310fa1e5d1cb7166c91')
 

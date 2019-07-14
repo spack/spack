@@ -15,6 +15,7 @@ class RRaster(RPackage):
     url      = "https://cran.r-project.org/src/contrib/raster_2.5-8.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/raster"
 
+    version('2.9-22', sha256='8107d95f1aa85cea801c8101c6aa391becfef4b5b915d9bc7a323531fee26128')
     version('2.5-8', '2a7db931c74d50516e82d04687c0a577')
 
     depends_on('r-sp', type=('build', 'run'))

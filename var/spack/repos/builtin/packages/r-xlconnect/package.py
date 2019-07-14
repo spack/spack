@@ -14,6 +14,7 @@ class RXlconnect(RPackage):
     url      = "https://cran.r-project.org/src/contrib/XLConnect_0.2-11.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/XLConnect"
 
+    version('0.2-14', sha256='d1013ed26947572bad97d62a3d66346f74993cf96c6408d21d5b6ee567468819')
     version('0.2-12', '3340d05d259f0a41262eab4ed32617ad')
     version('0.2-11', '9d1769a103cda05665df399cc335017d')
 

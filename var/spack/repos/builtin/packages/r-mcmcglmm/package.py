@@ -13,6 +13,7 @@ class RMcmcglmm(RPackage):
     url      = "https://cran.r-project.org/src/contrib/MCMCglmm_2.25.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/MCMCglmm"
 
+    version('2.28', sha256='7d92e6d35638e5e060a590b92c3b1bfc02a11386276a8ab99bceec5d797bfc2a')
     version('2.25', '260527ef6fecdd87f762fd07406d674a')
 
     depends_on('r-matrix', type=('build', 'run'))

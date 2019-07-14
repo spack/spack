@@ -22,6 +22,7 @@ class ROpenssl(RPackage):
     url      = "https://cran.r-project.org/src/contrib/openssl_0.9.6.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/openssl"
 
+    version('1.3', sha256='1c83f4d529adc1f5ec40e477c690a8d5b0a42422f3e542f1fc39062dcfaca4bf')
     version('0.9.7', '86773824dce7d3d79abfef574ce2531a')
     version('0.9.6', '7ef137929d9dd07db690d35db242ba4b')
     version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')

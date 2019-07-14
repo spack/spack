@@ -14,6 +14,7 @@ class RFf(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/ff_2.2-13.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ff"
 
+    version('2.2-14', sha256='1c6307847275b1b8ad9e2ffdce3f4df3c9d955dc2e8a45e3fd7bfd2b0926e2f0')
     version('2.2-13', '4adf8840d24cb6e2927a3ef885c86fcd')
 
     depends_on('r-bit', type=('build', 'run'))

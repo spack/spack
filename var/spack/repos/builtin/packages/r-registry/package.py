@@ -13,4 +13,5 @@ class RRegistry(RPackage):
     url      = "https://cran.r-project.org/src/contrib/registry_0.3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/registry"
 
+    version('0.5', sha256='5d8be59ba791987b2400e9e8eaaac614cd544c1aece785ec4782ea6d5ea00efb')
     version('0.3', '85345b334ec81eb3da6edcbb27c5f421')

@@ -16,6 +16,7 @@ class RPhangorn(RPackage):
     url      = "https://cran.r-project.org/src/contrib/phangorn_2.3.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/phangorn"
 
+    version('2.5.3', sha256='a306585a0aabe7360a2adaf9116ae2993fb5ceff641b198f2e01e4329d3768af')
     version('2.3.1', '85e7309900d061432508ab6f7e3e627e')
 
     depends_on('r-ape@5.0:', type=('build', 'run'))

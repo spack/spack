@@ -15,6 +15,7 @@ class RNanotime(RPackage):
     url      = "https://cran.r-project.org/src/contrib/nanotime_0.2.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/nanotime"
 
+    version('0.2.3', sha256='7d6df69a4223ae154f610b650e24ece38ce4aa706edfa38bec27d15473229f5d')
     version('0.2.0', '796b1f7d0bb43e2f3d98e3cc6f4b0657')
 
     depends_on('r-bit64', type=('build', 'run'))

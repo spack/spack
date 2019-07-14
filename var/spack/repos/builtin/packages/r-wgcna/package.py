@@ -13,6 +13,7 @@ class RWgcna(RPackage):
     url      = "https://cran.r-project.org/src/contrib/WGCNA_1.66.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/WGCNA/"
 
+    version('1.67', sha256='c9cc9989763b2c80835489eabd38d9ee35b204305044d115ca7c775a103f6824')
     version('1.64-1', sha256='961a890cda40676ba533cd6de2b1d4f692addd16363f874c82ba8b65dd2d0db6')
 
     depends_on('r@3.0:', type=('build', 'run'))

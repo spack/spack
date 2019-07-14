@@ -19,6 +19,7 @@ class RHtmltable(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/htmlTable_1.11.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/htmlTable"
 
+    version('1.13.1', sha256='689f32b65da6a57ad500e8d9ef3309d346401dca277c6b264a46c8d7c75884d0')
     version('1.11.2', '473e6d486e7714f8dd7f16a31480c896')
     version('1.9', '08c62c19e1ffe570e7d8fa57db5094b9')
 

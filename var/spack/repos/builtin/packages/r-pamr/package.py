@@ -13,4 +13,5 @@ class RPamr(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/pamr_1.55.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/pamr"
 
+    version('1.56.1', sha256='d0e527f2336ee4beee91eefb2a8f0dfa96413d9b5a5841d6fc7ff821e67c9779')
     version('1.55', '108932d006a4de3a178b6f57f5d1a006')

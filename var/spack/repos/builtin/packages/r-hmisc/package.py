@@ -18,6 +18,7 @@ class RHmisc(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/Hmisc_4.1-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/Hmisc"
 
+    version('4.2-0', sha256='9e9614673288dd00295f250fa0bf96fc9e9fed692c69bf97691081c1a01411d9')
     version('4.1-1', 'd255611f2b108d3cc0212b8a98fef6e3')
     version('4.0-3', '7091924db1e473419d8116c3335f82da')
 

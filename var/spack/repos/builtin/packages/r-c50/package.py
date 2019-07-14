@@ -14,6 +14,7 @@ class RC50(RPackage):
     url      = "https://cran.r-project.org/src/contrib/C50_0.1.0-24.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/C50"
 
+    version('0.1.1', sha256='03bc1fc2f64bcd5c680568a24902deafab1965074a66f8802bc4cd0335bd01df')
     version('0.1.0-24', '42631e65c5c579532cc6edf5ea175949')
 
     depends_on('r-partykit', type=('build', 'run'))

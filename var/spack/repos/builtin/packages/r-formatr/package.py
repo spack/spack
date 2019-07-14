@@ -18,6 +18,7 @@ class RFormatr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/formatR_1.5.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/formatR"
 
+    version('1.6', sha256='f5c98f0c3506ca51599671a2cdbc17738d0f326e8e3bb18b7a38e9f172122229')
     version('1.5', 'ac735515b8e4c32097154f1b68c5ecc7')
     version('1.4', '98b9b64b2785b35f9df403e1aab6c73c')
 

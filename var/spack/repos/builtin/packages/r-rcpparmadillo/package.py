@@ -14,6 +14,7 @@ class RRcpparmadillo(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RcppArmadillo_0.8.100.1.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/RcppArmadillo"
 
+    version('0.9.400.3.0', sha256='56936d501fe8e6f8796ae1a6badb9294d7dad98a0b557c3b3ce6bd4ecaad13b0')
     version('0.8.100.1.0', 'a79c0ee967f502702414bc3c80c88f56')
 
     depends_on('r-rcpp', type=('build', 'run'))

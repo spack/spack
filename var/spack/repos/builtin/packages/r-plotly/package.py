@@ -14,6 +14,7 @@ class RPlotly(RPackage):
     url      = "https://cran.r-project.org/src/contrib/plotly_4.7.1.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/plotly"
 
+    version('4.8.0', sha256='78f90282c831bbbb675ed4811fb506a98dd05e37251fabd42ebc263c80bae8a6')
     version('4.7.1', '4799c8b429291d4c52fb904380806548')
     version('4.7.0', '5bd52d515c01af7ff291c30a6cf23bec')
     version('4.6.0', '27ff3de288bacfaad6e6694752ea2929')

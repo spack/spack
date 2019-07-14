@@ -26,4 +26,5 @@ class RRrpp(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RRPP_0.3.0.tar.gz"
     list_url = "https://cron.r-project.org/src/contrib/Archive/RRPP"
 
+    version('0.4.1', sha256='d7cd3b089240d7f7e13f65f0259487669a378ffae062aee33d4dc6ab0f86f899')
     version('0.3.0', sha256='34fea6ce7a78e4f38398d3b99585bab11a8171bc8b9a4e461b6d984ed1373739')

@@ -18,6 +18,7 @@ class RVcd(RPackage):
     url      = "https://cran.r-project.org/src/contrib/vcd_1.4-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/vcd"
 
+    version('1.4-3', sha256='17ce89927421d9cd01285b6093eeaaecb1e7252388007f66d3b9222e58cc5f15')
     version('1.4-1', '7db150a77f173f85b69a1f86f73f8f02')
 
     depends_on('r-mass', type=('build', 'run'))

@@ -19,6 +19,7 @@ class RDorng(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/doRNG_1.6.6.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/doRNG"
 
+    version('1.7.1', sha256='27533d54464889d1c21301594137fc0f536574e3a413d61d7df9463ab12a67e9')
     version('1.6.6', 'ffb26024c58c8c99229470293fbf35cf')
 
     depends_on('r-foreach', type=('build', 'run'))

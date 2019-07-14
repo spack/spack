@@ -14,6 +14,7 @@ class RModelr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/modelr_0.1.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/modelr"
 
+    version('0.1.3', sha256='e536b247c17d6cacf10565dd8a1b744efc90a8815c70edd54371e413e6d1b423')
     version('0.1.1', 'ce5fd088fb7850228ab1e34d241a975d')
 
     depends_on('r-magrittr', type=('build', 'run'))

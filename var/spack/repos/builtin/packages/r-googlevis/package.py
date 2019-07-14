@@ -17,6 +17,7 @@ class RGooglevis(RPackage):
     url      = "https://cran.r-project.org/src/contrib/googleVis_0.6.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/googleVis"
 
+    version('0.6.3', sha256='17d104c5d4e6ab7b984df229cd51be19681e4726077afec7c61a33f6e4c0b6ef')
     version('0.6.0', 'ec36fd2a6884ddc7baa894007d0d0468')
 
     depends_on('r-jsonlite', type=('build', 'run'))

@@ -21,4 +21,5 @@ class RFilehash(RPackage):
     url      = "https://cran.r-project.org/src/contrib/filehash_2.3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/filehash"
 
+    version('2.4-1', sha256='d0e087d338d89372c251c18fc93b53fb24b1750ea154833216ff16aff3b1eaf4')
     version('2.3', '01fffafe09b148ccadc9814c103bdc2f')

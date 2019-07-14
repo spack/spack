@@ -19,6 +19,7 @@ class ROo(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/R.oo_1.21.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/R.oo"
 
+    version('1.22.0', sha256='c0862e4608fb2b8f91ec4494d46c2f3ba7bc44999f9aa3d7b9625d3792e7dd4c')
     version('1.21.0', 'f0062095c763faaeba30558303f68bc3')
 
     depends_on('r-methodss3', type=('build', 'run'))

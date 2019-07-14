@@ -15,6 +15,7 @@ class RPryr(RPackage):
     url      = "https://cran.r-project.org/src/contrib/pryr_0.1.2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/pryr"
 
+    version('0.1.3', sha256='6acd88341dde4fe247a5cafd3949b281dc6742b7d60f68b57c1feb84b96739ac')
     version('0.1.2', '66b597a762aa15a3b7037779522983b6')
 
     depends_on('r-stringr', type=('build', 'run'))

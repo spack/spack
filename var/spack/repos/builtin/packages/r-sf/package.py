@@ -16,6 +16,7 @@ class RSf(RPackage):
     url      = "https://cran.r-project.org/src/contrib/sf_0.5-5.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/sf"
 
+    version('0.7-5', sha256='53ed0567f502216a116c4848f5a9262ca232810f82642df7b98e0541a2524868')
     version('0.5-5', '53ff32d0c9bf2844666c68ce7d75beb2')
 
     depends_on('r-rcpp', type=('build', 'run'))

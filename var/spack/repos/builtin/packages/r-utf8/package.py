@@ -14,6 +14,7 @@ class RUtf8(RPackage):
     url      = "https://cran.r-project.org/src/contrib/utf8_1.1.4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/utf8"
 
+    version('1.1.4', sha256='f6da9cadfc683057d45f54b43312a359cf96ec2731c0dda18a8eae31d1e31e54')
     version('1.1.3', sha256='43b394c3274ba0f66719d28dc4a7babeb87187e766de8d8ca716e0548091440f')
     version('1.1.2', sha256='148517aadb75d82aba61f63afe2a30d254abebbdc7e32dd0830e12ff443915b9')
     version('1.1.1', sha256='0e30c824e43cdc0a3339f4688e3271737d02ea10768a46137e0e41936051cb3d')

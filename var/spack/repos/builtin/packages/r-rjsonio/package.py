@@ -27,4 +27,5 @@ class RRjsonio(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RJSONIO_1.3-0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/RJSONIO"
 
+    version('1.3-1.1', sha256='c72493b441758cd1e3e9d91296b9ea31068e71104649f46ad84c854a02c09693')
     version('1.3-0', '72c395622ba8d1435ec43849fd32c830')

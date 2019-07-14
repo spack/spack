@@ -16,6 +16,7 @@ class RSn(RPackage):
     url      = "https://cran.r-project.org/src/contrib/sn_1.5-0.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/sn"
 
+    version('1.5-3', sha256='cc21b97ddd674c9b1296260f2a72ffb085cdcb877c8332f0bfa96ff028517183')
     version('1.5-0', 'a3349773be950199d7f4c17954be56d1')
     version('1.4-0', 'cfa604317ea54224b06abd1cec179375')
     version('1.3-0', '84d02ba2ab5ca6f3644626013e7ce36d')

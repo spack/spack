@@ -21,6 +21,7 @@ class RXgboost(RPackage):
     url      = "https://cran.r-project.org/src/contrib/xgboost_0.6-4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/xgboost"
 
+    version('0.81.0.1', sha256='3e7ada32e66881ea5c90aeafdab948927014c76cfff60a8e3d7f9e1f8a9ed7ce')
     version('0.6-4', '86e517e3ce39f8a01de796920f6b425e')
     version('0.4-4', 'c24d3076058101a71de4b8af8806697c')
 

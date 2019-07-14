@@ -13,5 +13,6 @@ class RPlotrix(RPackage):
     url      = "https://cran.r-project.org/src/contrib/plotrix_3.6-4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/plotrix"
 
+    version('3.7-5', sha256='b22f3f9d93961d23ad46e41597d1e45d2665ced04dcad8c40f6806a67cded14c')
     version('3.6-4', 'efe9b9b093d8903228a9b56c46d943fa')
     version('3.6-3', '23e3e022a13a596e9b77b40afcb4a2ef')

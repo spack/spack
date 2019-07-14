@@ -16,4 +16,5 @@ class RDesolve(RPackage):
     url      = "https://cran.r-project.org/src/contrib/deSolve_1.20.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/deSolve"
 
+    version('1.21', sha256='45c372d458fe4c7c11943d4c409517849b1be6782dc05bd9a74b066e67250c63')
     version('1.20', '85c6a2d8568944ae8eef27ac7c35fb25')

@@ -21,6 +21,7 @@ class RMaldiquant(RPackage):
     url      = "https://cran.r-project.org/src/contrib/MALDIquant_1.16.4.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/MALDIquant"
 
+    version('1.19.2', sha256='8c6efc4ae4f1af4770b079db29743049f2fd597bcdefeaeb16f623be43ddeb87')
     version('1.16.4', '83200e7496d05c5a99292e45d2b11c67')
 
     depends_on('r-knitr', type=('build', 'run'))

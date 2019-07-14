@@ -17,6 +17,7 @@ class RMarkdown(RPackage):
     url      = "https://cran.r-project.org/src/contrib/markdown_0.7.7.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/markdown"
 
+    version('0.9', sha256='3068c6a41ca7a76cbedeb93b7371798f4d8437eea69a23c0ed5204c716d1bf23')
     version('0.8', '5dde829a865ad65bab37a2b9d243b071')
     version('0.7.7', '72deca9c675c7cc9343048edbc29f7ff')
 

@@ -21,6 +21,7 @@ class RPartykit(RPackage):
     url      = "https://cran.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/partykit"
 
+    version('1.2-3', sha256='56749b246e283f94ac2ad2cdcfc0a477e05cd44b5e8f6e462c26f4dff818da35')
     version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
 
     depends_on('r-survival', type=('build', 'run'))

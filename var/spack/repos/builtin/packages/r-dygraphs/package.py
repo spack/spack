@@ -17,6 +17,7 @@ class RDygraphs(RPackage):
     url      = "https://cran.r-project.org/src/contrib/dygraphs_0.9.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/dygraphs"
 
+    version('1.1.1.5', sha256='274035988fdd6833121fd5831692355d383acc828d540788dbcecaf88eb2d72d')
     version('0.9', '7f0ce4312bcd3f0a58b8c03b2772f833')
 
     depends_on('r-magrittr', type=('build', 'run'))

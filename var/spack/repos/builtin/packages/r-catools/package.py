@@ -17,6 +17,7 @@ class RCatools(RPackage):
     url      = "https://cran.r-project.org/src/contrib/caTools_1.17.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/caTools"
 
+    version('1.17.1.1', sha256='d53e2c5c77f1bd4744703d7196dbc9b4671a120bbb5b9b3edc45fc57c0650c06')
     version('1.17.1', '5c872bbc78b177b306f36709deb44498')
 
     depends_on('r-bitops', type=('build', 'run'))

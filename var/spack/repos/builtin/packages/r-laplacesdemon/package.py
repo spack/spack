@@ -15,4 +15,5 @@ class RLaplacesdemon(RPackage):
     url      = "https://cran.r-project.org/src/contrib/LaplacesDemon_16.0.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/LaplacesDemon"
 
+    version('16.1.0', sha256='41d99261e8fc33c977b43ecf66ebed8ef1c84d9bd46b271609e9aadddc2ca8bb')
     version('16.0.1', '1e4dab2dd0e27251734d68b0bfdbe911')

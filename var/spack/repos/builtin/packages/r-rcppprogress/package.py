@@ -15,6 +15,7 @@ class RRcppprogress(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RcppProgress_0.3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/RcppProgress"
 
+    version('0.4', sha256='706e14360dbc5976db05c2ac6692c3279c0f8c95e72bf9d4becd9e1348025e3e')
     version('0.3',   '3cd527af84bc6fcb3c77422e0ff09dba')
     version('0.2.1', 'c9cd69759ff457acfee0b52353f9af1b')
     version('0.2',   '9522c962ecddd4895b5636e7a499bda5')

@@ -17,6 +17,7 @@ class RParamhelpers(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ParamHelpers_1.10.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ParamHelpers"
 
+    version('1.11', sha256='1614f4c0842cf822befc01228ab7263417f3423dd6a1dc24347b14f8491637a0')
     version('1.10', '36e9060488ebd484d62cd991a4693332')
 
     depends_on('r-bbmisc@1.10:', type=('build', 'run'))

@@ -15,6 +15,7 @@ class RSurvival(RPackage):
     url      = "https://cran.r-project.org/src/contrib/survival_2.41-3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/survival"
 
+    version('2.44-1', sha256='82c44afa41fe4504295855f1da4a5940c3289dfd61bc664bf211bb67c051a909')
     version('2.41-3', '6edb8093d1177775685dc26f3ce78d73')
     version('2.40-1', 'a2474b656cd723791268e3114481b8a7')
     version('2.39-5', 'a3cc6b5762e8c5c0bb9e64a276710be2')
