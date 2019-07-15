@@ -25,6 +25,7 @@ from spack.main import SpackCommand
 from six.moves.urllib.error import HTTPError, URLError
 
 install = SpackCommand('install')
+share = SpackCommand('share')
 
 
 @pytest.fixture(scope='module')
@@ -591,3 +592,22 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
 
         assert 'WARNING: ALL CAPITAL WARNING!' in msg
         assert 'foo.c:89: warning: some weird warning!' in msg
+
+
+@pytest.mark.test_shared_install
+def test_shared_install(
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
+        install_mockery):
+    share('activate')
+    with tmpdir.as_cwd():
+        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
+
+    content = filename.open().read()
+    assert 'tests="2"' in content
+    assert 'failures="0"' in content
+    assert 'errors="0"' in content
+    share('deactivate')
