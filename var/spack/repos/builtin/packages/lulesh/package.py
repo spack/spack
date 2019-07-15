@@ -12,7 +12,7 @@ class Lulesh(MakefilePackage):
     code to only solve a Sedov blast problem with analytic answer
     """
     tags = ['proxy-app']
-    homepage = "https://computation.llnl.gov/projects/co-design/lulesh"
+    homepage = "https://computing.llnl.gov/projects/co-design/lulesh"
     git      = "https://github.com/LLNL/LULESH.git"
 
     version('2.0.3', tag='2.0.3')
