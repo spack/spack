@@ -12,8 +12,8 @@ class Zfp(MakefilePackage):
        arrays.
     """
 
-    homepage = 'http://computation.llnl.gov/projects/floating-point-compression'
-    url      = 'http://computation.llnl.gov/projects/floating-point-compression/download/zfp-0.5.2.tar.gz'
+    homepage = 'http://computing.llnl.gov/projects/floating-point-compression'
+    url      = 'http://computing.llnl.gov/projects/floating-point-compression/download/zfp-0.5.2.tar.gz'
 
     version('0.5.4', sha256='768a05ed9bf10e54ac306f90b81dd17b0e7b13782f01823d7da4394fd2da8adb')
     version('0.5.2', '2f0a77aa34087219a6e10b8b7d031e77')
