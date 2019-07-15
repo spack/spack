@@ -138,10 +138,10 @@ packages:
       - mpi
       - python
     specs:
-      - neurodamus-neocortex
-      - neurodamus-hippocampus
-      - neurodamus-thalamus
-      - neurodamus-mousify
+      - neurodamus-neocortex+coreneuron
+      - neurodamus-hippocampus+coreneuron
+      - neurodamus-thalamus+coreneuron
+      - neurodamus-mousify+coreneuron
       - neurodamus-neocortex+coreneuron^coreneuron+knl
       - neurodamus-thalamus+coreneuron^coreneuron+knl
       - neurodamus-hippocampus+coreneuron^coreneuron+knl
