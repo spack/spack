@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMsnbase(RPackage):
-    """Base Functions and Classes for Mass Spectrometry and Proteomics
+    """Base Functions and Classes for Mass Spectrometry and Proteomics.
 
        MSnbase provides infrastructure for manipulation, processing and
        visualisation of mass spectrometry and proteomics data, ranging from raw

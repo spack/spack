@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRgraphviz(RPackage):
-    """Provides plotting capabilities for R graph objects
+    """Provides plotting capabilities for R graph objects.
 
        Interfaces R with the AT and T graphviz library for plotting R graph
        objects from the graph package."""

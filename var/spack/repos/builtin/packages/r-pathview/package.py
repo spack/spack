@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPathview(RPackage):
-    """a tool set for pathway based data integration and visualization
+    """a tool set for pathway based data integration and visualization.
 
        Pathview is a tool set for pathway based data integration and
        visualization. It maps and renders a wide variety of biological data on

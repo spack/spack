@@ -7,7 +7,8 @@ from spack import *
 
 
 class ROrganismdbi(RPackage):
-    """Software to enable the smooth interfacing of different database packages
+    """Software to enable the smooth interfacing of different database
+       packages.
 
        The package enables a simple unified interface to several annotation
        packages each of which has its own schema by taking advantage of the

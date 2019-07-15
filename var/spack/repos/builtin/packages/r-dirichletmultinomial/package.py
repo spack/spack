@@ -7,7 +7,8 @@ from spack import *
 
 
 class RDirichletmultinomial(RPackage):
-    """Dirichlet-Multinomial Mixture Model Machine Learning for Microbiome Data
+    """Dirichlet-Multinomial Mixture Model Machine Learning for Microbiome
+       Data.
 
        Dirichlet-multinomial mixture models can be used to describe variability
        in microbial metagenomic data. This package is an interface to code

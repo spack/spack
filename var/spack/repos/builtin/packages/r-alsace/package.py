@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAlsace(RPackage):
-    """ALS for the Automatic Chemical Exploration of mixtures
+    """ALS for the Automatic Chemical Exploration of mixtures.
 
        Alternating Least Squares (or Multivariate Curve Resolution) for
        analytical chemical data, in particular hyphenated data where the first

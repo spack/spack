@@ -7,7 +7,7 @@ from spack import *
 
 
 class RCategory(RPackage):
-    """Category Analysis
+    """Category Analysis.
 
        A collection of tools for performing category (gene set enrichment)
        analysis."""

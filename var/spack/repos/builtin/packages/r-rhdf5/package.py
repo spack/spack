@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRhdf5(RPackage):
-    """R Interface to HDF5
+    """R Interface to HDF5.
 
        This package provides an interface between HDF5 and R. HDF5's main
        features are the ability to store and access very large and/or complex

@@ -8,7 +8,7 @@ from spack import *
 
 class RSseq(RPackage):
     """Shrinkage estimation of dispersion in Negative Binomial models for RNA-
-       seq experiments with small sample size
+       seq experiments with small sample size.
 
        The purpose of this package is to discover the genes that are
        differentially expressed between two conditions in RNA-seq experiments.

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAneufinder(RPackage):
-    """Analysis of Copy Number Variation in Single-Cell-Sequencing Data
+    """Analysis of Copy Number Variation in Single-Cell-Sequencing Data.
 
        AneuFinder implements functions for copy-number detection, breakpoint
        detection, and karyotype and heterogeneity analysis in single-cell whole

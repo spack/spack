@@ -7,7 +7,7 @@ from spack import *
 
 
 class RS4vectors(RPackage):
-    """Foundation of vector-like and list-like containers in Bioconductor
+    """Foundation of vector-like and list-like containers in Bioconductor.
 
        The S4Vectors package defines the Vector and List virtual classes and a
        set of generic functions that extend the semantic of ordinary vectors

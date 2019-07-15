@@ -7,7 +7,7 @@ from spack import *
 
 
 class RYapsa(RPackage):
-    """Yet Another Package for Signature Analysis
+    """Yet Another Package for Signature Analysis.
 
        This package provides functions and routines useful in the analysis of
        somatic signatures (cf. L. Alexandrov et al., Nature 2013). In

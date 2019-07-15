@@ -8,7 +8,7 @@ from spack import *
 
 class RInteractivedisplaybase(RPackage):
     """Base package for enabling powerful shiny web displays of Bioconductor
-       objects
+       objects.
 
        The interactiveDisplayBase package contains the the basic methods needed
        to generate interactive Shiny based display methods for Bioconductor

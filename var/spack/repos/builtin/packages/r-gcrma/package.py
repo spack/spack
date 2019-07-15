@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGcrma(RPackage):
-    """Background Adjustment Using Sequence Information
+    """Background Adjustment Using Sequence Information.
 
        Background adjustment using sequence information"""
 

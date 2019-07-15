@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGraph(RPackage):
-    """graph: A package to handle graph data structures
+    """graph: A package to handle graph data structures.
 
        A package that implements some simple graph handling capabilities."""
 

@@ -8,7 +8,7 @@ from spack import *
 
 class RAbsseq(RPackage):
     """ABSSeq: a new RNA-Seq analysis method based on modelling absolute
-       expression differences
+       expression differences.
 
        Inferring differential expression genes by absolute counts difference
        between two groups, utilizing Negative binomial distribution and

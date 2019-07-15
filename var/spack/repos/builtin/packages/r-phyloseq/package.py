@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPhyloseq(RPackage):
-    """Handling and analysis of high-throughput microbiome census data
+    """Handling and analysis of high-throughput microbiome census data.
 
        phyloseq provides a set of classes and tools to facilitate the import,
        storage, analysis, and graphical display of microbiome census data."""

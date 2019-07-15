@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAcme(RPackage):
-    """Algorithms for Calculating Microarray Enrichment (ACME)
+    """Algorithms for Calculating Microarray Enrichment (ACME).
 
        ACME (Algorithms for Calculating Microarray Enrichment) is a set of
        tools for analysing tiling array ChIP/chip, DNAse hypersensitivity, or

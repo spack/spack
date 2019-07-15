@@ -8,7 +8,7 @@ from spack import *
 
 class RDelayedarray(RPackage):
     """A unified framework for working transparently with on-disk and in-memory
-       array-like datasets
+       array-like datasets.
 
        Wrapping an array-like object (typically an on-disk object) in a
        DelayedArray object allows one to perform common array operations on it

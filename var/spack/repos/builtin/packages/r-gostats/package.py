@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGostats(RPackage):
-    """Tools for manipulating GO and microarrays
+    """Tools for manipulating GO and microarrays.
 
        A set of tools for interacting with GO and microarray data. A variety of
        basic manipulation tools for graphs, hypothesis testing and other simple

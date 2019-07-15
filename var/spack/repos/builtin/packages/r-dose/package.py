@@ -7,7 +7,7 @@ from spack import *
 
 
 class RDose(RPackage):
-    """Disease Ontology Semantic and Enrichment analysis
+    """Disease Ontology Semantic and Enrichment analysis.
 
        This package implements five methods proposed by Resnik, Schlicker,
        Jiang, Lin and Wang respectively for measuring semantic similarities

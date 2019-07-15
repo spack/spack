@@ -7,7 +7,7 @@ from spack import *
 
 
 class RQvalue(RPackage):
-    """Q-value estimation for false discovery rate control
+    """Q-value estimation for false discovery rate control.
 
        This package takes a list of p-values resulting from the simultaneous
        testing of many hypotheses and estimates their q-values and local FDR

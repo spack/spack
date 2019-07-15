@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGenomicranges(RPackage):
-    """Representation and manipulation of genomic intervals
+    """Representation and manipulation of genomic intervals.
 
        The ability to efficiently represent and manipulate genomic annotations
        and alignments is playing a central role when it comes to analyzing

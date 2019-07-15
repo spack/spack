@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffycomp(RPackage):
-    """Graphics Toolbox for Assessment of Affymetrix Expression Measures
+    """Graphics Toolbox for Assessment of Affymetrix Expression Measures.
 
        The package contains functions that can be used to compare expression
        measures for Affymetrix Oligonucleotide Arrays."""

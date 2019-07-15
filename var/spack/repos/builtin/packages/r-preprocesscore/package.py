@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPreprocesscore(RPackage):
-    """A collection of pre-processing functions
+    """A collection of pre-processing functions.
 
        A library of core preprocessing routines."""
 

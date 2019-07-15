@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffyexpress(RPackage):
-    """Affymetrix Quality Assessment and Analysis Tool
+    """Affymetrix Quality Assessment and Analysis Tool.
 
        The purpose of this package is to provide a comprehensive and easy-to-
        use tool for quality assessment and to identify differentially expressed

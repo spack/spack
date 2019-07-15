@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffycompatible(RPackage):
-    """Affymetrix GeneChip software compatibility
+    """Affymetrix GeneChip software compatibility.
 
        This package provides an interface to Affymetrix chip annotation and
        sample attribute files. The package allows an easy way for users to

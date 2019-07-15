@@ -7,7 +7,7 @@ from spack import *
 
 
 class RQuantro(RPackage):
-    """A test for when to use quantile normalization
+    """A test for when to use quantile normalization.
 
        A data-driven test for the assumptions of quantile normalization using
        raw data such as objects that inherit eSets (e.g. ExpressionSet,

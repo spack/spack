@@ -8,7 +8,7 @@ from spack import *
 
 class RGenomeinfodb(RPackage):
     """Utilities for manipulating chromosome names, including modifying them to
-       follow a particular naming style
+       follow a particular naming style.
 
        Contains data and functions that define and allow translation between
        different chromosome sequence naming conventions (e.g., "chr1" versus

@@ -8,7 +8,7 @@ from spack import *
 
 class RAffycoretools(RPackage):
     """Functions useful for those doing repetitive analyses with Affymetrix
-       GeneChips
+       GeneChips.
 
        Various wrapper functions that have been written to streamline the more
        common analyses that a core Biostatistician might see."""

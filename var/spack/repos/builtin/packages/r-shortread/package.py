@@ -7,7 +7,7 @@ from spack import *
 
 
 class RShortread(RPackage):
-    """FASTQ input and manipulation
+    """FASTQ input and manipulation.
 
        This package implements sampling, iteration, and input of FASTQ files.
        The package includes functions for filtering and trimming reads, and for

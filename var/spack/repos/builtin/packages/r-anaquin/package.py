@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAnaquin(RPackage):
-    """Statistical analysis of sequins
+    """Statistical analysis of sequins.
 
        The project is intended to support the use of sequins (synthetic
        sequencing spike-in controls) owned and made available by the Garvan

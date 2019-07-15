@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMakecdfenv(RPackage):
-    """CDF Environment Maker
+    """CDF Environment Maker.
 
        This package has two functions. One reads a Affymetrix chip description
        file (CDF) and creates a hash table environment containing the

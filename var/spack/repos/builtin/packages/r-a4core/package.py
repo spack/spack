@@ -7,7 +7,7 @@ from spack import *
 
 
 class RA4core(RPackage):
-    """Automated Affymetrix Array Analysis Core Package
+    """Automated Affymetrix Array Analysis Core Package.
 
        Automated Affymetrix Array Analysis Core Package"""
 

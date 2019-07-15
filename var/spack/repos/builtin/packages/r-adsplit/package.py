@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAdsplit(RPackage):
-    """Annotation-Driven Clustering
+    """Annotation-Driven Clustering.
 
        This package implements clustering of microarray gene expression
        profiles according to functional annotations. For each term genes are

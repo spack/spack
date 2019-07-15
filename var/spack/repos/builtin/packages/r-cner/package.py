@@ -7,7 +7,7 @@ from spack import *
 
 
 class RCner(RPackage):
-    """CNE Detection and Visualization
+    """CNE Detection and Visualization.
 
        Large-scale identification and advanced visualization of sets of
        conserved noncoding elements."""

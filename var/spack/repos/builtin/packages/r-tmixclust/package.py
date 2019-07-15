@@ -8,7 +8,7 @@ from spack import *
 
 class RTmixclust(RPackage):
     """Time Series Clustering of Gene Expression with Gaussian Mixed-Effects
-       Models and Smoothing Splines
+       Models and Smoothing Splines.
 
        Implementation of a clustering method for time series gene expression
        data based on mixed-effects models with Gaussian variables and non-

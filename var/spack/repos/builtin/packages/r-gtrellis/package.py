@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGtrellis(RPackage):
-    """Genome Level Trellis Layout
+    """Genome Level Trellis Layout.
 
        Genome level Trellis graph visualizes genomic data conditioned by
        genomic categories (e.g. chromosomes). For each genomic category,

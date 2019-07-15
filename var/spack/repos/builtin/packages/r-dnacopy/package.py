@@ -7,7 +7,7 @@ from spack import *
 
 
 class RDnacopy(RPackage):
-    """DNA copy number data analysis
+    """DNA copy number data analysis.
 
        Implements the circular binary segmentation (CBS) algorithm to segment
        DNA copy number data and identify genomic regions with abnormal copy

@@ -8,7 +8,7 @@ from spack import *
 
 class RAffyrnadegradation(RPackage):
     """Analyze and correct probe positional bias in microarray data due to RNA
-       degradation
+       degradation.
 
        The package helps with the assessment and correction of RNA degradation
        effects in Affymetrix 3' expression arrays. The parameter d gives a

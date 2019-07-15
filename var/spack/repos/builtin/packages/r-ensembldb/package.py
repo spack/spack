@@ -7,7 +7,7 @@ from spack import *
 
 
 class REnsembldb(RPackage):
-    """Utilities to create and use Ensembl-based annotation databases
+    """Utilities to create and use Ensembl-based annotation databases.
 
        The package provides functions to create and use transcript centric
        annotation databases/packages. The annotation for the databases are

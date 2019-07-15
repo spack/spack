@@ -7,7 +7,7 @@ from spack import *
 
 
 class RA4classif(RPackage):
-    """Automated Affymetrix Array Analysis Classification Package
+    """Automated Affymetrix Array Analysis Classification Package.
 
        Automated Affymetrix Array Analysis Classification Package"""
 

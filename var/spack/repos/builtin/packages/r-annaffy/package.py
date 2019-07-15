@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAnnaffy(RPackage):
-    """Annotation tools for Affymetrix biological metadata
+    """Annotation tools for Affymetrix biological metadata.
 
        Functions for handling data from Bioconductor Affymetrix annotation data
        packages. Produces compact HTML and text reports including experimental

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSeqlogo(RPackage):
-    """Sequence logos for DNA sequence alignments
+    """Sequence logos for DNA sequence alignments.
 
        seqLogo takes the position weight matrix of a DNA sequence motif and
        plots the corresponding sequence logo as introduced by Schneider and

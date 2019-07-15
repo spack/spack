@@ -7,7 +7,7 @@ from spack import *
 
 
 class RYaqcaffy(RPackage):
-    """Affymetrix expression data quality control and reproducibility analysis
+    """Affymetrix expression data quality control and reproducibility analysis.
 
        Quality control of Affymetrix GeneChip expression data and
        reproducibility analysis of human whole genome chips with the MAQC

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RXmapbridge(RPackage):
-    """Export plotting files to the xmapBridge for visualisation in X:Map
+    """Export plotting files to the xmapBridge for visualisation in X:Map.
 
        xmapBridge can plot graphs in the X:Map genome browser. This package
        exports plotting files in a suitable format."""

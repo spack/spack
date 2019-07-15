@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMzid(RPackage):
-    """An mzIdentML parser for R
+    """An mzIdentML parser for R.
 
        A parser for mzIdentML files implemented using the XML package. The
        parser tries to be general and able to handle all types of mzIdentML

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiocstyle(RPackage):
-    """Standard styles for vignettes and other Bioconductor documents
+    """Standard styles for vignettes and other Bioconductor documents.
 
        Provides standard formatting styles for Bioconductor PDF and HTML
        documents. Package vignettes illustrate use and functionality."""

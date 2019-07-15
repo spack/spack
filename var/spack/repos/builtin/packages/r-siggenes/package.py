@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSiggenes(RPackage):
-    """Multiple Testing using SAM and Efron's Empirical Bayes Approaches
+    """Multiple Testing using SAM and Efron's Empirical Bayes Approaches.
 
        Identification of differentially expressed genes and estimation of the
        False Discovery Rate (FDR) using both the Significance Analysis of

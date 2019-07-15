@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMinfi(RPackage):
-    """Analyze Illumina Infinium DNA methylation arrays
+    """Analyze Illumina Infinium DNA methylation arrays.
 
        Tools to analyze & visualize Illumina Infinium methylation arrays."""
 

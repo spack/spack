@@ -8,7 +8,7 @@ from spack import *
 
 class RAnalysispageserver(RPackage):
     """A framework for sharing interactive data and plots from R through the
-       web
+       web.
 
        AnalysisPageServer is a modular system that enables sharing of
        customizable R analyses via the web."""

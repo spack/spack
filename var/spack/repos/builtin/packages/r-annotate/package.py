@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAnnotate(RPackage):
-    """Annotation for microarrays
+    """Annotation for microarrays.
 
        Using R enviroments for annotation."""
 

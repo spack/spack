@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiomformat(RPackage):
-    """An interface package for the BIOM file format
+    """An interface package for the BIOM file format.
 
        This is an R package for interfacing with the BIOM format. This package
        includes basic tools for reading biom-format files, accessing and

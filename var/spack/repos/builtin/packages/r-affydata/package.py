@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffydata(RPackage):
-    """Affymetrix Data for Demonstration Purpose
+    """Affymetrix Data for Demonstration Purpose.
 
        Example datasets of a slightly large size. They represent 'real world
        examples', unlike the artificial examples included in the package

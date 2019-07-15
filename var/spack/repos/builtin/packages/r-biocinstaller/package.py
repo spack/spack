@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiocinstaller(RPackage):
-    """Install/Update Bioconductor, CRAN, and github Packages
+    """Install/Update Bioconductor, CRAN, and github Packages.
 
        This package is used to install and update Bioconductor, CRAN, and
        (some) github packages."""

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAcde(RPackage):
-    """Artificial Components Detection of Differentially Expressed Genes
+    """Artificial Components Detection of Differentially Expressed Genes.
 
        This package provides a multivariate inferential analysis method for
        detecting differentially expressed genes in gene expression data. It
@@ -35,5 +35,4 @@ class RAcde(RPackage):
     depends_on('r@3.4.0:3.4.9', when='@1.8.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.6.0', type=('build', 'run'))
 
-    depends_on('r-boot(>=@1.3:', when='@1.6.0:', type=('build', 'run'))
-    depends_on('r-r(>=@3.3:', when='@1.6.0:', type=('build', 'run'))
+    depends_on('r-boot@1.3:', when='@1.6.0:', type=('build', 'run'))

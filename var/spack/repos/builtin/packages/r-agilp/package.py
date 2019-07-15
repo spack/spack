@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAgilp(RPackage):
-    """Agilent expression array processing package
+    """Agilent expression array processing package.
 
        More about what it does (maybe more than one line)"""
 

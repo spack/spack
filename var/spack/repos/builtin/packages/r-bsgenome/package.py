@@ -8,7 +8,7 @@ from spack import *
 
 class RBsgenome(RPackage):
     """Software infrastructure for efficient representation of full genomes and
-       their SNPs
+       their SNPs.
 
        Infrastructure shared by all the Biostrings-based genome data
        packages."""

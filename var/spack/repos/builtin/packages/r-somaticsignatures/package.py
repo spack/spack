@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSomaticsignatures(RPackage):
-    """Somatic Signatures
+    """Somatic Signatures.
 
        The SomaticSignatures package identifies mutational signatures of single
        nucleotide variants (SNVs). It provides a infrastructure related to the

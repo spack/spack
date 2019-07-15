@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiobase(RPackage):
-    """Biobase: Base functions for Bioconductor
+    """Biobase: Base functions for Bioconductor.
 
        Functions that are needed by many other packages or which replace R
        functions."""

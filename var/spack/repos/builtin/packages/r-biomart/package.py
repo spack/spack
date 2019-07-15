@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiomart(RPackage):
-    """Interface to BioMart databases (i.e. Ensembl)
+    """Interface to BioMart databases (i.e. Ensembl).
 
        In recent years a wealth of biological data has become available in
        public data repositories. Easy access to these valuable data resources

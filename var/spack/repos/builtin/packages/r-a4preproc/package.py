@@ -7,7 +7,7 @@ from spack import *
 
 
 class RA4preproc(RPackage):
-    """Automated Affymetrix Array Analysis Preprocessing Package
+    """Automated Affymetrix Array Analysis Preprocessing Package.
 
        Automated Affymetrix Array Analysis Preprocessing Package"""
 

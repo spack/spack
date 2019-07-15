@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRtracklayer(RPackage):
-    """R interface to genome annotation files and the UCSC genome browser
+    """R interface to genome annotation files and the UCSC genome browser.
 
        Extensible framework for interacting with multiple genome browsers
        (currently UCSC built-in) and manipulating annotation tracks in various

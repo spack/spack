@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGenie3(RPackage):
-    """GEne Network Inference with Ensemble of trees
+    """GEne Network Inference with Ensemble of trees.
 
        This package implements the GENIE3 algorithm for inferring gene
        regulatory networks from expression data."""

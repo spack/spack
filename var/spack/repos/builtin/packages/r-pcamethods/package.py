@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPcamethods(RPackage):
-    """A collection of PCA methods
+    """A collection of PCA methods.
 
        Provides Bayesian PCA, Probabilistic PCA, Nipals PCA, Inverse Non-Linear
        PCA and the conventional SVD PCA. A cluster based method for missing

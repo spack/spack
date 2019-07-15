@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffxparser(RPackage):
-    """Affymetrix File Parsing SDK
+    """Affymetrix File Parsing SDK.
 
        Package for parsing Affymetrix files (CDF, CEL, CHP, BPMAP, BAR). It
        provides methods for fast and memory efficient parsing of Affymetrix

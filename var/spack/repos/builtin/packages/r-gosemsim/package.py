@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGosemsim(RPackage):
-    """GO-terms Semantic Similarity Measures
+    """GO-terms Semantic Similarity Measures.
 
        The semantic comparisons of Gene Ontology (GO) annotations provide
        quantitative ways to compute similarities between genes and gene groups,

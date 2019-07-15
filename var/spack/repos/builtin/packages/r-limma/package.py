@@ -7,7 +7,7 @@ from spack import *
 
 
 class RLimma(RPackage):
-    """Linear Models for Microarray Data
+    """Linear Models for Microarray Data.
 
        Data analysis, linear models and differential expression for microarray
        data."""

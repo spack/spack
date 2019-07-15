@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffyqcreport(RPackage):
-    """QC Report Generation for affyBatch objects
+    """QC Report Generation for affyBatch objects.
 
        This package creates a QC report for an AffyBatch object. The report is
        intended to allow the user to quickly assess the quality of a set of

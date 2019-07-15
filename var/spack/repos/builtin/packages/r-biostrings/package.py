@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiostrings(RPackage):
-    """Efficient manipulation of biological strings
+    """Efficient manipulation of biological strings.
 
        Memory efficient string containers, string matching algorithms, and
        other utilities, for fast manipulation of large biological sequences or

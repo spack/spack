@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffycontam(RPackage):
-    """structured corruption of affymetrix cel file data
+    """structured corruption of affymetrix cel file data.
 
        structured corruption of cel file data to demonstrate QA
        effectiveness"""

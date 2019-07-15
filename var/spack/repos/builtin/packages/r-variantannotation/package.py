@@ -7,7 +7,7 @@ from spack import *
 
 
 class RVariantannotation(RPackage):
-    """Annotation of Genetic Variants
+    """Annotation of Genetic Variants.
 
        Annotate variants, compute amino acid coding changes, predict coding
        outcomes."""

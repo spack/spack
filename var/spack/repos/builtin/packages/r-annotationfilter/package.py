@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAnnotationfilter(RPackage):
-    """Facilities for Filtering Bioconductor Annotation Resources
+    """Facilities for Filtering Bioconductor Annotation Resources.
 
        This package provides class and other infrastructure to implement
        filters for manipulating Bioconductor annotation resources. The filters

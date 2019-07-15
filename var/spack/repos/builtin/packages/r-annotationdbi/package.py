@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAnnotationdbi(RPackage):
-    """Manipulation of SQLite-based annotations in Bioconductor
+    """Manipulation of SQLite-based annotations in Bioconductor.
 
        Implements a user-friendly interface for querying SQLite-based
        annotation data packages."""

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RZlibbioc(RPackage):
-    """An R packaged zlib-1.2.5
+    """An R packaged zlib-1.2.5.
 
        This package uses the source code of zlib-1.2.5 to create libraries for
        systems that do not have these available via other means (most Linux and

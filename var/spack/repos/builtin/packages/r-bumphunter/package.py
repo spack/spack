@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBumphunter(RPackage):
-    """Bump Hunter
+    """Bump Hunter.
 
        Tools for finding bumps in genomic data"""
 

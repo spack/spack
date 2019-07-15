@@ -8,7 +8,7 @@ from spack import *
 
 class RDeseq(RPackage):
     """Differential gene expression analysis based on the negative binomial
-       distribution
+       distribution.
 
        Estimate variance-mean dependence in count data from high-throughput
        sequencing assays and test for differential expression based on a model

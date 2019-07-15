@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiocgenerics(RPackage):
-    """S4 generic functions used in Bioconductor
+    """S4 generic functions used in Bioconductor.
 
        The package defines S4 generic functions used in Bioconductor."""
 

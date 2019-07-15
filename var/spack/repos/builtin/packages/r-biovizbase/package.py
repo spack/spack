@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiovizbase(RPackage):
-    """Basic graphic utilities for visualization of genomic data.
+    """Basic graphic utilities for visualization of genomic data..
 
        The biovizBase package is designed to provide a set of utilities, color
        schemes and conventions for genomic data. It serves as the base for

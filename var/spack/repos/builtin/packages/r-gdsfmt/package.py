@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGdsfmt(RPackage):
-    """R Interface to CoreArray Genomic Data Structure (GDS) Files
+    """R Interface to CoreArray Genomic Data Structure (GDS) Files.
 
        This package provides a high-level R interface to CoreArray Genomic Data
        Structure (GDS) data files, which are portable across platforms with

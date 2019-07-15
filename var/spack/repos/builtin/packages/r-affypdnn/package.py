@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffypdnn(RPackage):
-    """Probe Dependent Nearest Neighbours (PDNN) for the affy package
+    """Probe Dependent Nearest Neighbours (PDNN) for the affy package.
 
        The package contains functions to perform the PDNN method described by
        Li Zhang et al."""

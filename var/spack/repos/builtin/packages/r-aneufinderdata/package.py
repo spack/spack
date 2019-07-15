@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAneufinderdata(RPackage):
-    """WGSCS Data for Demonstration Purposes
+    """WGSCS Data for Demonstration Purposes.
 
        Whole-genome single cell sequencing data for demonstration purposes in
        the AneuFinder package."""

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAgdex(RPackage):
-    """Agreement of Differential Expression Analysis
+    """Agreement of Differential Expression Analysis.
 
        A tool to evaluate agreement of differential expression for cross-
        species genomics"""

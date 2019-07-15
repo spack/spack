@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffyilm(RPackage):
-    """Linear Model of background subtraction and the Langmuir isotherm
+    """Linear Model of background subtraction and the Langmuir isotherm.
 
        affyILM is a preprocessing tool which estimates gene expression levels
        for Affymetrix Gene Chips. Input from physical chemistry is employed to

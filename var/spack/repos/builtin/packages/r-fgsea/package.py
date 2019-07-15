@@ -7,7 +7,7 @@ from spack import *
 
 
 class RFgsea(RPackage):
-    """Fast Gene Set Enrichment Analysis
+    """Fast Gene Set Enrichment Analysis.
 
        The package implements an algorithm for fast gene set enrichment
        analysis. Using the fast algorithm allows to make more permutations and

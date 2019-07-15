@@ -8,7 +8,7 @@ from spack import *
 
 class RMzr(RPackage):
     """parser for netCDF, mzXML, mzData and mzML and mzIdentML files (mass
-       spectrometry data)
+       spectrometry data).
 
        mzR provides a unified API to the common file formats and parsers
        available for mass spectrometry data. It comes with a wrapper for the

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGeneplotter(RPackage):
-    """Graphics related functions for Bioconductor
+    """Graphics related functions for Bioconductor.
 
        Functions for plotting genomic data"""
 

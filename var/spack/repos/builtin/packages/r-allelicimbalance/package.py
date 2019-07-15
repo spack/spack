@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAllelicimbalance(RPackage):
-    """Investigates Allele Specific Expression
+    """Investigates Allele Specific Expression.
 
        Provides a framework for allelic specific expression investigation using
        RNA-seq data."""

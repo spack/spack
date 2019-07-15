@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSpem(RPackage):
-    """S-system parameter estimation method
+    """S-system parameter estimation method.
 
        This package can optimize the parameter in S-system models given time
        series data"""

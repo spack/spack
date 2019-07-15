@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffyplm(RPackage):
-    """Methods for fitting probe-level models
+    """Methods for fitting probe-level models.
 
        A package that extends and improves the functionality of the base affy
        package. Routines that make heavy use of compiled code for speed.

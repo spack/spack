@@ -7,7 +7,7 @@ from spack import *
 
 
 class RKegggraph(RPackage):
-    """KEGGgraph: A graph approach to KEGG PATHWAY in R and Bioconductor
+    """KEGGgraph: A graph approach to KEGG PATHWAY in R and Bioconductor.
 
        KEGGGraph is an interface between KEGG pathway and graph object as well
        as a collection of tools to analyze, dissect and visualize these graphs.

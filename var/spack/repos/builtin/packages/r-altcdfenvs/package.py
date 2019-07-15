@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAltcdfenvs(RPackage):
-    """alternative CDF environments (aka probeset mappings)
+    """alternative CDF environments (aka probeset mappings).
 
        Convenience data structures and functions to handle cdfenvs"""
 

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGviz(RPackage):
-    """Plotting data and annotation information along genomic coordinates
+    """Plotting data and annotation information along genomic coordinates.
 
        Genomic data analyses requires integrated visualization of known genomic
        information and new experimental data. Gviz uses the biomaRt and the
@@ -38,7 +38,7 @@ class RGviz(RPackage):
     depends_on('r-biostrings@2.33.11:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-biovizbase@1.13.8:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-bsgenome@1.33.1:', when='@1.20.0:', type=('build', 'run'))
-    depends_on('r-digest(>=@0.6.8:', when='@1.20.0:', type=('build', 'run'))
+    depends_on('r-digest@0.6.8:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-genomeinfodb@1.1.3:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-genomicalignments@1.1.16:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-genomicfeatures@1.17.22:', when='@1.20.0:', type=('build', 'run'))

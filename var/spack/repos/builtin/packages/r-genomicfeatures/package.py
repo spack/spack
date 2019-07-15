@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGenomicfeatures(RPackage):
-    """Conveniently import and query gene models
+    """Conveniently import and query gene models.
 
        A set of tools and methods for making and manipulating transcript
        centric annotations. With these tools the user can easily download the

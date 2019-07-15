@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGenomicalignments(RPackage):
-    """Representation and manipulation of short genomic alignments
+    """Representation and manipulation of short genomic alignments.
 
        Provides efficient containers for storing and manipulating short genomic
        alignments (typically obtained by aligning short reads to a reference

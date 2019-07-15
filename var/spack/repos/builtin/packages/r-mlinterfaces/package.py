@@ -8,7 +8,7 @@ from spack import *
 
 class RMlinterfaces(RPackage):
     """Uniform interfaces to R machine learning procedures for data in
-       Bioconductor containers
+       Bioconductor containers.
 
        This package provides uniform interfaces to machine learning code for
        data in R and Bioconductor containers."""

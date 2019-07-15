@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAmpliqueso(RPackage):
-    """Analysis of amplicon enrichment panels
+    """Analysis of amplicon enrichment panels.
 
        The package provides tools and reports for the analysis of amplicon
        sequencing panels, such as AmpliSeq"""

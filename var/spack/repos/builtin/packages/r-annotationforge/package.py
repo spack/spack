@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAnnotationforge(RPackage):
-    """Tools for building SQLite-based annotation data packages
+    """Tools for building SQLite-based annotation data packages.
 
        Provides code for generating Annotation packages and their databases.
        Packages produced are intended to be used with AnnotationDbi."""

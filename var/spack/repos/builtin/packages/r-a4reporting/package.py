@@ -7,7 +7,7 @@ from spack import *
 
 
 class RA4reporting(RPackage):
-    """Automated Affymetrix Array Analysis Reporting Package
+    """Automated Affymetrix Array Analysis Reporting Package.
 
        Automated Affymetrix Array Analysis Reporting Package"""
 

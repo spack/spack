@@ -7,7 +7,7 @@ from spack import *
 
 
 class RIranges(RPackage):
-    """Foundation of integer range manipulation in Bioconductor
+    """Foundation of integer range manipulation in Bioconductor.
 
        Provides efficient low-level and highly reusable S4 classes for storing,
        manipulating and aggregating over annotated ranges of integers.

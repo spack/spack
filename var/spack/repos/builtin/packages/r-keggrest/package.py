@@ -7,7 +7,7 @@ from spack import *
 
 
 class RKeggrest(RPackage):
-    """Client-side REST access to KEGG
+    """Client-side REST access to KEGG.
 
        A package that provides a client interface to the KEGG REST server.
        Based on KEGGSOAP by J. Zhang, R. Gentleman, and Marc Carlson, and KEGG

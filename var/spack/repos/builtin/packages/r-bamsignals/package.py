@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBamsignals(RPackage):
-    """Extract read count signals from bam files
+    """Extract read count signals from bam files.
 
        This package allows to efficiently obtain count vectors from indexed bam
        files. It counts the number of reads in given genomic ranges and it

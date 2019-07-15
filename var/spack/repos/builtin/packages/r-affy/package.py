@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffy(RPackage):
-    """Methods for Affymetrix Oligonucleotide Arrays
+    """Methods for Affymetrix Oligonucleotide Arrays.
 
        The package contains functions for exploratory oligonucleotide array
        analysis. The dependence on tkWidgets only concerns few convenience

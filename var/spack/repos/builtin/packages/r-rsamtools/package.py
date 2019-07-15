@@ -7,7 +7,8 @@ from spack import *
 
 
 class RRsamtools(RPackage):
-    """Binary alignment (BAM), FASTA, variant call (BCF), and tabix file import
+    """Binary alignment (BAM), FASTA, variant call (BCF), and tabix file
+       import.
 
        This package provides an interface to the 'samtools', 'bcftools', and
        'tabix' utilities for manipulating SAM (Sequence Alignment / Map),

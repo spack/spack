@@ -7,7 +7,7 @@ from spack import *
 
 
 class RIlluminaio(RPackage):
-    """Parsing Illumina Microarray Output Files
+    """Parsing Illumina Microarray Output Files.
 
        Tools for parsing Illumina's microarray output files, including IDAT."""
 

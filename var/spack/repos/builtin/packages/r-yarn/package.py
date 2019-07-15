@@ -7,7 +7,7 @@ from spack import *
 
 
 class RYarn(RPackage):
-    """YARN: Robust Multi-Condition RNA-Seq Preprocessing and Normalization
+    """YARN: Robust Multi-Condition RNA-Seq Preprocessing and Normalization.
 
        Expedite large RNA-Seq analyses using a combination of previously
        developed tools. YARN is meant to make it easier for the user in

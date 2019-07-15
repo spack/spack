@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGgbio(RPackage):
-    """Visualization tools for genomic data
+    """Visualization tools for genomic data.
 
        The ggbio package extends and specializes the grammar of graphics for
        biological data. The graphics are designed to answer common scientific

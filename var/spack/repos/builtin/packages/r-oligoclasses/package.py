@@ -7,7 +7,7 @@ from spack import *
 
 
 class ROligoclasses(RPackage):
-    """Classes for high-throughput arrays supported by oligo and crlmm
+    """Classes for high-throughput arrays supported by oligo and crlmm.
 
        This package contains class definitions, validity checks, and
        initialization methods for classes used by the oligo and crlmm

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RImpute(RPackage):
-    """impute: Imputation for microarray data
+    """impute: Imputation for microarray data.
 
        Imputation for microarray data (currently KNN only)"""
 

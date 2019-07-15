@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffyio(RPackage):
-    """Tools for parsing Affymetrix data files
+    """Tools for parsing Affymetrix data files.
 
        Routines for parsing Affymetrix data files based upon file format
        information. Primary focus is on accessing the CEL and CDF file

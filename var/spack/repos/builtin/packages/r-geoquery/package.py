@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGeoquery(RPackage):
-    """Get data from NCBI Gene Expression Omnibus (GEO)
+    """Get data from NCBI Gene Expression Omnibus (GEO).
 
        The NCBI Gene Expression Omnibus (GEO) is a public repository of
        microarray data. Given the rich and varied nature of this resource, it

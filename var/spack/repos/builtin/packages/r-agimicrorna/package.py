@@ -8,7 +8,7 @@ from spack import *
 
 class RAgimicrorna(RPackage):
     """Processing and Differential Expression Analysis of Agilent microRNA
-       chips
+       chips.
 
        Processing and Analysis of Agilent microRNA data"""
 

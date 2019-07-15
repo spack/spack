@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSva(RPackage):
-    """Surrogate Variable Analysis
+    """Surrogate Variable Analysis.
 
        The sva package contains functions for removing batch effects and other
        unwanted variation in high-throughput experiment. Specifically, the sva

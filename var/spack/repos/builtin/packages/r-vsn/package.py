@@ -7,7 +7,7 @@ from spack import *
 
 
 class RVsn(RPackage):
-    """Variance stabilization and calibration for microarray data
+    """Variance stabilization and calibration for microarray data.
 
        The package implements a method for normalising microarray intensities,
        and works for single- and multiple-color arrays. It can also be used for

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RReportingtools(RPackage):
-    """Tools for making reports in various formats
+    """Tools for making reports in various formats.
 
        The ReportingTools software package enables users to easily display
        reports of analysis results generated from sources such as microarray
@@ -39,9 +39,9 @@ class RReportingtools(RPackage):
     depends_on('r-annotate', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-annotationdbi', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@2.16.0:', type=('build', 'run'))
-    depends_on('r-biocgenerics(>=@0.1.6:', when='@2.16.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.1.6:', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-category', when='@2.16.0:', type=('build', 'run'))
-    depends_on('r-deseq2(>=@1.3.41:', when='@2.16.0:', type=('build', 'run'))
+    depends_on('r-deseq2@1.3.41:', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-edger', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-ggbio', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-ggplot2', when='@2.16.0:', type=('build', 'run'))
@@ -51,7 +51,7 @@ class RReportingtools(RPackage):
     depends_on('r-iranges', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-knitr', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-lattice', when='@2.16.0:', type=('build', 'run'))
-    depends_on('r-limma(>=@3.17.5:', when='@2.16.0:', type=('build', 'run'))
+    depends_on('r-limma@3.17.5:', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-pfam-db', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-utils', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-xml', when='@2.16.0:', type=('build', 'run'))

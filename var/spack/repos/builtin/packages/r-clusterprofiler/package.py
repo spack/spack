@@ -8,7 +8,7 @@ from spack import *
 
 class RClusterprofiler(RPackage):
     """statistical analysis and visualization of functional profiles for genes
-       and gene clusters
+       and gene clusters.
 
        This package implements methods to analyze and visualize functional
        profiles (GO and KEGG) of gene and gene clusters."""

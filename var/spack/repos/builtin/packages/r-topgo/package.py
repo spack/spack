@@ -7,7 +7,7 @@ from spack import *
 
 
 class RTopgo(RPackage):
-    """Enrichment Analysis for Gene Ontology
+    """Enrichment Analysis for Gene Ontology.
 
        topGO package provides tools for testing GO terms while accounting for
        the topology of the GO graph. Different test statistics and different

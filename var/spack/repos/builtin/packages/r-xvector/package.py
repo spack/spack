@@ -8,7 +8,7 @@ from spack import *
 
 class RXvector(RPackage):
     """Foundation of external vector representation and manipulation in
-       Bioconductor
+       Bioconductor.
 
        Provides memory efficient S4 classes for storing sequences "externally"
        (e.g. behind an R external pointer, or on disk)."""

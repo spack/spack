@@ -7,7 +7,7 @@ from spack import *
 
 
 class RHypergraph(RPackage):
-    """A package providing hypergraph data structures
+    """A package providing hypergraph data structures.
 
        A package that implements some simple capabilities for representing and
        manipulating hypergraphs."""

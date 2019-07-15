@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiocparallel(RPackage):
-    """Bioconductor facilities for parallel evaluation
+    """Bioconductor facilities for parallel evaluation.
 
        This package provides modified versions and novel implementation of
        functions for parallel evaluation, tailored to use with Bioconductor

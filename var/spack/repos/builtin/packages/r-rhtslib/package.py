@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRhtslib(RPackage):
-    """HTSlib high-throughput sequencing library as an R package
+    """HTSlib high-throughput sequencing library as an R package.
 
        This package provides version 1.7 of the 'HTSlib' C library for high-
        throughput sequence analysis. The package is primarily useful to

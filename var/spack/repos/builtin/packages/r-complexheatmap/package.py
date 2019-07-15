@@ -7,7 +7,7 @@ from spack import *
 
 
 class RComplexheatmap(RPackage):
-    """Make Complex Heatmaps
+    """Make Complex Heatmaps.
 
        Complex heatmaps are efficient to visualize associations between
        different sources of data sets and reveal potential patterns. Here the

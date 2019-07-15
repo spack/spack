@@ -8,7 +8,7 @@ from spack import *
 
 class RSnprelate(RPackage):
     """Parallel Computing Toolset for Relatedness and Principal Component
-       Analysis of SNP Data
+       Analysis of SNP Data.
 
        Genome-wide association studies (GWAS) are widely used to investigate
        the genetic basis of diseases and traits, but they pose many

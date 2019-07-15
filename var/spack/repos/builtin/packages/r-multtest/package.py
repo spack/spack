@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMulttest(RPackage):
-    """Resampling-based multiple hypothesis testing
+    """Resampling-based multiple hypothesis testing.
 
        Non-parametric bootstrap and permutation resampling-based multiple
        testing procedures (including empirical Bayes methods) for controlling

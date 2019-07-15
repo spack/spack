@@ -7,7 +7,7 @@ from spack import *
 
 
 class RA4(RPackage):
-    """Automated Affymetrix Array Analysis Umbrella Package
+    """Automated Affymetrix Array Analysis Umbrella Package.
 
        Automated Affymetrix Array Analysis Umbrella Package"""
 

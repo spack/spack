@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSimpleaffy(RPackage):
-    """Very simple high level analysis of Affymetrix data
+    """Very simple high level analysis of Affymetrix data.
 
        Provides high level functions for reading Affy .CEL files, phenotypic
        data, and then computing simple things with it, such as t-tests, fold

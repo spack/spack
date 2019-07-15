@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAlpine(RPackage):
-    """alpine
+    """alpine.
 
        Fragment sequence bias modeling and correction for RNA-seq transcript
        abundance estimation."""

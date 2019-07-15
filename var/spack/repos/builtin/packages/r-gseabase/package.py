@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGseabase(RPackage):
-    """Gene set enrichment data structures and methods
+    """Gene set enrichment data structures and methods.
 
        This package provides classes and methods to support Gene Set Enrichment
        Analysis (GSEA)."""

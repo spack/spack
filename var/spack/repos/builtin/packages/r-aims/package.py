@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAims(RPackage):
-    """AIMS : Absolute Assignment of Breast Cancer Intrinsic Molecular Subtype
+    """AIMS : Absolute Assignment of Breast Cancer Intrinsic Molecular Subtype.
 
        This package contains the AIMS implementation. It contains necessary
        functions to assign the five intrinsic molecular subtypes (Luminal A,

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAldex2(RPackage):
-    """Analysis Of Differential Abundance Taking Sample Variation Into Account
+    """Analysis Of Differential Abundance Taking Sample Variation Into Account.
 
        A differential abundance analysis for the comparison of two or more
        conditions. Useful for analyzing data from standard RNA-seq or meta-RNA-

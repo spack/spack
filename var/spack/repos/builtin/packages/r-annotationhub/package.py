@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAnnotationhub(RPackage):
-    """Client to access AnnotationHub resources
+    """Client to access AnnotationHub resources.
 
        This package provides a client for the Bioconductor AnnotationHub web
        resource. The AnnotationHub web resource provides a central location

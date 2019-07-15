@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMergemaid(RPackage):
-    """Merge Maid
+    """Merge Maid.
 
        The functions in this R extension are intended for cross-study
        comparison of gene expression array data. Required from the user is gene

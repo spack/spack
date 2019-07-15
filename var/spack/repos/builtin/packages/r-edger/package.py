@@ -7,7 +7,7 @@ from spack import *
 
 
 class REdger(RPackage):
-    """Empirical Analysis of Digital Gene Expression Data in R
+    """Empirical Analysis of Digital Gene Expression Data in R.
 
        Differential expression analysis of RNA-seq expression profiles with
        biological replication. Implements a range of statistical methodology

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAbadata(RPackage):
-    """Averaged gene expression in human brain regions from Allen Brain Atlas
+    """Averaged gene expression in human brain regions from Allen Brain Atlas.
 
        Provides the data for the gene expression enrichment analysis conducted
        in the package 'ABAEnrichment'. The package includes three datasets

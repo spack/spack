@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAcgh(RPackage):
-    """Classes and functions for Array Comparative Genomic Hybridization data.
+    """Classes and functions for Array Comparative Genomic Hybridization data..
 
        Functions for reading aCGH data from image analysis output files and
        clone information files, creation of aCGH S3 objects for storing these
