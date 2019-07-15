@@ -43,5 +43,18 @@ class Intel(IntelPackage):
 
     variant('rpath', default=True, description='Add rpath to .cfg files')
 
+    auto_dispatch_options = IntelPackage.auto_dispatch_options
+    variant(
+        'auto_dispatch',
+        values=any_combination_of(*auto_dispatch_options),
+        description='Enable generation of multiple auto-dispatch code paths'
+    )
+
+    # MacOS does not support some of the auto dispatch settings
+    conflicts('auto_dispatch=SSE2', 'platform=darwin',
+              msg='SSE2 is not supported on MacOS')
+    conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64',
+              msg='SSE3 is not supported on MacOS x86_64')
+
     # Since the current package is a subset of 'intel-parallel-studio',
     # all remaining Spack actions are handled in the package class.
