@@ -37,7 +37,7 @@ def test_installed_dependents():
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures('database')
+@pytest.mark.usefixtures('mutable_database')
 def test_recursive_uninstall():
     """Test recursive uninstall."""
     uninstall('-y', '-a', '--dependents', 'callpath')
@@ -52,3 +52,32 @@ def test_recursive_uninstall():
     assert len(mpileaks_specs) == 0
     assert len(callpath_specs) == 0
     assert len(mpi_specs) == 3
+
+
+@pytest.mark.db
+@pytest.mark.regression('3690')
+@pytest.mark.usefixtures('mutable_database')
+@pytest.mark.parametrize('constraint,expected_number_of_specs', [
+    ('dyninst', 7), ('libelf', 5)
+])
+def test_uninstall_spec_with_multiple_roots(
+        constraint, expected_number_of_specs
+):
+    uninstall('-y', '-a', '--dependents', constraint)
+
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == expected_number_of_specs
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('mutable_database')
+@pytest.mark.parametrize('constraint,expected_number_of_specs', [
+    ('dyninst', 13), ('libelf', 13)
+])
+def test_force_uninstall_spec_with_ref_count_not_zero(
+        constraint, expected_number_of_specs
+):
+    uninstall('-f', '-y', constraint)
+
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == expected_number_of_specs
