@@ -403,7 +403,7 @@ function _spack_diy {
         compgen -W "-h --help -j --jobs -d --source-path
                     -i --ignore-dependencies -n --no-checksum
                     --keep-prefix --skip-patch -q --quiet --clean
-                    --dirty" -- "$cur"
+                    --dirty -u --until" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
