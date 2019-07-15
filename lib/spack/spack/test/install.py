@@ -5,12 +5,16 @@
 
 import os
 import pytest
+import shutil
+
+from llnl.util.filesystem import mkdirp, touch, working_dir
 
 from spack.package import BundlePackage
 import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
+from spack.package import _spack_build_envfile, _spack_build_logfile
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
@@ -272,11 +276,6 @@ class MockInstallError(spack.error.SpackError):
     pass
 
 
-class MockNoSourcePackage(BundlePackage):
-    def __init__(self, spec):
-        self.spec = spec
-
-
 def test_nosource_pkg(install_mockery, mock_fetch, mock_packages):
     spec = Spec('nosource').concretized()
     spec.package.do_install()
@@ -289,3 +288,97 @@ def test_nosource_pkg(install_mockery, mock_fetch, mock_packages):
 
     with pytest.raises(ValueError, match="with a URL"):
         spec.package.do_patch()
+
+
+def test_pkg_build_paths(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    log_path = spec.package.log_path
+    assert log_path.endswith(_spack_build_logfile)
+
+    env_path = spec.package.env_path
+    assert env_path.endswith(_spack_build_envfile)
+
+    # Backward compatibility checks
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        # Start with the older of the previous log filenames
+        older_log = 'spack-build.out'
+        touch(older_log)
+        assert spec.package.log_path.endswith(older_log)
+
+        # Now check the newer log filename
+        last_log = 'spack-build.txt'
+        os.rename(older_log, last_log)
+        assert spec.package.log_path.endswith(last_log)
+
+        # Check the old environment file
+        last_env = 'spack-build.env'
+        os.rename(last_log, last_env)
+        assert spec.package.env_path.endswith(last_env)
+
+    # Cleanup
+    shutil.rmtree(log_dir)
+
+
+def test_pkg_install_paths(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    log_path = os.path.join(spec.prefix, '.spack', _spack_build_logfile)
+    assert spec.package.install_log_path == log_path
+
+    env_path = os.path.join(spec.prefix, '.spack', _spack_build_envfile)
+    assert spec.package.install_env_path == env_path
+
+    # Backward compatibility checks
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        # Start with the older of the previous install log filenames
+        older_log = 'build.out'
+        touch(older_log)
+        assert spec.package.install_log_path.endswith(older_log)
+
+        # Now check the newer install log filename
+        last_log = 'build.txt'
+        os.rename(older_log, last_log)
+        assert spec.package.install_log_path.endswith(last_log)
+
+        # Check the old install environment file
+        last_env = 'build.env'
+        os.rename(last_log, last_env)
+        assert spec.package.install_env_path.endswith(last_env)
+
+    # Cleanup
+    shutil.rmtree(log_dir)
+
+
+def test_pkg_install_log(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    # Attempt installing log without the build log file
+    with pytest.raises(IOError, match="No such file or directory"):
+        spec.package.log()
+
+    # Set up mock build files and try again
+    log_path = spec.package.log_path
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        touch(log_path)
+        touch(spec.package.env_path)
+
+    install_path = os.path.dirname(spec.package.install_log_path)
+    mkdirp(install_path)
+
+    spec.package.log()
+
+    assert os.path.exists(spec.package.install_log_path)
+    assert os.path.exists(spec.package.install_env_path)
+
+    # Cleanup
+    shutil.rmtree(log_dir)

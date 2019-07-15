@@ -36,7 +36,8 @@ class Libfabric(AutotoolsPackage):
                'udp',
                'rxm',
                'rxd',
-               'mlx')
+               'mlx',
+               'tcp')
 
     variant(
        'fabrics',
