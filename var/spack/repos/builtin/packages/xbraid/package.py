@@ -11,8 +11,8 @@ import os.path
 class Xbraid(MakefilePackage):
     """XBraid: Parallel time integration with Multigrid"""
 
-    homepage = "https://computation.llnl.gov/projects/parallel-time-integration-multigrid/software"
-    url      = "https://computation.llnl.gov/projects/parallel-time-integration-multigrid/download/braid_2.2.0.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/parallel-time-integration-multigrid/software"
+    url      = "https://computing.llnl.gov/projects/parallel-time-integration-multigrid/download/braid_2.2.0.tar.gz"
 
     version('2.2.0', '0a9c2fc3eb8f605f73cce78ab0d8a7d9')
 

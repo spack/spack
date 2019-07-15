@@ -12,8 +12,8 @@ class Sundials(CMakePackage):
     """SUNDIALS (SUite of Nonlinear and DIfferential/ALgebraic equation
     Solvers)"""
 
-    homepage = "https://computation.llnl.gov/projects/sundials"
-    url = "https://computation.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/sundials"
+    url = "https://computing.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
     maintainers = ['cswoodward', 'gardner48', 'balos1']
 
     # ==========================================================================
