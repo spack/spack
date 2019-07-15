@@ -9,7 +9,6 @@ import shutil
 
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
-from spack.package import BundlePackage
 import spack.patch
 import spack.repo
 import spack.store
