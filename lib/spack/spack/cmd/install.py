@@ -178,7 +178,13 @@ def default_log_file(spec):
     basename = fmt.format(x=spec, hash=spec.dag_hash())
 
     if spack.config.get('config:shared'):
-        dirname = fs.os.path.join(os.environ['SPACK_PATH'],
+        if 'SPACK_PATH' in os.environ:
+            spack_path = os.environ['SPACK_PATH']
+        else:
+            spack_path = os.path.expanduser('~/.spack/')
+
+    if spack.config.get('config:shared'):
+        dirname = fs.os.path.join(spack_path,
                                   'var/',
                                   'junit-report')
     else:
