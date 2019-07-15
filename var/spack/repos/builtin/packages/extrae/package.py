@@ -89,6 +89,8 @@ class Extrae(AutotoolsPackage):
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
+            # parallel installs are buggy prior to 3.7
+            # see https://github.com/bsc-performance-tools/extrae/issues/18
             if(spec.satisfies('@3.7:')):
                 make('install', parallel=True)
             else:
