@@ -13,7 +13,7 @@ class Hypre(Package):
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
 
-    homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
+    homepage = "http://computing.llnl.gov/project/linear_solvers/software.php"
     url      = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/hypre-space/hypre.git"
 
@@ -71,7 +71,7 @@ class Hypre(Package):
         if version >= Version('2.12.0'):
             url = 'https://github.com/hypre-space/hypre/archive/v{0}.tar.gz'
         else:
-            url = 'http://computation.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
+            url = 'http://computing.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
 
         return url.format(version)
 
@@ -150,12 +150,7 @@ class Hypre(Package):
         """Export the hypre library.
         Sample usage: spec['hypre'].libs.ld_flags
         """
-        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
-                        [self.prefix, True]]
         is_shared = '+shared' in self.spec
-        for path, recursive in search_paths:
-            libs = find_libraries('libHYPRE', root=path,
-                                  shared=is_shared, recursive=recursive)
-            if libs:
-                return libs
-        return None
+        libs = find_libraries('libHYPRE', root=self.prefix, shared=is_shared,
+                              recursive=True)
+        return libs or None

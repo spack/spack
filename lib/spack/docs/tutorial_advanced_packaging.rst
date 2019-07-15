@@ -347,7 +347,7 @@ we'll notice that this time the installation won't complete:
        11            options.extend([
 
   See build log for details:
-    /usr/local/var/spack/stage/arpack-ng-3.5.0-bloz7cqirpdxj33pg7uj32zs5likz2un/arpack-ng-3.5.0/spack-build.out
+    /usr/local/var/spack/stage/arpack-ng-3.5.0-bloz7cqirpdxj33pg7uj32zs5likz2un/arpack-ng-3.5.0/spack-build-out.txt
 
 Unlike ``openblas`` which provides a library named ``libopenblas.so``,
 ``netlib-lapack`` provides ``liblapack.so``, so it needs to implement
@@ -459,7 +459,7 @@ Let's look at an example and try to install ``netcdf ^mpich``:
        56                config_args.append('--enable-pnetcdf')
 
   See build log for details:
-    /usr/local/var/spack/stage/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj/netcdf-4.4.1.1/spack-build.out
+    /usr/local/var/spack/stage/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj/netcdf-4.4.1.1/spack-build-out.txt
 
 We can see from the error that ``netcdf`` needs to know how to link the *high-level interface*
 of ``hdf5``, and thus passes the extra parameter ``hl`` after the request to retrieve it.

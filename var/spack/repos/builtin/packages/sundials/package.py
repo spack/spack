@@ -12,8 +12,8 @@ class Sundials(CMakePackage):
     """SUNDIALS (SUite of Nonlinear and DIfferential/ALgebraic equation
     Solvers)"""
 
-    homepage = "https://computation.llnl.gov/projects/sundials"
-    url = "https://computation.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/sundials"
+    url = "https://computing.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
     maintainers = ['cswoodward', 'gardner48', 'balos1']
 
     # ==========================================================================
@@ -500,12 +500,9 @@ class Sundials(CMakePackage):
             # Q: should the result be ordered by dependency?
         else:
             sun_libs = ['libsundials_' + p for p in query_parameters]
-        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
-                        [self.prefix, True]]
         is_shared = '+shared' in self.spec
-        for path, recursive in search_paths:
-            libs = find_libraries(sun_libs, root=path, shared=is_shared,
-                                  recursive=recursive)
-            if libs:
-                return libs
-        return None  # Raise an error
+
+        libs = find_libraries(sun_libs, root=self.prefix, shared=is_shared,
+                              recursive=True)
+
+        return libs or None  # Raise an error if no libs are found

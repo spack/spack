@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Luit(Package):
+class Luit(AutotoolsPackage):
     """Luit is a filter that can be run between an arbitrary application and
     a UTF-8 terminal emulator such as xterm.  It will convert application
     output from the locale's encoding into UTF-8, and convert terminal
@@ -23,10 +23,6 @@ class Luit(Package):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  # see http://www.linuxquestions.org/questions/linux-from-scratch-13/can't-compile-luit-xorg-applications-4175476308/  # noqa
-                  'CFLAGS=-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600')
-
-        make()
-        make('install')
+  # see http://www.linuxquestions.org/questions/linux-from-scratch-13/can't-compile-luit-xorg-applications-4175476308/  # noqa
+    def configure_args(self):
+        return ['CFLAGS=-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600']

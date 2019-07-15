@@ -22,6 +22,7 @@ class Cfitsio(AutotoolsPackage):
     variant('bzip2', default=True, description='Enable bzip2 support')
     variant('shared', default=True, description='Build shared libraries')
 
+    depends_on('curl')
     depends_on('bzip2', when='+bzip2')
 
     def url_for_version(self, version):
