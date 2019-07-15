@@ -210,10 +210,17 @@ def find_compilers(path_hints=None):
         search_paths = getattr(o, 'compiler_search_paths', default_paths)
         arguments.extend(arguments_to_detect_version_fn(o, search_paths))
 
+    return make_compiler_list(detection_threadpool(detect_version, arguments))
+
+
+def detection_threadpool(fn, args):
+    """Wrapper function that execututes fn called with args using
+    multiprocessing.pool.ThreadPool()
+    """
     # Here we map the function arguments to the corresponding calls
     tp = multiprocessing.pool.ThreadPool()
     try:
-        detected_versions = tp.map(detect_version, arguments)
+        results = tp.map(fn, args)
     finally:
         tp.close()
 
@@ -233,8 +240,8 @@ def find_compilers(path_hints=None):
         value, _ = item
         return value
 
-    return make_compiler_list(
-        map(remove_errors, filter(valid_version, detected_versions))
+    return list(
+        map(remove_errors, filter(valid_version, results))
     )
 
 

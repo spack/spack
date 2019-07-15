@@ -36,10 +36,10 @@ def module(*args):
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
         module_cmd += ' >/dev/null;'
-        module_cmd += 'export SPACK_NEW_LD_LIBRARY_PATH=$LD_LIBRARY_PATH;'
+        module_cmd += 'export SPACK_NEW_LD_LIBRARY_PATH="$LD_LIBRARY_PATH";'
         module_cmd += 'LD_LIBRARY_PATH="$SPACK_LD_LIBRARY_PATH" '
         module_cmd += '%s -c %s;' % (sys.executable, py_cmd)
-        module_cmd += 'echo $SPACK_NEW_LD_LIBRARY_PATH'
+        module_cmd += 'echo "${SPACK_NEW_LD_LIBRARY_PATH:-SPACKIGNORE}"'
         module_p  = subprocess.Popen(module_cmd,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT,
@@ -56,7 +56,7 @@ def module(*args):
         env_dict = json.loads(env)
         os.environ.clear()
         os.environ.update(env_dict)
-        if new_ld_library_path:
+        if new_ld_library_path != 'SPACKIGNORE':
             os.environ['LD_LIBRARY_PATH'] = new_ld_library_path
 
     else:
