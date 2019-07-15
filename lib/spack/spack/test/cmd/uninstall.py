@@ -10,6 +10,7 @@ from spack.main import SpackCommand, SpackCommandError
 uninstall = SpackCommand('uninstall')
 share = SpackCommand('share')
 
+
 class MockArgs(object):
 
     def __init__(self, packages, all=False, force=False, dependents=False):
