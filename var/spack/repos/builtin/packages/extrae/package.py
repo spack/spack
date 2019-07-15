@@ -38,7 +38,6 @@ class Extrae(AutotoolsPackage):
     version('3.7.1', sha256='95810b057f95e91bfc89813eb8bd320dfe40614fc8e98c63d95c5101c56dd213')
     version('3.4.1', '69001f5cfac46e445d61eeb567bc8844')
 
-    depends_on("autoconf")
     depends_on("mpi")
     depends_on("libunwind")
     depends_on("boost")
@@ -87,3 +86,10 @@ class Extrae(AutotoolsPackage):
         args.append('LDFLAGS=-lintl')
 
         return(args)
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            if(spec.satisfies('@3.7:')):
+                make('install', parallel=True)
+            else:
+                make('install', parallel=False)
