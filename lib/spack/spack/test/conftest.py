@@ -406,8 +406,14 @@ def _populate(mock_db):
         _install('externaltest')
 
 
+@pytest.fixture(scope='session')
+def _installation_cache(tmpdir_factory):
+    cache = tmpdir_factory.mktemp('installation_cache')
+    return cache
+
+
 @pytest.fixture(scope='module')
-def database(tmpdir_factory, mock_packages, config):
+def database(tmpdir_factory, mock_packages, config, _installation_cache):
     """Creates a mock database with some packages installed note that
     the ref count for dyninst here will be 3, as it's recycled
     across each install.
@@ -422,29 +428,30 @@ def database(tmpdir_factory, mock_packages, config):
     tmp_store = spack.store.Store(str(install_path))
     spack.store.store = tmp_store
 
-    _populate(tmp_store.db)
+    # If the cache exists just copy it in place, otherwise populate the
+    # store and create the cache.
+    if os.path.exists(str(_installation_cache.join('.spack-db'))):
+        _installation_cache.copy(install_path, mode=True, stat=True)
+    else:
+        _populate(tmp_store.db)
+        install_path.copy(_installation_cache, mode=True, stat=True)
 
     yield tmp_store.db
-
-    with tmp_store.db.write_transaction():
-        for spec in tmp_store.db.query():
-            if spec.package.installed:
-                PackageBase.uninstall_by_spec(spec, force=True)
-            else:
-                tmp_store.db.remove(spec)
 
     install_path.remove(rec=1)
     spack.store.store = real_store
 
 
 @pytest.fixture(scope='function')
-def mutable_database(database):
+def mutable_database(database, _installation_cache):
     """For tests that need to modify the database instance."""
     yield database
-    with database.write_transaction():
-        for spec in spack.store.db.query():
-            PackageBase.uninstall_by_spec(spec, force=True)
-    _populate(database)
+
+    root = database.root
+    install_path = py.path.local(root)
+    install_path.remove(rec=1)
+
+    _installation_cache.copy(install_path, mode=True, stat=True)
 
 
 @pytest.fixture(scope='function')
