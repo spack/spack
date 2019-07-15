@@ -93,7 +93,7 @@ def find_list_urls(url):
          lambda m: m.group(1) + '/Archive/' + m.group(2)),
     ]
 
-    list_urls = {os.path.dirname(url)}
+    list_urls = set([os.path.dirname(url)])
 
     for pattern, fun in url_types:
         match = re.search(pattern, url)
