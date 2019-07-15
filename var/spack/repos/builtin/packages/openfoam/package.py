@@ -258,9 +258,9 @@ class Openfoam(Package):
 
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
-    url      = "https://sourceforge.net/projects/openfoamplus/files/v1706/OpenFOAM-v1706.tgz"
+    url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
-    list_url = "https://sourceforge.net/projects/openfoamplus/files/"
+    list_url = "https://sourceforge.net/projects/openfoam/files/"
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')
@@ -724,7 +724,7 @@ class Openfoam(Package):
         # Make build log visible - it contains OpenFOAM-specific information
         with working_dir(self.projectdir):
             os.symlink(
-                join_path('.spack', 'build.out'),
+                join_path(os.path.relpath(self.install_log_path)),
                 join_path('log.' + str(self.foam_arch)))
 
         if not self.config['link']:
