@@ -78,7 +78,6 @@ def get_tmp_root():
             if 'SPACK_PATH' in os.environ:
                 candidates = os.path.join(spack_path,
                                           'var/spack/stage')
-                
         else:
             candidates = spack.config.get('config:build_stage')
 
@@ -208,11 +207,10 @@ class Stage(object):
 
         # Determine SPACK_PATH variable
         if spack.config.get('config:shared'):
-           if 'SPACK_PATH' in os.environ:
-               spack_path = os.path.join(os.environ['SPACK_PATH'])
-           else:
-               spack_path = os.path.expanduser('~/.spack/')
-
+            if 'SPACK_PATH' in os.environ:
+                spack_path = os.path.join(os.environ['SPACK_PATH'])
+            else:
+                spack_path = os.path.expanduser('~/.spack/')
 
         # Try to construct here a temporary name for the stage directory
         # If this is a named stage, then construct a named path.
@@ -498,10 +496,10 @@ class Stage(object):
 
         """
         if spack.config.get('config:shared'):
-           if 'SPACK_PATH' in os.environ:
-               spack_path = os.path.join(os.environ['SPACK_PATH'])
-           else:
-               spack_path = os.path.expanduser('~/.spack/')
+            if 'SPACK_PATH' in os.environ:
+                spack_path = os.path.join(os.environ['SPACK_PATH'])
+            else:
+                spack_path = os.path.expanduser('~/.spack/')
 
         # Create the top-level stage directory
         if spack.config.get('config:shared'):
