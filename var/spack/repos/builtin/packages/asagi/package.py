@@ -26,15 +26,15 @@ class Asagi(CMakePackage):
             values=('static', 'shared'), multi=True)
 
     variant('fortran', default=True, description="enable fortran support")
-    variant('maxDimensions', default=4,
+    variant('max_dimensions', default=4,
             description="max. number of dimensions supported")
     variant('numa', default=True, description="enable NUMA support")
     variant('mpi', default=True, description="enable MPI")
     variant('threadsafe', default=True,
             description="enable threadsafe ASAGI-functions")
-    variant('threadsafeCounter', default=False,
+    variant('threadsafe_counter', default=False,
             description="enable threadsafe access counters")
-    variant('threadsafeMPI', default=True,
+    variant('threadsafe_mpi', default=True,
             description="make MPI calls threadsafe")
     variant('mpi3', default=True,
             description="enable MPI-3 (enables additional features)")
@@ -53,7 +53,7 @@ class Asagi(CMakePackage):
 
         link_type = self.spec.variants['link_type'].value
         spec = self.spec
-        args = ['-DMAX_DIMENSIONS=' + spec.variants['maxDimensions'].value,
+        args = ['-DMAX_DIMENSIONS=' + spec.variants['max_dimensions'].value,
                 '-DSHARED_LIB=' + ('ON' if 'shared' in link_type else 'OFF'),
                 '-DSTATIC_LIB=' + ('ON' if 'static' in link_type else 'OFF'),
                 '-DFORTRAN_SUPPORT=' + ('ON' if '+fortran' in spec else 'OFF'),
@@ -64,7 +64,7 @@ class Asagi(CMakePackage):
                 '-DTESTS=' + ('ON' if '+tests' in spec else 'OFF'),
                 '-DEXAMPLES=' + ('ON' if '+tests' in spec else 'OFF'),
                 '-DTHREADSAFE_COUNTER='
-                + ('ON' if '+threadsafeCounter' in spec else 'OFF'),
+                + ('ON' if '+threadsafe_counter' in spec else 'OFF'),
                 '-DTHREADSAFE_MPI='
-                + ('ON' if '+threadsafeMPI' in spec else 'OFF'), ]
+                + ('ON' if '+threadsafe_mpi' in spec else 'OFF'), ]
         return args
