@@ -38,6 +38,10 @@ class Extrae(AutotoolsPackage):
     version('3.7.1', sha256='95810b057f95e91bfc89813eb8bd320dfe40614fc8e98c63d95c5101c56dd213')
     version('3.4.1', '69001f5cfac46e445d61eeb567bc8844')
 
+    depends_on("autoconf", type='build')
+    depends_on("automake", type='build')
+    depends_on("libtool", type='build')
+
     depends_on("mpi")
     depends_on("libunwind")
     depends_on("boost")
@@ -78,8 +82,8 @@ class Extrae(AutotoolsPackage):
                  ["--without-dyninst"])
 
         if spec.satisfies("^dyninst@9.3.0:"):
-            make.add_default_arg('CXXFLAGS=-std=c++11')
-            args.append('CXXFLAGS=-std=c++11')
+            make.add_default_arg(self.compiler.cxx11_flag)
+            args.append(self.compiler.cxx11_flag)
 
         # This was added due to configure failure
         # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
