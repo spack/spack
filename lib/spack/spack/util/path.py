@@ -24,6 +24,7 @@ replacements = {
     'spack': spack.paths.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
+    'home': os.path.expanduser('~'),
 }
 
 
