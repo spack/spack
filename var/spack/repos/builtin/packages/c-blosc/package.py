@@ -32,7 +32,7 @@ class CBlosc(CMakePackage):
     depends_on('zstd')
     depends_on('lz4')
 
-    patch('gcc.patch')
+    patch('gcc.patch', when="@1.12.1:1.16.3")
 
     def cmake_args(self):
         args = []
