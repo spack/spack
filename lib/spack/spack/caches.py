@@ -40,11 +40,7 @@ def _fetch_cache():
     This prevents Spack from repeatedly fetch the same files when
     building the same package different ways or multiple times.
     """
-    if spack.config.get('config:shared'):
-        path = os.path.join(os.environ['SPACK_PATH'],
-                            'var/spack/cache')
-    else:
-        path = spack.config.get('config:source_cache')
+    path = spack.config.get('config:source_cache')
 
     if not path:
         path = os.path.join(spack.paths.var_path, "cache")
