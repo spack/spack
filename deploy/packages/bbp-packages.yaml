@@ -102,6 +102,7 @@ packages:
       # - lapack
       - python
     specs:
+      - py-bluepy
       - py-bluepymm@0.6.38 ^neuron~mpi
       - py-bluepyopt@1.6.56 ^neuron~mpi
       - py-efel@3.0.22
