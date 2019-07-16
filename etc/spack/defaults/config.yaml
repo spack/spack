@@ -16,7 +16,7 @@
 config:
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
-  install_tree: $spack/opt/spack
+  install_tree: ~/.spack/opt/spack
 
 
   # Locations where templates should be found
@@ -30,9 +30,9 @@ config:
 
   # Locations where different types of modules should be installed.
   module_roots:
-    tcl:    $spack/share/spack/modules
-    lmod:   $spack/share/spack/lmod
-    dotkit: $spack/share/spack/dotkit
+    tcl:    ~/.spack/share/spack/modules
+    lmod:   ~/.spack/share/spack/lmod
+    dotkit: ~/.spack/share/spack/dotkit
 
 
   # Temporary locations Spack can try to use for builds.
@@ -48,7 +48,7 @@ config:
   # The build stage can be purged with `spack clean --stage`.
   build_stage:
     - $tempdir
-    - $spack/var/spack/stage
+    - ~/.spack/var/spack/stage
 
 
   # Cache directory for already downloaded source tarballs and archived
