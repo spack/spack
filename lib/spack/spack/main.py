@@ -90,6 +90,7 @@ required_command_properties = ['level', 'section', 'description']
 spack_working_dir = None
 spack_ld_library_path = os.environ.get('LD_LIBRARY_PATH', '')
 
+
 def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
     global spack_working_dir

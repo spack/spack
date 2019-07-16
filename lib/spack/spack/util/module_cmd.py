@@ -48,9 +48,9 @@ def module(*args):
 
         # Cray modules spit out warnings that we cannot supress.
         # This hack skips to the last output (the environment)
-        env_output = str(module_p.communicate()[0].decode()).strip().split('\n')
-        env = env_output[-2]
-        new_ld_library_path = env_output[-1]
+        env_out = str(module_p.communicate()[0].decode()).strip().split('\n')
+        env = env_out[-2]
+        new_ld_library_path = env_out[-1]
 
         # Update os.environ with new dict
         env_dict = json.loads(env)
@@ -106,6 +106,7 @@ def get_path_arg_from_module_line(line):
         path_arg = line.split()[2]
     return path_arg
 
+
 def get_bin_path_from_module(mod):
     """Inspects a TCL or lmod module for an entry that indicates a modification
     of the PATH variable."""
@@ -114,9 +115,10 @@ def get_bin_path_from_module(mod):
     for line in text:
         try:
             return get_path_arg_from_module_line(line)
-        except:
+        except ValueError:
             pass
     return None
+
 
 def get_path_from_module(mod):
     """Inspects a TCL module for entries that indicate the absolute path

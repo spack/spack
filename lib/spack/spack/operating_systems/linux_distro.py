@@ -5,8 +5,8 @@
 
 import re
 from spack.architecture import OperatingSystem
-import platform
 from spack.util.module_cmd import module
+
 
 class LinuxDistro(OperatingSystem):
     """ This class will represent the autodetected operating system

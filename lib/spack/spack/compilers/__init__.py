@@ -247,6 +247,7 @@ def find_compilers(path_hints=None, module_hints=None):
         detection_threadpool(detect_version, arguments),
         module_association)
 
+
 def detection_threadpool(fn, args):
     """Wrapper function that execututes fn called with args using
     multiprocessing.pool.ThreadPool()
