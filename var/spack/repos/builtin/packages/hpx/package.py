@@ -13,6 +13,7 @@ class Hpx(CMakePackage, CudaPackage):
     homepage = "http://stellar.cct.lsu.edu/tag/hpx/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
 
+    version('1.3.0', sha256='cd34da674064c4cc4a331402edbd65c5a1f8058fb46003314ca18fa08423c5ad')
     version('1.2.1', sha256='8cba9b48e919035176d3b7bbfc2c110df6f07803256626f1dad8d9dde16ab77a')
     version('1.2.0', sha256='20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170')
     version('1.1.0', sha256='1f28bbe58d8f0da600d60c3a74a644d75ac777b20a018a5c1c6030a470e8a1c9')
