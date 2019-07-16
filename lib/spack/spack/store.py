@@ -90,12 +90,22 @@ layout = llnl.util.lang.LazyReference(lambda: store.layout)
 
 def retrieve_upstream_dbs():
 
-    other_spack_instances = spack.config.get('upstreams')
+    global_fallback = {'global': {'install_tree': '$spack/opt/spack',
+                                  'modules':
+                                  {'tcl': '$spack/share/spack/modules',
+                                   'lmod': '$spack/share/spack/lmod',
+                                   'dotkit': '$spack/share/spack/dotkit'}}}
 
-    if spack.config.get('config:shared'):
-        path = spack.util.path.canonicalize_path("$spack/opt/spack")
-        other_spack_instances.update({'spack-root':
-                                     {'install_tree': path}})
+    other_spack_instances = spack.config.get('upstreams',
+                                             global_fallback)
+
+    # Canonicalizes upstream paths
+    temp = other_spack_instances['global']
+    temp['install_tree'] = spack.util.path.canonicalize_path(
+        temp['install_tree'])
+    for mod_type, path in temp['modules'].items():
+        temp['modules']['mod_type'] = spack.util.path.canonicalize_path(path)
+    other_spack_instances['global'] = temp
 
     install_roots = []
     for install_properties in other_spack_instances.values():
