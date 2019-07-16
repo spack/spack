@@ -52,8 +52,8 @@ class LibjpegTurbo(Package):
         # For Fujitsu compiler(fj)
         # Use spack compiler flags for cmake.
         if self.compiler.name == 'fj':
-            cmake_args.extend(['-DCMAKE_C_FLAGS={0}'
-                              .format(env["SPACK_CFLAGS"])])
+            cmake_args.extend(['-DCMAKE_C_FLAGS=%s'
+                              % ''.join(spec.compiler_flags['cflags'])])
 
         cmake_args.extend(std_cmake_args)
         with working_dir('spack-build', create=True):
