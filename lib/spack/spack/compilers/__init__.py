@@ -227,11 +227,12 @@ def find_compilers(path_hints=None, module_hints=None):
                 tty.warn(msg)
             module_association[path] = mod
 
-    # Get PATH if no path hints
+    # Get PATH and all paths from modules if no path hints
     if path_hints is None:
-        path_hints = get_path('PATH')
+        paths_to_search = module_association.keys() + get_path('PATH')
+    else:
+        paths_to_search = path_hints
 
-    paths_to_search = module_association.keys() + path_hints
     default_paths = fs.search_paths_for_executables(*paths_to_search)
 
     # To detect the version of the compilers, we dispatch a certain number
