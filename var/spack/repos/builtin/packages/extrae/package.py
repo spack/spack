@@ -82,8 +82,8 @@ class Extrae(AutotoolsPackage):
                  ["--without-dyninst"])
 
         if spec.satisfies("^dyninst@9.3.0:"):
-            make.add_default_arg(self.compiler.cxx11_flag)
-            args.append(self.compiler.cxx11_flag)
+            make.add_default_arg("CXXFLAGS=%s" % self.compiler.cxx11_flag)
+            args.append("CXXFLAGS=%s" % self.compiler.cxx11_flag)
 
         # This was added due to configure failure
         # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
