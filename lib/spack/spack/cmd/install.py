@@ -105,7 +105,8 @@ the dependencies"""
         help="install from file. Read specs to install from .yaml files")
     subparser.add_argument(
         '-g', '--global', action='store_true', default=False,
-        dest='install_global', help='install package to globally accesible location')
+        dest='install_global',
+        help='install package to globally accesible location')
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
