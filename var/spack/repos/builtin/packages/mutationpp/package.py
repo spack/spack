@@ -17,6 +17,7 @@ class Mutationpp(CMakePackage):
     homepage = "https://github.com/mutationpp/Mutationpp"
     url      = "https://github.com/mutationpp/Mutationpp/archive/v0.3.1.tar.gz"
 
+    version('1.0.0', '928df99accd1a02706a57246edeef8ebbf3bd91bb40492258ee18b810a7e0194')
     version('0.3.1', 'a6da2816e145ac9fcfbd8920595b7f65ce7bc8df0bec572b32647720758cbe69')
 
     variant('fortran', default=True, description='Enable Fortran interface')
