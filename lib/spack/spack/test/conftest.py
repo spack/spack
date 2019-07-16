@@ -38,8 +38,6 @@ from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version
-from spack.main import SpackCommand
-
 
 #
 # Disable any activate Spack environment BEFORE all tests
@@ -60,16 +58,6 @@ def clean_user_environment():
         os.environ[ev.spack_env_var] = spack_env_value
     if active:
         ev.activate(active)
-
-
-#
-# Turn off Spack's shared mode if need be
-#
-@pytest.fixture(scope='session', autouse=True)
-def disable_shared():
-    if spack.config.get('config:shared'):
-        share = SpackCommand('share')
-        share('deactivate')
 
 
 # Hooks to add command line options or set other custom behaviors.
