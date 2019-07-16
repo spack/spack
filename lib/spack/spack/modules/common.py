@@ -54,9 +54,9 @@ configuration = spack.config.get('modules')
 
 #: Root folders where the various module files should be written
 if spack.config.get('config:shared') and 'SPACK_PATH' in os.environ:
-    roots = {'tcl':    os.environ['SPACK_PATH'] + '/share/spack/modules',
-             'lmod':   os.environ['SPACK_PATH'] + '/share/spack/lmod',
-             'dotkit': os.environ['SPACK_PATH'] + '/share/spack/lmod'}
+    roots = {'tcl':    os.path.join(spack.util.path.canonicalize_path("$home/.spack") ,'/share/spack/modules'),
+             'lmod':   os.path.join(spack.util.path.canonicalize_path("$home/.spack") ,'/share/spack/lmod'),
+             'dotkit': os.path.join(spack.util.path.canonicalize_path("$home/.spack") ,'/share/spack/lmod')}
 elif spack.config.get('config:shared') and 'SPACK_PATH' not in os.environ:
     tty.info("""Shared mode enabled but,
              $SPACK_PATH environment variable is undefined.""")
