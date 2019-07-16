@@ -1491,6 +1491,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         tests = kwargs.get('tests', False)
         dirty = kwargs.get('dirty', False)
         restage = kwargs.get('restage', False)
+        install_global = kwargs.get('install_global', False)
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB

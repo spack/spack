@@ -38,7 +38,8 @@ def update_kwargs_from_args(args, kwargs):
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty,
-        'use_cache': args.use_cache
+        'use_cache': args.use_cache,
+        'global': args.install_global
     })
     if hasattr(args, 'setup'):
         setups = set()
@@ -102,6 +103,9 @@ the dependencies"""
         '-f', '--file', action='append', default=[],
         dest='specfiles', metavar='SPEC_YAML_FILE',
         help="install from file. Read specs to install from .yaml files")
+    subparser.add_argument(
+        '-g', '--global', action='store_true', default=False,
+        dest='install_global', help='install package to globally accesible location')
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -177,18 +181,9 @@ def default_log_file(spec):
     fmt = 'test-{x.name}-{x.version}-{hash}.xml'
     basename = fmt.format(x=spec, hash=spec.dag_hash())
 
-    if spack.config.get('config:shared'):
-        if 'SPACK_PATH' in os.environ:
-            spack_path = os.environ['SPACK_PATH']
-        else:
-            spack_path = os.path.expanduser('~/.spack/')
-
-    if spack.config.get('config:shared'):
-        dirname = fs.os.path.join(spack_path,
-                                  'var/',
-                                  'junit-report')
-    else:
-        dirname = fs.os.path.join(spack.paths.var_path, 'junit-report')
+    dirname = fs.os.path.join(spack.paths.user_config_path,
+                              'var/spack',
+                              'junit-report')
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)
 
