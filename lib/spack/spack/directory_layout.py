@@ -265,8 +265,8 @@ class YamlDirectoryLayout(DirectoryLayout):
             set permissions for b and c
 
         Argument:
-            - absolute_path: (prefix must be be self.root)
-                absolute path of the folder hierarcy to create
+            - absolute_path: (prefix must be self.root)
+                absolute path of the folder hierarchy to create
             - mode:
                 permissions to set to all non existing nested folders
         """
