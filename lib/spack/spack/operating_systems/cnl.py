@@ -76,10 +76,10 @@ class Cnl(OperatingSystem):
 
             # If the compiler doesn't have a corresponding
             # Programming Environment, skip to the next
-            if cmp_cls.PrgEnv is None:
+            if cmp_cls.cray_prgenv_name is None:
                 continue
 
-            if cmp_cls.modules is None:
+            if cmp_cls.cray_module_name is None:
                 tty.die('Must supply modules with PrgEnv')
 
             compiler_id = spack.compilers.CompilerID(self, compiler_name, None)
@@ -96,7 +96,7 @@ class Cnl(OperatingSystem):
         compiler_name = detect_version_args.id.compiler_name
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
 
-        for m in compiler_cls.modules:
+        for m in compiler_cls.cray_module_name:
             output = modulecmd('avail', m)
             version_regex = r'(%s)/([\d\.]+[\d])' % m
             matches = re.findall(version_regex, output)
@@ -117,7 +117,8 @@ class Cnl(OperatingSystem):
             comp = cmp_cls(
                 spack.spec.CompilerSpec(name + '@' + v),
                 self, "any",
-                ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
+                ['cc', 'CC', 'ftn'], [cmp_cls.cray_prgenv_name,
+                                      name + '/' + v])
 
             compilers.append(comp)
         return compilers

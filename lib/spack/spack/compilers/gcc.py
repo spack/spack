@@ -35,8 +35,8 @@ class Gcc(Compiler):
                   'f77': 'gcc/gfortran',
                   'fc': 'gcc/gfortran'}
 
-    PrgEnv = 'PrgEnv-gnu'
-    modules = 'gcc'
+    cray_prgenv_name = 'PrgEnv-gnu'
+    cray_module_name = 'gcc'
 
     @property
     def openmp_flag(self):

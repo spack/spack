@@ -108,9 +108,9 @@ class Compiler(object):
     def fc_rpath_arg(self):
         return '-Wl,-rpath,'
     # Cray PrgEnv name that can be used to load this compiler
-    PrgEnv = None
+    cray_prgenv_name = None
     # Name of module used to switch versions of this compiler
-    modules = None
+    cray_module_name = None
 
     def __init__(self, cspec, operating_system, target,
                  paths, modules=[], alias=None, environment=None,
