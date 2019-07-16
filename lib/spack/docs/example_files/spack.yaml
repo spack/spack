@@ -1,11 +1,19 @@
 spack:
   definitions:
+  - compiler-pkgs:
+    - 'llvm+clang@6.0.1 os=centos7'
+    - 'gcc@6.5.0 os=centos7'
+    - 'llvm+clang@6.0.1 os=ubuntu18.04'
+    - 'gcc@6.5.0 os=ubuntu18.04'
   - pkgs:
     - readline@7.0
+    # - xsdk@0.4.0
   - compilers:
     - '%gcc@5.5.0'
+    - '%gcc@6.5.0'
     - '%gcc@7.3.0'
     - '%clang@6.0.0'
+    - '%clang@6.0.1'
   - oses:
     - os=ubuntu18.04
     - os=centos7
@@ -17,15 +25,15 @@ spack:
     - [$oses]
     exclude:
       - '%gcc@7.3.0 os=centos7'
+      - '%gcc@5.5.0 os=ubuntu18.04'
 
   mirrors:
     cloud_gitlab: https://mirror.spack.io
 
   compilers:
-    # The .gitlab-ci.yml for this project picks a Docker container which is
-    # based on ubuntu18.04 and which already has some compilers configured.
-    # Here we just add some of the ones which are defined on a different
-    # builder image.
+    # The .gitlab-ci.yml for this project picks a Docker container which does
+    # not have any compilers pre-built and ready to use, so we need to fake the
+    # existence of those here.
     - compiler:
         operating_system: centos7
         modules: []
@@ -44,13 +52,76 @@ spack:
           cxx: /not/used
           f77: /not/used
           fc: /not/used
+        spec: gcc@6.5.0
+        target: x86_64
+    - compiler:
+        operating_system: centos7
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
         spec: clang@6.0.0
         target: x86_64
+    - compiler:
+        operating_system: centos7
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: clang@6.0.1
+        target: x86_64
 
+    - compiler:
+        operating_system: ubuntu18.04
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: clang@6.0.0
+        target: x86_64
+    - compiler:
+        operating_system: ubuntu18.04
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: clang@6.0.1
+        target: x86_64
+    - compiler:
+        operating_system: ubuntu18.04
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: gcc@6.5.0
+        target: x86_64
+    - compiler:
+        operating_system: ubuntu18.04
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: gcc@7.3.0
+        target: x86_64
 
   gitlab-ci:
+    bootstrap:
+      - name: compiler-pkgs
+        compiler-agnostic: true
     mappings:
-      - spack-cloud-ubuntu:
+      - # spack-cloud-ubuntu
         match:
           # these are specs, if *any* match the spec under consideration, this
           # 'mapping' will be used to generate the CI job
@@ -61,8 +132,10 @@ spack:
           # a part of the CI workflow
           tags:
             - spack-k8s
-          image: scottwittenburg/spack_builder_ubuntu_18.04
-      - spack-cloud-centos:
+          image:
+            name: scottwittenburg/spack_builder_ubuntu_18.04
+            entrypoint: [""]
+      - # spack-cloud-centos
         match:
           # these are specs, if *any* match the spec under consideration, this
           # 'mapping' will be used to generate the CI job
@@ -70,28 +143,15 @@ spack:
         runner-attributes:
           tags:
             - spack-k8s
-          image: spack/centos:7
-      - summit:
-        match:
-          - os=rhel7
-          - target=power9
-          - platform=secret-sauce
-        runner-attributes:
-          tags:
-            # this is a set of tags
-            - summit
-            - '{os}-{target}'
-            - rhel7
-            - centos7
-            - x86_64
-          variables:
-            SCHEDULER_ARGS: "arg2 arg2"
+          image:
+            name: scottwittenburg/spack_builder_centos_7
+            entrypoint: [""]
 
   cdash:
     build-group: Release Testing
-    url: https://cdash.spack.io
+    url: http://cdash
     project: Spack Testing
-    site: Spack AWS Gitlab Instance
+    site: Spack Docker-Compose Workflow
 
   repos: []
   upstreams: {}

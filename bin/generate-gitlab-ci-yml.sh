@@ -19,8 +19,10 @@ if [ -z "${SPACK_RELEASE_ENVIRONMENT_PATH}" ] ; then
 fi
 
 if [ -z "${CDASH_AUTH_TOKEN}" ] ; then
-    echo "ERROR: missing variable: CDASH_AUTH_TOKEN" >&2
-    exit 1
+    echo "WARNING: missing variable: CDASH_AUTH_TOKEN" >&2
+else
+    token_file="${temp_dir}/cdash_auth_token"
+    echo ${CDASH_AUTH_TOKEN} > ${token_file}
 fi
 
 if [ -z "${SPACK_RELEASE_ENVIRONMENT_REPO}" ] ; then
@@ -51,11 +53,14 @@ fi
 
 cd $env_dir
 
-token_file="${temp_dir}/cdash_auth_token"
-echo ${CDASH_AUTH_TOKEN} > ${token_file}
+# The next commands generates the .gitlab-ci.yml (and optionally creates a
+# buildgroup in cdash)
+RELEASE_JOBS_ARGS=("--output-file" "${gen_ci_file}")
+if [ ! -z "${token_file}" ]; then
+    RELEASE_JOBS_ARGS+=("--cdash-credentials" "${token_file}")
+fi
 
-# This commands generates the .gitlab-ci.yml and creates buildgroup in cdash
-spack release-jobs --force --output-file ${gen_ci_file} --cdash-credentials ${token_file}
+spack release-jobs "${RELEASE_JOBS_ARGS[@]}"
 
 if [[ $? -ne 0 ]]; then
     echo "spack release-jobs command failed"
@@ -64,6 +69,7 @@ fi
 
 cp ${gen_ci_file} "${original_directory}/.gitlab-ci.yml"
 
+# Remove global from here, it's clobbering people git identity config
 git config --global user.email "robot@spack.io"
 git config --global user.name "Build Robot"
 
