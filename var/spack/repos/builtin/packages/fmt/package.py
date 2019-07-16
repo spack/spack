@@ -14,7 +14,7 @@ class Fmt(CMakePackage):
     homepage = "http://fmtlib.net/latest/index.html"
     url      = "https://github.com/fmtlib/fmt/releases/download/5.2.1/fmt-5.2.1.zip"
 
-    version('5.3.0', sha256='2ba1469c1f7677e70cb32bcd7dd0907e6952e16a161f07e05c7ffa388643b607')
+    version('5.3.0', sha256='4c0741e10183f75d7d6f730b8708a99b329b2f942dad5a9da3385ab92bb4a15c')
     version('5.2.1', sha256='43894ab8fe561fc9e523a8024efc23018431fa86b95d45b06dbe6ddb29ffb6cd')
     version('5.2.0', sha256='c016db7f825bce487a7929e1edb747b9902a2935057af6512cad3df3a080a027')
     version('5.1.0', sha256='77ef9fea638dc846e484409fbc1ea710bb9bcea042e7b35b8805041bf7655ad5')
