@@ -57,7 +57,7 @@ configuration = spack.config.get('modules')
 # if spack.config.get('config:shared'):
 #     roots = {'tcl':    os.path.join(spack.util.path.canonicalize_path("$spack") ,'/share/spack/modules'),
 #              'lmod':   os.path.join(spack.util.path.canonicalize_path("$spack") ,'/share/spack/lmod'),
-#              'dotkit': os.path.join(spack.util.path.canonicalize_path("$spack") ,'/share/spack/lmod')}
+#              'dotkit': os.path.join(spack.util.path.canonicalize_path("$spack") ,'/share/spack/dotkit')}
 # else:
 #     roots = spack.config.get('config:module_roots', {})
 roots = spack.config.get('config:module_roots', {})
