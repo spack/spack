@@ -106,6 +106,17 @@ def get_path_arg_from_module_line(line):
         path_arg = line.split()[2]
     return path_arg
 
+def get_bin_path_from_module(mod):
+    """Inspects a TCL or lmod module for an entry that indicates a modification
+    of the PATH variable."""
+    text = module('show', mod).split('\n')
+    text = filter(lambda x: '"PATH"' in x or ' PATH ' in x, text)
+    for line in text:
+        try:
+            return get_path_arg_from_module_line(line)
+        except:
+            pass
+    return None
 
 def get_path_from_module(mod):
     """Inspects a TCL module for entries that indicate the absolute path
