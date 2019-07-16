@@ -53,17 +53,15 @@ import spack.util.file_permissions as fp
 configuration = spack.config.get('modules')
 
 #: Root folders where the various module files should be written
-if spack.config.get('config:shared') and 'SPACK_PATH' in os.environ:
-    roots = {'tcl':    os.path.join(spack.util.path.canonicalize_path("$home/.spack") ,'/share/spack/modules'),
-             'lmod':   os.path.join(spack.util.path.canonicalize_path("$home/.spack") ,'/share/spack/lmod'),
-             'dotkit': os.path.join(spack.util.path.canonicalize_path("$home/.spack") ,'/share/spack/lmod')}
-elif spack.config.get('config:shared') and 'SPACK_PATH' not in os.environ:
-    tty.info("""Shared mode enabled but,
-             $SPACK_PATH environment variable is undefined.""")
-    tty.info("Setting $SPACK_PATH to %s" % str(os.path.expanduser('~')))
-    os.environ['SPACK_PATH'] = str(os.path.expanduser('~'))
-else:
-    roots = spack.config.get('config:module_roots', {})
+#: When install --upstream run then the upstream location is targeted
+# if spack.config.get('config:shared'):
+#     roots = {'tcl':    os.path.join(spack.util.path.canonicalize_path("$spack") ,'/share/spack/modules'),
+#              'lmod':   os.path.join(spack.util.path.canonicalize_path("$spack") ,'/share/spack/lmod'),
+#              'dotkit': os.path.join(spack.util.path.canonicalize_path("$spack") ,'/share/spack/lmod')}
+# else:
+#     roots = spack.config.get('config:module_roots', {})
+roots = spack.config.get('config:module_roots', {})
+
 
 #: Inspections that needs to be done on spec prefixes
 prefix_inspections = spack.config.get('modules:prefix_inspections', {})
