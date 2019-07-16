@@ -34,7 +34,7 @@ import spack.database
 import spack.directory_layout
 
 #: default installation root, relative to the Spack install path
-default_root = os.path.join(spack.paths.opt_path, 'spack')
+default_root = os.path.join(spack.paths.user_config_path, 'opt/spack')
 
 
 class Store(object):
@@ -70,10 +70,7 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    if spack.config.get('config:shared'):
-        root = os.path.join(os.environ["SPACK_PATH"], "opt/")
-    else:
-        root = spack.config.get('config:install_tree', default_root)
+    root = spack.config.get('config:install_tree', default_root)
 
     # Canonicalize Path for Root regardless of origin
     root = spack.util.path.canonicalize_path(root)
