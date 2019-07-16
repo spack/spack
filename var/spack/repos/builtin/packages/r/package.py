@@ -131,6 +131,10 @@ class R(AutotoolsPackage):
         if '+memory_profiling' in spec:
             config_args.append('--enable-memory-profiling')
 
+        # Set FPICFLAGS for compilers except 'gcc'.
+        if self.compiler.name != 'gcc':
+            config_args.append('FPICFLAGS={0}'.format(self.compiler.pic_flag))
+
         return config_args
 
     @run_after('install')
