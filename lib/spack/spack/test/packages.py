@@ -353,3 +353,13 @@ def test_git_url_top_level_conflicts(mock_packages, config):
 
     with pytest.raises(spack.fetch_strategy.FetcherConflict):
         spack.fetch_strategy.for_package_version(pkg, '1.3')
+
+
+def test_rpath_args(mutable_database):
+    """Test a package's rpath_args property."""
+
+    rec = mutable_database.get_record('mpich')
+
+    rpath_args = rec.spec.package.rpath_args
+    assert '-rpath' in rpath_args
+    assert 'mpich' in rpath_args

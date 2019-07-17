@@ -284,12 +284,8 @@ def test_uninstall_by_spec_errors(mutable_database):
     with pytest.raises(InstallError, matches="not installed"):
         PackageBase.uninstall_by_spec(rec.spec)
 
-    # Try uninstall -- without forcing -- a spec with dependencies
+    # Try an unforced uninstall of a spec with dependencies
     rec = mutable_database.get_record('mpich')
-
-    rpath_args = rec.spec.package.rpath_args
-    assert rpath_args.find('-rpath') > 0
-    assert rpath_args.rfind('mpich') > 0
 
     with pytest.raises(PackageStillNeededError, matches="cannot uninstall"):
         PackageBase.uninstall_by_spec(rec.spec)
