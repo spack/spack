@@ -70,7 +70,7 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    root = spack.config.get('config:install_tree', default_root)
+    root = spack.config.get('config:active_tree', default_root)
 
     # Canonicalize Path for Root regardless of origin
     root = spack.util.path.canonicalize_path(root)
