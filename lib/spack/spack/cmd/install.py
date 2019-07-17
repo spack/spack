@@ -104,6 +104,10 @@ the dependencies"""
         dest='specfiles', metavar='SPEC_YAML_FILE',
         help="install from file. Read specs to install from .yaml files")
     subparser.add_argument(
+        '-u', '--upstream', action='store', default=None,
+        dest='upstream', metavar='UPSTREAM_NAME',
+        help='specify which upstream spack to install too')
+    subparser.add_argument(
         '-g', '--global', action='store_true', default=False,
         dest='install_global',
         help='install package to globally accesible location')
