@@ -134,9 +134,17 @@ class Vtk(CMakePackage):
 
         if '+mpi' in spec:
             cmake_args.extend([
+                ''.join((
+                    "-DCMAKE_CXX_FLAGS='",
+                    getattr(self.compiler, 'cxx_flag', ' '),
+                    '-DOMPI_SKIP_MPICXX',
+                    " -DMPICH_SKIP_MPICXX'",
+                )),
                 '-DVTK_Group_MPI:BOOL=ON',
                 '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF',
             ])
+        else:
+            cmake_args.append('-DVTK_Group_MPI:BOOL=OFF')
 
         if '+ffmpeg' in spec:
             cmake_args.extend(['-DModule_vtkIOFFMPEG:BOOL=ON'])
