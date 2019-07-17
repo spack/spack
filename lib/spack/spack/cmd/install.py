@@ -39,7 +39,8 @@ def update_kwargs_from_args(args, kwargs):
         'fake': args.fake,
         'dirty': args.dirty,
         'use_cache': args.use_cache,
-        'install_global': args.install_global
+        'install_global': args.install_global,
+        'upstream': args.upstream
     })
     if hasattr(args, 'setup'):
         setups = set()
