@@ -98,18 +98,10 @@ def retrieve_upstream_dbs():
 
     other_spack_instances = spack.config.get('upstreams',
                                              global_fallback)
-
-    # Canonicalizes upstream paths
-    temp = other_spack_instances['global']
-    temp['install_tree'] = spack.util.path.canonicalize_path(
-        temp['install_tree'])
-    for mod_type, path in temp['modules'].items():
-        temp['modules']['mod_type'] = spack.util.path.canonicalize_path(path)
-    other_spack_instances['global'] = temp
-
     install_roots = []
     for install_properties in other_spack_instances.values():
-        install_roots.append(install_properties['install_tree'])
+        install_roots.append(spack.util.path.canonicalize_path(
+                             install_properties['install_tree']))
 
     return _construct_upstream_dbs_from_install_roots(install_roots)
 
