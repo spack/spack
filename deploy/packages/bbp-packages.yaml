@@ -118,7 +118,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - neurodamus-core+common
+      - neurodamus-core+common@2.4.3
 
   intel-stable-parallel:
     target_matrix:
