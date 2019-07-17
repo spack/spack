@@ -1492,7 +1492,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         dirty = kwargs.get('dirty', False)
         restage = kwargs.get('restage', False)
         install_global = kwargs.get('install_global', False)
-        upstream = kwargs.get('upstream', False)
+        upstream = kwargs.get('upstream', None)
 
         # Install Package to Global Upstream for multi-user use
         if install_global:
@@ -1502,7 +1502,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             spack.config.set('config:active_tree', global_root,
                              scope='user')
         elif upstream:
-            raise NotImplementedError
+            if upstream not in spack.config.get('upstreams'):
+                tty.die("specified upstream does not exist")
+            root = spack.config.get('upstreams')
+            root = root[upstream]['install_tree']
+            root = spack.util.path.canonicalize_path(root)
+            spack.config.set('config:active_tree', root, scope='user')
         else:
             spack.config.set('config:active_tree',
                              spack.config.get('config:install_tree'),

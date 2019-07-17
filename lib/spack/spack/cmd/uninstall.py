@@ -94,7 +94,12 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
         spack.config.set('config:active_tree', global_root,
                          scope='user')
     elif upstream:
-        raise NotImplementedError
+        if upstream not in spack.config.get('upstreams'):
+            tty.die("specified upstream does not exist")
+        root = spack.config.get('upstreams')
+        root = root[upstream]['install_tree']
+        root = spack.util.path.canonicalize_path(root)
+        spack.config.set('config:active_tree', root, scope='user')
     else:
         for spec in specs:
             if isinstance(spec, spack.spec.Spec):
