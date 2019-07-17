@@ -83,7 +83,10 @@ class Clang(Compiler):
     @property
     def openmp_flag(self):
         if self.is_apple:
-            return '-Xpreprocessor -fopenmp'
+            raise UnsupportedCompilerFlag(self,
+                                          "OpenMP",
+                                          "openmp_flag",
+                                          "Xcode {0}".format(self.version))
         else:
             return "-fopenmp"
 
