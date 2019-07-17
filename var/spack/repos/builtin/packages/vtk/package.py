@@ -79,8 +79,6 @@ class Vtk(CMakePackage):
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
 
-    depends_on('mpi', when='+mpi')
-
     depends_on('ffmpeg', when='+ffmpeg')
 
     depends_on('expat')
