@@ -123,7 +123,8 @@ class Mysql(CMakePackage):
         # dtrace may cause build to fail because it uses
         # '/usr/bin/python' in the shebang. To work around that we copy
         # the original script into a temporary folder, and change the
-        # shebang to '/usr/bin/env python'.
+        # shebang to '/usr/bin/env python'. Treatment adapted from that
+        # used in glib recipe per M. Culpo @b2822b258.
         dtrace = which('dtrace').path
         dtrace_copy_path = os.path.join(tempfile.mkdtemp(), 'dtrace-copy')
         dtrace_copy = os.path.join(dtrace_copy_path, 'dtrace')
