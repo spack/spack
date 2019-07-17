@@ -274,11 +274,11 @@ def test_xl_r_flags():
 
 
 def test_fj_flags():
-    supported_flag_test("openmp_flag", "-Kopenmp", "fj@1.2.0")
-    supported_flag_test("cxx98_flag", "-std=c++98", "fj@1.2.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "fj@1.2.0")
-    supported_flag_test("cxx14_flag", "-std=c++14", "fj@1.2.0")
-    supported_flag_test("pic_flag", "-fPIC", "fj@1.2.0")
+    supported_flag_test("openmp_flag", "-Kopenmp", "fj@4.0.0")
+    supported_flag_test("cxx98_flag", "-std=c++98", "fj@4.0.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "fj@4.0.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "fj@4.0.0")
+    supported_flag_test("pic_flag", "-KPIC", "fj@4.0.0")
 
 
 @pytest.mark.regression('10191')
