@@ -91,3 +91,12 @@ class Binutils(AutotoolsPackage):
             for current_file in glob.glob(join_path(self.build_directory,
                                                     'bfd', '*.h')):
                 install(current_file, extradir)
+
+    def flag_handler(self, name, flags):
+        # To ignore the errors of narrowing conversions for
+        # the Fujitsu compiler
+        if name == 'cxxflags'\
+           and (self.compiler.name == 'fj' or self.compiler.name == 'clang')\
+           and self.version <= ver('2.31.1'):
+            flags.append('-Wno-narrowing')
+        return (flags, None, None)

@@ -9,6 +9,7 @@ import argparse
 
 import spack.cmd
 import spack.environment as ev
+import spack.error
 import spack.package
 import spack.cmd.common.arguments as arguments
 import spack.repo
@@ -126,9 +127,10 @@ def installed_dependents(specs, env):
 
     env_hashes = set(env.all_hashes()) if env else set()
 
+    all_specs_in_db = spack.store.db.query()
+
     for spec in specs:
-        installed = spack.store.db.installed_relatives(
-            spec, direction='parents', transitive=True)
+        installed = [x for x in all_specs_in_db if spec in x]
 
         # separate installed dependents into dpts in this environment and
         # dpts that are outside this environment
@@ -212,16 +214,23 @@ def do_uninstall(env, specs, force):
         if env:
             _remove_from_env(item, env)
 
-    # Sort packages to be uninstalled by the number of installed dependents
-    # This ensures we do things in the right order
-    def num_installed_deps(pkg):
-        dependents = spack.store.db.installed_relatives(
-            pkg.spec, 'parents', True)
-        return len(dependents)
+    # A package is ready to be uninstalled when nothing else references it,
+    # unless we are requested to force uninstall it.
+    is_ready = lambda x: not spack.store.db.query_by_spec_hash(x)[1].ref_count
+    if force:
+        is_ready = lambda x: True
 
-    packages.sort(key=num_installed_deps)
-    for item in packages:
-        item.do_uninstall(force=force)
+    while packages:
+        ready = [x for x in packages if is_ready(x.spec.dag_hash())]
+        if not ready:
+            msg = 'unexpected error [cannot proceed uninstalling specs with' \
+                  ' remaining dependents {0}]'
+            msg = msg.format(', '.join(x.name for x in packages))
+            raise spack.error.SpackError(msg)
+
+        packages = [x for x in packages if x not in ready]
+        for item in ready:
+            item.do_uninstall(force=force)
 
     # write any changes made to the active environment
     if env:
@@ -332,5 +341,5 @@ def uninstall(parser, args):
                 '  Use `spack uninstall --all` to uninstall ALL packages.')
 
     # [any] here handles the --all case by forcing all specs to be returned
-    uninstall_specs(
-        args, spack.cmd.parse_specs(args.packages) if args.packages else [any])
+    specs = spack.cmd.parse_specs(args.packages) if args.packages else [any]
+    uninstall_specs(args, specs)
