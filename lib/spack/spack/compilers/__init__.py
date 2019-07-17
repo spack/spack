@@ -225,11 +225,13 @@ def find_compilers(path_hints=None, module_hints=None):
                 msg = 'Multiple modules associated with path %s. ' % path
                 msg += 'Compilers may require manual configuration'
                 tty.warn(msg)
-            module_association[path] = mod
+                module_association[path].add(mod)
+            else:
+                module_association[path] = set([mod])
 
     # Get PATH and all paths from modules if no path hints
     if path_hints is None:
-        paths_to_search = module_association.keys() + get_path('PATH')
+        paths_to_search = list(module_association.keys()) + get_path('PATH')
     else:
         paths_to_search = path_hints
 
@@ -657,10 +659,29 @@ def make_compiler_list(detected_versions, module_association):
         return [compiler]
 
     for compiler_id, by_compiler_id in compilers_d.items():
-        _, selected_name_variation = max(
-            (len(by_compiler_id[variation]), variation)
-            for variation in by_compiler_id
-        )
+        def sort_tuple(variation):
+            modules_for_paths = set()
+            paths = by_compiler_id[variation]
+            for p in paths.values():
+                modules_for_paths |= module_association.get(
+                    os.path.dirname(p), set())
+
+            positive_attributes = [
+                len(modules_for_paths) > 0,
+                any(compiler_id.compiler_name in m for m in modules_for_paths),
+                any(compiler_id.compiler_name in m and compiler_id.version in m
+                    for m in modules_for_paths),
+                any(m.endswith('%s/%s' % (compiler_id.compiler_name,
+                                          compiler_id.version))
+                    for m in modules_for_paths)
+            ]
+
+            positives = list(filter(lambda x: x, positive_attributes))
+            return (len(paths), len(positives))
+
+        selected_name_variation = sorted(list(by_compiler_id.keys()),
+                                         key=sort_tuple,
+                                         reverse=True)[0]
 
         # Add it to the list of compilers
         selected = by_compiler_id[selected_name_variation]
@@ -668,10 +689,13 @@ def make_compiler_list(detected_versions, module_association):
         make_compilers = getattr(operating_system, 'make_compilers', _default)
         compilers.extend(make_compilers(compiler_id, selected))
 
-    for cmp in compilers:
-        for path in (cmp.cc, cmp.cxx, cmp.fc, cmp.f77):
-            if path and os.path.dirname(path) in module_association:
-                cmp.modules.append(module_association[os.path.dirname(path)])
+    for compiler in compilers:
+        for path in (compiler.cc, compiler.cxx, compiler.fc, compiler.f77):
+            if path:
+                bindir = os.path.dirname(path)
+                if bindir in module_association:
+                    compiler.modules = list(
+                        set(compiler.modules) | module_association[bindir])
 
     return compilers
 
