@@ -143,10 +143,12 @@ class Mysql(CMakePackage):
         flag = getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
         if flag:
             spack_env.append_flags('CXXFLAGS', flag)
-        if cxxstd > 11:
-            spack_env.append_flags('CXXFLAGS', '-Wno-deprecated-declarations')
-        if cxxstd > 14:
-            spack_env.append_flags('CXXFLAGS', '-Wno-error=register')
+        if cxxstd != '98':
+            if int(cxxstd) > 11:
+                spack_env.append_flags('CXXFLAGS',
+                                       '-Wno-deprecated-declarations')
+            if int(cxxstd) > 14:
+                spack_env.append_flags('CXXFLAGS', '-Wno-error=register')
         if 'python' in self.spec.flat_dependencies() and \
            self.spec.satisfies('@:7.99.99'):
             self.fix_dtrace_usr_bin_path(spack_env)
