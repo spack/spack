@@ -209,6 +209,7 @@ def find_compilers(path_hints=None, module_hints=None):
     """
     # Get modules if none given
     if spack.architecture.platform().name == "cray":
+        # Cray modules are handled in their own special way
         module_hints = []
     else:
         if module_hints is None:

@@ -95,18 +95,15 @@ class Cnl(OperatingSystem):
         modulecmd = self.modulecmd
         compiler_name = detect_version_args.id.compiler_name
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-
-        for m in compiler_cls.cray_module_name:
-            output = modulecmd('avail', m)
-            version_regex = r'(%s)/([\d\.]+[\d])' % m
-            matches = re.findall(version_regex, output)
-            if matches:
-                version = tuple(version for _, version in matches)
-                compiler_id = detect_version_args.id
-                value = detect_version_args._replace(
-                    id=compiler_id._replace(version=version)
-                )
-                return value, None
+        output = modulecmd('avail', compiler_cls.cray_module_name)
+        version_regex = r'(%s)/([\d\.]+[\d])' % compiler_cls.cray_module_name
+        matches = re.findall(version_regex, output)
+        version = tuple(version for _, version in matches)
+        compiler_id = detect_version_args.id
+        value = detect_version_args._replace(
+            id=compiler_id._replace(version=version)
+        )
+        return value, None
 
     def make_compilers(self, compiler_id, paths):
         import spack.spec
