@@ -22,6 +22,7 @@ class Swig(AutotoolsPackage):
     homepage = "http://www.swig.org"
     url      = "http://prdownloads.sourceforge.net/swig/swig-3.0.12.tar.gz"
 
+    version('4.0.0', 'e8a39cd6437e342cdcbd5af27a9bf11b62dc9efec9248065debcb8276fcbb925')
     version('3.0.12', '82133dfa7bba75ff9ad98a7046be687c')
     version('3.0.11', '13732eb0f1ab2123d180db8425c1edea')
     version('3.0.10', 'bb4ab8047159469add7d00910e203124')
