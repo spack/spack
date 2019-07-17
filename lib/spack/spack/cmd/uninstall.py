@@ -95,7 +95,7 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
                          scope='user')
     elif upstream:
         raise NotImplementedError
-    else :
+    else:
         for spec in specs:
             if isinstance(spec, spack.spec.Spec):
                 spec_name = str(spec)
@@ -267,15 +267,18 @@ def do_uninstall(env, specs, force):
     if env:
         env.write()
 
-    spack.config.set('config:active_tree', '~/.spack/opt/spack',
-                             scope='user')
+    spack.config.set('config:active_tree',
+                     '~/.spack/opt/spack',
+                     scope='user')
+
 
 def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli
     # args.all takes care of the case where '-a' is given in the cli
     uninstall_list = find_matching_specs(env, specs, args.all, args.force,
                                          upstream=args.upstream,
-                                         global_uninstall=args.global_uninstall)
+                                         global_uninstall=args.global_uninstall
+                                         )
 
     # Takes care of '-R'
     active_dpts, inactive_dpts = installed_dependents(uninstall_list, env)
