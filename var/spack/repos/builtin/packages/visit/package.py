@@ -34,6 +34,8 @@ class Visit(CMakePackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('mpi', when='+mpi')
 
+    patch('parallel-hdf5-name-fix.patch', when='+hdf5 +mpi')
+
     conflicts('+hdf5', when='~gui')
     conflicts('+silo', when='~gui')
 
