@@ -1496,13 +1496,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Install Package to Global Upstream for multi-user use
         if install_global:
-            global_root = spack.config.get('upstreams')['global']['install_tree']
+            global_root = spack.config.get('upstreams')
+            global_root = global_root['global']['install_tree']
             global_root = spack.util.path.canonicalize_path(global_root)
             spack.config.set('config:active_tree', global_root)
         elif upstream:
             raise NotImplementedError
         else:
-            spack.config.set('config:active_tree', spack.config.get('config:install_tree'))
+            spack.config.set('config:active_tree',
+                             spack.config.get('config:install_tree'))
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
