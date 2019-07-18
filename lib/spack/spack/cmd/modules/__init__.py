@@ -137,7 +137,12 @@ def loads(module_type, specs, args, out=sys.stdout):
             modules.append((spec, module_cls(spec).layout.use_name))
         elif spec.package.installed_upstream:
             tty.debug("Using upstream module for {0}".format(spec))
-            module = spack.modules.common.upstream_module(spec, module_type)
+
+            import spack.modules.common as common
+            module = common.upstream_module_index.upstream_modules(
+                spec,
+                module_type
+            )
             modules.append((spec, module.use_name))
 
     module_commands = {
