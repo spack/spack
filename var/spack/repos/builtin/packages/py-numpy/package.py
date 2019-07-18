@@ -201,15 +201,18 @@ class PyNumpy(PythonPackage):
         return args
 
     def setup_environment(self, spack_env, run_env):
-        python_version = self.spec['python'].version.up_to(2)
+        # If py-numpy is installed as an external package, python won't
+        # be available in the spec. See #9149 for details.
+        if 'python' in self.spec:
+            python_version = self.spec['python'].version.up_to(2)
 
-        include_path = join_path(
-            self.prefix.lib,
-            'python{0}'.format(python_version),
-            'site-packages',
-            'numpy/core/include')
+            include_path = join_path(
+                self.prefix.lib,
+                'python{0}'.format(python_version),
+                'site-packages',
+                'numpy/core/include')
 
-        run_env.prepend_path('CPATH', include_path)
+            run_env.prepend_path('CPATH', include_path)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following
