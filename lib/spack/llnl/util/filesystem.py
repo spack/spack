@@ -450,7 +450,10 @@ def mkdirp(*paths, **kwargs):
                 if mode is not None:
                     os.chmod(path, mode)
 
-                # newly-created intermediate folders permissions
+                # for intermediate folders, change mode just for newly created
+                # ones and if mode_intermediate has been specified, otherwise
+                # intermediate folders list is not populated at all and default
+                # OS mode will be used
                 for intermediate_path in reversed(intermediate_folders):
                     os.chmod(intermediate_path, mode_intermediate)
             except OSError as e:
