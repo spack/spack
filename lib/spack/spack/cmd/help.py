@@ -4,10 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-
-import spack.config
 
 description = "get help on spack and its commands"
 section = "help"
@@ -103,14 +100,7 @@ def help(parser, args):
         return 0
 
     if args.help_command:
-        try:
-            parser.add_command(args.help_command)
-        except Exception:
-            if spack.config.get('config:debug'):
-                raise
-            tty.die(
-                'Help request for unknown command or failed command load: {0}'.
-                format(args.help_command))
+        parser.add_command(args.help_command)
         parser.parse_args([args.help_command, '-h'])
     else:
         sys.stdout.write(parser.format_help(level=args.all))

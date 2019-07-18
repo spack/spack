@@ -53,8 +53,8 @@ def _init_extension_command_map():
             _command_paths.append(command_path)
             commands = spack.cmd.find_commands(command_path)
             _extension_command_map.update(
-                dict((command, path) for command in
-                     commands if command not in _extension_command_map))
+                ((command, path) for command in
+                 commands if command not in _extension_command_map))
 
 
 def reset_command_cache():
@@ -68,8 +68,13 @@ def reset_command_cache():
 
 
 def get_command_paths():
-    _init_extension_command_map()  # Ensure we are initialized.
+    _init_extension_command_map()
     return _command_paths
+
+
+def get_extension_command_map():
+    _init_extension_command_map()
+    return _extension_command_map
 
 
 def extension_name(path):
@@ -97,11 +102,10 @@ def load_command_extension(command):
     Returns:
         A valid module object if the command is found or None
     """
-    _init_extension_command_map()  # Ensure we have initialized.
-    global _extension_command_map
-    if command not in _extension_command_map:
+    extension_command_map = get_extension_command_map()
+    if command not in extension_command_map:
         raise CommandNotFoundError(command)
-    path = _extension_command_map[command]
+    path = extension_command_map[command]
     extension = extension_name(path)
 
     # Compute the name of the module we search, exit early if already imported
