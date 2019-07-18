@@ -85,7 +85,7 @@ def test_upstream_install_package_and_dependency(
         install_mockery):
 
     with tmpdir.as_cwd():
-        install('--upstream global',
+        install('--upstream=global',
                 '--log-format=junit',
                 '--log-file=test.xml',
                 'libdwarf')
