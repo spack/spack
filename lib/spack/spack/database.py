@@ -199,15 +199,14 @@ class Database(object):
 
         self.is_upstream = is_upstream
 
-        # Create global
-        index_path = self._index_path
+        # Create .spack-db/index.json for global upstream it doesn't exist
         global_install_tree = spack.config.get(
             'upstreams')['global']['install_tree']
         global_install_tree = global_install_tree.replace(
             '$spack', spack.paths.prefix)
         if self.is_upstream:
             if global_install_tree in self._db_dir:
-                if not os.path.isfile(index_path):
+                if not os.path.isfile(self._index_path):
                     f = open(self._index_path, "w+")
                     database = {
                         'database': {
