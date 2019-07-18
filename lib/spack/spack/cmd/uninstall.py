@@ -283,7 +283,8 @@ def do_uninstall(env, specs, force):
                      scope='user')
 
     spack.config.set('config:active_upstream', None,
-                         scope='user')
+                     scope='user')
+
 
 def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli
