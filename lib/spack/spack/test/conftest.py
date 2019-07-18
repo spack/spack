@@ -290,6 +290,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     packages_yaml = test_path.join('data', 'packages.yaml')
     config_yaml = test_path.join('data', 'config.yaml')
     repos_yaml = test_path.join('data', 'repos.yaml')
+    upstreams_yaml = test_path.join('data', 'upstreams.yaml')
 
     # Create temporary 'site' and 'user' folders
     tmpdir.ensure('site', dir=True)
@@ -299,6 +300,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     packages_yaml.copy(tmpdir.join('site', 'packages.yaml'))
     config_yaml.copy(tmpdir.join('site', 'config.yaml'))
     repos_yaml.copy(tmpdir.join('site', 'repos.yaml'))
+    upstreams_yaml.copy(tmpdir.join('site', 'upstreams.yaml'))
 
     # Write the one that needs modifications
     content = ''.join(compilers_yaml.read()).format(linux_os)
