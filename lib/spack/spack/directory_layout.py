@@ -262,6 +262,14 @@ class YamlDirectoryLayout(DirectoryLayout):
         # Cannot import at top of file
         from spack.package_prefs import get_package_dir_permissions
         from spack.package_prefs import get_package_group
+
+        # Each package folder can have its own specific permissions, while
+        # intermediate folders (arch/compiler) are set with full access to
+        # everyone (0o777) and install_tree root folder is the chokepoint
+        # for restricting global access.
+        # So, whoever has access to the install_tree is allowed to install
+        # packages for same arch/compiler and since no data is stored in
+        # intermediate folders, it does not represent a security threat.
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
         perms_intermediate = 0o777
