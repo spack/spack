@@ -1497,7 +1497,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Install Package to Global Upstream for multi-user use
         if install_global:
             spack.config.set('config:active_upstream', 'global',
-                         scope='user')
+                             scope='user')
             global_root = spack.config.get('upstreams')
             global_root = global_root['global']['install_tree']
             global_root = spack.util.path.canonicalize_path(global_root)

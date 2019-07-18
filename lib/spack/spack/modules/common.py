@@ -225,7 +225,8 @@ def root_path(name):
 
     if active_upstream:
         root_name = 'upstreams:' + active_upstream + ":modules:" + name
-        path = spack.config.get(root_name, os.path.join(spack.paths.share_path, name))
+        path = spack.config.get(root_name, os.path.join(spack.paths.share_path,
+                                                        name))
     else:
         path = roots.get(name, os.path.join(spack.paths.share_path, name))
 
