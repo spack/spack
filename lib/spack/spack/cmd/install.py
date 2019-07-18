@@ -207,6 +207,8 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
             spec.package.do_install(**kwargs)
             spack.config.set('config:active_tree', '~/.spack/opt/spack',
                              scope='user')
+            spack.config.set('config:active_upstream', None,
+                             scope='user')
 
     try:
         if cli_args.things_to_install == 'dependencies':

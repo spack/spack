@@ -88,6 +88,8 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
         list of specs
     """
     if global_uninstall:
+        spack.config.set('config:active_upstream', 'global',
+                         scope='user')
         global_root = spack.config.get('upstreams')
         global_root = global_root['global']['install_tree']
         global_root = spack.util.path.canonicalize_path(global_root)
@@ -96,11 +98,15 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
     elif upstream:
         if upstream not in spack.config.get('upstreams'):
             tty.die("specified upstream does not exist")
+        spack.config.set('config:active_upstream', upstream,
+                         scope='user')
         root = spack.config.get('upstreams')
         root = root[upstream]['install_tree']
         root = spack.util.path.canonicalize_path(root)
         spack.config.set('config:active_tree', root, scope='user')
     else:
+        spack.config.set('config:active_upstream', None,
+                         scope='user')
         for spec in specs:
             if isinstance(spec, spack.spec.Spec):
                 spec_name = str(spec)
@@ -276,6 +282,8 @@ def do_uninstall(env, specs, force):
                      '~/.spack/opt/spack',
                      scope='user')
 
+    spack.config.set('config:active_upstream', None,
+                         scope='user')
 
 def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli

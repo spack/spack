@@ -214,12 +214,21 @@ def root_path(name):
     """Returns the root folder for module file installation.
 
     Args:
-        name: name of the module system t be used (e.g. 'tcl')
+        name: name of the module system to be used (e.g. 'tcl')
 
     Returns:
         root folder for module file installation
     """
-    path = roots.get(name, os.path.join(spack.paths.share_path, name))
+
+    # Determine where to install modules too
+    active_upstream = spack.config.get('config:active_upstream')
+
+    if active_upstream:
+        root_name = 'upstreams:' + active_upstream + ":modules:" + name
+        path = spack.config.get(root_name, os.path.join(spack.paths.share_path, name))
+    else:
+        path = roots.get(name, os.path.join(spack.paths.share_path, name))
+
     return spack.util.path.canonicalize_path(path)
 
 
@@ -284,6 +293,7 @@ def read_module_indices():
         module_type_to_index = {}
         module_type_to_root = install_properties.get('modules', {})
         for module_type, root in module_type_to_root.items():
+            root = spack.util.path.canonicalize_path(root)
             module_type_to_index[module_type] = read_module_index(root)
         module_indices.append(module_type_to_index)
 
