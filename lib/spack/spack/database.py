@@ -178,7 +178,6 @@ class Database(object):
 
         """
         self.root = root
-
         if db_dir is None:
             # If the db_dir is not provided, default to within the db root.
             self._db_dir = os.path.join(self.root, _db_dirname)
@@ -200,7 +199,28 @@ class Database(object):
 
         self.is_upstream = is_upstream
 
+        # Create global
+        index_path = self._index_path
+        global_install_tree = spack.config.get(
+            'upstreams')['global']['install_tree']
+        global_install_tree = global_install_tree.replace(
+            '$spack', spack.paths.prefix)
         if self.is_upstream:
+            if global_install_tree in self._db_dir:
+                if not os.path.isfile(index_path):
+                    f = open(self._index_path, "w+")
+                    database = {
+                        'database': {
+                            'installs': {},
+                            'version': str(_db_version)
+                        }
+                    }
+                    try:
+                        sjson.dump(database, f)
+                    except YAMLError as e:
+                        raise syaml.SpackYAMLError(
+                            "error writing YAML database:", str(e))
+
             self.lock = ForbiddenLock()
         else:
             self.lock = Lock(self._lock_path)
