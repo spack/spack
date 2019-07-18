@@ -1496,6 +1496,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Install Package to Global Upstream for multi-user use
         if install_global:
+            spack.config.set('config:active_upstream', 'global',
+                         scope='user')
             global_root = spack.config.get('upstreams')
             global_root = global_root['global']['install_tree']
             global_root = spack.util.path.canonicalize_path(global_root)
@@ -1504,11 +1506,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         elif upstream:
             if upstream not in spack.config.get('upstreams'):
                 tty.die("specified upstream does not exist")
+            spack.config.set('config:active_upstream', upstream,
+                             scope='user')
             root = spack.config.get('upstreams')
             root = root[upstream]['install_tree']
             root = spack.util.path.canonicalize_path(root)
             spack.config.set('config:active_tree', root, scope='user')
         else:
+            spack.config.set('config:active_upstream', None,
+                             scope='user')
             spack.config.set('config:active_tree',
                              spack.config.get('config:install_tree'),
                              scope='user')
