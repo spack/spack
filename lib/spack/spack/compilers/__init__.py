@@ -188,7 +188,7 @@ def all_compiler_specs(scope=None, init_config=True):
             for s in all_compilers_config(scope, init_config)]
 
 
-def find_compilers(path_hints=None, module_hints=None):
+def find_compilers(path_hints=None):
     """Returns the list of compilers found in the paths or modules given.
 
     If a compiler is found by both path and module, use the module version.
@@ -210,16 +210,15 @@ def find_compilers(path_hints=None, module_hints=None):
     # Get modules if none given
     if spack.architecture.platform().name == "cray":
         # Cray modules are handled in their own special way
-        module_hints = []
+        modules_to_check_paths = []
     else:
-        if module_hints is None:
-            avail_output = spack.util.module_cmd.module('avail')
-            module_hints = avail_output.split()
+        avail_output = spack.util.module_cmd.module('avail')
+        modules_to_check_paths = avail_output.split()
 
     # Associate paths with modules. If a compiler is found in the path
     # associated with a module, it will include that module
     module_association = {}
-    for mod in module_hints:
+    for mod in modules_to_check_paths:
         path = spack.util.module_cmd.get_bin_path_from_module(mod)
         if path:
             if path in module_association:

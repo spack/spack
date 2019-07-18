@@ -5,7 +5,6 @@
 
 import re
 from spack.architecture import OperatingSystem
-from spack.util.module_cmd import module
 
 
 class LinuxDistro(OperatingSystem):
@@ -17,7 +16,6 @@ class LinuxDistro(OperatingSystem):
     """
 
     def __init__(self):
-        self.modulecmd = module
         try:
             # This will throw an error if imported on a non-Linux platform.
             from external.distro import linux_distribution

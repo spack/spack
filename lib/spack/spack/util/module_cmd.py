@@ -56,7 +56,9 @@ def module(*args):
         env_dict = json.loads(env)
         os.environ.clear()
         os.environ.update(env_dict)
-        if new_ld_library_path != 'SPACKIGNORE':
+        if new_ld_library_path == 'SPACKIGNORE':
+            os.environ.pop('LD_LIBRARY_PATH', None)
+        else:
             os.environ['LD_LIBRARY_PATH'] = new_ld_library_path
 
     else:
