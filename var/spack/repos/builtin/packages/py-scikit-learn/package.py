@@ -11,6 +11,7 @@ class PyScikitLearn(PythonPackage):
 
     homepage = "https://pypi.python.org/pypi/scikit-learn"
     url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.21.2.tar.gz"
+    git      = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -31,6 +32,7 @@ class PyScikitLearn(PythonPackage):
         'sklearn.ensemble._hist_gradient_boosting'
     ]
 
+    version('master', branch='master')
     version('0.21.2', sha256='0aafc312a55ebf58073151b9308761a5fcfa45b7f7730cea4b1f066f824c72db')
     version('0.21.1', sha256='228d0611e69e5250946f8cd7bbefec75347950f0ca426d0c518db8f06583f660')
     version('0.20.2', sha256='bc5bc7c7ee2572a1edcb51698a6caf11fae554194aaab9a38105d9ec419f29e6')
@@ -41,6 +43,8 @@ class PyScikitLearn(PythonPackage):
     version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
     version('0.17.1', 'a2f8b877e6d99b1ed737144f5a478dfc')
     version('0.13.1', 'acba398e1d46274b8470f40d0926e6a4')
+
+    variant('openmp', default=True, description='Build with OpenMP support')
 
     depends_on('python@2.6:2.8,3.3:', when='@:0.19')
     depends_on('python@2.7:2.8,3.4:', when='@0.20.0:0.20.999')
@@ -59,11 +63,20 @@ class PyScikitLearn(PythonPackage):
     depends_on('py-setuptools', type='build')
     # Technically not correct, but currently no way to check if we
     # are using Apple Clang or not.
-    depends_on('llvm-openmp', when='@0.21: %clang platform=darwin')
+    depends_on('llvm-openmp', when='@0.21: %clang platform=darwin +openmp')
+
+    # Release tarballs are already cythonized. If you wanted to build a release
+    # version without OpenMP support, you would need to delete all .c files
+    # that include omp.h, as well as PKG-INFO.
+    # See https://github.com/scikit-learn/scikit-learn/issues/14332
+    conflicts('~openmp', when='@:999', msg='Only master supports ~openmp')
 
     def setup_environment(self, spack_env, run_env):
+        # https://scikit-learn.org/stable/developers/advanced_installation.html#building-from-source
+        if self.spec.satisfies('~openmp'):
+            spack_env.set('SKLEARN_NO_OPENMP', 'True')
         # https://scikit-learn.org/stable/developers/advanced_installation.html#mac-osx
-        if self.spec.satisfies('@0.21: %clang platform=darwin'):
+        elif self.spec.satisfies('@0.21: %clang platform=darwin +openmp'):
             spack_env.append_flags(
                 'CPPFLAGS', '-Xpreprocessor -fopenmp')
             spack_env.append_flags(
@@ -82,7 +95,7 @@ class PyScikitLearn(PythonPackage):
                 self.spec['llvm-openmp'].libs.directories[0])
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if self.spec.satisfies('@0.21: %clang platform=darwin'):
+        if self.spec.satisfies('@0.21: %clang platform=darwin +openmp'):
             spack_env.append_flags(
                 'DYLD_LIBRARY_PATH',
                 self.spec['llvm-openmp'].libs.directories[0])
