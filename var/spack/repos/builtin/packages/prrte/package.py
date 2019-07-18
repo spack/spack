@@ -16,10 +16,11 @@ class Prrte(AutotoolsPackage):
        environment."""
 
     homepage = "https://pmix.org"
-    url      = "https://github.com/pmix/prrte/archive/dev.tar.gz"
+    url      = "https://github.com/pmix/prrte/releases/download/v1.0.0/prrte-1.0.0.tar.bz2"
     git      = "https://github.com/pmix/prrte.git"
 
     version('develop', branch='master')
+    version('1.0.0', sha256='a9b3715e059c10ed091bd6e3a0d8896f7752e43ee731abcc95fb962e67132a2d')
 
     depends_on('pmix')
     depends_on('libevent')
