@@ -31,9 +31,10 @@ class Pmix(AutotoolsPackage):
        itself."""
 
     homepage = "https://pmix.org"
-    url      = "https://github.com/pmix/pmix/releases/download/v3.1.2/pmix-3.1.2.tar.bz2"
+    url      = "https://github.com/pmix/pmix/releases/download/v3.1.3/pmix-3.1.3.tar.bz2"
     maintainers = ['rhc54']
 
+    version('3.1.3',    sha256='118acb9c4e10c4e481406dcffdfa762f314af50db75336bf8460e53b56dc439d')
     version('3.1.2',    sha256='28aed0392d4ca2cdfbdd721e6210c94dadc9830677fea37a0abe9d592c00f9c3')
     version('3.0.2',    sha256='df68f35a3ed9517eeade80b13855cebad8fde2772b36a3f6be87559b6d430670')
     version('3.0.1',    sha256='b81055d2c0d61ef5a451b63debc39c820bcd530490e2e4dcb4cdbacb618c157c')
