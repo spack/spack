@@ -26,4 +26,9 @@ class Jsoncpp(CMakePackage):
     depends_on('python', type='test')
 
     def cmake_args(self):
-        return ['-DBUILD_SHARED_LIBS=ON', '-DJSONCPP_WITH_TESTS=OFF']
+        args = ['-DBUILD_SHARED_LIBS=ON']
+        if self.run_tests:
+            args.append('-DJSONCPP_WITH_TESTS=ON')
+        else:
+            args.append('-DJSONCPP_WITH_TESTS=OFF')
+        return args
