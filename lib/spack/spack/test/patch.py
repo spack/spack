@@ -6,6 +6,7 @@
 import os
 import filecmp
 import pytest
+import collections
 
 from llnl.util.filesystem import working_dir, mkdirp
 
@@ -314,3 +315,11 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
         libelf, libdwarf, fake,
         'builtin.mock.patch-several-dependencies',
         spec.package.package_dir)
+
+
+def test_file_patch_no_file():
+    # Give it the attributes we need to construct the error message
+    FakePackage = collections.namedtuple('FakePackage', ['name', 'namespace'])
+    fp = FakePackage('fake-package', 'test')
+    with pytest.raises(ValueError, match=r'FilePatch:.*'):
+        spack.patch.FilePatch(fp, 'nonexistent_file', 0, '')
