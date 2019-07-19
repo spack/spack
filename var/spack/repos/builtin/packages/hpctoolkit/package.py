@@ -77,7 +77,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('libpfm4', when='~papi')
     depends_on('mpi', when='+mpi')
 
-    conflicts('%gcc@:4.7.99',
+    conflicts('%gcc@:4.7.99', when='^dyninst@10.0.0:',
               msg='hpctoolkit requires gnu gcc 4.8.x or later')
     conflicts('%gcc@:4.99.99', when='@gpu',
               msg='the gpu branch requires gnu gcc 5.x or later')
