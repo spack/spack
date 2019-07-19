@@ -19,6 +19,12 @@ def _module_files(module_type, *specs):
     return [writer_cls(spec).layout.filename for spec in specs]
 
 
+@pytest.fixture(scope='module', autouse=True)
+def ensure_module_files_are_there(database):
+    module('dotkit', 'refresh', '-y')
+    module('tcl', 'refresh', '-y')
+
+
 @pytest.fixture(
     params=[
         ['rm', 'doesnotexist'],  # Try to remove a non existing module

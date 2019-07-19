@@ -19,6 +19,7 @@ from llnl.util.tty.colify import colify
 import spack.repo
 import spack.store
 import spack.database
+import spack.package
 import spack.spec
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 from spack.util.executable import Executable
@@ -646,3 +647,13 @@ def test_old_external_entries_prefix(mutable_database):
     assert record.path is None
     assert record.spec._prefix is None
     assert record.spec.prefix == record.spec.external_path
+
+
+def test_uninstall_by_spec(mutable_database):
+    with mutable_database.write_transaction():
+        for spec in mutable_database.query():
+            if spec.package.installed:
+                spack.package.PackageBase.uninstall_by_spec(spec, force=True)
+            else:
+                mutable_database.remove(spec)
+    assert len(mutable_database.query()) == 0
