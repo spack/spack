@@ -272,9 +272,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             # Need to reset the sticky group bit after chgrp
             os.chmod(spec.prefix, perms)
 
-        mkdirp(self.metadata_path(spec),
-               mode=perms,
-               mode_intermediate=perms_intermediate)
+        mkdirp(self.metadata_path(spec), mode=perms)
 
         self.write_spec(spec, self.spec_file_path(spec))
 
