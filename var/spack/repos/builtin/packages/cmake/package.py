@@ -111,7 +111,7 @@ class Cmake(Package):
     phases = ['bootstrap', 'build', 'install']
 
     def flag_handler(self, name, flags):
-        if name == 'cxxflags' and self.compiler.name == 'fc':
+        if name == 'cxxflags' and self.compiler.name == 'fj':
             cxx11plus_flags = (self.compiler.cxx11_flag,
                                self.compiler.cxx14_flag)
             cxxpre11_flags = (self.cxx98_flags)
