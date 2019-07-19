@@ -112,7 +112,13 @@ class Cmake(Package):
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fc':
-            flags.append(self.compiler.cxx11_flag)
+            cxx11plus_flags = (self.compiler.cxx11_flag,
+                               self.compiler.cxx14_flag)
+            cxxpre11_flags = (self.cxx98_flags)
+            if any(f in flags for f in cxxpre11_flags):
+                raise ValueError('cannot build cmake pre-c++11 standard')
+            elif not any(f in flags for f in cxx11plus_flags):
+                flags.append(self.compiler.cxx11_flag)
         return (flags, None, None)
 
     def bootstrap_args(self):
