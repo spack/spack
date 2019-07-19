@@ -54,8 +54,9 @@ class Fftw(AutotoolsPackage):
 
     variant(
         'simd',
-        default='sse2,avx,avx2',
+        default='dfault',
         values=(
+            'default',
             'sse', 'sse2', 'avx', 'avx2', 'avx512',  # Intel
             'avx-128-fma', 'kcvi',  # Intel
             'altivec', 'vsx',  # IBM
@@ -149,6 +150,12 @@ class Fftw(AutotoolsPackage):
             options.append('--enable-mpi')
 
         # SIMD support
+        if 'default' in self.spec.variants['simd'].value:
+            if 'x86_64' in spec.architecture.target.lower():
+                self.spec.variants['simd'].value = 'sse2,avx,avx2'
+            else:
+                self.spec.variants['simd'].value = \
+                    'generic-simd128,generic-simd256'
         float_options, double_options = [], []
         if spec.satisfies('@3:', strict=True):
             for opts in (float_options, double_options):
