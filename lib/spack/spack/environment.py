@@ -462,9 +462,7 @@ class ViewDescriptor(object):
             # recognize environment specs (which do store build deps), then
             # they need to be stripped
             if spec.concrete:  # Do not link unconcretized roots
-                specs_for_view.append(spack.spec.Spec.from_dict(
-                    spec.to_dict(all_deps=False)
-                ))
+                specs_for_view.append(spec.copy(deps=('link', 'run')))
 
         if self.select:
             specs_for_view = list(filter(self.select_fn, specs_for_view))
