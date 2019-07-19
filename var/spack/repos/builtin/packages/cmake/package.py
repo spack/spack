@@ -58,10 +58,6 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    # Fix linker error when using external libs on darwin.
-    # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
-    patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
-
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
     # a build dependency, and its libs will not interfere with others in
