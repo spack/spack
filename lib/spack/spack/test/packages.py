@@ -123,6 +123,12 @@ class TestPackage(object):
         assert '~openblas' in s
         assert 'mpi' in s
 
+    @pytest.mark.regression('11844')
+    def test_inheritance_of_patches(self):
+        s = Spec('patch-inheritance')
+        # Will error if inheritor package cannot find inherited patch files
+        s.concretize()
+
     def test_dependency_extensions(self):
         s = Spec('extension2')
         s.concretize()
