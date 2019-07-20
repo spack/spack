@@ -19,6 +19,7 @@ from llnl.util.tty.colify import colify
 import spack.repo
 import spack.store
 import spack.database
+import spack.package
 import spack.spec
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 from spack.util.executable import Executable
@@ -411,7 +412,7 @@ def test_010_all_install_sanity(database):
     ) == 1
 
 
-def test_015_write_and_read(database):
+def test_015_write_and_read(mutable_database):
     # write and read DB
     with spack.store.db.write_transaction():
         specs = spack.store.db.query()
@@ -430,10 +431,10 @@ def test_020_db_sanity(database):
     _check_db_sanity(database)
 
 
-def test_025_reindex(database):
+def test_025_reindex(mutable_database):
     """Make sure reindex works and ref counts are valid."""
     spack.store.store.reindex()
-    _check_db_sanity(database)
+    _check_db_sanity(mutable_database)
 
 
 def test_030_db_sanity_from_another_process(mutable_database):
@@ -492,64 +493,64 @@ def test_050_basic_query(database):
     assert len(database.query(end_date=datetime.datetime.max)) == 16
 
 
-def test_060_remove_and_add_root_package(database):
-    _check_remove_and_add_package(database, 'mpileaks ^mpich')
+def test_060_remove_and_add_root_package(mutable_database):
+    _check_remove_and_add_package(mutable_database, 'mpileaks ^mpich')
 
 
-def test_070_remove_and_add_dependency_package(database):
-    _check_remove_and_add_package(database, 'dyninst')
+def test_070_remove_and_add_dependency_package(mutable_database):
+    _check_remove_and_add_package(mutable_database, 'dyninst')
 
 
-def test_080_root_ref_counts(database):
-    rec = database.get_record('mpileaks ^mpich')
+def test_080_root_ref_counts(mutable_database):
+    rec = mutable_database.get_record('mpileaks ^mpich')
 
     # Remove a top-level spec from the DB
-    database.remove('mpileaks ^mpich')
+    mutable_database.remove('mpileaks ^mpich')
 
     # record no longer in DB
-    assert database.query('mpileaks ^mpich', installed=any) == []
+    assert mutable_database.query('mpileaks ^mpich', installed=any) == []
 
     # record's deps have updated ref_counts
-    assert database.get_record('callpath ^mpich').ref_count == 0
-    assert database.get_record('mpich').ref_count == 1
+    assert mutable_database.get_record('callpath ^mpich').ref_count == 0
+    assert mutable_database.get_record('mpich').ref_count == 1
 
     # Put the spec back
-    database.add(rec.spec, spack.store.layout)
+    mutable_database.add(rec.spec, spack.store.layout)
 
     # record is present again
-    assert len(database.query('mpileaks ^mpich', installed=any)) == 1
+    assert len(mutable_database.query('mpileaks ^mpich', installed=any)) == 1
 
     # dependencies have ref counts updated
-    assert database.get_record('callpath ^mpich').ref_count == 1
-    assert database.get_record('mpich').ref_count == 2
+    assert mutable_database.get_record('callpath ^mpich').ref_count == 1
+    assert mutable_database.get_record('mpich').ref_count == 2
 
 
-def test_090_non_root_ref_counts(database):
-    database.get_record('mpileaks ^mpich')
-    database.get_record('callpath ^mpich')
+def test_090_non_root_ref_counts(mutable_database):
+    mutable_database.get_record('mpileaks ^mpich')
+    mutable_database.get_record('callpath ^mpich')
 
     # "force remove" a non-root spec from the DB
-    database.remove('callpath ^mpich')
+    mutable_database.remove('callpath ^mpich')
 
     # record still in DB but marked uninstalled
-    assert database.query('callpath ^mpich', installed=True) == []
-    assert len(database.query('callpath ^mpich', installed=any)) == 1
+    assert mutable_database.query('callpath ^mpich', installed=True) == []
+    assert len(mutable_database.query('callpath ^mpich', installed=any)) == 1
 
     # record and its deps have same ref_counts
-    assert database.get_record(
+    assert mutable_database.get_record(
         'callpath ^mpich', installed=any
     ).ref_count == 1
-    assert database.get_record('mpich').ref_count == 2
+    assert mutable_database.get_record('mpich').ref_count == 2
 
     # remove only dependent of uninstalled callpath record
-    database.remove('mpileaks ^mpich')
+    mutable_database.remove('mpileaks ^mpich')
 
     # record and parent are completely gone.
-    assert database.query('mpileaks ^mpich', installed=any) == []
-    assert database.query('callpath ^mpich', installed=any) == []
+    assert mutable_database.query('mpileaks ^mpich', installed=any) == []
+    assert mutable_database.query('callpath ^mpich', installed=any) == []
 
     # mpich ref count updated properly.
-    mpich_rec = database.get_record('mpich')
+    mpich_rec = mutable_database.get_record('mpich')
     assert mpich_rec.ref_count == 0
 
 
@@ -596,18 +597,18 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
         _check_db_sanity(mutable_database)
 
 
-def test_external_entries_in_db(database):
-    rec = database.get_record('mpileaks ^zmpi')
+def test_external_entries_in_db(mutable_database):
+    rec = mutable_database.get_record('mpileaks ^zmpi')
     assert rec.spec.external_path is None
     assert rec.spec.external_module is None
 
-    rec = database.get_record('externaltool')
+    rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
-    rec = database.get_record('externaltool')
+    rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is True
@@ -646,3 +647,13 @@ def test_old_external_entries_prefix(mutable_database):
     assert record.path is None
     assert record.spec._prefix is None
     assert record.spec.prefix == record.spec.external_path
+
+
+def test_uninstall_by_spec(mutable_database):
+    with mutable_database.write_transaction():
+        for spec in mutable_database.query():
+            if spec.package.installed:
+                spack.package.PackageBase.uninstall_by_spec(spec, force=True)
+            else:
+                mutable_database.remove(spec)
+    assert len(mutable_database.query()) == 0

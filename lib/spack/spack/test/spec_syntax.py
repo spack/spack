@@ -310,15 +310,15 @@ class TestSpecSyntax(object):
         assert len(specs) == 2
 
     @pytest.mark.db
-    def test_ambiguous_hash(self, database):
+    def test_ambiguous_hash(self, mutable_database):
         x1 = Spec('a')
         x1._hash = 'xy'
         x1._concrete = True
         x2 = Spec('a')
         x2._hash = 'xx'
         x2._concrete = True
-        database.add(x1, spack.store.layout)
-        database.add(x2, spack.store.layout)
+        mutable_database.add(x1, spack.store.layout)
+        mutable_database.add(x2, spack.store.layout)
 
         # ambiguity in first hash character
         self._check_raises(AmbiguousHashError, ['/x'])
