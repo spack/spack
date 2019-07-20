@@ -37,18 +37,27 @@ config:
 
   # Temporary locations Spack can try to use for builds.
   #
-  # Spack will use the first one it finds that exists and is writable.
-  # You can use $tempdir to refer to the system default temp directory
-  # (as returned by tempfile.gettempdir()).
+  # Recommended options are given below.
   #
-  # A value of $spack/var/spack/stage indicates that Spack should run
-  # builds directly inside its install directory without staging them in
+  # Builds can be faster in temporary directories on some (e.g., HPC) systems.
+  # Specifying `$tempdir` will ensure use of the system default temporary
+  # directory (as returned by `tempfile.gettempdir()`).  Spack will append
+  # `spack-stage` and, if the username is not already in the path, the value
+  # of `$user` to the path.  The latter is used to avoid conflicts between
+  # users in shared temporary spaces.
+  #
+  # Another option that prevents conflicts and potential permission issues is
+  # to specify `~/.spack/stage`, which ensures each user builds in their home
+  # directory.
+  #
+  # A more traditional path uses the value of `$spack/var/spack/stage`, which
+  # builds directly inside Spack's instance without staging them in a
   # temporary space.
   #
   # The build stage can be purged with `spack clean --stage`.
   build_stage:
-    - $tempdir
-    - $spack/var/spack/stage
+    - $tempdir/spack-stage
+    - ~/.spack/stage
 
 
   # Cache directory for already downloaded source tarballs and archived

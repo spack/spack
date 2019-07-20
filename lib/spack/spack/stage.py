@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import grp
 import os
 import stat
 import sys
 import errno
 import hashlib
-import tempfile
 import getpass
 from six import string_types
 from six import iteritems
@@ -16,7 +16,7 @@ from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
+from llnl.util.filesystem import remove_linked_tree, chgrp, copy_mode
 
 import spack.paths
 import spack.caches
@@ -28,45 +28,66 @@ import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 
+
+# The well-known stage source subdirectory name.
 _source_path_subdir = 'spack-src'
-_stage_prefix = 'spack-stage-'
+
+
+def _adjust_stage_access(path):
+    """
+    Adjust permissions and group for the stage directory but only if it is in
+    ``$tempdir`` since it is shared on some systems.
+
+    The caller is responsible for ensuring the canonicalized path exists.
+    """
+    temp_path = canonicalize_path('$tempdir')
+    if path.startswith(temp_path) and path != temp_path:
+        prefix = os.path.commonprefix([temp_path, path])
+        user = getpass.getuser()
+        group = grp.getgrgid(os.stat(prefix).st_gid)[0]
+        parts = path[len(prefix):].strip(os.path.sep).split(os.path.sep)
+        for part in parts:
+            if part != user:
+                prefix = os.path.join(prefix, part)
+                try:
+                    copy_mode(temp_path, prefix)
+                    chgrp(prefix, group)
+                except OSError as e:
+                    tty.debug('OSError changing access to {0}: {1}'.
+                              format(prefix, str(e)))
+            else:
+                break
 
 
 def _first_accessible_path(paths):
-    """Find a tmp dir that exists that we can access."""
+    """Find the first path is accessible, creating if needed."""
     for path in paths:
         try:
-            # try to create the path if it doesn't exist.
+            # Try to create the path if it doesn't exist.
             path = canonicalize_path(path)
+            existed = os.path.exists(path)
             mkdirp(path)
 
-            # ensure accessible
-            if not can_access(path):
-                continue
-
-            # return it if successful.
-            return path
+            if can_access(path):
+                if not existed:
+                    _adjust_stage_access(path)
+                return path
 
         except OSError as e:
-            tty.debug('OSError while checking temporary path %s: %s' % (
+            tty.debug('OSError while checking stage path %s: %s' % (
                       path, str(e)))
-            continue
 
     return None
 
 
-# cached temporary root
-_tmp_root = None
-_use_tmp_stage = True
+# Cached temporary stage path root
+_stage_root = None
 
 
-def get_tmp_root():
-    global _tmp_root, _use_tmp_stage
+def get_stage_root():
+    global _stage_root
 
-    if not _use_tmp_stage:
-        return None
-
-    if _tmp_root is None:
+    if _stage_root is None:
         candidates = spack.config.get('config:build_stage')
         if isinstance(candidates, string_types):
             candidates = [candidates]
@@ -75,23 +96,16 @@ def get_tmp_root():
         if not path:
             raise StageError("No accessible stage paths in:", candidates)
 
-        # Return None to indicate we're using a local staging area.
-        if path == canonicalize_path(spack.paths.stage_path):
-            _use_tmp_stage = False
-            return None
-
         # Ensure that any temp path is unique per user, so users don't
         # fight over shared temporary space.
         user = getpass.getuser()
         if user not in path:
-            path = os.path.join(path, user, 'spack-stage')
-        else:
-            path = os.path.join(path, 'spack-stage')
+            path = os.path.join(path, user)
+            mkdirp(path)
 
-        mkdirp(path)
-        _tmp_root = path
+        _stage_root = path
 
-    return _tmp_root
+    return _stage_root
 
 
 class Stage(object):
@@ -165,6 +179,17 @@ class Stage(object):
                  is deleted on exit when no exceptions are raised.
                  Pass True to keep the stage intact even if no
                  exceptions are raised.
+
+            path
+                 If provided, the stage path to use for associated builds.
+
+            lock
+                 True if the stage directory file lock is to be used, False
+                 otherwise.
+
+            search_fn
+                 The search function that provides the fetch strategy
+                 instance.
         """
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
@@ -183,21 +208,22 @@ class Stage(object):
         self.skip_checksum_for_mirror = True
 
         self.srcdir = None
-
-        # TODO : this uses a protected member of tempfile, but seemed the only
-        # TODO : way to get a temporary name besides, the temporary link name
-        # TODO : won't be the same as the temporary stage area in tmp_root
         self.name = name
-        if name is None:
-            self.name = _stage_prefix + next(tempfile._get_candidate_names())
         self.mirror_path = mirror_path
 
-        # Try to construct here a temporary name for the stage directory
-        # If this is a named stage, then construct a named path.
+        # Use the provided path or construct a path, which is named if this is
+        # a named stage.
         if path is not None:
             self.path = path
         else:
-            self.path = os.path.join(spack.paths.stage_path, self.name)
+            self.path = get_stage_root()
+            if self.name is not None:
+                self.path = os.path.join(self.path, self.name)
+
+        if self.name is None:
+            # TODO: Is it appropriate to use the stage root dir as the name
+            # for locking when not a named stage?
+            self.name = os.path.basename(self.path)
 
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
@@ -210,7 +236,7 @@ class Stage(object):
             if self.name not in Stage.stage_locks:
                 sha1 = hashlib.sha1(self.name.encode('utf-8')).digest()
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-                stage_lock_path = os.path.join(spack.paths.stage_path, '.lock')
+                stage_lock_path = os.path.join(get_stage_root(), '.lock')
 
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
                     stage_lock_path, lock_id, 1)
@@ -253,44 +279,6 @@ class Stage(object):
 
         if self._lock is not None:
             self._lock.release_write()
-
-    def _need_to_create_path(self):
-        """Makes sure nothing weird has happened since the last time we
-           looked at path.  Returns True if path already exists and is ok.
-           Returns False if path needs to be created."""
-        # Path doesn't exist yet.  Will need to create it.
-        if not os.path.exists(self.path):
-            return True
-
-        # Path exists but points at something else.  Blow it away.
-        if not os.path.isdir(self.path):
-            os.unlink(self.path)
-            return True
-
-        # Path looks ok, but need to check the target of the link.
-        if os.path.islink(self.path):
-            tmp_root = get_tmp_root()
-            if tmp_root is not None:
-                real_path = os.path.realpath(self.path)
-                real_tmp = os.path.realpath(tmp_root)
-
-                # If we're using a tmp dir, it's a link, and it points at the
-                # right spot, then keep it.
-                if (real_path.startswith(real_tmp) and
-                        os.path.exists(real_path)):
-                    return False
-                else:
-                    # otherwise, just unlink it and start over.
-                    os.unlink(self.path)
-                    return True
-
-            else:
-                # If we're not tmp mode, then it's a link and we want a
-                # directory.
-                os.unlink(self.path)
-                return True
-
-        return False
 
     @property
     def expected_archive_files(self):
@@ -341,6 +329,11 @@ class Stage(object):
     def source_path(self):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
+
+    @property
+    def managed_by_spack(self):
+        """Staging is, in general, managed by Spack."""
+        return True
 
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
@@ -453,30 +446,16 @@ class Stage(object):
         self.fetcher.reset()
 
     def create(self):
-        """Creates the stage directory.
-
-        If get_tmp_root() is None, the stage directory is created
-        directly under spack.paths.stage_path, otherwise this will attempt to
-        create a stage in a temporary directory and link it into
-        spack.paths.stage_path.
-
         """
-        # Create the top-level stage directory
-        mkdirp(spack.paths.stage_path)
-        remove_if_dead_link(self.path)
+        Ensures the top-level (config:build_stage) directory exists.
+        """
+        # Emulate file permissions for tempfile.mkdtemp.
+        if not os.path.exists(self.path):
+            mkdirp(self.path, mode=stat.S_IRWXU)
+        elif not os.path.isdir(self.path):
+            os.remove(self.path)
+            mkdirp(self.path, mode=stat.S_IRWXU)
 
-        # If a tmp_root exists then create a directory there and then link it
-        # in the stage area, otherwise create the stage directory in self.path
-        if self._need_to_create_path():
-            tmp_root = get_tmp_root()
-            if tmp_root is not None:
-                # tempfile.mkdtemp already sets mode 0700
-                tmp_dir = tempfile.mkdtemp('', _stage_prefix, tmp_root)
-                tty.debug('link %s -> %s' % (self.path, tmp_dir))
-                os.symlink(tmp_dir, self.path)
-            else:
-                # emulate file permissions for tempfile.mkdtemp
-                mkdirp(self.path, mode=stat.S_IRWXU)
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
         self.created = True
@@ -501,6 +480,9 @@ class ResourceStage(Stage):
     def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
         super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
         self.root_stage = root
+        # Ensure the resource has its own stage path
+        if self.path == root.path:
+            self.path = os.path.join(self.path, 'resource-stage')
         self.resource = resource
 
     def restage(self):
@@ -560,7 +542,7 @@ class ResourceStage(Stage):
 
 @pattern.composite(method_list=[
     'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
-    'destroy', 'cache_local'])
+    'destroy', 'cache_local', 'managed_by_spack'])
 class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
@@ -629,6 +611,11 @@ class DIYStage(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
+    @property
+    def managed_by_spack(self):
+        """DIY staging is, by definition, not managed by Spack."""
+        return False
+
     def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
 
@@ -657,17 +644,18 @@ class DIYStage(object):
         tty.msg("Sources for DIY stages are not cached")
 
 
-def ensure_access(file=spack.paths.stage_path):
+def ensure_access(file_):
     """Ensure we can access a directory and die with an error if we can't."""
-    if not can_access(file):
-        tty.die("Insufficient permissions for %s" % file)
+    if not can_access(file_):
+        tty.die("Insufficient permissions for %s" % file_)
 
 
 def purge():
     """Remove all build directories in the top-level stage path."""
-    if os.path.isdir(spack.paths.stage_path):
-        for stage_dir in os.listdir(spack.paths.stage_path):
-            stage_path = os.path.join(spack.paths.stage_path, stage_dir)
+    root = get_stage_root()
+    if os.path.isdir(root):
+        for stage_dir in os.listdir(root):
+            stage_path = os.path.join(root, stage_dir)
             remove_linked_tree(stage_path)
 
 

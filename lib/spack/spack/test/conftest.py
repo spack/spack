@@ -122,13 +122,13 @@ def reset_compiler_cache():
 
 
 @pytest.fixture(scope='session', autouse=True)
-def mock_stage(tmpdir_factory):
+def mock_stage(tmpdir_factory, config):
     """Mocks up a fake stage directory for use by tests."""
-    stage_path = spack.paths.stage_path
+    current = spack.config.get('config:build_stage')
     new_stage = str(tmpdir_factory.mktemp('mock_stage'))
-    spack.paths.stage_path = new_stage
+    spack.config.set('config', {'build_stage': new_stage}, scope='user')
     yield new_stage
-    spack.paths.stage_path = stage_path
+    spack.config.set('config', {'build_stage': current}, scope='user')
 
 
 @pytest.fixture(scope='session')
@@ -176,14 +176,15 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
     yield
 
     files_in_stage = set()
-    if os.path.exists(spack.paths.stage_path):
+    stage_path = spack.stage.get_stage_root()
+    if os.path.exists(stage_path):
         files_in_stage = set(
-            os.listdir(spack.paths.stage_path)) - ignore_stage_files
+            os.listdir(stage_path)) - ignore_stage_files
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(spack.paths.stage_path, f)
+            path = os.path.join(stage_path, f)
             remove_whatever_it_is(path)
     else:
         ignore_stage_files |= files_in_stage
@@ -311,7 +312,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     shutil.rmtree(str(tmpdir))
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope

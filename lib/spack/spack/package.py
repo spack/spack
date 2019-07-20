@@ -1756,9 +1756,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 else:
                     partial = True
 
-        stage_is_managed_in_spack = self.stage.path.startswith(
-            spack.paths.stage_path)
-        if restage and stage_is_managed_in_spack:
+        if restage and self.stage.managed_by_spack:
             self.stage.destroy()
             self.stage.create()
 

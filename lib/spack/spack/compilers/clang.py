@@ -15,6 +15,7 @@ import spack.paths
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
+import spack.stage
 
 
 #: compiler symlink mappings for mixed f77 compilers
@@ -282,7 +283,7 @@ class Clang(Compiler):
             raise OSError(msg)
 
         real_root = os.path.dirname(os.path.dirname(real_root))
-        developer_root = os.path.join(spack.paths.stage_path,
+        developer_root = os.path.join(spack.stage.get_stage_root(),
                                       'xcode-select',
                                       self.name,
                                       str(self.version))
