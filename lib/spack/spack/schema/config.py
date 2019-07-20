@@ -38,7 +38,15 @@ properties = {
                 'additionalProperties': False,
                 'properties': {
                     'tcl': {'type': 'string'},
-                    'lmod': {'type': 'string'}
+                    'lmod': {'type': 'string'},
+                    'dotkit': {'type': 'string'},
+                },
+                'deprecatedProperties': {
+                    'properties': ['dotkit'],
+                    'message': 'specifying a "{property}" module root has no '
+                               'effect [support for {property} module files'
+                               ' has been dropped]',
+                    'error': False
                 },
             },
             'source_cache': {'type': 'string'},
