@@ -219,7 +219,8 @@ def test_clang_flags():
     supported_flag_test("pic_flag", "-fPIC", "gcc@4.0")
 
     # Apple Clang.
-    unsupported_flag_test("openmp_flag", "clang@2.0.0-apple")
+    supported_flag_test(
+        "openmp_flag", "-Xpreprocessor -fopenmp", "clang@2.0.0-apple")
     unsupported_flag_test("cxx11_flag", "clang@2.0.0-apple")
     supported_flag_test("cxx11_flag", "-std=c++11", "clang@4.0.0-apple")
     unsupported_flag_test("cxx14_flag", "clang@5.0.0-apple")
