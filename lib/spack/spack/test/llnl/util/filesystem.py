@@ -107,6 +107,13 @@ class TestCopyTree:
 
             assert os.path.exists('dest/sub/directory/a/b/2')
 
+    def test_parent_dir(self, stage):
+        """Test copying to from a parent directory."""
+
+        with pytest.raises(ValueError, matches="Cannot copy"):
+            with fs.working_dir(str(stage)):
+                fs.copy_tree('source', 'source/sub/directory')
+
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
 

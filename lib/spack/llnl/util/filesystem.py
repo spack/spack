@@ -352,6 +352,12 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     src = os.path.abspath(src)
     dest = os.path.abspath(dest)
 
+    # Stop early to avoid unnecessary recursion if being asked to copy from a
+    # parent directory.
+    if dest.startswith(src):
+        raise ValueError('Cannot copy ancestor directory {0} into {1}'.
+                         format(src, dest))
+
     for s, d in traverse_tree(src, dest, order='pre',
                               follow_symlinks=not symlinks,
                               ignore=ignore,
