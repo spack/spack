@@ -600,8 +600,8 @@ class Environment(object):
         """Copy user_specs from a read-in lockfile."""
         self.spec_lists = {
             user_speclist_name: SpecList(
-                user_speclist_name, [Spec(s)
-                                     for s in self.concretized_user_specs]
+                user_speclist_name,
+                [str(s) for s in self.concretized_user_specs]
             )
         }
 
