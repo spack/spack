@@ -406,45 +406,58 @@ def _populate(mock_db):
         _install('externaltest')
 
 
+@pytest.fixture(scope='session')
+def _store_dir_and_cache(tmpdir_factory):
+    """Returns the directory where to build the mock database and
+    where to cache it.
+    """
+    store = tmpdir_factory.mktemp('mock_store')
+    cache = tmpdir_factory.mktemp('mock_store_cache')
+    return store, cache
+
+
 @pytest.fixture(scope='module')
-def database(tmpdir_factory, mock_packages, config):
-    """Creates a mock database with some packages installed note that
-    the ref count for dyninst here will be 3, as it's recycled
+def database(tmpdir_factory, mock_packages, config, _store_dir_and_cache):
+    """Creates a read-only mock database with some packages installed note
+    that the ref count for dyninst here will be 3, as it's recycled
     across each install.
     """
-    # save the real store
     real_store = spack.store.store
+    store_path, store_cache = _store_dir_and_cache
 
-    # Make a fake install directory
-    install_path = tmpdir_factory.mktemp('install_for_database')
+    mock_store = spack.store.Store(str(store_path))
+    spack.store.store = mock_store
 
-    # Make fake store (database and install layout)
-    tmp_store = spack.store.Store(str(install_path))
-    spack.store.store = tmp_store
+    # If the cache does not exist populate the store and create it
+    if not os.path.exists(str(store_cache.join('.spack-db'))):
+        _populate(mock_store.db)
+        store_path.copy(store_cache, mode=True, stat=True)
 
-    _populate(tmp_store.db)
+    # Make the database read-only to ensure we can't modify entries
+    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
-    yield tmp_store.db
+    yield mock_store.db
 
-    with tmp_store.db.write_transaction():
-        for spec in tmp_store.db.query():
-            if spec.package.installed:
-                PackageBase.uninstall_by_spec(spec, force=True)
-            else:
-                tmp_store.db.remove(spec)
-
-    install_path.remove(rec=1)
+    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
     spack.store.store = real_store
 
 
 @pytest.fixture(scope='function')
-def mutable_database(database):
-    """For tests that need to modify the database instance."""
+def mutable_database(database, _store_dir_and_cache):
+    """Writeable version of the fixture, restored to its initial state
+    after each test.
+    """
+    # Make the database writeable, as we are going to modify it
+    store_path, store_cache = _store_dir_and_cache
+    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
+
     yield database
-    with database.write_transaction():
-        for spec in spack.store.db.query():
-            PackageBase.uninstall_by_spec(spec, force=True)
-    _populate(database)
+
+    # Restore the initial state by copying the content of the cache back into
+    # the store and making the database read-only
+    store_path.remove(rec=1)
+    store_cache.copy(store_path, mode=True, stat=True)
+    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
 
 @pytest.fixture(scope='function')
