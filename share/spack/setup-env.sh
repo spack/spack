@@ -7,7 +7,7 @@
 ########################################################################
 #
 # This file is part of Spack and sets up the spack environment for bash,
-# zsh, and dash (sh).  This includes environment-modules and lmod support,
+# zsh, and dash (sh).  This includes environment modules and lmod support,
 # and it also puts spack in your path. The script also checks that at least
 # module support exists, and provides suggestions if it doesn't. Source
 # it like this:
@@ -17,10 +17,10 @@
 ########################################################################
 # This is a wrapper around the spack command that forwards calls to
 # 'spack load' and 'spack unload' to shell functions.  This in turn
-# allows them to be used to invoke environment-modules functions.
+# allows them to be used to invoke environment modules functions.
 #
 # 'spack load' is smarter than just 'load' because it converts its
-# arguments into a unique Spack spec that is then passed to environment-modules
+# arguments into a unique Spack spec that is then passed to module
 # commands.  This allows the user to use packages without knowing all
 # their installation details.
 #

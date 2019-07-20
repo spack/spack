@@ -6,7 +6,7 @@
 
 #
 # This file is part of Spack and sets up the spack environment for
-# csh and tcsh.  This includes environment-modules and lmod support, and
+# csh and tcsh.  This includes environment modules and lmod support, and
 # it also puts spack in your path.  Source it like this:
 #
 #    setenv SPACK_ROOT /path/to/spack
@@ -24,7 +24,7 @@ if ($?SPACK_ROOT) then
     _spack_pathadd PATH "$SPACK_ROOT/bin"
     eval `spack --print-shell-vars csh`
 
-    # Set up modules search paths in the user environment
+    # Set up module search paths in the user environment
     set tcl_roots = `echo $_sp_tcl_roots:q | sed 's/:/ /g'`
     foreach tcl_root ($tcl_roots:q)
         _spack_pathadd MODULEPATH "$tcl_root/$_sp_sys_type"
