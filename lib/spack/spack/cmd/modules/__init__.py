@@ -59,6 +59,11 @@ def setup_parser(subparser):
         help='display full path to module file',
         action='store_true'
     )
+    find_parser.add_argument(
+        '--latest',
+        help='use the last installed package when multiple ones match',
+        action='store_true'
+    )
     arguments.add_common_arguments(
         find_parser, ['constraint', 'recurse_dependencies']
     )
@@ -71,6 +76,11 @@ def setup_parser(subparser):
     loads_parser = sp.add_parser(
         'loads',
         help='prompt the list of modules associated with a constraint'
+    )
+    loads_parser.add_argument(
+        '--latest',
+        help='use the last installed package when multiple ones match',
+        action='store_true'
     )
     add_loads_arguments(loads_parser)
     arguments.add_common_arguments(loads_parser, ['constraint'])
@@ -125,6 +135,12 @@ def one_spec_or_raise(specs):
 def loads(module_type, specs, args, out=sys.stdout):
     """Prompt the list of modules associated with a list of specs"""
 
+    if args.latest:
+        def install_date(s):
+            _, record = spack.store.db.query_by_spec_hash(s.dag_hash())
+            return record.installation_time
+        specs = sorted(specs, key=install_date, reverse=True)[:1]
+
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
         specs_from_user_constraint = specs[:]
@@ -177,6 +193,11 @@ def find(module_type, specs, args):
     """Returns the module file "use" name if there's a single match. Raises
     error messages otherwise.
     """
+    if args.latest:
+        def install_date(s):
+            _, record = spack.store.db.query_by_spec_hash(s.dag_hash())
+            return record.installation_time
+        specs = sorted(specs, key=install_date, reverse=True)[:1]
 
     spec = one_spec_or_raise(specs)
 

@@ -31,6 +31,7 @@ packages:
       - highfive~mpi@2.0
       - intel-mkl@2018.1.163
       - jdk@1.8.0_191-b12
+      - julia
       - libjpeg@1.2.90
       - libjpeg-turbo@1.5.90
       - libxml2@2.9.8

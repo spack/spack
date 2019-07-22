@@ -131,7 +131,7 @@ function spack {
             _sp_subcommand_args=""
             _sp_module_args=""
             while [[ "$1" =~ ^- ]]; do
-                if [ "$1" = "-r" -o "$1" = "--dependencies" ]; then
+                if [ "$1" = "-r" -o "$1" = "--dependencies" -o "$1" = "--latest" ]; then
                     _sp_subcommand_args="$_sp_subcommand_args $1"
                 else
                     _sp_module_args="$_sp_module_args $1"

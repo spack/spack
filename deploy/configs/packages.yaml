@@ -49,6 +49,8 @@ packages:
         version: [2.16]
     intel-mkl:
         version: [2018.3.222]
+    julia:
+        variants: +external_llvm
     libjpeg:
         paths:
             libjpeg@1.2.90: /usr
@@ -65,6 +67,8 @@ packages:
         paths:
             libtool@2.4.2: /usr
         version: [2.4.2]
+    llvm:
+        variants: +link_dylib
     m4:
         paths:
             m4@1.4.16: /usr
@@ -118,10 +122,6 @@ packages:
         paths:
             tar@1.26: /usr
         version: [1.26]
-    #tcl:
-    #    paths:
-    #        tcl@8.5.13: /usr
-    #    version: [8.5.13]
     tk:
         paths:
             tk@8.5.13: /usr

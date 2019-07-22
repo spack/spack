@@ -29,6 +29,7 @@ modules:
     whitelist:
       - cuda
       - cudnn
+      - julia
       - python
       - spark
     blacklist:

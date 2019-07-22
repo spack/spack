@@ -5,6 +5,7 @@
 
 import os
 import os.path
+import re
 
 import spack.build_environment
 import spack.fetch_strategy
@@ -12,6 +13,9 @@ import spack.package
 from spack.reporter import Reporter
 
 __all__ = ['JUnit']
+
+
+ANTI_ANSI = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 
 class JUnit(Reporter):
@@ -27,4 +31,5 @@ class JUnit(Reporter):
             env = spack.tengine.make_environment()
             template = env.get_template(self.template_file)
             formatted = template.render(report_data)
-            fd.write(formatted.encode('utf-8'))
+            # Pre-emptively remove all ANSI escape sequences
+            fd.write(ANTI_ANSI.sub('', formatted.encode('utf-8')))

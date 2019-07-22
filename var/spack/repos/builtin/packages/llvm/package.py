@@ -65,6 +65,7 @@ class Llvm(CMakePackage):
     depends_on('python@2.7:2.8', when='@:4.999')
     depends_on('python')
     depends_on('py-lit', type=('build', 'run'))
+    depends_on('zlib')
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')

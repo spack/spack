@@ -270,7 +270,9 @@ configure_compilers() {
     while read -r line; do
         set +o nounset
         log "...processing ${line}"
-        $(spack module tcl loads ${line}|tail -n 1)
+        cmd=$(spack module tcl loads --latest ${line}|tail -n 1)
+        echo "${cmd}"
+        ${cmd}
         set -o nounset
         if [[ ${line} != *"intel-parallel-studio"* ]]; then
             spack compiler find --scope=user
@@ -300,7 +302,9 @@ configure_compilers() {
                 cp $template $PGI_DIR/localrc.$node || true
             done
         fi
-        spack unload ${line}
+        cmd=${cmd/load/unload}
+        echo "${cmd}"
+        ${cmd}
     done
 
     sed  -i 's#.*f\(77\|c\): null#      f\1: /usr/bin/gfortran#' ${HOME}/.spack/compilers.yaml
@@ -641,7 +645,7 @@ EOF
     . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
     if [[ "${export_packages[${what}]}" = "yes" ]]; then
         log "augmenting packages.yaml"
-        spack export --scope=user --module tcl --explicit --exclude 'py-.*|neuron|hdf5' > "${HOME}/packages.yaml"
+        spack export --scope=user --module tcl --explicit --exclude 'py-.*|neuron|hdf5|intel-parallel-studio|pgi' > "${HOME}/packages.yaml"
     else
         log "copying packages.yaml"
         cp "${HOME}/.spack/packages.yaml" "${HOME}"

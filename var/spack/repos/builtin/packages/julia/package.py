@@ -9,64 +9,61 @@ import os
 import sys
 
 
-class Julia(Package):
+class Julia(MakefilePackage):
     """The Julia Language: A fresh approach to technical computing"""
 
     homepage = "http://julialang.org"
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 
+    extendable = True
+
     version('master', branch='master')
-    version('0.6.2', '255d80bc8d56d5f059fe18f0798e32f6')
-    version('release-0.5', branch='release-0.5')
-    version('0.5.2', '8c3fff150a6f96cf0536fb3b4eaa5cbb')
-    version('0.5.1', 'bce119b98f274e0f07ce01498c463ad5')
-    version('0.5.0', 'b61385671ba74767ab452363c43131fb')
-    version('release-0.4', branch='release-0.4')
-    version('0.4.7', '75a7a7dd882b7840829d8f165e9b9078')
-    version('0.4.6', 'd88db18c579049c23ab8ef427ccedf5d')
-    version('0.4.5', '69141ff5aa6cee7c0ec8c85a34aa49a6')
-    version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
+    version('1.2.0-rc1', sha256='e301421b869c6ecea8c3ae06bfdddf67843d16e694973b4958924914249afa46')
+    version('1.1.1', sha256='3c5395dd3419ebb82d57bcc49dc729df3b225b9094e74376f8c649ee35ed79c2')
 
     # TODO: Split these out into jl-hdf5, jl-mpi packages etc.
-    variant("cxx", default=False, description="Prepare for Julia Cxx package")
-    variant("hdf5", default=False, description="Install Julia HDF5 package")
-    variant("mpi", default=True, description="Install Julia MPI package")
-    variant("plot", default=False,
-            description="Install Julia plotting packages")
-    variant("python", default=False,
-            description="Install Julia Python package")
-    variant("simd", default=False, description="Install Julia SIMD package")
-
-    patch('gc.patch', when='@0.4:0.4.5')
-    patch('openblas.patch', when='@0.4:0.4.5')
 
     variant('binutils', default=sys.platform != 'darwin',
             description="Build via binutils")
 
+    variant("external_llvm", default=False, description="Use an external LLVM")
+
     # Build-time dependencies:
-    # depends_on("awk")
     depends_on("m4", type="build")
-    # depends_on("pkgconfig")
+    depends_on("pkgconfig")
 
     # Combined build-time and run-time dependencies:
     # (Yes, these are run-time dependencies used by Julia's package manager.)
     depends_on("binutils", when='+binutils')
     depends_on("cmake @2.8:")
-    depends_on("curl")
-    depends_on("git", when='@:0.4')
-    depends_on("git", when='@release-0.4')
+    depends_on("git")
     depends_on("openssl")
-    depends_on("python@2.7:2.8")
+
+    # 1.2 and higher can be built with an external LLVM installation
+    depends_on("llvm@7: +link_dylib", when="+external_llvm")
+    # Python needed to build heavily patched included LLVM
+    depends_on("python@2.7:2.8", when="@:1.2~external_llvm")
 
     # Run-time dependencies:
-    # depends_on("arpack")
-    # depends_on("fftw +float")
-    # depends_on("gmp")
-    # depends_on("libgit")
-    # depends_on("mpfr")
-    # depends_on("openblas")
-    # depends_on("pcre2")
+
+    # depends_on("blas")
+    # depends_on("lapack")
+
+    depends_on("pcre2")
+    depends_on("gmp")
+    depends_on("mpfr")
+    depends_on("suite-sparse")
+
+    # depends_on("libuv")
+    depends_on("curl")
+    depends_on("libgit2")
+    # depends_on("libm")
+    # depends_on("libxml2")
+    # # depends_on("lzma")
+    # depends_on("ncurses")
+    # depends_on("zlib")
+
 
     # ARPACK: Requires BLAS and LAPACK; needs to use the same version
     # as Julia.
@@ -92,12 +89,7 @@ class Julia(Package):
     # USE_SYSTEM_UTF8PROC=0
     # USE_SYSTEM_LIBGIT2=0
 
-    # Run-time dependencies for Julia packages:
-    depends_on("hdf5", when="+hdf5", type="run")
-    depends_on("mpi", when="+mpi", type="run")
-    depends_on("py-matplotlib", when="+plot", type="run")
-
-    def install(self, spec, prefix):
+    def edit(self, spec, prefix):
         # Julia needs git tags
         if os.path.isfile(".git/shallow"):
             git = which("git")
@@ -108,119 +100,39 @@ class Julia(Package):
         # still use Spack's compilers, even if we don't specify them
         # explicitly.
         options = [
-            # "CC=cc",
-            # "CXX=c++",
-            # "FC=fc",
-            # "USE_SYSTEM_ARPACK=1",
-            "override USE_SYSTEM_CURL=1",
-            # "USE_SYSTEM_FFTW=1",
-            # "USE_SYSTEM_GMP=1",
-            # "USE_SYSTEM_MPFR=1",
-            # "USE_SYSTEM_PCRE=1",
-            "prefix=%s" % prefix]
-        if "+cxx" in spec:
-            if "@master" not in spec:
-                raise InstallError(
-                    "Variant +cxx requires the @master version of Julia")
-            options += [
-                "BUILD_LLVM_CLANG=1",
-                "LLVM_ASSERTIONS=1",
-                "USE_LLVM_SHLIB=1"]
+            "USE_BINARYBUILDER=0",
+            "USE_SYSTEM_LLVM={0}".format(1 if spec.satisfies('+external_llvm') else 0),
+            "USE_SYSTEM_PCRE=1",
+            "USE_SYSTEM_LIBM=1",
+            # "USE_SYSTEM_BLAS=1",
+            # "USE_SYSTEM_LAPACK=1",
+            "USE_SYSTEM_GMP=1",
+            "USE_SYSTEM_MPFR=1",
+            "USE_SYSTEM_SUITESPARSE=1",
+            # "USE_SYSTEM_LIBUV=1",
+            "USE_SYSTEM_CURL=1",
+            "USE_SYSTEM_LIBGIT2=1",
+
+            # START Can be removed in future versions!
+            "override USE_BINARYBUILDER_LLVM=0",
+            "override USE_BINARYBUILDER_PCRE=0",
+            "override USE_BINARYBUILDER_OPENBLAS=0",
+            "override USE_BINARYBUILDER_OPENLIBM=0",
+            "override USE_BINARYBUILDER_SUITESPARSE=0",
+            "override USE_BINARYBUILDER_MBEDTLS=0",
+            "override USE_BINARYBUILDER_LIBSSH2=0",
+            "override USE_BINARYBUILDER_CURL=0",
+            "override USE_BINARYBUILDER_LIBGIT2=0",
+            "override USE_BINARYBUILDER_PCRE=0",
+            "override USE_BINARYBUILDER_LIBUV=0",
+            "override USE_BINARYBUILDER_UNWIND=0",
+            # END remove
+
+            # "# LIBBLAS={0}".format(spec["blas"].libs),
+            # "LIBBLASNAME={0}".format(spec["blas"].name),
+            # "# LIBLAPACK={0}".format(spec["lapack"].libs),
+            # "LIBLAPACKNAME={0}".format(spec["lapack"].name),
+            "prefix={0}".format(prefix)
+        ]
         with open('Make.user', 'w') as f:
             f.write('\n'.join(options) + '\n')
-        make()
-        make("install")
-
-        # Julia's package manager needs a certificate
-        cacert_dir = join_path(prefix, "etc", "curl")
-        mkdirp(cacert_dir)
-        cacert_file = join_path(cacert_dir, "cacert.pem")
-        curl = which("curl")
-        curl("--create-dirs",
-             "--output", cacert_file,
-             "https://curl.haxx.se/ca/cacert.pem")
-
-        # Put Julia's compiler cache into a private directory
-        cachedir = join_path(prefix, "var", "julia", "cache")
-        mkdirp(cachedir)
-
-        # Store Julia packages in a private directory
-        pkgdir = join_path(prefix, "var", "julia", "pkg")
-        mkdirp(pkgdir)
-
-        # Configure Julia
-        with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
-                  "a") as juliarc:
-            if "@master" in spec or "@release-0.5" in spec or "@0.5:" in spec:
-                # This is required for versions @0.5:
-                juliarc.write(
-                    '# Point package manager to working certificates\n')
-                juliarc.write('LibGit2.set_ssl_cert_locations("%s")\n' %
-                              cacert_file)
-                juliarc.write('\n')
-            juliarc.write('# Put compiler cache into a private directory\n')
-            juliarc.write('empty!(Base.LOAD_CACHE_PATH)\n')
-            juliarc.write('unshift!(Base.LOAD_CACHE_PATH, "%s")\n' % cachedir)
-            juliarc.write('\n')
-            juliarc.write('# Put Julia packages into a private directory\n')
-            juliarc.write('ENV["JULIA_PKGDIR"] = "%s"\n' % pkgdir)
-            juliarc.write('\n')
-
-        # Install some commonly used packages
-        julia = spec['julia'].command
-        julia("-e", 'Pkg.init(); Pkg.update()')
-
-        # Install HDF5
-        if "+hdf5" in spec:
-            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
-                      "a") as juliarc:
-                juliarc.write('# HDF5\n')
-                juliarc.write('push!(Libdl.DL_LOAD_PATH, "%s")\n' %
-                              spec["hdf5"].prefix.lib)
-                juliarc.write('\n')
-            julia("-e", 'Pkg.add("HDF5"); using HDF5')
-            julia("-e", 'Pkg.add("JLD"); using JLD')
-
-        # Install MPI
-        if "+mpi" in spec:
-            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
-                      "a") as juliarc:
-                juliarc.write('# MPI\n')
-                juliarc.write('ENV["JULIA_MPI_C_COMPILER"] = "%s"\n' %
-                              join_path(spec["mpi"].prefix.bin, "mpicc"))
-                juliarc.write('ENV["JULIA_MPI_Fortran_COMPILER"] = "%s"\n' %
-                              join_path(spec["mpi"].prefix.bin, "mpifort"))
-                juliarc.write('\n')
-            julia("-e", 'Pkg.add("MPI"); using MPI')
-
-        # Install Python
-        if "+python" in spec or "+plot" in spec:
-            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
-                      "a") as juliarc:
-                juliarc.write('# Python\n')
-                juliarc.write('ENV["PYTHON"] = "%s"\n' % spec["python"].home)
-                juliarc.write('\n')
-            # Python's OpenSSL package installer complains:
-            # Error: PREFIX too long: 166 characters, but only 128 allowed
-            # Error: post-link failed for: openssl-1.0.2g-0
-            julia("-e", 'Pkg.add("PyCall"); using PyCall')
-
-        if "+plot" in spec:
-            julia("-e", 'Pkg.add("PyPlot"); using PyPlot')
-            julia("-e", 'Pkg.add("Colors"); using Colors')
-            # These require maybe gtk and image-magick
-            julia("-e", 'Pkg.add("Plots"); using Plots')
-            julia("-e", 'Pkg.add("PlotRecipes"); using PlotRecipes')
-            julia("-e", 'Pkg.add("UnicodePlots"); using UnicodePlots')
-            julia("-e", """\
-using Plots
-using UnicodePlots
-unicodeplots()
-plot(x->sin(x)*cos(x), linspace(0, 2pi))
-""")
-
-        # Install SIMD
-        if "+simd" in spec:
-            julia("-e", 'Pkg.add("SIMD"); using SIMD')
-
-        julia("-e", 'Pkg.status()')
