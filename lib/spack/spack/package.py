@@ -776,20 +776,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return composite_stage
 
-    @property
-    def is_code_pkg(self):
-        """
-        Return True if the package is a code/source package; False otherwise.
-
-        Most packages are code/source based so the default is to always return
-        True.
-        """
-        # Note: Automating the detection of URLs based on fetch strategy URL
-        # attributes presents backward compatibility challenges as dozens of
-        # existing built-in packages override url_for_version() instead of
-        # specifying a URL.  Additionally, in some cases, the URL for different
-        # versions reside at different sites (e.g., py-basemap).
-        return True
+    # Automating the detection of URLs based on fetch strategy URL attributes
+    # presents backward compatibility challenges as dozens of existing built-in
+    # packages override url_for_version() instead of specifying a URL.
+    # Additionally, in some cases, the URL for different versions reside at
+    # different sites (e.g., py-basemap).
+    #: Most Spack packages are used to install source or binary code.
+    has_code = True
 
     @property
     def stage(self):
@@ -1050,7 +1043,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only fetch concrete packages.")
 
-        if not self.is_code_pkg:
+        if not self.has_code:
             raise ValueError("Can only fetch package with a URL.")
 
         start_time = time.time()
@@ -1090,7 +1083,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        if not self.is_code_pkg:
+        if not self.has_code:
             raise ValueError("Can only stage package with a URL.")
 
         self.do_fetch(mirror_only)     # this will create the stage
@@ -1104,7 +1097,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only patch concrete packages.")
 
-        if not self.is_code_pkg:
+        if not self.has_code:
             raise ValueError("Can only patch package with a URL.")
 
         # Kick off the stage first.  This creates the stage.
@@ -1536,8 +1529,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # module from the upstream Spack instance.
             return
 
-        if self.is_code_pkg:
-            # Ensure package source is not already installed
+        if self.has_code:
+            # Ensure package code is not already installed
             partial = self.check_for_unfinished_installation(keep_prefix,
                                                              restage)
 
@@ -1576,8 +1569,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     dep.package.bootstrap_compiler(**comp_kwargs)
                 dep.package.do_install(**dep_kwargs)
 
-        # There's nothing left to do for a bundle (or no-source) package
-        if not self.is_code_pkg:
+        # There's nothing left to do for a bundle (or no-code) package
+        if not self.has_code:
             return
 
         # Otherwise, install the package proper
@@ -2384,17 +2377,13 @@ build_system_flags = PackageBase.build_system_flags
 
 
 class BundlePackage(PackageBase):
-    """General purpose bundle, or no-source, package class."""
+    """General purpose bundle, or no-code, package class."""
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
     build_system_class = 'BundlePackage'
 
-    @property
-    def is_code_pkg(self):
-        """
-        Return False since bundle packages are not code/source-based.
-        """
-        return False
+    #: Bundle packages do not have associated source or binary code.
+    has_code = False
 
 
 class Package(PackageBase):

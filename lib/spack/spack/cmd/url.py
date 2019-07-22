@@ -258,9 +258,9 @@ def url_stats(args):
     for pkg in spack.repo.path.all_packages():
         npkgs += 1
 
-        if not pkg.is_code_pkg:
+        if not pkg.has_code:
             for _ in pkg.versions:
-                inc('No source', 'total')
+                inc('No code', 'total')
                 nvers += 1
             continue
 

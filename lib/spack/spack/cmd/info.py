@@ -174,10 +174,9 @@ def print_text_info(pkg):
                             not v.isdevelop(),
                             v)
         preferred = sorted(pkg.versions, key=key_fn).pop()
-        if pkg.is_code_pkg:
+        url = ''
+        if pkg.has_code:
             url = fs.for_package_version(pkg, preferred)
-        else:
-            url = pkg.homepage
 
         line = version('    {0}'.format(pad(preferred))) + color.cescape(url)
         color.cprint(line)
@@ -185,7 +184,7 @@ def print_text_info(pkg):
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
-            if pkg.is_code_pkg:
+            if pkg.has_code:
                 url = fs.for_package_version(pkg, v)
             line = version('    {0}'.format(pad(v))) + color.cescape(url)
             color.cprint(line)
