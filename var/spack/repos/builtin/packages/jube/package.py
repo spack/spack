@@ -26,7 +26,7 @@ class Jube(PythonPackage):
     version('2.0.0', sha256='ecfe8717bc61f35f333bc24d27b39e78e67c596e23512bdd97c9b4f28491f0b3', extension="tar.gz")
 
     variant(
-        'resource_manager', default='slurm',
+        'resource_manager', default='none',
         description='Select resource manager templates',
         values=('loadleveler', 'lsf', 'moab', 'pbs', 'slurm'), multi=False
     )
@@ -34,8 +34,9 @@ class Jube(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path(
-            'JUBE_INCLUDE_PATH',
-            prefix + "/platform/" +
-            self.spec.variants['resource_manager'].value
-        )
+        if not self.spec.variants['resource_manager'].value == 'none':
+            run_env.prepend_path(
+                'JUBE_INCLUDE_PATH',
+                prefix + "/platform/" +
+                self.spec.variants['resource_manager'].value
+            )
