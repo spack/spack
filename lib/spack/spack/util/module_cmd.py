@@ -20,24 +20,39 @@ import llnl.util.tty as tty
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
-py_cmd = "'import os;import json;print(json.dumps(dict(os.environ)))'"
+py_cmd = 'import os;import json;print(json.dumps(dict(os.environ)))'
 _cmd_template = "'module ' + ' '.join(args) + ' 2>&1'"
 
 
 def module(*args):
     module_cmd = eval(_cmd_template)  # So we can monkeypatch for testing
     if args[0] in module_change_commands:
-        os.environ['SPACK_LD_LIBRARY_PATH'] = spack.main.spack_ld_library_path
-
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
-        # Manipulate LD_LIBRARY_PATH so that python will run properly, then
-        # restore the new value
+        # For python, we use the same python running the Spack process, because
+        # we can guarantee its existence. We have to do some LD_LIBRARY_PATH
+        # shenanigans to ensure python will run.
+
+        # LD_LIBRARY_PATH under which Spack ran
+        os.environ['SPACK_LD_LIBRARY_PATH'] = spack.main.spack_ld_library_path
+
+        # suppress output from module function
         module_cmd += ' >/dev/null;'
-        module_cmd += 'export SPACK_NEW_LD_LIBRARY_PATH=$LD_LIBRARY_PATH;'
+
+        # Capture the new LD_LIBRARY_PATH after `module` was run
+        module_cmd += 'export SPACK_NEW_LD_LIBRARY_PATH="$LD_LIBRARY_PATH";'
+
+        # Set LD_LIBRARY_PATH to value at Spack startup time to ensure that
+        # python executable finds its libraries
         module_cmd += 'LD_LIBRARY_PATH="$SPACK_LD_LIBRARY_PATH" '
-        module_cmd += '%s -c %s;' % (sys.executable, py_cmd)
-        module_cmd += 'echo $SPACK_NEW_LD_LIBRARY_PATH'
+
+        # Execute the python command
+        module_cmd += '%s -c "%s";' % (sys.executable, py_cmd)
+
+        # If LD_LIBRARY_PATH was set after `module`, dump the old value because
+        # we have since corrupted it to ensure python would run.
+        # dump SPACKIGNORE as a placeholder for parsing if LD_LIBRARY_PATH null
+        module_cmd += 'echo "${SPACK_NEW_LD_LIBRARY_PATH:-SPACKIGNORE}"'
 
         module_p  = subprocess.Popen(module_cmd,
                                      stdout=subprocess.PIPE,
@@ -47,15 +62,22 @@ def module(*args):
 
         # Cray modules spit out warnings that we cannot supress.
         # This hack skips to the last output (the environment)
-        env_output = str(module_p.communicate()[0].decode()).strip().split('\n')
-        env = env_output[-2]
-        new_ld_library_path = env_output[-1]
+        env_out = str(module_p.communicate()[0].decode()).strip().split('\n')
+
+        # The environment dumped as json
+        env_json = env_out[-2]
+        # Either the uncorrupted $LD_LIBRARY_PATH or SPACKIGNORE
+        new_ld_library_path = env_out[-1]
 
         # Update os.environ with new dict
-        env_dict = json.loads(env)
+        env_dict = json.loads(env_json)
         os.environ.clear()
         os.environ.update(env_dict)
-        if new_ld_library_path:
+
+        # Override restored LD_LIBRARY_PATH with pre-python value
+        if new_ld_library_path == 'SPACKIGNORE':
+            os.environ.pop('LD_LIBRARY_PATH', None)
+        else:
             os.environ['LD_LIBRARY_PATH'] = new_ld_library_path
 
     else:
