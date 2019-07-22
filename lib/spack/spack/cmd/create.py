@@ -508,7 +508,7 @@ def get_name(args):
         # Try to guess the package name based on the URL
         try:
             name = parse_name(args.url)
-            tty.msg("This looks like a valid package for {0}".format(name))
+            tty.msg("This looks like a URL for {0}".format(name))
         except UndetectableNameError:
             tty.die("Couldn't guess a name for this package.",
                     "  Please report this bug. In the meantime, try running:",

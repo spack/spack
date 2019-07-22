@@ -40,12 +40,16 @@ def parser():
     return prs
 
 
-def test_create_template(parser, cmd_create_repo):
+@pytest.mark.parametrize('options,name,expected', [
+        ([], 'test-package', [r'TestPackage(Package)', r'def install(self']),
+        (['-t', 'bundle'], 'test-bundle', [r'TestBundle(BundlePackage)'])
+])
+def test_create_template(parser, cmd_create_repo, options, name, expected):
     """Test template creation."""
     repo, repodir = cmd_create_repo
 
-    name = 'test-package'
-    args = parser.parse_args(['--skip-editor', name])
+    temp_args = options + ['--skip-editor', name]
+    args = parser.parse_args(temp_args)
     spack.cmd.create.create(parser, args)
 
     filename = repo.filename_for_package_name(name)
@@ -53,5 +57,5 @@ def test_create_template(parser, cmd_create_repo):
 
     with open(filename, 'r') as package_file:
         content = ' '.join(package_file.readlines())
-        for entry in [r'TestPackage(Package)', r'def install(self']:
-            assert content.find(entry) > -1
+        for entry in expected:
+            assert entry in content
