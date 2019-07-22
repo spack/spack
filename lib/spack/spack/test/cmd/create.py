@@ -41,8 +41,8 @@ def parser():
 
 
 @pytest.mark.parametrize('options,name,expected', [
-        ([], 'test-package', [r'TestPackage(Package)', r'def install(self']),
-        (['-t', 'bundle'], 'test-bundle', [r'TestBundle(BundlePackage)'])
+    ([], 'test-package', [r'TestPackage(Package)', r'def install(self']),
+    (['-t', 'bundle'], 'test-bundle', [r'TestBundle(BundlePackage)'])
 ])
 def test_create_template(parser, cmd_create_repo, options, name, expected):
     """Test template creation."""
