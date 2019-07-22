@@ -65,7 +65,7 @@ class Asagi(CMakePackage):
                 '-DMPI3=' + ('ON' if '+mpi3' in spec else 'OFF'),
                 '-DNONUMA=' + ('ON' if '~numa' in spec else 'OFF'),
                 '-DTESTS=' + ('ON' if '+tests' in spec else 'OFF'),
-                '-DEXAMPLES=' + ('ON' if '+tests' in spec else 'OFF'),
+                '-DEXAMPLES=' + ('ON' if '+examples' in spec else 'OFF'),
                 '-DTHREADSAFE_COUNTER='
                 + ('ON' if '+threadsafe_counter' in spec else 'OFF'),
                 '-DTHREADSAFE_MPI='
