@@ -50,6 +50,14 @@ def setup_parser(subparser):
         'rev2', nargs='?', default='HEAD',
         help="revision to compare to rev1 (default is HEAD)")
 
+    add_parser = sp.add_parser('changed', help=pkg_changed.__doc__)
+    add_parser.add_argument(
+        'rev1', nargs='?', default='HEAD^',
+        help="revision to compare against")
+    add_parser.add_argument(
+        'rev2', nargs='?', default='HEAD',
+        help="revision to compare to rev1 (default is HEAD)")
+
     rm_parser = sp.add_parser('removed', help=pkg_removed.__doc__)
     rm_parser.add_argument(
         'rev1', nargs='?', default='HEAD^',
@@ -59,11 +67,27 @@ def setup_parser(subparser):
         help="revision to compare to rev1 (default is HEAD)")
 
 
+def packages_path():
+    """Get the test repo if it is active, otherwise the builtin repo."""
+    try:
+        return spack.repo.path.get_repo('builtin.mock').packages_path
+    except spack.repo.UnknownNamespaceError:
+        return spack.repo.path.get_repo('builtin').packages_path
+
+
+def get_git():
+    """Get a git executable that runs *within* the packages path."""
+    git = which('git', required=True)
+    git.add_default_arg('-C')
+    git.add_default_arg(packages_path())
+    return git
+
+
 def list_packages(rev):
-    pkgpath = os.path.join(spack.paths.packages_path, 'packages')
+    pkgpath = packages_path()
     relpath = pkgpath[len(spack.paths.prefix + os.path.sep):] + os.path.sep
 
-    git = which('git', required=True)
+    git = get_git()
     with working_dir(spack.paths.prefix):
         output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
                      output=str)
@@ -71,20 +95,22 @@ def list_packages(rev):
 
 
 def pkg_add(args):
-    """Add a package to the git stage."""
+    """add a package to the git stage with `git add`"""
+    pkgpath = packages_path()
+
     for pkg_name in args.packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" %
                     pkg_name, filename)
 
-        git = which('git', required=True)
+        git = get_git()
         with working_dir(spack.paths.prefix):
-            git('-C', spack.paths.packages_path, 'add', filename)
+            git('-C', pkgpath, 'add', filename)
 
 
 def pkg_list(args):
-    """List packages associated with a particular spack git revision."""
+    """list packages associated with a particular spack git revision"""
     colify(list_packages(args.rev))
 
 
@@ -95,7 +121,7 @@ def diff_packages(rev1, rev2):
 
 
 def pkg_diff(args):
-    """Compare packages available in two different git revisions."""
+    """compare packages available in two different git revisions"""
     u1, u2 = diff_packages(args.rev1, args.rev2)
 
     if u1:
@@ -110,17 +136,35 @@ def pkg_diff(args):
 
 
 def pkg_removed(args):
-    """Show packages removed since a commit."""
+    """show packages removed since a commit"""
     u1, u2 = diff_packages(args.rev1, args.rev2)
     if u1:
         colify(sorted(u1))
 
 
 def pkg_added(args):
-    """Show packages added since a commit."""
+    """show packages added since a commit"""
     u1, u2 = diff_packages(args.rev1, args.rev2)
     if u2:
         colify(sorted(u2))
+
+
+def pkg_changed(args):
+    """show packages changed since a commit"""
+    pkgpath = spack.repo.path.get_repo('builtin').packages_path
+    rel_pkg_path = os.path.relpath(pkgpath, spack.paths.prefix)
+
+    git = get_git()
+    paths = git('diff', '--name-only', args.rev1, args.rev2, pkgpath,
+                output=str).strip().split('\n')
+
+    packages = set([])
+    for path in paths:
+        path = path.replace(rel_pkg_path + os.sep, '')
+        pkg_name, _, _ = path.partition(os.sep)
+        packages.add(pkg_name)
+
+    colify(sorted(packages))
 
 
 def pkg(parser, args):
@@ -131,5 +175,6 @@ def pkg(parser, args):
               'diff': pkg_diff,
               'list': pkg_list,
               'removed': pkg_removed,
-              'added': pkg_added}
+              'added': pkg_added,
+              'changed': pkg_changed}
     action[args.pkg_command](args)
