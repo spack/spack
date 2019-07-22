@@ -10,19 +10,29 @@ class PyPipits(PythonPackage):
     """Automated pipeline for analyses of fungal ITS from the Illumina"""
 
     homepage = "https://github.com/hsgweon/pipits"
-    url      = "https://github.com/hsgweon/pipits/archive/1.5.0.tar.gz"
+    url      = "https://github.com/hsgweon/pipits/archive/2.4.tar.gz"
 
+    version('2.4', sha256='b08a9d70ac6e5dd1c64d56b77384afd69e21e7d641b2fc4416feff862a2cd054')
     version('1.5.0', '3f9b52bd7ffbcdb96d7bec150275070a')
 
-    depends_on('python@:2.999', type=('build', 'run'))
+    # https://github.com/bioconda/bioconda-recipes/blob/master/recipes/pipits/meta.yaml
+    depends_on('python@3:', type=('build', 'run'), when='@2:')
+    depends_on('python@:2', type=('build', 'run'), when='@:1')
+    depends_on('py-setuptools', type='build', when='@2:')
+    depends_on('py-pispino@1.1:', type=('build', 'run'), when='@2:')
+    depends_on('vsearch', type='run')
+    depends_on('fastx-toolkit', type='run')
+    depends_on('hmmer', type='run')
+    depends_on('itsx', type='run')
     depends_on('py-biom-format', type=('build', 'run'))
+    depends_on('rdptools', type='run', when='@2:')
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('java', type=('build', 'run'))
-    depends_on('hmmer')
-    depends_on('fastx-toolkit')
-    depends_on('vsearch')
-    depends_on('itsx')
-    depends_on('rdp-classifier')
+    depends_on('py-pandas', type=('build', 'run'), when='@2:')
+    depends_on('py-progressbar2', type=('build', 'run'), when='@2:')
+    depends_on('py-requests', type=('build', 'run'), when='@2:')
+    depends_on('seqkit', type='run')
+    depends_on('java', type=('build', 'run'), when='@:1')
+    depends_on('rdp-classifier', type='run', when='@:1')
 
     resource(
         name='UNITE_retrained',
