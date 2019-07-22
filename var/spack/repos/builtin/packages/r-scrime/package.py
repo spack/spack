@@ -7,7 +7,8 @@ from spack import *
 
 
 class RScrime(RPackage):
-    """scrime: Analysis of High-Dimensional Categorical Data Such as SNP Data"""
+    """scrime: Analysis of High-Dimensional Categorical Data Such as SNP
+       Data"""
 
     homepage = "https://cran.r-project.org/package=scrime"
     url      = "https://cran.r-project.org/src/contrib/scrime_1.3.5.tar.gz"
