@@ -13,7 +13,7 @@ class Scr(CMakePackage):
        Linux cluster to provide a fast, scalable checkpoint/restart
        capability for MPI codes"""
 
-    homepage = "http://computation.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
+    homepage = "http://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
 

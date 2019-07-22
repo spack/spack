@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack import *
 
@@ -48,6 +49,8 @@ class R(AutotoolsPackage):
             description='Enable X11 support (call configure --with-x)')
     variant('memory_profiling', default=False,
             description='Enable memory profiling')
+    variant('rmath', default=False,
+            description='Build standalone Rmath library')
 
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
@@ -70,9 +73,10 @@ class R(AutotoolsPackage):
     depends_on('pango~X', when='~X')
     depends_on('freetype')
     depends_on('tcl')
-    depends_on('tk')
+    depends_on('tk', when='+X')
     depends_on('libx11', when='+X')
     depends_on('libxt', when='+X')
+    depends_on('libxmu', when='+X')
     depends_on('curl')
     depends_on('pcre')
     depends_on('java')
@@ -87,12 +91,23 @@ class R(AutotoolsPackage):
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
 
+    @run_after('build')
+    def build_rmath(self):
+        if '+rmath' in self.spec:
+            with working_dir('src/nmath/standalone'):
+                make()
+
+    @run_after('install')
+    def install_rmath(self):
+        if '+rmath' in self.spec:
+            with working_dir('src/nmath/standalone'):
+                make('install')
+
     def configure_args(self):
         spec   = self.spec
         prefix = self.prefix
 
         tcl_config_path = join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')
-        tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
 
         config_args = [
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
@@ -100,14 +115,27 @@ class R(AutotoolsPackage):
             '--enable-BLAS-shlib',
             '--enable-R-framework=no',
             '--with-tcl-config={0}'.format(tcl_config_path),
-            '--with-tk-config={0}'.format(tk_config_path),
+            'LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(join_path(prefix, 'rlib',
+                                                            'R', 'lib')),
         ]
+        if '^tk' in spec:
+            tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
+            config_args.append('--with-tk-config={0}'.format(tk_config_path))
 
         if '+external-lapack' in spec:
-            config_args.extend([
-                '--with-blas={0}'.format(spec['blas'].libs),
-                '--with-lapack'
-            ])
+            if '^mkl' in spec and 'gfortran' in self.compiler.fc:
+                mkl_re = re.compile(r'(mkl_)intel(_i?lp64\b)')
+                config_args.extend([
+                    mkl_re.sub(r'\g<1>gf\g<2>',
+                               '--with-blas={0}'.format(
+                                   spec['blas'].libs.ld_flags)),
+                    '--with-lapack'
+                ])
+            else:
+                config_args.extend([
+                    '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
+                    '--with-lapack'
+                ])
 
         if '+X' in spec:
             config_args.append('--with-x')
@@ -116,6 +144,10 @@ class R(AutotoolsPackage):
 
         if '+memory_profiling' in spec:
             config_args.append('--enable-memory-profiling')
+
+        # Set FPICFLAGS for compilers except 'gcc'.
+        if self.compiler.name != 'gcc':
+            config_args.append('FPICFLAGS={0}'.format(self.compiler.pic_flag))
 
         return config_args
 

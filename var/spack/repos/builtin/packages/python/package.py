@@ -151,6 +151,10 @@ class Python(AutotoolsPackage):
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
 
+    def url_for_version(self, version):
+        url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
+        return url.format(re.split('[a-z]', str(version))[0], version)
+
     @when('@2.7:2.8,3.4:')
     def patch(self):
         # NOTE: Python's default installation procedure makes it possible for a

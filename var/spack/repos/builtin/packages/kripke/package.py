@@ -10,8 +10,8 @@ class Kripke(CMakePackage):
     """Kripke is a simple, scalable, 3D Sn deterministic particle
        transport proxy/mini app.
     """
-    homepage = "https://computation.llnl.gov/projects/co-design/kripke"
-    url      = "https://computation.llnl.gov/projects/co-design/download/kripke-openmp-1.1.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/co-design/kripke"
+    url      = "https://computing.llnl.gov/projects/co-design/download/kripke-openmp-1.1.tar.gz"
 
     tags = ['proxy-app']
     version('1.1', '7fe6f2b26ed983a6ce5495ab701f85bf')

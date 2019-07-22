@@ -109,6 +109,18 @@ def no_chdir():
         assert os.getcwd() == original_wd
 
 
+@pytest.fixture(scope='function', autouse=True)
+def reset_compiler_cache():
+    """Ensure that the compiler cache is not shared across Spack tests
+
+    This cache can cause later tests to fail if left in a state incompatible
+    with the new configuration. Since tests can make almost unlimited changes
+    to their setup, default to not use the compiler cache across tests."""
+    spack.compilers._compiler_cache = {}
+    yield
+    spack.compilers._compiler_cache = {}
+
+
 @pytest.fixture(scope='session', autouse=True)
 def mock_stage(tmpdir_factory):
     """Mocks up a fake stage directory for use by tests."""

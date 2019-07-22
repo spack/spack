@@ -46,4 +46,4 @@ class Fj(spack.compiler.Compiler):
 
     @property
     def pic_flag(self):
-        return "-fPIC"
+        return "-KPIC"
