@@ -14,9 +14,7 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
-from spack.package import \
-    _spack_build_envfile, _spack_build_logfile, \
-    install_dependency_symlinks
+from spack.package import _spack_build_envfile, _spack_build_logfile
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
@@ -144,16 +142,13 @@ def test_installed_dependency_request_conflicts(
 
 def test_install_dependency_symlinks(
         install_mockery, mock_fetch, mutable_mock_packages):
-    dependent = Spec('dependent-install')
-    dependent.concretize()
-    pkg = dependent.package
+    spec = Spec('flatten-deps')
+    spec.concretize()
+    pkg = spec.package
     pkg.do_install()
 
-    # Ensure dependency directory appears only after the symlinks call
+    # Ensure dependency directory appears after the symlinks call
     dependency_name = 'dependency-install'
-    assert dependency_name not in os.listdir(pkg.prefix)
-
-    install_dependency_symlinks(pkg, dependent, pkg.prefix)
     assert dependency_name in os.listdir(pkg.prefix)
 
     dependency_dir = os.path.join(pkg.prefix, dependency_name)
