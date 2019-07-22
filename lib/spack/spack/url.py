@@ -285,6 +285,9 @@ def strip_name_suffixes(path, version):
         r'snapshot',
         r'distrib',
 
+        # Arch
+        r'Linux64',
+
         # VCS
         r'0\+bzr',
 

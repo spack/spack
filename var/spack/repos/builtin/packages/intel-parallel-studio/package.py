@@ -129,6 +129,13 @@ class IntelParallelStudio(IntelPackage):
         multi=False
     )
 
+    auto_dispatch_options = IntelPackage.auto_dispatch_options
+    variant(
+        'auto_dispatch',
+        values=any_combination_of(*auto_dispatch_options),
+        description='Enable generation of multiple auto-dispatch code paths'
+    )
+
     # Components available in all editions
     variant('daal', default=True,
             description='Install the Intel DAAL libraries')
@@ -185,6 +192,12 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+daal',      when='@professional.0:professional.2015.7')
     conflicts('+daal',      when='@cluster.0:cluster.2015.7')
     conflicts('+daal',      when='@composer.0:composer.2015.7')
+
+    # MacOS does not support some of the auto dispatch settings
+    conflicts('auto_dispatch=SSE2', 'platform=darwin',
+              msg='SSE2 is not supported on MacOS')
+    conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64',
+              msg='SSE3 is not supported on MacOS x86_64')
 
     def setup_dependent_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.

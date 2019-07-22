@@ -20,12 +20,13 @@ class KimApi(CMakePackage):
 
        To obtain all models archived at https://openkim.org that are
        compatible with the kim-api package, install and activate the
-       openkim-models pacakge too.
+       openkim-models package too.
     """
     extendable = True
     homepage = "https://openkim.org/"
-    url      = "https://s3.openkim.org/kim-api/kim-api-2.0.2.txz"
+    url      = "https://s3.openkim.org/kim-api/kim-api-2.1.0.txz"
     git      = "https://github.com/openkim/kim-api.git"
 
     version('develop', branch='devel')
-    version('2.0.2', sha256="26e7cf91066692f316b8ba1548ccb7152bf56aad75902bce2338cff53e74e63d", extension='txz', url='https://s3.openkim.org/kim-api/kim-api-2.0.2.txz')
+    version('2.1.0', sha256="d6b154b31b288ec0a5643db176950ed71f1ca83a146af210a1d5d01cce8ce958")
+    version('2.0.2', sha256="26e7cf91066692f316b8ba1548ccb7152bf56aad75902bce2338cff53e74e63d")

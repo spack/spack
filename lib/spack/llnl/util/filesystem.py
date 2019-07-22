@@ -423,14 +423,39 @@ def mkdirp(*paths, **kwargs):
     Keyword Aguments:
         mode (permission bits or None, optional): optional permissions to
             set on the created directory -- use OS default if not provided
+        mode_intermediate (permission bits or None, optional):
+            same as mode, but for newly-created intermediate directories
     """
     mode = kwargs.get('mode', None)
+    mode_intermediate = kwargs.get('mode_intermediate', None)
     for path in paths:
         if not os.path.exists(path):
             try:
+                intermediate_folders = []
+                if mode_intermediate is not None:
+                    # detect missing intermediate folders
+                    intermediate_path = os.path.dirname(path)
+
+                    while intermediate_path:
+                        if os.path.exists(intermediate_path):
+                            break
+
+                        intermediate_folders.append(intermediate_path)
+                        intermediate_path = os.path.dirname(intermediate_path)
+
+                # create folders
                 os.makedirs(path)
+
+                # leaf folder permissions
                 if mode is not None:
                     os.chmod(path, mode)
+
+                # for intermediate folders, change mode just for newly created
+                # ones and if mode_intermediate has been specified, otherwise
+                # intermediate folders list is not populated at all and default
+                # OS mode will be used
+                for intermediate_path in reversed(intermediate_folders):
+                    os.chmod(intermediate_path, mode_intermediate)
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e

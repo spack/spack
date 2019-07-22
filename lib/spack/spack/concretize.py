@@ -500,7 +500,8 @@ def concretize_specs_together(*abstract_specs):
         # Split recursive specs, as it seems the concretizer has issue
         # respecting conditions on dependents expressed like
         # depends_on('foo ^bar@1.0'), see issue #11160
-        split_specs = [dep for spec in abstract_specs
+        split_specs = [dep.copy(deps=False)
+                       for spec in abstract_specs
                        for dep in spec.traverse(root=True)]
 
         with open(os.path.join(pkg_dir, 'package.py'), 'w') as f:

@@ -123,6 +123,12 @@ class TestPackage(object):
         assert '~openblas' in s
         assert 'mpi' in s
 
+    @pytest.mark.regression('11844')
+    def test_inheritance_of_patches(self):
+        s = Spec('patch-inheritance')
+        # Will error if inheritor package cannot find inherited patch files
+        s.concretize()
+
     def test_dependency_extensions(self):
         s = Spec('extension2')
         s.concretize()
@@ -353,3 +359,13 @@ def test_git_url_top_level_conflicts(mock_packages, config):
 
     with pytest.raises(spack.fetch_strategy.FetcherConflict):
         spack.fetch_strategy.for_package_version(pkg, '1.3')
+
+
+def test_rpath_args(mutable_database):
+    """Test a package's rpath_args property."""
+
+    rec = mutable_database.get_record('mpich')
+
+    rpath_args = rec.spec.package.rpath_args
+    assert '-rpath' in rpath_args
+    assert 'mpich' in rpath_args
