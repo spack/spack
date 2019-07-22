@@ -18,6 +18,7 @@ class Hpctoolkit(AutotoolsPackage):
     git      = "https://github.com/HPCToolkit/hpctoolkit.git"
 
     version('develop', branch='master')
+    version('gpu', branch='master-gpu')
     version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc')
     version('2018.11.05', commit='d0c43e39020e67095b1f1d8bb89b75f22b12aee9')
 
@@ -37,10 +38,6 @@ class Hpctoolkit(AutotoolsPackage):
     variant('mpi', default=False,
             description='Build hpcprof-mpi, the MPI version of hpcprof.')
 
-    variant('all-static', default=False,
-            description='Needed when MPICXX builds static binaries '
-            'for the compute nodes.')
-
     # We can't build with both PAPI and perfmon for risk of segfault
     # from mismatched header files (unless PAPI installs the perfmon
     # headers).
@@ -48,11 +45,19 @@ class Hpctoolkit(AutotoolsPackage):
             description='Use PAPI instead of perfmon for access to '
             'the hardware performance counters.')
 
-    boost_libs = '+atomic +graph +regex +serialization'  \
-        '+shared +multithreaded'
+    variant('all-static', default=False,
+            description='Needed when MPICXX builds static binaries '
+            'for the compute nodes.')
+
+    variant('cuda', default=False,
+            description='Support CUDA on NVIDIA GPUs (gpu branch only).')
+
+    boost_libs = '+atomic +chrono +date_time +filesystem +system +thread' \
+                 '+timer +graph +regex +shared +multithreaded'
 
     depends_on('binutils+libiberty~nls')
     depends_on('boost' + boost_libs)
+    depends_on('boost' + ' visibility=global', when='@gpu')
     depends_on('bzip2')
     depends_on('dyninst')
     depends_on('elfutils~nls')
@@ -65,10 +70,19 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('xz')
     depends_on('zlib')
 
+    depends_on('cuda', when='+cuda')
     depends_on('intel-xed', when='target=x86_64')
+    depends_on('mbedtls+pic', when='@gpu')
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='~papi')
     depends_on('mpi', when='+mpi')
+
+    conflicts('%gcc@:4.7.99', when='^dyninst@10.0.0:',
+              msg='hpctoolkit requires gnu gcc 4.8.x or later')
+    conflicts('%gcc@:4.99.99', when='@gpu',
+              msg='the gpu branch requires gnu gcc 5.x or later')
+    conflicts('+cuda', when='@2018.0.0:',
+              msg='cuda is only available on the gpu branch')
 
     flag_handler = AutotoolsPackage.build_system_flags
 
@@ -90,6 +104,16 @@ class Hpctoolkit(AutotoolsPackage):
             '--with-lzma=%s'         % spec['xz'].prefix,
             '--with-zlib=%s'         % spec['zlib'].prefix,
         ]
+
+        if '+cuda' in spec:
+            cupti_path = join_path(spec['cuda'].prefix, 'extras', 'CUPTI')
+            args.extend([
+                '--with-cuda=%s' % spec['cuda'].prefix,
+                '--with-cupti=%s' % cupti_path,
+            ])
+
+        if spec.satisfies('@gpu'):
+            args.append('--with-mbedtls=%s' % spec['mbedtls'].prefix)
 
         if target == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
