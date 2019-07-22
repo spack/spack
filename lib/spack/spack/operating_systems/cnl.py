@@ -114,8 +114,8 @@ class Cnl(OperatingSystem):
             comp = cmp_cls(
                 spack.spec.CompilerSpec(name + '@' + v),
                 self, "any",
-                ['cc', 'CC', 'ftn'], [cmp_cls.cray_prgenv_name,
-                                      name + '/' + v])
+                ['cc', 'CC', 'ftn'],
+                [cmp_cls.cray_prgenv_name, name + '/' + v])
 
             compilers.append(comp)
         return compilers
