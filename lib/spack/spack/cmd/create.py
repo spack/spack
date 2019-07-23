@@ -504,11 +504,11 @@ def get_name(args):
     # Default package name
     name = 'example'
 
-    if args.name:
+    if args.name is not None:
         # Use a user-supplied name if one is present
         name = args.name
         tty.msg("Using specified package name: '{0}'".format(name))
-    elif args.url:
+    elif args.url is not None:
         # Try to guess the package name based on the URL
         try:
             name = parse_name(args.url)
@@ -581,7 +581,7 @@ def get_versions(args, name):
     # Default guesser
     guesser = BuildSystemGuesser()
 
-    if args.url and args.template != 'bundle':
+    if args.url is not None and args.template != 'bundle':
         # Find available versions
         try:
             url_dict = spack.util.web.find_versions_of_archive(args.url)
@@ -619,15 +619,11 @@ def get_build_system(args, guesser):
     Returns:
         str: The name of the build system template to use
     """
-
-    # Default template
-    template = 'generic'
-
-    if args.template:
+    if args.template is not None:
         # Use a user-supplied template if one is present
         template = args.template
         tty.msg("Using specified package template: '{0}'".format(template))
-    elif args.url:
+    elif args.url is not None:
         # Use whatever build system the guesser detected
         template = guesser.build_system
         if template == 'generic':

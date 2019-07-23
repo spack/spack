@@ -9,7 +9,7 @@ import pytest
 
 import spack.cmd.create
 import spack.util.editor
-
+from spack.url import UndetectableNameError
 from spack.main import SpackCommand
 
 
@@ -61,3 +61,47 @@ def test_create_template(parser, cmd_create_repo, args, name_index, expected):
         content = ' '.join(package_file.readlines())
         for entry in expected:
             assert entry in content
+
+
+@pytest.mark.parametrize('url,expected', [
+    (None, 'bundle'),
+    ('downloads.sourceforge.net/octave/', 'octave'),
+])
+def test_build_system_guesser_urls(parser, url, expected):
+    """Test basic build systems based solely on urls."""
+    guesser = spack.cmd.create.BuildSystemGuesser()
+
+    # Ensure get the expected build system
+    opts = {'stage': None, 'url': url}
+    guesser(**opts)
+    assert guesser.build_system == expected
+
+    # Also ensure get the correct template
+    args = parser.parse_args([url])
+    bs = spack.cmd.create.get_build_system(args, guesser)
+    assert bs == expected
+
+
+@pytest.mark.parametrize('url,expected', [
+    ('testname', 'testname'),
+    ('file://example.com/archive.tar.gz', 'archive'),
+])
+def test_get_name_urls(parser, url, expected):
+    """Test get_name with different URLs."""
+    args = parser.parse_args([url])
+    name = spack.cmd.create.get_name(args)
+    assert name == expected
+
+
+def test_get_name_error(parser, monkeypatch):
+    """Test get_name UndetectableNameError exception path."""
+    def _parse_name_offset(path, v):
+        raise UndetectableNameError(path)
+
+    monkeypatch.setattr(spack.url, 'parse_name_offset', _parse_name_offset)
+
+    url = 'downloads.sourceforge.net/noapp/'
+    args = parser.parse_args([url])
+
+    with pytest.raises(SystemExit, matches="Couldn't guess a name"):
+        spack.cmd.create.get_name(args)
