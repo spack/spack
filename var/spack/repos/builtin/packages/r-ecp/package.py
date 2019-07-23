@@ -7,7 +7,8 @@ from spack import *
 
 
 class REcp(RPackage):
-    """ecp: Non-Parametric Multiple Change-Point Analysis of MultivariateData"""
+    """ecp: Non-Parametric Multiple Change-Point Analysis of
+       MultivariateData"""
 
     homepage = "https://cran.r-project.org/package=ecp"
     url      = "https://cran.r-project.org/src/contrib/ecp_3.1.1.tar.gz"
