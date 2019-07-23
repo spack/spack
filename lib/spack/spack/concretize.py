@@ -587,6 +587,6 @@ class NoBuildError(spack.error.SpackError):
        no satisfactory external versions can be found"""
 
     def __init__(self, spec):
-        msg = ("The spec '%s' is configured as not buildable, "
+        msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")
-        super(NoBuildError, self).__init__(msg % spec.name)
+        super(NoBuildError, self).__init__(msg % spec)
