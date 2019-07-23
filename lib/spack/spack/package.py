@@ -376,14 +376,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     **Package Lifecycle**
 
-    A code, or source-based, package's lifecycle over a run of Spack looks
-    something like this:
+    A code-based package's lifecycle over a run of Spack looks something
+    like this:
 
     .. code-block:: python
 
        p = Package()             # Done for you by spack
 
-       p.do_fetch()              # downloads tarball from a URL
+       p.do_fetch()              # downloads tarball from a URL (or repo)
        p.do_stage()              # expands tarball in a temp directory
        p.do_patch()              # applies patches to expanded source
        p.do_install()            # calls package's install() function
@@ -405,9 +405,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     Package creators have a lot of freedom, and they could technically
     override anything in this class.  That is not usually required.
 
-    For most use cases.  Package creators typically just add attributes like
-    ``homepage`` and, for a code or source package, ``url``, or functions
-    like ``install()``.
+    For most use cases.  Package creators typically just add attributes
+    like ``homepage`` and, for a code-based package, ``url``, or functions
+    such as ``install()``.
     There are many custom ``Package`` subclasses in the
     ``spack.build_systems`` package that make things even easier for
     specific build systems.

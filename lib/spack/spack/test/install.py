@@ -291,17 +291,18 @@ def test_uninstall_by_spec_errors(mutable_database):
         PackageBase.uninstall_by_spec(rec.spec)
 
 
-def test_nosource_pkg(install_mockery, mock_fetch, mock_packages):
+def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages):
+    """Test install phases with the nosource package."""
     spec = Spec('nosource').concretized()
     spec.package.do_install()
 
-    with pytest.raises(ValueError, match="with a URL"):
+    with pytest.raises(ValueError, match="fetch package with a URL"):
         spec.package.do_fetch()
 
-    with pytest.raises(ValueError, match="with a URL"):
+    with pytest.raises(ValueError, match="stage package with a URL"):
         spec.package.do_stage()
 
-    with pytest.raises(ValueError, match="with a URL"):
+    with pytest.raises(ValueError, match="patch package with a URL"):
         spec.package.do_patch()
 
 
