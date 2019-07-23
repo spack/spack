@@ -66,13 +66,6 @@ class Qmcpack(CMakePackage, CudaPackage):
         'Please add "~phdf5" to the Spack install line for serial QMCPACK.'
     )
     conflicts(
-        '+qe',
-        when='~mpi',
-        msg='QMCPACK QE variant requires MPI due to limitation in QE build ' \
-        'system. Please add "~qe" to the Spack install line for serial ' \
-        'QMCPACK.'
-    )
-    conflicts(
         '+soa',
         when='+cuda',
         msg='QMCPACK SOA variant does not exist for CUDA'
