@@ -18,19 +18,22 @@ class SpecHashDescriptor(object):
 
     We currently use different hashes for different use cases.
     """
-    def __init__(self, deptype=('link', 'run'), package_hash=False):
+    def __init__(self, deptype=('link', 'run'), package_hash=False, attr=None):
         self.deptype = dp.canonical_deptype(deptype)
         self.package_hash = package_hash
+        self.attr = attr
 
 
 #: Default Hash descriptor, used by Spec.dag_hash() and stored in the DB.
-dag_hash = SpecHashDescriptor(deptype=('link', 'run'), package_hash=False)
+dag_hash = SpecHashDescriptor(deptype=('link', 'run'), package_hash=False,
+                              attr='_hash')
 
 
 #: Hash descriptor that includes build dependencies.
 build_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=False)
+    deptype=('build', 'link', 'run'), package_hash=False, attr='_build_hash')
 
 
 #: Full hash used in build pipelines to determine when to rebuild packages.
-full_hash = SpecHashDescriptor(deptype=('link', 'run'), package_hash=True)
+full_hash = SpecHashDescriptor(deptype=('link', 'run'), package_hash=True,
+                               attr='_full_hash')
