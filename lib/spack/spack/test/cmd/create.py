@@ -40,19 +40,21 @@ def parser():
     return prs
 
 
-@pytest.mark.parametrize('options,name,expected', [
-    ([], 'test-package', [r'TestPackage(Package)', r'def install(self']),
-    (['-t', 'bundle'], 'test-bundle', [r'TestBundle(BundlePackage)'])
+@pytest.mark.parametrize('args,name_index,expected', [
+    (['test-package'], 0, [r'TestPackage(Package)', r'def install(self']),
+    (['-n', 'test-named-package', 'file://example.tar.gz'], 1,
+     [r'TestNamedPackage(Package)', r'def install(self']),
+    (['-t', 'bundle', 'test-bundle'], 2, [r'TestBundle(BundlePackage)']),
+    (['-n', 'test-named-bundle'], 1, [r'TestNamedBundle(BundlePackage)'])
 ])
-def test_create_template(parser, cmd_create_repo, options, name, expected):
+def test_create_template(parser, cmd_create_repo, args, name_index, expected):
     """Test template creation."""
     repo, repodir = cmd_create_repo
 
-    temp_args = options + ['--skip-editor', name]
-    args = parser.parse_args(temp_args)
-    spack.cmd.create.create(parser, args)
+    constr_args = parser.parse_args(['--skip-editor'] + args)
+    spack.cmd.create.create(parser, constr_args)
 
-    filename = repo.filename_for_package_name(name)
+    filename = repo.filename_for_package_name(args[name_index])
     assert os.path.exists(filename)
 
     with open(filename, 'r') as package_file:

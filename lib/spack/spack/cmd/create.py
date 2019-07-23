@@ -78,8 +78,8 @@ class BundlePackageTemplate(object):
     # FIXME: Add dependencies if required.
     # depends_on('foo')"""
 
-    url_def = "    # There is no URL since there is no source to download."
-    body_def = "    # There is no need for install() since there is no source."
+    url_def = "    # There is no URL since there is no code to download."
+    body_def = "    # There is no need for install() since there is no code."
 
     def __init__(self, name, versions):
         self.name       = name
@@ -112,7 +112,7 @@ class PackageTemplate(BundlePackageTemplate):
         make()
         make('install')"""
 
-    url_line = """    url      = {url}"""
+    url_line = """    url      = \"{url}\""""
 
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
@@ -429,6 +429,10 @@ class BuildSystemGuesser:
         """Try to guess the type of build system used by a project based on
         the contents of its archive or the URL it was downloaded from."""
 
+        if url is None:
+            self.build_system = 'bundle'
+            return
+
         # Most octave extensions are hosted on Octave-Forge:
         #     http://octave.sourceforge.net/index.html
         # They all have the same base URL.
@@ -508,7 +512,11 @@ def get_name(args):
         # Try to guess the package name based on the URL
         try:
             name = parse_name(args.url)
-            tty.msg("This looks like a URL for {0}".format(name))
+            if name != args.url:
+                desc = 'URL'
+            else:
+                desc = 'package name'
+            tty.msg("This looks like a {0} for {1}".format(desc, name))
         except UndetectableNameError:
             tty.die("Couldn't guess a name for this package.",
                     "  Please report this bug. In the meantime, try running:",
@@ -560,21 +568,27 @@ def get_versions(args, name):
             BuildSystemGuesser object
     """
 
-    # Default version, hash, and guesser
-    versions = """\
+    # Default version with hash
+    hashed_versions = """\
     # FIXME: Add proper versions and checksums here.
     # version('1.2.3', '0123456789abcdef0123456789abcdef')"""
 
+    # Default version without hash
+    unhashed_versions = """\
+    # FIXME: Add proper versions here.
+    # version('1.2.4')"""
+
+    # Default guesser
     guesser = BuildSystemGuesser()
 
-    if args.url:
+    if args.url and args.template != 'bundle':
         # Find available versions
         try:
             url_dict = spack.util.web.find_versions_of_archive(args.url)
         except UndetectableVersionError:
             # Use fake versions
             tty.warn("Couldn't detect version in: {0}".format(args.url))
-            return versions, guesser
+            return hashed_versions, guesser
 
         if not url_dict:
             # If no versions were found, revert to what the user provided
@@ -584,6 +598,8 @@ def get_versions(args, name):
         versions = spack.util.web.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
             keep_stage=args.keep_stage)
+    else:
+        versions = unhashed_versions
 
     return versions, guesser
 

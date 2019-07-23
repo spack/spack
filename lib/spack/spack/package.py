@@ -347,7 +347,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     sometimes referred to as a ``no-source`` package, requires only defining
     the packages to be built.
 
-    Packages are written in pure Python by users of Spack.
+    Packages are written in pure Python.
 
     There are two main parts of a Spack package:
 

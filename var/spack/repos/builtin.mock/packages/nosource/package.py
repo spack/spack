@@ -8,10 +8,10 @@ from spack import *
 
 
 class Nosource(BundlePackage):
-    """Simple bundle package with one optional dependency"""
+    """Simple bundle package with one dependency"""
 
     homepage = "http://www.example.com"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version('1.0')
 
     depends_on('dependency-install')
