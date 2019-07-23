@@ -965,6 +965,29 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.regression('12095')
+def test_stack_yaml_definitions_write_reference(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - indirect: [$packages]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        with ev.read('test'):
+            concretize()
+        test = ev.read('test')
+
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
 def test_stack_yaml_add_to_list(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
