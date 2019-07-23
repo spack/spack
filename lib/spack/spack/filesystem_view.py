@@ -205,8 +205,9 @@ class YamlFilesystemView(FilesystemView):
                     mkdirp(os.path.dirname(projections_path))
                     with open(projections_path, 'w') as f:
                         f.write(s_yaml.dump({'projections': self.projections}))
-                except OSError:
-                    pass
+                except OSError as e:
+                    if self.projections:
+                        raise e
         elif not os.path.exists(projections_path):
             # Write projections file to new view
             mkdirp(os.path.dirname(projections_path))
