@@ -28,3 +28,18 @@ class RDelayedmatrixstats(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@1.4.0', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.2.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.0.3', type=('build', 'run'))
+
+    depends_on('r-delayedarray', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-iranges', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-matrix', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-matrixstats@0.53.1:', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-s4vectors', when='@1.0.3:', type=('build', 'run'))
+
+    depends_on('r-delayedarray@0.5.27:', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.17.5:', when='@1.2.0:', type=('build', 'run'))
+
+    depends_on('r-biocparallel', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r-delayedarray@0.7.37:', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r-hdf5array@1.7.10:', when='@1.4.0:', type=('build', 'run'))
+
+    depends_on('r-delayedarray@0.9.8:', when='@1.6.0:', type=('build', 'run'))

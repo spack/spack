@@ -42,3 +42,9 @@ class RSva(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@3.28.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@3.26.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@3.24.4', type=('build', 'run'))
+
+    depends_on('r-biocparallel', when='@3.24.4:', type=('build', 'run'))
+    depends_on('r-genefilter', when='@3.24.4:', type=('build', 'run'))
+    depends_on('r-limma', when='@3.24.4:', type=('build', 'run'))
+    depends_on('r-matrixstats', when='@3.24.4:', type=('build', 'run'))
+    depends_on('r-mgcv', when='@3.24.4:', type=('build', 'run'))

@@ -29,3 +29,9 @@ class RGlimma(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@1.8.2', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.6.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))
+
+    depends_on('r-biobase', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r-edger', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r-jsonlite', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r-s4vectors', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r-scater', when='@1.4.0:', type=('build', 'run'))

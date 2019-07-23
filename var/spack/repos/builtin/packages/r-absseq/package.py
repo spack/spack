@@ -29,3 +29,6 @@ class RAbsseq(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@1.34.1', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.32.3', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.22.8', type=('build', 'run'))
+
+    depends_on('r-limma', when='@1.22.8:', type=('build', 'run'))
+    depends_on('r-locfit', when='@1.22.8:', type=('build', 'run'))

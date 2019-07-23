@@ -27,3 +27,19 @@ class RClusterprofiler(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@3.8.1', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@3.6.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@3.4.4', type=('build', 'run'))
+
+    depends_on('r-annotationdbi', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-dose@3.1.3:', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-ggplot2', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-go-db', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-gosemsim@2.0.0:', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-magrittr', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-plyr', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-qvalue', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-rvcheck', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r-tidyr', when='@3.4.4:', type=('build', 'run'))
+
+    depends_on('r-dose@3.3.2:', when='@3.6.0:', type=('build', 'run'))
+
+    depends_on('r-dose@3.5.1:', when='@3.8.1:', type=('build', 'run'))
+    depends_on('r-enrichplot@0.99.7:', when='@3.8.1:', type=('build', 'run'))

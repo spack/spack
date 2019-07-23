@@ -32,4 +32,6 @@ class RGosemsim(RPackage):
     depends_on('r@3.4.0:3.4.9', when='@2.4.1', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@2.2.0', type=('build', 'run'))
 
+    depends_on('r-annotationdbi', when='@2.2.0:', type=('build', 'run'))
+    depends_on('r-go-db', when='@2.2.0:', type=('build', 'run'))
     depends_on('r-rcpp', when='@2.2.0:', type=('build', 'run'))

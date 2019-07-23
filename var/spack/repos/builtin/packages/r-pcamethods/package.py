@@ -34,4 +34,7 @@ class RPcamethods(RPackage):
     depends_on('r@3.4.0:3.4.9', when='@1.70.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.68.0', type=('build', 'run'))
 
-    depends_on('r-rcpp', when='@1.68.0:', type=('build', 'run'))
+    depends_on('r-biobase', when='@1.68.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics', when='@1.68.0:', type=('build', 'run'))
+    depends_on('r-mass', when='@1.68.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.3:', when='@1.68.0:', type=('build', 'run'))

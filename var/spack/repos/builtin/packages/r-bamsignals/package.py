@@ -29,7 +29,10 @@ class RBamsignals(RPackage):
     depends_on('r@3.4.0:3.4.9', when='@1.10.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.8.0', type=('build', 'run'))
 
-    depends_on('r-rcpp', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-genomicranges', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-iranges', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.10.6:', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-rhtslib', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-zlibbioc', when='@1.8.0:', type=('build', 'run'))
 

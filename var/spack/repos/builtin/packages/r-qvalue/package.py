@@ -35,3 +35,6 @@ class RQvalue(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@2.12.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@2.10.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@2.8.0', type=('build', 'run'))
+
+    depends_on('r-ggplot2', when='@2.8.0:', type=('build', 'run'))
+    depends_on('r-reshape2', when='@2.8.0:', type=('build', 'run'))

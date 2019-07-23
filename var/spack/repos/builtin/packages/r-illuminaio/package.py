@@ -25,3 +25,5 @@ class RIlluminaio(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@0.22.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@0.20.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@0.18.0', type=('build', 'run'))
+
+    depends_on('r-base64', when='@0.18.0:', type=('build', 'run'))

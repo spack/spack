@@ -29,3 +29,10 @@ class RMzid(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@1.18.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.16.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.14.0', type=('build', 'run'))
+
+    depends_on('r-doparallel', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r-foreach', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r-iterators', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r-plyr', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r-protgenerics', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r-xml', when='@1.14.0:', type=('build', 'run'))

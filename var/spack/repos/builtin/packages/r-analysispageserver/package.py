@@ -27,3 +27,8 @@ class RAnalysispageserver(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@1.14.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.12.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.10.0', type=('build', 'run'))
+
+    depends_on('r-biobase', when='@1.10.0:', type=('build', 'run'))
+    depends_on('r-graph', when='@1.10.0:', type=('build', 'run'))
+    depends_on('r-log4r', when='@1.10.0:', type=('build', 'run'))
+    depends_on('r-rjson', when='@1.10.0:', type=('build', 'run'))

@@ -29,6 +29,13 @@ class RFgsea(RPackage):
     depends_on('r@3.4.0:3.4.9', when='@1.4.1', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.2.1', type=('build', 'run'))
 
+    depends_on('r-biocparallel', when='@1.2.1:', type=('build', 'run'))
+    depends_on('r-data-table', when='@1.2.1:', type=('build', 'run'))
+    depends_on('r-fastmatch', when='@1.2.1:', type=('build', 'run'))
+    depends_on('r-ggplot2@2.2.0:', when='@1.2.1:', type=('build', 'run'))
+    depends_on('r-gridextra', when='@1.2.1:', type=('build', 'run'))
     depends_on('r-rcpp', when='@1.2.1:', type=('build', 'run'))
+
+    depends_on('r-matrix', when='@1.6.0:', type=('build', 'run'))
 
     depends_on('r-bh', when='@1.10.0:', type=('build', 'run'))

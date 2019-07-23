@@ -30,3 +30,17 @@ class RDose(RPackage):
     depends_on('r@3.5.0:3.5.9', when='@3.6.1', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@3.4.0', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@3.2.0', type=('build', 'run'))
+
+    depends_on('r-annotationdbi', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-biocparallel', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-do-db', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-fgsea', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-ggplot2', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-gosemsim@2.0.0:', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-igraph', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-qvalue', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-reshape2', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-s4vectors', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-scales', when='@3.2.0:', type=('build', 'run'))
+
+    depends_on('r-rvcheck', when='@3.4.0:', type=('build', 'run'))
