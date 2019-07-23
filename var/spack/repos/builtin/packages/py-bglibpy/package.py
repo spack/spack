@@ -9,12 +9,12 @@ from spack import *
 class PyBglibpy(PythonPackage):
     """Pythonic Blue Brain simulator access"""
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/sim/BGLibPy"
+    url = "ssh://bbpcode.epfl.ch/sim/BGLibPy"
     git = "ssh://bbpcode.epfl.ch/sim/BGLibPy"
 
     version('develop', branch='master')
-    version(
-        '4.0.27',
-        commit='42d9c1f891ef1ec9af6d72c49ff3b7726a009951')
+    version('4.0.27', commit='42d9c1f891ef1ec9af6d72c49ff3b7726a009951')
+    version('4.0.17', commit='e90513f52a7d9ca3c16877ae7a2bcb8df31c8545')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
