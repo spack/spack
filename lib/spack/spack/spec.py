@@ -1305,7 +1305,7 @@ class Spec(object):
 
         return b32_hash
 
-    def _cached_hash(self, length, attr, hash):
+    def _cached_hash(self, hash, length=None):
         """Helper function for storing a cached hash on the spec.
 
         This will run _spec_hash() with the deptype and package_hash
@@ -1315,13 +1315,16 @@ class Spec(object):
         Arguments:
             hash (SpecHashDescriptor): type of hash to generate.
         """
-        hash_string = getattr(self, attr, None)
+        if not hash.attr:
+            return self._spec_hash(hash)[:length]
+
+        hash_string = getattr(self, hash.attr, None)
         if hash_string:
             return hash_string[:length]
         else:
             hash_string = self._spec_hash(hash)
             if self.concrete:
-                setattr(self, attr, hash_string)
+                setattr(self, hash.attr, hash_string)
 
             return hash_string[:length]
 
@@ -1333,7 +1336,7 @@ class Spec(object):
         revise this to include more detailed provenance when the
         concretizer can more aggressievly reuse installed dependencies.
         """
-        return self._cached_hash(length, '_hash', ht.dag_hash)
+        return self._cached_hash(ht.dag_hash, length)
 
     def build_hash(self, length=None):
         """Hash used to store specs in environments.
@@ -1341,7 +1344,7 @@ class Spec(object):
         This hash includes build dependencies, and we need to preserve
         them to be able to rebuild an entire environment for a user.
         """
-        return self._cached_hash(length, '_build_hash', ht.build_hash)
+        return self._cached_hash(ht.build_hash, length)
 
     def full_hash(self, length=None):
         """Hash  to determine when to rebuild packages in the build pipeline.
@@ -1352,7 +1355,7 @@ class Spec(object):
 
         TODO: investigate whether to include build deps here.
         """
-        return self._cached_hash(length, '_full_hash', ht.full_hash)
+        return self._cached_hash(ht.full_hash, length)
 
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
@@ -1456,7 +1459,7 @@ class Spec(object):
             d['dependencies'] = syaml_dict([
                 (name,
                  syaml_dict([
-                     ('hash', dspec.spec._spec_hash(hash)),
+                     ('hash', dspec.spec._cached_hash(hash)),
                      ('type', sorted(str(s) for s in dspec.deptypes))])
                  ) for name, dspec in sorted(deps.items())
             ])
