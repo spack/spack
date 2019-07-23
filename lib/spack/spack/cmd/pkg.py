@@ -7,15 +7,15 @@ from __future__ import print_function
 
 import os
 import argparse
+import re
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
-from llnl.util.filesystem import working_dir
 
+import spack.cmd
 import spack.paths
 import spack.repo
 from spack.util.executable import which
-from spack.cmd import spack_is_git_repo
 
 description = "query packages associated with particular git revisions"
 section = "developer"
@@ -57,6 +57,10 @@ def setup_parser(subparser):
     add_parser.add_argument(
         'rev2', nargs='?', default='HEAD',
         help="revision to compare to rev1 (default is HEAD)")
+    add_parser.add_argument(
+        '-t', '--type', action='store', default='C',
+        help="Types of changes to show (A: added, R: removed, "
+        "C: changed); default is 'C'")
 
     rm_parser = sp.add_parser('removed', help=pkg_removed.__doc__)
     rm_parser.add_argument(
@@ -84,20 +88,20 @@ def get_git():
 
 
 def list_packages(rev):
-    pkgpath = packages_path()
-    relpath = pkgpath[len(spack.paths.prefix + os.path.sep):] + os.path.sep
-
     git = get_git()
-    with working_dir(spack.paths.prefix):
-        output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
-                     output=str)
-    return sorted(line[len(relpath):] for line in output.split('\n') if line)
+
+    # git ls-tree does not support ... merge-base syntax, so do it manually
+    if rev.endswith('...'):
+        ref = rev.replace('...', '')
+        rev = git('merge-base', ref, 'HEAD', output=str).strip()
+
+    output = git('ls-tree', '--name-only', rev, output=str)
+    return sorted(line for line in output.split('\n')
+                  if line and not line.startswith('.'))
 
 
 def pkg_add(args):
     """add a package to the git stage with `git add`"""
-    pkgpath = packages_path()
-
     for pkg_name in args.packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
@@ -105,8 +109,7 @@ def pkg_add(args):
                     pkg_name, filename)
 
         git = get_git()
-        with working_dir(spack.paths.prefix):
-            git('-C', pkgpath, 'add', filename)
+        git('add', filename)
 
 
 def pkg_list(args):
@@ -151,24 +154,38 @@ def pkg_added(args):
 
 def pkg_changed(args):
     """show packages changed since a commit"""
-    pkgpath = spack.repo.path.get_repo('builtin').packages_path
-    rel_pkg_path = os.path.relpath(pkgpath, spack.paths.prefix)
+    lower_type = args.type.lower()
+    if not re.match('^[arc]*$', lower_type):
+        tty.die("Invald change type: '%s'." % args.type,
+                "Can contain only A (added), R (removed), or C (changed)")
+
+    removed, added = diff_packages(args.rev1, args.rev2)
 
     git = get_git()
-    paths = git('diff', '--name-only', args.rev1, args.rev2, pkgpath,
-                output=str).strip().split('\n')
+    out = git('diff', '--relative', '--name-only', args.rev1, args.rev2,
+              output=str).strip()
 
-    packages = set([])
-    for path in paths:
-        path = path.replace(rel_pkg_path + os.sep, '')
+    lines = [] if not out else re.split(r'\s+', out)
+    changed = set()
+    for path in lines:
         pkg_name, _, _ = path.partition(os.sep)
-        packages.add(pkg_name)
+        if pkg_name not in added and pkg_name not in removed:
+            changed.add(pkg_name)
 
-    colify(sorted(packages))
+    packages = set()
+    if 'a' in lower_type:
+        packages |= added
+    if 'r' in lower_type:
+        packages |= removed
+    if 'c' in lower_type:
+        packages |= changed
+
+    if packages:
+        colify(sorted(packages))
 
 
 def pkg(parser, args):
-    if not spack_is_git_repo():
+    if not spack.cmd.spack_is_git_repo():
         tty.die("This spack is not a git clone. Can't use 'spack pkg'")
 
     action = {'add': pkg_add,
