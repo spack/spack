@@ -30,7 +30,6 @@ class QuantumEspresso(Package):
     version('5.4',   '085f7e4de0952e266957bbc79563c54e')
     version('5.3',   'be3f8778e302cffb89258a5f936a7592')
     version('develop', branch='develop')
-    version('latest-backports', branch='qe-6.3-backports')
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
