@@ -164,6 +164,7 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     flag_handler = CMakePackage.build_system_flags
 
+    @when('@:3.7.0')
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
         # for libxml2, so we fix that.
