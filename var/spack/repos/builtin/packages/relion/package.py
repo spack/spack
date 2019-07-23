@@ -15,7 +15,7 @@ class Relion(CMakePackage, CudaPackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
 
-    version('3.0.7', preferred='true', tag='3.0.7')
+    version('3.0.7', tag='3.0.7')
     # relion has no develop branch though pulling from master
     # should be considered the same as develop
     version('develop', branch='master')
@@ -42,6 +42,7 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('libtiff')
 
     depends_on('cuda', when='+cuda')
+    depends_on('cuda@9:10.99', when='@3: +cuda')
 
     def cmake_args(self):
 
