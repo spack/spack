@@ -30,9 +30,6 @@ class Ioapi(MakefilePackage):
         makefile.filter('^BININST.*', 'BININST = ' + prefix.bin)
         makefile.filter('^LIBINST.*', 'LIBINST = ' + prefix.lib)
 
-    def build(self, spec, prefix):
-        make()
-
     def install(self, spec, prefix):
         make('install')
         # Install the header files.
