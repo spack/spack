@@ -17,10 +17,10 @@ class Xsdk(BundlePackage):
 
     maintainers = ['balay', 'luszczek']
 
-    version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('0.4.0', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('0.3.0', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
+    version('develop')
+    version('0.4.0')
+    version('0.3.0')
+    version('xsdk-0.2.0')
 
     variant('debug', default=False, description='Compile in debug mode')
     variant('cuda', default=False, description='Enable CUDA dependent packages')
