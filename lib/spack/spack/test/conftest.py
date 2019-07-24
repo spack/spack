@@ -687,22 +687,28 @@ def mock_git_repository(tmpdir_factory):
 
     checks = {
         'master': Bunch(
-            revision='master', file=r0_file, args={'git': str(repodir)}
+            revision='master', file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
-                'git': str(repodir), 'branch': branch
+                'git': url, 'branch': branch
+            }
+        ),
+        'tag-branch': Bunch(
+            revision=tag_branch, file=tag_file, args={
+                'git': url, 'branch': tag_branch
             }
         ),
         'tag': Bunch(
-            revision=tag, file=tag_file, args={'git': str(repodir), 'tag': tag}
+            revision=tag, file=tag_file, args={'git': url, 'tag': tag}
         ),
         'commit': Bunch(
-            revision=r1, file=r1_file, args={'git': str(repodir), 'commit': r1}
+            revision=r1, file=r1_file, args={'git': url, 'commit': r1}
         )
     }
 
-    t = Bunch(checks=checks, url=url, hash=rev_hash, path=str(repodir))
+    t = Bunch(checks=checks, url=url, hash=rev_hash,
+              path=str(repodir), git_exe=git)
     yield t
 
 
