@@ -710,6 +710,19 @@ def make_compiler_list(detected_versions, module_mapping):
                     compiler.modules = list(
                         set(compiler.modules) | module_mapping[bindir])
 
+    # Get set of all modules which provide any compiler we found
+    compiler_modules = set()
+    for compiler in compilers:
+        compiler_modules.update(compiler.modules)
+
+    # filter compiler modules by heuristic
+    # intel compiler module liable to add gcc to path
+    # if a module is for another compiler, exclude it from gcc compilers
+    for cm in compiler_modules:
+        cs_with_module = list(filter(lambda x: cm in x.modules, compilers))
+        if any(c.name != 'gcc' for c in cs_with_module):
+            for c in filter(lambda x: x.name == 'gcc', cs_with_module):
+                c.modules.remove(cm)
 
     return compilers
 
