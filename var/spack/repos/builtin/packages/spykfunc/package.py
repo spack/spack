@@ -53,8 +53,8 @@ class Spykfunc(PythonPackage):
     # accessible. Add explicit dependency for now.
     depends_on('java@8', type=('build', 'run'))
 
-    depends_on('mvdtool~mpi', when='@:0.13.1')
-    depends_on('mvdtool~mpi+python', type=('build', 'run'), when='@0.13.2:0.14.3')
+    depends_on('mvdtool@:1.999~mpi', when='@:0.13.1')
+    depends_on('mvdtool@:1.999~mpi+python', type=('build', 'run'), when='@0.13.2:0.14.3')
     depends_on('py-mvdtool', type=('build', 'run'), when='@0.14.4:')
 
     depends_on('python@3.6:')
