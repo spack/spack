@@ -37,6 +37,7 @@ modules:
       - neurodamus-hippocampus
       - neurodamus-neocortex
       - neurodamus-thalamus
+      - neurodamus-mousify
       #- 'neuron+mpi%intel'
       - neuron@7.6.6
       - parquet-converters
