@@ -383,3 +383,20 @@ def test_pkg_install_log(install_mockery):
 
     # Cleanup
     shutil.rmtree(log_dir)
+
+
+def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
+    """Test attempts to perform install phases with unconcretized spec."""
+    spec = Spec('trivial-install-test-package')
+
+    with pytest.raises(ValueError, match="only install concrete packages"):
+        spec.package.do_install()
+
+    with pytest.raises(ValueError, match="fetch concrete packages"):
+        spec.package.do_fetch()
+
+    with pytest.raises(ValueError, match="stage concrete packages"):
+        spec.package.do_stage()
+
+    with pytest.raises(ValueError, match="patch concrete packages"):
+        spec.package.do_patch()
