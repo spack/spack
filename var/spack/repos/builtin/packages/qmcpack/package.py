@@ -22,6 +22,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.8.0', tag='v3.8.0')
     version('3.7.0', tag='v3.7.0')
     version('3.6.0', tag='v3.6.0')
     version('3.5.0', tag='v3.5.0')
@@ -63,13 +64,6 @@ class Qmcpack(CMakePackage, CudaPackage):
         when='~mpi',
         msg='Parallel collective I/O requires MPI-enabled QMCPACK. ' \
         'Please add "~phdf5" to the Spack install line for serial QMCPACK.'
-    )
-    conflicts(
-        '+qe',
-        when='~mpi',
-        msg='QMCPACK QE variant requires MPI due to limitation in QE build ' \
-        'system. Please add "~qe" to the Spack install line for serial ' \
-        'QMCPACK.'
     )
     conflicts(
         '+soa',
@@ -141,17 +135,15 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('py-matplotlib', when='+gui', type='run')
 
     # B-spline basis calculation require a patched version of
-    # Quantum Espresso 6.4 (see QMCPACK manual)
-    # Building explicitly without ELPA due to issues in Quantum Espresso
-    # Spack package
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
-    patch_checksum = 'ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994'
-    depends_on('quantum-espresso@6.4~elpa+mpi hdf5=parallel',
-               patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
+    # Quantum Espresso 6.4.1 (see QMCPACK manual)
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
+    patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
+    depends_on('quantum-espresso@6.4.1+mpi hdf5=parallel',
+               patches=patch(patch_url, sha256=patch_checksum),
                    when='+qe+mpi', type='run')
 
-    depends_on('quantum-espresso@6.4~elpa~scalapack~mpi hdf5=serial',
-               patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
+    depends_on('quantum-espresso@6.4.1~scalapack~mpi hdf5=serial',
+               patches=patch(patch_url, sha256=patch_checksum),
                    when='+qe~mpi', type='run')
 
     # Backport several patches from recent versions of QMCPACK
@@ -172,6 +164,7 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     flag_handler = CMakePackage.build_system_flags
 
+    @when('@:3.7.0')
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
         # for libxml2, so we fix that.
