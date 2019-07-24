@@ -240,7 +240,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ccflags='"
-            substitute = "ccflags='%s " % ' '.join(self.spec.compiler_flags['cflags'])
+            substitute = "ccflags='%s " % ' '\
+                         .join(self.spec.compiler_flags['cflags'])
             filter_file(match, substitute, config_heavy, **kwargs)
 
     @contextmanager
