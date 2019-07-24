@@ -700,6 +700,16 @@ function _spack_log_parse {
     fi
 }
 
+function _spack_maintainers {
+    if $list_options
+    then
+        compgen -W "-h --help -a --all --maintained --unmaintained
+                    --by-user" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
 function _spack_mirror {
     if $list_options
     then
