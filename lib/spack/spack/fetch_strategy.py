@@ -1102,6 +1102,10 @@ def _from_merged_attrs(fetcher, pkg, version):
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
+
+    if not pkg.has_code:
+        raise NoFetchStrategyError(pkg)
+
     check_pkg_attributes(pkg)
 
     if not isinstance(version, Version):
@@ -1252,3 +1256,10 @@ class NoStageError(FetchError):
         super(NoStageError, self).__init__(
             "Must call FetchStrategy.set_stage() before calling %s" %
             method.__name__)
+
+
+class NoFetchStrategyError(FetchError):
+    """Raised when attempt to retrieve fetch strategy for no-code pkg."""
+    def __init__(self, pkg=None):
+        msg = "{0} is a no-code package so has no fetch strategy".format(pkg)
+        super(FetchError, self).__init__(msg)
