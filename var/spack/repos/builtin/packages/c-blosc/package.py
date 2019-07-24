@@ -35,6 +35,10 @@ class CBlosc(CMakePackage):
     def cmake_args(self):
         args = []
 
+        # Some of the tests do not build with icc.
+        if '%intel' in self.spec:
+            args.append('-DBUILD_TESTS=OFF')
+
         if '+avx2' in self.spec:
             args.append('-DDEACTIVATE_AVX2=OFF')
         else:

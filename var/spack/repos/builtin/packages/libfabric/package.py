@@ -37,7 +37,8 @@ class Libfabric(AutotoolsPackage):
                'rxm',
                'rxd',
                'mlx',
-               'tcp')
+               'tcp',
+               'efa')
 
     variant(
        'fabrics',

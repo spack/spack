@@ -33,6 +33,9 @@ class Ncurses(AutotoolsPackage):
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
 
+    def setup_environment(self, spack_env, run_env):
+        spack_env.unset('TERMINFO')
+
     def configure(self, spec, prefix):
         opts = [
             'CFLAGS={0}'.format(self.compiler.pic_flag),

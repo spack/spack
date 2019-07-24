@@ -20,11 +20,13 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
 import spack.error
+import spack.hash_types as ht
 import spack.repo
 import spack.schema.env
 import spack.spec
 import spack.util.spack_json as sjson
 import spack.config
+
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.environment import EnvironmentModifications
 import spack.architecture as architecture
@@ -72,7 +74,7 @@ spack:
 valid_environment_name_re = r'^\w[\w-]*$'
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 1
+lockfile_format_version = 2
 
 #: legal first keys in the spack.yaml manifest file
 env_schema_keys = ('spack', 'env')
@@ -145,8 +147,12 @@ def activate(
         cmds += 'export SPACK_ENV=%s;\n' % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
-            cmds += 'if [ -z "${SPACK_OLD_PS1}" ]; then\n'
-            cmds += 'export SPACK_OLD_PS1="${PS1}"; fi;\n'
+            cmds += 'if [ -z ${SPACK_OLD_PS1+x} ]; then\n'
+            cmds += '    if [ -z ${PS1+x} ]; then\n'
+            cmds += "        PS1='$$$$';\n"
+            cmds += '    fi;\n'
+            cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
+            cmds += 'fi;\n'
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
 
     if add_view and default_view_name in env.views:
@@ -184,11 +190,17 @@ def deactivate(shell='sh'):
         cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
         cmds += 'unalias despacktivate;\n'
     else:
+        cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
+        cmds += 'fi;\n'
         cmds += 'unalias despacktivate;\n'
-        cmds += 'if [ -n "$SPACK_OLD_PS1" ]; then\n'
-        cmds += 'export PS1="$SPACK_OLD_PS1";\n'
-        cmds += 'unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
+        cmds += 'if [ ! -z ${SPACK_OLD_PS1+x} ]; then\n'
+        cmds += '    if [ "$SPACK_OLD_PS1" = \'$$$$\' ]; then\n'
+        cmds += '        unset PS1; export PS1;\n'
+        cmds += '    else\n'
+        cmds += '        export PS1="$SPACK_OLD_PS1";\n'
+        cmds += '    fi;\n'
+        cmds += '    unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
         cmds += 'fi;\n'
 
     if default_view_name in _active_environment.views:
@@ -462,9 +474,7 @@ class ViewDescriptor(object):
             # recognize environment specs (which do store build deps), then
             # they need to be stripped
             if spec.concrete:  # Do not link unconcretized roots
-                specs_for_view.append(spack.spec.Spec.from_dict(
-                    spec.to_dict(all_deps=False)
-                ))
+                specs_for_view.append(spec.copy(deps=('link', 'run')))
 
         if self.select:
             specs_for_view = list(filter(self.select_fn, specs_for_view))
@@ -525,10 +535,16 @@ class Environment(object):
 
             if os.path.exists(self.lock_path):
                 with open(self.lock_path) as f:
-                    self._read_lockfile(f)
+                    read_lock_version = self._read_lockfile(f)
                 if default_manifest:
                     # No manifest, set user specs from lockfile
                     self._set_user_specs_from_lockfile()
+
+                if read_lock_version == 1:
+                    tty.debug(
+                        "Storing backup of old lockfile {0} at {1}".format(
+                            self.lock_path, self._lock_backup_v1_path))
+                    shutil.copy(self.lock_path, self._lock_backup_v1_path)
 
         if with_view is False:
             self.views = {}
@@ -584,8 +600,8 @@ class Environment(object):
         """Copy user_specs from a read-in lockfile."""
         self.spec_lists = {
             user_speclist_name: SpecList(
-                user_speclist_name, [Spec(s)
-                                     for s in self.concretized_user_specs]
+                user_speclist_name,
+                [str(s) for s in self.concretized_user_specs]
             )
         }
 
@@ -629,6 +645,11 @@ class Environment(object):
     def lock_path(self):
         """Path to spack.lock file in this environment."""
         return os.path.join(self.path, lockfile_name)
+
+    @property
+    def _lock_backup_v1_path(self):
+        """Path to backup of v1 lockfile before conversion to v2"""
+        return self.lock_path + '.backup.v1'
 
     @property
     def env_subdir_path(self):
@@ -801,7 +822,7 @@ class Environment(object):
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
 
-    def concretize(self, force=False):
+    def concretize(self, force=False, _display=True):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -842,12 +863,13 @@ class Environment(object):
                 concrete = _concretize_from_constraints(uspec_constraints)
                 self._add_concrete_spec(uspec, concrete)
 
-                # Display concretized spec to the user
-                sys.stdout.write(concrete.tree(
-                    recurse_dependencies=True,
-                    status_fn=spack.spec.Spec.install_status,
-                    hashlen=7, hashes=True)
-                )
+                if _display:
+                    # Display concretized spec to the user
+                    sys.stdout.write(concrete.tree(
+                        recurse_dependencies=True,
+                        status_fn=spack.spec.Spec.install_status,
+                        hashlen=7, hashes=True)
+                    )
 
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
@@ -864,7 +886,7 @@ class Environment(object):
             # spec might be in the user_specs, but not installed.
             # TODO: Redo name-based comparison for old style envs
             spec = next(s for s in self.user_specs if s.satisfies(user_spec))
-            concrete = self.specs_by_hash.get(spec.dag_hash())
+            concrete = self.specs_by_hash.get(spec.build_hash())
             if not concrete:
                 concrete = spec.concretized()
                 self._add_concrete_spec(spec, concrete)
@@ -976,7 +998,7 @@ class Environment(object):
         # update internal lists of specs
         self.concretized_user_specs.append(spec)
 
-        h = concrete.dag_hash()
+        h = concrete.build_hash()
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
@@ -1005,6 +1027,10 @@ class Environment(object):
 
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""
+        # Note this uses dag-hashes calculated without build deps as keys,
+        # whereas the environment tracks specs based on dag-hashes calculated
+        # with all dependencies. This function should not be used by an
+        # Environment object for management of its own data structures
         hashes = {}
         for h in self.concretized_order:
             specs = self.specs_by_hash[h].traverse(deptype=('link', 'run'))
@@ -1087,9 +1113,11 @@ class Environment(object):
         concrete_specs = {}
         for spec in self.specs_by_hash.values():
             for s in spec.traverse():
-                dag_hash = s.dag_hash()
-                if dag_hash not in concrete_specs:
-                    concrete_specs[dag_hash] = s.to_node_dict(all_deps=True)
+                dag_hash_all = s.build_hash()
+                if dag_hash_all not in concrete_specs:
+                    spec_dict = s.to_node_dict(hash=ht.build_hash)
+                    spec_dict[s.name]['hash'] = s.dag_hash()
+                    concrete_specs[dag_hash_all] = spec_dict
 
         hash_spec_list = zip(
             self.concretized_order, self.concretized_user_specs)
@@ -1118,6 +1146,7 @@ class Environment(object):
         """Read a lockfile from a file or from a raw string."""
         lockfile_dict = sjson.load(file_or_json)
         self._read_lockfile_dict(lockfile_dict)
+        return lockfile_dict['_meta']['lockfile-version']
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
@@ -1138,8 +1167,25 @@ class Environment(object):
                 specs_by_hash[dag_hash]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)
 
-        self.specs_by_hash = dict(
-            (x, y) for x, y in specs_by_hash.items() if x in root_hashes)
+        # If we are reading an older lockfile format (which uses dag hashes
+        # that exclude build deps), we use this to convert the old
+        # concretized_order to the full hashes (preserving the order)
+        old_hash_to_new = {}
+        self.specs_by_hash = {}
+        for _, spec in specs_by_hash.items():
+            dag_hash = spec.dag_hash()
+            build_hash = spec.build_hash()
+            if dag_hash in root_hashes:
+                old_hash_to_new[dag_hash] = build_hash
+
+            if (dag_hash in root_hashes or build_hash in root_hashes):
+                self.specs_by_hash[build_hash] = spec
+
+        if old_hash_to_new:
+            # Replace any older hashes in concretized_order with hashes
+            # that include build deps
+            self.concretized_order = [
+                old_hash_to_new.get(h, h) for h in self.concretized_order]
 
     def write(self):
         """Writes an in-memory environment to its location on disk.
