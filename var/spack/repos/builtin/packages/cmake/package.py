@@ -115,7 +115,7 @@ class Cmake(Package):
         if name == 'cxxflags' and self.compiler.name == 'fj':
             cxx11plus_flags = (self.compiler.cxx11_flag,
                                self.compiler.cxx14_flag)
-            cxxpre11_flags = (self.cxx98_flags)
+            cxxpre11_flags = (self.compiler.cxx98_flag)
             if any(f in flags for f in cxxpre11_flags):
                 raise ValueError('cannot build cmake pre-c++11 standard')
             elif not any(f in flags for f in cxx11plus_flags):
