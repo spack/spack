@@ -438,6 +438,8 @@ generate_specs() {
     . ${venv}/bin/activate
     set -o nounset
     pip install -q --force-reinstall -U .
+    pip install -U setuptools
+    pip install -U setuptools-scm
 
     for stage in ${what}; do
         log "generating specs for ${stage}"

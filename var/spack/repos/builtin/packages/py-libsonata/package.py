@@ -12,9 +12,11 @@ class PyLibsonata(PythonPackage):
     homepage = "https://github.com/BlueBrain/libsonata"
     git = "https://github.com/BlueBrain/libsonata.git"
 
+    version('0.1.0', tag='v0.1.0', submodules=False, clean=False)
     version('0.0.3', tag='v0.0.3', submodules=True)
 
     depends_on('cmake@3.3:', type='build')
     depends_on('hdf5~mpi', type='build')
 
     depends_on('py-numpy@1.12:', type=('build', 'run'))
+    depends_on('py-setuptools-scm', type='build', when='@0.1:')

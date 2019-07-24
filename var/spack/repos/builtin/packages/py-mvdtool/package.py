@@ -18,8 +18,10 @@ class PyMvdtool(PythonPackage):
     version('2.0.0', tag='v2.0.0', submodules=True, clean=False)
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm', type='build')
 
     depends_on('cmake@3.2:', type='build')
     depends_on('py-numpy', type='run')
     depends_on('hdf5~mpi', type=('build', 'run'))
     depends_on('highfive', type='build')
+    depends_on('libsonata', type=('build', 'run'), when='@2.1:')
