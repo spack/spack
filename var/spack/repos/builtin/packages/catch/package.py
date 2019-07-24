@@ -20,13 +20,22 @@ class Catch(CMakePackage):
     # - CMake config package was added in 2.1.2
     conflicts('~single_header', when='@:1.6.1')
 
+    version('2.9.1', sha256='0b36488aca6265e7be14da2c2d0c748b4ddb9c70a1ea4da75736699c629f14ac')
+    version('2.9.0', sha256='00040cad9b6d6bb817ebd5853ff6dda23f9957153d8c4eedf85def0c9e787c42')
     version('2.8.0', sha256='b567c37446cd22c8550bfeb7e2fe3f981b8f3ab8b2148499a522e7f61b8a481d')
+    version('2.7.2', sha256='9f4116da13d8402b5145f95ab91ae0173cd27b804152d3bb2d4f9b6e64852af7')
+    version('2.7.1', sha256='04b303517284572c277597004a33c3f8c02a4d12ba73d5a4cb73b4a369dfef0b')
+    version('2.7.0', sha256='d4655e87c0ccda5a2e78bf4256fce8036feb969399503dcc8272f4c90347d9c0')
     version('2.6.1', sha256='b57c2d3362102a77955d3cd0181b792c496520349bfefee8379b9d35b8819f80')
     version('2.6.0', sha256='4c94a685557328eb1b0ed1017ca37c3a378742dc03b558cf02267b6ba8579577')
     version('2.5.0', sha256='720c84d18f4dc9eb23379941df2054e7bcd5ff9c215e4d620f8533a130d128ae')
+    version('2.4.2', sha256='9f3caf00749f9aa378d40db5a04019c684419457fd56cee625714de1bff45a92')
+    version('2.4.1', sha256='e1b559d77bd857cb0f773e3e826ac1d7e016cf14057fd14b9e99ec3b2c6b809f')
     version('2.4.0', sha256='ab176de36b886a33aa745fcf34642eac853bf677bda518a88655dc750c72d756')
     version('2.3.0', sha256='aaf6bbf81ce8522131bae2ea4d013a77b003bbb2017614f5872d5787687f8f5f')
     # releases 2.3.0+ changed to "catch2/catch.hpp" header
+    version('2.2.3', sha256='45e5e12cc5a98e098b0960d70c0d99b7168b711e85fb947dcd4d68ec3f8b8826')
+    version('2.2.2', sha256='e93aacf012579093fe6b4e686ff0488975cabee1e6b4e4f27a0acd898e8f09fd')
     version('2.2.1', '54e56803c84890636bd7fe6c3856b104')
     version('2.1.0', '70b44068976d46d48f3cd8796f675691d3bc726b')
     version('2.0.1', '5c191a031edebd0525640ed2f38cbf64bacb1803')
