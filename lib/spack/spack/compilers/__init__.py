@@ -634,13 +634,35 @@ def make_compiler_list(detected_versions, module_mapping):
     sort_fn = lambda x: (x.id, x.variation, x.language)
     compilers_s = sorted(detected_versions, key=sort_fn)
 
+    def module_match_heuristic(modules, compiler_id):
+        # A heuristic for how likely the modules given are to be modules for
+        # the compiler given. Used in multiple sort keys
+        attributes = [
+            bool(modules),
+            any(compiler_id.compiler_name in m for m in modules),
+            any(compiler_id.compiler_name in m and compiler_id.version in m
+                for m in modules),
+            any(m.endswith('%s/%s' % (compiler_id.compiler_name,
+                                      compiler_id.version))
+                for m in modules)
+        ]
+        positives = list(filter(lambda x: x, attributes))
+        return len(positives)
+
+    def group_sort_key(detect_version_args):
+        # A key to sort detected paths by how confident we are that we found
+        # an appropriate module for the path.
+        binpath = os.path.dirname(detect_version_args.path)
+        return module_match_heuristic(module_mapping.get(binpath, ''),
+                                      detect_version_args.id)
+
     # Gather items in a dictionary by the id, name variation and language
     compilers_d = {}
     for sort_key, group in itertools.groupby(compilers_s, key=sort_fn):
         compiler_id, name_variation, language = sort_key
         by_compiler_id = compilers_d.setdefault(compiler_id, {})
         by_name_variation = by_compiler_id.setdefault(name_variation, {})
-        by_name_variation[language] = next(x.path for x in group)
+        by_name_variation[language] = max(group, key=group_sort_key).path
 
     # For each unique compiler id select the name variation with most entries
     # i.e. the one that supports most languages
@@ -664,20 +686,13 @@ def make_compiler_list(detected_versions, module_mapping):
                 modules_for_paths |= module_mapping.get(
                     os.path.dirname(p), set())
 
-            positive_attributes = [
-                len(modules_for_paths) > 0,
-                any(compiler_id.compiler_name in m for m in modules_for_paths),
-                any(compiler_id.compiler_name in m and compiler_id.version in m
-                    for m in modules_for_paths),
-                any(m.endswith('%s/%s' % (compiler_id.compiler_name,
-                                          compiler_id.version))
-                    for m in modules_for_paths)
-            ]
+            module_suitability = module_match_heuristic(modules_for_paths,
+                                                        compiler_id)
+            return (len(paths), module_suitability)
 
-            positives = list(filter(lambda x: x, positive_attributes))
-            return (len(paths), len(positives))
-
-        selected_name_variation = max(by_compiler_id.keys(), key=sort_tuple)
+        selected_name_variation = sorted(list(by_compiler_id.keys()),
+                                         key=sort_tuple,
+                                         reverse=True)[0]
 
         # Add it to the list of compilers
         selected = by_compiler_id[selected_name_variation]
@@ -694,6 +709,7 @@ def make_compiler_list(detected_versions, module_mapping):
                 if bindir in module_mapping:
                     compiler.modules = list(
                         set(compiler.modules) | module_mapping[bindir])
+
 
     return compilers
 
