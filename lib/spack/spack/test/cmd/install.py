@@ -25,7 +25,6 @@ from spack.main import SpackCommand
 from six.moves.urllib.error import HTTPError, URLError
 
 install = SpackCommand('install')
-share = SpackCommand('share')
 
 
 @pytest.fixture(scope='module')
