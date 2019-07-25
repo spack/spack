@@ -399,6 +399,7 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
     assert all(x not in after for x in deleted)
 
 
+@pytest.mark.regression('12085')
 @pytest.mark.parametrize('before,after,search_list', [
     # Set environment variables
     ({}, {'FOO': 'foo'}, [environment.SetEnv('FOO', 'foo')]),
@@ -420,7 +421,12 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
     ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/c/path:/a/path'}, [
         environment.RemovePath('FOO_PATH', '/b/path'),
         environment.PrependPath('FOO_PATH', '/c/path')
-    ])
+    ]),
+    # Modify two variables in the same environment
+    ({'FOO': 'foo', 'BAR': 'bar'}, {'FOO': 'baz', 'BAR': 'baz'}, [
+        environment.SetEnv('FOO', 'baz'),
+        environment.SetEnv('BAR', 'baz'),
+    ]),
 ])
 def test_from_environment_diff(before, after, search_list):
 

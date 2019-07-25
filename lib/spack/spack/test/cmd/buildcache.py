@@ -17,5 +17,6 @@ buildcache = spack.main.SpackCommand('buildcache')
     platform.system().lower() != 'linux',
     reason='implementation for MacOS still missing'
 )
+@pytest.mark.db
 def test_buildcache_preview_just_runs(database):
     buildcache('preview', 'mpileaks')
