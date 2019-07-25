@@ -16,6 +16,7 @@ class Alquimia(CMakePackage):
     maintainers = ['smolins', 'balay']
 
     version('develop')
+    version('xsdk-0.5.0', branch='master')
     version('xsdk-0.4.0', commit='2edad6733106142d014bb6e6a73c2b21d5e3cf2d')
     version('xsdk-0.3.0', tag='xsdk-0.3.0')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
@@ -25,6 +26,7 @@ class Alquimia(CMakePackage):
 
     depends_on('mpi')
     depends_on('hdf5')
+    depends_on('pflotran@xsdk-0.5.0', when='@xsdk-0.5.0')
     depends_on('pflotran@xsdk-0.4.0', when='@xsdk-0.4.0')
     depends_on('pflotran@xsdk-0.3.0', when='@xsdk-0.3.0')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')

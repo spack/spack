@@ -35,6 +35,7 @@ class Trilinos(CMakePackage):
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
+    version('12.16', branch='develop')
     version('12.14.1', '52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
@@ -190,6 +191,12 @@ class Trilinos(CMakePackage):
              commit='4fe4d9d56cfd4f8a61f392b81d8efd0e389ee764',  # branch dtk-3.0
              placement='DataTransferKit',
              when='+dtk @12.14.0:12.14.99')
+    resource(name='dtk',
+             git='https://github.com/ornl-cees/DataTransferKit.git',
+             branch='master',
+             placement='DataTransferKit',
+             submodules=True,
+             when='+dtk @12.16.0:12.16.99')
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit.git',
              branch='master',
