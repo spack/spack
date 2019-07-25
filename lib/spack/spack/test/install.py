@@ -142,6 +142,7 @@ def test_installed_dependency_request_conflicts(
 
 def test_install_dependency_symlinks(
         install_mockery, mock_fetch, mutable_mock_packages):
+    """Test dependency flattening/symlinks mock package."""
     spec = Spec('flatten-deps')
     spec.concretize()
     pkg = spec.package

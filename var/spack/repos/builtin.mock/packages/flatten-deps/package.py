@@ -16,4 +16,4 @@ class FlattenDeps(Package):
 
     depends_on('dependency-install')
 
-    install = spack.package.install_dependency_symlinks
+    install = install_dependency_symlinks
