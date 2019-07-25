@@ -12,6 +12,7 @@ libboost-all-dev
 libbz2-dev
 libhdf5-serial-dev
 libhdf5-openmpi-dev
+libmlpack-dev
 libncurses-dev
 libpciaccess-dev
 libopenmpi-dev
