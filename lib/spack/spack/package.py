@@ -199,7 +199,7 @@ class PackageMeta(
 
         return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
 
-    def __init__(cls, name, bases, attr_dict):
+    def __init__(cls, name, bases, attr_dict):  # noqa: N805
         """
         Perform package metaclass-level initializations/checks.
         """
