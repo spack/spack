@@ -17,8 +17,18 @@ class Minimap2(MakefilePackage):
     version('2.10', '52b36f726ec00bfca4a2ffc23036d1a2b5f96f0aae5a92fd826be6680c481c20') 
     version('2.2', '5b68e094f4fa3dfbd9b37d5b654b7715')
 
-    depends_on('py-mappy', type=('build', 'run'))
+    conflicts('target=aarch64', when='@:2.10')
     depends_on('zlib')
+
+    @property
+    def build_targets(self):
+        make_arg = []
+        if self.spec.satisfies("target=aarch64"):
+            make_arg.extend([
+                'arm_neon=1',
+                'aarch64=1'
+            ])
+        return make_arg
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
