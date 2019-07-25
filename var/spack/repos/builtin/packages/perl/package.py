@@ -239,6 +239,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             substitute = "ld='{ld}'".format(ld=self.compiler.cc)
             filter_file(match, substitute, config_heavy, **kwargs)
 
+            match = "^ccflags='"
+            substitute = "ccflags='%s " % ' '\
+                         .join(self.spec.compiler_flags['cflags'])
+            filter_file(match, substitute, config_heavy, **kwargs)
+
     @contextmanager
     def make_briefly_writable(self, path):
         """Temporarily make a file writable, then reset"""
