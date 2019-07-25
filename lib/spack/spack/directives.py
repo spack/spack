@@ -17,13 +17,14 @@ definition to modify the package, for example:
 
 The available directives are:
 
-  * ``version``
+  * ``conflicts``
   * ``depends_on``
-  * ``provides``
   * ``extends``
   * ``patch``
-  * ``variant``
+  * ``provides``
   * ``resource``
+  * ``variant``
+  * ``version``
 
 """
 
@@ -138,8 +139,8 @@ class DirectiveMeta(type):
             cls, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
-        # The class is being created: if it is a package we must ensure
-        # that the directives are called on the class to set it up
+        # The instance is being initialized: if it is a package we must ensure
+        # that the directives are called to set it up.
 
         if 'spack.pkg' in cls.__module__:
             # Ensure the presence of the dictionaries associated
@@ -269,7 +270,7 @@ def version(ver, checksum=None, **kwargs):
     later. See ``spack.fetch_strategy.for_package_version()``.
     """
     def _execute_version(pkg):
-        if checksum:
+        if checksum is not None:
             kwargs['checksum'] = checksum
 
         # Store kwargs for the package to later with a fetch_strategy.

@@ -59,7 +59,7 @@ from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
-from spack.version import Version
+from spack.version import Version, VersionError, VersionChecksumError
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
 
@@ -137,10 +137,9 @@ class PackageMeta(
     spack.directives.DirectiveMeta,
     spack.mixins.PackageMixinsMeta
 ):
-    """Conveniently transforms attributes to permit extensible phases
-
-    Iterates over the attribute 'phases' and creates / updates private
-    InstallPhase attributes in the class that is being initialized
+    """
+    Package metaclass for supporting directives (e.g., depends_on) and
+    mixins (e.g., phases).
     """
     phase_fmt = '_InstallPhase_{0}'
 
@@ -148,7 +147,14 @@ class PackageMeta(
     _InstallPhase_run_after = {}
 
     def __new__(cls, name, bases, attr_dict):
+        """
+        Instance creation is preceded by phase attribute transformations.
 
+        Conveniently transforms attributes to permit extensible phases by
+        iterating over the attribute 'phases' and creating / updating private
+        InstallPhase attributes in the class that will be initialized in
+        __init__.
+        """
         if 'phases' in attr_dict:
             # Turn the strings in 'phases' into InstallPhase instances
             # and add them as private attributes
@@ -192,6 +198,27 @@ class PackageMeta(
         _flush_callbacks('run_after')
 
         return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
+
+    def __init__(cls, name, bases, attr_dict):
+        """
+        Perform package metaclass-level initializations/checks.
+        """
+        super(PackageMeta, cls).__init__(name, bases, attr_dict)
+
+        # Directive metaclass attributes are now accessible so we can perform
+        # associated checks on them.
+
+        # Ensure versions are correct
+        if hasattr(cls, 'versions'):
+            allow_checksums = hasattr(cls, 'has_code') and cls.has_code
+            check_pkg_versions(name, cls.versions, allow_checksums)
+
+            # Version-ize the keys in versions dict
+            try:
+                cls.versions = dict((Version(v), h)
+                                    for v, h in cls.versions.items())
+            except ValueError as e:
+                raise ValueError("In package %s: %s" % (name, e.message))
 
     @staticmethod
     def register_callback(check_type, *phases):
@@ -284,6 +311,26 @@ def on_package_attributes(**attr_dict):
         return _wrapper
 
     return _execute_under_condition
+
+
+def check_pkg_versions(name, versions, allow_checksums=True):
+    """Ensure directive-generated package versions are valid."""
+
+    # Check version type and descriptors
+    for v, h in versions.items():
+        if not isinstance(v, Version):
+            raise VersionError('Expected a version instance for {0}, not {1}'.
+                               format(name, type(v)))
+
+        elif not isinstance(versions[v], dict):
+            raise VersionError(
+                'Expected a version dictionary for {0}\'s {1}, not {2}'.
+                format(name, v, type(v)))
+
+        if 'checksum' in h and not allow_checksums:
+            raise VersionChecksumError(
+                'Checksum detected in {0} of {1} when not allowed.'.
+                format(name, v))
 
 
 class PackageViewMixin(object):
@@ -417,6 +464,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     # These are default values for instance variables.
     #
 
+    # Automating the detection of URLs based on fetch strategy URL attributes
+    # presents backward compatibility challenges as dozens of existing built-in
+    # packages override url_for_version() instead of specifying a URL.
+    # Additionally, in some cases, the URL for different versions reside at
+    # different sites (e.g., py-basemap).
+    #: Most Spack packages are used to install source or binary code.
+    has_code = True
+
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
 
@@ -489,7 +544,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
-    #: List of required and optional attributes affecting a package's content.
+    #: List of attributes to be excluded from a package's hash.
     metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
                       'make_jobs']
 
@@ -499,21 +554,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Allow custom staging paths for packages
         self.path = None
-
-        # Check versions in the versions dict.
-        for v in self.versions:
-            assert (isinstance(v, Version))
-
-        # Check version descriptors
-        for v in sorted(self.versions):
-            assert (isinstance(self.versions[v], dict))
-
-        # Version-ize the keys in versions dict
-        try:
-            self.versions = dict((Version(v), h)
-                                 for v, h in self.versions.items())
-        except ValueError as e:
-            raise ValueError("In package %s: %s" % (self.name, e.message))
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -775,14 +815,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             composite_stage.append(stage)
 
         return composite_stage
-
-    # Automating the detection of URLs based on fetch strategy URL attributes
-    # presents backward compatibility challenges as dozens of existing built-in
-    # packages override url_for_version() instead of specifying a URL.
-    # Additionally, in some cases, the URL for different versions reside at
-    # different sites (e.g., py-basemap).
-    #: Most Spack packages are used to install source or binary code.
-    has_code = True
 
     @property
     def stage(self):

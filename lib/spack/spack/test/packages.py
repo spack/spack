@@ -12,6 +12,8 @@ from spack.paths import mock_packages_path
 from spack.util.naming import mod_to_class
 from spack.spec import Spec
 from spack.util.package_hash import package_content
+from spack.version import Version, VersionError, VersionChecksumError
+from spack.package import check_pkg_versions
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -369,3 +371,17 @@ def test_rpath_args(mutable_database):
     rpath_args = rec.spec.package.rpath_args
     assert '-rpath' in rpath_args
     assert 'mpich' in rpath_args
+
+
+def test_check_pkg_versions_errors():
+    """Test check_pkg_versions error paths."""
+
+    with pytest.raises(VersionError, match='Expected a version instance'):
+        check_pkg_versions('String', {'version': {}}, False)
+
+    with pytest.raises(VersionError, match='Expected a version dictionary'):
+        check_pkg_versions('version', {Version('1.0'): []}, False)
+
+    with pytest.raises(VersionChecksumError, match='Checksum detected'):
+        versions = {Version(2.0): {'checksum': '234'}}
+        check_pkg_versions('checksum', versions, False)
