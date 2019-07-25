@@ -15,6 +15,7 @@ class PyMvdtool(PythonPackage):
     git      = "https://github.com/BlueBrain/MVDTool.git"
 
     version('develop', branch='master', submodules=True, clean=False)
+    version('2.1.0', tag='v2.1.0', submodules=True, clean=False)
     version('2.0.0', tag='v2.0.0', submodules=True, clean=False)
 
     depends_on('py-setuptools', type='build')
