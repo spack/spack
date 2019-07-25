@@ -4,7 +4,6 @@ bison
 build-essential
 cmake
 curl
-cython
 diffutils
 flex
 gfortran

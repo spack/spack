@@ -37,8 +37,8 @@ packages:
         version: [2.6.2]
     hdf5:
         paths:
-            hdf5@1.10~mpi: /usr/lib/x86_64-linux-gnu/hdf5/serial
-            hdf5@1.10+mpi: /usr/lib/x86_64-linux-gnu/hdf5/openmpi
+            hdf5@1.10~mpi+hl: /usr/lib/x86_64-linux-gnu/hdf5/serial
+            hdf5@1.10+mpi+hl: /usr/lib/x86_64-linux-gnu/hdf5/openmpi
         version: [1.10]
     libpciaccess:
         paths:
@@ -86,10 +86,6 @@ packages:
         paths:
             python@2.7.15: /usr
         version: [2.7.15]
-    py-cython:
-        paths:
-            py-cython@0.26.1: /usr
-        version: [0.26.1]
     py-numpy:
         paths:
             py-numpy@1.13.3: /usr
