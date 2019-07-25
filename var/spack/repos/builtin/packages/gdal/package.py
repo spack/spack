@@ -29,7 +29,9 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('3.0.1',  sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
     version('3.0.0',  sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
+    version('2.4.2',  sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c')
     version('2.4.1',  sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad')
     version('2.4.0',  sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
     version('2.3.3',  sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe')
