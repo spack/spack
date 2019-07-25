@@ -82,3 +82,39 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
 
     all_specs = spack.store.layout.all_specs()
     assert len(all_specs) == expected_number_of_specs
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('mutable_database')
+def test_global_recursive_uninstall():
+    """Test recursive uninstall."""
+    uninstall('-g', '-y', '-a', '--dependents', 'callpath')
+
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == 8
+    # query specs with multiple configurations
+    mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
+    callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
+    mpi_specs = [s for s in all_specs if s.satisfies('mpi')]
+
+    assert len(mpileaks_specs) == 0
+    assert len(callpath_specs) == 0
+    assert len(mpi_specs) == 3
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('mutable_database')
+def test_upstream_recursive_uninstall():
+    """Test recursive uninstall."""
+    uninstall('--upstream=global', '-y', '-a', '--dependents', 'callpath')
+
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == 8
+    # query specs with multiple configurations
+    mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
+    callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
+    mpi_specs = [s for s in all_specs if s.satisfies('mpi')]
+
+    assert len(mpileaks_specs) == 0
+    assert len(callpath_specs) == 0
+    assert len(mpi_specs) == 3
