@@ -97,7 +97,7 @@ class Xsdk(Package):
     depends_on('omega-h@develop', when='@develop +omega-h')
     depends_on('omega-h@9.19.1', when='@0.4.0 +omega-h')
 
-    depends_on('strumpack@master', when='@develop')
+    depends_on('strumpack@develop', when='@develop')
     depends_on('strumpack@3.1.1', when='@0.4.0')
 
     depends_on('pumi@develop', when='@develop')
