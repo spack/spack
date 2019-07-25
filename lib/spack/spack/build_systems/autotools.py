@@ -58,7 +58,8 @@ class AutotoolsPackage(PackageBase):
     build_system_class = 'AutotoolsPackage'
     #: Whether or not to update ``config.guess`` on old architectures
     patch_config_guess = True
-    #: Whether or not to update ``libtool`` (currently only for Arm compiler)
+    #: Whether or not to update ``libtool`` (currently only for Arm/Clang
+    #: compilers)
     patch_libtool = True
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`
@@ -153,22 +154,20 @@ class AutotoolsPackage(PackageBase):
 
     @run_after('configure')
     def _do_patch_libtool(self):
-        """Some packages ship with older configure/config.guess scripts
-        which leads to a libtool script that does not work with newer
-        compilers (such as Arm). Add the missing flags to libtool."""
+        """If configure generates a "libtool" script that does not correctly
+        detect the compiler (and patch_libtool is set), patch in the correct
+        flags for the Arm and Clang/Flang compilers."""
 
         libtool = os.path.join(self.build_directory, "libtool")
-        if (self.patch_libtool and
-            self.spec.satisfies('%arm') and
-            os.path.exists(libtool)):
-            for line in fileinput.input(libtool, inplace=True):
-                # Replace empty linker and pic flags with values for Arm
-                # compiler
-                if line == 'wl=""\n':
-                    line = 'wl="-Wl,"\n'
-                if line == 'pic_flag=""\n':
-                    line = 'pic_flag="-fPIC -DPIC"\n'
-                sys.stdout.write(line)
+        if self.patch_libtool and os.path.exists(libtool):
+            if self.spec.satisfies('%arm') or self.spec.satisfies('%clang'):
+                for line in fileinput.input(libtool, inplace=True):
+                    # Replace missing flags with those for Arm/Clang
+                    if line == 'wl=""\n':
+                        line = 'wl="-Wl,"\n'
+                    if line == 'pic_flag=""\n':
+                        line = 'pic_flag="-fPIC -DPIC"\n'
+                    sys.stdout.write(line)
 
     @property
     def configure_directory(self):
