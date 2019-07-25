@@ -13,6 +13,7 @@ import multiprocessing
 import os
 import pytest
 import json
+import shutil
 
 from llnl.util.tty.colify import colify
 
@@ -37,6 +38,12 @@ def test_store(tmpdir):
 
     spack.store.store = real_store
 
+@pytest.fixture()
+def test_global_db_generation():
+    global_db_path = '$spack/opt/spack'
+    global_db_path = spack.util.path.canonicalize_path(global_db_path)
+    shutil.rmtree(os.path.join(global_db_path, '.spack-db'))
+    global_store = spack.store.Store(str(global_db_path))
 
 @pytest.fixture()
 def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
