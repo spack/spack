@@ -38,6 +38,9 @@ ARG revision=develop
 RUN if [[ "x$pr" != "x" ]]; then \
             git fetch origin +refs/pull/$pr/head:refs/remotes/origin/pull/$pr \
             && git checkout pull/$pr; \
+    elif [[ "x$revision" = "xdevelop" ]]; then \
+            git checkout $revision \
+            && git pull --ff-only; \
     else \
             git fetch \
             && git checkout $revision; \
