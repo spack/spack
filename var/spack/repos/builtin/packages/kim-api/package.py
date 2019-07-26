@@ -27,6 +27,8 @@ class KimApi(CMakePackage):
     url      = "https://s3.openkim.org/kim-api/kim-api-2.1.1.txz"
     git      = "https://github.com/openkim/kim-api.git"
 
+    maintainers = ['ellio167']
+
     version('develop', branch='devel')
     version('2.1.1', sha256="25c4e83c6caa83a1c4ad480b430f1926fb44813b64f548fdaedc45e310b5f6b9")
     version('2.1.0', sha256="d6b154b31b288ec0a5643db176950ed71f1ca83a146af210a1d5d01cce8ce958")
