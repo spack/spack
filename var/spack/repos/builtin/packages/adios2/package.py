@@ -26,11 +26,13 @@ class Adios2(CMakePackage):
             description='Also build shared libraries')
     variant('mpi', default=True,
             description='Enable MPI')
+
     # transforms
     variant('bzip2', default=True,
             description='Enable BZip2 compression')
     variant('zfp', default=True,
             description='Enable ZFP compression')
+
     # sz is broken in 2.2.0: https://github.com/ornladios/ADIOS2/issues/705
     # variant('sz', default=True,
     #         description='Enable SZ compression')
@@ -81,6 +83,10 @@ class Adios2(CMakePackage):
     depends_on('python@2.7:', type=('build', 'run'), when='+python')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='+python')
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi +python')
+
+    # Fix findmpi when called by dependees
+    # See https://github.com/ornladios/ADIOS2/pull/1632
+    patch('cmake-update-findmpi.patch', when='@2.4.0')
 
     def cmake_args(self):
         spec = self.spec
