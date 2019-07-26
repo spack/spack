@@ -23,9 +23,6 @@ class FontUtil(AutotoolsPackage):
     depends_on('mkfontscale', type='build')
     depends_on('mkfontdir', type='build')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-
     font_baseurl = 'https://www.x.org/archive/individual/font/'
     fonts = []
     # name, version, md5
@@ -104,7 +101,7 @@ class FontUtil(AutotoolsPackage):
 
         for font in fonts:
             fontroot = find(font, '*', recursive=False)
-            with working_dir(join_path(font, fontroot[0])):
+            with working_dir(fontroot[0]):
                 autoreconf(*autoconf_args)
                 configure = Executable("./configure")
                 configure('--prefix={0}'.format(self.prefix))
