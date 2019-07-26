@@ -59,7 +59,7 @@ from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
-from spack.version import Version, VersionError, VersionChecksumError
+from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
 
@@ -199,27 +199,6 @@ class PackageMeta(
 
         return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
 
-    def __init__(cls, name, bases, attr_dict):  # noqa: N805
-        """
-        Perform package metaclass-level initializations/checks.
-        """
-        super(PackageMeta, cls).__init__(name, bases, attr_dict)
-
-        # Directive metaclass attributes are now accessible so we can perform
-        # associated checks on them.
-
-        # Ensure versions are correct
-        if hasattr(cls, 'versions'):
-            allow_checksums = hasattr(cls, 'has_code') and cls.has_code
-            check_pkg_versions(name, cls.versions, allow_checksums)
-
-            # Version-ize the keys in versions dict
-            try:
-                cls.versions = dict((Version(v), h)
-                                    for v, h in cls.versions.items())
-            except ValueError as e:
-                raise ValueError("In package %s: %s" % (name, e.message))
-
     @staticmethod
     def register_callback(check_type, *phases):
         def _decorator(func):
@@ -311,26 +290,6 @@ def on_package_attributes(**attr_dict):
         return _wrapper
 
     return _execute_under_condition
-
-
-def check_pkg_versions(name, versions, allow_checksums=True):
-    """Ensure directive-generated package versions are valid."""
-
-    # Check version type and descriptors
-    for v, h in versions.items():
-        if not isinstance(v, Version):
-            raise VersionError('Expected a version instance for {0}, not {1}'.
-                               format(name, type(v)))
-
-        elif not isinstance(versions[v], dict):
-            raise VersionError(
-                'Expected a version dictionary for {0}\'s {1}, not {2}'.
-                format(name, v, type(v)))
-
-        if 'checksum' in h and not allow_checksums:
-            raise VersionChecksumError(
-                'Checksum detected in {0} of {1} when not allowed.'.
-                format(name, v))
 
 
 class PackageViewMixin(object):
@@ -464,11 +423,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     # These are default values for instance variables.
     #
 
-    # Automating the detection of URLs based on fetch strategy URL attributes
-    # presents backward compatibility challenges as dozens of existing built-in
-    # packages override url_for_version() instead of specifying a URL.
-    # Additionally, in some cases, the URL for different versions reside at
-    # different sites (e.g., py-basemap).
+    # Automatically detecting packages with code cannot be based on the
+    # presence of URL-like package attributes since dozens of existing built-in
+    # packages override url_for_version() instead of specifying such an
+    # attribute.
     #: Most Spack packages are used to install source or binary code.
     has_code = True
 
