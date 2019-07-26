@@ -28,8 +28,7 @@ packages:
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
       - py-basalt@0.2.4
-      - py-entity-management@1.0.5
-      - py-entity-management@0.1.12
+      - py-entity-management@1.0.9
 
   gnu-stable-outdated:
     target_matrix:
@@ -40,6 +39,7 @@ packages:
       - python
     specs:
       - py-simwriter@0.4.3 ^py-rpy2@2.8.6 ^openjdk
+      - py-entity-management@1.0.9
 
   gnu-stable-parallel:
     target_matrix:
