@@ -6,9 +6,10 @@
 from spack import *
 
 
-class Minimap2(MakefilePackage):
+class Minimap2(PythonPackage):
     """Minimap2 is a versatile sequence alignment program that aligns DNA or
-       mRNA sequences against a large reference database."""
+       mRNA sequences against a large reference database.
+       Mappy provides a convenient interface to minimap2."""
 
     homepage = "https://github.com/lh3/minimap2"
     url      = "https://github.com/lh3/minimap2/releases/download/v2.2/minimap2-2.2.tar.bz2"
@@ -19,17 +20,17 @@ class Minimap2(MakefilePackage):
 
     conflicts('target=aarch64', when='@:2.10')
     depends_on('zlib')
+    depends_on('py-cython')
 
-    @property
-    def build_targets(self):
+    @run_after('install')
+    def install_minimap2(self):
+        make = which('make')
         make_arg = []
         if self.spec.satisfies("target=aarch64"):
             make_arg.extend([
                 'arm_neon=1',
-                'aarch64=1'
+                'aarch64~1'
             ])
-        return make_arg
-
-    def install(self, spec, prefix):
+        make(*make_arg)
         mkdirp(prefix.bin)
         install('minimap2', prefix.bin)
