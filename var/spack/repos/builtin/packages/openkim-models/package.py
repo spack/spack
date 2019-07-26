@@ -22,6 +22,8 @@ class OpenkimModels(CMakePackage):
     url      = "https://s3.openkim.org/archives/collection/openkim-models-2019-07-25.txz"
 
     extends('kim-api')
+    depends_on('kim-api@2.1.0:', when='@2019-07-25:')
+    depends_on('kim-api@:2.0.2', when='@:2019-03-29')
 
     version(
        '2019-07-25',
@@ -34,8 +36,15 @@ class OpenkimModels(CMakePackage):
         args = []
         args.append(('-DKIM_API_MODEL_DRIVER_INSTALL_PREFIX={0}'
                      + '/lib/kim-api/model-drivers').format(prefix))
-        args.append(('-DKIM_API_PORTABLE_MODEL_INSTALL_PREFIX={0}'
-                     + '/lib/kim-api/portable-models').format(prefix))
+
+        if self.spec.satisfies('@2019-07-25:'):
+           args.append(('-DKIM_API_PORTABLE_MODEL_INSTALL_PREFIX={0}'
+                        + '/lib/kim-api/portable-models').format(prefix))
+        else:
+           args.append(('-DKIM_API_MODEL_INSTALL_PREFIX={0}'
+                        + '/lib/kim-api/models').format(prefix))
+
+
         args.append(('-DKIM_API_SIMULATOR_MODEL_INSTALL_PREFIX={0}'
                      + '/lib/kim-api/simulator-models').format(prefix))
         return args
