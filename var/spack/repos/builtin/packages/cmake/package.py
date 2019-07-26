@@ -59,6 +59,10 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
+    # Revert the change that introduced a regression when parsing mpi link
+    # flags, see: https://gitlab.kitware.com/cmake/cmake/issues/19516
+    patch('cmake-revert-findmpi-link-flag-list.patch', when='@3.15.0')
+
     # Fix linker error when using external libs on darwin.
     # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
     patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
