@@ -10,8 +10,9 @@ class Libtiff(AutotoolsPackage):
     """LibTIFF - Tag Image File Format (TIFF) Library and Utilities."""
 
     homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.9.tar.gz"
+    url      = "http://download.osgeo.org/libtiff/tiff-4.0.10.tar.gz"
 
+    version('4.0.10', sha256='2c52d11ccaf767457db0c46795d9c7d1a8d8f76f68b0b800a3dfe45786b996e4')
     version('4.0.9', '54bad211279cc93eb4fca31ba9bfdc79')
     version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
     version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')

@@ -27,5 +27,5 @@ class PySfepy(PythonPackage):
     depends_on('py-matplotlib', type='run')
     depends_on('py-sympy', type='run')
     depends_on('hdf5+hl', type='run')
-    depends_on('py-pytables', type='run')
+    depends_on('py-tables', type='run')
     depends_on('py-petsc4py', type='run', when='+petsc')

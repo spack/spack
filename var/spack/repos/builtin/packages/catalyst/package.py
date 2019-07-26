@@ -19,6 +19,8 @@ class Catalyst(CMakePackage):
     _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
     _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
 
+    maintainers = ['chuckatkins', 'danlipsa']
+
     version('5.6.0', sha256='5b49cb96ab78eee0427e25200530ac892f9a3da7725109ce1790f8010cb5b377')
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
@@ -60,6 +62,12 @@ class Catalyst(CMakePackage):
     depends_on('mpi')
     depends_on('python@2.7:2.8', when='+python', type=('build', 'link', 'run'))
     depends_on('python@3:', when='+python3', type=('build', 'link', 'run'))
+
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python3', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
+
     depends_on('gl@3.2:', when='+rendering')
     depends_on('mesa+osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
@@ -119,7 +127,7 @@ class Catalyst(CMakePackage):
         super(Catalyst, self).do_stage(mirror_only)
 
         # extract the catalyst part
-        paraview_dir = os.path.join(self.stage.path,
+        paraview_dir = os.path.join(self.stage.source_path,
                                     'ParaView-v' + str(self.version))
         catalyst_script = os.path.join(paraview_dir, 'Catalyst', 'catalyze.py')
         editions_dir = os.path.join(paraview_dir, 'Catalyst', 'Editions')
@@ -135,10 +143,10 @@ class Catalyst(CMakePackage):
         if not os.path.isdir(catalyst_source_dir):
             os.mkdir(catalyst_source_dir)
             subprocess.check_call(command)
-            tty.msg("Generated catalyst source in %s" % self.stage.path)
+            tty.msg("Generated catalyst source in %s" % self.stage.source_path)
         else:
             tty.msg("Already generated %s in %s" % (self.name,
-                                                    self.stage.path))
+                                                    self.stage.source_path))
 
     def setup_environment(self, spack_env, run_env):
         # paraview 5.5 and later
@@ -174,7 +182,8 @@ class Catalyst(CMakePackage):
 
         :return: directory containing CMakeLists.txt
         """
-        return os.path.join(self.stage.path, 'Catalyst-v' + str(self.version))
+        return os.path.join(self.stage.source_path,
+                            'Catalyst-v' + str(self.version))
 
     @property
     def build_directory(self):
@@ -205,12 +214,17 @@ class Catalyst(CMakePackage):
             '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
             '-DVTK_USE_OFFSCREEN:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
-            '-DPARAVIEW_ENABLE_PYTHON:BOOL=%s' % variant_bool('+python')
         ]
         if '+python' in spec or '+python3' in spec:
-            cmake_args.append(
+            cmake_args.extend([
+                '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
-                spec['python'].command.path)
+                spec['python'].command.path,
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
+            ])
+        else:
+            cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
+
         return cmake_args
 
     def cmake(self, spec, prefix):

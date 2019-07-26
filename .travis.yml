@@ -19,57 +19,32 @@ jobs:
   include:
     - stage: 'style checks'
       python: '2.7'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=flake8
     - stage: 'unit tests + documentation'
       python: '2.6'
       dist: trusty
-      sudo: required
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '2.7'
-      sudo: required
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.5'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=unit
     - python: '3.7'
-      sudo: required
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-      addons:
-        apt:
-          packages:
-          - cmake
-          - gfortran
-          - graphviz
-          - gnupg2
-          - kcov
-          - mercurial
-          - ninja-build
-          - perl
-          - perl-base
-          - realpath
-          - patchelf
-          - r-base
-          - r-base-core
-          - r-base-dev
-
     - python: '3.7'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=doc
@@ -119,7 +94,6 @@ jobs:
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
     - python: '3.6'
       stage: 'docker build'
-      sudo: required
       os: linux
       language: python
       env: TEST_SUITE=docker
@@ -137,8 +111,6 @@ stages:
 #=============================================================================
 # Environment
 #=============================================================================
-# Use new Travis infrastructure (Docker can't sudo yet)
-sudo: false
 
 # Docs need graphviz to build
 addons:
@@ -159,6 +131,7 @@ addons:
       - r-base
       - r-base-core
       - r-base-dev
+      - zsh
   # for Mac builds, we use Homebrew
   homebrew:
     packages:
@@ -166,6 +139,9 @@ addons:
       - gcc
       - gnupg2
       - ccache
+      - dash
+      - kcov
+    update: true
 
 # ~/.ccache needs to be cached directly as Travis is not taking care of it
 # (possibly because we use 'language: python' and not 'language: c')
@@ -222,11 +198,13 @@ script:
 
 after_success:
   - ccache -s
-  - if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
-        codecov --env PYTHON_VERSION
-                --required
-                --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
-    fi
+  - case "$TEST_SUITE" in
+        unit)
+            codecov --env PYTHON_VERSION
+                    --required
+                    --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
+            ;;
+    esac
 
 #=============================================================================
 # Notifications

@@ -270,20 +270,18 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     """Scrape web pages for new versions of a tarball.
 
     Arguments:
-      archive_urls:
-          URL or sequence of URLs for different versions of a
-          package. Typically these are just the tarballs from the package
-          file itself.  By default, this searches the parent directories
-          of archives.
+        archive_urls (str or list or tuple): URL or sequence of URLs for
+            different versions of a package. Typically these are just the
+            tarballs from the package file itself. By default, this searches
+            the parent directories of archives.
 
     Keyword Arguments:
-      list_url:
-          URL for a listing of archives.  Spack wills scrape these
-          pages for download links that look like the archive URL.
+        list_url (str or None): URL for a listing of archives.
+            Spack will scrape these pages for download links that look
+            like the archive URL.
 
-      list_depth:
-          Max depth to follow links on list_url pages. Default 0.
-
+        list_depth (int): Max depth to follow links on list_url pages.
+            Defaults to 0.
     """
     if not isinstance(archive_urls, (list, tuple)):
         archive_urls = [archive_urls]
@@ -291,17 +289,17 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     # Generate a list of list_urls based on archive urls and any
     # explicitly listed list_url in the package
     list_urls = set()
-    if list_url:
+    if list_url is not None:
         list_urls.add(list_url)
     for aurl in archive_urls:
-        list_urls.add(spack.url.find_list_url(aurl))
+        list_urls |= spack.url.find_list_urls(aurl)
 
     # Add '/' to the end of the URL. Some web servers require this.
     additional_list_urls = set()
     for lurl in list_urls:
         if not lurl.endswith('/'):
             additional_list_urls.add(lurl + '/')
-    list_urls.update(additional_list_urls)
+    list_urls |= additional_list_urls
 
     # Grab some web pages to scrape.
     pages = {}

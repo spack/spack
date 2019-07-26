@@ -17,7 +17,8 @@ class Cdo(AutotoolsPackage):
 
     maintainers = ['skosukhin']
 
-    version('1.9.7rc2', '62313bdf60860693e96494fd2fd8ff48e65266f600f6ae8c817e46a652e6b215', url='https://code.mpimet.mpg.de/attachments/download/19883/cdo-1.9.7rc2.tar.gz')
+    version('1.9.7.1', sha256='3771952e065bcf935d43e492707370ed2a0ecb59a06bea24f9ab69d77943962c',
+            url='https://code.mpimet.mpg.de/attachments/download/20124/cdo-1.9.7.1.tar.gz')
     version('1.9.6', '322f56c5e13f525c585ee5318d4435db', url='https://code.mpimet.mpg.de/attachments/download/19299/cdo-1.9.6.tar.gz')
     version('1.9.5', '0c60f2c94dc5c76421ecf363153a5043', url='https://code.mpimet.mpg.de/attachments/download/18264/cdo-1.9.5.tar.gz')
     version('1.9.4', '377c9e5aa7d8cbcb4a6c558abb2eb053', url='https://code.mpimet.mpg.de/attachments/download/17374/cdo-1.9.4.tar.gz')
@@ -27,11 +28,6 @@ class Cdo(AutotoolsPackage):
     version('1.9.0', '2d88561b3b4a880df0422a62e5027e40', url='https://code.mpimet.mpg.de/attachments/download/15187/cdo-1.9.0.tar.gz')
     version('1.8.2', '6a2e2f99b7c67ee9a512c40a8d4a7121', url='https://code.mpimet.mpg.de/attachments/download/14686/cdo-1.8.2.tar.gz')
     version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz')
-
-    # The build fails due to changes to OpenMP data sharing in GCC 9.
-    # See: https://gcc.gnu.org/gcc-9/porting_to.html#ompdatasharing
-    # See: https://code.mpimet.mpg.de/issues/9038 (not public)
-    patch('gcc9-openmp-1.9.7rc2.patch', when='@1.9.7rc2%gcc@9:')
 
     variant('netcdf', default=True, description='Enable NetCDF support')
     variant('grib2', default='eccodes', values=('eccodes', 'grib-api', 'none'),
@@ -69,7 +65,7 @@ class Cdo(AutotoolsPackage):
 
     depends_on('udunits2', when='+udunits2')
     depends_on('libxml2', when='+libxml2')
-    depends_on('proj', when='+proj')
+    depends_on('proj@:5', when='+proj')
     depends_on('curl', when='+curl')
     depends_on('fftw@3:', when='+fftw3')
     depends_on('magics', when='+magics')

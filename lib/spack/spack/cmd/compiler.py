@@ -73,7 +73,8 @@ def compiler_find(args):
        add them to Spack's configuration.
 
     """
-    paths = args.add_paths
+    # None signals spack.compiler.find_compilers to use its default logic
+    paths = args.add_paths or None
 
     # Don't initialize compilers config via compilers.get_compiler_config.
     # Just let compiler_find do the

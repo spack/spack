@@ -71,7 +71,7 @@ class Nseg(MakefilePackage):
         for key in self.resources:
             for res in self.resources[key]:
                 res_name = res.name
-                res_path = join_path(res.fetcher.stage.path, res.name)
+                res_path = join_path(res.fetcher.stage.source_path, res.name)
                 copy(res_path, join_path(self.build_directory, res_name))
 
     def install(self, spec, prefix):

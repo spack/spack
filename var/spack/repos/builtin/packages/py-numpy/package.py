@@ -15,7 +15,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.15.1.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.16.4.zip"
 
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
@@ -26,6 +26,7 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('1.16.4', sha256='7242be12a58fec245ee9734e625964b97cf7e3f2f7d016603f9e56660ce479c7')
     version('1.16.3', sha256='78a6f89da87eeb48014ec652a65c4ffde370c036d780a995edaeb121d3625621')
     version('1.16.2', sha256='6c692e3879dde0b67a9dc78f9bfb6f61c666b4562fd8619632d7043fb5b691b0')
     version('1.16.1', sha256='31d3fe5b673e99d33d70cfee2ea8fe8dccd60f265c3ed990873a88647e3dd288')
@@ -200,15 +201,18 @@ class PyNumpy(PythonPackage):
         return args
 
     def setup_environment(self, spack_env, run_env):
-        python_version = self.spec['python'].version.up_to(2)
+        # If py-numpy is installed as an external package, python won't
+        # be available in the spec. See #9149 for details.
+        if 'python' in self.spec:
+            python_version = self.spec['python'].version.up_to(2)
 
-        include_path = join_path(
-            self.prefix.lib,
-            'python{0}'.format(python_version),
-            'site-packages',
-            'numpy/core/include')
+            include_path = join_path(
+                self.prefix.lib,
+                'python{0}'.format(python_version),
+                'site-packages',
+                'numpy/core/include')
 
-        run_env.prepend_path('CPATH', include_path)
+            run_env.prepend_path('CPATH', include_path)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following

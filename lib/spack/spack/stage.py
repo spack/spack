@@ -28,7 +28,7 @@ import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 
-_source_path_subdir = 'src'
+_source_path_subdir = 'spack-src'
 _stage_prefix = 'spack-stage-'
 
 
@@ -73,7 +73,7 @@ def get_tmp_root():
 
         path = _first_accessible_path(candidates)
         if not path:
-            raise StageError("No accessible stage paths in %s", candidates)
+            raise StageError("No accessible stage paths in:", candidates)
 
         # Return None to indicate we're using a local staging area.
         if path == canonicalize_path(spack.paths.stage_path):
@@ -106,7 +106,7 @@ class Stage(object):
         with Stage() as stage:      # Context manager creates and destroys the
                                     # stage directory
             stage.fetch()           # Fetch a source archive into the stage.
-            stage.expand_archive()  # Expand the source archive.
+            stage.expand_archive()  # Expand the archive into source_path.
             <install>               # Build and install the archive.
                                     # (handled by user of Stage)
 
@@ -122,7 +122,7 @@ class Stage(object):
         try:
             stage.create()          # Explicitly create the stage directory.
             stage.fetch()           # Fetch a source archive into the stage.
-            stage.expand_archive()  # Expand the source archive.
+            stage.expand_archive()  # Expand the archive into source_path.
             <install>               # Build and install the archive.
                                     # (handled by user of Stage)
         finally:
@@ -181,6 +181,8 @@ class Stage(object):
         self.search_fn = search_fn
         # used for mirrored archives of repositories.
         self.skip_checksum_for_mirror = True
+
+        self.srcdir = None
 
         # TODO : this uses a protected member of tempfile, but seemed the only
         # TODO : way to get a temporary name besides, the temporary link name
@@ -294,18 +296,21 @@ class Stage(object):
     def expected_archive_files(self):
         """Possible archive file paths."""
         paths = []
-        roots = [self.path]
-        if self.expanded:
-            roots.insert(0, self.source_path)
 
-        for path in roots:
-            if isinstance(self.default_fetcher, fs.URLFetchStrategy):
-                paths.append(os.path.join(
-                    path, os.path.basename(self.default_fetcher.url)))
+        fnames = []
+        expanded = True
+        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+            expanded = self.default_fetcher.expand_archive
+            fnames.append(os.path.basename(self.default_fetcher.url))
 
-            if self.mirror_path:
-                paths.append(os.path.join(
-                    path, os.path.basename(self.mirror_path)))
+        if self.mirror_path:
+            fnames.append(os.path.basename(self.mirror_path))
+
+        paths.extend(os.path.join(self.path, f) for f in fnames)
+        if not expanded:
+            # If the download file is not compressed, the "archive" is a
+            # single file placed in Stage.source_path
+            paths.extend(os.path.join(self.source_path, f) for f in fnames)
 
         return paths
 
@@ -512,9 +517,14 @@ class ResourceStage(Stage):
         """
         root_stage = self.root_stage
         resource = self.resource
-        placement = os.path.basename(self.source_path) \
-            if resource.placement is None \
-            else resource.placement
+
+        if resource.placement:
+            placement = resource.placement
+        elif self.srcdir:
+            placement = self.srcdir
+        else:
+            placement = self.source_path
+
         if not isinstance(placement, dict):
             placement = {'': placement}
 
@@ -594,9 +604,19 @@ class StageComposite:
 
 
 class DIYStage(object):
-    """Simple class that allows any directory to be a spack stage."""
+    """
+    Simple class that allows any directory to be a spack stage.  Consequently,
+    it does not expect or require that the source path adhere to the standard
+    directory naming convention.
+    """
 
     def __init__(self, path):
+        if path is None:
+            raise ValueError("Cannot construct DIYStage without a path.")
+        elif not os.path.isdir(path):
+            raise StagePathError("The stage path directory does not exist:",
+                                 path)
+
         self.archive_file = None
         self.path = path
         self.source_path = path
@@ -618,8 +638,13 @@ class DIYStage(object):
     def expand_archive(self):
         tty.msg("Using source directory: %s" % self.source_path)
 
+    @property
+    def expanded(self):
+        """Returns True since the source_path must exist."""
+        return True
+
     def restage(self):
-        tty.die("Cannot restage DIY stage.")
+        raise RestageError("Cannot restage a DIY stage.")
 
     def create(self):
         self.created = True
@@ -648,6 +673,10 @@ def purge():
 
 class StageError(spack.error.SpackError):
     """"Superclass for all errors encountered during staging."""
+
+
+class StagePathError(StageError):
+    """"Error encountered with stage path."""
 
 
 class RestageError(StageError):

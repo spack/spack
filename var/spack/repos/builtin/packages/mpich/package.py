@@ -19,6 +19,7 @@ class Mpich(AutotoolsPackage):
     list_depth = 1
 
     version('develop', submodules=True)
+    version('3.3.1', 'fe551ef29c8eea8978f679484441ed8bb1d943f6ad25b63c235d4b9243d551e5')
     version('3.3',   '574af413dc0dc7fbb929a761822beb06')
     version('3.2.1', 'e175452f4d61646a52c73031683fc375')
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
@@ -33,6 +34,7 @@ class Mpich(AutotoolsPackage):
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
     variant('slurm', default=False, description='Enable SLURM support')
+    variant('wrapperrpath', default=True, description='Enable wrapper rpath')
     variant(
         'pmi',
         default='pmi',
@@ -77,9 +79,11 @@ spack package at this time.''',
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
     # and https://github.com/pmodels/mpich/pull/3578
+    # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
+    # the when clause, otherwise the patch will be applied to 3.3.1, too.
     patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch',
           sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
-          when='@3.3')
+          when='@3.3:3.3.0')
 
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
@@ -172,7 +176,9 @@ spack package at this time.''',
             '--enable-shared',
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
-            '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
+            '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),
+            '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
+                                                spec else 'yes')
         ]
 
         if 'pmi=off' in spec:

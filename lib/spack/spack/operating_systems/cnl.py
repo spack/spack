@@ -7,8 +7,41 @@ import re
 
 import llnl.util.tty as tty
 
+import spack.version
 from spack.architecture import OperatingSystem
 from spack.util.module_cmd import module
+
+#: Location of the Cray CLE release file, which we look at to get the CNL
+#: OS version.
+_cle_release_file = '/etc/opt/cray/release/cle-release'
+
+
+def read_cle_release_file():
+    """Read the CLE release file and return a dict with its attributes.
+
+    The release file looks something like this::
+
+        RELEASE=6.0.UP07
+        BUILD=6.0.7424
+        ...
+
+    The dictionary we produce looks like this::
+
+        {
+          "RELEASE": "6.0.UP07",
+          "BUILD": "6.0.7424",
+          ...
+        }
+
+    """
+    with open(_cle_release_file) as release_file:
+        result = {}
+        for line in release_file:
+            # use partition instead of split() to ensure we only split on
+            # the first '=' in the line.
+            key, _, value = line.partition('=')
+            result[key] = value.strip()
+        return result
 
 
 class Cnl(OperatingSystem):
@@ -28,12 +61,11 @@ class Cnl(OperatingSystem):
     def __str__(self):
         return self.name + str(self.version)
 
-    def _detect_crayos_version(self):
-        output = module("avail", "PrgEnv-cray")
-        matches = re.findall(r'PrgEnv-cray/(\d+).\d+.\d+', output)
-        major_versions = set(matches)
-        latest_version = max(major_versions)
-        return latest_version
+    @classmethod
+    def _detect_crayos_version(cls):
+        release_attrs = read_cle_release_file()
+        v = spack.version.Version(release_attrs['RELEASE'])
+        return v[0]
 
     def arguments_to_detect_version_fn(self, paths):
         import spack.compilers

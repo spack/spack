@@ -541,9 +541,10 @@ Skipping the expand step
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spack normally expands archives (e.g. ``*.tar.gz`` and ``*.zip``) automatically
-after downloading them. If you want to skip this step (e.g., for
-self-extracting executables and other custom archive types), you can add
-``expand=False`` to a ``version`` directive.
+into a standard stage source directory (``self.stage.source_path``) after
+downloading them. If you want to skip this step (e.g., for self-extracting
+executables and other custom archive types), you can add ``expand=False`` to a
+``version`` directive.
 
 .. code-block:: python
 
@@ -814,7 +815,8 @@ For some packages, source code is provided in a Version Control System
 (VCS) repository rather than in a tarball.  Spack can fetch packages
 from VCS repositories. Currently, Spack supports fetching with `Git
 <git-fetch_>`_, `Mercurial (hg) <hg-fetch_>`_, `Subversion (svn)
-<svn-fetch_>`_, and `Go <go-fetch_>`_.
+<svn-fetch_>`_, and `Go <go-fetch_>`_.  In all cases, the destination
+is the standard stage source path.
 
 To fetch a package from a source repository, Spack needs to know which
 VCS to use and where to download from. Much like with ``url``, package
@@ -880,6 +882,8 @@ Git fetching supports the following parameters to ``version``:
 * ``submodules``: Also fetch submodules recursively when checking out this repository.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
+
+The destination directory for the clone is the standard stage source path.
 
 Default branch
   To fetch a repository's default branch:
@@ -981,6 +985,7 @@ Mercurial
 
 Fetching with Mercurial works much like `Git <git-fetch>`_, but you
 use the ``hg`` parameter.
+The destination directory is still the standard stage source path.
 
 Default branch
   Add the ``hg`` attribute with no ``revision`` passed to ``version``:
@@ -1019,6 +1024,7 @@ Subversion
 ^^^^^^^^^^
 
 To fetch with subversion, use the ``svn`` and ``revision`` parameters.
+The destination directory will be the standard stage source path.
 
 Fetching the head
   Simply add an ``svn`` parameter to the package:
@@ -1063,7 +1069,9 @@ Go
 Go isn't a VCS, it is a programming language with a builtin command,
 `go get <https://golang.org/cmd/go/#hdr-Download_and_install_packages_and_dependencies>`_,
 that fetches packages and their dependencies automatically.
-It can clone a Git repository, or download from another source location.
+The destination directory will be the standard stage source path.
+
+This strategy can clone a Git repository, or download from another source location.
 For example:
 
 .. code-block:: python

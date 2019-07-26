@@ -19,6 +19,7 @@ class PyPandas(PythonPackage):
     homepage = "http://pandas.pydata.org/"
     url = "https://pypi.io/packages/source/p/pandas/pandas-0.19.0.tar.gz"
 
+    version('0.24.2', sha256='4f919f409c433577a501e023943e582c57355d50a724c589e78bc1d551a535a2')
     version('0.24.1', sha256='435821cb2501eabbcee7e83614bd710940dc0cf28b5afbc4bdb816c31cec71af')
     version('0.23.4', sha256='5b24ca47acf69222e82530e89111dd9d14f9b970ab2cd3a1c2c78f0c4fbba4f4')
     version('0.21.1', '42ae7f81b81a86c3f91f663b66c525f7')
@@ -29,7 +30,7 @@ class PyPandas(PythonPackage):
     version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
     version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
 
-    depends_on('py-dateutil', type=('build', 'run'))
+    depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')

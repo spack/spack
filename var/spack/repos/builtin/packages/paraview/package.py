@@ -16,6 +16,8 @@ class Paraview(CMakePackage):
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
 
+    maintainers = ['chuckatkins', 'danlipsa']
+
     version('develop', branch='master', submodules=True)
     version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
@@ -193,7 +195,6 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
-            '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+python+mpi'),
             '-DVTK_USE_SYSTEM_NETCDF:BOOL=ON',
             '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
@@ -211,8 +212,12 @@ class Paraview(CMakePackage):
         if '+python' in spec or '+python3' in spec:
             cmake_args.extend([
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
-                '-DPYTHON_EXECUTABLE:FILEPATH=%s' % spec['python'].command.path
+                '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
+                spec['python'].command.path,
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
             ])
+        else:
+            cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
         if '+mpi' in spec:
             cmake_args.extend([

@@ -17,7 +17,7 @@ class PyOwslib(PythonPackage):
     version('0.16.0', '7ff9c9edde95eadeb27ea8d8fbd1a2cf')
 
     depends_on('py-setuptools',     type='build')
-    depends_on('py-dateutil@1.5:',  type=('build', 'run'))
+    depends_on('py-python-dateutil@1.5:',  type=('build', 'run'))
     depends_on('py-pytz',           type=('build', 'run'))
     depends_on('py-requests@1.0:',  type=('build', 'run'))
     depends_on('py-pyproj',           type=('build', 'run'))

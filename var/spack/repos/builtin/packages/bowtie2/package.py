@@ -14,6 +14,7 @@ class Bowtie2(Package):
     homepage = "bowtie-bio.sourceforge.net/bowtie2/index.shtml"
     url      = "http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.3.1/bowtie2-2.3.1-source.zip"
 
+    version('2.3.5.1', sha256='335c8dafb1487a4a9228ef922fbce4fffba3ce8bc211e2d7085aac092155a53f')
     version('2.3.5', sha256='2b6b2c46fbb5565ba6206b47d07ece8754b295714522149d92acebefef08347b')
     version('2.3.4.1', '8371bbb6eb02ae99c5cf633054265cb9')
     version('2.3.1', 'b4efa22612e98e0c23de3d2c9f2f2478')
@@ -29,9 +30,18 @@ class Bowtie2(Package):
     patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
     patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
     patch('bowtie2-2.3.0.patch', when='@2.3.0', level=0)
+    resource(name='simde', git="https://github.com/nemequ/simde",
+             destination='.', when='target=aarch64')
 
     # seems to have trouble with 6's -std=gnu++14
     conflicts('%gcc@6:', when='@:2.3.1')
+    conflicts('@:2.3.5.0', when='target=aarch64')
+
+    def patch(self):
+        if self.spec.satisfies('target=aarch64'):
+            copy_tree('simde', 'third_party/simde')
+        if self.spec.satisfies('%gcc@:4.8.9 target=aarch64'):
+            filter_file('-fopenmp-simd', '', 'Makefile')
 
     @run_before('install')
     def filter_sbang(self):
@@ -55,7 +65,10 @@ class Bowtie2(Package):
             filter_file(match, substitute, *files, **kwargs)
 
     def install(self, spec, prefix):
-        make()
+        make_arg = []
+        if self.spec.satisfies('target=aarch64'):
+            make_arg.append('POPCNT_CAPABILITY=0')
+        make(*make_arg)
         mkdirp(prefix.bin)
         for bow in glob("bowtie2*"):
             install(bow, prefix.bin)

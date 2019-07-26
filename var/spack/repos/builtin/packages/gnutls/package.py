@@ -27,7 +27,10 @@ class Gnutls(AutotoolsPackage):
     version('3.3.9',  'ff61b77e39d09f1140ab5a9cf52c58b6')
 
     variant('zlib', default=True, description='Enable zlib compression support')
-    variant('guile', default=True, description='Enable Guile bindings')
+    variant('guile', default=False, description='Enable Guile bindings')
+
+    # gnutls+guile is currently broken on MacOS.  See Issue #11668
+    conflicts('+guile', when='platform=darwin')
 
     # Note that version 3.3.9 of gnutls doesn't support nettle 3.0.
     depends_on('nettle@3.4.1:', when='@3.6.7.1:')

@@ -123,7 +123,7 @@ to build this package:
     >> 3    make: *** No targets specified and no makefile found.  Stop.
 
   See build log for details:
-    /home/ubuntu/packaging/spack/var/spack/stage/mpileaks-1.0-sv75n3u5ev6mljwcezisz3slooozbbxu/mpileaks-1.0/spack-build.out
+    /home/ubuntu/packaging/spack/var/spack/stage/mpileaks-1.0-sv75n3u5ev6mljwcezisz3slooozbbxu/mpileaks-1.0/spack-build-out.txt
 
 This obviously didn't work; we need to fill in the package-specific
 information.  Specifically, Spack didn't try to build any of mpileaks'
@@ -256,7 +256,7 @@ Now when we try to install this package a lot more happens:
     >> 3    make: *** No targets specified and no makefile found.  Stop.
 
   See build log for details:
-    /home/ubuntu/packaging/spack/var/spack/stage/mpileaks-1.0-csoikctsalli4cdkkdk377gprkc472rb/mpileaks-1.0/spack-build.out
+    /home/ubuntu/packaging/spack/var/spack/stage/mpileaks-1.0-csoikctsalli4cdkkdk377gprkc472rb/mpileaks-1.0/spack-build-out.txt
 
 Note that this command may take a while to run and produce more output if
 you don't have an MPI already installed or configured in Spack.
@@ -319,14 +319,15 @@ If we re-run we still get errors:
     >> 31    configure: error: unable to locate adept-utils installation
 
   See build log for details:
-    /home/ubuntu/packaging/spack/var/spack/stage/mpileaks-1.0-csoikctsalli4cdkkdk377gprkc472rb/mpileaks-1.0/spack-build.out
+    /home/ubuntu/packaging/spack/var/spack/stage/mpileaks-1.0-csoikctsalli4cdkkdk377gprkc472rb/mpileaks-1.0/spack-build-out.txt
 
 Again, the problem may be obvious.  But let's pretend we're not
 all intelligent developers and use this opportunity spend some
 time debugging.  We have a few options that can tell us about
 what's going wrong:
 
-As per the error message, Spack has given us a ``spack-build.out`` debug log:
+As per the error message, Spack has given us a ``spack-build-out.txt`` debug
+log:
 
 .. code-block:: console
 

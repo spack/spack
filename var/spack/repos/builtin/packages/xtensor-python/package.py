@@ -16,11 +16,16 @@ class XtensorPython(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('0.23.1', sha256='450b25f5c739df174b2a50774b89e68b23535fdc37cb55bd542ffdb7c78991ab')
     version('0.17.0', '51d22e42909a81201c3421d9e119eed0')
 
-    depends_on('xtensor@0.15.1:0.15.99', when='@0.17.0:')
-    depends_on('xtl@0.4.0:0.4.99', when='@0.17.0:')
-    depends_on('py-pybind11@2.2.1', when='@0.17.0:')
+    depends_on('xtensor', when='@develop')
+    depends_on('xtensor@0.20.6:0.20.99', when='@0.23.1')
+    depends_on('xtensor@0.15.1:0.15.99', when='@0.17.0')
+    depends_on('xtl', when='@develop')
+    depends_on('xtl@0.6.4:0.6.99', when='@0.23.1')
+    depends_on('xtl@0.4.0:0.4.99', when='@0.17.0')
+    depends_on('py-pybind11@2.2.1:2.2.99')
 
     depends_on('py-numpy')
     depends_on('python', type=('build', 'link', 'run'))

@@ -114,7 +114,7 @@ def test_installed_deps():
         c_spec.concretize()
         assert c_spec['d'].version == spack.version.Version('2')
 
-        c_installed = spack.spec.Spec.from_dict(c_spec.to_dict(all_deps=False))
+        c_installed = spack.spec.Spec.from_dict(c_spec.to_dict())
         for spec in c_installed.traverse():
             setattr(spec.package, 'installed', True)
 

@@ -19,6 +19,7 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import remove_linked_tree
 
 import spack.architecture
+import spack.compilers
 import spack.config
 import spack.caches
 import spack.database
@@ -106,6 +107,18 @@ def no_chdir():
     yield
     if os.path.isdir(original_wd):
         assert os.getcwd() == original_wd
+
+
+@pytest.fixture(scope='function', autouse=True)
+def reset_compiler_cache():
+    """Ensure that the compiler cache is not shared across Spack tests
+
+    This cache can cause later tests to fail if left in a state incompatible
+    with the new configuration. Since tests can make almost unlimited changes
+    to their setup, default to not use the compiler cache across tests."""
+    spack.compilers._compiler_cache = {}
+    yield
+    spack.compilers._compiler_cache = {}
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -202,6 +215,21 @@ def mock_fetch_cache(monkeypatch):
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
+@pytest.fixture(autouse=True)
+def _skip_if_missing_executables(request):
+    """Permits to mark tests with 'require_executables' and skip the
+    tests if the executables passed as arguments are not found.
+    """
+    if request.node.get_marker('requires_executables'):
+        required_execs = request.node.get_marker('requires_executables').args
+        missing_execs = [
+            x for x in required_execs if spack.util.executable.which(x) is None
+        ]
+        if missing_execs:
+            msg = 'could not find executables: {0}'
+            pytest.skip(msg.format(', '.join(missing_execs)))
+
+
 # FIXME: The lines below should better be added to a fixture with
 # FIXME: session-scope. Anyhow doing it is not easy, as it seems
 # FIXME: there's some weird interaction with compilers during concretization.
@@ -277,7 +305,10 @@ def configuration_dir(tmpdir_factory, linux_os):
     content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
     t.write(content)
-    return tmpdir
+    yield tmpdir
+
+    # Once done, cleanup the directory
+    shutil.rmtree(str(tmpdir))
 
 
 @pytest.fixture(scope='module')
@@ -306,22 +337,24 @@ def config(configuration_dir):
 
 
 @pytest.fixture(scope='function')
-def mutable_config(tmpdir_factory, configuration_dir, config):
+def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
     """Like config, but tests can modify the configuration."""
     spack.package_prefs.PackagePrefs.clear_caches()
 
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
-    real_configuration = spack.config.config
-
-    spack.config.config = spack.config.Configuration(
+    cfg = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
+    monkeypatch.setattr(spack.config, 'config', cfg)
+
+    # This is essential, otherwise the cache will create weird side effects
+    # that will compromise subsequent tests if compilers.yaml is modified
+    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
 
     yield spack.config.config
 
-    spack.config.config = real_configuration
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
@@ -373,45 +406,58 @@ def _populate(mock_db):
         _install('externaltest')
 
 
+@pytest.fixture(scope='session')
+def _store_dir_and_cache(tmpdir_factory):
+    """Returns the directory where to build the mock database and
+    where to cache it.
+    """
+    store = tmpdir_factory.mktemp('mock_store')
+    cache = tmpdir_factory.mktemp('mock_store_cache')
+    return store, cache
+
+
 @pytest.fixture(scope='module')
-def database(tmpdir_factory, mock_packages, config):
-    """Creates a mock database with some packages installed note that
-    the ref count for dyninst here will be 3, as it's recycled
+def database(tmpdir_factory, mock_packages, config, _store_dir_and_cache):
+    """Creates a read-only mock database with some packages installed note
+    that the ref count for dyninst here will be 3, as it's recycled
     across each install.
     """
-    # save the real store
     real_store = spack.store.store
+    store_path, store_cache = _store_dir_and_cache
 
-    # Make a fake install directory
-    install_path = tmpdir_factory.mktemp('install_for_database')
+    mock_store = spack.store.Store(str(store_path))
+    spack.store.store = mock_store
 
-    # Make fake store (database and install layout)
-    tmp_store = spack.store.Store(str(install_path))
-    spack.store.store = tmp_store
+    # If the cache does not exist populate the store and create it
+    if not os.path.exists(str(store_cache.join('.spack-db'))):
+        _populate(mock_store.db)
+        store_path.copy(store_cache, mode=True, stat=True)
 
-    _populate(tmp_store.db)
+    # Make the database read-only to ensure we can't modify entries
+    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
-    yield tmp_store.db
+    yield mock_store.db
 
-    with tmp_store.db.write_transaction():
-        for spec in tmp_store.db.query():
-            if spec.package.installed:
-                PackageBase.uninstall_by_spec(spec, force=True)
-            else:
-                tmp_store.db.remove(spec)
-
-    install_path.remove(rec=1)
+    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
     spack.store.store = real_store
 
 
 @pytest.fixture(scope='function')
-def mutable_database(database):
-    """For tests that need to modify the database instance."""
+def mutable_database(database, _store_dir_and_cache):
+    """Writeable version of the fixture, restored to its initial state
+    after each test.
+    """
+    # Make the database writeable, as we are going to modify it
+    store_path, store_cache = _store_dir_and_cache
+    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
+
     yield database
-    with database.write_transaction():
-        for spec in spack.store.db.query():
-            PackageBase.uninstall_by_spec(spec, force=True)
-    _populate(database)
+
+    # Restore the initial state by copying the content of the cache back into
+    # the store and making the database read-only
+    store_path.remove(rec=1)
+    store_cache.copy(store_path, mode=True, stat=True)
+    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
 
 @pytest.fixture(scope='function')

@@ -15,10 +15,7 @@ class Relion(CMakePackage, CudaPackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
 
-    version('3.0_beta',
-            git='https://bitbucket.org/scheres/relion-3.0_beta.git')
-    version('2.1', preferred='true', tag='2.1')
-    version('2.0.3', tag='2.0.3')
+    version('3.0.7', tag='3.0.7')
     # relion has no develop branch though pulling from master
     # should be considered the same as develop
     version('develop', branch='master')
@@ -44,11 +41,8 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('fltk', when='+gui')
     depends_on('libtiff')
 
-    # relion 3 supports cuda 9
-    # relion < 3 does not
     depends_on('cuda', when='+cuda')
-    depends_on('cuda@9:', when='@3: +cuda')
-    depends_on('cuda@8.0:8.99', when='@:2 +cuda')
+    depends_on('cuda@9:10.99', when='@3: +cuda')
 
     def cmake_args(self):
 
