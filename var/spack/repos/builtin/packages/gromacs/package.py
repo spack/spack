@@ -83,8 +83,6 @@ class Gromacs(CMakePackage):
 
         if '+mpi' in self.spec:
             options.append('-DGMX_MPI:BOOL=ON')
-            options.append('-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc)
-            options.append('-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx)
 
         if '+double' in self.spec:
             options.append('-DGMX_DOUBLE:BOOL=ON')
