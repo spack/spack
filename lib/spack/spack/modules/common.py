@@ -340,8 +340,10 @@ class BaseConfiguration(object):
         """
         suffixes = []
         for constraint, suffix in self.conf.get('suffixes', {}).items():
-            if constraint in self.spec:
-                suffixes.append(suffix)
+            for spec in self.spec.traverse(deptype=('link', 'run')):
+                if constraint in spec:
+                    suffixes.append(suffix)
+                    break
         if self.hash:
             suffixes.append(self.hash)
         return suffixes

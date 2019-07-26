@@ -24,7 +24,9 @@ class Libsonata(CMakePackage):
 
     variant('mpi', default=False, description="Enable MPI backend")
 
+
     depends_on('cmake@3.3:', type='build')
+    depends_on('py-setuptools-scm', type='build', when='@0.1:')
     depends_on('fmt@4.0:')
     depends_on('highfive+mpi', when='+mpi')
     depends_on('highfive~mpi', when='~mpi')
