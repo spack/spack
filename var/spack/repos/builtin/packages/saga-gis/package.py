@@ -55,7 +55,7 @@ class SagaGis(AutotoolsPackage):
     # dependency through meson by a dependency of wx/gtkplus
     depends_on('python@3:')
 
-    depends_on('wx')
+    depends_on('wxwidgets')
     depends_on('gdal')
     depends_on('proj@:5')
 

@@ -7,7 +7,7 @@ from spack import *
 import sys
 
 
-class Wx(AutotoolsPackage):
+class Wxwidgets(AutotoolsPackage):
     """wxWidgets is a C++ library that lets developers create
        applications for Windows, Mac OS X, Linux and other platforms
        with a single code base. It has popular language bindings for
