@@ -10,6 +10,7 @@ class Zeromq(AutotoolsPackage):
     """The ZMQ networking/concurrency library and core API"""
 
     homepage = "http://zguide.zeromq.org/"
+    url      = "https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz"
     git      = "https://github.com/zeromq/libzmq.git"
 
     version('develop', branch='master')
