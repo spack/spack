@@ -197,6 +197,8 @@ class Grass(AutotoolsPackage):
         return args
 
     # see issue: https://github.com/spack/spack/issues/11325
+    # 'Platform.make' is created after configure step
+    # hence invoke the following function afterwards
     def fix_iconv_linking(self):
         makefile = FileFilter('include/Make/Platform.make')
         makefile.filter('^ICONVLIB\s*=\s*', 'ICONVLIB = -liconv')
