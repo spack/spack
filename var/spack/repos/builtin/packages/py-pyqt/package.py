@@ -18,9 +18,21 @@ class PyPyqt(Package):
     extends('python')
     depends_on('py-sip', type=('build', 'run'))
 
-    # TODO: allow qt5 when conditional deps are supported.
     # TODO: Fix version matching so that @4 works like @:4
-    depends_on('qt@:4+phonon+dbus')
+    depends_on('qt@:4+phonon+dbus', when='@:4.99.99')
+    depends_on('qt@5:+phonon+dbus', when='@5:')
+
+    def url_for_version(self, version):
+        """Handle version-based custom URLs."""
+        url = 'http://sourceforge.net/projects/pyqt/files'
+        if version.up_to(1).string <= '4': 
+            return url + '/PyQt%s/PyQt-%s/PyQt-x11-gpl-%s.tar.gz' % (version.up_to(1), version, version)
+        # url is different for 5.5.1 or less vs higher (note the '_' before 'gpl...')
+        elif int(version.string.split('.')[1]) <= 5 and version.string != '5.5.1':
+            return url + '/PyQt5/PyQt-%s/PyQt5-gpl-%s.tar.gz' % (version, version)
+        else:
+            return url + '/PyQt5/PyQt-%s/PyQt5_gpl-%s.tar.gz' % (version, version)
+
 
     def install(self, spec, prefix):
         python('configure.py',
