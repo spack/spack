@@ -13,7 +13,3 @@ class Libuuid(AutotoolsPackage):
     url      = "http://downloads.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibuuid%2F&ts=1433881396&use_mirror=iweb"
 
     version('1.0.3', 'd44d866d06286c08ba0846aba1086d68')
-
-    conflicts('platform=darwin',
-              msg="This version of libuuid will prevent any downstream code "
-              "from linking against the Carbon framework")
