@@ -13,6 +13,7 @@ class PyPyqt(Package):
     homepage = "http://www.riverbankcomputing.com/software/pyqt/intro"
     url      = "http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.3/PyQt-x11-gpl-4.11.3.tar.gz"
 
+    version('5.11.3', sha256='c9b57d15601d436faf35dacf8e0acefa220194829a653e771e80b189b3261073')
     version('4.11.3', '997c3e443165a89a559e0d96b061bf70')
 
     extends('python')
@@ -25,14 +26,18 @@ class PyPyqt(Package):
     def url_for_version(self, version):
         """Handle version-based custom URLs."""
         url = 'http://sourceforge.net/projects/pyqt/files'
-        if version.up_to(1).string <= '4': 
-            return url + '/PyQt%s/PyQt-%s/PyQt-x11-gpl-%s.tar.gz' % (version.up_to(1), version, version)
-        # url is different for 5.5.1 or less vs higher (note the '_' before 'gpl...')
-        elif int(version.string.split('.')[1]) <= 5 and version.string != '5.5.1':
-            return url + '/PyQt5/PyQt-%s/PyQt5-gpl-%s.tar.gz' % (version, version)
+        if version.up_to(1).string <= '4':
+            return url + '/PyQt%s/PyQt-%s/PyQt-x11-gpl-%s.tar.gz' %\
+                (version.up_to(1), version, version)
+        # url is different for 5.5.1 or less vs higher
+        # (note the '_' before 'gpl...')
+        elif int(version.string.split('.')[1]) <= 5 and\
+                version.string != '5.5.1':
+            return url +\
+                '/PyQt5/PyQt-%s/PyQt5-gpl-%s.tar.gz' % (version, version)
         else:
-            return url + '/PyQt5/PyQt-%s/PyQt5_gpl-%s.tar.gz' % (version, version)
-
+            return url +\
+                '/PyQt5/PyQt-%s/PyQt5_gpl-%s.tar.gz' % (version, version)
 
     def install(self, spec, prefix):
         python('configure.py',
