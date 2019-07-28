@@ -71,6 +71,8 @@ class Graphviz(AutotoolsPackage):
             description='Build with Qt support')
     variant('gtkplus', default=False,
             description='Build with GTK+ support')
+    variant('x', default=False,
+            description='Use the X Window System')
 
     patch('http://www.linuxfromscratch.org/patches/blfs/svn/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
@@ -121,9 +123,10 @@ class Graphviz(AutotoolsPackage):
     # +ghostscript
     depends_on('ghostscript', when='+ghostscript')
     # +qt
-    depends_on('qt', when='+qt')
+    depends_on('qt@4', when='+qt')
     # +gtkplus
     depends_on('gtkplus', when='+gtkplus')
+    depends_on('libx11', when="+x")
 
     # Build dependencies
     depends_on('pkgconfig', type='build')
