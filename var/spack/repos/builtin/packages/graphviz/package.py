@@ -35,20 +35,21 @@ class Graphviz(AutotoolsPackage):
                 description='Enable for optional {0} language '
                 'bindings'.format(lang))
 
-    variant('pangocairo', default=False,
-            description='Build with pango+cairo support (more output formats)')
-    variant('libgd', default=False,
-            description='Build with libgd support (more output formats)')
-    variant('gts', default=False,
-            description='Build with GNU Triangulated Surface Library')
+    # Feature variants
     variant('expat', default=False,
             description='Build with Expat support (enables HTML-like labels)')
+    variant('gts', default=False,
+            description='Build with GNU Triangulated Surface Library')
     variant('ghostscript', default=False,
             description='Build with Ghostscript support')
-    variant('qt', default=False,
-            description='Build with Qt support')
     variant('gtkplus', default=False,
             description='Build with GTK+ support')
+    variant('libgd', default=False,
+            description='Build with libgd support (more output formats)')
+    variant('pangocairo', default=False,
+            description='Build with pango+cairo support (more output formats)')
+    variant('qt', default=False,
+            description='Build with Qt support')
     variant('quartz', default=(MACOS_VERSION is not None),
             description='Build with Quartz and PDF support')
     variant('x', default=False,
@@ -72,32 +73,27 @@ class Graphviz(AutotoolsPackage):
         # Doesn't detect newer mac os systems as being new
         patch('fix-quartz-darwin.patch')
 
+    # Language dependencies
     depends_on('java', when='+java')
     for lang in language_bindings:
         depends_on('swig', when=('+' + lang))
 
-    # +pangocairo
-    depends_on('cairo', when='+pangocairo')
-    depends_on('pango', when='+pangocairo')
-    depends_on('freetype', when='+pangocairo')
-    depends_on('glib', when='+pangocairo')
-    depends_on('fontconfig', when='+pangocairo')
-    depends_on('libpng', when='+pangocairo')
-    depends_on('zlib', when='+pangocairo')
-    # +libgd
+    # Feature dependencies
+    depends_on('expat', when='+expat')
     depends_on('libgd', when='+libgd')
     depends_on('fontconfig', when='+libgd')
     depends_on('freetype', when='+libgd')
-    # +gts
-    depends_on('gts', when='+gts')
-    # +expat
-    depends_on('expat', when='+expat')
-    # +ghostscript
     depends_on('ghostscript', when='+ghostscript')
-    # +qt
-    depends_on('qt@4', when='+qt')
-    # +gtkplus
     depends_on('gtkplus', when='+gtkplus')
+    depends_on('gts', when='+gts')
+    depends_on('cairo', when='+pangocairo')
+    depends_on('fontconfig', when='+pangocairo')
+    depends_on('freetype', when='+pangocairo')
+    depends_on('glib', when='+pangocairo')
+    depends_on('libpng', when='+pangocairo')
+    depends_on('pango', when='+pangocairo')
+    depends_on('zlib', when='+pangocairo')
+    depends_on('qt@4', when='+qt')
     depends_on('libx11', when="+x")
 
     # Build dependencies
