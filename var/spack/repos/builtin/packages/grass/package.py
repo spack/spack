@@ -195,3 +195,11 @@ class Grass(AutotoolsPackage):
             args.append('--without-geos')
 
         return args
+
+    # see issue: https://github.com/spack/spack/issues/11325
+    def fix_iconv_linking(self):
+        makefile = FileFilter('include/Make/Platform.make')
+        makefile.filter('^ICONVLIB\s*=\s*', 'ICONVLIB = -liconv')
+        return None
+
+    run_after('configure')(fix_iconv_linking)
