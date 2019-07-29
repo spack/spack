@@ -174,11 +174,12 @@ class PyNumpy(PythonPackage):
                     f.write('[blas]\n')
                     f.write('libraries = {0}\n'.format(blas_lib_names))
                     write_library_dirs(f, blas_lib_dirs)
-                    f.write('include_dirs = {0}\n'.format(blas_header_dirs)
+                    f.write('include_dirs = {0}\n'.format(blas_header_dirs))
                 if spec.satisfies('+lapack'):
                     f.write('[lapack]\n')
-                    f.write('libraries = {0}\n' % lapack_names)
-                    write_library_dirs(f, lapack_dirs)
+                    f.write('libraries = {0}\n'.format(lapack_lib_names))
+                    write_library_dirs(f, lapack_lib_dirs)
+                    f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
 
     def setup_environment(self, spack_env, run_env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
@@ -189,7 +190,7 @@ class PyNumpy(PythonPackage):
         # https://numpy.org/devdocs/user/building.html#blas
         if '~blas' in spec:
             blas = ''
-        elif spec['blas'].name == 'intel-mkl' or
+        elif spec['blas'].name == 'intel-mkl' or \
                 spec['blas'].name == 'intel-parallel-studio':
             blas = 'mkl'
         elif spec['blas'].name == 'blis':
@@ -208,7 +209,7 @@ class PyNumpy(PythonPackage):
         # https://numpy.org/devdocs/user/building.html#lapack
         if '~lapack' in spec:
             lapack = ''
-        elif spec['lapack'].name == 'intel-mkl' or
+        elif spec['lapack'].name == 'intel-mkl' or \
                 spec['lapack'].name == 'intel-parallel-studio':
             lapack = 'mkl'
         elif spec['lapack'].name == 'openblas':
