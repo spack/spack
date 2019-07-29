@@ -14,9 +14,12 @@ class Cgdb(AutotoolsPackage):
     version('0.7.0', sha256='bf7a9264668db3f9342591b08b2cc3bbb08e235ba2372877b4650b70c6fb5423')
 
     # Required dependency
-    depends_on('ncurses',  type='build')
-    depends_on('readline', type='build')
+    depends_on('ncurses')
+    depends_on('readline')
 
     def configure_args(self):
-        args = []
-        return args
+        spec = self.spec
+
+        return [
+            '--with-installed-readline={0}'.format(spec['readline'].prefix)
+        ]
