@@ -125,7 +125,13 @@ class Python(AutotoolsPackage):
     depends_on('tk', when='+tkinter')
     depends_on('tcl', when='+tkinter')
     depends_on('tix', when='+tix')
-    depends_on('libuuid', when='+uuid')
+    if sys.platform != 'darwin':
+        # On macOS systems, Spack's libuuid conflicts with the system-installed
+        # version and breaks anything linked against Cocoa/Carbon. Since the
+        # system-provided version is sufficient to build Python's UUID support,
+        # the easy solution is to only depend on Spack's libuuid when *not* on
+        # a Mac.
+        depends_on('libuuid', when='+uuid')
 
     patch('tkinter.patch', when='@:2.8,3.3: platform=darwin')
 
