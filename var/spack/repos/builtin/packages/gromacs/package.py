@@ -59,6 +59,11 @@ class Gromacs(CMakePackage):
                     'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
+    variant('mdrun_only', default=False,
+            description='Enables the build of a cut-down version' +
+                         ' of libgromacs and/or the mdrun program')
+    variant('openmp', default=True, description='Enables OpenMP at configure time')
+    variant('double_precision', default=False, description='Enables a double-precision configuration')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
@@ -104,5 +109,20 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
         else:
             options.append('-DGMX_USE_RDTSCP:BOOL=ON')
+
+        if '+mdrun_only' in self.spec:
+            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
+        else:
+            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=OFF')
+
+        if '~openmp' in self.spec:
+            options.append('-DGMX_OPENMP:BOOL=OFF')
+        else:
+            options.append('-DGMX_OPENMP:BOOL=ON')
+
+        if '+double_precision' in self.spec:
+            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
+        else:
+            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
 
         return options
