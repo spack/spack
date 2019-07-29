@@ -163,7 +163,7 @@ def test_flatten_deps(
     pkg = spec.package
     pkg.do_install()
 
-    # Demonstrate that the directory does not appear under the spec 
+    # Demonstrate that the directory does not appear under the spec
     # prior to the flatten operation.
     dependency_name = 'dependency-install'
     assert dependency_name not in os.listdir(pkg.prefix)
