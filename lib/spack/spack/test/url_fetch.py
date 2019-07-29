@@ -10,7 +10,7 @@ from llnl.util.filesystem import working_dir, is_exe
 
 import spack.repo
 import spack.config
-from spack.fetch_strategy import FailedDownloadError
+from spack.fetch_strategy import FailedDownloadError, NoFetchStrategyError
 from spack.fetch_strategy import from_list_url, URLFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
@@ -146,6 +146,13 @@ def test_from_list_url(mock_packages, config):
     assert isinstance(fetch_strategy, URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
     assert fetch_strategy.digest is None
+
+
+def test_nosource_from_list_url(mock_packages, config):
+    pkg = spack.repo.get('nosource')
+
+    with pytest.raises(NoFetchStrategyError, match="has no fetch strategy"):
+        from_list_url(pkg)
 
 
 def test_hash_detection(checksum_type):
