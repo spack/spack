@@ -84,7 +84,8 @@ class PyNumpy(PythonPackage):
         def write_library_dirs(f, dirs):
             f.write('library_dirs=%s\n' % dirs)
             if not ((platform.system() == "Darwin") and
-                    (platform.mac_ver()[0] == '10.12')):
+                    (Version(platform.mac_ver()[0]).up_to(2) == Version(
+                        '10.12'))):
                 f.write('rpath=%s\n' % dirs)
 
         # for build notes see http://www.scipy.org/scipylib/building/linux.html
