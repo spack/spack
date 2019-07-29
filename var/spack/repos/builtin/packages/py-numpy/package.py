@@ -79,6 +79,7 @@ class PyNumpy(PythonPackage):
         # https://github.com/numpy/numpy/blob/master/site.cfg.example
 
         # Skip if no BLAS/LAPACK requested
+        spec = self.spec
         if '+blas' not in spec and '+lapack' not in spec:
             return
 
@@ -89,7 +90,6 @@ class PyNumpy(PythonPackage):
                         '10.12'))):
                 f.write('rpath = {0}\n'.format(dirs))
 
-        spec = self.spec
         blas_libs = LibraryList()
         blas_headers = HeaderList()
         if '+blas' in spec:
