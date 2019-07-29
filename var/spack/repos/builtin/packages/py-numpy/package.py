@@ -90,14 +90,14 @@ class PyNumpy(PythonPackage):
                         '10.12'))):
                 f.write('rpath = {0}\n'.format(dirs))
 
-        blas_libs = LibraryList()
-        blas_headers = HeaderList()
+        blas_libs = LibraryList([])
+        blas_headers = HeaderList([])
         if '+blas' in spec:
             blas_libs = spec['blas'].libs
             blas_headers = spec['blas'].headers
 
-        lapack_libs = LibraryList()
-        lapack_headers = HeaderList()
+        lapack_libs = LibraryList([])
+        lapack_headers = HeaderList([])
         if '+lapack' in spec:
             lapack_libs = spec['lapack'].libs
             lapack_headers = spec['lapack'].headers
