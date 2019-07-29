@@ -16,6 +16,4 @@ class FlattenDeps(Package):
 
     depends_on('dependency-install')
 
-    # While the "spack.package." preface is unnecessary, it is specified
-    # here to ensure code coverage recognizes the test.
-    install = spack.package.install_dependency_symlinks
+    install = install_dependency_symlinks
