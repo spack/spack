@@ -155,10 +155,7 @@ class Qt(Package):
         depends_on("xcb-util-wm")
         depends_on("libxext", when='@3:4.99')
         conflicts('+framework',
-                  msg="QT can only be build as a framework on macOS.")
-    elif MACOS_VERSION >= Version('10.15'):
-        conflicts('platform=darwin', when='@4',
-                  msg="QT 4 hasn't been updated for this version of macOS.")
+                  msg="QT cannot be built as a framework except on macOS.")
     else:
         for _spec in ('%gcc', '%intel'):
             conflicts(_spec, when='@4',
