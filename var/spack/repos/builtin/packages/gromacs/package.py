@@ -61,7 +61,7 @@ class Gromacs(CMakePackage):
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version' +
-                         'of libgromacs and/or the mdrun program')
+                         ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True, description='Enables OpenMP at configure time')
     variant('double_precision', default=False, description='Enables a double-precision configuration')
 
