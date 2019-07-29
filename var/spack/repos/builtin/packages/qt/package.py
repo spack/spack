@@ -157,9 +157,6 @@ class Qt(Package):
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
-        for _spec in ('%gcc', '%intel'):
-            conflicts(_spec, when='@4',
-                      msg='QT4 for mac requires Apple clang compilers')
         conflicts('platform=darwin', when='@4.8.6',
                 msg="QT 4 for macOS is only patched for 4.8.7")
 
