@@ -19,12 +19,11 @@ class Minimap2(PythonPackage):
     version('2.2', '5b68e094f4fa3dfbd9b37d5b654b7715')
 
     conflicts('target=aarch64', when='@:2.10')
-    depends_on('zlib')
-    depends_on('py-cython')
+    depends_on('zlib', type='link')
+    depends_on('py-cython', type='build')
 
     @run_after('install')
     def install_minimap2(self):
-        make = which('make')
         make_arg = []
         if self.spec.satisfies("target=aarch64"):
             make_arg.extend([
