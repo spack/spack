@@ -112,11 +112,17 @@ class Gromacs(CMakePackage):
 
         if '+mdrun_only' in self.spec:
             options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
+        else:
+            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=OFF')
 
         if '~openmp' in self.spec:
             options.append('-DGMX_OPENMP:BOOL=OFF')
+        else:
+            options.append('-DGMX_OPENMP:BOOL=ON')
 
         if '+double_precision' in self.spec:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
+        else:
+            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
 
         return options
