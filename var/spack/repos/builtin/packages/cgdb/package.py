@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Cgdb(AutotoolsPackage):
     """A curses front-end to GDB"""
 
