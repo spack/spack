@@ -170,6 +170,7 @@ class QuantumEspresso(Package):
             options.append('CC={0}'.format(env['SPACK_CC']))
 
         options.append('F77={0}'.format(env['SPACK_F77']))
+        options.append('F90={0}'.format(env['SPACK_FC']))
 
         if '+openmp' in spec:
             options.append('--enable-openmp')
