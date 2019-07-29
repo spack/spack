@@ -63,7 +63,7 @@ class PyOpendatacube(PythonPackage):
     depends_on('py-jsonschema', type=('build', 'run'))
     depends_on('py-netcdf4', type=('build', 'run'))
     depends_on('py-pypeg2', type=('build', 'run'))
-    depends_on('py-dateutil', type=('build', 'run'))
+    depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-rasterio', type=('build', 'run'))
     depends_on('py-sqlalchemy', type=('build', 'run'))

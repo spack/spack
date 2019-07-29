@@ -57,7 +57,7 @@ class PyPy6s(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-pysolar', type=('build', 'run'))
+    depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('sixs', type=('build', 'run'))
-
 
