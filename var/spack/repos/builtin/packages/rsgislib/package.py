@@ -39,6 +39,7 @@
 #
 from spack import *
 import subprocess
+import os
 
 class Rsgislib(Package):
     """The Remote Sensing and GIS software library (RSGISLib) is a 
@@ -50,8 +51,6 @@ class Rsgislib(Package):
     url      = "https://bitbucket.org/petebunting/rsgislib/downloads/rsgislib-3.5.7.tar.gz"
     
     version('develop', hg='https://bitbucket.org/petebunting/rsgislib')
-    version('3.5.8', '54849d968b8f4b113c3557fbcb845334')
-    version('3.5.7', '9a9e7c9f092cf92f5f4d11a3ac1e0629')
 
     # Add dependencies if required.
     depends_on('cmake', type='build')
@@ -67,7 +66,6 @@ class Rsgislib(Package):
     depends_on('boost')
     depends_on('py-numpy')
     depends_on('py-scikit-learn')
-    depends_on('py-h5py')
     
     extends('python')
     
@@ -107,7 +105,10 @@ class Rsgislib(Package):
         cmdKEALib = ' -DKEA_LIB_PATH={0}/lib'.format(spec['kealib'].prefix)
         cmdKEAInc = ' -DKEA_INCLUDE_DIR={0}/include'.format(spec['kealib'].prefix)
         
-        cmd = 'cmake -DCMAKE_INSTALL_PREFIX='+str(prefix) + cmdPython + ' -DINSTALL_PYTHON_USING_PREFIX=OFF -DCMAKE_BUILD_TYPE=Release ' + cmdBoostLib + cmdBoostInc + cmdGDALLib + cmdGDALInc + cmdHDF5Lib + cmdHDF5Inc + cmdXercescLib + cmdXercescInc + cmdGSLLib + cmdGSLInc + cmdGEOSLib + cmdGEOSInc + cmdMuParserLib + cmdMuParserInc + cmdCGALLib + cmdCGALInc + cmdGMPLib + cmdGMPInc + cmdMPFRLib + cmdMPFRInc + cmdKEAInc + cmdKEAInc + ' . '
+        cmd = 'cmake -DCMAKE_INSTALL_PREFIX='+str(prefix) + cmdPython + ' -DINSTALL_PYTHON_USING_PREFIX=OFF -DCMAKE_BUILD_TYPE=Release ' + cmdBoostLib + cmdBoostInc + cmdGDALLib + cmdGDALInc + cmdHDF5Lib + cmdHDF5Inc + cmdXercescLib + cmdXercescInc + cmdGSLLib + cmdGSLInc + cmdGEOSLib + cmdGEOSInc + cmdMuParserLib + cmdMuParserInc + cmdCGALLib + cmdCGALInc + cmdGMPLib + cmdGMPInc + cmdMPFRLib + cmdMPFRInc + cmdKEAInc + cmdKEAInc + ' .. '
+        
+        os.mkdir('build_dir')
+        os.chdir('build_dir')
         subprocess.call(cmd, shell=True)
         
         make()
