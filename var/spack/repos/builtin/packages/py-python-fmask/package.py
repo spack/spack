@@ -45,8 +45,9 @@ class PyPythonFmask(PythonPackage):
        the FMASK algorithm for Landsat and Sentinel-2"""
 
     homepage = "http://pythonfmask.org"
-    url      = "https://bitbucket.org/chchrsc/python-fmask/downloads/python-fmask-0.4.5.tar.gz"
+    url      = "https://bitbucket.org/chchrsc/python-fmask/downloads/python-fmask-0.5.3.tar.gz"
 
+    version('0.5.3', '6923320282860ea7e2cdeed2192e2923')
     version('0.4.5', 'a0223906b8d1532129072fd71c645870')
     version('0.3.0', 'a8395883f6a0efe4126fae3eac327604')
     version('0.2.1', '525ddba46e1ce75f93915e828ed6de54')

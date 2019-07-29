@@ -49,8 +49,10 @@ class PyRios(PythonPackage):
 
     # Add a proper url for your package's homepage here.
     homepage = "http://rioshome.org"
-    url      = "https://bitbucket.org/chchrsc/rios/downloads/rios-1.4.5.tar.gz"
+    url      = "https://bitbucket.org/chchrsc/rios/downloads/rios-1.4.8.tar.gz"
 
+    version('1.4.8', '5a18c0618e1b5f0f646932924a682206')
+    version('1.4.6', 'b7a0840c3eeac1d2bd2563f08d433247')
     version('1.4.5', '1e71c533524a9436ed1b5bd3ec91f4a9')
     version('1.4.4', '14dae098d1a0100c81bfc270b7d9d226')
     version('1.4.3', '156cce39c3e406517f9e829d3fe59210')
