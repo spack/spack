@@ -30,6 +30,7 @@ modules:
       - archngv
       - brainbuilder
       - brayns
+      - brion
       - connectome-tools
       - functionalizer
       - 'neurodamus%intel'

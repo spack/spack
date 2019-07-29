@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 class Brion(CMakePackage):
@@ -32,3 +34,11 @@ class Brion(CMakePackage):
 
     def cmake_args(self):
         return ['-DDISABLE_SUBPROJECTS=ON']
+
+    @when('+python')
+    def setup_environment(self, spack_env, run_env):
+        site_dir = self.spec['python'].package.site_packages_dir.split(os.sep)[1:]
+        for target in (self.prefix.lib, self.prefix.lib64):
+            pathname = os.path.join(target, *site_dir)
+            if os.path.isdir(pathname):
+                run_env.prepend_path('PYTHONPATH', pathname)
