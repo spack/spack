@@ -22,5 +22,6 @@ class Cgdb(AutotoolsPackage):
         spec = self.spec
 
         return [
-            '--with-installed-readline={0}'.format(spec['readline'].prefix)
+            '--with-ncurses={0}'.format(spec['ncurses'].prefix),
+            '--with-readline={0}'.format(spec['readline'].prefix)
         ]
