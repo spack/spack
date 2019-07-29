@@ -1,0 +1,28 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class Mii(MakefilePackage):
+    """Mii is an inverted indexing system for environment modules.
+       After installation you will no longer need to load modules to run
+       applications.
+
+       To complete the installation into your shell, first load 'mii':
+           $ module load mii
+
+       Then, use the helper to install Mii to the shell:
+           $ mii install
+
+       Mii will then be available to all new shells."""
+
+    homepage = "https://github.com/codeandkey/mii"
+    url      = "https://github.com/codeandkey/mii/archive/1.0.2.tar.gz"
+
+    version('1.0.2', sha256='1c2c86ec37779ecd3821c30ce5b6dd19be4ec1813da41832d49ff3dcf615e22d')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('PREFIX', self.prefix)
