@@ -104,6 +104,14 @@ class Vtk(CMakePackage):
         # the environment
         spack_env.set('FREETYPE_DIR', self.spec['freetype'].prefix)
 
+        if '+mpi' in spec:
+            spack_env.set('CXXFLAGS', ' '.join(
+                flags for flags in (
+                    getattr(self.compiler, 'cxx_flag', None),
+                    '-DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX'
+                ) if flags
+            ))
+
     def cmake_args(self):
         spec = self.spec
 
@@ -132,19 +140,12 @@ class Vtk(CMakePackage):
             '-DVTK_WRAP_TCL=OFF',
         ]
 
+        mpi_group = 'OFF'
         if '+mpi' in spec:
-            cmake_args.extend([
-                ''.join((
-                    "-DCMAKE_CXX_FLAGS='",
-                    getattr(self.compiler, 'cxx_flag', ' '),
-                    '-DOMPI_SKIP_MPICXX',
-                    " -DMPICH_SKIP_MPICXX'",
-                )),
-                '-DVTK_Group_MPI:BOOL=ON',
-                '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF',
-            ])
-        else:
-            cmake_args.append('-DVTK_Group_MPI:BOOL=OFF')
+            mpi_group = 'ON'
+            cmake_args.append('-DVTK_USE_SYSTEM_DIY2:BOOL=OFF')
+
+        cmake_args.append('-DVTK_Group_MPI:BOOL=' + mpi_group)
 
         if '+ffmpeg' in spec:
             cmake_args.extend(['-DModule_vtkIOFFMPEG:BOOL=ON'])
