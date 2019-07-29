@@ -46,9 +46,9 @@ class PyPy6s(PythonPackage):
        dealing with the rather cryptic 6S input and output files."""
 
     homepage = "http://py6s.rtwilson.com"
-    url      = "https://files.pythonhosted.org/packages/1c/ea/fdb4fe3e289e3c14e3bdc473f6b6f595ceb476399600fab21c92db97c82a/Py6S-1.7.0.tar.gz"
+    url      = "https://files.pythonhosted.org/packages/5f/7e/c795a9c75436ae50b537d02f70793c6a6129d7f7f8e3f50e9163063d2501/Py6S-1.7.2.tar.gz"
 
-    version('1.7.0', 'db0180a920ef328d3a4d7217374cccf7')
+    version('1.7.2', '5c0d0b47607c4ecdf22a81242af8369fc3b99249da0e23e25e9e7ac554d9adcc')
 
     # Add dependencies if required.
     depends_on('py-setuptools', type='build')
@@ -56,7 +56,6 @@ class PyPy6s(PythonPackage):
     depends_on('python', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-dateutil', type=('build', 'run'))
     depends_on('py-pysolar', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('sixs', type=('build', 'run'))

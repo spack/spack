@@ -44,9 +44,9 @@ class PyOpendatacube(PythonPackage):
     """Open Data Cube analyses continental scale Earth Observation data through time."""
 
     homepage = "https://www.opendatacube.org"
-    url      = "https://github.com/opendatacube/datacube-core/archive/datacube-1.6.0.tar.gz"
+    url      = "https://github.com/opendatacube/datacube-core/archive/datacube-1.7.tar.gz"
 
-    version('1.6.0', '71fbe46094ff90237956bd800bf2a688')
+    version('1.7', '71fbe46094ff90237956bd800bf2a688')
 
     # Add dependencies if required.
     depends_on('py-setuptools', type='build')
