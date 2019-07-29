@@ -33,13 +33,6 @@ class Libglvnd(AutotoolsPackage):
     variant('glx', default=True, description="Enable GLX support.")
     variant('gles', default=True, description="Enable OpenGL ES support.")
 
-    # TODO(opadron): Should any of these virtuals be limited in version?
-    # TODO(opadron): If so, which and what versions?
-    provides('gl')
-    provides('glx', when='+glx')
-    provides('egl', when='+egl')
-    provides('gles', when='+gles')
-
     depends_on('libxext')
     depends_on('libx11')
     depends_on('glproto')
