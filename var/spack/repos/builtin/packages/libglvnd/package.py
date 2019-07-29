@@ -9,10 +9,10 @@ from spack import *
 class Libglvnd(AutotoolsPackage):
     """The GL Vendor-Neutral Dispatch library
 
-    libglvnd is a vendor-neutral dispatch layer for arbitrating OpenGL API calls
-    between multiple vendors. It allows multiple drivers from different vendors
-    to coexist on the same filesystem, and determines which vendor to dispatch
-    each API call to at runtime.
+    libglvnd is a vendor-neutral dispatch layer for arbitrating OpenGL API
+    calls between multiple vendors. It allows multiple drivers from different
+    vendors to coexist on the same filesystem, and determines which vendor to
+    dispatch each API call to at runtime.
 
     Both GLX and EGL are supported, in any combination with OpenGL and OpenGL
     ES."""
@@ -44,12 +44,18 @@ class Libglvnd(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if '+egl' in self.spec: args.append('--enable-egl')
-        if '+glx' in self.spec: args.append('--enable-glx')
-        if '+gles' in self.spec: args.append('--enable-gles')
+        if '+egl' in self.spec:
+            args.append('--enable-egl')
+        if '+glx' in self.spec:
+            args.append('--enable-glx')
+        if '+gles' in self.spec:
+            args.append('--enable-gles')
 
-        if '~egl' in self.spec: args.append('--disable-egl')
-        if '~glx' in self.spec: args.append('--disable-glx')
-        if '~gles' in self.spec: args.append('--disable-gles')
+        if '~egl' in self.spec:
+            args.append('--disable-egl')
+        if '~glx' in self.spec:
+            args.append('--disable-glx')
+        if '~gles' in self.spec:
+            args.append('--disable-gles')
 
         return args
