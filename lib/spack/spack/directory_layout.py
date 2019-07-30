@@ -254,15 +254,26 @@ class YamlDirectoryLayout(DirectoryLayout):
         # Cannot import at top of file
         from spack.package_prefs import get_package_dir_permissions
         from spack.package_prefs import get_package_group
+
+        # Each package folder can have its own specific permissions, while
+        # intermediate folders (arch/compiler) are set with full access to
+        # everyone (0o777) and install_tree root folder is the chokepoint
+        # for restricting global access.
+        # So, whoever has access to the install_tree is allowed to install
+        # packages for same arch/compiler and since no data is stored in
+        # intermediate folders, it does not represent a security threat.
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
-        mkdirp(spec.prefix, mode=perms)
+        perms_intermediate = 0o777
+
+        mkdirp(spec.prefix, mode=perms, mode_intermediate=perms_intermediate)
         if group:
             chgrp(spec.prefix, group)
             # Need to reset the sticky group bit after chgrp
             os.chmod(spec.prefix, perms)
 
         mkdirp(self.metadata_path(spec), mode=perms)
+
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):

@@ -13,6 +13,7 @@ class Opengl(Package):
 
     homepage = "https://www.opengl.org/"
 
+    provides('gl')
     provides('gl@:4.5', when='@4.5:')
     provides('gl@:4.4', when='@4.4:')
     provides('gl@:4.3', when='@4.3:')

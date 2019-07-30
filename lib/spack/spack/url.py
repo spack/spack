@@ -43,8 +43,8 @@ from spack.version import Version
 # work on paths and URLs.  There's not a good word for both of these, but
 # "path" seemed like the most generic term.
 #
-def find_list_url(url):
-    r"""Finds a good list URL for the supplied URL.
+def find_list_urls(url):
+    r"""Find good list URLs for the supplied URL.
 
     By default, returns the dirname of the archive path.
 
@@ -62,7 +62,7 @@ def find_list_url(url):
         url (str): The download URL for the package
 
     Returns:
-        str: The list URL for the package
+        set: One or more list URLs for the package
     """
 
     url_types = [
@@ -93,12 +93,14 @@ def find_list_url(url):
          lambda m: m.group(1) + '/Archive/' + m.group(2)),
     ]
 
+    list_urls = set([os.path.dirname(url)])
+
     for pattern, fun in url_types:
         match = re.search(pattern, url)
         if match:
-            return fun(match)
-    else:
-        return os.path.dirname(url)
+            list_urls.add(fun(match))
+
+    return list_urls
 
 
 def strip_query_and_fragment(path):
@@ -284,6 +286,9 @@ def strip_name_suffixes(path, version):
         r'release',
         r'snapshot',
         r'distrib',
+
+        # Arch
+        r'Linux64',
 
         # VCS
         r'0\+bzr',

@@ -9,6 +9,7 @@ import shutil
 
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
+from spack.package import InstallError, PackageBase, PackageStillNeededError
 import spack.patch
 import spack.repo
 import spack.store
@@ -275,6 +276,21 @@ class MockInstallError(spack.error.SpackError):
     pass
 
 
+def test_uninstall_by_spec_errors(mutable_database):
+    """Test exceptional cases with the uninstall command."""
+
+    # Try to uninstall a spec that has not been installed
+    rec = mutable_database.get_record('zmpi')
+    with pytest.raises(InstallError, matches="not installed"):
+        PackageBase.uninstall_by_spec(rec.spec)
+
+    # Try an unforced uninstall of a spec with dependencies
+    rec = mutable_database.get_record('mpich')
+
+    with pytest.raises(PackageStillNeededError, matches="cannot uninstall"):
+        PackageBase.uninstall_by_spec(rec.spec)
+
+
 def test_pkg_build_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
@@ -367,3 +383,20 @@ def test_pkg_install_log(install_mockery):
 
     # Cleanup
     shutil.rmtree(log_dir)
+
+
+def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
+    """Test attempts to perform install phases with unconcretized spec."""
+    spec = Spec('trivial-install-test-package')
+
+    with pytest.raises(ValueError, match="only install concrete packages"):
+        spec.package.do_install()
+
+    with pytest.raises(ValueError, match="fetch concrete packages"):
+        spec.package.do_fetch()
+
+    with pytest.raises(ValueError, match="stage concrete packages"):
+        spec.package.do_stage()
+
+    with pytest.raises(ValueError, match="patch concrete packages"):
+        spec.package.do_patch()

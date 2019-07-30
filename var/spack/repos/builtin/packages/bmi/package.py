@@ -9,8 +9,8 @@ from spack import *
 class Bmi(AutotoolsPackage):
     """a communications framework and network abstraction layer"""
 
-    homepage = 'http://git.mcs.anl.gov/bmi.git/'
-    git = 'git://git.mcs.anl.gov/bmi'
+    homepage = 'https://xgitlab.cels.anl.gov/sds/bmi'
+    git = 'https://xgitlab.cels.anl.gov/sds/bmi.git'
 
     version('develop', branch='master')
 
