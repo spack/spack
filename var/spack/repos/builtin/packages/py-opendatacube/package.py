@@ -46,7 +46,7 @@ class PyOpendatacube(PythonPackage):
     homepage = "https://www.opendatacube.org"
     url      = "https://github.com/opendatacube/datacube-core/archive/datacube-1.7.tar.gz"
 
-    version('1.7', '71fbe46094ff90237956bd800bf2a688')
+    version('1.7', '472a25b9c7c3090f854e8a7725aa67eb')
 
     # Add dependencies if required.
     depends_on('py-setuptools', type='build')
