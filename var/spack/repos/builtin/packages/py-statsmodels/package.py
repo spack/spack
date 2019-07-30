@@ -12,7 +12,8 @@ class PyStatsmodels(PythonPackage):
     homepage = "http://www.statsmodels.org"
     url      = "https://pypi.io/packages/source/s/statsmodels/statsmodels-0.8.0.tar.gz"
 
-    version('0.8.0', 'b3e5911cc9b00b71228d5d39a880bba0')
+    version('0.10.1', '7eeb04ca15ff15b74bb32c6497e47ac0')
+    version('0.8.0',  'b3e5911cc9b00b71228d5d39a880bba0')
 
     variant('plotting', default=False, description='With matplotlib')
 
