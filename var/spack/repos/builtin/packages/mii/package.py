@@ -11,13 +11,9 @@ class Mii(MakefilePackage):
        After installation you will no longer need to load modules to run
        applications.
 
-       To complete the installation into your shell, first load 'mii':
-           $ module load mii
-
-       Then, use the helper to install Mii to the shell:
-           $ mii install
-
-       Mii will then be available to all new shells."""
+       NOTE: Additional steps are required after installing the
+       Spack package to enable Mii in your shell. Please see the README
+       on the homepage for more information."""
 
     homepage = "https://github.com/codeandkey/mii"
     url      = "https://github.com/codeandkey/mii/archive/1.0.2.tar.gz"
