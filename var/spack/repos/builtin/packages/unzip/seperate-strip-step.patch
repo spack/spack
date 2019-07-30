@@ -1,0 +1,41 @@
+diff -u unzip60.orig/unix/configure unzip60/unix/configure
+--- unzip60.orig/unix/configure	2019-07-30 09:02:50.788045319 -0500
++++ unzip60/unix/configure	2019-07-30 08:57:07.371128691 -0500
+@@ -17,7 +17,7 @@
+ IZ_BZIP2=${3}
+ CFLAGS="${CFLAGS} -I. -DUNIX"
+ LFLAGS1=""
+-LFLAGS2="-s"
++LFLAGS2=""
+ LN="ln -s"
+ 
+ CFLAGS_OPT=''
+diff -u unzip60.orig/unix/Makefile unzip60/unix/Makefile
+--- unzip60.orig/unix/Makefile	2019-07-30 09:02:59.331869165 -0500
++++ unzip60/unix/Makefile	2019-07-30 09:00:24.023071785 -0500
+@@ -52,7 +52,7 @@
+ CF = $(CFLAGS) $(CF_NOOPT)
+ LFLAGS1 =
+ LF = -o unzip$E $(LFLAGS1)
+-LF2 = -s
++LF2 =
+ 
+ # UnZipSFX flags
+ SL = -o unzipsfx$E $(LFLAGS1)
+@@ -281,12 +281,15 @@
+ 
+ unzip$E:	$(OBJS) $(LIBBZ2)	# add `&' for parallel makes
+ 	$(LD) $(LF) -L$(IZ_BZIP2) $(LOBJS) $(L_BZ2) $(LF2)
++	$(STRIP) -s unzip$E
+ 
+ unzipsfx$E:	$(OBJX)			# add `&' for parallel makes
+ 	$(LD) $(SL) $(LOBJX) $(SL2)
++	$(STRIP) -s unzipsfx$E
+ 
+ funzip$E:	$(OBJF)			# add `&' for parallel makes
+ 	$(LD) $(FL) $(OBJF) $(FL2)
++	$(STRIP) -s funzip$E
+ 
+ zipinfo$E:	unzip$E			# `&' is pointless here...
+ 	@echo\
+Common subdirectories: unzip60.orig/unix/Packaging and unzip60/unix/Packaging

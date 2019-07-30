@@ -14,7 +14,9 @@ class Unzip(MakefilePackage):
 
     version('6.0', '62b490407489521db863b523a7f86375')
 
-    conflicts('platform=cray', msg='Unzip does not currently build on Cray')
+    # The -s link flag crashes the cray compiler wrappers so this splits
+    # symbol striping into a seperate step
+    patch('seperate-strip-step.patch', when='@6:')
 
     make_args = ['-f', 'unix/Makefile']
     build_targets = make_args + ['generic']
