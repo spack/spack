@@ -31,6 +31,7 @@ class PyGoogleAuth(PythonPackage):
     homepage = "https://github.com/googleapis/google-auth-library-python"
     url      = "https://github.com/googleapis/google-auth-library-python/archive/v1.5.1.tar.gz"
 
+    version('1.6.3', '9e6d98c8e4f6ce899d6e5d416e7c372a')
     version('1.5.1', '39812c24d24dda8488f8896be285b013')
 
     # Build dependencies
