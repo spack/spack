@@ -14,10 +14,11 @@ class Libxsmm(MakefilePackage):
     and deep learning primitives."""
 
     homepage = 'https://github.com/hfp/libxsmm'
-    url      = 'https://github.com/hfp/libxsmm/archive/1.12.1.tar.gz'
+    url      = 'https://github.com/hfp/libxsmm/archive/1.13.tar.gz'
     git      = 'https://github.com/hfp/libxsmm.git'
 
     version('develop', branch='master')
+    version('1.13',   '47c034e169820a9633770eece0e0fdd8d4a744e09b81da2af8c2608a4625811e')
     version('1.12.1', '3687fb98da00ba92cd50b5f0d18b39912c7886dad3856843573aee0cb34e9791')
     version('1.12',   '37432fae4404ca12d8c5a205bfec7f9326c2d607d9ec37680f42dae60b52382a')
     version('1.11',   '5fc1972471cd8e2b8b64ea017590193739fc88d9818e3d086621e5c08e86ea35')
@@ -45,12 +46,14 @@ class Libxsmm(MakefilePackage):
     version('1.4.1',  'c19be118694c9b4e9a61ef4205b1e1a7e0c400c07f9bce65ae430d2dc2be5fe1')
     version('1.4',    'cf483a370d802bd8800c06a12d14d2b4406a745c8a0b2c8722ccc992d0cd72dd')
 
+    variant('shared', default=False,
+            description='With shared libraries (and static libraries).')
     variant('debug', default=False,
-            description='Unoptimized with call-trace (LIBXSMM_TRACE).')
+            description='With call-trace (LIBXSMM_TRACE); unoptimized.')
     variant('header-only', default=False,
-            description='Produce header-only installation')
+            description='With header-only installation')
     variant('generator', default=False,
-            description='build generator executables')
+            description='With generator executable(s)')
     conflicts('+header-only', when='@:1.6.2',
               msg='Header-only is available since v1.6.2!')
 
@@ -73,9 +76,6 @@ class Libxsmm(MakefilePackage):
             'SYM=1'
         ]
 
-        if '+header-only' in spec:
-            make_args += ['header-only']
-
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
 #       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
 
@@ -84,11 +84,11 @@ class Libxsmm(MakefilePackage):
             make_args += ['DBG=1']
             make_args += ['TRACE=1']
 
-        make(*make_args)
+        if '+shared' in spec:
+            make(*(make_args + ['STATIC=0']))
 
-        if '+generator' in spec:
-            make_args += ['generator']
-            make(*make_args)
+        # builds static libraries by default
+        make(*make_args)
 
     def install(self, spec, prefix):
         install_tree('include', prefix.include)
@@ -99,10 +99,11 @@ class Libxsmm(MakefilePackage):
             os.rename(pcfile, os.path.join('lib/pkgconfig',
                                            os.path.basename(pcfile)))
 
+        # always install libraries
+        install_tree('lib', prefix.lib)
+
         if '+header-only' in spec:
             install_tree('src', prefix.src)
-        else:
-            install_tree('lib', prefix.lib)
 
         if '+generator' in spec:
             install_tree('bin', prefix.bin)
