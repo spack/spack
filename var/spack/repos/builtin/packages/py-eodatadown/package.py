@@ -29,6 +29,8 @@ class PyEodatadown(PythonPackage):
     homepage = "https://www.remotesensing.info/eodatadown"
     url      = "https://bitbucket.org/petebunting/eodatadown/downloads/EODataDown-0.13.0.tar.gz"
 
+    maintainers = ['petebunting']
+
     version('0.13.0', sha256='75854c99a259c4ddcf6cdbff6aab946d2e1c69bc4ba12a4ed256270af65947f9')
 
     # Add dependencies if required.

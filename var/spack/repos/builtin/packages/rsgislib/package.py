@@ -49,7 +49,9 @@ class Rsgislib(Package):
     # Add a proper url for your package's homepage here.
     homepage = "http://www.rsgislib.org"
     url      = "https://bitbucket.org/petebunting/rsgislib/downloads/rsgislib-3.7.54a.tar.gz"
-   
+    
+    maintainers = ['petebunting']
+
     version('3.7.54a', '28bccbe06bc2ec14c3d1e4d75708d70f')
     version('3.6.14', '13dde2a575f044b41c11f973eba1de16')
     version('3.5.8', '54849d968b8f4b113c3557fbcb845334')

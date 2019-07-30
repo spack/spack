@@ -51,6 +51,8 @@ class PyArcsi(PythonPackage):
     homepage = "https://www.arcsi.remotesensing.info"
     url      = "https://bitbucket.org/petebunting/arcsi/downloads/arcsi-3.1.6.tar.gz"
 
+    maintainers = ['petebunting']
+
     version('3.2.3a', '177aacacdae897b43c4a717c88e95ea7')
     version('3.1.6', '85b2ece361750f27ca1416ec8b0463c5')
 

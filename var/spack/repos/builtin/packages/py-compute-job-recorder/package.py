@@ -29,6 +29,8 @@ class PyComputeJobRecorder(PythonPackage):
     homepage = "https://www.remotesensing.info/compute_job_recorder"
     url      = "https://bitbucket.org/petebunting/compute_job_recorder/downloads/ComputeJobRecorder-0.0.1.tar.gz"
 
+    maintainers = ['petebunting']
+
     version('0.0.1', sha256='0347c8a51829b1f8bae2bcaf370dc4c78dfa2e6340ad2489e9e15aaa3981a165')
 
     depends_on('py-setuptools', type='build')
