@@ -153,6 +153,11 @@ class Python(AutotoolsPackage):
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
 
+    # Python 3.6.7 and above can not be compiled with the Intel compiler
+    # https://bugs.python.org/issue35473
+    # https://bugs.python.org/issue37415
+    conflicts('%intel', when='@3.6.7:')
+
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
