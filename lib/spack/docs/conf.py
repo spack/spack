@@ -91,7 +91,7 @@ class PatchedPythonDomain(PythonDomain):
             env, fromdocname, builder, typ, target, node, contnode)
 
 def setup(sphinx):
-    sphinx.override_domain(PatchedPythonDomain)
+    sphinx.add_domain(PatchedPythonDomain, override=True)
 
 # -- General configuration -----------------------------------------------------
 
