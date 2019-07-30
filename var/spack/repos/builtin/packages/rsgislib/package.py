@@ -48,9 +48,12 @@ class Rsgislib(Package):
 
     # Add a proper url for your package's homepage here.
     homepage = "http://www.rsgislib.org"
-    url      = "https://bitbucket.org/petebunting/rsgislib/downloads/rsgislib-3.5.7.tar.gz"
-    
-    version('develop', hg='https://bitbucket.org/petebunting/rsgislib')
+    url      = "https://bitbucket.org/petebunting/rsgislib/downloads/rsgislib-3.7.54a.tar.gz"
+   
+    version('3.7.54a', '28bccbe06bc2ec14c3d1e4d75708d70f')
+    version('3.6.14', '13dde2a575f044b41c11f973eba1de16')
+    version('3.5.8', '54849d968b8f4b113c3557fbcb845334')
+    version('3.5.7', '9a9e7c9f092cf92f5f4d11a3ac1e0629')
 
     # Add dependencies if required.
     depends_on('cmake', type='build')

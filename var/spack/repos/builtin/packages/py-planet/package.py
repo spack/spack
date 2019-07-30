@@ -45,9 +45,10 @@ class PyPlanet(PythonPackage):
 
     # Add a proper url for your package's homepage here.
     homepage = "https://github.com/planetlabs/planet-client-python"
-    url      = "https://github.com/planetlabs/planet-client-python/archive/1.2.0.tar.gz"
-
-    version('1.2.0',       '1a4fad136fa083461a6887c930d14bc1')
+    url      = "https://github.com/planetlabs/planet-client-python/archive/1.3.0.tar.gz"
+    
+    version('1.3.0', 'd7ed6dcf77a5aa83f77dca129d126331')
+    version('1.2.0', '1a4fad136fa083461a6887c930d14bc1')
 
     # Add dependencies if required.
     depends_on('py-setuptools', type='build')
