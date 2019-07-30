@@ -6,7 +6,6 @@
 import collections
 import errno
 import hashlib
-import fileinput
 import glob
 import grp
 import itertools
@@ -125,10 +124,15 @@ def filter_file(regex, repl, *filenames, **kwargs):
         backup (bool): Make backup file(s) suffixed with ``~``. Default is True
         ignore_absent (bool): Ignore any files that don't exist.
             Default is False
+        stop_at (str): Marker used to stop scanning the file further. If a text
+            line matches this marker filtering is stopped and the rest of the
+            file is copied verbatim. Default is to filter until the end of the
+            file.
     """
     string = kwargs.get('string', False)
     backup = kwargs.get('backup', True)
     ignore_absent = kwargs.get('ignore_absent', False)
+    stop_at = kwargs.get('stop_at', None)
 
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
@@ -149,6 +153,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
         tty.debug(msg.format(filename, regex))
 
         backup_filename = filename + "~"
+        tmp_filename = filename + ".spack~"
 
         if ignore_absent and not os.path.exists(filename):
             msg = 'FILTER FILE: file "{0}" not found. Skipping to next file.'
@@ -160,15 +165,48 @@ def filter_file(regex, repl, *filenames, **kwargs):
         if not os.path.exists(backup_filename):
             shutil.copy(filename, backup_filename)
 
+        # Create a temporary file to read from. We cannot use backup_filename
+        # in case filter_file is invoked multiple times on the same file.
+        shutil.copy(filename, tmp_filename)
+
         try:
-            for line in fileinput.input(filename, inplace=True):
-                print(re.sub(regex, repl, line.rstrip('\n')))
+            extra_kwargs = {}
+            if sys.version_info > (3, 0):
+                extra_kwargs = {'errors': 'surrogateescape'}
+
+            # Open as a text file and filter until the end of the file is
+            # reached or we found a marker in the line if it was specified
+            with open(tmp_filename, mode='r', **extra_kwargs) as input_file:
+                with open(filename, mode='w', **extra_kwargs) as output_file:
+                    # Using iter and readline is a workaround needed not to
+                    # disable input_file.tell(), which will happen if we call
+                    # input_file.next() implicitly via the for loop
+                    for line in iter(input_file.readline, ''):
+                        if stop_at is not None:
+                            current_position = input_file.tell()
+                            if stop_at == line.strip():
+                                output_file.write(line)
+                                break
+                        filtered_line = re.sub(regex, repl, line)
+                        output_file.write(filtered_line)
+                    else:
+                        current_position = None
+
+            # If we stopped filtering at some point, reopen the file in
+            # binary mode and copy verbatim the remaining part
+            if current_position and stop_at:
+                with open(tmp_filename, mode='rb') as input_file:
+                    input_file.seek(current_position)
+                    with open(filename, mode='ab') as output_file:
+                        output_file.writelines(input_file.readlines())
+
         except BaseException:
+            os.remove(tmp_filename)
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise
-
         finally:
+            os.remove(tmp_filename)
             if not backup and os.path.exists(backup_filename):
                 os.remove(backup_filename)
 

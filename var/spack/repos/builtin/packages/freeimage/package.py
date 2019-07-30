@@ -16,6 +16,9 @@ class Freeimage(MakefilePackage):
 
     patch('install_fixes.patch', when='@3.18.0')
 
+    def edit(self, spec, prefix):
+        env["DESTDIR"] = prefix
+
     def url_for_version(self, version):
         url = "https://downloads.sourceforge.net/project/freeimage/Source%20Distribution/{0}/FreeImage{1}.zip"
         return url.format(version, str(version).replace('.', ''))

@@ -260,7 +260,6 @@ class PyNumpy(PythonPackage):
 
         return args
 
-<<<<<<< HEAD
     def setup_environment(self, spack_env, run_env):
         # Quick fix for the cases when python/numpy are external packages
         if not 'python' in self.spec:
@@ -275,8 +274,6 @@ class PyNumpy(PythonPackage):
 
         run_env.prepend_path('CPATH', include_path)
 
-=======
->>>>>>> spack/develop
     def test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:

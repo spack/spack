@@ -86,10 +86,6 @@ packages:
         paths:
             python@2.7.15: /usr
         version: [2.7.15]
-    py-numpy:
-        paths:
-            py-numpy@1.13.3: /usr
-        version: [1.13.3]
     readline:
         paths:
             readline@7.0: /usr

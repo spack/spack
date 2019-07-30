@@ -70,6 +70,10 @@ class Cmake(Package):
     # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
     patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
 
+    # GCC marks `-mtune=x86-64 as deprecated, but still accepts it. CMake
+    # fails when encountering the deprecation warning.
+    patch('cmake-mtune-ignore-deprecated.patch')
+
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
     # a build dependency, and its libs will not interfere with others in

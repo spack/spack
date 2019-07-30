@@ -15,7 +15,9 @@ class Libxkbfile(AutotoolsPackage):
     version('1.0.9', '5aab87eba67f37dd910a19be5c1129ee')
 
     depends_on('libx11')
+    depends_on('libxcb')
+    depends_on('kbproto')
+    depends_on('xproto')
 
-    depends_on('kbproto', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

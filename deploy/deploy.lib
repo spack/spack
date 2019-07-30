@@ -9,10 +9,12 @@
 # * `DEPLOYMENT_DATE` to force a date for the installation directory
 
 DEFAULT_DEPLOYMENT_DATE=${DEFAULT_DEPLOYMENT_DATE:-$(date +%Y-%m-%d)}
-DEFAULT_MODULE_DATE=${DEFAULT_MODULE_DATE-$(date +Y-%m)}
+
+BASE_GCC_VERSION=${DEFAULT_BASE_GCC_VERSION:-8.3.0}
+BASE_ARCHITECTURE=${DEFAULT_BASE_ARCHITECTURE:-linux-rhel7-x86_64}
 
 # A list of stages in the order they will be built
-stages="compilers tools external-libraries serial-libraries parallel-libraries applications"
+stages="compilers tools external-libraries libraries applications"
 
 # Definitions for the installation spec generation. For every stage
 # mentioned above, this should be a list of filenames *without* extension
@@ -20,8 +22,13 @@ stages="compilers tools external-libraries serial-libraries parallel-libraries a
 declare -A spec_definitions=([compilers]=compilers
                              [tools]=tools
                              [external-libraries]="external-libraries"
-                             [serial-libraries]="serial-libraries python-packages"
-                             [parallel-libraries]=parallel-libraries
+                             [libraries]="serial-libraries python-packages parallel-libraries"
+                             [applications]=bbp-packages)
+
+declare -A module_locations=([compilers]=compilers
+                             [tools]=tools
+                             [external-libraries]=libraries
+                             [libraries]=libraries
                              [applications]=bbp-packages)
 
 # Export installed software as packages to be re-used later
@@ -35,8 +42,7 @@ declare -A spec_definitions=([compilers]=compilers
 declare -A export_packages=([compilers]=no
                             [tools]=yes
                             [external-libraries]=yes
-                            [serial-libraries]=no
-                            [parallel-libraries]=no
+                            [libraries]=no
                             [applications]=no)
 
 # Re-use installed software via the chain mechanism
@@ -44,8 +50,7 @@ declare -A export_packages=([compilers]=no
 declare -A include_in_chain=([compilers]=no
                              [tools]=no
                              [external-libraries]=no
-                             [serial-libraries]=yes
-                             [parallel-libraries]=yes
+                             [libraries]=yes
                              [applications]=yes)
 
 # Set up the dependency graph
@@ -278,11 +283,10 @@ configure_compilers() {
             spack compiler find --scope=user
         fi
 
+        GCC_DIR=$(spack location --latest --install-dir gcc@${BASE_GCC_VERSION})
         if [[ ${line} = *"intel"* ]]; then
-            GCC_DIR=$(spack location --install-dir gcc@6.4.0)
-
             # update intel modules to use gcc@6.4.0 in .cfg files
-            install_dir=$(spack location --install-dir ${line})
+            install_dir=$(spack location --latest --install-dir ${line})
             for f in $(find ${install_dir} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
                 if ! grep -q "${GCC_DIR}" $f; then
                     echo "-gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
@@ -431,6 +435,8 @@ generate_specs() {
     venv="${DEPLOYMENT_ROOT}/spack/venv"
 
     log "updating the deployment virtualenv"
+    log "...virtualenv binary: $(which virtualenv)"
+    log "...python binary:     $(which python)"
     # Recreate the virtualenv and update the command line
     mkdir -p ${venv}
     virtualenv -q -p $(which python) ${venv} --clear
@@ -452,9 +458,15 @@ generate_specs() {
         rm -f "${datadir}/specs.txt"
         for stub in ${spec_definitions[$stage]}; do
             log "...using ${stub}.yaml"
-            spackd --input packages/${stub}.yaml packages x86_64 >> "${datadir}/specs.txt"
+            spackd --input packages/${stub}.yaml packages ${BASE_ARCHITECTURE} >> "${datadir}/specs.txt"
         done
+
+        rpm -q -a > "${datadir}/rpms.txt"
     done
+    log "leaving the deployment virtualenv"
+    set +o nounset
+    deactivate
+    set -o nounset
 }
 
 copy_configuration() {
@@ -502,17 +514,9 @@ copy_user_configuration() {
 
     rm -f ${target}/modules.{,c}sh
     for modpath in ${modpaths}; do
-        echo "MODULEPATH=\"\${MODULEPATH}\${MODULEPATH:+:}${modpath}\"" >> ${target}/modules.sh
-
-        cat <<EOF >> ${target}/modules.csh
-if ( \$?MODULEPATH ) then
-    setenv MODULEPATH \${MODULEPATH}:${modpath}
-else
-    setenv MODULEPATH ${modpath}
-endif
-EOF
+        echo "module use \"${modpath}\"" >> ${target}/modules.sh
+        echo "module use \"${modpath}\"" >> ${target}/modules.csh
     done
-    echo "export MODULEPATH" >> ${target}/modules.sh
 
     ./modules.rb > "${target}/modules.yaml"
 
@@ -533,8 +537,9 @@ EOF
 copy_modules() {
     what="$1"
 
+    local where="${module_locations[${what}]}"
     local source="$(install_dir ${what})/modules"
-    local target="${DEPLOYMENT_ROOT}/modules/${what}/$(date +%Y-%m)"
+    local target="${DEPLOYMENT_ROOT}/modules/${where}/$(date +%Y-%m)"
 
     log "copying module files"
     log "...from ${source}"
@@ -543,22 +548,41 @@ copy_modules() {
     rsync -av "${source}/" "${target}"
 }
 
+bogus_packages() {
+    for toplevel in $(ls "${1}"); do
+        if [ "${toplevel}" = "modules" ]; then
+            continue
+        elif [ "${toplevel}" = "data" ]; then
+            continue
+        fi
+        find "${SPACK_INSTALL_PREFIX}/${toplevel}" -mindepth 2 -maxdepth 2 -type d | while read dirname; do
+            [ -z "$(ls ${dirname})" ] && [ -f "${dirname}/.spack/spec.yaml" ] && {
+                pkgname=$(sed -ne '/spec:/ { n; s/^- //; s/:$//; p }' ${dirname}/.spack/spec.yaml)
+                pkgdir=$(find ${dirname}/.spack -name ${pkgname} -type d)
+
+                log "...found empty installation directory for $(basename ${dirname})"
+                [ -f "${pkgdir}/package.py" ] && [ -z "$(grep Bundle ${pkgdir}/package.py)" ] && {
+                    echo ${dirname}
+                }
+            }
+        done
+    done
+}
+
 install_specs() {
     what="$1"
 
     location="$(install_dir ${what})"
     HOME="${location}/data"
-    SOFTS_DIR_PATH="${location}"
-    MODS_DIR_PATH="${location}/modules"
-    export HOME SOFTS_DIR_PATH MODS_DIR_PATH
+    SPACK_INSTALL_PREFIX="${location}"
+    export HOME SPACK_INSTALL_PREFIX
 
     cat > "${HOME}/.profile" <<EOF
 . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
 
-SOFTS_DIR_PATH="${location}"
-MODS_DIR_PATH="${location}/modules"
+SPACK_INSTALL_PREFIX="${location}"
 
-export MODS_DIR_PATH SOFTS_DIR_PATH
+export SPACK_INSTALL_PREFIX
 EOF
 
     copy_configuration "${what}"
@@ -591,8 +615,17 @@ EOF
     log "cleaning up after a bad spack"
     spack clean -a
 
+    log "cleaning failed installations"
+    bogus_packages "${SPACK_INSTALL_PREFIX}" | while read bogus_package; do
+        log "...removing potentially failed installation of $(basename ${bogus_package})"
+        rm -rf "${bogus_package}"
+    done
+
+    log "reindexing software"
+    spack reindex
+
     log "installed specs"
-    spack reindex && spack find -lv
+    spack find -lv
 
     log "gathering specs"
     spec_list=$(spack filter --not-installed $(< ${HOME}/specs.txt))
@@ -647,7 +680,7 @@ EOF
     . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
     if [[ "${export_packages[${what}]}" = "yes" ]]; then
         log "augmenting packages.yaml"
-        spack export --scope=user --module tcl --explicit --exclude 'py-.*|neuron|hdf5|intel-parallel-studio|pgi' > "${HOME}/packages.yaml"
+        spack export --scope=user --module tcl --explicit --exclude 'allinea|py-.*|neuron|hdf5|intel-parallel-studio|pgi' > "${HOME}/packages.yaml"
     else
         log "copying packages.yaml"
         cp "${HOME}/.spack/packages.yaml" "${HOME}"

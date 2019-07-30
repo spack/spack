@@ -159,3 +159,22 @@
   * `~/.spack/upstreams.yaml`
   to avoid rebuilding packages that have already been build centrally.
 </details>
+
+<details>
+  <summary>Q: How do I debug my Pull Request?</summary>
+
+  To re-create the environment a Pull Request was built in, let's say #666,
+  and debug failures, it is recommended to create a throw-away shell
+  environment and execute the following commands.  Note that the parameters
+  in the first line correspond to the pull request and the stage you wish
+  to debug (as labelled in Jenkins, but lowercase):
+  ```console
+  eval $(${SPACK_ROOT}/deploy/pull_env.sh pulls/666 applications)
+  spacktivate
+  spack install $(grep <my_failed_piece_of_software> ${HOME}/specs.txt)
+  ```
+  Evaluating the first line will override local environment variables such
+  as the current `$HOME` directory.  *After leaving the shell, this will
+  leave a temporary directory behind*, following the pattern `spack_*`.
+  Please make sure to delete this directory when not needed any longer.
+</details>

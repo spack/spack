@@ -820,7 +820,8 @@ class IntelPackage(PackageBase):
               '^intel-mpi' in spec_root or
               '^intel-parallel-studio' in spec_root):
             blacs_lib = 'libmkl_blacs_intelmpi'
-        elif '^mpt' in spec_root:
+        elif ('^mpt' in spec_root or
+              '^hpe-mpi' in spec_root):
             blacs_lib = 'libmkl_blacs_sgimpt'
         else:
             raise_lib_error('Cannot find a BLACS library for the given MPI.')

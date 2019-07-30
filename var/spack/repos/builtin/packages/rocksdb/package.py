@@ -33,6 +33,13 @@ class Rocksdb(MakefilePackage):
     git      = 'https://github.com/facebook/rocksdb.git'
 
     version('develop', git=git, branch='master', submodules=True)
+    version('6.3.6', sha256='9878beb4e9b74a5f0d9500772235a39066fd019ba7af9ae6afe483ca713e3c7c')
+    version('6.2.4', sha256='7f34d1b55501f5273d11cd064bd34aef87c51ff114452968b86457f06cdb8ced')
+    version('6.2.2', sha256='3e7365cb2a35982e95e5e5dd0b3352dc78573193dafca02788572318c38483fb')
+    version('6.1.2', sha256='df93f3b66caa1cbe1c2862c99c33e18a5c5b24a64fb51dfe8ef805e3c9fd1cad')
+    version('6.1.1', sha256='f98abad7feeb40a0a77de4b3b7a58e70c9cd7f2780c40d9bd268adb12f095ee3')
+    version('6.0.2', sha256='89e0832f1fb00ac240a9438d4bbdae37dd3e52f7c15c3f646dc26887da16f342')
+    version('6.0.1', sha256='9a9aca15bc3617729d976ceb98f6cbd64c6c25c4d92f374b4897aa2d2faa07cf')
     version('5.18.3',  sha256='7fb6738263d3f2b360d7468cf2ebe333f3109f3ba1ff80115abd145d75287254')
     version('5.17.2',  sha256='101f05858650a810c90e4872338222a1a3bf3b24de7b7d74466814e6a95c2d28')
     version('5.16.6',  sha256='f0739edce1707568bdfb36a77638fd5bae287ca21763ce3e56cf0bfae8fff033')
@@ -54,6 +61,9 @@ class Rocksdb(MakefilePackage):
     depends_on('snappy', when='+snappy')
     depends_on('zlib', when='+zlib')
     depends_on('zstd', when='+zstd')
+
+    # backport of https://github.com/facebook/rocksdb/commit/61876614dce8c9155e28d40b5d95ec1bf1cbfa47
+    patch('gcc_warnings.patch')
 
     def build(self, spec, prefix):
         cflags = []

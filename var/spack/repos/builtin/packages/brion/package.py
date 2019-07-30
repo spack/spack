@@ -26,7 +26,10 @@ class Brion(CMakePackage):
     depends_on('py-numpy', type=('build', 'run'), when='+python')
     depends_on('boost +python', when='+python')
 
-    depends_on('boost@1.65.0')
+    depends_on('boost')
+    # TODO: bzip2 is a dependency of boost. Needed here because of linking
+    # issue (libboost_iostreams.so.1.68.0 not finding libbz2.so)
+    depends_on('bzip2')
     depends_on('lunchbox')
     depends_on('vmmlib')
     depends_on('highfive@2.1: +boost ~mpi')

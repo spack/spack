@@ -200,7 +200,12 @@ def create(path, specs, **kwargs):
         spack.caches.mirror_cache = mirror_cache
         # Iterate through packages and download all safe tarballs for each
         for spec in version_specs:
-            add_single_spec(spec, mirror_root, categories, **kwargs)
+            if spec.package.has_code:
+                add_single_spec(spec, mirror_root, categories, **kwargs)
+            else:
+                tty.msg("Skipping package {pkg} without code".format(
+                    pkg=spec.format("{name}{@version}")
+                ))
     finally:
         spack.caches.mirror_cache = None
 

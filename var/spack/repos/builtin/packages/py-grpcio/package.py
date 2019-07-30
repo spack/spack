@@ -31,4 +31,5 @@ class PyGrpcio(PythonPackage):
         spack_env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', '1')
         spack_env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', '1')
         spack_env.append_flags('LDFLAGS', self.spec['cares'].libs.search_flags)
+        spack_env.append_flags('CFLAGS', '-I{0}'.format(self.spec['cares'].prefix.include))
         spack_env.append_flags('LDFLAGS', self.spec['zlib'].libs.search_flags)

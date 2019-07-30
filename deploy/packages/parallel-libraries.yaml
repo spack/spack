@@ -19,11 +19,8 @@ packages:
       - compiler
       - mpi
     specs:
-      - py-mpi4py@3.0.0
       - hdf5+mpi@1.10.4
       - highfive+mpi@2.0
-      - ospray@1.7.3
-      - ospray@1.8.5
       - parmetis@4.0.3
       - mvdtool+mpi~python
 
@@ -36,7 +33,7 @@ packages:
       - mpi
       - python
     specs:
-      - py-mpi4py@3.0.0
+      - py-mpi4py
 
   gnu-stable-parallel-lapack:
     target_matrix:
@@ -48,9 +45,9 @@ packages:
       - lapack
     specs:
       - hypre@2.14.0
-      - omega-h+trilinos@9.29.0
       - superlu-dist@5.4.0
       - trilinos@xsdk-0.4.0-rc1
+      - omega-h+trilinos@9.29.0
 
   gnu-stable-parallel-lapack-python:
     target_matrix:
@@ -62,7 +59,7 @@ packages:
       - mpi
       - python
     specs:
-      - petsc+int64+mpi@3.10.2
+      - petsc+int64+mpi@3.11.2
 
   intel-stable-parallel:
     target_matrix:

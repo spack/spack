@@ -1,4 +1,8 @@
 packages:
+    atk:
+        paths:
+            atk@2.22.0: /usr
+        version: [2.22.0]
     autoconf:
         paths:
             autoconf@2.69: /usr
@@ -11,6 +15,8 @@ packages:
         paths:
             bison@3.0.4: /usr
         version: [3.0.4]
+    boost:
+        variants: +pic
     cairo:
         paths:
             cairo@1.8.10: /usr
@@ -31,10 +37,6 @@ packages:
         paths:
             fontconfig@2.10.95: /usr
         version: [2.10.95]
-    glib:
-        paths:
-            glib@2.50.3: /usr
-        version: [2.50.3]
     gtkplus:
         paths:
             gtkplus@2.24.31: /usr
@@ -43,12 +45,13 @@ packages:
         version: [2.9.0]
     hdf5:
         variants: +hl
-    hpe-mpi:
-        paths:
-            hpe-mpi@2.16: /opt/hpe/hpc/mpt/mpt-2.16
-        version: [2.16]
     intel-mkl:
         version: [2018.3.222]
+    # Drags in heavy PEARL dependencies
+    intltool:
+        paths:
+            intltool@0.50.2: /usr
+        version: [0.50.2]
     julia:
         variants: +external_llvm
     libjpeg:
@@ -95,22 +98,19 @@ packages:
         paths:
             pango@1.40.4: /usr
         version: [1.40.4]
-    pcre:
-        paths:
-            pcre@8.32+jit+utf: /usr
-        version: [8.32]
     perl:
         paths:
             perl@5.16.3: /usr
         version: [5.16.3]
     petsc:
-        variants: +patchmpi64
+        variants: ~fortran
     pkg-config:
         paths:
             pkg-config@0.27.1: /usr
         version: [0.27.1]
     python:
-        version: [3.6.5]
+        variants: +tk
+        version: [3.7.4]
     slurm:
         paths:
             slurm@17.02: /usr
@@ -127,7 +127,7 @@ packages:
             tk@8.5.13: /usr
         version: [8.5.13]
     trilinos:
-        variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
+        variants: +kokkos+teuchos+openmp~amesos~amesos2~aztec~epetra~epetraext~hypre~ifpack~ifpack2~superlu-dist~mumps~muelu~metis~suite-sparse~tpetra~zoltan~zoltan2
         version: [xsdk-0.4.0-rc1]
     xz:
         paths:

@@ -174,7 +174,7 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec, env):
+def disambiguate_spec(spec, env, last_installed=False):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
@@ -186,7 +186,11 @@ def disambiguate_spec(spec, env):
     matching_specs = spack.store.db.query(spec, hashes=hashes)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
-
+    elif last_installed:
+        def install_date(s):
+            _, record = spack.store.db.query_by_spec_hash(s.dag_hash())
+            return record.installation_time
+        matching_specs.sort(key=install_date, reverse=True)
     elif len(matching_specs) > 1:
         format_string = '{name}{@version}{%compiler}{arch=architecture}'
         args = ["%s matches multiple packages." % spec,

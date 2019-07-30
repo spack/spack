@@ -40,6 +40,9 @@ class Bazel(Package):
     depends_on('java@8:', type=('build', 'link', 'run'))
     depends_on('zip')
 
+    # TODO : note that the patches need to be updated to account
+    # SPACK_TARGET_ARGS env variable. Only patch 0.17.2.patch has
+    # been updated.
     patch('fix_env_handling.patch', when='@:0.4.5')
     patch('fix_env_handling-0.9.0.patch', when='@0.9.0:0.12.0')
     patch('fix_env_handling-0.13.0.patch', when='@0.13.0:0.13.999')

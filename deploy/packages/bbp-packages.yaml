@@ -57,16 +57,16 @@ packages:
       - mpi
     specs:
       - functionalizer@3.12.2
-      - parquet-converters@0.5.2
+      # - parquet-converters@0.5.2
       - synapsetool@0.5.2
-      - touchdetector@4.4.2
-      - touchdetector@5.1.0
-      - touchdetector@5.3.0
-      - brayns@0.8.0 +opendeck +brion ^ospray@1.7.3
-      - brayns@immersive +opendeck +brion +optix
-      - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3
-      - brayns-brainatlas@0.1.0  ^brayns@0.8.0 ^ospray@1.7.3
-      - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3
+      - touchdetector@5.3.2
+      # - brayns +opendeck +brion ^ospray@1.7.3%intel
+      # - brayns@1.0.1 +brion ^ospray%intel
+      # - brayns@immersive +opendeck +brion +optix ^ospray%intel
+      # - brayns-graphs@0.1.0 ^brayns +brion ^ospray%intel
+      # - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel
+      # - brayns-brainatlas@0.1.0  ^brayns@0.8.0 ^ospray@1.7.3%intel
+      # - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel
   gnu-stable-parallel-python:
     target_matrix:
       - gnu-stable
@@ -92,17 +92,17 @@ packages:
     specs:
       - steps@3.4.1+petsc
 
-  gnu-stable-lapack-parallel:
-    target_matrix:
-      - gnu-stable
-    requires:
-      - architecture
-      - compiler
-      - mpi
-      - lapack
-      #- python
-    specs:
-      - zee@develop
+  #gnu-stable-lapack-parallel:
+  #  target_matrix:
+  #    - gnu-stable
+  #  requires:
+  #    - architecture
+  #    - compiler
+  #    - mpi
+  #    - lapack
+  #    #- python
+  #  specs:
+  #    - zee@develop
 
   gnu-stable-lapack-python:
     target_matrix:

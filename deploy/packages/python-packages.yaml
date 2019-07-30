@@ -14,15 +14,11 @@ packages:
   gnu-stable-serial:
     target_matrix:
       - gnu-stable
-      - gnu-stable-py2
+      # - gnu-stable-py2
     requires:
       - architecture
       - compiler
       - python
-    blacklist:
-      - 'py-bb5 ^python@2.7.15'
-      - 'py-mvdtool ^python@2.7.15'
-      - 'py-munkres ^python@2.7.15'
     specs:
       - py-argcomplete
       - py-argparse
@@ -52,34 +48,21 @@ packages:
       - py-funcsigs
       - py-future
       - py-futures
-      # - py-gcovr
       - py-h5py~mpi
       - py-hdfs
       - py-humanize
       - py-ipykernel
       - py-ipyparallel
-      - py-ipython
-      - py-ipython-genutils
       - py-ipywidgets
-      - py-ipython
       - py-jinja2
       - py-jprops
-      # - py-jupyter-client
-      # - py-jupyter-console
-      # - py-jupyter-core
-      # - py-jupyter-notebook
       - py-lazy-property
       - py-line-profiler
       - py-lxml
       - py-markdown
       - py-mvdtool
-      # - py-memory-profiler
-      # - py-mpmath
-      # - py-multiprocess
-      # - py-neo
-      # - py-networkx
-      # - py-nose
       - py-morphio
+      - py-morpho-kit
       - py-munkres
       - py-neurom
       - py-pandas
@@ -91,7 +74,6 @@ packages:
       - py-progress
       - py-py4j
       - py-pyarrow+parquet
-      # - py-pynn
       - py-pylru
       - py-pyspark
       - py-pytest
@@ -101,20 +83,13 @@ packages:
       - py-seaborn
       - py-setuptools
       - py-setuptools-scm
-      # - py-sh
-      # - py-shapely
       - py-simplejson
       - py-six
-      # - py-slurm-pipeline
       - py-sparkmanager
       - py-sphinx
       # - py-sphinx-bootstrap-theme
       - py-sphinx-rtd-theme
-      # - py-sqlalchemy
-      # - py-symengine
       - py-sympy
-      # - py-toml
-      # - py-tornado
       - py-urllib3
       - py-virtualenv
       - py-virtualenv-clone
@@ -126,7 +101,7 @@ packages:
   gnu-stable-serial-lapack:
     target_matrix:
       - gnu-stable
-      - gnu-stable-py2
+      # - gnu-stable-py2
     requires:
       - architecture
       - compiler
@@ -138,6 +113,3 @@ packages:
       - py-matplotlib
       - python-dev
       - py-scikit-learn
-    # - py-scikit-learn@0.19.1 ^py-numpy@1.15.1 ^py-scipy@1.1.0
-    # - py-theano@1.0.2 ^py-numpy@1.15.1 ^py-scipy@1.1.0
-    # - py-pytorch@0.4.0 ^py-numpy@1.15.1

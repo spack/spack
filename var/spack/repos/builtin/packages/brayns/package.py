@@ -14,6 +14,7 @@ class Brayns(CMakePackage):
 
     version('develop', submodules=True)
     version('0.8.0', tag='0.8.0', submodules=True, preferred=True)
+    version('1.0.1', tag='1.0.1', submodules=True)
     version('immersive', branch='videostreaming', submodules=True)
 
     variant('assimp', default=True, description='Build with assimp support')
@@ -38,6 +39,7 @@ class Brayns(CMakePackage):
     depends_on('ffmpeg@4.2', when='+net')
     depends_on('glew', when='+viewer')
     depends_on('libarchive')
+    depends_on('cgal')
     depends_on('libjpeg-turbo', when='+net')
     depends_on('libuv', when='+net')
     depends_on('opengl', when='+viewer')
@@ -54,7 +56,11 @@ class Brayns(CMakePackage):
                 'ON' if '+assimp' in self.spec else 'OFF'),
             '-DBRAYNS_OSPRAY_ENABLED={}'.format(
                 'ON' if '+ospray' in self.spec else 'OFF'),
+            '-DBRAYNS_CIRCUITEXPLORER_ENABLED={}'.format(
+                'ON' if '+brion' in self.spec else 'OFF'),
             '-DBRAYNS_CIRCUITVIEWER_ENABLED={}'.format(
+                'ON' if '+brion' in self.spec else 'OFF'),
+            '-DBRAYNS_DTI_ENABLED={}'.format(
                 'ON' if '+brion' in self.spec else 'OFF'),
             '-DBRAYNS_NETWORKING_ENABLED={}'.format(
                 'ON' if '+net' in self.spec else 'OFF'),

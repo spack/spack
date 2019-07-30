@@ -20,6 +20,7 @@ class IntelParallelStudio(IntelPackage):
     # in the 'intel' package.
 
     # Cluster Edition (top tier; all components included)
+    version('cluster.2019.5',      'c03421de616bd4e640ed25ce4103ec9c5c85768a940a5cb5bd1e97b45be33904', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15809/parallel_studio_xe_2019_update5_cluster_edition.tgz')
     version('cluster.2019.4',      '32aee12de3b5ca14caf7578313c06b205795c67620f4a9606ea45696ee3b3d9e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15533/parallel_studio_xe_2019_update4_cluster_edition.tgz')
     version('cluster.2019.3',      'b5b022366d6d1a98dbb63b60221c62bc951c9819653ad6f5142192e89f78cf63', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15268/parallel_studio_xe_2019_update3_cluster_edition.tgz')
     version('cluster.2019.2',      '8c526bdd95d1da454e5cada00f7a2353089b86d0c9df2088ca7f842fe3ff4cae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15088/parallel_studio_xe_2019_update2_cluster_edition.tgz')

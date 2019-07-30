@@ -34,6 +34,7 @@ class Synapsetool(CMakePackage):
     git      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
     version('develop', submodules=True)
+    version('0.5.4', tag='v0.5.4', submodules=True)
     version('0.5.3', tag='v0.5.3', submodules=True)
     version('0.5.2', tag='v0.5.2', submodules=True)
     version('0.5.1', tag='v0.5.1', submodules=True)
@@ -55,6 +56,8 @@ class Synapsetool(CMakePackage):
     depends_on('python', when='+python')
     depends_on('libsonata+mpi', when='+mpi')
     depends_on('libsonata~mpi', when='~mpi')
+
+    patch("tests-unit-cmake.patch", when="@:0.5.4")
 
     @property
     def libs(self):

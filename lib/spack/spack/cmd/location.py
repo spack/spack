@@ -56,6 +56,12 @@ def setup_parser(subparser):
         help="location of an environment managed by spack")
 
     subparser.add_argument(
+        '--latest',
+        help='use the last installed package when multiple ones match',
+        action='store_true'
+    )
+
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="spec of package to fetch directory for")
 
@@ -81,6 +87,7 @@ def location(parser, args):
 
     else:
         specs = spack.cmd.parse_specs(args.spec)
+
         if not specs:
             tty.die("You must supply a spec.")
         if len(specs) != 1:
@@ -89,7 +96,7 @@ def location(parser, args):
         if args.install_dir:
             # install_dir command matches against installed specs.
             env = ev.get_env(args, 'location')
-            spec = spack.cmd.disambiguate_spec(specs[0], env)
+            spec = spack.cmd.disambiguate_spec(specs[0], env, args.latest)
             print(spec.prefix)
 
         else:

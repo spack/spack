@@ -49,11 +49,18 @@
       "vendor": "generic",
       "features": [],
       "compilers": {
-        "gcc": {
-          "versions": "4:",
-          "name": "x86-64",
-          "flags": "-march={name} -mtune={name}"
-        }
+        "gcc": [
+          {
+            "versions": "4.2.0:",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": "4.0:4.1.2",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
       }
     },
     "nocona": {

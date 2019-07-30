@@ -467,10 +467,11 @@ def relocate_package(workdir, spec, allow_root):
     Relocate the given package
     """
     buildinfo = read_buildinfo_file(workdir)
-    new_path = spack.store.layout.root
-    new_prefix = spack.paths.prefix
-    old_path = buildinfo['buildpath']
-    old_prefix = buildinfo.get('spackprefix', '/not/in/buildinfo/dictionary')
+    new_path = str(spack.store.layout.root)
+    new_prefix = str(spack.paths.prefix)
+    old_path = str(buildinfo['buildpath'])
+    old_prefix = str(buildinfo.get('spackprefix',
+                                   '/not/in/buildinfo/dictionary'))
     rel = buildinfo.get('relative_rpaths', False)
     if rel:
         return

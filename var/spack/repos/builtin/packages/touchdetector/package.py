@@ -33,6 +33,8 @@ class Touchdetector(CMakePackage):
     git      = "ssh://bbpcode.epfl.ch/building/TouchDetector"
 
     version('develop', submodules=True)
+    version('5.3.2', tag='5.3.2', submodules=True)
+    version('5.3.1', tag='5.3.1', submodules=True)
     version('5.3.0', tag='5.3.0', submodules=True)
     version('5.2.0', tag='5.2.0', submodules=True)
     version('5.1.0', tag='5.1.0', submodules=True)
@@ -62,6 +64,8 @@ class Touchdetector(CMakePackage):
     depends_on('hpctools+openmp', when='+openmp@:4.4')
     depends_on('libxml2', when='@:4.4')
     depends_on('zlib', when='@:4.4')
+
+    patch("no-wall.patch")
 
     def cmake_args(self):
         args = [

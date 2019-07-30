@@ -24,7 +24,6 @@ numactl
 pkg-config
 python2.7-dev
 python-minimal
-python-numpy
 python-setuptools
 software-properties-common
 tcl-dev

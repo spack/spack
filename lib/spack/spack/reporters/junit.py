@@ -32,4 +32,4 @@ class JUnit(Reporter):
             template = env.get_template(self.template_file)
             formatted = template.render(report_data)
             # Pre-emptively remove all ANSI escape sequences
-            fd.write(ANTI_ANSI.sub('', formatted.encode('utf-8')))
+            fd.write(ANTI_ANSI.sub('', formatted).encode('utf-8'))

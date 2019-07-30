@@ -63,6 +63,7 @@ class Petsc(Package):
             description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')
     variant('debug',   default=False, description='Compile in debug mode')
+    variant('fortran', default=False, description='Enable Fortran support')
 
     variant('metis',   default=True,
             description='Activates support for metis and parmetis')
@@ -88,8 +89,6 @@ class Petsc(Package):
             description='Activates support for FFTW (only parallel)')
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
-    variant('patchmpi64', default=False,
-            description='Patch of MPI support of int64')
     variant('dmplex', default=False,
             description='Enable DMPlex support')
 
@@ -112,7 +111,6 @@ class Petsc(Package):
         patch('macos-clang-8.1.0.diff',
               when='@3.7.5%clang@8.1.0:')
     patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
-    patch('mpi_int64_t_c++11.diff', when='+patchmpi64')
 
     patch('xcode_stub_out_of_sync.patch', when='@:3.10.4')
 
@@ -142,7 +140,8 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi')
+    depends_on('hdf5+mpi+hl', when='+hdf5+mpi~fortran')
+    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+fortran')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     # Hypre does not support complex numbers.
@@ -186,10 +185,17 @@ class Petsc(Package):
                 '--with-cc=%s' % os.environ['CC'],
                 '--with-cxx=%s' % (os.environ['CXX']
                                    if self.compiler.cxx is not None else '0'),
-                '--with-fc=%s' % (os.environ['FC']
-                                  if self.compiler.fc is not None else '0'),
                 '--with-mpi=0'
             ]
+            if self.spec.satisfies('~fortran'):
+                compiler_opts += [
+                    '--with-fc=0',
+                ]
+            else:
+                compiler_opts += [
+                    '--with-fc=%s' % (os.environ['FC']
+                                      if self.compiler.fc is not None else '0'),
+                ]
             error_message_fmt = \
                 '\t{library} support requires "+mpi" to be activated'
 
@@ -206,8 +212,15 @@ class Petsc(Package):
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
+            if self.spec.satisfies('~fortran'):
+                compiler_opts += [
+                    '--with-fc=0',
+                ]
+            else:
+                compiler_opts += [
+                    '--with-fc=%s' % self.spec['mpi'].mpifc,
+                ]
             if self.spec.satisfies('%intel'):
                 # mpiifort needs some help to automatically link
                 # all necessary run-time libraries

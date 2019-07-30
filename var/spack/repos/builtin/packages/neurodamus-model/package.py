@@ -20,7 +20,7 @@ class NeurodamusModel(SimModel):
     variant('synapsetool', default=True,  description="Enable Synapsetool reader")
     variant('sonata',      default=False, description="Enable Synapsetool with Sonata")
     variant('python',      default=False, description="Install neurodamus-python alongside")
-    variant('common_mods', default='',    description="Source of common mods. '': no change,"
+    variant('common_mods', default=False, description="Source of common mods. '': no change,"
                                                       " other string: alternate path")
 
     depends_on('neurodamus-core')
