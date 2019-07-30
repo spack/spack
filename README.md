@@ -4,6 +4,8 @@ Official documentation [below](#-spack).
 For the development documentation of the deployment stack, see
 [`deploy/README.md`](deploy/README.md).
 
+For some common issues, please see the [FAQ](FAQ.md).
+
 ## Building software on Ubuntu 18.04
 
 We build Docker images based on Ubuntu 18.04, and the same settings can be
