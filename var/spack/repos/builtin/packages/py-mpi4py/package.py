@@ -28,4 +28,4 @@ class PyMpi4py(PythonPackage):
     depends_on('py-cython', when='@develop', type='build')
 
     def build_args(self, spec, prefix):
-      return ['--mpicc=%s -shared' % spec['mpi'].mpicc]
+        return ['--mpicc=%s -shared' % spec['mpi'].mpicc]
