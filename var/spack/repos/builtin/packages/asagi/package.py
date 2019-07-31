@@ -18,7 +18,7 @@ class Asagi(CMakePackage):
     # fetching the package via git with submodules
     # is preferred satisfy internal-dependencies
     version('1.0.1', commit='f633f96931ae00805f599078d5a1a6a830881554',
-            submodules=True)
+            submodules=True, preferred=True)
     # fetching the package via git with submodules
     # is preferred satisfy internal-dependencies
     version('1.0', commit='f67250798b435c308b9a1e7516f916f7855534ec',
@@ -31,8 +31,8 @@ class Asagi(CMakePackage):
     variant('fortran', default=True, description="enable fortran support")
     variant('max_dimensions', default=4,
             description="max. number of dimensions supported")
-    variant('nonuma', default=False, description="disable NUMA support")
-    variant('nompi', default=False, description="disanable MPI")
+    variant('numa', default=True, description="enable NUMA support")
+    variant('mpi', default=True, description="enable MPI")
     variant('threadsafe', default=True,
             description="enable threadsafe ASAGI-functions")
     variant('threadsafe_counter', default=False,
@@ -44,11 +44,11 @@ class Asagi(CMakePackage):
     variant('tests', default=False, description="compile tests")
     variant('examples', default=False, description="compile examples")
 
-    depends_on('mpi', when="~nompi")
-    depends_on('mpi@3:', when="+mpi3" and "~nompi")
-    depends_on('netcdf +mpi', when="~nompi")
-    depends_on('netcdf ~mpi', when="+nompi")
-    depends_on('numactl', when="~nonuma")
+    depends_on('mpi', when="+mpi")
+    depends_on('mpi@3:', when="+mpi3")
+    depends_on('netcdf +mpi', when="+mpi")
+    depends_on('netcdf ~mpi', when="~mpi")
+    depends_on('numactl', when="+numa")
 
     conflicts('%gcc@5:', when='@:1.0.0')
 
@@ -61,9 +61,9 @@ class Asagi(CMakePackage):
                 '-DSTATIC_LIB=' + ('ON' if 'static' in link_type else 'OFF'),
                 '-DFORTRAN_SUPPORT=' + ('ON' if '+fortran' in spec else 'OFF'),
                 '-DTHREADSAFE=' + ('ON' if '+threadsafe' in spec else 'OFF'),
-                '-DNOMPI=' + ('ON' if '+nompi' in spec else 'OFF'),
+                '-DNOMPI=' + ('ON' if '~mpi' in spec else 'OFF'),
                 '-DMPI3=' + ('ON' if '+mpi3' in spec else 'OFF'),
-                '-DNONUMA=' + ('ON' if '+nonuma' in spec else 'OFF'),
+                '-DNONUMA=' + ('ON' if '~numa' in spec else 'OFF'),
                 '-DTESTS=' + ('ON' if '+tests' in spec else 'OFF'),
                 '-DEXAMPLES=' + ('ON' if '+examples' in spec else 'OFF'),
                 '-DTHREADSAFE_COUNTER='
