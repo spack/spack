@@ -249,7 +249,8 @@ def env_remove(args):
 
     for env in read_envs:
         if env.active:
-            tty.die("Environment %s can't be removed while activated.")
+            tty.die("Environment %s can't be removed while activated."
+                    % env.name)
 
         env.destroy()
         tty.msg("Successfully removed environment '%s'" % env.name)
