@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mpileaks(Package):
+class Mpileaks(AutotoolsPackage):
     """Tool to detect and report MPI objects like MPI_Requests and
     MPI_Datatypes."""
 
@@ -16,19 +16,18 @@ class Mpileaks(Package):
     version('1.0', sha256='2e34cc4505556d1c1f085758e26f2f8eea0972db9382f051b2dcfb1d7d9e1825')
 
     variant('stackstart', values=int, default=0,
-            description='Specify the number of stack frames to truncate.')
+            description='Specify the number of stack frames to truncate')
 
     depends_on('mpi')
     depends_on('adept-utils')
     depends_on('callpath')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
         stackstart = int(self.spec.variants['stackstart'].value)
 
         args = [
-            '--prefix={0}'.format(prefix),
-            '--with-adept-utils={0}'.format(spec['adept-utils'].prefix),
-            '--with-callpath={0}'.format(spec['callpath'].prefix),
+            '--with-adept-utils={0}'.format(self.spec['adept-utils'].prefix),
+            '--with-callpath={0}'.format(self.spec['callpath'].prefix),
         ]
 
         if stackstart:
@@ -37,6 +36,4 @@ class Mpileaks(Package):
                 '--with-stack-start-fortran={0}'.format(stackstart)
             ])
 
-        configure(*args)
-        make()
-        make('install')
+        return args

@@ -109,21 +109,21 @@ to build this package:
    ==> No binary for mpileaks found: installing from source
    ==> Fetching https://github.com/LLNL/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
    ############################################################################# 100.0%
-   ==> Staging archive: ~/spack/var/spack/stage/mpileaks-1.0-hhqdfaxc4tpo5uiwch5eqf5yfddelj66/mpileaks-1.0.tar.gz
-   ==> Created stage in ~/spack/var/spack/stage/mpileaks-1.0-hhqdfaxc4tpo5uiwch5eqf5yfddelj66
+   ==> Staging archive: ~/spack/var/spack/stage/mpileaks-1.0-sv75n3u5ev6mljwcezisz3slooozbbxu/mpileaks-1.0.tar.gz
+   ==> Created stage in ~/spack/var/spack/stage/mpileaks-1.0-sv75n3u5ev6mljwcezisz3slooozbbxu
    ==> No patches needed for mpileaks
    ==> Building mpileaks [Package]
    ==> Executing phase: 'install'
    ==> Error: ProcessError: Command exited with status 2:
-       'make' '-j4'
+       'make' '-j16'
 
    1 error found in build log:
         1    ==> Executing phase: 'install'
-        2    ==> [2019-07-30-21:25:24.102494] 'make' '-j4'
+        2    ==> 'make' '-j16'
      >> 3    make: *** No targets specified and no makefile found.  Stop.
 
    See build log for details:
-     ~/spack/var/spack/stage/mpileaks-1.0-hhqdfaxc4tpo5uiwch5eqf5yfddelj66/spack-build-out.txt
+     ~/spack/var/spack/stage/mpileaks-1.0-sv75n3u5ev6mljwcezisz3slooozbbxu/spack-build-out.txt
 
 This obviously didn't work; we need to fill in the package-specific
 information.  Specifically, Spack didn't try to build any of mpileaks'
