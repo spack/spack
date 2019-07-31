@@ -13,6 +13,7 @@ from spack.util.naming import mod_to_class
 from spack.spec import Spec
 from spack.util.package_hash import package_content
 from spack.version import VersionChecksumError
+from spack.directives import version
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -372,23 +373,20 @@ def test_rpath_args(mutable_database):
     assert 'mpich' in rpath_args
 
 
-def test_nosource_checksum(mock_test_repo):
-    """Test a bundle package with a version checksum."""
-    repo, repodir = mock_test_repo
+def test_bundle_version_checksum(mock_packages):
+    """Test raising exception on a version checksum with a bundle package."""
+    # Note the original approach to this test, which involved creating
+    # an extra repository with a suitably defined BundlePackage package.py
+    # file, would cause url_fetch::test_from_list_url tests to hang when
+    # run with this test from Python 2.6/2.7 (not Python 3).  The issue was
+    # traced to spack.util.web's _spider's NonDaemonPool.map.
 
-    name = 'nosource-checksum'
-    pkgdir = repodir.join(spack.repo.packages_dir_name, name)
-    pkgdir.ensure(dir=True)
-    pkgfile = pkgdir.join('package.py')
-    pkgfile.write("""\n
-class NosourceChecksum(BundlePackage):
-    \"\"\"Simple bundle package with a checksum.\"\"\"
-    homepage = "http://www.example.com"
+    class MockPkg(object):
+        name = 'MockBundle'
+        has_code = False
+        versions = {}
 
-    version('1.0', '1badpkg')
-
-    depends_on('dependency-install')
-""")
+    fn = version('1.0', checksum='1badpkg')
 
     with pytest.raises(VersionChecksumError, match="Checksums not allowed"):
-        repo.get(name)
+        fn(MockPkg())
