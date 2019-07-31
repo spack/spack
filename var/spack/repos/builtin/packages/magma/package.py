@@ -46,8 +46,8 @@ class Magma(CMakePackage):
         options = []
 
         options.extend([
-            '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix,
+            '-DCMAKE_INSTALL_PREFIX=%s' % self.prefix,
+            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix,
             '-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'),
             # As of MAGMA v2.3.0, CMakeLists.txt does not use the variable
             # BLAS_LIBRARIES, but only LAPACK_LIBRARIES, so we need to
