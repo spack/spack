@@ -822,7 +822,7 @@ class Environment(object):
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
 
-    def concretize(self, force=False, _display=True):
+    def concretize(self, force=False):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -863,13 +863,7 @@ class Environment(object):
                 concrete = _concretize_from_constraints(uspec_constraints)
                 self._add_concrete_spec(uspec, concrete)
 
-                if _display:
-                    # Display concretized spec to the user
-                    sys.stdout.write(concrete.tree(
-                        recurse_dependencies=True,
-                        status_fn=spack.spec.Spec.install_status,
-                        hashlen=7, hashes=True)
-                    )
+                sys.stdout.write(_tree_to_display(concrete))
 
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
@@ -1298,6 +1292,13 @@ class Environment(object):
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def _tree_to_display(concrete_spec):
+    return concrete_spec.tree(
+        recurse_dependencies=True,
+        status_fn=spack.spec.Spec.install_status,
+        hashlen=7, hashes=True)
 
 
 def _concretize_from_constraints(spec_constraints):
