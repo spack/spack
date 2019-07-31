@@ -17,5 +17,5 @@ class RTiff(RPackage):
 
     version('0.1-5', '5052990b8647c77d3e27bc0ecf064e0b')
 
-    depends_on("libjpeg")
+    depends_on("jpeg")
     depends_on("libtiff")

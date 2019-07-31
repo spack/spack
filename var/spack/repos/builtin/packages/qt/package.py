@@ -320,8 +320,8 @@ class Qt(Package):
         if '@4' in self.spec and sys.platform == 'darwin':
             config_args.append('-cocoa')
 
-            mac_ver = tuple(platform.mac_ver()[0].split('.')[:2])
-            sdkname = 'macosx%s' % '.'.join(mac_ver)
+            mac_ver = Version(platform.mac_ver()[0])
+            sdkname = 'macosx{0}'.format(mac_ver.up_to(2))
             sdkpath = which('xcrun')('--show-sdk-path',
                                      '--sdk', sdkname,
                                      output=str)
@@ -338,7 +338,7 @@ class Qt(Package):
                 use_clang_platform = True
             if use_clang_platform:
                 config_args.append('-platform')
-                if mac_ver >= (10, 9):
+                if mac_ver >= Version('10.9'):
                     config_args.append('unsupported/macx-clang-libc++')
                 else:
                     config_args.append('unsupported/macx-clang')
