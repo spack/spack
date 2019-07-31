@@ -41,6 +41,7 @@ class Extrae(AutotoolsPackage):
     depends_on("autoconf", type='build')
     depends_on("automake", type='build')
     depends_on("libtool", type='build')
+    depends_on("m4", type='build')
 
     depends_on("mpi")
     depends_on("libunwind")
@@ -99,3 +100,12 @@ class Extrae(AutotoolsPackage):
                 make('install', parallel=True)
             else:
                 make('install', parallel=False)
+
+    def setup_environment(self, spack_env, run_env):
+        # set EXTRAE_HOME in the module file
+        run_env.set('EXTRAE_HOME', self.prefix)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # set EXTRAE_HOME for everyone using the Extrae package
+        spack_env.set('EXTRAE_HOME', self.prefix)
+
