@@ -68,7 +68,6 @@ subprocess.call([
 # Without this, the API Docs will never actually update
 #
 apidoc_args = [
-    '--force',         # Older versions of Sphinx ignore the first argument
     '--force',         # Overwrite existing files
     '--no-toc',        # Don't create a table of contents file
     '--output-dir=.',  # Directory to place all output
@@ -96,7 +95,7 @@ def setup(sphinx):
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
+needs_sphinx = '1.8'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
