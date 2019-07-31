@@ -20,6 +20,8 @@ class NeurodamusModel(SimModel):
     variant('synapsetool', default=True,  description="Enable Synapsetool reader")
     variant('sonata',      default=False, description="Enable Synapsetool with Sonata")
     variant('python',      default=False, description="Install neurodamus-python alongside")
+    variant('common_mods', default='',    description="Source of common mods. '': no change,"
+                                                      " other string: alternate path")
 
     depends_on('neurodamus-core')
     depends_on('neurodamus-core+python', when='+python')
@@ -53,6 +55,12 @@ class NeurodamusModel(SimModel):
         so that incremental builds can actually happen.
         """
         core_prefix = spec['neurodamus-core'].prefix
+
+        # If specified common_mods then we must change the source
+        # Particularly useful for CI of changes to models/common
+        if spec.variants['common_mods'].value:
+            shutil.move('common', '_common_orig')
+            force_symlink(spec.variants['common_mods'].value, 'common')
 
         # If we shall build mods for coreneuron, only bring from core those specified
         if spec.satisfies("+coreneuron"):
