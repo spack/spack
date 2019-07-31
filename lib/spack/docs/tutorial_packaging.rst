@@ -20,7 +20,7 @@ ask Spack to build that package in many different ways.
 
 This tutorial assumes you have a basic familiarity with some of the Spack
 commands, and that you have a working version of Spack installed.  If
-not, we suggest looking at Spack's :ref:`getting-started` guide.  This
+not, we suggest looking at Spack's :ref:`getting_started` guide.  This
 tutorial also assumes you have at least a beginner's-level familiarity
 with Python.
 
