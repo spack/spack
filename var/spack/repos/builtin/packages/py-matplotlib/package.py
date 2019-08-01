@@ -139,6 +139,8 @@ class PyMatplotlib(PythonPackage):
     def set_backend(self):
         """Set build options with regards to backend GUI libraries."""
 
+        backend = self.spec.variants['backend'].value
+
         with open('setup.cfg', 'w') as setup:
             # Default backend
             setup.write('[rc_options]\n')
