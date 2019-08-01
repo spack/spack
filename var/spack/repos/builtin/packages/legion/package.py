@@ -40,10 +40,12 @@ class Legion(CMakePackage):
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
     variant('shared', default=True, description='Build shared libraries')
+    variant('hdf5', default=True, description='Enable HDF5 support')
 
     depends_on("cmake@3.1:", type='build')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB'", when='~mpi')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +mpi", when='+mpi')
+    depends_on("hdf5~mpi", when='+hdf5')
 
     def cmake_args(self):
         options = [
@@ -53,5 +55,8 @@ class Legion(CMakePackage):
 
         if '+mpi' in self.spec:
             options.append('-DGASNet_CONDUIT=mpi')
+
+        if '+hdf5' in self.spec:
+            options.append('-DLegion_USE_HDF5=ON')
 
         return options
