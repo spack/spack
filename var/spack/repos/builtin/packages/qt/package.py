@@ -222,7 +222,9 @@ class Qt(Package):
         }
 
         def repl(match):
-            # Try to replace with our patch
+            # Replace the original config variable value with the one chosen
+            # here if it is mentioned in 'patches'; otherwise return the
+            # original value.
             return patches.get(match.group(1), match.group(0))
 
         files_to_filter = [
