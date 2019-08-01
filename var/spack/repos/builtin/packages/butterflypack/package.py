@@ -21,7 +21,6 @@ class Butterflypack(CMakePackage):
     equations or highly oscillatory integral operators."""
 
     homepage = "https://github.com/liuyangzhuan/ButterflyPACK"
-    # url      = ""
     git      = "https://github.com/liuyangzhuan/ButterflyPACK.git"
 
     maintainers = ['liuyangzhuan']
