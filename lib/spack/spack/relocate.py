@@ -358,8 +358,13 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-            replace_prefix_bin(path_name, old_dir, new_dir)
-
+            if len(new_dir) <= len(old_dir):
+                replace_prefix_bin(path_name, old_dir, new_dir)
+            else:
+                tty.warn('Cannot do a binary string replacement'
+                         ' with padding for %s'
+                         ' because %s is longer than %s' %
+                         (path_name, new_dir, old_dir))
     elif platform.system() == 'Linux':
         for path_name in path_names:
             orig_rpaths = get_existing_elf_rpaths(path_name)
@@ -371,7 +376,13 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
                 new_rpaths = substitute_rpath(n_rpaths,
                                               old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
-                replace_prefix_bin(path_name, old_dir, new_dir)
+                if len(new_dir) <= len(old_dir):
+                    replace_prefix_bin(path_name, old_dir, new_dir)
+                else:
+                    tty.warn('Cannot do a binary string replacement'
+                             ' with padding for %s'
+                             ' because %s is longer than %s.' %
+                             (path_name, new_dir, old_dir))
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
