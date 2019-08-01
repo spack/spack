@@ -65,8 +65,8 @@ class Qt(Package):
             description='Build shared libraries.')
     variant('ssl',    default=True,
             description="Build with OpenSSL support.")
-    variant('freetype', default='system', description='Freetype2 support',
-            values=('system', 'qt', 'none'), multi=False)
+    variant('freetype', default='spack', description='Freetype2 support',
+            values=('spack', 'qt', 'none'), multi=False)
 
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
@@ -123,7 +123,7 @@ class Qt(Package):
     depends_on("libtiff")
     depends_on("libxml2")
     depends_on("zlib")
-    depends_on("freetype", when='freetype=system')
+    depends_on("freetype", when='freetype=spack')
     depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
@@ -309,7 +309,7 @@ class Qt(Package):
             '-no-pch',
         ]
 
-        if self.spec.variants['freetype'].value == 'system':
+        if self.spec.variants['freetype'].value == 'spack':
             config_args.extend([
                 '-system-freetype',
                 '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include)
