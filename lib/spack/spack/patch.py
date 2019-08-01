@@ -194,9 +194,11 @@ class UrlPatch(Patch):
         fetcher = fs.URLFetchStrategy(self.url, fetch_digest)
         mirror = os.path.join(
             os.path.dirname(stage.mirror_path),
+            'mirror-stage',
             os.path.basename(self.url))
 
-        self.stage = spack.stage.Stage(fetcher, mirror_path=mirror)
+        self.stage = spack.stage.Stage(fetcher, path=os.path.dirname(mirror),
+                                       mirror_path=mirror)
         self.stage.create()
         self.stage.fetch()
         self.stage.check()
