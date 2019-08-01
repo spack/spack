@@ -70,10 +70,7 @@ def _get_scope_and_section(args):
 
     # set scope defaults
     elif not args.scope:
-        if section == 'compilers':
-            scope = spack.config.default_modify_scope()
-        else:
-            scope = 'user'
+        scope = spack.config.default_modify_scope()
 
     return scope, section
 

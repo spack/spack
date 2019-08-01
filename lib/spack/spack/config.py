@@ -557,12 +557,17 @@ def override(path_or_scope, value=None):
 command_line_scopes = []
 
 
+def _platform_scope(scope_name):
+    platform = spack.architecture.platform().name
+    return '%s/%s' % (scope_name, platform)
+
+
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
+    plat_scope_name = _platform_scope(name)
     platform = spack.architecture.platform().name
-    plat_name = '%s/%s' % (name, platform)
     plat_path = os.path.join(path, platform)
-    cfg.push_scope(scope_type(plat_name, plat_path))
+    cfg.push_scope(scope_type(plat_scope_name, plat_path))
 
 
 def _add_command_line_scopes(cfg, command_line_scopes):
@@ -814,7 +819,12 @@ def default_modify_scope():
     Commands that modify configuration by default modify the *highest*
     priority scope.
     """
-    return spack.config.config.highest_precedence_scope().name
+    default_edit_scope = spack.config.get('config:default_edit_scope')
+    platform_scope = _platform_scope(default_edit_scope)
+    if platform_scope in spack.config.config.scopes:
+        return platform_scope
+    else:
+        return default_edit_scope
 
 
 def default_list_scope():
