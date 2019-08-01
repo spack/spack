@@ -13,6 +13,7 @@ class Charliecloud(MakefilePackage):
     url      = "https://github.com/hpc/charliecloud/releases/download/v0.9.10/charliecloud-0.9.10.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
 
+    version('0.10',   sha256='5cf00b170e7568750ca0b828c43c0857c39674860b480d757057450d69f1a21e')
     version('0.9.10', sha256='44e821b62f9c447749d3ed0d2b2e44d374153058814704a5543e83f42db2a45a')
     version('0.9.9',  sha256='2624c5a0b19a01c9bca0acf873ceeaec401b9185a23e9108fadbcee0b9d74736')
     version('0.9.8',  sha256='903bcce05b19501b5524ef57a929d2f4c6ddeacb0e8443fcb2fe6963e2f29229')

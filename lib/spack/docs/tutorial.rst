@@ -10,10 +10,9 @@ Tutorial: Spack 101
 =============================
 
 This is a full-day introduction to Spack with lectures and live demos.
-It was last presented at the `International Supercomputing Conference
-<https://isc-hpc.com>`_ on June 16, 2019.  That instance was a half day
-tutorial, but the materials here include all the material you need for a
-full day.
+It was last presented at the `Practice and Experience in Advanced
+Research Computing Conference (PEARC19)
+<https://www.pearc19.pearc.org/>`_ on July 31, 2019.
 
 You can use these materials to teach a course on Spack at your own site,
 or you can just skip ahead and read the live demo scripts to see how
@@ -24,17 +23,17 @@ Spack is used in practice.
 .. rubric:: Slides
 
 .. figure:: tutorial/sc16-tutorial-slide-preview.png
-   :target: https://spack.io/slides/Spack-ISC19-Tutorial.pdf
+   :target: https://spack.io/slides/spack-pearc19-tutorial-slides.pdf
    :height: 72px
    :align: left
    :alt: Slide Preview
 
-`Download Slides <https://spack.io/slides/Spack-RIKEN19-Tutorial.pdf>`_.
+`Download Slides <https://spack.io/slides/spack-pearc19-tutorial-slides.pdf>`_.
 
-**Full citation:** Todd Gamblin, Gregory Becker, Massimiliano Culpo, and
-Michael Kuhn.  Managing HPC Software Complexity with Spack.  Tutorial
-presented at International Supercomputing Conference (ISC'19). June 16, 2019.
-Frankfurt, Germany.
+**Full citation:** Levi Baber, Gregory Becker, Adam J. Stewart, and Todd
+Gamblin. Managing HPC Software Complexity with Spack.  Tutorial presented
+at the Practice and Experience in Advanced Research Computing Conference
+(PEARC19).  July 31, 2019.  Chicago, IL, USA.
 
 .. _sc16-live-demos:
 

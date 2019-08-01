@@ -249,7 +249,8 @@ def env_remove(args):
 
     for env in read_envs:
         if env.active:
-            tty.die("Environment %s can't be removed while activated.")
+            tty.die("Environment %s can't be removed while activated."
+                    % env.name)
 
         env.destroy()
         tty.msg("Successfully removed environment '%s'" % env.name)
@@ -310,16 +311,16 @@ def env_view(args):
 
     if env:
         if args.action == ViewAction.regenerate:
-            env.regenerate_view()
+            env.regenerate_views()
         elif args.action == ViewAction.enable:
             if args.view_path:
                 view_path = args.view_path
             else:
-                view_path = env.default_view_path
-            env.update_view(view_path)
+                view_path = env.view_path_default
+            env.update_default_view(view_path)
             env.write()
         elif args.action == ViewAction.disable:
-            env.update_view(None)
+            env.update_default_view(None)
             env.write()
     else:
         tty.msg("No active environment")

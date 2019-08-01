@@ -16,6 +16,7 @@ import os
 import inspect
 import pstats
 import argparse
+import traceback
 from six import StringIO
 
 import llnl.util.tty as tty
@@ -705,10 +706,14 @@ def main(argv=None):
         tty.die(e)
 
     except KeyboardInterrupt:
+        if spack.config.get('config:debug'):
+            raise
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")
 
     except SystemExit as e:
+        if spack.config.get('config:debug'):
+            traceback.print_exc()
         return e.code
 
 

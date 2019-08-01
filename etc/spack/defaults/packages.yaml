@@ -28,7 +28,7 @@ packages:
       glu: [mesa-glu, openglu]
       golang: [gcc]
       ipp: [intel-ipp]
-      java: [jdk, openjdk, ibm-java]
+      java: [openjdk, jdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas]
       mariadb-client: [mariadb-c-client, mariadb]

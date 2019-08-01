@@ -66,6 +66,8 @@ class Llvm(CMakePackage):
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant('omp_tsan', default=False,
+            description="Build with OpenMP capable thread sanitizer")
     variant('python', default=False, description="Install python bindings")
     extends('python', when='+python')
 
@@ -576,6 +578,9 @@ class Llvm(CMakePackage):
     conflicts('%gcc@8:',       when='@:5')
     conflicts('%gcc@:5.0.999', when='@8:')
 
+    # OMP TSAN exists in > 5.x
+    conflicts('+omp_tsan', when='@:5.99')
+
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
 
@@ -688,6 +693,9 @@ class Llvm(CMakePackage):
 
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:STRING=' + ';'.join(targets))
+
+        if '+omp_tsan' in spec:
+            cmake_args.append('-DLIBOMP_TSAN_SUPPORT=ON')
 
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')

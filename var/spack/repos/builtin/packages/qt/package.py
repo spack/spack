@@ -82,7 +82,7 @@ class Qt(Package):
 
     # Fix build failure with newer versions of GCC
     patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch',
-          sha256='e10c871033568a9aed982628ed627356761f72f63c5fdaf11882dc147528e9ed',
+          sha256='c49b228c27e3ad46ec3af4bac0e9985af5b5b28760f238422d32e14f98e49b1e',
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
 
@@ -320,8 +320,8 @@ class Qt(Package):
         if '@4' in self.spec and sys.platform == 'darwin':
             config_args.append('-cocoa')
 
-            mac_ver = tuple(platform.mac_ver()[0].split('.')[:2])
-            sdkname = 'macosx%s' % '.'.join(mac_ver)
+            mac_ver = Version(platform.mac_ver()[0])
+            sdkname = 'macosx{0}'.format(mac_ver.up_to(2))
             sdkpath = which('xcrun')('--show-sdk-path',
                                      '--sdk', sdkname,
                                      output=str)
@@ -338,7 +338,7 @@ class Qt(Package):
                 use_clang_platform = True
             if use_clang_platform:
                 config_args.append('-platform')
-                if mac_ver >= (10, 9):
+                if mac_ver >= Version('10.9'):
                     config_args.append('unsupported/macx-clang-libc++')
                 else:
                     config_args.append('unsupported/macx-clang')

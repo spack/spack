@@ -16,7 +16,7 @@ class Wxpropgrid(Package):
 
     version('1.4.15', 'f44b5cd6fd60718bacfabbf7994f1e93')
 
-    depends_on("wx")
+    depends_on("wxwidgets")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix, "--with-wxdir=%s" %

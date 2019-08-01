@@ -17,7 +17,7 @@ def test_possible_dependencies(mock_packages):
     mpileaks = spack.repo.get('mpileaks')
     mpi_names = [spec.name for spec in spack.repo.path.providers_for('mpi')]
 
-    assert mpileaks.possible_dependencies() == {
+    assert mpileaks.possible_dependencies(expand_virtuals=True) == {
         'callpath': set(['dyninst'] + mpi_names),
         'dyninst': set(['libdwarf', 'libelf']),
         'fake': set(),
@@ -28,6 +28,15 @@ def test_possible_dependencies(mock_packages):
         'mpileaks': set(['callpath'] + mpi_names),
         'multi-provider-mpi': set(),
         'zmpi': set(['fake']),
+    }
+
+    assert mpileaks.possible_dependencies(expand_virtuals=False) == {
+        'callpath': set(['dyninst']),
+        'dyninst': set(['libdwarf', 'libelf']),
+        'libdwarf': set(['libelf']),
+        'libelf': set(),
+        'mpi': set(),
+        'mpileaks': set(['callpath']),
     }
 
 

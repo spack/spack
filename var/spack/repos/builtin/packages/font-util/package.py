@@ -13,6 +13,9 @@ class FontUtil(AutotoolsPackage):
     url      = "https://www.x.org/archive/individual/font/font-util-1.3.1.tar.gz"
     version('1.3.1', 'd153a9af216e4498fa171faea2c82514')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
@@ -98,7 +101,7 @@ class FontUtil(AutotoolsPackage):
 
         for font in fonts:
             fontroot = find(font, '*', recursive=False)
-            with working_dir(join_path(font, fontroot[0])):
+            with working_dir(fontroot[0]):
                 autoreconf(*autoconf_args)
                 configure = Executable("./configure")
                 configure('--prefix={0}'.format(self.prefix))
