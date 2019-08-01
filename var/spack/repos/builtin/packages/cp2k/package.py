@@ -65,7 +65,7 @@ class Cp2k(MakefilePackage):
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
 
     # libint & libxc are always statically linked
-    depends_on('libint@1.1.4:1.2:', when='@3.0:', type='build')
+    depends_on('libint@1.1.4:1.2', when='@3.0:6.9', type='build')
     depends_on('libint@2:', when='@7.0:', type='build')
 
     depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
