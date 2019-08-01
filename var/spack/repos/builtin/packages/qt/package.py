@@ -94,7 +94,7 @@ class Qt(Package):
         # recent versions of gcc.
         # https://github.com/spack/spack/issues/9205
         # https://github.com/spack/spack/issues/9209
-        patch('qt4-gcc-and-webkit.patch', when='@4.8.6')
+        patch('qt4-gcc-and-webkit.patch', when='@4:4.8.6')
         patch('qt4-gcc-and-webkit-487.patch', when='@4.8.7')
     else:
         patch('qt4-mac.patch', when='@4.8.7')
