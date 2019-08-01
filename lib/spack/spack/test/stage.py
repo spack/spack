@@ -212,7 +212,7 @@ def instance_path_for_stage(config):
     spack.config.set('config', {'build_stage': path}, scope='user')
     yield
     spack.config.set('config', {'build_stage': current}, scope='user')
-    shutil.rmtree(path)
+    shutil.rmtree(base)
 
 
 @pytest.fixture
@@ -490,7 +490,7 @@ class TestStage(object):
                 root_stage.source_path, 'resource-dir', fname)
             assert os.path.exists(file_path)
 
-        # Perform a little clean
+        # Perform a little cleanup
         shutil.rmtree(root_stage.path)
 
     @pytest.mark.disable_clean_stage_check
@@ -516,7 +516,7 @@ class TestStage(object):
                 root_stage.source_path, 'resource-expand', fname)
             assert os.path.exists(file_path)
 
-        # Perform a little clean
+        # Perform a little cleanup
         shutil.rmtree(root_stage.path)
 
     def test_setup_and_destroy_no_name_without_tmp(self, mock_stage_archive):

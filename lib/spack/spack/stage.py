@@ -60,7 +60,7 @@ def _adjust_stage_access(path):
 
 
 def _first_accessible_path(paths):
-    """Find the first path is accessible, creating if needed."""
+    """Find the first path that is accessible, creating if needed."""
     for path in paths:
         try:
             # Try to create the path if it doesn't exist.
@@ -152,6 +152,9 @@ class Stage(object):
 
     """Shared dict of all stage locks."""
     stage_locks = {}
+
+    """Staging is, in general, managed by Spack."""
+    managed_by_spack = True
 
     def __init__(
             self, url_or_fetch_strategy,
@@ -329,11 +332,6 @@ class Stage(object):
     def source_path(self):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
-
-    @property
-    def managed_by_spack(self):
-        """Staging is, in general, managed by Spack."""
-        return True
 
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
@@ -592,6 +590,9 @@ class DIYStage(object):
     directory naming convention.
     """
 
+    """DIY staging is, by definition, not managed by Spack."""
+    managed_by_spack = False
+
     def __init__(self, path):
         if path is None:
             raise ValueError("Cannot construct DIYStage without a path.")
@@ -610,11 +611,6 @@ class DIYStage(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-    @property
-    def managed_by_spack(self):
-        """DIY staging is, by definition, not managed by Spack."""
-        return False
 
     def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
