@@ -21,12 +21,12 @@ class Iegenlib(CMakePackage):
         url="https://github.com/CompOpt4Apps/IEGenLib/archive/fc479ee6ff01dba26beffc1dc6bacdba03262138.zip",
         sha256='b4c0b368363fcc1e34b388057cc0940bb87fc336cebb0772fd6055f45009b12b')
 
-    depends_on('cmake@2.6:', type='build')
-    depends_on('autoconf',   type='build')
-    depends_on('texinfo',    type='build')
+    depends_on('cmake@2.6:', type = 'build')
+    depends_on('autoconf',   type = 'build')
+    depends_on('texinfo',    type = 'build')
     depends_on('isl')
 
-    build_directory='spack-build'
+    build_directory = 'spack-build'
 
     @run_before('cmake')
     def make_dirs(self):
