@@ -48,7 +48,7 @@ class Gdl(CMakePackage):
     depends_on('proj@:5', when='+proj')
     depends_on('py-numpy', type=('build', 'run'), when='+embed_python')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='+embed_python')
-    depends_on('wx', when='+wx')
+    depends_on('wxwidgets', when='+wx')
 
     depends_on('eigen')
     depends_on('fftw')

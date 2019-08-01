@@ -39,6 +39,7 @@ class Gromacs(CMakePackage):
     version('5.1.5',  '831fe741bcd9f1612155dffc919885f2')
     version('5.1.4',  'ba2e34d59b3982603b4935d650c08040')
     version('5.1.2',  '614d0be372f1a6f1f36382b7a6fcab98')
+    version('4.5.5', sha256='e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba')
 
     variant('mpi', default=True, description='Activate MPI support')
     variant('shared', default=True,
