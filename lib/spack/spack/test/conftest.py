@@ -16,7 +16,7 @@ import py
 import pytest
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import remove_linked_tree
+from llnl.util.filesystem import mkdirp, remove_linked_tree
 
 import spack.architecture
 import spack.compilers
@@ -124,11 +124,20 @@ def reset_compiler_cache():
 @pytest.fixture(scope='session', autouse=True)
 def mock_stage(tmpdir_factory, config):
     """Mocks up a fake stage directory for use by tests."""
+    new_stage = str(tmpdir_factory.mktemp('mock-stage'))
+
+    # Set the stage path to the temporary path.
     current = spack.config.get('config:build_stage')
-    new_stage = str(tmpdir_factory.mktemp('mock_stage'))
-    spack.config.set('config', {'build_stage': new_stage}, scope='user')
+    spack.config.set('config',
+                     {'build_stage': [new_stage]}, scope='user')
+    source_path = os.path.join(new_stage, spack.stage._source_path_subdir)
+    mkdirp(source_path)
+
     yield new_stage
+
     spack.config.set('config', {'build_stage': current}, scope='user')
+    if os.path.isdir(source_path):
+        shutil.rmtree(source_path)
 
 
 @pytest.fixture(scope='session')
@@ -138,7 +147,7 @@ def ignore_stage_files():
     Used to track which leftover files in the stage have been seen.
     """
     # to start with, ignore the .lock file at the stage root.
-    return set(['.lock'])
+    return set(['.lock', spack.stage._source_path_subdir])
 
 
 def remove_whatever_it_is(path):
@@ -173,13 +182,14 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
 
     to tests that need it.
     """
+    stage_path = mock_stage
+
     yield
 
     files_in_stage = set()
-    stage_path = spack.stage.get_stage_root()
     if os.path.exists(stage_path):
-        files_in_stage = set(
-            os.listdir(stage_path)) - ignore_stage_files
+        stage_files = os.listdir(stage_path)
+        files_in_stage = set(stage_files) - ignore_stage_files
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
