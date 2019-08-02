@@ -18,9 +18,8 @@ class G4realsurface(Package):
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
-        install_path = join_path(prefix.share, 'data', '{0}RealSurface{1}'
-                                 .format("G4" if self.version > Version('1.0')
-                                         else "", self.version))
+        install_path = join_path(prefix.share, 'data', 'RealSurface{0}'
+                                 .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
     def url_for_version(self, version):

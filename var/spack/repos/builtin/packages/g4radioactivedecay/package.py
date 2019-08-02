@@ -17,8 +17,8 @@ class G4radioactivedecay(Package):
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
-        install_path = join_path(prefix.share, 'data', 'G4RadioactiveDecay{0}'
-                                 .format(self.prefix))
+        install_path = join_path(prefix.share, 'data', 'RadioactiveDecay{0}'
+                                 .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
     def url_for_version(self, version):

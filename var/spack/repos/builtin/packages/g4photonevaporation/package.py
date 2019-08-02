@@ -18,7 +18,7 @@ class G4photonevaporation(Package):
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data',
-                                 'G4PhotonEvaporation{0}'
+                                 'PhotonEvaporation{0}'
                                  .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
