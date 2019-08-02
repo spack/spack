@@ -73,6 +73,10 @@ class PyNumpy(PythonPackage):
     depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
     depends_on('py-pytest', when='@1.15:', type='test')
 
+    # Allows you to specify order of BLAS/LAPACK preference
+    # https://github.com/numpy/numpy/pull/13132
+    patch('blas-lapack-order.patch', when='@1.15:1.16')
+
     @run_before('build')
     def set_blas_lapack(self):
         # https://numpy.org/devdocs/user/building.html
