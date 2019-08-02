@@ -292,19 +292,37 @@ or
 
    $ spack -E myenv add python
 
+.. _environments_concretization:
+
 ^^^^^^^^^^^^
 Concretizing
 ^^^^^^^^^^^^
 
 Once some user specs have been added to an environment, they can be
-concretized.  The following command will concretize all user specs
-that have been added and not yet concretized:
+concretized. *By default specs are concretized separately*, one after
+the other. This mode of operation permits to deploy a full
+software stack where multiple configurations of the same package
+need to be installed alongside each other. Central installations done
+at HPC centers by system administrators or user support groups
+are a common case that fits in this behavior.
+Environments *can also be configured to concretize all
+the root specs in a self-consistent way* to ensure that
+each package in the environment comes with a single configuration. This
+mode of operation is usually what is required by software developers that
+want to deploy their development environment.
+
+Regardless of which mode of operation has been chosen, the following
+command will ensure all the root specs are concretized according to the
+constraints that are prescribed in the configuration:
 
 .. code-block:: console
 
    [myenv]$ spack concretize
 
-This command will re-concretize all specs:
+In the case of specs that are not concretized together, the command
+above will concretize only the specs that were added and not yet
+concretized. Forcing a re-concretization of all the specs can be done
+instead with this command:
 
 .. code-block:: console
 
@@ -466,6 +484,27 @@ the ``spack.yaml`` manifest under the heading ``specs``.
 Appending to this list in the yaml is identical to using the ``spack
 add`` command from the command line. However, there is more power
 available from the yaml file.
+
+"""""""""""""""""""
+Spec concretization
+"""""""""""""""""""
+
+Specs can be either concretized separately or together, as already
+explained in :ref:`environments_concretization`. The behavior active
+under any environment is determined by the ``concretize_together``
+property:
+
+.. code-block:: yaml
+
+   spack:
+       specs:
+         - ncview
+         - netcdf
+         - nco
+         - py-sphinx
+       concretize_together: true
+
+If this property is not set it will default to ``false``.
 
 """""""""""""
 Spec Matrices
