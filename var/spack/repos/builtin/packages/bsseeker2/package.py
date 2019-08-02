@@ -18,7 +18,7 @@ class Bsseeker2(Package):
     version('2.1.2', '5f7f0ef4071711e56b59c5c16b7f34a7',
             url='https://github.com/BSSeeker/BSseeker2/archive/v2.1.2.tar.gz')
 
-    depends_on('python@2.6:2.999', type=('build', 'run'))
+    depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-pysam', type=('build', 'run'))
 
     def install(self, spec, prefix):

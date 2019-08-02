@@ -20,4 +20,4 @@ class F18(CMakePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install("spack-build/tools/f18/f18", prefix.bin)
+        install("spack-build/tools/f18/bin/f18", prefix.bin)
