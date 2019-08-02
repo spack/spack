@@ -225,7 +225,7 @@ def tmp_path_for_stage(tmpdir, config):
     """
     current = spack.config.get('config:build_stage')
     spack.config.set('config', {'build_stage': [str(tmpdir)]}, scope='user')
-    yield
+    yield tmpdir
     spack.config.set('config', {'build_stage': current}, scope='user')
 
 
@@ -720,8 +720,9 @@ class TestStage(object):
         """Ensure a temp path stage root is a suitable temp path."""
         assert spack.stage._stage_root is None
 
+        tmpdir = tmp_path_for_stage
         path = spack.stage.get_stage_root()
-        assert 'tmp' in path.split(os.path.sep)
+        assert path == str(tmpdir)
         assert 'test_get_stage_root_tmp' in path
 
         # Make sure the cached stage path values are changed appropriately.
