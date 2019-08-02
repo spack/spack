@@ -18,5 +18,5 @@ class PyNumexpr(PythonPackage):
     version('2.4.6', '17ac6fafc9ea1ce3eb970b9abccb4fbd')
 
     depends_on('python@2.6:')
-    depends_on('py-numpy@1.6:', type=('build', 'run'))
+    depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

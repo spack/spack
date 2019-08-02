@@ -59,7 +59,7 @@ class Gnuplot(AutotoolsPackage):
     depends_on('libcerf', when='+libcerf')
     depends_on('libgd', when='+gd')
     depends_on('cairo@1.2:', when='+cairo')
-    depends_on('wx', when='+wx')
+    depends_on('wxwidgets', when='+wx')
     depends_on('pango@1.10:', when='+wx')
     depends_on('pango@1.10:', when='+cairo')
     depends_on('libx11', when='+X')

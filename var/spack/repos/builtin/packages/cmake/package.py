@@ -13,6 +13,7 @@ class Cmake(Package):
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz'
     maintainers = ['chuckatkins']
 
+    version('3.15.1', sha256='18dec548d8f8b04d53c60f9cedcebaa6762f8425339d1e2c889c383d3ccdd7f7')
     version('3.15.0', sha256='0678d74a45832cacaea053d85a5685f3ed8352475e6ddf9fcb742ffca00199b5')
     version('3.14.5', sha256='505ae49ebe3c63c595fa5f814975d8b72848447ee13b6613b0f8b96ebda18c06')
     version('3.14.4', sha256='00b4dc9b0066079d10f16eed32ec592963a44e7967371d2f5077fd1670ff36d9')
@@ -58,6 +59,10 @@ class Cmake(Package):
     version('3.1.0',    '188eb7dc9b1b82b363bc51c0d3f1d461')
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
+
+    # Revert the change that introduced a regression when parsing mpi link
+    # flags, see: https://gitlab.kitware.com/cmake/cmake/issues/19516
+    patch('cmake-revert-findmpi-link-flag-list.patch', when='@3.15.0')
 
     # Fix linker error when using external libs on darwin.
     # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873

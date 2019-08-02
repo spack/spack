@@ -1148,7 +1148,10 @@ def from_list_url(pkg):
     """If a package provides a URL which lists URLs for resources by
        version, this can can create a fetcher for a URL discovered for
        the specified package's version."""
-    if pkg.list_url:
+    if not pkg.has_code:
+        raise NoFetchStrategyError(pkg)
+
+    if pkg.list_url is not None:
         try:
             versions = pkg.fetch_remote_versions()
             try:

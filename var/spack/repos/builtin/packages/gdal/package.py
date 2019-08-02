@@ -18,7 +18,7 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/3.0.0/gdal-3.0.0.tar.xz"
+    url        = "http://download.osgeo.org/gdal/3.0.1/gdal-3.0.1.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
     list_depth = 1
 
@@ -95,7 +95,7 @@ class Gdal(AutotoolsPackage):
     depends_on('libgeotiff@1.2.1:')
     depends_on('libgeotiff@:1.4', when='@:2.4')
     depends_on('libgeotiff@1.5:', when='@3:')
-    depends_on('json-c', when='@2.3:')
+    depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
 
     # Optional dependencies
@@ -127,7 +127,9 @@ class Gdal(AutotoolsPackage):
     depends_on('qhull', when='+qhull @2.1:')
     depends_on('opencl', when='+opencl')
     depends_on('poppler', when='+poppler')
-    depends_on('poppler@:0.63', when='@:2.3.0 +poppler')
+    depends_on('poppler@:0.63', when='@:2.3 +poppler')
+    depends_on('poppler@:0.71', when='@:2.4 +poppler')
+    depends_on('poppler@0.24:', when='@3: +poppler')
     depends_on('proj@:4', when='+proj @2.3.0:2.3.999')
     depends_on('proj@:5', when='+proj @2.4.0:2.4.999')
     depends_on('proj@:6', when='+proj @2.5:2.999')

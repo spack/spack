@@ -12,10 +12,11 @@ class EnvironmentModules(Package):
     """
 
     homepage = 'https://cea-hpc.github.io/modules/'
-    url = 'https://github.com/cea-hpc/modules/releases/download/v4.2.4/modules-4.2.4.tar.gz'
+    url = 'https://github.com/cea-hpc/modules/releases/download/v4.3.0/modules-4.3.0.tar.gz'
 
     maintainers = ['xdelaruelle']
 
+    version('4.3.0', sha256='231f059c4109a2d3028c771f483f6c92f1f3689eb0033648ce00060dad00e103')
     version('4.2.5', sha256='3375b454568e7bbec7748cd6173516ef9f30a3d8e13c3e99c02794a6a3bc3c8c')
     version('4.2.4', sha256='416dda94141e4778356e2aa9ba8687e6522a1eb197b3caf00a82e5fa2707709a')
     version('4.2.3', sha256='f667134cca8e2c75e12a00b50b5605d0d8068efa5b821f5b3c3f0df06fd79411')
@@ -65,6 +66,11 @@ class EnvironmentModules(Package):
 
         if '~X' in spec:
             config_args = ['--without-x'] + config_args
+
+        if '@4.3.0:' in self.spec:
+            config_args.extend([
+                '--enable-color'
+            ])
 
         if '@4.2.0:' in self.spec:
             config_args.extend([

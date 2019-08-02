@@ -12,8 +12,8 @@ from spack.paths import mock_packages_path
 from spack.util.naming import mod_to_class
 from spack.spec import Spec
 from spack.util.package_hash import package_content
-from spack.version import Version, VersionError, VersionChecksumError
-from spack.package import check_pkg_versions
+from spack.version import VersionChecksumError
+from spack.directives import version
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -373,15 +373,20 @@ def test_rpath_args(mutable_database):
     assert 'mpich' in rpath_args
 
 
-def test_check_pkg_versions_errors():
-    """Test check_pkg_versions error paths."""
+def test_bundle_version_checksum(mock_packages):
+    """Test raising exception on a version checksum with a bundle package."""
+    # Note the original approach to this test, which involved creating
+    # an extra repository with a suitably defined BundlePackage package.py
+    # file, would cause url_fetch::test_from_list_url tests to hang when
+    # run with this test from Python 2.6/2.7 (not Python 3).  The issue was
+    # traced to spack.util.web's _spider's NonDaemonPool.map.
 
-    with pytest.raises(VersionError, match='Expected a version instance'):
-        check_pkg_versions('String', {'version': {}}, False)
+    class MockPkg(object):
+        name = 'MockBundle'
+        has_code = False
+        versions = {}
 
-    with pytest.raises(VersionError, match='Expected a version dictionary'):
-        check_pkg_versions('version', {Version('1.0'): []}, False)
+    fn = version('1.0', checksum='1badpkg')
 
-    with pytest.raises(VersionChecksumError, match='Checksum detected'):
-        versions = {Version(2.0): {'checksum': '234'}}
-        check_pkg_versions('checksum', versions, False)
+    with pytest.raises(VersionChecksumError, match="Checksums not allowed"):
+        fn(MockPkg())
