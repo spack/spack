@@ -119,7 +119,7 @@ class Mysql(CMakePackage):
             options.append('-DWITHOUT_SERVER:BOOL=ON')
         return options
 
-    def fix_dtrace_usr_bin_path(self, spack_env):
+    def _fix_dtrace_shebang(self, spack_env):
         # dtrace may cause build to fail because it uses
         # '/usr/bin/python' in the shebang. To work around that we copy
         # the original script into a temporary folder, and change the
@@ -139,6 +139,12 @@ class Mysql(CMakePackage):
         # prepend to PATH the temporary folder where it resides.
         spack_env.prepend_path('PATH', dtrace_copy_path)
 
+    @run_before('cmake')
+    def _maybe_fix_dtrace_shebang(self):
+        if 'python' in self.spec.flat_dependencies() and \
+           self.spec.satisfies('@:7.99.99'):
+            self._fix_dtrace_shebang(spack_env)
+
     def setup_environment(self, spack_env, run_env):
         cxxstd = self.spec.variants['cxxstd'].value
         flag = getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
@@ -150,6 +156,3 @@ class Mysql(CMakePackage):
                                        '-Wno-deprecated-declarations')
             if int(cxxstd) > 14:
                 spack_env.append_flags('CXXFLAGS', '-Wno-error=register')
-        if 'python' in self.spec.flat_dependencies() and \
-           self.spec.satisfies('@:7.99.99'):
-            self.fix_dtrace_usr_bin_path(spack_env)
