@@ -56,12 +56,6 @@ def env_deactivate():
     os.environ.pop('SPACK_ENV', None)
 
 
-@pytest.fixture()
-def no_display(monkeypatch):
-    """Instead of returning a tree to display, returns and empty string."""
-    monkeypatch.setattr(ev, '_tree_to_display', lambda x: '')
-
-
 def test_add():
     e = ev.create('test')
     e.add('mpileaks')
@@ -716,7 +710,7 @@ def test_read_old_lock_creates_backup(tmpdir):
         assert y.dag_hash() in lockfile_dict_v1['concrete_specs']
 
 
-@pytest.mark.usefixtures('config', 'no_display')
+@pytest.mark.usefixtures('config')
 def test_indirect_build_dep():
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
     build-only dep. Make sure this concrete DAG is preserved when writing the
@@ -752,7 +746,7 @@ def test_indirect_build_dep():
         assert x_env_spec == x_concretized
 
 
-@pytest.mark.usefixtures('config', 'no_display')
+@pytest.mark.usefixtures('config')
 def test_store_different_build_deps():
     r"""Ensure that an environment can store two instances of a build-only
 Dependency:
