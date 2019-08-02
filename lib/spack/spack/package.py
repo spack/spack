@@ -1076,7 +1076,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only fetch concrete packages.")
 
         if not self.has_code:
-            raise ValueError("Can only fetch package with a URL.")
+            raise InvalidPackageOpError("Can only fetch a package with a URL.")
 
         start_time = time.time()
         checksum = spack.config.get('config:checksum')
@@ -1116,7 +1116,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only stage concrete packages.")
 
         if not self.has_code:
-            raise ValueError("Can only stage package with a URL.")
+            raise InvalidPackageOpError("Can only stage a package with a URL.")
 
         self.do_fetch(mirror_only)     # this will create the stage
         self.stage.expand_archive()
@@ -1130,7 +1130,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only patch concrete packages.")
 
         if not self.has_code:
-            raise ValueError("Can only patch package with a URL.")
+            raise InvalidPackageOpError("Can only patch a package with a URL.")
 
         # Kick off the stage first.  This creates the stage.
         self.do_stage()
@@ -2579,6 +2579,10 @@ class NoURLError(PackageError):
     def __init__(self, cls):
         super(NoURLError, self).__init__(
             "Package %s has no version with a URL." % cls.__name__)
+
+
+class InvalidPackageOpError(PackageError):
+    """Raised when someone tries perform an invalid operation on a package."""
 
 
 class ExtensionError(PackageError):

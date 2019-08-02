@@ -9,7 +9,8 @@ import shutil
 
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
-from spack.package import InstallError, PackageBase, PackageStillNeededError
+from spack.package import \
+    InstallError, InvalidPackageOpError, PackageBase, PackageStillNeededError
 import spack.patch
 import spack.repo
 import spack.store
@@ -296,13 +297,16 @@ def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages):
     spec = Spec('nosource').concretized()
     spec.package.do_install()
 
-    with pytest.raises(ValueError, match="fetch package with a URL"):
+    with pytest.raises(InvalidPackageOpError,
+                       match="fetch a package with a URL"):
         spec.package.do_fetch()
 
-    with pytest.raises(ValueError, match="stage package with a URL"):
+    with pytest.raises(InvalidPackageOpError,
+                       match="stage a package with a URL"):
         spec.package.do_stage()
 
-    with pytest.raises(ValueError, match="patch package with a URL"):
+    with pytest.raises(InvalidPackageOpError,
+                       match="patch a package with a URL"):
         spec.package.do_patch()
 
 
