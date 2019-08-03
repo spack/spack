@@ -736,7 +736,7 @@ def test_indirect_build_dep():
         _env_create('test', with_view=False)
         e = ev.read('test')
         e.add(x_spec)
-        e.concretize(_display=False)
+        e.concretize()
         e.write()
 
         e_read = ev.read('test')
@@ -788,7 +788,7 @@ Dependency:
         e = ev.read('test')
         e.add(y_spec)
         e.add(x_spec)
-        e.concretize(_display=False)
+        e.concretize()
         e.write()
 
         e_read = ev.read('test')
