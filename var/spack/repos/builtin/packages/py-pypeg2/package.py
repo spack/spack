@@ -25,4 +25,3 @@ class PyPypeg2(PythonPackage):
 
     version('2.15.2', '84057d292808553290f0b78f42c64bbe')
 
-    depends_on('py-setuptools', type='build')
