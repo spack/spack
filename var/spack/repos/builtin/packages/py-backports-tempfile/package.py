@@ -15,7 +15,6 @@ class PyBackportsTempfile(PythonPackage):
     url      = "https://pypi.io/packages/source/b/backports.tempfile/backports.tempfile-1.0.tar.gz"
 
     version('1.0', sha256='1c648c452e8770d759bdc5a5e2431209be70d25484e1be24876cf2168722c762')
-    version('1.0rc1', sha256='1492e2fd8e8abcae6a9c9e78edc52aae4234937c5d462fd3ce0e29c1a4687d3b')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-backports-weakref', type=('build', 'run'))
