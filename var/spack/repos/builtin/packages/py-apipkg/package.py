@@ -16,3 +16,4 @@ class PyApipkg(PythonPackage):
     version('1.4', sha256='37228cda29411948b422fae072f57e31d3396d2ee1c9783775980ee9c9990af6')
 
     depends_on('py-setuptools@30.3.0:', type='build')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
