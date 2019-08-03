@@ -26,19 +26,10 @@ class PyPythonFmask(PythonPackage):
     version('0.5.3', '6923320282860ea7e2cdeed2192e2923')
 
     # Add dependencies if required.
-    depends_on('py-setuptools', type='build')
     depends_on('py-rios', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
     
-    phases = ['install']
-    
-    """
-    def install(self, spec, prefix):
-        import subprocess
-        cmd = '{0} setup.py install --prefix={1}'.format(spec['python'].command.path, prefix)
-        subprocess.call(cmd, shell=True)
-    """
 
 
