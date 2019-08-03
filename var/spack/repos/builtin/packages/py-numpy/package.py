@@ -228,14 +228,6 @@ class PyNumpy(PythonPackage):
 
         spack_env.set('NPY_LAPACK_ORDER', lapack)
 
-        # Needed by py-meep
-        include_path = join_path(site_packages_dir, 'numpy/core/include')
-        run_env.prepend_path('CPATH', include_path)
-
-    def setup_dependent_package(self, module, dependent_spec):
-        # Needed by py-meep
-        self.spec.include = join_path(site_packages_dir, 'numpy/core/include')
-
     def build_args(self, spec, prefix):
         args = []
 

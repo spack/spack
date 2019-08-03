@@ -38,7 +38,10 @@ class PyMeep(PythonPackage):
     def common_args(self, spec, prefix):
         include_dirs = [
             spec['meep'].prefix.include,
-            spec['py-numpy'].include
+            os.path.join(
+                spec['py-numpy'].prefix,
+                spec['python'].package.python_include_dir
+            )
         ]
 
         library_dirs = [
