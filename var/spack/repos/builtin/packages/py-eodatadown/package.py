@@ -27,7 +27,6 @@ class PyEodatadown(PythonPackage):
     version('0.13.0', sha256='75854c99a259c4ddcf6cdbff6aab946d2e1c69bc4ba12a4ed256270af65947f9')
 
     # Add dependencies if required.
-    depends_on('py-setuptools',    type='build')
     depends_on('python',           type=('build', 'run'))
     depends_on('rsgislib',         type=('build', 'run'))
     depends_on('py-arcsi',         type=('build', 'run'))
@@ -40,13 +39,4 @@ class PyEodatadown(PythonPackage):
     depends_on('wget',             type=('build', 'run'))
     depends_on('postgresql',       type=('build', 'run'))
     
-    phases = ['install']
-    
-    """
-    def install(self, spec, prefix):
-        import subprocess
-        cmd = '{0} setup.py install --prefix={1}'.format(spec['python'].command.path, prefix)
-        subprocess.call(cmd, shell=True)
-    """
-        
 

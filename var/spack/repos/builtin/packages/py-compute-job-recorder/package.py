@@ -27,15 +27,7 @@ class PyComputeJobRecorder(PythonPackage):
 
     version('0.0.1', sha256='0347c8a51829b1f8bae2bcaf370dc4c78dfa2e6340ad2489e9e15aaa3981a165')
 
-    depends_on('py-setuptools', type='build')
     depends_on('sqlite',        type=('build', 'run'))
     depends_on('py-sqlalchemy', type=('build', 'run'))
     
-    phases = ['install']
-    """
-    def install(self, spec, prefix):
-        import subprocess
-        cmd = '{0} setup.py install --prefix={1}'.format(spec['python'].command.path, prefix)
-        subprocess.call(cmd, shell=True)
-    """
 

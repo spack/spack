@@ -29,21 +29,8 @@ class PyRios(PythonPackage):
     version('1.4.8', '5a18c0618e1b5f0f646932924a682206')
 
     # Add dependencies if required.
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-six', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('gdal', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
-    
-    phases = ['install']
-    
-    """    
-    def install(self, spec, prefix):
-        import subprocess
-        subprocess.call('export RIOS_NOCMDLINE=1', shell=True)
-        cmd = '{0} setup.py install --prefix={1}'.format(spec['python'].command.path, prefix)
-        subprocess.call(cmd, shell=True) 
-    """
     
 
