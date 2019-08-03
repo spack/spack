@@ -18,9 +18,9 @@ class RCirclize(RPackage):
        convenience and freedom to design figures for better understanding
        complex patterns behind multiple dimensional data."""
 
-    homepage = "https://cran.r-project.org/package=circlize"
-    url      = "https://cran.r-project.org/src/contrib/circlize_0.4.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/circlize"
+    homepage = "https://cloud.r-project.org/package=circlize"
+    url      = "https://cloud.r-project.org/src/contrib/circlize_0.4.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/circlize"
 
     version('0.4.1', '6818830654f485abbdc8c74ec9087377')
     version('0.4.0', '0dbf1b481930a759d6f413d17f8ae1c4')

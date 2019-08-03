@@ -12,7 +12,7 @@ class RMatrix(RPackage):
 
     homepage = "http://matrix.r-forge.r-project.org/"
     url      = "https://cran.rstudio.com/src/contrib/Matrix_1.2-14.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Matrix"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/Matrix"
 
     version('1.2-17', sha256='db43e6f0196fd5dfd05a7e88cac193877352c60d771d4ec8772763e645723fcc')
     version('1.2-14', 'b2babcf1515625196b75592c9b345bba')

@@ -10,9 +10,9 @@ from spack import *
 class RExpint(RPackage):
     """expint: Exponential Integral and Incomplete Gamma Function"""
 
-    homepage = "https://cran.r-project.org/package=expint"
-    url      = "https://cran.r-project.org/src/contrib/expint_0.1-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/expint"
+    homepage = "https://cloud.r-project.org/package=expint"
+    url      = "https://cloud.r-project.org/src/contrib/expint_0.1-5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/expint"
 
     version('0.1-5', sha256='b03d60938cd6cf615aa3a02b1bf73436785eca89eaff56059ee0807b8244718a')
 

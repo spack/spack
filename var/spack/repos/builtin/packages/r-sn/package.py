@@ -12,8 +12,8 @@ class RSn(RPackage):
     related statistical methods for data fitting and diagnostics, in the
     univariate and the multivariate case."""
 
-    homepage = "https://cran.r-project.org/web/packages/sn/index.html"
-    url      = "https://cran.r-project.org/src/contrib/sn_1.5-0.tar.gz"
+    homepage = "https://cloud.r-project.org/web/packages/sn/index.html"
+    url      = "https://cloud.r-project.org/src/contrib/sn_1.5-0.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/sn"
 
     version('1.5-3', sha256='cc21b97ddd674c9b1296260f2a72ffb085cdcb877c8332f0bfa96ff028517183')
@@ -23,6 +23,5 @@ class RSn(RPackage):
     version('1.2-4', 'bf3a47b05016326e910fdb4cc4967e4d')
     version('1.2-3', '290ae511d974a6beb4c3c79c0106858f')
 
-    depends_on('r@3.4.0:3.4.9')
-    depends_on('r-mnormt', type=('build', 'run'))
+    depends_on('r-mnormt@1.5-4:', type=('build', 'run'))
     depends_on('r-numderiv', type=('build', 'run'))

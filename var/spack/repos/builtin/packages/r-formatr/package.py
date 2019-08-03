@@ -14,9 +14,9 @@ class RFormatr(RPackage):
     human-readable and tidy. There is also a Shiny app as a user interface in
     this package."""
 
-    homepage = "https://cran.r-project.org/package=formatR"
-    url      = "https://cran.r-project.org/src/contrib/formatR_1.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/formatR"
+    homepage = "https://cloud.r-project.org/package=formatR"
+    url      = "https://cloud.r-project.org/src/contrib/formatR_1.5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/formatR"
 
     version('1.6', sha256='f5c98f0c3506ca51599671a2cdbc17738d0f326e8e3bb18b7a38e9f172122229')
     version('1.5', 'ac735515b8e4c32097154f1b68c5ecc7')

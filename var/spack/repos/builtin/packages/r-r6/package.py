@@ -16,7 +16,7 @@ class RR6(RPackage):
 
     homepage = "https://github.com/wch/R6/"
     url      = "https://cran.rstudio.com/src/contrib/R6_2.2.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/R6"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/R6"
 
     version('2.4.0', sha256='70be110174fbf5f5304049b186a6f9c05b77bfaec6d8caf980fcef5da6e0abce')
     version('2.2.2', '635b58c65bff624a1fab69c6b1989801')

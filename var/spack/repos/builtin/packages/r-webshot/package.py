@@ -10,8 +10,8 @@ class RWebshot(RPackage):
     """webshot: Take Screenshots of Web Pages"""
 
     homepage = "https://github.com/wch/webshot/"
-    url      = "https://cran.r-project.org/src/contrib/webshot_0.5.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/webshot/"
+    url      = "https://cloud.r-project.org/src/contrib/webshot_0.5.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/webshot/"
 
     version('0.5.1', sha256='b9750d206c6fa0f1f16cc212b0a34f4f4bfa916962d2c877f0ee9a33620f4b23')
 

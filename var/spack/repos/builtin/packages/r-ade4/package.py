@@ -11,8 +11,8 @@ class RAde4(RPackage):
     Environmental Sciences"""
 
     homepage = "http://pbil.univ-lyon1.fr/ADE-4"
-    url      = "https://cran.r-project.org/src/contrib/ade4_1.7-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ade4"
+    url      = "https://cloud.r-project.org/src/contrib/ade4_1.7-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ade4"
 
     version('1.7-13', sha256='f5d0a7356ae63f82d3adb481a39007e7b0d70211b8724aa686af0c89c994e99b')
     version('1.7-11', sha256='4ccd799ae99bd625840b866a697c4a48adb751660470bf0d6cf9207b1927a572')

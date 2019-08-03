@@ -16,7 +16,11 @@ class RBookdown(RPackage):
 
     version('0.5', '7bad360948e2b22d28397870b9319f17')
 
-    depends_on('r-yaml@2.1.14:', type=('build', 'run'))
-    depends_on('r-rmarkdown@1.5:', type=('build', 'run'))
-    depends_on('r-knitr@1.16:', type=('build', 'run'))
+    depends_on('r-yaml@2.1.14:', when='@:0.10', type=('build', 'run'))
+    depends_on('r-rmarkdown@1.12:', type=('build', 'run'))
+    depends_on('r-knitr@1.22:', type=('build', 'run'))
     depends_on('r-htmltools@0.3.6:', type=('build', 'run'))
+    depends_on('r-xfun@0.6:', when='@0.12:', type=('build', 'run'))
+    depends_on('r-tinytex@0.12:', when='@0.12:', type=('build', 'run'))
+
+

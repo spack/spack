@@ -13,7 +13,7 @@ class RFastmatch(RPackage):
        subsequent lookup as it keeps the hash table in memory."""
 
     homepage = "http://www.rforge.net/fastmatch"
-    url      = "https://cran.r-project.org/src/contrib/fastmatch_1.1-0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/fastmatch"
+    url      = "https://cloud.r-project.org/src/contrib/fastmatch_1.1-0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/fastmatch"
 
     version('1.1-0', '900c2363c15059ac9d63c4c71ea2d6b2')

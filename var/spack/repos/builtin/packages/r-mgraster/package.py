@@ -12,7 +12,7 @@ class RMgraster(RPackage):
     (DOE) Systems Biology Knowledge Base (KBase)."""
 
     homepage = "https://github.com/braithwaite/MGRASTer/"
-    url      = "https://cran.r-project.org/src/contrib/MGRASTer_0.9.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/MGRASTer_0.9.tar.gz"
 
     version('0.9', '902c7ad4180b858d6b6428ea26d7652a')
 

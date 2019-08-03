@@ -13,8 +13,8 @@ class RDt(RPackage):
     abbreviation of 'DataTables'."""
 
     homepage = "http://rstudio.github.io/DT"
-    url      = "https://cran.r-project.org/src/contrib/DT_0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/DT"
+    url      = "https://cloud.r-project.org/src/contrib/DT_0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/DT"
 
     version('0.6', sha256='2ed68e9d161559171fa74b6105eee87b98acf755eae072b38ada60a83d427916')
     version('0.4', sha256='3daa96b819ca54e5fbc2c7d78cb3637982a2d44be58cea0683663b71cfc7fa19')
@@ -26,3 +26,4 @@ class RDt(RPackage):
     depends_on('r-htmlwidgets@1.3:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-crosstalk', type=('build', 'run'))
+    depends_on('r-promises', type=('build', 'run'))

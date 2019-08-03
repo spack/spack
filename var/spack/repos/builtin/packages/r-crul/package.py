@@ -9,9 +9,9 @@ from spack import *
 class RCrul(RPackage):
     """crul: HTTP Client"""
 
-    homepage = "https://cran.r-project.org/package=crul"
-    url      = "https://cran.r-project.org/src/contrib/crul_0.7.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/crul"
+    homepage = "https://cloud.r-project.org/package=crul"
+    url      = "https://cloud.r-project.org/src/contrib/crul_0.7.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/crul"
 
     version('0.7.4', sha256='c963dd666ae3fc89b661ce19fce2fa19a16fc3825e1502105cae98ceb92c6014')
 

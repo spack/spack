@@ -11,9 +11,10 @@ class RClass(RPackage):
     Learning Vector Quantization and Self-Organizing Maps."""
 
     homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
-    url      = "https://cran.r-project.org/src/contrib/class_7.3-14.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/class"
+    url      = "https://cloud.r-project.org/src/contrib/class_7.3-14.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/class"
 
     version('7.3-14', '6a21dd206fe4ea29c55faeb65fb2b71e')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

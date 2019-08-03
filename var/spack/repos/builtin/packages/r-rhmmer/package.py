@@ -9,9 +9,9 @@ from spack import *
 class RRhmmer(RPackage):
     """rhmmer: Utilities Parsing 'HMMER' Results"""
 
-    homepage = "https://cran.r-project.org/package=rhmmer"
-    url      = "https://cran.r-project.org/src/contrib/rhmmer_0.1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rhmmer/"
+    homepage = "https://cloud.r-project.org/package=rhmmer"
+    url      = "https://cloud.r-project.org/src/contrib/rhmmer_0.1.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rhmmer/"
 
     version('0.1.0', sha256='5022cefc9ba335160c1ad8d1b614610ae0ad48287c9fdbaf8f8966149358e520')
 

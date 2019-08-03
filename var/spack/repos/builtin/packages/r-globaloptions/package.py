@@ -10,9 +10,9 @@ class RGlobaloptions(RPackage):
     """It provides more controls on the option values such as validation and
        filtering on the values, making options invisible or private."""
 
-    homepage = "https://cran.r-project.org/package=GlobalOptions"
+    homepage = "https://cloud.r-project.org/package=GlobalOptions"
     url      = "https://cran.rstudio.com/src/contrib/GlobalOptions_0.0.12.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/GlobalOptions"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/GlobalOptions"
 
     version('0.0.12', '6c268b3b27874918ba62eb0f6aa0a3e5')
 

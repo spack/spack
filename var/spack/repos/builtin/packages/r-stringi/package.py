@@ -18,8 +18,8 @@ class RStringi(RPackage):
     etc."""
 
     homepage = "http://www.gagolewski.com/software/stringi/"
-    url      = "https://cran.r-project.org/src/contrib/stringi_1.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/stringi"
+    url      = "https://cloud.r-project.org/src/contrib/stringi_1.1.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/stringi"
 
     version('1.3.1', sha256='32df663bb6e9527e1ac265eec2116d26f7b7e62ea5ae7cc5de217cbb8defc362')
     version('1.1.5', '0d5ec30ae368ab1b87a36fee3e228e7b')

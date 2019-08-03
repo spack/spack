@@ -16,8 +16,8 @@ class RPermute(RPackage):
     (and later) by Cajo ter Braak."""
 
     homepage = "https://github.com/gavinsimpson/permute"
-    url      = "https://cran.r-project.org/src/contrib/permute_0.9-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/permute"
+    url      = "https://cloud.r-project.org/src/contrib/permute_0.9-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/permute"
 
     version('0.9-4', '569fc2442d72a1e3b7e2d456019674c9')
 

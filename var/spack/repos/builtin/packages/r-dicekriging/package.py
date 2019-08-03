@@ -11,7 +11,7 @@ class RDicekriging(RPackage):
        functions : km, print.km, plot.km, predict.km."""
 
     homepage = "http://dice.emse.fr/"
-    url      = "https://cran.r-project.org/src/contrib/DiceKriging_1.5.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/DiceKriging"
+    url      = "https://cloud.r-project.org/src/contrib/DiceKriging_1.5.5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/DiceKriging"
 
     version('1.5.5', 'ee3e2d7a91d4a712467ef4f0b69c2844')

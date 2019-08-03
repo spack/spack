@@ -9,8 +9,8 @@ from spack import *
 class RPcapp(RPackage):
     """Provides functions for robust PCA by projection pursuit."""
 
-    homepage = "https://cran.r-project.org/web/packages/pcaPP/index.html"
-    url      = "https://cran.r-project.org/src/contrib/pcaPP_1.9-72.tar.gz"
+    homepage = "https://cloud.r-project.org/web/packages/pcaPP/index.html"
+    url      = "https://cloud.r-project.org/src/contrib/pcaPP_1.9-72.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/pcaPP"
 
     version('1.9-72.1', sha256='a9e39ee15a650930c07672092f9f0c431807869b68b5471037eb7290a4d65bd5')

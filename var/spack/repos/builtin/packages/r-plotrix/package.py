@@ -9,9 +9,9 @@ from spack import *
 class RPlotrix(RPackage):
     """Lots of plots, various labeling, axis and color scaling functions."""
 
-    homepage = "https://cran.r-project.org/package=plotrix"
-    url      = "https://cran.r-project.org/src/contrib/plotrix_3.6-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plotrix"
+    homepage = "https://cloud.r-project.org/package=plotrix"
+    url      = "https://cloud.r-project.org/src/contrib/plotrix_3.6-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/plotrix"
 
     version('3.7-5', sha256='b22f3f9d93961d23ad46e41597d1e45d2665ced04dcad8c40f6806a67cded14c')
     version('3.6-4', 'efe9b9b093d8903228a9b56c46d943fa')

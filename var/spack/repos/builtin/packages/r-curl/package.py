@@ -18,8 +18,8 @@ class RCurl(RPackage):
     package with http specific tools and logic."""
 
     homepage = "https://github.com/jeroenooms/curl"
-    url      = "https://cran.r-project.org/src/contrib/curl_2.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/curl"
+    url      = "https://cloud.r-project.org/src/contrib/curl_2.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/curl"
 
     version('3.3', sha256='0cb0b9a9280edc42ebed94708541ec86b4f48779e722171e45227eab8a88a5bd')
     version('3.0', '741202626eacd1f9c022b0a4d7be6d6a')

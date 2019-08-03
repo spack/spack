@@ -23,8 +23,8 @@ class RSpdep(RPackage):
     two stage least squares models."""
 
     homepage = "https://r-forge.r-project.org/projects/spdep"
-    url      = "https://cran.r-project.org/src/contrib/spdep_0.6-13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/spdep"
+    url      = "https://cloud.r-project.org/src/contrib/spdep_0.6-13.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/spdep"
 
     version('1.0-2', sha256='6f9efa4347d5c13b49922b75481ac403431c3c76a65a109af29954aa7bb138b2')
     version('0.6-13', 'bfc68b3016b4894b152ecec4b86f85d1')
@@ -36,3 +36,10 @@ class RSpdep(RPackage):
     depends_on('r-coda', type=('build', 'run'))
     depends_on('r-gmodels', type=('build', 'run'))
     depends_on('r-expm', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-boot@1.3-1:', type=('build', 'run'))
+    depends_on('r-splines', type=('build', 'run'))
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-spdata@0.2.6.0:', when='@1.0-2:', type=('build', 'run'))
+    depends_on('r-sf', when='@1.0-2:', type=('build', 'run'))

@@ -10,8 +10,8 @@ class RChemometrics(RPackage):
     """R companion to the book "Introduction to Multivariate Statistical Analysis
     in Chemometrics" written by K. Varmuza and P. Filzmoser (2009)."""
 
-    homepage = "https://cran.r-project.org/web/packages/chemometrics/index.html"
-    url      = "https://cran.r-project.org/src/contrib/chemometrics_1.4.2.tar.gz"
+    homepage = "https://cloud.r-project.org/web/packages/chemometrics/index.html"
+    url      = "https://cloud.r-project.org/src/contrib/chemometrics_1.4.2.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/chemometrics"
 
     version('1.4.2', '8137b0ca4004add9cc2ea81d2c54427f')
@@ -20,7 +20,6 @@ class RChemometrics(RPackage):
     version('1.3.8', '7fad828bd094b5485fbf20bdf7d3d0d1')
     version('1.3.7', 'a9e2f32efb1545421dd96185fd849184')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-rpart', type=('build', 'run'))
     depends_on('r-mclust', type=('build', 'run'))
     depends_on('r-lars', type=('build', 'run'))
@@ -29,3 +28,6 @@ class RChemometrics(RPackage):
     depends_on('r-pls', type=('build', 'run'))
     depends_on('r-som', type=('build', 'run'))
     depends_on('r-pcapp', type=('build', 'run'))
+    depends_on('r-class', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-nnet', type=('build', 'run'))

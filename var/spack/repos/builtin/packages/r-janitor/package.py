@@ -20,12 +20,15 @@ class RJanitor(RPackage):
        for the fun stuff."""
 
     homepage = "https://github.com/sfirke/janitor"
-    url      = "https://cran.r-project.org/src/contrib/janitor_0.3.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/janitor"
+    url      = "https://cloud.r-project.org/src/contrib/janitor_0.3.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/janitor"
 
     version('1.1.1', sha256='404b41f56e571fab4c95ef62e79cb4f3bb34d5bb6e4ea737e748ff269536176b')
     version('0.3.0', '76036c54693b91aef19d468107ae066a')
 
-    depends_on('r-dplyr', type=('build', 'run'))
-    depends_on('r-tidyr', type=('build', 'run'))
+    depends_on('r-dplyr@0.7.0:', type=('build', 'run'))
+    depends_on('r-tidyr@0.7.0:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-snakecase@0.9.2:', when='@1.1.0:', type=('build', 'run'))
+    depends_on('r-purrr', when='@1.1.0:', type=('build', 'run'))
+    depends_on('r-rlamg', when='@1.1.0:', type=('build', 'run'))

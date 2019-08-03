@@ -9,13 +9,13 @@ from spack import *
 class RTseries(RPackage):
     """Time series analysis and computational finance."""
 
-    homepage = "https://cran.r-project.org/package=tseries"
-    url      = "https://cran.r-project.org/src/contrib/tseries_0.10-42.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/tseries"
+    homepage = "https://cloud.r-project.org/package=tseries"
+    url      = "https://cloud.r-project.org/src/contrib/tseries_0.10-42.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/tseries"
 
     version('0.10-46', sha256='12940afd1d466401160e46f993ed4baf28a42cef98d3757b66ee15e916e07222')
     version('0.10-42', '3feaa5c463bc967d749323163d9bc836')
 
     depends_on('r-quadprog', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))
-    depends_on('r-quantmod', type=('build', 'run'))
+    depends_on('r-quantmod@0.4-9:', type=('build', 'run'))

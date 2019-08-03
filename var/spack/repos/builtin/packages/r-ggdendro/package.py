@@ -22,5 +22,5 @@ class RGgdendro(RPackage):
 
     version('0.1-20', '787552e346432c758633d8f4b2675eb6')
 
-    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-ggplot2@0.9.2:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

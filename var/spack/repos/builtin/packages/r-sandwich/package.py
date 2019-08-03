@@ -10,9 +10,9 @@ class RSandwich(RPackage):
     """Model-robust standard error estimators for cross-sectional, time series,
     and longitudinal data."""
 
-    homepage = "https://cran.r-project.org/package=sandwich"
-    url      = "https://cran.r-project.org/src/contrib/sandwich_2.3-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/sandwich"
+    homepage = "https://cloud.r-project.org/package=sandwich"
+    url      = "https://cloud.r-project.org/src/contrib/sandwich_2.3-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/sandwich"
 
     version('2.5-0', sha256='6cc144af20739eb23e5539010d3833d7c7fc53cbca2addb583ab933167c11399')
     version('2.3-4', 'a621dbd8a57b6e1e036496642aadc2e5')

@@ -9,9 +9,9 @@ from spack import *
 class RScatterplot3d(RPackage):
     """scatterplot3d: 3D Scatter Plot"""
 
-    homepage = "https://CRAN.R-project.org/package=scatterplot3d"
-    url      = "https://cran.r-project.org/src/contrib/scatterplot3d_0.3-40.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/scatterplot3d"
+    homepage = "https://cloud.R-project.org/package=scatterplot3d"
+    url      = "https://cloud.r-project.org/src/contrib/scatterplot3d_0.3-40.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/scatterplot3d"
 
     version('0.3-40', '67b9ab6131d244d7fc1db39dcc911dfe')
 

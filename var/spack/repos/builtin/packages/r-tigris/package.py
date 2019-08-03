@@ -19,7 +19,7 @@ class RTigris(RPackage):
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-rgdal', type=('build', 'run'))
-    depends_on('r-rgeos', type=('build', 'run'))
+    depends_on('r-rgeos', when='@:0.5.3', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))
     depends_on('r-rappdirs', type=('build', 'run'))
     depends_on('r-maptools', type=('build', 'run'))

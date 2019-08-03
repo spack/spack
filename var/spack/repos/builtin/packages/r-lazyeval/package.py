@@ -11,9 +11,9 @@ class RLazyeval(RPackage):
     Provides a full implementation of LISP style 'quasiquotation', making it
     easier to generate code with other code."""
 
-    homepage = "https://cran.r-project.org/web/packages/lazyeval/index.html"
-    url      = "https://cran.r-project.org/src/contrib/lazyeval_0.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lazyeval"
+    homepage = "https://cloud.r-project.org/web/packages/lazyeval/index.html"
+    url      = "https://cloud.r-project.org/src/contrib/lazyeval_0.2.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/lazyeval"
 
     version('0.2.1', sha256='83b3a43e94c40fe7977e43eb607be0a3cd64c02800eae4f2774e7866d1e93f61')
     version('0.2.0', 'df1daac908dcf02ae7e12f4335b1b13b')

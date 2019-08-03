@@ -11,8 +11,8 @@ class RFnn(RPackage):
     related applications including KNN classification, regression and
     information measures are implemented."""
 
-    homepage = "https://cran.r-project.org/web/packages/FNN/index.html"
-    url      = "https://cran.r-project.org/src/contrib/FNN_1.1.tar.gz"
+    homepage = "https://cloud.r-project.org/web/packages/FNN/index.html"
+    url      = "https://cloud.r-project.org/src/contrib/FNN_1.1.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/FNN"
 
     version('1.1.2.2', sha256='b51a60fbbeff58c48cc90c2023c48972d5082d68efd02284c17ccd9820986326')

@@ -9,8 +9,8 @@ from spack import *
 class RKs(RPackage):
     """Kernel smoothers for univariate and multivariate data."""
 
-    homepage = "https://cran.r-project.org/package=ks"
-    url      = "https://cran.r-project.org/src/contrib/Archive/ks/ks_1.11.2.tar.gz"
+    homepage = "https://cloud.r-project.org/package=ks"
+    url      = "https://cloud.r-project.org/src/contrib/Archive/ks/ks_1.11.2.tar.gz"
 
     version('1.11.2', sha256='9dfd485096e1e67abc7dfcb7b76a83de110dd15bcfeffe5c899605b3a5592961')
 

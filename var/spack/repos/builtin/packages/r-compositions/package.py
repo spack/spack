@@ -9,13 +9,12 @@ from spack import *
 class RCompositions(RPackage):
     """Compositional Data Analysis"""
 
-    homepage = "https://cran.r-project.org/web/packages/compositions/index.html"
-    url      = "https://cran.r-project.org/src/contrib/compositions_1.40-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/compositions"
+    homepage = "https://cloud.r-project.org/web/packages/compositions/index.html"
+    url      = "https://cloud.r-project.org/src/contrib/compositions_1.40-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/compositions"
 
     version('1.40-2', 'ad87efe2fb303d95472e73c8ca8d9a01')
 
-    depends_on('r@2.2.0:', type=('build', 'run'))
     depends_on('r-tensora', type=('build', 'run'))
     depends_on('r-robustbase', type=('build', 'run'))
     depends_on('r-energy', type=('build', 'run'))

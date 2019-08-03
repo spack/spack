@@ -11,9 +11,9 @@ class RPls(RPackage):
     Principal Component Regression (PCR) and Canonical Powered Partial Least
     Squares (CPPLS)."""
 
-    homepage = "https://cran.r-project.org/package=pls"
-    url      = "https://cran.r-project.org/src/contrib/pls_2.6-0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pls"
+    homepage = "https://cloud.r-project.org/package=pls"
+    url      = "https://cloud.r-project.org/src/contrib/pls_2.6-0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pls"
 
     version('2.7-0', sha256='5ddc1249a14d69a7a39cc4ae81595ac8c0fbb1e46c911af67907baddeac35875')
     version('2.6-0', '04e02e8e46d983c5ed53c1f952b329df')

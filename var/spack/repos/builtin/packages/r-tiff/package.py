@@ -13,7 +13,7 @@ class RTiff(RPackage):
 
     homepage = "http://www.rforge.net/tiff/"
     url      = "https://cran.rstudio.com/src/contrib/tiff_0.1-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/tiff"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/tiff"
 
     version('0.1-5', '5052990b8647c77d3e27bc0ecf064e0b')
 

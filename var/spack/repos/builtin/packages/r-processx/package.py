@@ -10,8 +10,8 @@ class RProcessx(RPackage):
     """Tools to run system processes in the background"""
 
     homepage = "https://github.com/r-lib/processx"
-    url      = "https://cran.r-project.org/src/contrib/processx_3.2.0.tar.gz"
-    list_url      = "https://cran.r-project.org/src/contrib/Archive/processx/processx_3.1.0.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/processx_3.2.0.tar.gz"
+    list_url      = "https://cloud.r-project.org/src/contrib/Archive/processx/processx_3.1.0.tar.gz"
 
     version('3.3.1', sha256='6123dbdf9f3bb6e5e8678980fb4587dcefb56d2190adf2ef494d7cd199720bae')
     version('3.2.0', sha256='c4ba602fcbdc032ae9d94701b3e6b83a2dab1b53d0b4f9937b07a84eae22fddf')
@@ -20,8 +20,8 @@ class RProcessx(RPackage):
     version('2.0.0.1', sha256='8f61b2952d0f2d13c74465bfba174ce11eee559475c2f7b9be6bcb9e2e1d827b')
     version('2.0.0',   sha256='8325b56a60a276909228756281523cda9256bc754c5f3ca03b41c5c17cc398ad')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-crayon', type=('build', 'run'))
-    depends_on('r-ps', type=('build', 'run'))
+    depends_on('r-assertthat', when='@:3.2.9', type=('build', 'run'))
+    depends_on('r-crayon', when='@:3.2.9', type=('build', 'run'))
+    depends_on('r-ps@1.2.0:', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-utils', type=('build', 'run'))
+    depends_on('r-debugme', when='@:3.0.9', type=('build', 'run'))

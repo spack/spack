@@ -16,3 +16,7 @@ class RSamr(RPackage):
 
     depends_on('r-impute', type=('build', 'run'))
     depends_on('r-matrixstats', type=('build', 'run'))
+    depends_on('r-shiny', when='@3.0:', type=('build', 'run'))
+    depends_on('r-shinyfiles', when='@3.0:', type=('build', 'run'))
+    depends_on('r-openxlsx', when='@3.0:', type=('build', 'run'))
+    depends_on('r-gsa', when='@3.0:', type=('build', 'run'))

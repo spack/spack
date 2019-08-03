@@ -14,7 +14,7 @@ class RLattice(RPackage):
 
     homepage = "http://lattice.r-forge.r-project.org/"
     url      = "https://cran.rstudio.com/src/contrib/lattice_0.20-35.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lattice"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/lattice"
 
     version('0.20-38', sha256='fdeb5e3e50dbbd9d3c5e2fa3eef865132b3eef30fbe53a10c24c7b7dfe5c0a2d')
     version('0.20-35', '07f1814623b3da6278ca61554ff7bfe6')

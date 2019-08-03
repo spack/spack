@@ -9,9 +9,9 @@ from spack import *
 class RPicante(RPackage):
     """R tools for integrating phylogenies and ecology"""
 
-    homepage = "https://cran.r-project.org/package=picante"
-    url      = "https://cran.r-project.org/src/contrib/picante_1.6-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/picante"
+    homepage = "https://cloud.r-project.org/package=picante"
+    url      = "https://cloud.r-project.org/src/contrib/picante_1.6-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/picante"
 
     version('1.7', sha256='75e4d73080db67e776562a1d58685438461cbde39af46900c7838da56aef0a62')
     version('1.6-2', 'e3eba6ef254068d2cfa9e96760bcd7a3')

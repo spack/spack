@@ -11,8 +11,8 @@ class RClipr(RPackage):
        and X11 clipboards."""
 
     homepage = "https://github.com/mdlincoln/clipr"
-    url      = "https://cran.r-project.org/src/contrib/clipr_0.4.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/clipr"
+    url      = "https://cloud.r-project.org/src/contrib/clipr_0.4.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/clipr"
 
     version('0.5.0', sha256='fd303f8b7f29badcdf490bb2d579acdfc4f4e1aa9c90ac77ab9d05ce3d053dbf')
     version('0.4.0', '4012a31eb3b7a36bd3bac00f916e56a7')

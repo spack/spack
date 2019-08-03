@@ -13,9 +13,9 @@ class RMunsell(RPackage):
     utilities to explore slices through the Munsell colour tree, to transform
     Munsell colours and display colour palettes."""
 
-    homepage = "https://cran.r-project.org/web/packages/munsell/index.html"
-    url      = "https://cran.r-project.org/src/contrib/munsell_0.4.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/munsell"
+    homepage = "https://cloud.r-project.org/web/packages/munsell/index.html"
+    url      = "https://cloud.r-project.org/src/contrib/munsell_0.4.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/munsell"
 
     version('0.4.3', 'ebd205323dc37c948f499ee08be9c476')
 

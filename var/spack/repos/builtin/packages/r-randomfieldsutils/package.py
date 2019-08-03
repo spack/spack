@@ -12,11 +12,11 @@ class RRandomfieldsutils(RPackage):
        checks the sparsity of the matrix before any algorithm is used.
        Furthermore, it includes the Struve functions."""
 
-    homepage = "https://cran.r-project.org/web/packages/RandomFieldsUtils"
-    url = "https://cran.r-project.org/src/contrib/RandomFieldsUtils_0.3.25.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RandomFieldsUtils"
+    homepage = "https://cloud.r-project.org/web/packages/RandomFieldsUtils"
+    url = "https://cloud.r-project.org/src/contrib/RandomFieldsUtils_0.3.25.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RandomFieldsUtils"
 
     version('0.5.1', sha256='a95aab4e2025c4247503ff513570a65aa3c8e63cb7ce2979c9317a2798dfaca2')
     version('0.3.25', '026c15a23296c9726012135891f016d5')
 
-    depends_on('r@3.3:', type=('build', 'run'))
+    depends_on('r@3.0:', type=('build', 'run'))

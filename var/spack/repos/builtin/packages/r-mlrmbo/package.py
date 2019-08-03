@@ -22,8 +22,8 @@ class RMlrmbo(RPackage):
        use cases."""
 
     homepage = "https://github.com/mlr-org/mlrMBO/"
-    url      = "https://cran.r-project.org/src/contrib/mlrMBO_1.1.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mlrMBO"
+    url      = "https://cloud.r-project.org/src/contrib/mlrMBO_1.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mlrMBO"
 
     version('1.1.1', '9a35b41ceb8754111af294dee0ae76e0')
     version('1.1.0', '9e27ff8498225d24863b8da758d2918e')

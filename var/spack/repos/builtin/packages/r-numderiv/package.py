@@ -10,9 +10,9 @@ class RNumderiv(RPackage):
     """Methods for calculating (usually) accurate numerical first and
     second order derivatives."""
 
-    homepage = "https://cran.r-project.org/package=numDeriv"
-    url      = "https://cran.r-project.org/src/contrib/numDeriv_2016.8-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/numDeriv"
+    homepage = "https://cloud.r-project.org/package=numDeriv"
+    url      = "https://cloud.r-project.org/src/contrib/numDeriv_2016.8-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/numDeriv"
 
     version('2016.8-1', '30e486298d5126d86560095be8e8aac1')
 

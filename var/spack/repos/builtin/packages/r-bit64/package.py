@@ -22,7 +22,9 @@ class RBit64(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/bit64/index.html"
     url      = "https://cran.rstudio.com/src/contrib/bit64_0.9-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/bit64"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/bit64"
+
     version('0.9-7', 'ac4bc39827338c552d329d3d4d2339c2')
 
-    depends_on('r-bit', type=('build', 'run'))
+    depends_on('r@3.0.1:', type=('build', 'run'))
+    depends_on('r-bit@1.1-12:', type=('build', 'run'))

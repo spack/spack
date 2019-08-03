@@ -10,8 +10,8 @@ class RGwmodel(RPackage):
     """GWmodel: Geographically-Weighted Models"""
 
     homepage = "http://gwr.nuim.ie/"
-    url      = "https://cran.r-project.org/src/contrib/GWmodel_2.0-9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/GWmodel"
+    url      = "https://cloud.r-project.org/src/contrib/GWmodel_2.0-9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/GWmodel"
 
     version('2.1-1', sha256='91241b4e26d423a54c7c6784ef5159759058a5dafdff18a1ea8451faf979d1f3')
     version('2.0-9', sha256='b479af2c19d4aec30f1883d00193d52e342c609c1badcb51cc0344e4404cffa7')
@@ -25,3 +25,4 @@ class RGwmodel(RPackage):
     depends_on('r-spacetime', type=('build', 'run'))
     depends_on('r-spatialreg', type=('build', 'run'))
     depends_on('r-spdep', type=('build', 'run'))
+    depends_on('r-fnn', when='@2.1-1:', type=('build', 'run'))

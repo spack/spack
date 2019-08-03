@@ -17,4 +17,4 @@ class RReordercluster(RPackage):
     version('1.0', '67ba34acb15dda75389a822bd2fdd31a')
 
     depends_on('r-gplots', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

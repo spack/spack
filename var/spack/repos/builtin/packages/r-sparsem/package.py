@@ -12,8 +12,8 @@ class RSparsem(RPackage):
         subsetting and Kronecker products."""
 
     homepage = "http://www.econ.uiuc.edu/~roger/research/sparse/sparse.html"
-    url      = "https://cran.r-project.org/src/contrib/SparseM_1.74.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/SparseM"
+    url      = "https://cloud.r-project.org/src/contrib/SparseM_1.74.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/SparseM"
 
     version('1.76', sha256='c2c8e44376936a5fe6f09a37f3668016e66cbc687519cc952aa346a658a2b69b')
     version('1.74', 'a16c9b7db172dfd2b7b6508c48e81a5d')

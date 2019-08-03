@@ -13,8 +13,8 @@ class RDataTable(RPackage):
     syntax, for faster development."""
 
     homepage = "https://github.com/Rdatatable/data.table/wiki"
-    url      = "https://cran.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/data.table"
+    url      = "https://cloud.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/data.table"
 
     version('1.12.0', sha256='611b112123dbd4ebd5200770fcdfaaeaab622adeb2b290d36018d3092742e3f7')
     version('1.11.8',   sha256='dc427465599cadd848b28a78e2fce3362867847b44148252054385999fe566d9')

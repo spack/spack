@@ -12,17 +12,17 @@ class RRsqlite(RPackage):
     (version 3.8.6) is included."""
 
     homepage = "https://cran.rstudio.com/web/packages/RSQLite/index.html"
-    url      = "https://cran.r-project.org/src/contrib/RSQLite_2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RSQLite"
+    url      = "https://cloud.r-project.org/src/contrib/RSQLite_2.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RSQLite"
 
     version('2.1.0', sha256='ad6081be2885be5921b1a44b1896e6a8568c8cff40789f43bfaac9f818767642')
     version('2.0', '63842410e78ccdfc52d4ee97992521d5')
 
-    depends_on('r-dbi', type=('build', 'run'))
+    depends_on('r-dbi@1.0.0:', type=('build', 'run'))
     depends_on('r-bit64', type=('build', 'run'))
-    depends_on('r-blob', type=('build', 'run'))
+    depends_on('r-blob@1.2.0:', type=('build', 'run'))
     depends_on('r-memoise', type=('build', 'run'))
     depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@1.12.7:', type=('build', 'run'))
     depends_on('r-bh', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
+    depends_on('r-plogr@0.2.0:', type=('build', 'run'))

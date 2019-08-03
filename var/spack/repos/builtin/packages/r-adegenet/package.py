@@ -18,13 +18,12 @@ class RAdegenet(RPackage):
     to illustrate various methods."""
 
     homepage = "https://github.com/thibautjombart/adegenet/wiki"
-    url      = "https://cran.r-project.org/src/contrib/adegenet_2.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/adegenet"
+    url      = "https://cloud.r-project.org/src/contrib/adegenet_2.0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/adegenet"
 
     version('2.1.0', sha256='7ee44061002b41164bbc09256307ab02e536f4f2ac03f36c7dc8f85f6af4639a')
     version('2.0.1', 'ecb1220ce7c9affaba2987bc7f38adda')
 
-    depends_on('r@2.14:')
     depends_on('r-ade4', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
@@ -36,3 +35,4 @@ class RAdegenet(RPackage):
     depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r-dplyr@0.4.1:', type=('build', 'run'))
     depends_on('r-vegan', type=('build', 'run'))
+    depends_on('r-boot', type=('build', 'run'))

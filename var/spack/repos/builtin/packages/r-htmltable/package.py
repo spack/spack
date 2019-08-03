@@ -15,9 +15,9 @@ class RHtmltable(RPackage):
     few text formatting functions that help outputting text
     compatible with HTML/'LaTeX'."""
 
-    homepage = "https://CRAN.R-project.org/package=htmlTable"
+    homepage = "https://cloud.R-project.org/package=htmlTable"
     url      = "https://cran.rstudio.com/src/contrib/htmlTable_1.11.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/htmlTable"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/htmlTable"
 
     version('1.13.1', sha256='689f32b65da6a57ad500e8d9ef3309d346401dca277c6b264a46c8d7c75884d0')
     version('1.11.2', '473e6d486e7714f8dd7f16a31480c896')
@@ -28,4 +28,5 @@ class RHtmltable(RPackage):
     depends_on('r-magrittr@1.5:', type=('build', 'run'))
     depends_on('r-checkmate', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'), when="@1.11.0:")
     depends_on('r-rstudioapi@0.6:', type=('build', 'run'), when="@1.11.0:")

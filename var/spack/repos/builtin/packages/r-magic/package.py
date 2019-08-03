@@ -12,9 +12,9 @@ class RMagic(RPackage):
     functions for the manipulation and analysis of arbitrarily dimensioned
     arrays."""
 
-    homepage = "https://cran.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/magic_1.5-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/magic"
+    homepage = "https://cloud.r-project.org/"
+    url      = "https://cloud.r-project.org/src/contrib/magic_1.5-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/magic"
 
     version('1.5-8', sha256='7f8bc26e05003168e9d2dadf64eb9a34b51bc41beba482208874803dee7d6c20')
     version('1.5-6', 'a68e5ced253b2196af842e1fc84fd029')

@@ -14,9 +14,9 @@ class RQuantreg(RPackage):
         selection methods based on expected shortfall risk are also
         included."""
 
-    homepage = "https://cran.r-project.org/package=quantreg"
-    url      = "https://cran.r-project.org/src/contrib/quantreg_5.29.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/quantreg"
+    homepage = "https://cloud.r-project.org/package=quantreg"
+    url      = "https://cloud.r-project.org/src/contrib/quantreg_5.29.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/quantreg"
 
     version('5.40', sha256='86e310a235009ab85635dfb8803c175f80a35892e237db2525c4ef37a98936eb')
     version('5.29', '643ca728200d13f8c2e62365204e9907')

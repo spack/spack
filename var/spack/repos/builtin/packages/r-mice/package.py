@@ -20,9 +20,9 @@ class RMice(RPackage):
     variables. Various diagnostic plots are available to inspect the quality
     of the imputations."""
 
-    homepage = "https://cran.r-project.org/package=mice"
-    url      = "https://cran.r-project.org/src/contrib/mice_3.0.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mice"
+    homepage = "https://cloud.r-project.org/package=mice"
+    url      = "https://cloud.r-project.org/src/contrib/mice_3.0.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mice"
 
     version('3.5.0', sha256='4fccecdf9e8d8f9f63558597bfbbf054a873b2d0b0820ceefa7b6911066b9e45')
     version('3.0.0', 'fb54a29679536c474c756cca4538d7e3')

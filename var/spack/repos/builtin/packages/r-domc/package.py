@@ -10,9 +10,9 @@ class RDomc(RPackage):
     """Provides a parallel backend for the %dopar% function using
     the multicore functionality of the parallel package."""
 
-    homepage = "https://cran.r-project.org/package=doMC"
-    url      = "https://cran.r-project.org/src/contrib/doMC_1.3.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/doMC"
+    homepage = "https://cloud.r-project.org/package=doMC"
+    url      = "https://cloud.r-project.org/src/contrib/doMC_1.3.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/doMC"
 
     version('1.3.4', 'f965b09add9056e84f99a831dc3af7d1')
 

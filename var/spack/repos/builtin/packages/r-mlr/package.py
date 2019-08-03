@@ -19,8 +19,8 @@ class RMlr(RPackage):
        resampling. Most operations can be parallelized."""
 
     homepage = "https://github.com/mlr-org/mlr/"
-    url      = "https://cran.r-project.org/src/contrib/mlr_2.12.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mlr"
+    url      = "https://cloud.r-project.org/src/contrib/mlr_2.12.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mlr"
 
     version('2.13', sha256='e8729be7acddc1ea124c44f9493a8b903c5f54b97e09c714366553aed733011d')
     version('2.12.1', 'abddfc9dfe95f290a233ecd97969a4ec')
@@ -34,4 +34,5 @@ class RMlr(RPackage):
     depends_on('r-checkmate@1.8.2:', type=('build', 'run'))
     depends_on('r-data-table', type=('build', 'run'))
     depends_on('r-parallelmap@1.3:', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))

@@ -13,8 +13,8 @@ class RPaleotree(RPackage):
        extinct (i.e. fossil) lineages"""
 
     homepage = "https://github.com/dwbapst/paleotree"
-    url      = "https://cran.r-project.org/src/contrib/paleotree_3.1.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/paleotree"
+    url      = "https://cloud.r-project.org/src/contrib/paleotree_3.1.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/paleotree"
 
     version('3.1.3', sha256='4c1cc8a5e171cbbbd88f78914f86d5e6d144ae573816fbeeff2ab54a814ec614')
 
@@ -22,3 +22,6 @@ class RPaleotree(RPackage):
     depends_on('r-ape@4.1:', type=('build', 'run'))
     depends_on('r-phangorn@2.0.0:', type=('build', 'run'))
     depends_on('r-phytools@0.6-00:', type=('build', 'run'))
+    depends_on('r-jsonlite', when='@3.3.0:', type=('build', 'run'))
+    depends_on('r-png', when='@3.3.0:', type=('build', 'run'))
+    depends_on('r-rcurl', when='@3.3.0:', type=('build', 'run'))

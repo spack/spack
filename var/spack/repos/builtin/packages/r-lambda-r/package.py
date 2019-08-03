@@ -16,3 +16,5 @@ class RLambdaR(RPackage):
     list_url = "https://cran.rstudio.com/src/contrib/Archive/lambda.r"
 
     version('1.2', 'bda49898b85ad5902880a31f43b432e2')
+
+    depends_on('r-formatr', type=('build', 'run'))

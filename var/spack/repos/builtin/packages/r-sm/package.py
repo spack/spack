@@ -12,8 +12,8 @@ class RSm(RPackage):
        Oxford University Press."""
 
     homepage = "http://www.stats.gla.ac.uk/~adrian/sm"
-    url      = "https://cran.r-project.org/src/contrib/sm_2.2-5.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/sm"
+    url      = "https://cloud.r-project.org/src/contrib/sm_2.2-5.5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/sm"
 
     version('2.2-5.5', sha256='43e212a14c364b98b10018b56fe0a619ccffe4bde1294e6c45b3eafe7caf82e7')
 

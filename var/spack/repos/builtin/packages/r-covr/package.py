@@ -16,15 +16,16 @@ class RCovr(RPackage):
     or framework and tracks coverage of both R code and compiled
     C/C++/FORTRAN code."""
 
-    homepage = "https://cran.r-project.org/package=covr"
-    url      = "https://cran.r-project.org/src/contrib/covr_3.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/covr"
+    homepage = "https://cloud.r-project.org/package=covr"
+    url      = "https://cloud.r-project.org/src/contrib/covr_3.0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/covr"
 
     version('3.2.0', sha256='b26135306b1d6b14dd4deb481359dd919a7ca1e802ca5479fed394dcf35f0ef9')
     version('3.0.1', 'f88383f751fe5aa830a2b2e5c14aa66a')
 
+    depends_on('r-digest', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-rex', type=('build', 'run'))
     depends_on('r-httr', type=('build', 'run'))
     depends_on('r-crayon', type=('build', 'run'))
-    depends_on('r-withr', type=('build', 'run'))
+    depends_on('r-withr@1.0.2:', type=('build', 'run'))

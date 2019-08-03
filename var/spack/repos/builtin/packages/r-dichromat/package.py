@@ -10,8 +10,8 @@ class RDichromat(RPackage):
     """Collapse red-green or green-blue distinctions to simulate the effects of
     different types of color-blindness."""
 
-    homepage = "https://cran.r-project.org/web/packages/dichromat/index.html"
-    url      = "https://cran.r-project.org/src/contrib/dichromat_2.0-0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/dichromat"
+    homepage = "https://cloud.r-project.org/web/packages/dichromat/index.html"
+    url      = "https://cloud.r-project.org/src/contrib/dichromat_2.0-0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/dichromat"
 
     version('2.0-0', '84e194ac95a69763d740947a7ee346a6')

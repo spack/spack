@@ -25,8 +25,8 @@ class RDigest(RPackage):
     used."""
 
     homepage = "http://dirk.eddelbuettel.com/code/digest.html"
-    url      = "https://cran.r-project.org/src/contrib/digest_0.6.12.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/digest"
+    url      = "https://cloud.r-project.org/src/contrib/digest_0.6.12.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/digest"
 
     version('0.6.19', sha256='28d159bd589ecbd01b8da0826eaed417f5c1bf5a11b79e76bf67ce8d935cccf4')
     version('0.6.12', '738efd4d9a37c5a4001ae66e954ce07e')

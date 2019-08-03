@@ -19,5 +19,5 @@ class RRgeos(RPackage):
 
     version('0.3-26', '7d10a28011b49f68c5817b6fbca132df')
 
-    depends_on('r-sp', type=('build', 'run'))
+    depends_on('r-sp@1.1-0:', type=('build', 'run'))
     depends_on('geos')

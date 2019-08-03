@@ -12,5 +12,5 @@ class RHwriter(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/hwriter/index.html"
     url      = "https://cran.rstudio.com/src/contrib/hwriter_1.3.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/hwriter"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/hwriter"
     version('1.3.2', '9eef49df2eb68bbf3a16b5860d933517')

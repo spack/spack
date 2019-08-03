@@ -18,8 +18,8 @@ class RXgboost(RPackage):
     users are also allowed to define their own objectives easily."""
 
     homepage = "https://github.com/dmlc/xgboost"
-    url      = "https://cran.r-project.org/src/contrib/xgboost_0.6-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/xgboost"
+    url      = "https://cloud.r-project.org/src/contrib/xgboost_0.6-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/xgboost"
 
     version('0.81.0.1', sha256='3e7ada32e66881ea5c90aeafdab948927014c76cfff60a8e3d7f9e1f8a9ed7ce')
     version('0.6-4', '86e517e3ce39f8a01de796920f6b425e')

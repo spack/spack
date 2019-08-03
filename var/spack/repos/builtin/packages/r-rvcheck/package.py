@@ -15,3 +15,6 @@ class RRvcheck(RPackage):
     list_url = "https://cran.rstudio.com/src/contrib/Archive/rvcheck"
 
     version('0.0.9', '7e9821de754577f94fdcbf7b02a20edc')
+
+    depends_on('r@3.4.0:')
+    depends_on('r-rlang', when='@0.1.1:', type=('build', 'run'))

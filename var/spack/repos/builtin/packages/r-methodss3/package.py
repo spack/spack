@@ -17,8 +17,8 @@ class RMethodss3(RPackage):
     a cross-platform package implemented in pure R that generates
     standard S3 methods."""
 
-    homepage = "https://cran.r-project.org/package=R.methodsS3"
-    url      = "https://cran.r-project.org/src/contrib/R.methodsS3_1.7.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/R.methodsS3"
+    homepage = "https://cloud.r-project.org/package=R.methodsS3"
+    url      = "https://cloud.r-project.org/src/contrib/R.methodsS3_1.7.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/R.methodsS3"
 
     version('1.7.1', 'c88e815837f268affd4f2a39c737d969')

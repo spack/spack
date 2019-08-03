@@ -12,8 +12,8 @@ class RTidyr(RPackage):
     pipelines."""
 
     homepage = "https://github.com/hadley/tidyr"
-    url      = "https://cran.r-project.org/src/contrib/tidyr_0.7.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/tidyr"
+    url      = "https://cloud.r-project.org/src/contrib/tidyr_0.7.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/tidyr"
 
     version('0.8.2', sha256='99a508d0539390364789c5f4835b36c4a383927f0ec1648e2a4636c1cc6e490f')
     version('0.7.2', '42d723bf04c5c1c59e27a8be14f3a6b6')
@@ -26,5 +26,5 @@ class RTidyr(RPackage):
     depends_on('r-glue', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-purrr', type=('build', 'run'))
-    depends_on('r-tidyselect', type=('build', 'run'))
+    depends_on('r-tidyselect@0.2.5:', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'))

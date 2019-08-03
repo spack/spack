@@ -11,8 +11,9 @@ class RProxy(RPackage):
        auto- and cross-proximities, along with implementations of the most
        popular ones."""
 
-    homepage = "https://cran.r-project.org/package=proxy"
+    homepage = "https://cloud.r-project.org/package=proxy"
     url      = "https://cran.rstudio.com/src/contrib/proxy_0.4-19.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/proxy"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/proxy"
+
     version('0.4-23', sha256='9dd4eb0978f40e4fcb55c8a8a26266d32eff9c63ac9dfe70cf1f664ca9c3669d')
     version('0.4-19', '279a01a1cc12ed50208c98196d78a5d7')

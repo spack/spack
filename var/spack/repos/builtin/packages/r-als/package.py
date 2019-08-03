@@ -22,4 +22,4 @@ class RAls(RPackage):
     version('0.0.6', 'b72d97911e8ab7e4f8aed1a710b3d62d')
 
     depends_on('r-iso', type=('build', 'run'))
-    depends_on('r-nnls', type=('build', 'run'))
+    depends_on('r-nnls@1.1:', type=('build', 'run'))

@@ -24,8 +24,8 @@ class RApe(RPackage):
     whose results are returned into R."""
 
     homepage = "http://ape-package.ird.fr/"
-    url      = "https://cran.r-project.org/src/contrib/ape_4.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ape"
+    url      = "https://cloud.r-project.org/src/contrib/ape_4.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ape"
 
     version('5.3', sha256='08b0df134c523feb00a86896d1aa2a43f0f0dab20a53bc6b5d6268d867988b23')
     version('5.2', sha256='27eb02856c130d59de6e06276be4981709923756319e465a7f2d4756d4f46415')

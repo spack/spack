@@ -10,8 +10,8 @@ class RFactominer(RPackage):
     """FactoMineR: Multivariate Exploratory Data Analysis and Data Mining"""
 
     homepage = "http://factominer.free.fr"
-    url      = "https://cran.r-project.org/src/contrib/FactoMineR_1.35.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/FactoMineR"
+    url      = "https://cloud.r-project.org/src/contrib/FactoMineR_1.35.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/FactoMineR"
 
     version('1.41', sha256='a9889d69e298b8a01e8d0a5a54260730e742c95681e367d759829aad9a8740c0')
     version('1.40', sha256='68cb778fe7581b55666a5ae4aa7a5e7fa3ecbd133ae8cff1b2371a737b6d95e8')

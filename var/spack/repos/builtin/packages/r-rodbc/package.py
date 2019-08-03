@@ -11,7 +11,7 @@ class RRodbc(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/RODBC/"
     url      = "https://cran.rstudio.com/src/contrib/RODBC_1.3-13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RODBC/"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RODBC/"
 
     version('1.3-15', sha256='c43e5a2f0aa2f46607e664bfc0bb3caa230bbb779f4ff084e01727642da136e1')
     version('1.3-13', 'c52ef9139c2ed85adc53ad6effa7d68e')

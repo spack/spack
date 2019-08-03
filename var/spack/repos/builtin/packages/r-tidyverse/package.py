@@ -13,8 +13,8 @@ class RTidyverse(RPackage):
        packages in a single step."""
 
     homepage = "http://tidyverse.tidyverse.org/"
-    url      = "https://cran.r-project.org/src/contrib/tidyverse_1.2.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/tidyverse"
+    url      = "https://cloud.r-project.org/src/contrib/tidyverse_1.2.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/tidyverse"
 
     version('1.2.1', '7e2ca0b72ab668342c02fd0f52c082e1')
 
@@ -43,4 +43,3 @@ class RTidyverse(RPackage):
     depends_on('r-tibble@1.3.4:', type=('build', 'run'))
     depends_on('r-tidyr@0.7.2:', type=('build', 'run'))
     depends_on('r-xml2@1.1.1:', type=('build', 'run'))
-    depends_on('r-rlang@0.1.4:', type=('build', 'run'))

@@ -23,3 +23,4 @@ class RFlexclust(RPackage):
 
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-modeltools', type=('build', 'run'))
+    depends_on('r-class', type=('build', 'run'))

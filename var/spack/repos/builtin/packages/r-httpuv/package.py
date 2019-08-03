@@ -17,7 +17,7 @@ class RHttpuv(RPackage):
 
     homepage = "https://github.com/rstudio/httpuv"
     url      = "https://cran.rstudio.com/src/contrib/httpuv_1.3.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/httpuv"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/httpuv"
 
     version('1.5.1', sha256='b5bb6b3b2f1a6d792568a70f3f357d6b3a35a5e26dd0c668c61a31f2ae8f5710')
     version('1.3.5', '48d894ff0067148f41a651634fbb2012')
@@ -26,3 +26,6 @@ class RHttpuv(RPackage):
     depends_on('r@2.15.1:')
 
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
+    depends_on('r-r6', when='@1.5.0:', type=('build', 'run'))
+    depends_on('r-promises', when='@1.5.0:', type=('build', 'run'))
+    depends_on('r-later@0.8.0:', when='@1.5.0:', type=('build', 'run'))

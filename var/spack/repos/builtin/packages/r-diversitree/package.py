@@ -19,7 +19,7 @@ class RDiversitree(RPackage):
        rate 'speciation' and extinction."""
 
     homepage = "http://www.zoology.ubc.ca/prog/diversitree"
-    url      = "https://cran.r-project.org/src/contrib/diversitree_0.9-10.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/diversitree_0.9-10.tar.gz"
     list_url = "https://cron.r-project.org/src/contrib/Archive/diversitree"
 
     version('0.9-10', sha256='e7df5910c8508a5c2c2d6d3deea53dd3f947bb762196901094c32a7033cb043e')

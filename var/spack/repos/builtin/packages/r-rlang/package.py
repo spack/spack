@@ -10,9 +10,9 @@ class RRlang(RPackage):
     """A toolbox for working with base types, core R features like the
        condition system, and core 'Tidyverse' features like tidy evaluation."""
 
-    homepage = "https://cran.r-project.org/package=rlang"
-    url      = "https://cran.r-project.org/src/contrib/rlang_0.2.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rlang"
+    homepage = "https://cloud.r-project.org/package=rlang"
+    url      = "https://cloud.r-project.org/src/contrib/rlang_0.2.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rlang"
 
     version('0.3.4', sha256='4e467f7b0dcbde91b60c292137d2c69cecaa713a6e4c9b7157ef6fd5453b7ade')
     version('0.3.1', sha256='30427b2be2288e88acd30c4ea348ee06043a649fd73623a63148b1ad96317151')
