@@ -6,25 +6,63 @@
 from __future__ import print_function
 
 import collections
+import re
+import tempfile
 import types
+from six import string_types
+
+import llnl.util.tty as tty
 
 import spack
 import spack.cmd
 import spack.spec
 import spack.package
+import spack.repo
+from spack.util.executable import which
+from spack.version import ver
 
 
-def title(name):
-    print()
-    print("%% %s" % name)
-    print("% -----------------------------------------")
+#: generate the problem space, establish cardinality constraints
+_generate = """\
+% One version, arch, etc. per package
+{ version(P, V) : version(P, V) } = 1             :- node(P).
+{ arch_platform(P, A) : arch_platform(P, A) } = 1 :- node(P).
+{ arch_os(P, A) : arch_os(P, A) } = 1             :- node(P).
+{ arch_target(P, T) : arch_target(P, T) } = 1     :- node(P).
 
+% one variant value for single-valued variants.
+{ variant_value(P, V, X) : variant_value(P, V, X) } = 1
+    :- node(P), variant(P, V), not variant_single_value(P, V).
+"""
 
-def section(name):
-    print()
-    print("%")
-    print("%% %s" % name)
-    print("%")
+#: define the rules of Spack concretization
+_define = """\
+% dependencies imply new nodes.
+node(D) :- node(P), depends_on(P, D).
+
+% propagate platform, os, target downwards
+arch_platform(D, A) :- node(D), depends_on(P, D), arch_platform(P, A).
+arch_os(D, A) :- node(D), depends_on(P, D), arch_os(P, A).
+arch_target(D, A) :- node(D), depends_on(P, D), arch_target(P, A).
+
+% if a variant is set to anything, it is considered "set".
+variant_set(P, V) :- variant_set(P, V, _).
+
+% variant_set is an explicitly set variant value. If it's not "set",
+% we revert to the default value. If it is set, we force the set value
+variant_value(P, V, X) :- node(P), variant(P, V), variant_set(P, V, X).
+"""
+
+#: what parts of the model to display to read models back in
+_display = """\
+#show node/1.
+#show depends_on/2.
+#show version/2.
+#show variant_value/3.
+#show arch_platform/2.
+#show arch_os/2.
+#show arch_target/2.
+"""
 
 
 def _id(thing):
@@ -33,7 +71,7 @@ def _id(thing):
 
 
 def issequence(obj):
-    if isinstance(obj, basestring):
+    if isinstance(obj, string_types):
         return False
     return isinstance(obj, (collections.Sequence, types.GeneratorType))
 
@@ -97,7 +135,30 @@ class AspNot(object):
         return "not %s" % self.arg
 
 
-class AspBuilder(object):
+class AspFunctionBuilder(object):
+    def __getattr__(self, name):
+        return AspFunction(name)
+
+
+fn = AspFunctionBuilder()
+
+
+class AspGenerator(object):
+    def __init__(self, out):
+        self.out = out
+        self.func = AspFunctionBuilder()
+
+    def title(self, name):
+        self.out.write('\n')
+        self.out.write("%% %s\n" % name)
+        self.out.write("% -----------------------------------------\n")
+
+    def section(self, name):
+        self.out.write("\n")
+        self.out.write("%\n")
+        self.out.write("%% %s\n" % name)
+        self.out.write("%\n")
+
     def _or(self, *args):
         return AspOr(*args)
 
@@ -107,192 +168,257 @@ class AspBuilder(object):
     def _not(self, arg):
         return AspNot(arg)
 
-    def _fact(self, head):
+    def fact(self, head):
         """ASP fact (a rule without a body)."""
-        print("%s." % head)
+        self.out.write("%s.\n" % head)
 
-    def _rule(self, head, body):
+    def rule(self, head, body):
         """ASP rule (an implication)."""
-        print("%s :- %s." % (head, body))
+        self.out.write("%s :- %s.\n" % (head, body))
 
-    def _constraint(self, body):
+    def constraint(self, body):
         """ASP integrity constraint (rule with no head; can't be true)."""
-        print(":- %s." % body)
+        self.out.write(":- %s.\n" % body)
 
-    def __getattr__(self, name):
-        return AspFunction(name)
+    def pkg_version_rules(self, pkg):
+        pkg = packagize(pkg)
+        self.rule(
+            self._or(fn.version(pkg.name, v) for v in pkg.versions),
+            fn.node(pkg.name))
 
+    def spec_versions(self, spec):
+        spec = specify(spec)
 
-asp = AspBuilder()
-
-
-def pkg_version_rules(pkg):
-    pkg = packagize(pkg)
-    asp._rule(
-        asp._or(asp.version(pkg.name, v) for v in pkg.versions),
-        asp.node(pkg.name))
-
-
-def spec_versions(spec):
-    spec = specify(spec)
-
-    if spec.concrete:
-        asp._rule(asp.version(spec.name, spec.version),
-                  asp.node(spec.name))
-    else:
-        version = spec.versions
-        impossible, possible = [], []
-        for v in spec.package.versions:
-            if v.satisfies(version):
-                possible.append(v)
-            else:
-                impossible.append(v)
-
-        if impossible:
-            asp._rule(
-                asp._and(asp._not(asp.version(spec.name, v))
-                         for v in impossible),
-                asp.node(spec.name))
-        if possible:
-            asp._rule(
-                asp._or(asp.version(spec.name, v) for v in possible),
-                asp.node(spec.name))
-
-
-def pkg_rules(pkg):
-    pkg = packagize(pkg)
-
-    # versions
-    pkg_version_rules(pkg)
-
-    # variants
-    for name, variant in pkg.variants.items():
-        asp._rule(asp.variant(pkg.name, name),
-                  asp.node(pkg.name))
-
-        single_value = not variant.multi
-        single = asp.variant_single_value(pkg.name, name)
-        if single_value:
-            asp._rule(single, asp.node(pkg.name))
-            asp._rule(asp.variant_value(pkg.name, name, variant.default),
-                      asp._not(asp.variant_set(pkg.name, name)))
+        if spec.concrete:
+            self.rule(fn.version(spec.name, spec.version),
+                      fn.node(spec.name))
         else:
-            asp._rule(asp._not(single), asp.node(pkg.name))
-            defaults = variant.default.split(',')
-            for val in defaults:
-                asp._rule(asp.variant_value(pkg.name, name, val),
-                          asp._not(asp.variant_set(pkg.name, name)))
+            version = spec.versions
+            impossible, possible = [], []
+            for v in spec.package.versions:
+                if v.satisfies(version):
+                    possible.append(v)
+                else:
+                    impossible.append(v)
 
-    # dependencies
-    for name, conditions in pkg.dependencies.items():
-        for cond, dep in conditions.items():
-            asp._fact(asp.depends_on(dep.pkg.name, dep.spec.name))
+            if impossible:
+                self.rule(
+                    self._and(self._not(fn.version(spec.name, v))
+                              for v in impossible),
+                    fn.node(spec.name))
+            if possible:
+                self.rule(
+                    self._or(fn.version(spec.name, v) for v in possible),
+                    fn.node(spec.name))
+
+    def pkg_rules(self, pkg):
+        pkg = packagize(pkg)
+
+        # versions
+        self.pkg_version_rules(pkg)
+
+        # variants
+        for name, variant in pkg.variants.items():
+            self.rule(fn.variant(pkg.name, name),
+                      fn.node(pkg.name))
+
+            single_value = not variant.multi
+            single = fn.variant_single_value(pkg.name, name)
+            if single_value:
+                self.rule(single, fn.node(pkg.name))
+                self.rule(fn.variant_value(pkg.name, name, variant.default),
+                          self._not(fn.variant_set(pkg.name, name)))
+            else:
+                self.rule(self._not(single), fn.node(pkg.name))
+                defaults = variant.default.split(',')
+                for val in defaults:
+                    self.rule(fn.variant_value(pkg.name, name, val),
+                              self._not(fn.variant_set(pkg.name, name)))
+
+        # dependencies
+        for name, conditions in pkg.dependencies.items():
+            for cond, dep in conditions.items():
+                self.fact(fn.depends_on(dep.pkg.name, dep.spec.name))
+
+    def spec_rules(self, spec):
+        self.fact(fn.node(spec.name))
+        self.spec_versions(spec)
+
+        # seed architecture at the root (we'll propagate later)
+        # TODO: use better semantics.
+        arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        spec_arch = spec.architecture
+        if spec_arch:
+            if spec_arch.platform:
+                arch.platform = spec_arch.platform
+            if spec_arch.os:
+                arch.os = spec_arch.os
+            if spec_arch.target:
+                arch.target = spec_arch.target
+        self.fact(fn.arch_platform(spec.name, arch.platform))
+        self.fact(fn.arch_os(spec.name, arch.os))
+        self.fact(fn.arch_target(spec.name, arch.target))
+
+        # TODO
+        # dependencies
+        # compiler
+        # external_path
+        # external_module
+        # compiler_flags
+        # namespace
+
+    def generate_asp_program(self, specs):
+        """Write an ASP program for specs.
+
+        Writes to this AspGenerator's output stream.
+
+        Arguments:
+            specs (list): list of Specs to solve
+        """
+        # get list of all possible dependencies
+        pkg_names = set(spec.fullname for spec in specs)
+        pkgs = [spack.repo.path.get_pkg_class(name) for name in pkg_names]
+        pkgs = list(set(spack.package.possible_dependencies(*pkgs))
+                    | set(pkg_names))
+
+        self.title("Generate")
+        self.out.write(_generate)
+
+        self.title("Define")
+        self.out.write(_define)
+
+        self.title("Package Constraints")
+        for pkg in pkgs:
+            self.section(pkg)
+            self.pkg_rules(pkg)
+
+        self.title("Spec Constraints")
+        for spec in specs:
+            self.section(str(spec))
+            self.spec_rules(spec)
+
+        self.title("Display")
+        self.out.write(_display)
+        self.out.write('\n\n')
 
 
-def spec_rules(spec):
-    asp._fact(asp.node(spec.name))
-    spec_versions(spec)
+class ResultParser(object):
+    """Class with actions that can re-parse a spec from ASP."""
+    def __init__(self):
+        self._result = None
 
-    # seed architecture at the root (we'll propagate later)
-    # TODO: use better semantics.
-    arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-    spec_arch = spec.architecture
-    if spec_arch:
-        if spec_arch.platform:
-            arch.platform = spec_arch.platform
-        if spec_arch.os:
-            arch.os = spec_arch.os
-        if spec_arch.target:
-            arch.target = spec_arch.target
-    asp._fact(asp.arch_platform(spec.name, arch.platform))
-    asp._fact(asp.arch_os(spec.name, arch.os))
-    asp._fact(asp.arch_target(spec.name, arch.target))
+    def node(self, pkg):
+        if pkg not in self._specs:
+            self._specs[pkg] = spack.spec.Spec(pkg)
 
-    # TODO
-    # dependencies
-    # compiler
-    # external_path
-    # external_module
-    # compiler_flags
-    # namespace
+    def _arch(self, pkg):
+        arch = self._specs[pkg].architecture
+        if not arch:
+            arch = spack.spec.ArchSpec()
+            self._specs[pkg].architecture = arch
+        return arch
+
+    def arch_platform(self, pkg, platform):
+        self._arch(pkg).platform = platform
+
+    def arch_os(self, pkg, os):
+        self._arch(pkg).os = os
+
+    def arch_target(self, pkg, target):
+        self._arch(pkg).target = target
+
+    def variant_value(self, pkg, name, value):
+        pkg_class = spack.repo.path.get_pkg_class(pkg)
+        variant = pkg_class.variants[name].make_variant(value)
+        self._specs[pkg].variants[name] = variant
+
+    def version(self, pkg, version):
+        self._specs[pkg].versions = ver([version])
+
+    def depends_on(self, pkg, dep):
+        self._specs[pkg]._add_dependency(
+            self._specs[dep], ('link', 'run'))
+
+    def parse(self, stream, result):
+        for line in stream:
+            match = re.match(r'SATISFIABLE', line)
+            if match:
+                result.satisfiable = True
+                continue
+
+            match = re.match(r'UNSATISFIABLE', line)
+            if match:
+                result.satisfiable = False
+                continue
+
+            match = re.match(r'Answer: (\d+)', line)
+            if not match:
+                continue
+
+            answer_number = int(match.group(1))
+            assert answer_number == len(result.answers) + 1
+
+            answer = next(stream)
+            tty.debug("Answer: %d" % answer_number, answer)
+
+            self._specs = {}
+            for m in re.finditer(r'(\w+)\(([^)]*)\)', answer):
+                name, arg_string = m.groups()
+                args = re.findall(r'"([^"]*)"', arg_string)
+
+                action = getattr(self, name)
+                assert action and callable(action)
+                action(*args)
+
+            result.answers.append(self._specs)
+
+
+class Result(object):
+    def __init__(self, asp):
+        self.asp = asp
+        self.satisfiable = None
+        self.warnings = None
+        self.answers = []
+
 
 #
 # These are handwritten parts for the Spack ASP model.
 #
-
-
-#: generate the problem space, establish cardinality constraints
-_generate = """\
-% One version, arch, etc. per package
-{ version(P, V) : version(P, V) } = 1             :- node(P).
-{ arch_platform(P, A) : arch_platform(P, A) } = 1 :- node(P).
-{ arch_os(P, A) : arch_os(P, A) } = 1             :- node(P).
-{ arch_target(P, T) : arch_target(P, T) } = 1     :- node(P).
-
-% one variant value for single-valued variants.
-{ variant_value(P, V, X) : variant_value(P, V, X) } = 1
-    :- node(P), variant(P, V), not variant_single_value(P, V).
-"""
-
-#: define the rules of Spack concretization
-_define = """\
-% dependencies imply new nodes.
-node(D) :- node(P), depends_on(P, D).
-
-% propagate platform, os, target downwards
-arch_platform(D, A) :- node(D), depends_on(P, D), arch_platform(P, A).
-arch_os(D, A) :- node(D), depends_on(P, D), arch_os(P, A).
-arch_target(D, A) :- node(D), depends_on(P, D), arch_target(P, A).
-
-% if a variant is set to anything, it is considered "set".
-variant_set(P, V) :- variant_set(P, V, _).
-
-% variant_set is an explicitly set variant value. If it's not "set",
-% we revert to the default value. If it is set, we force the set value
-variant_value(P, V, X) :- node(P), variant(P, V), variant_set(P, V, X).
-"""
-
-#: what parts of the model to display to read models back in
-_display = """\
-#show node/1.
-#show depends_on/2.
-#show version/2.
-#show variant_value/3.
-#show arch_platform/2.
-#show arch_os/2.
-#show arch_target/2.
-"""
-
-
-def solve(specs):
+def solve(specs, dump=None, models=1):
     """Solve for a stable model of specs.
 
     Arguments:
         specs (list): list of Specs to solve.
+        dump (tuple): what to dump
+        models (int): number of satisfying specs to find (default: 1)
     """
+    clingo = which('clingo', required=True)
+    parser = ResultParser()
 
-    # get list of all possible dependencies
-    pkg_names = set(spec.fullname for spec in specs)
-    pkgs = [spack.repo.path.get_pkg_class(name) for name in pkg_names]
-    pkgs = spack.package.possible_dependencies(*pkgs)
+    with tempfile.TemporaryFile("w+") as program:
+        generator = AspGenerator(program)
+        generator.generate_asp_program(specs)
+        program.seek(0)
 
-    title("Generate")
-    print(_generate)
+        result = Result(program.read())
+        program.seek(0)
 
-    title("Define")
-    print(_define)
+        with tempfile.TemporaryFile("w+") as output:
+            with tempfile.TemporaryFile() as warnings:
+                clingo(
+                    '--models=%d' % models,
+                    input=program,
+                    output=output,
+                    error=warnings,
+                    fail_on_error=False)
 
-    title("Package Constraints")
-    for pkg in pkgs:
-        section(pkg)
-        pkg_rules(pkg)
+                output.seek(0)
+                result.output = output.read()
 
-    title("Spec Constraints")
-    for spec in specs:
-        section(str(spec))
-        spec_rules(spec)
+                output.seek(0)
+                parser.parse(output, result)
 
-    title("Display")
-    print(_display)
-    print()
-    print()
+                warnings.seek(0)
+                result.warnings = warnings.read()
+
+    return result
