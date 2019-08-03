@@ -350,6 +350,28 @@ class IntelPackageTemplate(PackageTemplate):
     # FIXME: Override `setup_environment` if necessary."""
 
 
+class SIPPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for SIP packages."""
+
+    base_class_name = 'SIPPackage'
+
+    body = """\
+    def configure_args(self, spec, prefix):
+        # FIXME: Add arguments other than --bindir and --destdir
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+    def __init__(self, name, *args):
+        # If the user provided `--name py-pyqt4`, don't rename it py-py-pyqt4
+        if not name.startswith('py-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to py-{0}".format(name))
+            name = 'py-{0}'.format(name)
+
+        super(SIPPackageTemplate, self).__init__(name, *args)
+
+
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
@@ -366,6 +388,7 @@ templates = {
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
     'meson':      MesonPackageTemplate,
+    'sip':        SIPPackageTemplate,
     'generic':    PackageTemplate,
 }
 
@@ -440,6 +463,7 @@ class BuildSystemGuesser:
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
             (r'/meson\.build$',       'meson'),
+            (r'/configure\.py$',      'sip'),
         ]
 
         # Peek inside the compressed file.

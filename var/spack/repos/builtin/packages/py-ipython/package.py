@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
-import platform
 
 
 class PyIpython(PythonPackage):
@@ -32,9 +30,6 @@ class PyIpython(PythonPackage):
     depends_on('py-decorator',                  type=('build', 'run'))
     depends_on('py-pexpect',                    type=('build', 'run'))
     depends_on('py-backcall',                   type=('build', 'run'), when="^python@3.3:")
-
-    depends_on('py-appnope', type=('build', 'run'),
-                    when=sys.platform == 'darwin' and
-                            int(platform.mac_ver()[0].split('.')[1]) >= 9)
+    depends_on('py-appnope', type=('build', 'run'), when='platform=darwin')
 
     conflicts('^python@2.7:2.8', when='@7.0.0:')

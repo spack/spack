@@ -107,6 +107,7 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
+    depends_on('gettext')
 
     # Optional dependencies
     # See detect_modules() in setup.py for details
@@ -152,6 +153,11 @@ class Python(AutotoolsPackage):
     )
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
+
+    # Python 3.6.7 and above can not be compiled with the Intel compiler
+    # https://bugs.python.org/issue35473
+    # https://bugs.python.org/issue37415
+    conflicts('%intel', when='@3.6.7:')
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
