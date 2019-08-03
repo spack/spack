@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: MIT
-
+#
 # ----------------------------------------------------------------------------
 #
 #     spack install py-gitdb

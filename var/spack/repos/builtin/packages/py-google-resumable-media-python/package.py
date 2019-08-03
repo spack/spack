@@ -32,7 +32,6 @@ class PyGoogleResumableMediaPython(PythonPackage):
     url      = "https://github.com/GoogleCloudPlatform/google-resumable-media-python/archive/0.3.1.tar.gz"
 
     version('0.3.2', 'c5407ab051844272eadaf42ea40516bc')
-    version('0.3.1', '888d0d1c9fc07717c9c6cfa4982b0a6d')
 
     # Build dependencies
     depends_on('py-setuptools', type='build')

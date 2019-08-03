@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: MIT
-
+#
 # ----------------------------------------------------------------------------
 #
 #     spack install py-gitpython
@@ -15,7 +15,6 @@
 # ----------------------------------------------------------------------------
 
 from spack import *
-
 
 class PyGitpython(PythonPackage):
     """GitPython is a python library used to interact with Git repositories."""

@@ -1,27 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
+# SPDX-License-Identifier: MIT
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# ----------------------------------------------------------------------------
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
+#     spack install rsgislib
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
+# You can edit this file again by typing:
 #
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+#     spack edit rsgislib
+#
+# See the Spack documentation for more information on packaging.
+# ----------------------------------------------------------------------------
 
 from spack import *
 import subprocess
@@ -39,9 +30,6 @@ class Rsgislib(Package):
     maintainers = ['petebunting']
 
     version('3.7.54a', '28bccbe06bc2ec14c3d1e4d75708d70f')
-    version('3.6.14', '13dde2a575f044b41c11f973eba1de16')
-    version('3.5.8', '54849d968b8f4b113c3557fbcb845334')
-    version('3.5.7', '9a9e7c9f092cf92f5f4d11a3ac1e0629')
 
     # Add dependencies if required.
     depends_on('cmake', type='build')

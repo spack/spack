@@ -32,7 +32,6 @@ class PyGoogleCloud(PythonPackage):
     url      = "https://github.com/googleapis/google-cloud-python/archive/api_core-1.4.1.tar.gz"
 
     version('1.14.0', 'f62c8249485538751858dd41bd3f2e88')
-    version('1.4.1', 'b5b5bca9cea5d83900c675bf2409b59a')
 
     # Build dependencies
     depends_on('py-pkgconfig', type='build')

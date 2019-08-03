@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: MIT
-
+#
 # ----------------------------------------------------------------------------
 #
 #     spack install py-compute-job-recorder
@@ -30,9 +30,12 @@ class PyComputeJobRecorder(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('sqlite',        type=('build', 'run'))
     depends_on('py-sqlalchemy', type=('build', 'run'))
-
+    
+    phases = ['install']
+    """
     def install(self, spec, prefix):
         import subprocess
         cmd = '{0} setup.py install --prefix={1}'.format(spec['python'].command.path, prefix)
         subprocess.call(cmd, shell=True)
+    """
 
