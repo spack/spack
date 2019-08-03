@@ -33,20 +33,9 @@ class PyArcsi(PythonPackage):
     version('3.2.3a', '177aacacdae897b43c4a717c88e95ea7')
 
     # Add dependencies if required.
-    #depends_on('py-setuptools', type='build')
-    #depends_on('py-wheel', type='build')
-    #depends_on('py-six', type='build')
     depends_on('python', type=('build', 'run'))
     depends_on('rsgislib', type=('build', 'run'))
     depends_on('py-py6s', type=('build', 'run'))
     depends_on('py-rios', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
     
-    #phases = ['install']
-    
-    """
-    def install(self, spec, prefix):
-        import subprocess
-        cmd = '{0} setup.py install --prefix={1}'.format(spec['python'].command.path, prefix)
-        subprocess.call(cmd, shell=True)
-    """
