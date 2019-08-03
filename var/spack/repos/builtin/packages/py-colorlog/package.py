@@ -11,7 +11,7 @@ class PyColorlog(PythonPackage):
 
     homepage = "https://github.com/borntyping/python-colorlog"
     url      = "https://pypi.org/packages/source/c/colorlog/colorlog-4.0.2.tar.gz"
-  
+
     version('4.0.2', sha256='3cf31b25cbc8f86ec01fef582ef3b840950dea414084ed19ab922c8b493f9b42')
     version('3.1.4', sha256='418db638c9577f37f0fae4914074f395847a728158a011be2a193ac491b9779d')
 
