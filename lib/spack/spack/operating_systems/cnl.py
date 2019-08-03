@@ -50,6 +50,7 @@ def read_cle_release_file():
             result[key] = value.strip()
         return result
 
+
 def read_clerelease_file():
     """Read the CLE release file and return the Cray OS version.
 
