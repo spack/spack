@@ -83,7 +83,6 @@ class Libflame(AutotoolsPackage):
             config_args.append("--disable-supermatrix")
 
         # https://github.com/flame/libflame/issues/21
-        if self.spec.satisfies('@5.1.99:'):
-            config_args.append("--enable-max-arg-list-hack")
+        config_args.append("--enable-max-arg-list-hack")
 
         return config_args
