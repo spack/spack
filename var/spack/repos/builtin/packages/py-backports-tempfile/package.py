@@ -18,4 +18,4 @@ class PyBackportsTempfile(PythonPackage):
     version('1.0rc1', sha256='1492e2fd8e8abcae6a9c9e78edc52aae4234937c5d462fd3ce0e29c1a4687d3b')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-backports-weakref', type='run')
+    depends_on('py-backports-weakref', type=('build', 'run'))
