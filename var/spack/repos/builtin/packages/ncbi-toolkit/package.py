@@ -48,6 +48,10 @@ class NcbiToolkit(AutotoolsPackage):
                 filter_file(r'(boost::unit_test::decorator::collector)',
                             r'\1_t', 'test_boost.hpp')
         if self.spec.satisfies('^boost@1.70:'):
+            with working_dir(join_path('include', 'corelib')):
+                filter_file(('unit_test::ut_detail::'
+                             'ignore_unused_variable_warning'),
+                            'ignore_unused', 'test_boost.hpp', string=True)
             with working_dir(join_path('src', 'corelib')):
                 for file_ in ['test_boost.cpp', 'teamcity_boost.cpp']:
                     filter_file(
