@@ -5,7 +5,6 @@
 
 
 from spack import *
-import os
 
 
 class G4ensdfstate(Package):
@@ -18,8 +17,8 @@ class G4ensdfstate(Package):
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
-        install_path = join_path(prefix.share, 'data',
-                                 os.path.basename(self.stage.source_path))
+        install_path = join_path(prefix.share, 'data', 'G4ENSDFSTATE{0}'
+                                 .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
