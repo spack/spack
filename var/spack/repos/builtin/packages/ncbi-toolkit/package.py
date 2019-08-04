@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from glob import glob
+
 from spack import *
 
 
@@ -39,8 +41,6 @@ class NcbiToolkit(AutotoolsPackage):
                         'image_io_jpeg.cpp', string=True)
 
     def build(self, spec, prefix):
-        compiler_version = self.compiler.version.joined
-
-        with working_dir(join_path(
-                'GCC{0}-DebugMT64'.format(compiler_version), 'build')):
+        with working_dir(join_path(glob(
+                '*-DebugMT64')[0], 'build')):
             make('all_r')
