@@ -41,6 +41,22 @@ class NcbiToolkit(AutotoolsPackage):
             filter_file(r'jpeg_start_compress(&cinfo, true)',
                         'jpeg_start_compress(&cinfo, TRUE)',
                         'image_io_jpeg.cpp', string=True)
+        # TODO: Convert these substitutions into BOOST_VERSION preprocessor
+        # patches to send upstream.
+        if self.spec.satisfies('^boost@1.69:'):
+            with working_dir(join_path('include', 'corelib')):
+                filter_file(r'(boost::unit_test::decorator::collector)',
+                            r'\1_t', 'test_boost.hpp')
+        if self.spec.satisfies('^boost@1.70:'):
+            with working_dir(join_path('src', 'corelib')):
+                for file_ in ['test_boost.cpp', 'teamcity_boost.cpp']:
+                    filter_file(
+                        r'(void log_build_info\s*\(.*ostream&[^)]*)\);',
+                        r'\1, bool log_build_info = true);', file_)
+                    filter_file(r'(::log_build_info\(.*ostream.*&[^)]+)\)',
+                                r'\1, bool log_build_info)', file_)
+                    filter_file(r'(log_build_info\(ostr)\)', r'\1, true)',
+                                file_)
 
     def build(self, spec, prefix):
         with working_dir(join_path(glob(
