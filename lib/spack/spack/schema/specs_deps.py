@@ -5,7 +5,7 @@
 
 """Schema for expressing dependencies of a set of specs in a JSON file
 
-.. literalinclude:: ../spack/schema/specs_deps.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/specs_deps.py
    :lines: 32-
 """
 

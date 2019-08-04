@@ -20,8 +20,8 @@ specify external package installations to use. Finally, we will
 briefly touch on the config configuration file, which manages more
 high-level Spack configuration options.
 
-For all of these features we will demonstrate how we build up a full
-configuration file. For some we will then demonstrate how the
+For all of these features, we will demonstrate how we build up a full
+configuration file. For some, we will then demonstrate how the
 configuration affects the install command, and for others we will use
 the ``spack spec`` command to demonstrate how the configuration
 changes have affected Spack's concretization algorithm. The provided
@@ -75,6 +75,10 @@ development and another for production preferences.
 Settings specified on the command line have precedence over all
 other configuration scopes.
 
+You can also use ``spack config blame <config>`` for displaying
+the effective configuration. Spack will show from which scopes
+the configuration has been assembled.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Platform-specific Scopes
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -103,15 +107,15 @@ YAML Format
 
 Spack configurations are YAML dictionaries. Every configuration file
 begins with a top-level dictionary that tells Spack which
-configuration set it modifies. When Spack checks it's configuration,
+configuration set it modifies. When Spack checks its configuration,
 the configuration scopes are updated as dictionaries in increasing
 order of precedence, allowing higher precedence files to override
 lower. YAML dictionaries use a colon ":" to specify key-value
 pairs. Spack extends YAML syntax slightly to allow a double-colon
 "::" to specify a key-value pair. When a double-colon is used to
-specify a key-value pair, instead of adding that section Spack
-replaces what was in that section with the new value. For example, a
-user compilers configuration file as follows:
+specify a key-value pair, instead of adding that section, Spack
+replaces what was in that section with the new value. For example,
+consider a user's compilers configuration file as follows:
 
 .. code-block:: yaml
 
@@ -131,7 +135,7 @@ user compilers configuration file as follows:
        target: x86_64
 
 
-ensures that no other compilers are used, as the user configuration
+This ensures that no other compilers are used, as the user configuration
 scope is the last scope searched and the ``compilers::`` line replaces
 all previous configuration files information. If the same
 configuration file had a single colon instead of the double colon, it
@@ -152,7 +156,7 @@ circumstances we want even more fine-grained control over the
 compilers available. This section will teach you how to exercise that
 control using the compilers configuration file.
 
-We will start by opening the compilers configuration file
+We will start by opening the compilers configuration file:
 
 .. code-block:: console
 
@@ -242,7 +246,7 @@ to the ``compilers.yaml`` file.
 Let's talk about the sections of this compiler entry that we've changed.
 The biggest change we've made is to the ``paths`` section. This lists
 the paths to the compilers to use for each language/specification.
-In this case, we point to the clang compiler for C/C++ and the gfortran
+In this case, we point to the Clang compiler for C/C++ and the gfortran
 compiler for both specifications of Fortran. We've also changed the
 ``spec`` entry for this compiler. The ``spec`` entry is effectively the
 name of the compiler for Spack. It consists of a name and a version
@@ -266,7 +270,7 @@ This new compiler also works on Fortran codes:
 
 .. code-block:: console
 
-   $ spack install --no-cache cfitsio %clang@3.8.0-gfortran -bzip2
+   $ spack install --no-cache cfitsio~bzip2 %clang@3.8.0-gfortran
    ...
 
 
@@ -282,7 +286,7 @@ the build provenance. As on the command line, the flags are set
 through the implicit build variables ``cflags``, ``cxxflags``, ``cppflags``,
 ``fflags``, ``ldflags``, and ``ldlibs``.
 
-Let's open our compilers configuration file again and add a compiler flag.
+Let's open our compilers configuration file again and add a compiler flag:
 
 .. code-block:: yaml
 
@@ -303,7 +307,7 @@ Let's open our compilers configuration file again and add a compiler flag.
 
 
 We can test this out using the ``spack spec`` command to show how the
-spec is concretized.
+spec is concretized:
 
 .. code-block:: console
 
@@ -348,7 +352,7 @@ the executable automatically, the ``extra_rpaths`` field of the compiler
 configuration tells Spack which dependencies to rpath into every
 executable created by that compiler. The executables will then be able
 to find the link dependencies imposed by the compiler. As an example,
-this field can be set by
+this field can be set by:
 
 .. code-block:: yaml
 
@@ -392,7 +396,7 @@ configuration file. First, we will look at the default
    $ spack config --scope defaults edit packages
 
 
-.. literalinclude:: ../../../etc/spack/defaults/packages.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/packages.yaml
    :language: yaml
 
 
@@ -525,11 +529,11 @@ We can check the effect of this command with ``spack spec hdf5`` again.
 
 
 So far we have only made global changes to the package preferences. As
-we've seen throughout this tutorial, hdf5 builds with MPI enabled by
+we've seen throughout this tutorial, HDF5 builds with MPI enabled by
 default in Spack. If we were working on a project that would routinely
-need serial hdf5, that might get annoying quickly, having to type
+need serial HDF5, that might get annoying quickly, having to type
 ``hdf5~mpi`` all the time. Instead, we'll update our preferences for
-hdf5.
+HDF5.
 
 .. code-block:: yaml
 
@@ -604,7 +608,7 @@ okay.
 
 You'll notice that Spack is now using the external zlib installation,
 but the compiler used to build zlib is now overriding our compiler
-preference of clang. If we explicitly specify clang:
+preference of clang. If we explicitly specify Clang:
 
 .. code-block:: console
 
@@ -619,7 +623,7 @@ preference of clang. If we explicitly specify clang:
        ^zlib@1.2.11%clang@3.8.0-2ubuntu4+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
 
 
-Spack concretizes to both hdf5 and zlib being built with clang.
+Spack concretizes to both HDF5 and zlib being built with Clang.
 This has a side-effect of rebuilding zlib. If we want to force
 Spack to use the system zlib, we have two choices. We can either
 specify it on the command line, or we can tell Spack that it's
@@ -658,7 +662,7 @@ Now Spack will be forced to choose the external zlib.
 
 This gets slightly more complicated with virtual dependencies. Suppose
 we don't want to build our own MPI, but we now want a parallel version
-of hdf5? Well, fortunately we have mpich installed on these systems.
+of HDF5? Well, fortunately we have MPICH installed on these systems.
 
 .. code-block:: yaml
 
@@ -685,7 +689,7 @@ build with an alternate MPI implementation.
 
 .. code-block:: console
 
-   $ spack spec hdf5 %clang +mpi
+   $ spack spec hdf5+mpi %clang
    Input spec
    --------------------------------
    hdf5%clang+mpi
@@ -713,15 +717,15 @@ build with an alternate MPI implementation.
                    ^automake@1.16.1%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
 
 
-We have only expressed a preference for mpich over other MPI
+We have only expressed a preference for MPICH over other MPI
 implementations, and Spack will happily build with one we haven't
 forbid it from building. We could resolve this by requesting
-``hdf5%clang+mpi^mpich`` explicitly, or we can configure Spack not to
+``hdf5+mpi%clang^mpich`` explicitly, or we can configure Spack not to
 use any other MPI implementation. Since we're focused on
 configurations here and the former can get tedious, we'll need to
 modify our ``packages.yaml`` file again.
 
-While we're at it, we can configure hdf5 to build with MPI by default
+While we're at it, we can configure HDF5 to build with MPI by default
 again.
 
 .. code-block:: yaml
@@ -759,7 +763,7 @@ again.
 
 
 Now that we have configured Spack not to build any of the possible
-providers for MPI we can try again.
+providers for MPI, we can try again.
 
 .. code-block:: console
 
@@ -778,9 +782,10 @@ providers for MPI we can try again.
 By configuring most of our package preferences in ``packages.yaml``,
 we can cut down on the amount of work we need to do when specifying
 a spec on the command line. In addition to compiler and variant
-preferences, we can specify version preferences as well. Anything
-that you can specify on the command line can be specified in
-``packages.yaml`` with the exact same spec syntax.
+preferences, we can specify version preferences as well. Except for
+selecting providers via `^`, anything that you can specify on the
+command line can be specified in ``packages.yaml`` with the exact
+same spec syntax.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Installation Permissions
@@ -829,7 +834,7 @@ running:
    $ spack config --scope defaults edit config
 
 
-.. literalinclude:: ../../../etc/spack/defaults/config.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
    :language: yaml
 
 
@@ -863,8 +868,8 @@ into the build.
 One last setting that may be of interest to many users is the ability
 to customize the parallelism of Spack builds. By default, Spack
 installs all packages in parallel with the number of jobs equal to the
-number of cores on the node. For example, on a node with 16 cores,
-this will look like:
+number of cores on the node (up to a maximum of 16). For example, on a
+node with 16 cores, this will look like:
 
 .. code-block:: console
 
@@ -900,7 +905,7 @@ the number of cores our build uses, set ``build_jobs`` like so:
      build_jobs: 2
 
 
-If we uninstall and reinstall zlib, we see that it now uses only 4 cores:
+If we uninstall and reinstall zlib, we see that it now uses only 2 cores:
 
 .. code-block:: console
 

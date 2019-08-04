@@ -27,6 +27,7 @@ class Openspeedshop(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
     version('develop', branch='master')
+    version('2.4.1', branch='2.4.1')
     version('2.4.0', branch='2.4.0')
     version('2.3.1.5', branch='2.3.1.5')
     version('2.3.1.4', branch='2.3.1.4')
@@ -86,7 +87,8 @@ class Openspeedshop(CMakePackage):
     depends_on("sqlite")
 
     # For boost
-    depends_on("boost@1.66.0:")
+    # depends_on("boost@1.66.0:")
+    depends_on("boost@1.66.0:1.69.0")
 
     depends_on("dyninst@develop", when='@develop')
     depends_on("dyninst@10:", when='@2.3.1.3:9999')
@@ -288,7 +290,7 @@ class Openspeedshop(CMakePackage):
                                         shared=True, recursive=True)
 
         # Set Dyninst RT library path to support OSS loop resolution code
-        run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
+        run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir[0])
 
         run_env.set('OPENSS_RAWDATA_DIR', '.')
 

@@ -6,6 +6,7 @@
 import os
 import filecmp
 import pytest
+import collections
 
 from llnl.util.filesystem import working_dir, mkdirp
 
@@ -63,9 +64,9 @@ def test_url_patch(mock_stage, filename, sha256, archive_sha256):
         # TODO: there is probably a better way to mock this.
         stage.mirror_path = mock_stage  # don't disrupt the spack install
 
-        # fake a source path
+        # Fake a source path and ensure the directory exists
         with working_dir(stage.path):
-            mkdirp('spack-expanded-archive')
+            mkdirp(spack.stage._source_path_subdir)
 
         with working_dir(stage.source_path):
             # write a file to be patched
@@ -143,16 +144,16 @@ def test_nested_directives(mock_packages):
     # to Dependency objects.
     libelf_dep = next(iter(patcher.dependencies['libelf'].values()))
     assert len(libelf_dep.patches) == 1
-    assert len(libelf_dep.patches[Spec('libelf')]) == 1
+    assert len(libelf_dep.patches[Spec()]) == 1
 
     libdwarf_dep = next(iter(patcher.dependencies['libdwarf'].values()))
     assert len(libdwarf_dep.patches) == 2
-    assert len(libdwarf_dep.patches[Spec('libdwarf')]) == 1
-    assert len(libdwarf_dep.patches[Spec('libdwarf@20111030')]) == 1
+    assert len(libdwarf_dep.patches[Spec()]) == 1
+    assert len(libdwarf_dep.patches[Spec('@20111030')]) == 1
 
     fake_dep = next(iter(patcher.dependencies['fake'].values()))
     assert len(fake_dep.patches) == 1
-    assert len(fake_dep.patches[Spec('fake')]) == 2
+    assert len(fake_dep.patches[Spec()]) == 2
 
 
 def test_patched_dependency(
@@ -314,3 +315,11 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
         libelf, libdwarf, fake,
         'builtin.mock.patch-several-dependencies',
         spec.package.package_dir)
+
+
+def test_file_patch_no_file():
+    # Give it the attributes we need to construct the error message
+    FakePackage = collections.namedtuple('FakePackage', ['name', 'namespace'])
+    fp = FakePackage('fake-package', 'test')
+    with pytest.raises(ValueError, match=r'FilePatch:.*'):
+        spack.patch.FilePatch(fp, 'nonexistent_file', 0, '')

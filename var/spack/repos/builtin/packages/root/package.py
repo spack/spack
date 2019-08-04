@@ -501,7 +501,10 @@ class Root(CMakePackage):
                 self.spec['ftgl'].prefix))
             options.append('-DFTGL_INCLUDE_DIR={0}'.format(
                 self.spec['ftgl'].prefix.include))
-
+        # see https://github.com/spack/spack/pull/11579
+        if '+python' in self.spec:
+            options.append('-DPYTHON_EXECUTABLE=%s' %
+                           spec['python'].command.path)
         return options
 
     def setup_environment(self, spack_env, run_env):

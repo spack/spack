@@ -13,23 +13,24 @@ class Hypre(Package):
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
 
-    homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
-    url      = "https://github.com/LLNL/hypre/archive/v2.14.0.tar.gz"
-    git      = "https://github.com/LLNL/hypre.git"
+    homepage = "http://computing.llnl.gov/project/linear_solvers/software.php"
+    url      = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
+    git      = "https://github.com/hypre-space/hypre.git"
 
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
     version('develop', branch='master')
-    version('2.15.1', '877002d49f38b6a1434955baf79eff35')
-    version('2.15.0', '4645acc49141069cae1d53de96107a08')
-    version('2.14.0', 'ecde5cc807ec45bfb647e9f28d2eaea1')
-    version('2.13.0', '4b688a5c15b6b5e3de5e045ae081b89b')
-    version('2.12.1', 'c6fcb6d7e57cec1c7ce4a44da885068c')
+    version('2.16.0', sha256='33f8a27041e697343b820d0426e74694670f955e21bbf3fcb07ee95b22c59e90')
+    version('2.15.1', sha256='50d0c0c86b4baad227aa9bdfda4297acafc64c3c7256c27351f8bae1ae6f2402')
+    version('2.15.0', sha256='2d597472b473964210ca9368b2cb027510fff4fa2193a8c04445e2ed4ff63045')
+    version('2.14.0', sha256='705a0c67c68936bb011c50e7aa8d7d8b9693665a9709b584275ec3782e03ee8c')
+    version('2.13.0', sha256='3979602689c3b6e491c7cf4b219cfe96df5a6cd69a5302ccaa8a95ab19064bad')
+    version('2.12.1', sha256='824841a60b14167a0051b68fdb4e362e0207282348128c9d0ca0fd2c9848785c')
     version('2.11.2', 'd507943a1a3ce5681c3308e2f3a6dd34')
     version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0', git='https://github.com/LLNL/hypre.git')
 
     # Versions 2.13.0 and later can be patched to build shared
     # libraries on Darwin; the patch for this capability does not
@@ -54,7 +55,7 @@ class Hypre(Package):
     # Patch to build shared libraries on Darwin
     patch('darwin-shared-libs-for-hypre-2.13.0.patch', when='+shared@2.13.0 platform=darwin')
     patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0 platform=darwin')
-    patch('superlu-dist-link-2.15.0.patch', when='+superlu-dist @2.15:')
+    patch('superlu-dist-link-2.15.0.patch', when='+superlu-dist @2.15:2.16.0')
     patch('superlu-dist-link-2.14.0.patch', when='+superlu-dist @:2.14.0')
 
     depends_on("mpi", when='+mpi')
@@ -68,9 +69,9 @@ class Hypre(Package):
 
     def url_for_version(self, version):
         if version >= Version('2.12.0'):
-            url = 'https://github.com/LLNL/hypre/archive/v{0}.tar.gz'
+            url = 'https://github.com/hypre-space/hypre/archive/v{0}.tar.gz'
         else:
-            url = 'http://computation.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
+            url = 'http://computing.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
 
         return url.format(version)
 
@@ -149,12 +150,7 @@ class Hypre(Package):
         """Export the hypre library.
         Sample usage: spec['hypre'].libs.ld_flags
         """
-        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
-                        [self.prefix, True]]
         is_shared = '+shared' in self.spec
-        for path, recursive in search_paths:
-            libs = find_libraries('libHYPRE', root=path,
-                                  shared=is_shared, recursive=recursive)
-            if libs:
-                return libs
-        return None
+        libs = find_libraries('libHYPRE', root=self.prefix, shared=is_shared,
+                              recursive=True)
+        return libs or None

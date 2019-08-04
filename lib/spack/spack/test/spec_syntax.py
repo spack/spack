@@ -9,7 +9,7 @@ import shlex
 import spack.store
 import spack.spec as sp
 from spack.parse import Token
-from spack.spec import Spec, parse, parse_anonymous_spec
+from spack.spec import Spec
 from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
 from spack.spec import DuplicateArchitectureError, DuplicateVariantError
@@ -310,15 +310,15 @@ class TestSpecSyntax(object):
         assert len(specs) == 2
 
     @pytest.mark.db
-    def test_ambiguous_hash(self, database):
+    def test_ambiguous_hash(self, mutable_database):
         x1 = Spec('a')
         x1._hash = 'xy'
         x1._concrete = True
         x2 = Spec('a')
         x2._hash = 'xx'
         x2._concrete = True
-        database.add(x1, spack.store.layout)
-        database.add(x2, spack.store.layout)
+        mutable_database.add(x1, spack.store.layout)
+        mutable_database.add(x2, spack.store.layout)
 
         # ambiguity in first hash character
         self._check_raises(AmbiguousHashError, ['/x'])
@@ -532,18 +532,3 @@ class TestSpecSyntax(object):
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
-
-
-@pytest.mark.parametrize('spec,anon_spec,spec_name', [
-    ('openmpi languages=go', 'languages=go', 'openmpi'),
-    ('openmpi @4.6:', '@4.6:', 'openmpi'),
-    ('openmpi languages=go @4.6:', 'languages=go @4.6:', 'openmpi'),
-    ('openmpi @4.6: languages=go', '@4.6: languages=go', 'openmpi'),
-])
-def test_parse_anonymous_specs(spec, anon_spec, spec_name):
-
-    expected = parse(spec)
-    spec = parse_anonymous_spec(anon_spec, spec_name)
-
-    assert len(expected) == 1
-    assert spec in expected

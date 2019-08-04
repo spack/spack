@@ -16,6 +16,7 @@ class Pism(CMakePackage):
     maintainers = ['citibeth']
 
     version('develop', branch='dev')
+    version('1.1.4', sha256='8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44')
     version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
     version('0.7.x', branch='stable0.7')
     version('icebin', branch='efischer/dev')
@@ -76,11 +77,12 @@ class Pism(CMakePackage):
     depends_on('netcdf')    # Only the C interface is used, no netcdf-cxx4
     depends_on('petsc')
     depends_on('udunits2')
-    depends_on('proj')
+    depends_on('proj@:4')
     depends_on('everytrace', when='+everytrace')
 
     extends('python', when='+python')
-    depends_on('python@2.7:2.8', when='+python')
+    depends_on('python@2.7:2.8,3.3:', when='@1.1: +python')
+    depends_on('python@2.7:2.8', when='@:1.0 +python')
     depends_on('py-matplotlib', when='+python')
     depends_on('py-numpy', when='+python')
 

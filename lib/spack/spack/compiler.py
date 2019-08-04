@@ -7,15 +7,12 @@ import os
 import re
 import itertools
 
-import llnl.util.lang
-import llnl.util.tty as tty
-import llnl.util.multiproc as mp
+import llnl.util.filesystem
 
 import spack.error
 import spack.spec
 import spack.architecture
-from spack.util.executable import Executable, ProcessError
-from spack.util.environment import get_path
+import spack.util.executable
 
 __all__ = ['Compiler']
 
@@ -35,7 +32,7 @@ def get_compiler_version_output(compiler_path, version_arg):
         compiler_path (path): path of the compiler to be invoked
         version_arg (str): the argument used to extract version information
     """
-    compiler = Executable(compiler_path)
+    compiler = spack.util.executable.Executable(compiler_path)
     output = compiler(version_arg, output=str, error=str)
     return output
 
@@ -195,6 +192,24 @@ class Compiler(object):
                                       "the C++17 standard",
                                       "cxx17_flag")
 
+    # This property should be overridden in the compiler subclass if
+    # C99 is supported by that compiler
+    @property
+    def c99_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        raise UnsupportedCompilerFlag(self,
+                                      "the C99 standard",
+                                      "c99_flag")
+
+    # This property should be overridden in the compiler subclass if
+    # C11 is supported by that compiler
+    @property
+    def c11_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        raise UnsupportedCompilerFlag(self,
+                                      "the C11 standard",
+                                      "c11_flag")
+
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.
@@ -232,52 +247,19 @@ class Compiler(object):
         return cls.default_version(fc)
 
     @classmethod
-    def _find_matches_in_path(cls, compiler_names, detect_version, *path):
-        """Finds compilers in the paths supplied.
-
-           Looks for all combinations of ``compiler_names`` with the
-           ``prefixes`` and ``suffixes`` defined for this compiler
-           class.  If any compilers match the compiler_names,
-           prefixes, or suffixes, uses ``detect_version`` to figure
-           out what version the compiler is.
-
-           This returns a dict with compilers grouped by (prefix,
-           suffix, version) tuples.  This can be further organized by
-           find().
-        """
-        if not path:
-            path = get_path('PATH')
-
+    def search_regexps(cls, language):
+        # Compile all the regular expressions used for files beforehand.
+        # This searches for any combination of <prefix><name><suffix>
+        # defined for the compiler
+        compiler_names = getattr(cls, '{0}_names'.format(language))
         prefixes = [''] + cls.prefixes
         suffixes = [''] + cls.suffixes
-
-        checks = []
-        for directory in path:
-            if not (os.path.isdir(directory) and
-                    os.access(directory, os.R_OK | os.X_OK)):
-                continue
-
-            files = os.listdir(directory)
-            for exe in files:
-                full_path = os.path.join(directory, exe)
-
-                prod = itertools.product(prefixes, compiler_names, suffixes)
-                for pre, name, suf in prod:
-                    regex = r'^(%s)%s(%s)$' % (pre, re.escape(name), suf)
-
-                    match = re.match(regex, exe)
-                    if match:
-                        key = (full_path,) + match.groups() + (detect_version,)
-                        checks.append(key)
-
-        successful = [k for k in mp.parmap(_get_versioned_tuple, checks)
-                      if k is not None]
-
-        # The 'successful' list is ordered like the input paths.
-        # Reverse it here so that the dict creation (last insert wins)
-        # does not spoil the intented precedence.
-        successful.reverse()
-        return dict(((v, p, s), path) for v, p, s, path in successful)
+        regexp_fmt = r'^({0}){1}({2})$'
+        return [
+            re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
+            for prefix, name, suffix in
+            itertools.product(prefixes, compiler_names, suffixes)
+        ]
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
@@ -293,28 +275,6 @@ class Compiler(object):
             self.name, '\n     '.join((str(s) for s in (
                 self.cc, self.cxx, self.f77, self.fc, self.modules,
                 str(self.operating_system)))))
-
-
-def _get_versioned_tuple(compiler_check_tuple):
-    full_path, prefix, suffix, detect_version = compiler_check_tuple
-    try:
-        version = detect_version(full_path)
-        if (not version) or (not str(version).strip()):
-            tty.debug(
-                "Couldn't get version for compiler %s" % full_path)
-            return None
-        return (version, prefix, suffix, full_path)
-    except ProcessError as e:
-        tty.debug(
-            "Couldn't get version for compiler %s" % full_path, e)
-        return None
-    except Exception as e:
-        # Catching "Exception" here is fine because it just
-        # means something went wrong running a candidate executable.
-        tty.debug("Error while executing candidate compiler %s"
-                  % full_path,
-                  "%s: %s" % (e.__class__.__name__, e))
-        return None
 
 
 class CompilerAccessError(spack.error.SpackError):

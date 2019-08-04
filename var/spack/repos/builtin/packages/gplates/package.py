@@ -20,7 +20,7 @@ class Gplates(CMakePackage):
     version('2.1.0', '5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07')
     version('2.0.0', '9e95874b35a01f4c9bff5845a1621ad5')
 
-    depends_on('cmake@2.6.2:', type='build')
+    depends_on('cmake@2.8.8:', type='build')
     depends_on('ninja', type='build')
     # Qt 5 does not support (at least) the Q_WS_* constants.
     depends_on('qt+opengl@4.4.0:4.99')
@@ -30,7 +30,9 @@ class Gplates(CMakePackage):
     # GDAL's OGRSFDriverRegistrar is not compatible anymore starting with 2.0.
     depends_on('gdal@1.3.2:1.99')
     depends_on('cgal@3.5:')
-    depends_on('proj@4.6.0:')
+    # The latest release of gplates came out before PROJ.6 was released,
+    # so I'm assuming it's not supported.
+    depends_on('proj@4.6.0:5')
     # Boost's Python library has a different name starting with 1.67.
     # There were changes to Boost's optional in 1.61 that make the build fail.
     depends_on('boost+python@1.34:1.60')

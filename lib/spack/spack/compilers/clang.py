@@ -83,10 +83,7 @@ class Clang(Compiler):
     @property
     def openmp_flag(self):
         if self.is_apple:
-            raise UnsupportedCompilerFlag(self,
-                                          "OpenMP",
-                                          "openmp_flag",
-                                          "Xcode {0}".format(self.version))
+            return "-Xpreprocessor -fopenmp"
         else:
             return "-fopenmp"
 
@@ -151,11 +148,25 @@ class Clang(Compiler):
                 raise UnsupportedCompilerFlag(self,
                                               "the C++17 standard",
                                               "cxx17_flag",
-                                              "< 5.0")
+                                              "< 3.5")
             elif self.version < ver('5.0'):
                 return "-std=c++1z"
             else:
                 return "-std=c++17"
+
+    @property
+    def c99_flag(self):
+        return '-std=c99'
+
+    @property
+    def c11_flag(self):
+        if self.version < ver('6.1.0'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C11 standard",
+                                          "c11_flag",
+                                          "< 6.1.0")
+        else:
+            return "-std=c11"
 
     @property
     def pic_flag(self):

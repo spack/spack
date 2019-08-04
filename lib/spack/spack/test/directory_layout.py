@@ -29,9 +29,7 @@ def layout_and_dir(tmpdir):
     spack.store.layout = old_layout
 
 
-def test_yaml_directory_layout_parameters(
-        tmpdir, config
-):
+def test_yaml_directory_layout_parameters(tmpdir, config):
     """This tests the various parameters that can be used to configure
     the install location """
     spec = Spec('python')
@@ -84,9 +82,7 @@ def test_yaml_directory_layout_parameters(
                             path_scheme=scheme_package7)
 
 
-def test_read_and_write_spec(
-        layout_and_dir, config, mock_packages
-):
+def test_read_and_write_spec(layout_and_dir, config, mock_packages):
     """This goes through each package in spack and creates a directory for
     it.  It then ensures that the spec for the directory's
     installed package can be read back in consistently, and
@@ -145,7 +141,7 @@ def test_read_and_write_spec(
             read_separately = Spec.from_yaml(spec_file.read())
 
         # TODO: revise this when build deps are in dag_hash
-        norm = read_separately.normalized().copy(deps=stored_deptypes)
+        norm = read_separately.copy(deps=stored_deptypes)
         assert norm == spec_from_file
         assert norm.eq_dag(spec_from_file)
 
@@ -162,9 +158,7 @@ def test_read_and_write_spec(
         assert not os.path.exists(install_dir)
 
 
-def test_handle_unknown_package(
-        layout_and_dir, config, mock_packages
-):
+def test_handle_unknown_package(layout_and_dir, config, mock_packages):
     """This test ensures that spack can at least do *some*
     operations with packages that are installed but that it
     does not know about.  This is actually not such an uncommon
@@ -234,3 +228,14 @@ def test_find(layout_and_dir, config, mock_packages):
     for name, spec in found_specs.items():
         assert name in found_specs
         assert found_specs[name].eq_dag(spec)
+
+
+def test_yaml_directory_layout_build_path(tmpdir, config):
+    """This tests build path method."""
+    spec = Spec('python')
+    spec.concretize()
+
+    layout = YamlDirectoryLayout(str(tmpdir))
+    rel_path = os.path.join(layout.metadata_dir, layout.packages_dir)
+    assert layout.build_packages_path(spec) == os.path.join(spec.prefix,
+                                                            rel_path)

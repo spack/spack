@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 import os
 from datetime import datetime
 
@@ -141,6 +142,7 @@ def _read_specs_from_file(filename):
                 s.package
                 specs.append(s)
             except SpackError as e:
+                tty.debug(e)
                 tty.die("Parse error in %s, line %d:" % (filename, i + 1),
                         ">>> " + string, str(e))
     return specs
@@ -205,6 +207,7 @@ def mirror_create(args):
         if error:
             tty.error("Failed downloads:")
             colify(s.cformat("{name}{@version}") for s in error)
+            sys.exit(1)
 
 
 def mirror(parser, args):

@@ -20,6 +20,7 @@ class IntelParallelStudio(IntelPackage):
     # in the 'intel' package.
 
     # Cluster Edition (top tier; all components included)
+    version('cluster.2019.4',      '32aee12de3b5ca14caf7578313c06b205795c67620f4a9606ea45696ee3b3d9e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15533/parallel_studio_xe_2019_update4_cluster_edition.tgz')
     version('cluster.2019.3',      'b5b022366d6d1a98dbb63b60221c62bc951c9819653ad6f5142192e89f78cf63', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15268/parallel_studio_xe_2019_update3_cluster_edition.tgz')
     version('cluster.2019.2',      '8c526bdd95d1da454e5cada00f7a2353089b86d0c9df2088ca7f842fe3ff4cae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15088/parallel_studio_xe_2019_update2_cluster_edition.tgz')
     version('cluster.2019.1',      '3a1eb39f15615f7a2688426b9835e5e841e0c030f21dcfc899fe23e09bd2c645', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14850/parallel_studio_xe_2019_update1_cluster_edition.tgz')
@@ -54,6 +55,7 @@ class IntelParallelStudio(IntelPackage):
     # NB: Pre-2018 download packages for Professional are the same as for
     # Cluster; differences manifest only in the tokens present in the license
     # file delivered as part of the purchase.
+    version('professional.2019.4', '9b2818ea5739ade100841e99ce79ef7f4049a2513beb2ce20fc94706f1ba0231', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15534/parallel_studio_xe_2019_update4_professional_edition.tgz')
     version('professional.2019.3', '92a8879106d0bdf1ecf4670cd97fbcdc67d78b13bdf484f2c516a533aa7a27f9', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15269/parallel_studio_xe_2019_update3_professional_edition.tgz')
     version('professional.2019.1', 'bc83ef5a728903359ae11a2b90ad7dae4ae61194afb28bb5bb419f6a6aea225d', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14825/parallel_studio_xe_2019_update1_professional_edition.tgz')
     version('professional.2019.0', '94b9714e353e5c4f58d38cb236e2f8911cbef31c4b42a148d60c988e926411e2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13578/parallel_studio_xe_2019_professional_edition.tgz')
@@ -83,6 +85,7 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2015.1', '542b78c86beff9d7b01076a7be9c6ddc', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Composer Edition (basic tier; excluded: MPI/..., Advisor/Inspector/Vtune)
+    version('composer.2019.4',     '1915993445323e1e78d6de73702a88fa3df2036109cde03d74ee38fef9f1abf2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15537/parallel_studio_xe_2019_update4_composer_edition.tgz')
     version('composer.2019.3',     '15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
     version('composer.2019.1',     'db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
     version('composer.2019.0',     'e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
@@ -124,6 +127,13 @@ class IntelParallelStudio(IntelPackage):
         description='Multithreading support',
         values=('openmp', 'none'),
         multi=False
+    )
+
+    auto_dispatch_options = IntelPackage.auto_dispatch_options
+    variant(
+        'auto_dispatch',
+        values=any_combination_of(*auto_dispatch_options),
+        description='Enable generation of multiple auto-dispatch code paths'
     )
 
     # Components available in all editions
@@ -182,6 +192,12 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+daal',      when='@professional.0:professional.2015.7')
     conflicts('+daal',      when='@cluster.0:cluster.2015.7')
     conflicts('+daal',      when='@composer.0:composer.2015.7')
+
+    # MacOS does not support some of the auto dispatch settings
+    conflicts('auto_dispatch=SSE2', 'platform=darwin',
+              msg='SSE2 is not supported on MacOS')
+    conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64',
+              msg='SSE3 is not supported on MacOS x86_64')
 
     def setup_dependent_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.

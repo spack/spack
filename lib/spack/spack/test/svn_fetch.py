@@ -7,12 +7,14 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import touch, working_dir
+from llnl.util.filesystem import touch, working_dir, mkdirp
 
 import spack.repo
 import spack.config
 from spack.spec import Spec
+from spack.stage import Stage
 from spack.version import ver
+from spack.fetch_strategy import SvnFetchStrategy
 from spack.util.executable import which
 
 
@@ -73,3 +75,19 @@ def test_fetch(
             assert os.path.isfile(file_path)
 
             assert h() == t.revision
+
+
+def test_svn_extra_fetch(tmpdir):
+    """Ensure a fetch after downloading is effectively a no-op."""
+    testpath = str(tmpdir)
+
+    fetcher = SvnFetchStrategy(svn='file:///not-a-real-svn-repo')
+    assert fetcher is not None
+
+    with Stage(fetcher, path=testpath) as stage:
+        assert stage is not None
+
+        source_path = stage.source_path
+        mkdirp(source_path)
+
+        fetcher.fetch()

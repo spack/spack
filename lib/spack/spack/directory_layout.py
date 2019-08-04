@@ -78,10 +78,13 @@ class DirectoryLayout(object):
 
         if spec.external:
             return spec.external_path
-        if self.check_upstream and spec.package.installed_upstream:
-            raise SpackError(
-                "Internal error: attempted to call path_for_spec on"
-                " upstream-installed package.")
+        if self.check_upstream:
+            upstream, record = spack.store.db.query_by_spec_hash(
+                spec.dag_hash())
+            if upstream:
+                raise SpackError(
+                    "Internal error: attempted to call path_for_spec on"
+                    " upstream-installed package.")
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
@@ -190,9 +193,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'build.out'  # build log.
-        self.build_env_name      = 'build.env'  # build environment
-        self.packages_dir        = 'repos'      # archive of package.py files
+        self.packages_dir        = 'repos'  # archive of package.py files
 
     @property
     def hidden_file_paths(self):
@@ -239,12 +240,6 @@ class YamlDirectoryLayout(DirectoryLayout):
     def metadata_path(self, spec):
         return os.path.join(spec.prefix, self.metadata_dir)
 
-    def build_log_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.build_log_name)
-
-    def build_env_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.build_env_name)
-
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
 
@@ -259,15 +254,26 @@ class YamlDirectoryLayout(DirectoryLayout):
         # Cannot import at top of file
         from spack.package_prefs import get_package_dir_permissions
         from spack.package_prefs import get_package_group
+
+        # Each package folder can have its own specific permissions, while
+        # intermediate folders (arch/compiler) are set with full access to
+        # everyone (0o777) and install_tree root folder is the chokepoint
+        # for restricting global access.
+        # So, whoever has access to the install_tree is allowed to install
+        # packages for same arch/compiler and since no data is stored in
+        # intermediate folders, it does not represent a security threat.
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
-        mkdirp(spec.prefix, mode=perms)
+        perms_intermediate = 0o777
+
+        mkdirp(spec.prefix, mode=perms, mode_intermediate=perms_intermediate)
         if group:
             chgrp(spec.prefix, group)
             # Need to reset the sticky group bit after chgrp
             os.chmod(spec.prefix, perms)
 
         mkdirp(self.metadata_path(spec), mode=perms)
+
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):

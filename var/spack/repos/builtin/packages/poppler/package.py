@@ -10,21 +10,22 @@ class Poppler(CMakePackage):
     """Poppler is a PDF rendering library based on the xpdf-3.0 code base."""
 
     homepage = "https://poppler.freedesktop.org"
-    url      = "https://poppler.freedesktop.org/poppler-0.72.0.tar.xz"
+    url      = "https://poppler.freedesktop.org/poppler-0.77.0.tar.xz"
     list_url = "https://poppler.freedesktop.org/releases.html"
 
+    version('0.77.0', sha256='7267eb4cbccd64a58244b8211603c1c1b6bf32c7f6a4ced2642865346102f36b')
     version('0.72.0', sha256='c1747eb8f26e9e753c4001ed951db2896edc1021b6d0f547a0bd2a27c30ada51')
     version('0.65.0', 'b9a0af02e43deb26265f130343e90d78')
     version('0.64.0', 'f7f687ebb60004f8ad61994575018044')
 
     variant('cms',      default=False, description='Use color management system')
+    variant('cpp',      default=False, description='Compile poppler cpp wrapper')
     variant('glib',     default=False, description='Compile poppler glib wrapper')
     variant('gobject',  default=False, description='Generate GObject introspection')
     variant('libcurl',  default=False, description='Build libcurl based HTTP support')
     variant('openjpeg', default=False, description='Use libopenjpeg for JPX streams')
     variant('qt5',      default=False, description='Compile poppler qt5 wrapper')
     variant('zlib',     default=False, description='Build with zlib')
-    variant('cairo',    default=False, description='Search for Cairo package')
     variant('iconv',    default=False, description='Search for Iconv package')
     variant('jpeg',     default=False, description='Search for JPEG package')
     variant('png',      default=False, description='Search for PNG package')
@@ -37,13 +38,13 @@ class Poppler(CMakePackage):
     depends_on('freetype')
 
     depends_on('lcms', when='+cms')
-    depends_on('glib', when='+glib')
+    depends_on('glib@2.41:', when='+glib')
     depends_on('gobject-introspection', when='+gobject')
     depends_on('curl', when='+libcurl')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('qt@5.0:5.999', when='+qt5')
     depends_on('zlib', when='+zlib')
-    depends_on('cairo', when='+cairo')
+    depends_on('cairo@1.10.0:', when='+glib')
     depends_on('libiconv', when='+iconv')
     depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
@@ -72,10 +73,23 @@ class Poppler(CMakePackage):
         else:
             args.append('-DENABLE_CMS=none')
 
-        if '+glib' in spec:
-            args.append('-DENABLE_GLIB=ON')
+        if '+cpp' in spec:
+            args.append('-DENABLE_CPP=ON')
         else:
-            args.append('-DENABLE_GLIB=OFF')
+            args.append('-DENABLE_CPP=OFF')
+
+        if '+glib' in spec:
+            args.extend([
+                '-DENABLE_GLIB=ON',
+                '-DWITH_GLIB=ON',
+                '-DWITH_Cairo=ON',
+            ])
+        else:
+            args.extend([
+                '-DENABLE_GLIB=OFF',
+                '-DWITH_GLIB=OFF',
+                '-DWITH_Cairo=OFF',
+            ])
 
         if '+gobject' in spec:
             args.append('-DENABLE_GOBJECT_INTROSPECTION=ON')
@@ -101,11 +115,6 @@ class Poppler(CMakePackage):
             args.append('-DENABLE_ZLIB=ON')
         else:
             args.append('-DENABLE_ZLIB=OFF')
-
-        if '+cairo' in spec:
-            args.append('-DWITH_Cairo=ON')
-        else:
-            args.append('-DWITH_Cairo=OFF')
 
         if '+iconv' in spec:
             args.append('-DWITH_Iconv=ON')

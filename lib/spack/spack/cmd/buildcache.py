@@ -12,15 +12,16 @@ import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+import spack.hash_types as ht
 import spack.relocate
 import spack.repo
 import spack.spec
 import spack.store
-
-from spack.error import SpecError
 import spack.config
 import spack.repo
 import spack.store
+
+from spack.error import SpecError
 from spack.paths import etc_path
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.spec_set import CombinatorialSpecSet
@@ -543,7 +544,7 @@ def save_spec_yamls(args):
 
     root_spec = Spec(args.root_spec)
     root_spec.concretize()
-    root_spec_as_yaml = root_spec.to_yaml(all_deps=True)
+    root_spec_as_yaml = root_spec.to_yaml(hash=ht.build_hash)
 
     save_dependency_spec_yamls(
         root_spec_as_yaml, args.yaml_dir, args.specs.split())

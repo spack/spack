@@ -38,7 +38,7 @@ __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 # Valid version characters
 VALID_VERSION = r'[A-Za-z0-9_.-]'
 
-# Infinity-like versions. The order in the list implies the comparision rules
+# Infinity-like versions. The order in the list implies the comparison rules
 infinity_versions = ['develop', 'master', 'head', 'trunk']
 
 
@@ -467,7 +467,7 @@ class VersionRange(object):
 
         This is essentially the same as overlaps(), but overlaps assumes
         that its arguments are specific.  That is, 4.7 is interpreted as
-        4.7.0.0.0.0... .  This funciton assumes that 4.7 woudl be satisfied
+        4.7.0.0.0.0... .  This function assumes that 4.7 would be satisfied
         by 4.7.3.5, etc.
 
         Rationale:
@@ -549,7 +549,7 @@ class VersionRange(object):
                 # This is tricky:
                 #     1.6.5 in 1.6 = True  (1.6.5 is more specific)
                 #     1.6 < 1.6.5  = True  (lexicographic)
-                # Should 1.6 NOT be less than 1.6.5?  Hm.
+                # Should 1.6 NOT be less than 1.6.5?  Hmm.
                 # Here we test (not end in other.end) first to avoid paradox.
                 if other.end is not None and end not in other.end:
                     if other.end < end or other.end in end:
@@ -642,6 +642,23 @@ class VersionList(object):
             return None
         else:
             return self[-1].highest()
+
+    def highest_numeric(self):
+        """Get the highest numeric version in the list."""
+        numeric_versions = list(filter(
+            lambda v: str(v) not in infinity_versions,
+            self.versions))
+        if not any(numeric_versions):
+            return None
+        else:
+            return numeric_versions[-1].highest()
+
+    def preferred(self):
+        """Get the preferred (latest) version in the list."""
+        latest = self.highest_numeric()
+        if latest is None:
+            latest = self.highest()
+        return latest
 
     @coerced
     def overlaps(self, other):

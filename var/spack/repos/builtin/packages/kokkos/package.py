@@ -28,6 +28,8 @@ class Kokkos(Package):
     version('2.02.15', 'de41e38f452a50bb03363c519fe20769')
     version('2.02.07', 'd5baeea70109249f7dca763074ffb202')
 
+    variant('debug', default=False, description="Build debug version of Kokkos")
+
     variant('serial', default=True, description="enable Serial backend (default)")
     variant('pthreads', default=False, description="enable Pthreads backend")
     variant('qthreads', default=False, description="enable Qthreads backend")
@@ -147,6 +149,10 @@ class Kokkos(Package):
             # PIC
             if '+pic' in spec:
                 g_args.append('--cxxflags=-fPIC')
+
+            # Build Debug
+            if '+debug' in spec:
+                g_args.append('--debug')
 
             # Backends
             if '+serial' in spec:

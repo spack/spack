@@ -41,7 +41,7 @@ class Cuda(Package):
         run_env.set('CUDA_HOME', self.prefix)
 
     def install(self, spec, prefix):
-        runfile = glob(join_path(self.stage.path, 'cuda*_linux*'))[0]
+        runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
         runfile = which(runfile)
@@ -63,14 +63,8 @@ class Cuda(Package):
 
     @property
     def libs(self):
-        prefix = self.prefix
-        search_paths = [(prefix.lib, False), (prefix.lib64, False),
-                        (prefix, True)]
-        for search_root, recursive in search_paths:
-            libs = find_libraries(
-                'libcuda', root=search_root, shared=True, recursive=recursive)
-            if libs:
-                break
+        libs = find_libraries('libcuda', root=self.prefix, shared=True,
+                              recursive=True)
 
         filtered_libs = []
         # CUDA 10.0 provides Compatability libraries for running newer versions

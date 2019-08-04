@@ -13,6 +13,7 @@ class Intel(IntelPackage):
 
     # Same as in ../intel-parallel-studio/package.py, Composer Edition,
     # but the version numbering in Spack differs.
+    version('19.0.4',              '1915993445323e1e78d6de73702a88fa3df2036109cde03d74ee38fef9f1abf2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15537/parallel_studio_xe_2019_update4_composer_edition.tgz')
     version('19.0.3',              '15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
     version('19.0.1',              'db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
     version('19.0.0',              'e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
@@ -41,6 +42,19 @@ class Intel(IntelPackage):
     version('15.0.1',              '85beae681ae56411a8e791a7c44a5c0a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4933/l_compxe_2015.1.133.tgz')
 
     variant('rpath', default=True, description='Add rpath to .cfg files')
+
+    auto_dispatch_options = IntelPackage.auto_dispatch_options
+    variant(
+        'auto_dispatch',
+        values=any_combination_of(*auto_dispatch_options),
+        description='Enable generation of multiple auto-dispatch code paths'
+    )
+
+    # MacOS does not support some of the auto dispatch settings
+    conflicts('auto_dispatch=SSE2', 'platform=darwin',
+              msg='SSE2 is not supported on MacOS')
+    conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64',
+              msg='SSE3 is not supported on MacOS x86_64')
 
     # Since the current package is a subset of 'intel-parallel-studio',
     # all remaining Spack actions are handled in the package class.

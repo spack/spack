@@ -23,7 +23,7 @@ class PyNetcdf4(PythonPackage):
     depends_on('py-cftime', type=('build', 'run'))
 
     depends_on('netcdf')
-    depends_on('hdf5@1.8.0:')
+    depends_on('hdf5@1.8.0:+hl')
 
     def setup_environment(self, spack_env, run_env):
         """Ensure installed netcdf and hdf5 libraries are used"""

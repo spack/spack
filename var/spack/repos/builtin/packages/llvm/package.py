@@ -66,6 +66,8 @@ class Llvm(CMakePackage):
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant('omp_tsan', default=False,
+            description="Build with OpenMP capable thread sanitizer")
     variant('python', default=False, description="Install python bindings")
     extends('python', when='+python')
 
@@ -525,32 +527,32 @@ class Llvm(CMakePackage):
         if release['version'] == 'develop':
             version(release['version'], svn=release['repo'])
 
-            for name, repo in release['resources'].items():
-                resource(name=name,
+            for rname, repo in release['resources'].items():
+                resource(name=rname,
                          svn=repo,
-                         destination=resources[name]['destination'],
+                         destination=resources[rname]['destination'],
                          when='@%s%s' % (release['version'],
-                                         resources[name].get('variant', "")),
-                         placement=resources[name].get('placement', None))
+                                         resources[rname].get('variant', "")),
+                         placement=resources[rname].get('placement', None))
         else:
             version(release['version'], release['md5'], url=llvm_url % release)
 
-            for name, md5 in release['resources'].items():
-                resource(name=name,
-                         url=resources[name]['url'] % release,
+            for rname, md5 in release['resources'].items():
+                resource(name=rname,
+                         url=resources[rname]['url'] % release,
                          md5=md5,
-                         destination=resources[name]['destination'],
+                         destination=resources[rname]['destination'],
                          when='@%s%s' % (release['version'],
-                                         resources[name].get('variant', "")),
-                         placement=resources[name].get('placement', None))
+                                         resources[rname].get('variant', "")),
+                         placement=resources[rname].get('placement', None))
 
     for release in flang_releases:
         if release['version'] == 'develop':
             version('flang-' + release['version'], git=flang_llvm_url, branch=release['branch'])
 
-            for name, branch in release['resources'].items():
-                flang_resource = flang_resources[name]
-                resource(name=name,
+            for rname, branch in release['resources'].items():
+                flang_resource = flang_resources[rname]
+                resource(name=rname,
                          git=flang_resource['git'],
                          branch=branch,
                          destination=flang_resource['destination'],
@@ -560,9 +562,9 @@ class Llvm(CMakePackage):
         else:
             version('flang-' + release['version'], git=flang_llvm_url, commit=release['commit'])
 
-            for name, commit in release['resources'].items():
-                flang_resource = flang_resources[name]
-                resource(name=name,
+            for rname, commit in release['resources'].items():
+                flang_resource = flang_resources[rname]
+                resource(name=rname,
                          git=flang_resource['git'],
                          commit=commit,
                          destination=flang_resource['destination'],
@@ -575,6 +577,9 @@ class Llvm(CMakePackage):
     # LLVM 4 and 5 does not build with GCC 8
     conflicts('%gcc@8:',       when='@:5')
     conflicts('%gcc@:5.0.999', when='@8:')
+
+    # OMP TSAN exists in > 5.x
+    conflicts('+omp_tsan', when='@:5.99')
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
@@ -664,10 +669,14 @@ class Llvm(CMakePackage):
         if '+all_targets' not in spec:  # all is default on cmake
 
             targets = ['NVPTX', 'AMDGPU']
-            if spec.version < Version('3.9.0'):
+            if (spec.version < Version('3.9.0')
+                and spec.version[0] != 'flang'):
                 # Starting in 3.9.0 CppBackend is no longer a target (see
                 # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
                 # the complete list of targets)
+
+                # This also applies to the version of llvm used by flang
+                # hence the test to see if the version starts with "flang".
                 targets.append('CppBackend')
 
             if 'x86' in spec.architecture.target.lower():
@@ -684,6 +693,9 @@ class Llvm(CMakePackage):
 
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:STRING=' + ';'.join(targets))
+
+        if '+omp_tsan' in spec:
+            cmake_args.append('-DLIBOMP_TSAN_SUPPORT=ON')
 
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')

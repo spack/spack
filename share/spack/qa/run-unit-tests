@@ -16,6 +16,12 @@
 #     Optionally add one or more unit tests
 #     to only run these tests.
 #
+
+#-----------------------------------------------------------
+# Run a few initial commands and set up test environment
+#-----------------------------------------------------------
+ORIGINAL_PATH="$PATH"
+
 . "$(dirname $0)/setup.sh"
 check_dependencies ${coverage} git hg svn
 
@@ -27,17 +33,39 @@ cd "$SPACK_ROOT"
 spack config get compilers
 
 # Run spack help to cover command import
-${coverage_run} bin/spack -h
-${coverage_run} bin/spack help -a
+bin/spack -h
+bin/spack help -a
 
 # Profile and print top 20 lines for a simple call to spack spec
-if [[ $TRAVIS_PYTHON_VERSION != 2.6 ]]; then
-    ${coverage_run} bin/spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
-fi
+bin/spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
 
+#-----------------------------------------------------------
 # Run unit tests with code coverage
+#-----------------------------------------------------------
 extra_args=""
 if [[ -n "$@" ]]; then
     extra_args="-k $@"
 fi
 ${coverage_run} bin/spack test --verbose "$extra_args"
+
+#-----------------------------------------------------------
+# Run tests for setup-env.sh
+#-----------------------------------------------------------
+# Clean the environment by removing Spack from the path and getting rid of
+# the spack shell function
+export PATH="$ORIGINAL_PATH"
+unset spack
+
+# start in the spack root directory
+cd $SPACK_ROOT
+
+# Run bash tests with coverage enabled, but pipe output to /dev/null
+# because it seems that kcov seems to undo the script's redirection
+if [ "$BASH_COVERAGE" = true ]; then
+    ${QA_DIR}/bashcov ${QA_DIR}/setup-env-test.sh &> /dev/null
+fi
+
+# run the test scripts for their output (these will print nicely)
+bash ${QA_DIR}/setup-env-test.sh
+zsh  ${QA_DIR}/setup-env-test.sh
+dash ${QA_DIR}/setup-env-test.sh

@@ -54,6 +54,48 @@ reserved_names = ['patches']
 _patch_order_index = 0
 
 
+def make_when_spec(value):
+    """Create a ``Spec`` that indicates when a directive should be applied.
+
+    Directives with ``when`` specs, e.g.:
+
+        patch('foo.patch', when='@4.5.1:')
+        depends_on('mpi', when='+mpi')
+        depends_on('readline', when=sys.platform() != 'darwin')
+
+    are applied conditionally depending on the value of the ``when``
+    keyword argument.  Specifically:
+
+      1. If the ``when`` argument is ``True``, the directive is always applied
+      2. If it is ``False``, the directive is never applied
+      3. If it is a ``Spec`` string, it is applied when the package's
+         concrete spec satisfies the ``when`` spec.
+
+    The first two conditions are useful for the third example case above.
+    It allows package authors to include directives that are conditional
+    at package definition time, in additional to ones that are evaluated
+    as part of concretization.
+
+    Arguments:
+        value (Spec or bool): a conditional Spec or a constant ``bool``
+           value indicating when a directive should be applied.
+
+    """
+    # Unsatisfiable conditions are discarded by the caller, and never
+    # added to the package class
+    if value is False:
+        return False
+
+    # If there is no constraint, the directive should always apply;
+    # represent this by returning the unconstrained `Spec()`, which is
+    # always satisfied.
+    if value is None or value is True:
+        return spack.spec.Spec()
+
+    # This is conditional on the spec
+    return spack.spec.Spec(value)
+
+
 class DirectiveMeta(type):
     """Flushes the directives that were temporarily stored in the staging
     area into the package.
@@ -100,11 +142,6 @@ class DirectiveMeta(type):
         # that the directives are called on the class to set it up
 
         if 'spack.pkg' in cls.__module__:
-            # Package name as taken
-            # from llnl.util.lang.get_calling_module_name
-            pkg_name = cls.__module__.split('.')[-1]
-            setattr(cls, 'name', pkg_name)
-
             # Ensure the presence of the dictionaries associated
             # with the directives
             for d in DirectiveMeta._directive_names:
@@ -241,13 +278,9 @@ def version(ver, checksum=None, **kwargs):
 
 
 def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
-    # If when is False do nothing
-    if when is False:
+    when_spec = make_when_spec(when)
+    if not when_spec:
         return
-    # If when is None or True make sure the condition is always satisfied
-    if when is None or when is True:
-        when = pkg.name
-    when_spec = spack.spec.parse_anonymous_spec(when, pkg.name)
 
     dep_spec = spack.spec.Spec(spec)
     if pkg.name == dep_spec.name:
@@ -309,8 +342,9 @@ def conflicts(conflict_spec, when=None, msg=None):
     """
     def _execute_conflicts(pkg):
         # If when is not specified the conflict always holds
-        condition = pkg.name if when is None else when
-        when_spec = spack.spec.parse_anonymous_spec(condition, pkg.name)
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
 
         # Save in a list the conflicts and the associated custom messages
         when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
@@ -357,12 +391,11 @@ def extends(spec, **kwargs):
 
     """
     def _execute_extends(pkg):
-        # if pkg.extendees:
-        #     directive = 'extends'
-        #     msg = 'Packages can extend at most one other package.'
-        #     raise DirectiveError(directive, msg)
+        when = kwargs.get('when')
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
 
-        when = kwargs.get('when', pkg.name)
         _depends_on(pkg, spec, when=when)
         pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
     return _execute_extends
@@ -375,8 +408,14 @@ def provides(*specs, **kwargs):
        can use the providing package to satisfy the dependency.
     """
     def _execute_provides(pkg):
-        spec_string = kwargs.get('when', pkg.name)
-        provider_spec = spack.spec.parse_anonymous_spec(spec_string, pkg.name)
+        when = kwargs.get('when')
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
+
+        # ``when`` specs for ``provides()`` need a name, as they are used
+        # to build the ProviderIndex.
+        when_spec.name = pkg.name
 
         for string in specs:
             for provided_spec in spack.spec.parse(string):
@@ -386,7 +425,7 @@ def provides(*specs, **kwargs):
 
                 if provided_spec not in pkg.provided:
                     pkg.provided[provided_spec] = set()
-                pkg.provided[provided_spec].add(provider_spec)
+                pkg.provided[provided_spec].add(when_spec)
     return _execute_provides
 
 
@@ -412,9 +451,9 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
 
     """
     def _execute_patch(pkg_or_dep):
-        constraint = pkg_or_dep.name if when is None else when
-        when_spec = spack.spec.parse_anonymous_spec(
-            constraint, pkg_or_dep.name)
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
 
         # if this spec is identical to some other, then append this
         # patch to the existing list.
@@ -556,7 +595,11 @@ def resource(**kwargs):
       resource is moved into the main package stage area.
     """
     def _execute_resource(pkg):
-        when = kwargs.get('when', pkg.name)
+        when = kwargs.get('when')
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
+
         destination = kwargs.get('destination', "")
         placement = kwargs.get('placement', None)
 
@@ -579,7 +622,6 @@ def resource(**kwargs):
             message += "\tdestination : '{dest}'\n".format(dest=destination)
             raise RuntimeError(message)
 
-        when_spec = spack.spec.parse_anonymous_spec(when, pkg.name)
         resources = pkg.resources.setdefault(when_spec, [])
         name = kwargs.get('name')
         fetcher = from_kwargs(**kwargs)

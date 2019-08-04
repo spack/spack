@@ -7,13 +7,21 @@ import platform as py_platform
 
 from spack.architecture import OperatingSystem
 from spack.version import Version
+from spack.util.executable import Executable
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string
 def macos_version():
     """temporary workaround to return a macOS version as a Version object
     """
-    return Version('.'.join(py_platform.mac_ver()[0].split('.')[:2]))
+    return Version(py_platform.mac_ver()[0])
+
+
+def macos_sdk_path():
+    """Return SDK path
+    """
+    xcrun = Executable('xcrun')
+    return xcrun('--show-sdk-path', output=str, error=str).rstrip()
 
 
 class MacOs(OperatingSystem):
@@ -38,7 +46,7 @@ class MacOs(OperatingSystem):
                         "10.13": "highsierra",
                         "10.14": "mojave"}
 
-        mac_ver = '.'.join(py_platform.mac_ver()[0].split('.')[:2])
+        mac_ver = str(macos_version().up_to(2))
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 

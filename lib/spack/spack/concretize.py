@@ -500,7 +500,8 @@ def concretize_specs_together(*abstract_specs):
         # Split recursive specs, as it seems the concretizer has issue
         # respecting conditions on dependents expressed like
         # depends_on('foo ^bar@1.0'), see issue #11160
-        split_specs = [dep for spec in abstract_specs
+        split_specs = [dep.copy(deps=False)
+                       for spec in abstract_specs
                        for dep in spec.traverse(root=True)]
 
         with open(os.path.join(pkg_dir, 'package.py'), 'w') as f:
@@ -586,6 +587,6 @@ class NoBuildError(spack.error.SpackError):
        no satisfactory external versions can be found"""
 
     def __init__(self, spec):
-        msg = ("The spec '%s' is configured as not buildable, "
+        msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")
-        super(NoBuildError, self).__init__(msg % spec.name)
+        super(NoBuildError, self).__init__(msg % spec)

@@ -27,6 +27,7 @@ import spack.stage
         ('makefile',       'makefile'),
         ('Makefile',       'makefile'),
         ('meson.build',    'meson'),
+        ('configure.py',   'sip'),
         ('foobar',         'generic')
     ]
 )

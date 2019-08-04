@@ -45,10 +45,12 @@ def test_list_format_name_only():
 
 
 @pytest.mark.maybeslow
-def test_list_format_rst():
-    output = list('--format', 'rst')
-    assert '.. _cloverleaf3d:' in output
-    assert '.. _hdf5:' in output
+def test_list_format_version_json():
+    output = list('--format', 'version_json')
+    assert '  {"name": "cloverleaf3d",' in output
+    assert '  {"name": "hdf5",' in output
+    import json
+    json.loads(output)
 
 
 @pytest.mark.maybeslow
@@ -59,3 +61,30 @@ def test_list_format_html():
 
     assert '<div class="section" id="hdf5">' in output
     assert '<h1>hdf5' in output
+
+
+def test_list_update(tmpdir):
+    update_file = tmpdir.join('output')
+
+    # not yet created when list is run
+    list('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read()
+
+    # created but older than any package
+    with update_file.open('w') as f:
+        f.write('empty\n')
+    update_file.setmtime(0)
+    list('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read() != 'empty\n'
+
+    # newer than any packages
+    with update_file.open('w') as f:
+        f.write('empty\n')
+    list('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read() == 'empty\n'

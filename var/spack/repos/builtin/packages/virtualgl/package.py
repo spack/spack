@@ -18,5 +18,5 @@ class Virtualgl(CMakePackage):
 
     version('2.5.2', '1a9f404f4a35afa9f56381cb33ed210c')
 
-    depends_on("libjpeg-turbo")
+    depends_on("jpeg")
     depends_on("glu")

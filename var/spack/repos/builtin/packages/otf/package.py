@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Otf(Package):
+class Otf(AutotoolsPackage):
     """To improve scalability for very large and massively parallel
        traces the Open Trace Format (OTF) is developed at ZIH as a
        successor format to the Vampir Trace Format (VTF3)."""
@@ -18,10 +18,10 @@ class Otf(Package):
 
     depends_on('zlib')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--without-vtf3',
-                  '--with-zlib',
-                  '--with-zlibsymbols')
-        make()
-        make("install")
+    def configure_args(self):
+        args = []
+
+        args.append('--without-vtf3')
+        args.append('--with-zlib')
+        args.append('--with-zlibsymbols')
+        return args

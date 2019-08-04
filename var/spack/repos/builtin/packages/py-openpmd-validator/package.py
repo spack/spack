@@ -19,5 +19,5 @@ class PyOpenpmdValidator(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'))
-    depends_on('py-dateutil@2.3.0:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.3.0:', type=('build', 'run'))
     depends_on('py-h5py@2.0.0:', type=('build', 'run'))

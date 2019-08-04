@@ -39,6 +39,9 @@ def setup_parser(subparser):
         '-q', '--quiet', action='store_true', dest='quiet',
         help="do not display verbose build output while installing")
     subparser.add_argument(
+        '-u', '--until', type=str, dest='until', default=None,
+        help="phase to stop after when installing (default None)")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install. must contain package AND version")
 
@@ -49,10 +52,6 @@ def setup_parser(subparser):
 def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
-
-    if args.jobs is not None:
-        if args.jobs <= 0:
-            tty.die("the -j option must be a positive integer")
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
@@ -94,4 +93,5 @@ def diy(self, args):
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
         keep_stage=True,   # don't remove source dir for DIY.
-        dirty=args.dirty)
+        dirty=args.dirty,
+        stop_at=args.until)

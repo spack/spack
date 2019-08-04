@@ -27,8 +27,6 @@ class NinjaFortran(Package):
 
     depends_on('python', type='build')
 
-    provides('ninja')
-
     phases = ['configure', 'install']
 
     def url_for_version(self, version):

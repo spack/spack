@@ -8,7 +8,7 @@ from spack import *
 import sys
 
 
-class Mesa(MesonPackage):
+class Mesa(AutotoolsPackage):
     """Mesa is an open-source implementation of the OpenGL specification
      - a system for rendering interactive 3D graphics."""
 
@@ -20,22 +20,19 @@ class Mesa(MesonPackage):
     # whatever version of LLVM you're using.
     git      = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    version('develop',      branch='master')
-    version('19.1.develop', branch='19.1')
-    version('19.0.develop', branch='19.0')
-    version('19.0.4', tag='mesa-19.0.4', preferred=True)
-    version('19.0.3', tag='mesa-19.0.3')
-    version('19.0.2', tag='mesa-19.0.2')
-    version('19.0.1', tag='mesa-19.0.1')
-    version('19.0.0', tag='mesa-19.0.0')
+    version('18.3.6', tag='mesa-18.3.6', preferred=True)
 
-    depends_on('meson@0.45:', type='build')
-    depends_on('binutils', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('gettext', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('python@3:', type='build')
+    depends_on('python', type='build')
     depends_on('py-mako@0.8.0:', type='build')
     depends_on('libxml2')
     depends_on('zlib')
@@ -77,23 +74,29 @@ class Mesa(MesonPackage):
     depends_on('libxext', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx', type='build')
 
-    # Fix glproto dependency for glx=gallium-xlib
-    # https://gitlab.freedesktop.org/mesa/mesa/merge_requests/806
-    # Was included in the upstream patch release for 19.0.4
-    patch('glproto-mr806.patch', when='@19.0.0:19.0.3')
+    # Prevent an unnecessary xcb-dri dependency
+    patch('autotools-x11-nodri.patch')
 
-    def meson_args(self):
+    def autoreconf(self, spec, prefix):
+        which('autoreconf')('--force',  '--verbose', '--install')
+
+    def configure_args(self):
         spec = self.spec
         args = [
-            '-Dglvnd=false',
-            '-Dgallium-nine=false',
-            '-Dgallium-omx=disabled',
-            '-Dgallium-opencl=disabled',
-            '-Dgallium-va=false',
-            '-Dgallium-vdpau=false',
-            '-Dgallium-xa=false',
-            '-Dgallium-xvmc=false',
-            '-Dvulkan-drivers=']
+            '--enable-shared',
+            '--disable-static',
+            '--disable-libglvnd',
+            '--disable-nine',
+            '--disable-omx-bellagio',
+            '--disable-omx-tizonia',
+            '--disable-opencl',
+            '--disable-opencl-icd',
+            '--disable-va',
+            '--disable-vdpau',
+            '--disable-xa',
+            '--disable-xvmc',
+            '--disable-osmesa',
+            '--with-vulkan-drivers=']
         args_platforms = []
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []
@@ -101,49 +104,51 @@ class Mesa(MesonPackage):
         num_frontends = 0
         if '+osmesa' in spec:
             num_frontends += 1
-            args.append('-Dosmesa=gallium')
+            args.append('--enable-gallium-osmesa')
         else:
-            args.append('-Dosmesa=disabled')
+            args.append('--disable-gallium-osmesa')
 
         if '+glx' in spec:
             num_frontends += 1
-            args.append('-Dglx=gallium-xlib')
+            if '+egl' in spec:
+                args.append('--enable-glx=dri')
+            else:
+                args.append('--enable-glx=gallium-xlib')
             args_platforms.append('x11')
         else:
-            args.append('-Dglx=disabled')
+            args.append('--disable-glx')
 
         if '+egl' in spec:
             num_frontends += 1
-            args.extend(['-Degl=true', '-Dgbm=true'])
+            args.extend(['--enable-egl', '--enable-gbm', '--enable-dri'])
+            args_platforms.append('surfaceless')
         else:
-            args.extend(['-Degl=false', '-Dgbm=false'])
+            args.extend(['--disable-egl', '--disable-gbm', '--disable-dri'])
 
         if '+opengl' in spec:
-            args.append('-Dopengl=true')
+            args.append('--enable-opengl')
         else:
-            args.append('-Dopengl=false')
+            args.append('--disable-opengl')
 
         if '+opengles' in spec:
-            args.extend(['-Dgles1=true', '-Dgles2=true'])
+            args.extend(['--enable-gles1', '--enable-gles2'])
         else:
-            args.extend(['-Dgles1=false', '-Dgles2=false'])
-
-        if '+egl' in spec or '+osmesa' in spec:
-            args_platforms.append('surfaceless')
+            args.extend(['--disable-gles1', '--disable-gles2'])
 
         if num_frontends > 1:
-            args.append('-Dshared-glapi=true')
+            args.append('--enable-shared-glapi')
         else:
-            args.append('-Dshared-glapi=false')
+            args.append('--disable-shared-glapi')
 
         if '+llvm' in spec:
-            args.append('-Dllvm=true')
+            args.append('--enable-llvm')
+            args.append('--with-llvm-prefix=%s' % spec['llvm'].prefix)
             if '+link_dylib' in spec['llvm']:
-                args.append('-Dshared-llvm=true')
+                args.append('--enable-llvm-shared-libs')
             else:
-                args.append('-Dshared-llvm=false')
+                args.append('--disable-llvm-shared-libs')
         else:
-            args.append('-Dllvm=false')
+            args.append('--disable-llvm')
 
         args_swr_arches = []
         if 'swr=avx' in spec:
@@ -158,11 +163,11 @@ class Mesa(MesonPackage):
             if '+llvm' not in spec:
                 raise SpecError('Variant swr requires +llvm')
             args_gallium_drivers.append('swr')
-            args.append('-Dswr-arches=' + ','.join(args_swr_arches))
+            args.append('--with-swr-archs=' + ','.join(args_swr_arches))
 
         # Add the remaining list args
-        args.append('-Dplatforms=' + ','.join(args_platforms))
-        args.append('-Dgallium-drivers=' + ','.join(args_gallium_drivers))
-        args.append('-Ddri-drivers=' + ','.join(args_dri_drivers))
+        args.append('--with-platforms=' + ','.join(args_platforms))
+        args.append('--with-gallium-drivers=' + ','.join(args_gallium_drivers))
+        args.append('--with-dri-drivers=' + ','.join(args_dri_drivers))
 
         return args
