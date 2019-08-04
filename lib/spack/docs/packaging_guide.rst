@@ -138,7 +138,7 @@ generates a boilerplate template for your package, and opens up the new
 
        # FIXME: Add a list of GitHub accounts to automatically
        # notify when the package is updated.
-       # maintainers = ['foo', 'bar']
+       # maintainers = ['github_user1', 'github_user2']
 
        version('6.1.2', '8ddbb26dc3bd4e2302984debba1406a5')
        version('6.1.1', '4c175f86e11eb32d8bf9872ca3a8e11d')
