@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyBackportsTempfile(PythonPackage):
-    """This package provides backports of new features in Python’s tempfile
+    """This package provides backports of new features in Python's tempfile
     module under the backports namespace
     """
 
