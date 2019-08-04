@@ -22,5 +22,3 @@ class RBookdown(RPackage):
     depends_on('r-htmltools@0.3.6:', type=('build', 'run'))
     depends_on('r-xfun@0.6:', when='@0.12:', type=('build', 'run'))
     depends_on('r-tinytex@0.12:', when='@0.12:', type=('build', 'run'))
-
-

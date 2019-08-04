@@ -24,4 +24,3 @@ class RVegan(RPackage):
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))
-

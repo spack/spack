@@ -14,4 +14,3 @@ class RGridbase(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gridBase"
 
     version('0.4-7', '6d5064a85f5c966a92ee468ae44c5f1f')
-
