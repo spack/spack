@@ -17,6 +17,7 @@ class RDbplyr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/dbplyr_1.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dbplyr"
 
+    version('1.4.2', sha256='b783f0da2c09a1e63f41168b02c0715b08820f02a351f7ab0aaa688432754de0')
     version('1.4.1', sha256='cfe829f56acdc785c5af21bf3927cf08327504d78c4ae1477c405c81b131da95')
     version('1.2.2', sha256='9d410bb0055fffe10f1f8da55a5b24d98322c7b571d74df61427d5888332bc48')
     version('1.2.1', sha256='b348e7a02623f037632c85fb11be16c40c01755ae6ca02c8c189cdc192a699db')

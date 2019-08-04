@@ -14,6 +14,7 @@ class RRmarkdown(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rmarkdown"
 
+    version('1.14', sha256='f636b1048c5be56e06aa0b2b4342ad5c8192734f1e9b27468fef62be672edc61')
     version('1.13', sha256='96fb6b08d27bbb8054145e0a55721f905341941d4f6691480a2a234e2d5a63ef')
     version('1.7', '477c50840581ba7947b3d905c67a511b')
     version('1.0', '264aa6a59e9680109e38df8270e14c58')

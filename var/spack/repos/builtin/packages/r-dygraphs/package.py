@@ -17,6 +17,7 @@ class RDygraphs(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/dygraphs_0.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dygraphs"
 
+    version('1.1.1.6', sha256='c3d331f30012e721a048e04639f60ea738cd7e54e4f930ac9849b95f0f005208')
     version('1.1.1.5', sha256='274035988fdd6833121fd5831692355d383acc828d540788dbcecaf88eb2d72d')
     version('0.9', '7f0ce4312bcd3f0a58b8c03b2772f833')
 

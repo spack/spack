@@ -22,6 +22,7 @@ class RSplitstackshape(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/splitstackshape_1.4.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/splitstackshape"
 
+    version('1.4.8', sha256='656032c3f1e3dd5b8a3ee19ffcae617e07104c0e342fc3da4d863637a770fe56')
     version('1.4.6', sha256='b9888f9508babdb8e09f57674facaa8b158a06255ef1e61c8df813f58881860f')
     version('1.4.4', '54d2554fe92dfc4670a000b45baacc28')
 

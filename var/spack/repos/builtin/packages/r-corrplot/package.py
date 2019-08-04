@@ -14,4 +14,5 @@ class RCorrplot(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/corrplot_0.77.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/corrplot"
 
+    version('0.84', sha256='0dce5e628ead9045580a191f60c58fd7c75b4bbfaaa3307678fc9ed550c303cc')
     version('0.77', '2a5d54fd5c65618b9afba1a32f6b4542')

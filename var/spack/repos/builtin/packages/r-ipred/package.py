@@ -15,6 +15,7 @@ class RIpred(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ipred_0.9-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ipred"
 
+    version('0.9-9', sha256='0da87a70730d5a60b97e46b2421088765e7d6a7cc2695757eba0f9d31d86416f')
     version('0.9-8', sha256='9c1d11c3cb0d72be7870e70a216e589e403bbfee38c796fe75cd0611d878ac07')
     version('0.9-5', 'ce8768547a7aa9554ad3650b18ea3cbd')
 

@@ -13,6 +13,7 @@ class RParty(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/party_1.1-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/party"
 
+    version('1.3-3', sha256='9f72eea02d43a4cee105790ae7185b0478deb6011ab049cc9d31a0df3abf7ce9')
     version('1.3-2', sha256='9f350fa21114151c49bccc3d5f8536dbc5a608cfd88f60461c9805a4c630510b')
     version('1.1-2', '40a00336cf8418042d2ab616675c8ddf')
 

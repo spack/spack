@@ -15,6 +15,7 @@ class RDtw(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/dtw_1.18-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dtw"
 
+    version('1.20-1', sha256='43ca1a47a7c81a2b5d5054da1be8b8af79a85d6f9ce7b4512e9ed91f790f60f0')
     version('1.18-1', '5e9995a198a62f28045c29461265d536')
     version('1.17-1', 'e8be988fe528acd6b44afdf5aa06b745')
     version('1.16',   '260bd22d9db429394eb39739db4a4686')

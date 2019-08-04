@@ -19,4 +19,5 @@ class RLearnbayes(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/LearnBayes"
 
+    version('2.15.1', sha256='9b110858456523ca0b2a63f22013c4e1fbda6674b9d84dc1f4de8bffc5260532')
     version('2.15', '213713664707bc79fd6d3a109555ef76')

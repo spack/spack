@@ -13,6 +13,7 @@ class RProcessx(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/processx_3.2.0.tar.gz"
     list_url      = "https://cloud.r-project.org/src/contrib/Archive/processx/processx_3.1.0.tar.gz"
 
+    version('3.4.1', sha256='f1abddb48fa78f2b176552e2ec5d808d4d87d79ce72e9b3d25c9a7d715bbd1bc')
     version('3.3.1', sha256='6123dbdf9f3bb6e5e8678980fb4587dcefb56d2190adf2ef494d7cd199720bae')
     version('3.2.0', sha256='c4ba602fcbdc032ae9d94701b3e6b83a2dab1b53d0b4f9937b07a84eae22fddf')
     version('3.1.0',   sha256='11ac120ab4e4aa0e99c9b2eda87d07bc683bab735f1761e95e5ddacd311b5972')

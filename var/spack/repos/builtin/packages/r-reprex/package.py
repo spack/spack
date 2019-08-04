@@ -19,6 +19,7 @@ class RReprex(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/reprex_0.1.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/reprex"
 
+    version('0.3.0', sha256='203c2ae6343f6ff887e7a5a3f5d20bae465f6e8d9745c982479f5385f4effb6c')
     version('0.2.1', sha256='5d234ddfbcadc5a5194a58eb88973c51581e7e2e231f146974af8f42747b45f3')
     version('0.1.1', 'fcd89995d7b35a2ddd4269973937bde3')
 

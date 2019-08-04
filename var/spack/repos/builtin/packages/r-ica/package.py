@@ -15,5 +15,6 @@ class RIca(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ica_1.0-1.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/ica"
 
+    version('1.0-2', sha256='e721596fc6175d3270a60d5e0b5b98be103a8fd0dd93ef16680af21fe0b54179')
     version('1.0-1', '15c8d5afeec2804beec55dd14abc585d')
     version('1.0-0', '3ade2b3b00eb39c348d802f24d2afd1d')

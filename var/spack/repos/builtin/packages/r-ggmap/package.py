@@ -16,6 +16,7 @@ class RGgmap(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ggmap_2.6.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ggmap"
 
+    version('3.0.0', sha256='96c24ffdc0710d0633ac4721d599d2c06f43a29c59d1e85c94ff0af30dfdb58d')
     version('2.6.2', sha256='4e9cf53ab108fc70805d971dadb69b26fe67ea289c23c38adf6e30b198379d90')
     version('2.6.1', '25ad414a3a1c6d59a227a9f22601211a')
 

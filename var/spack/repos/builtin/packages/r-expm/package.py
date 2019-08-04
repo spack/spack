@@ -14,6 +14,7 @@ class RExpm(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/expm_0.999-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/expm"
 
+    version('0.999-4', sha256='58d06427a08c9442462b00a5531e2575800be13ed450c5a1546261251e536096')
     version('0.999-3', sha256='511bac5860cc5b3888bca626cdf23241b6118eabcc82d100935386039e516412')
     version('0.999-2', 'e05fa3f995754af92bd03227625da984')
 

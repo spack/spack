@@ -14,6 +14,7 @@ class RTestthat(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/testthat_1.0.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/testthat"
 
+    version('2.2.1', sha256='67ee0512bb312695c81fd74338bb8ce9e2e58763681ddbcdfdf35f52dfdb0b78')
     version('2.1.0', sha256='cf5fa7108111b32b86e70819352f86b57ab4e835221bb1e83642d52a1fdbcdd4')
     version('1.0.2', '6c6a90c8db860292df5784a70e07b8dc')
 

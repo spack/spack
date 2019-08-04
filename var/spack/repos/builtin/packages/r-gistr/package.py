@@ -19,6 +19,7 @@ class RGistr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/gistr_0.3.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gistr"
 
+    version('0.4.2', sha256='43c00c7f565732125f45f6c067724771ba1b337d6dd3a6e301639fe16e11032e')
     version('0.4.0', sha256='51771a257379a17552d0c88ada72ca6263954bbe896997f8a66cde3bf0b83ce0')
     version('0.3.6', '49d548cb3eca0e66711aece37757a2c0')
 

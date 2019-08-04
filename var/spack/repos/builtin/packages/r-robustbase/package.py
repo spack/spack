@@ -17,6 +17,7 @@ class RRobustbase(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/robustbase_0.92-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/robustbase"
 
+    version('0.93-5', sha256='bde564dbd52f04ab32f9f2f9dd09b9578f3ccd2541cf5f8ff430da42a55e7f56')
     version('0.93-4', sha256='ea9e03d484ef52ea805803477ffc48881e4c8c86ffda4eea56109f8b23f0a6e0')
     version('0.92-7', 'db3c8d12f9729b35bad17abf09e80b72')
 

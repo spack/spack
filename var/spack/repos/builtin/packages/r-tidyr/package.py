@@ -15,6 +15,7 @@ class RTidyr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/tidyr_0.7.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tidyr"
 
+    version('0.8.3', sha256='a18f54ec35124110058ab23f7e0a3c037a8d50f0405520cf5cc5443ec022cc37')
     version('0.8.2', sha256='99a508d0539390364789c5f4835b36c4a383927f0ec1648e2a4636c1cc6e490f')
     version('0.7.2', '42d723bf04c5c1c59e27a8be14f3a6b6')
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')

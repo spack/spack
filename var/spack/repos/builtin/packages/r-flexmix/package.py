@@ -13,6 +13,7 @@ class RFlexmix(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/flexmix_2.3-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/flexmix"
 
+    version('2.3-15', sha256='ba444c0bfe33ab87d440ab590c06b03605710acd75811c1622253171bb123f43')
     version('2.3-14', '5be4f7764e6a697f4586e60c2bf6e960')
 
     depends_on('r@2.15.0:')

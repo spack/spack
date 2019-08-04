@@ -20,6 +20,7 @@ class RBroom(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/broom_0.4.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/broom"
 
+    version('0.5.2', sha256='16af7b446b24bc14461efbda9bea1521cf738c778c5e48fcc7bad45660a4ac62')
     version('0.5.1', sha256='da9e6bf7cb8f960b83309cf107743976cc32b54524675f6471982abe3d1aae2e')
     version('0.4.2', '6eabab1f2eaec10f93cf9aa56d6a61de')
 

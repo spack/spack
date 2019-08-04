@@ -16,6 +16,7 @@ class RHighr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/highr_0.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/highr"
 
+    version('0.8', sha256='4bd01fba995f68c947a99bdf9aca15327a5320151e10bd0326fad50a6d8bc657')
     version('0.7', sha256='cabba5b6f2ea82024a49c5ced5f1aa476f864bc52bc129038e319e4e26b6f3b7')
     version('0.6', 'bf47388c5f57dc61962362fb7e1d8b16')
 

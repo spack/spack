@@ -16,6 +16,7 @@ class RCoda(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/coda_0.19-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/coda"
 
+    version('0.19-3', sha256='d3df1fc848bcf1af8fae13d61eeab60e99a3d4b4db384bec4326f909f502c5d6')
     version('0.19-2', sha256='678a7e6a87a2723089daeb780ea37ac3d4319b37eabe26928ea3fa9c9b1eda0d')
     version('0.19-1', '0d2aca6a5a3bdae9542708817c1ec001')
 

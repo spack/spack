@@ -26,6 +26,7 @@ class RSpdep(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/spdep_0.6-13.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/spdep"
 
+    version('1.1-2', sha256='ba0ca3a0ad6b9cc1dc46cadd9e79259949ad38c88f738e98e482d6c06640b31a')
     version('1.0-2', sha256='6f9efa4347d5c13b49922b75481ac403431c3c76a65a109af29954aa7bb138b2')
     version('0.6-13', 'bfc68b3016b4894b152ecec4b86f85d1')
 

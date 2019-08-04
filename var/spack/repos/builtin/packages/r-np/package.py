@@ -19,6 +19,7 @@ class RNp(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/np_0.60-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/np"
 
+    version('0.60-9', sha256='fe31a8985f0b1a576a7775022b7131093b1c9a8337734136d5fcad85fa6592fc')
     version('0.60-8', sha256='924c342feb2a862fa3871a45db5f8434dbbfb900cfc40c001a0872108a3a069e')
     version('0.60-2', 'e094d52ddff7280272b41e6cb2c74389')
 

@@ -17,6 +17,7 @@ class RCatools(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/caTools_1.17.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/caTools"
 
+    version('1.17.1.2', sha256='69cc542fab5677462b1a768709d0c4a0a0790f5db53e1fe9ae7123787c18726b')
     version('1.17.1.1', sha256='d53e2c5c77f1bd4744703d7196dbc9b4671a120bbb5b9b3edc45fc57c0650c06')
     version('1.17.1', '5c872bbc78b177b306f36709deb44498')
 

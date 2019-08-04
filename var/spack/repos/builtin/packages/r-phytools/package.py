@@ -13,6 +13,7 @@ class RPhytools(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/phytools_0.6-60.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/phytools/"
 
+    version('0.6-99', sha256='2ef532cba77c5f73803bd34582bef05709705311a0b50e42316e69944567390f')
     version('0.6-60', sha256='55cad759510d247ebbf03a53a46caddadd3bf87584ccf7fcd6dd06d44516b377')
 
     depends_on('r@3.2.0:', type=('build', 'run'))

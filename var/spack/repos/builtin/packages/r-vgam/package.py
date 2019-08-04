@@ -14,6 +14,7 @@ class RVgam(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/VGAM_1.0-4.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/VGAM"
 
+    version('1.1-1', sha256='de192bd65a7e8818728008de8e60e6dd3b61a13616c887a43e0ccc8147c7da52')
     version('1.0-6', sha256='121820a167411e847b41bdcb0028b55842d0ccc0c3471755c67449837e0fe3b9')
     version('1.0-4', '9d30736842db6d9dcec83df49f11d3c1')
     version('1.0-3', 'a158cd0a6ff956b4bf21d610df361b18')

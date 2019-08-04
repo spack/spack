@@ -15,6 +15,7 @@ class RRepr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/repr_0.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/repr"
 
+    version('1.0.1', sha256='ecde22c17fd800e1ff5c2b2962689119aa486fba40fbc6f2c50e8d4cc61bc44b')
     version('1.0.0', sha256='98b2eb1058c1cb2caa8f98708b63726f5564b45de03d38b95ff6b963a8261f49')
     version('0.9', 'db5ff74893063b492f684e42283070bd')
 

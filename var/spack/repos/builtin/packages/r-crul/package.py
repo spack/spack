@@ -13,6 +13,7 @@ class RCrul(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/crul_0.7.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/crul"
 
+    version('0.8.4', sha256='dbd950ad3b68402e5a5955615b1abcb5c9bdc846c93aa25f96a7a58913d04c8b')
     version('0.7.4', sha256='c963dd666ae3fc89b661ce19fce2fa19a16fc3825e1502105cae98ceb92c6014')
 
     depends_on('r-curl@3.3:', type=('build', 'run'))

@@ -15,6 +15,7 @@ class RErgm(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ergm_3.7.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ergm"
 
+    version('3.10.4', sha256='885f0b1a23c5a2c1947962350cfab66683dfdfd1db173c115e90396d00831f22')
     version('3.10.1', sha256='a2ac249ff07ba55b3359242f20389a892543b4fff5956d74143d2d41fa6d4beb')
     version('3.7.1', '431ae430c76b2408988f469831d80126')
 

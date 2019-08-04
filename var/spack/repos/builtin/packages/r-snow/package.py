@@ -13,6 +13,7 @@ class RSnow(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/snow_0.4-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/snow"
 
+    version('0.4-3', sha256='8512537daf334ea2b8074dbb80cf5e959a403a78d68bc1e97664e8a4f64576d8')
     version('0.4-2', 'afc7b0dfd4518aedb6fc81712fd2ac70')
 
     depends_on('r-rmpi', type='run')

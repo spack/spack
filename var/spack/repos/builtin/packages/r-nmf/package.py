@@ -18,6 +18,7 @@ class RNmf(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/NMF_0.20.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/NMF"
 
+    version('0.21.0', sha256='3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3')
     version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
 
     depends_on('r-pkgmaker@0.20:', type=('build', 'run'))

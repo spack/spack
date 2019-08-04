@@ -15,6 +15,7 @@ class RForecast(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/forecast_8.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/forecast"
 
+    version('8.8', sha256='d077074d77d3ea00e9215c828b3689a8c841a16af1e6859bb2dfdede081c2c1d')
     version('8.6', sha256='4279e4f700e26310bae39419ab4a9b5918a850148667a5e577a4807d53eb4d02')
     version('8.2', '3ef095258984364c100b771b3c90d15e')
 

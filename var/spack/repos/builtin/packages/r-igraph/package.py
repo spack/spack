@@ -15,6 +15,7 @@ class RIgraph(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/igraph"
 
+    version('1.2.4.1', sha256='891acc763b5a4a4a245358a95dee69280f4013c342f14dd6a438e7bb2bf2e480')
     version('1.2.4', sha256='1048eb26ab6b592815bc269c1d91e974c86c9ab827ccb80ae0a40042019592cb')
     version('1.1.2', 'ca1617aea272852d2856c4661ad1c7d8')
     version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')

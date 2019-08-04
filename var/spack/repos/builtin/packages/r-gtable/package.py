@@ -13,4 +13,5 @@ class RGtable(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/gtable_0.2.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gtable"
 
+    version('0.3.0', sha256='fd386cc4610b1cc7627dac34dba8367f7efe114b968503027fb2e1265c67d6d3')
     version('0.2.0', '124090ae40b2dd3170ae11180e0d4cab')

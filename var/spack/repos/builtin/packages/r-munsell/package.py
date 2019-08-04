@@ -17,6 +17,7 @@ class RMunsell(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/munsell_0.4.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/munsell"
 
+    version('0.5.0', sha256='d0f3a9fb30e2b5d411fa61db56d4be5733a2621c0edf017d090bdfa5e377e199')
     version('0.4.3', 'ebd205323dc37c948f499ee08be9c476')
 
     depends_on('r-colorspace', type=('build', 'run'))

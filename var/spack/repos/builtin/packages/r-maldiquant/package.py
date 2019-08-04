@@ -21,6 +21,7 @@ class RMaldiquant(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/MALDIquant_1.16.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/MALDIquant"
 
+    version('1.19.3', sha256='a730327c1f8d053d29e558636736b7b66d0671a009e0004720b869d2c76ff32c')
     version('1.19.2', sha256='8c6efc4ae4f1af4770b079db29743049f2fd597bcdefeaeb16f623be43ddeb87')
     version('1.16.4', '83200e7496d05c5a99292e45d2b11c67')
 

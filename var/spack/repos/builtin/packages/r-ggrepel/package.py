@@ -13,6 +13,7 @@ class RGgrepel(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ggrepel_0.6.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ggrepel"
 
+    version('0.8.1', sha256='d5d03a77ab6d8c831934bc46e840cc4e3df487272ab591fa72767ad42bcb7283')
     version('0.8.0', sha256='6386606e716d326354a29fcb6cd09f9b3d3b5e7c5ba0d5f7ff35416b1a4177d4')
     version('0.6.5', '7e2732cd4840efe2dc9e4bc689cf1ee5')
 

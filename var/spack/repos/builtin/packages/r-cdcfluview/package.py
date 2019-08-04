@@ -18,6 +18,7 @@ class RCdcfluview(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/cdcfluview_0.7.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/cdcfluview"
 
+    version('0.9.0', sha256='1b2064886858cbb1790ef808d88fbab75d3a9cf55e720638221a3377ff8dd244')
     version('0.7.0', 'd592606fab3da3536f39a15c0fdbcd17')
 
     depends_on('r@3.2.0:', type=('build', 'run'))

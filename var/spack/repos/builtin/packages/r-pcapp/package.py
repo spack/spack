@@ -13,6 +13,7 @@ class RPcapp(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/pcaPP_1.9-72.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/pcaPP"
 
+    version('1.9-73', sha256='ca4566b0babfbe83ef9418283b08a12b3420dc362f93c6562f265df7926b53fc')
     version('1.9-72.1', sha256='a9e39ee15a650930c07672092f9f0c431807869b68b5471037eb7290a4d65bd5')
     version('1.9-72', '87c08f8ecab69311bba395c026bbc91c')
     version('1.9-70', '3fcc809ec1cdc910f10e9ebf372888e8')

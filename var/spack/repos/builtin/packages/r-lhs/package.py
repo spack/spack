@@ -14,6 +14,7 @@ class RLhs(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/lhs_0.16.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lhs"
 
+    version('1.0.1', sha256='a4d5ac0c6f585f2880364c867fa94e6554698beb65d3678ba5938dd84fc6ea53')
     version('1.0', sha256='38c53482b360bdea89ddcfadf6d45476c80b99aee8902f97c5e97975903e2745')
     version('0.16', '088e593e5283414951e7e541a50ec2d1')
 

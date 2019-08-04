@@ -15,6 +15,7 @@ class RTidyselect(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/tidyselect_0.2.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tidyselect"
 
+    version('0.2.5', sha256='5ce2e86230fa35cfc09aa71dcdd6e05e1554a5739c863ca354d241bfccb86c74')
     version('0.2.4', sha256='5cb30e56ad5c1ac59786969edc8d542a7a1735a129a474f585a141aefe6a2295')
     version('0.2.3', 'c9dbd895ad7ce209bacfad6d19de91c9')
 

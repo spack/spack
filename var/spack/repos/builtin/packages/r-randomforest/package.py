@@ -14,4 +14,5 @@ class RRandomforest(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/randomForest_4.6-12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/randomForest"
 
+    version('4.6-14', sha256='f4b88920419eb0a89d0bc5744af0416d92d112988702dc726882394128a8754d')
     version('4.6-12', '071c03af974198e861f1475c5bab9e7a')

@@ -17,6 +17,7 @@ class RSdmtools(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/SDMTools_1.1-221.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/SDMTools"
 
+    version('1.1-221.1', sha256='3825856263bdb648ca018b27dc6ab8ceaef24691215c197f8d5cd17718b54fbb')
     version('1.1-221', '3604da1783d0c6081b62b29d35a32c3c')
     version('1.1-20', '27cc8de63cfdd86d4ba9983012121c58')
     version('1.1-13', '0d6a14d985988a81b9ff06c635675143')

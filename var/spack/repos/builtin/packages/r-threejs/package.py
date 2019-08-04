@@ -14,6 +14,7 @@ class RThreejs(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/threejs_0.2.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/threejs"
 
+    version('0.3.1', sha256='71750b741672a435ecf749b69c72f0681aa8bb795e317f4e3056d5e33f6d79e8')
     version('0.2.2', '35c179b10813c5e4bd3e7827fae6627b')
 
     depends_on('r-htmlwidgets@0.3.2:', type=('build', 'run'))

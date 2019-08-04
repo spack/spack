@@ -20,6 +20,7 @@ class RPbdzmq(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/pbdZMQ_0.2-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pbdZMQ"
 
+    version('0.3-3', sha256='ae26c13400e2acfb6463ff9b67156847a22ec79f3b53baf65119efaba1636eca')
     version('0.3-2', sha256='ece2a2881c662f77126e4801ba4e01c991331842b0d636ce5a2b591b9de3fc37')
     version('0.2-4', 'e5afb70199aa54d737ee7a0e26bde060')
 

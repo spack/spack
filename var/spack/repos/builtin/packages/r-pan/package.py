@@ -13,4 +13,5 @@ class RPan(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/pan_1.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pan"
 
+    version('1.6', sha256='adc0df816ae38bc188bce0aef3aeb71d19c0fc26e063107eeee71a81a49463b6')
     version('1.4', 'cdead963110561fc42dc544a60ac44ed')

@@ -18,4 +18,5 @@ class RLpsolve(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/lpSolve_5.6.13.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lpSolve"
 
+    version('5.6.13.1', sha256='6ad8dc430f72a4698fc4a615bb5ecb73690b3c4520e84d9094af51a528f720b8')
     version('5.6.13', '8471654d9ae76e0f85ff3449433d4bc1')

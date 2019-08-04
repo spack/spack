@@ -14,6 +14,7 @@ class RMda(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/mda_0.4-9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/mda"
 
+    version('0.4-10', sha256='7036bc622a8fea5b2de94fc19e6b64f5f0c27e5d743ae7646e116af08c9de6a5')
     version('0.4-9', '2ce1446c4a013e0ebcc1099a00269ad9')
 
     depends_on('r@1.9.0:')

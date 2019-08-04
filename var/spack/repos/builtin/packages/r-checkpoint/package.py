@@ -16,6 +16,7 @@ class RCheckpoint(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/checkpoint_0.3.18.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/checkpoint"
 
+    version('0.4.6', sha256='fd1a5edb5cb1a40d7ed26bb196de566110fe2ef62e70b4e947c003576a03ebb2')
     version('0.4.3', sha256='c3e862f89f8838183d6028f7ed13683aec562e6dab77ad4b6a5e24ec653cfb64')
     version('0.3.18', '021d7faeb72c36167951e103b2b065ea')
     version('0.3.15', 'a4aa8320338f1434a330d984e97981ea')

@@ -21,6 +21,7 @@ class RAdegenet(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/adegenet_2.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/adegenet"
 
+    version('2.1.1', sha256='3043fe5d731a38ff0e266f090dcda448640c3d0fd61934c76da32d082e5dce7a')
     version('2.1.0', sha256='7ee44061002b41164bbc09256307ab02e536f4f2ac03f36c7dc8f85f6af4639a')
     version('2.0.1', 'ecb1220ce7c9affaba2987bc7f38adda')
 

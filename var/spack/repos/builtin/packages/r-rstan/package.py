@@ -21,6 +21,7 @@ class RRstan(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/rstan_2.10.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rstan"
 
+    version('2.19.2', sha256='31e4ceb9c327cd62873225097ffa538c2ac4cb0547c52271e52e4c7652d508da')
     version('2.18.2', sha256='4d75dad95610d5a1d1c89a4ddbaf4326462e4ffe0ad28aed2129f2d9292e70ff')
     version('2.17.2', '60f4a0284c58f5efc1b1cbf488d7edda')
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')

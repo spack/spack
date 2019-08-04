@@ -17,6 +17,7 @@ class RDeldir(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/deldir_0.1-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/deldir"
 
+    version('0.1-23', sha256='e0112bce9fc94daf73596a0fff9b3958b80872e3bbb487be73e157b13a6f201d')
     version('0.1-21', sha256='b9dabcc1813c7a0f8edaf720a94bdd611a83baf3d3e52e861d352369e815690c')
     version('0.1-14', '6a22b13d962615cd9d51b6eae403409f')
 

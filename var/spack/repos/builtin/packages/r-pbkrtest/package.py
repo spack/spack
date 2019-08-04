@@ -17,6 +17,7 @@ class RPbkrtest(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pbkrtest"
 
+    version('0.4-7', sha256='5cbb03ad2b2468720a5a610a0ebda48ac08119a34fca77810a85f554225c23ea')
     version('0.4-6', '0a7d9ff83b8d131af9b2335f35781ef9')
     version('0.4-4', '5e54b1b1b35413dd1d24ef15735ec645')
 

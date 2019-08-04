@@ -15,6 +15,7 @@ class RHttr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/httr_1.2.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/httr"
 
+    version('1.4.0', sha256='d633f1425da514f65f3b8c034ae0a8b6911995009840c6bb9657ceedb99ddb48')
     version('1.3.1', '5acfb6b2a6f2f26cd6dfad0458fe3351')
     version('1.2.1', 'c469948dedac9ab3926f23cf484b33d9')
     version('1.1.0', '5ffbbc5c2529e49f00aaa521a2b35600')

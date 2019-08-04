@@ -21,6 +21,7 @@ class RXgboost(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/xgboost_0.6-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/xgboost"
 
+    version('0.90.0.2', sha256='240584c1b4d54a95b4fef9074480752fae9a5b096e8f84747457d641decfc9bf')
     version('0.81.0.1', sha256='3e7ada32e66881ea5c90aeafdab948927014c76cfff60a8e3d7f9e1f8a9ed7ce')
     version('0.6-4', '86e517e3ce39f8a01de796920f6b425e')
     version('0.4-4', 'c24d3076058101a71de4b8af8806697c')

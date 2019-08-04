@@ -23,6 +23,7 @@ class RJanitor(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/janitor_0.3.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/janitor"
 
+    version('1.2.0', sha256='5e15a2292c65c5ddd6160289dec2604b05a813651a2be0d7854ace4548a32b8c')
     version('1.1.1', sha256='404b41f56e571fab4c95ef62e79cb4f3bb34d5bb6e4ea737e748ff269536176b')
     version('0.3.0', '76036c54693b91aef19d468107ae066a')
 

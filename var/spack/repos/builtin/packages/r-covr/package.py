@@ -20,6 +20,7 @@ class RCovr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/covr_3.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/covr"
 
+    version('3.2.1', sha256='ea90daa48011e4ac4431ae47ee02fad98f54b529fc3900281cbeef7a2edef0a0')
     version('3.2.0', sha256='b26135306b1d6b14dd4deb481359dd919a7ca1e802ca5479fed394dcf35f0ef9')
     version('3.0.1', 'f88383f751fe5aa830a2b2e5c14aa66a')
 

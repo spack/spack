@@ -16,6 +16,7 @@ class RLme4(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/lme4_1.1-12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lme4"
 
+    version('1.1-21', sha256='7f5554b69ff8ce9bac21e8842131ea940fb7a7dfa2de03684f236d3e3114b20c')
     version('1.1-20', sha256='44f45f5cd20ec6a50bf96a939b1db44b1a180dbc871a5e3042baf7a107016b2c')
     version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
 

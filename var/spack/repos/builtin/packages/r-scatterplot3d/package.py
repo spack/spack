@@ -13,6 +13,7 @@ class RScatterplot3d(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/scatterplot3d_0.3-40.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/scatterplot3d"
 
+    version('0.3-41', sha256='4c8326b70a3b2d37126ca806771d71e5e9fe1201cfbe5b0d5a0a83c3d2c75d94')
     version('0.3-40', '67b9ab6131d244d7fc1db39dcc911dfe')
 
     depends_on('r@2.7.0:')

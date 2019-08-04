@@ -28,6 +28,7 @@ class RPsych(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/psych_1.7.8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/psych"
 
+    version('1.8.12', sha256='6e175e049bc1ee5b79a9e51ccafb22b962b4e6c839ce5c9cfa1ad83967037743')
     version('1.8.10', sha256='e8901ddab14729bfccbd82a8824fbb6523c10c2cd8fb7199b1ca56a7ffcb6e58')
     version('1.7.8', 'db37f2f85ff5470ee40bbc0a58ebe22b')
 

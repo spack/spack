@@ -15,6 +15,7 @@ class RRandomfields(RPackage):
     url = "https://cloud.r-project.org/src/contrib/RandomFields_3.1.50.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RandomFields"
 
+    version('3.3.6', sha256='51b7bfb4e5bd7fd0ce1207c77f428508a6cd3dfc9de01545a8724dfd9c050213')
     version('3.3.4', sha256='a340d4f3ba7950d62acdfa19b9724c82e439d7b1a9f73340124038b7c90c73d4')
     version('3.1.50', 'fd91aea76365427c0ba3b25fb3af43a6')
 

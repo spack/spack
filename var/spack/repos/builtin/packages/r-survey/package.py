@@ -19,6 +19,7 @@ class RSurvey(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/survey_3.30-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/survey"
 
+    version('3.36', sha256='90f32e9d2b52eacf881e6717a4b5edfc5a3beb5da516f8372293549589d79475')
     version('3.35-1', sha256='11e5ddde9c8c21dfaed0b1247036e068ad32782c76ff71f7937eb7585dd364db')
     version('3.30-3', 'c70cdae9cb43d35abddd11173d64cad0')
 

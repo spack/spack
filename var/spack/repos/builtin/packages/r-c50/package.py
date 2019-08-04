@@ -14,6 +14,7 @@ class RC50(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/C50_0.1.0-24.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/C50"
 
+    version('0.1.2', sha256='8f459856e0309274bee24462b7145db4eba1d71031c236db39000a5375bdfaba')
     version('0.1.1', sha256='03bc1fc2f64bcd5c680568a24902deafab1965074a66f8802bc4cd0335bd01df')
     version('0.1.0-24', '42631e65c5c579532cc6edf5ea175949')
 

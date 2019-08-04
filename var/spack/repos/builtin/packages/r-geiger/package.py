@@ -13,6 +13,7 @@ class RGeiger(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/geiger_2.0.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/geiger"
 
+    version('2.0.6.2', sha256='9153047b608d652821251206d1450bb3f517c8884379f498a695315574ae001d')
     version('2.0.6.1', sha256='2a95e20a3a90c096343b014344dd97e699e954da99c151c17fc6c245c77dba0b')
     version('2.0.6', 'e5e1a407ea56805227d0f91bf6d95afc')
 

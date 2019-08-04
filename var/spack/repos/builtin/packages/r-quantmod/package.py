@@ -14,6 +14,7 @@ class RQuantmod(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/quantmod_0.4-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/quantmod"
 
+    version('0.4-15', sha256='7ef2e798d4d8e4d2af0a5b2b9fecebec30568087afbd24bfd923cdeb8b53df53')
     version('0.4-14', sha256='d95b1acf73328d675bbad18a93fa3c40faf58959e0401458ad21cf6b9f9254b3')
     version('0.4-10', 'e4119c673567801eee16dcbbd0265de8')
     version('0.4-5', 'cab3c409e4de3df98a20f1ded60f3631')

@@ -13,6 +13,7 @@ class RViridis(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/viridis_0.4.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/viridis"
 
+    version('0.5.1', sha256='ddf267515838c6eb092938133035cee62ab6a78760413bfc28b8256165701918')
     version('0.5.0', sha256='fea477172c1e11be40554545260b36d6ddff3fe6bc3bbed87813ffb77c5546cd')
     version('0.4.0', 'f874384cbedf459f6c309ddb40b354ea')
 
