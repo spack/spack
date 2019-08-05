@@ -34,9 +34,8 @@ ignore_files = r'^\.|^__init__.py$|^#'
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
 
-# All found spack commands
+# Cache found spack commands.
 _all_commands = None
-_default_command_path = spack.paths.command_path
 
 
 def python_name(cmd_name):
@@ -44,9 +43,21 @@ def python_name(cmd_name):
     return cmd_name.replace("-", "_")
 
 
+def require_python_name(pname):
+    """Require that the provided name is a valid python name"""
+    if python_name(pname) != pname:
+        raise PythonNameError(pname)
+
+
 def cmd_name(python_name):
     """Convert module name (with ``_``) to command name (with ``-``)."""
     return python_name.replace('_', '-')
+
+
+def require_cmd_name(cname):
+    """Require that the provided name is a valid command name"""
+    if cmd_name(cname) != cname:
+        raise CommandNameError(cname)
 
 
 def find_commands(*command_paths):
@@ -72,7 +83,8 @@ def all_commands():
     global _all_commands
     if _all_commands is None:
         extension_paths = spack.extensions.get_command_paths()
-        _all_commands = find_commands(_default_command_path, *extension_paths)
+        _all_commands\
+            = find_commands(spack.paths.command_path, *extension_paths)
     return _all_commands
 
 
@@ -92,7 +104,10 @@ def get_module_from(cmd_name, namespace):
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
         namespace (str): namespace for command.
+
+    Invoke this from command implementations in order to find sub-commands.
     """
+    require_cmd_name(cmd_name)
     pname = python_name(cmd_name)
     module_name = '{0}.cmd.{1}'.format(namespace, pname)
     module = __import__(module_name,
@@ -117,6 +132,7 @@ def get_module(cmd_name):
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
+    require_cmd_name(cmd_name)
     try:
         module = get_module_from(cmd_name, 'spack')
     except ImportError:
@@ -131,6 +147,7 @@ def get_command(cmd_name):
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
+    require_cmd_name(cmd_name)
     pname = python_name(cmd_name)
     return getattr(get_module(cmd_name), pname)
 
@@ -405,3 +422,22 @@ def extant_file(f):
     if not os.path.isfile(f):
         raise argparse.ArgumentTypeError('%s does not exist' % f)
     return f
+
+
+########################################
+# Exceptions
+########################################
+class PythonNameError(SpackError):
+    """Exception class thrown for impermissible python names"""
+    def __init__(self, name):
+        self.name = name
+        super(PythonNameError, self).__init__(
+            '{0} is not a permissible Python name.'.format(name))
+
+
+class CommandNameError(SpackError):
+    """Exception class thrown for impermissible command names"""
+    def __init__(self, name):
+        self.name = name
+        super(CommandNameError, self).__init__(
+            '{0} is not a permissible Spack command name.'.format(name))

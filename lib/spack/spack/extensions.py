@@ -15,30 +15,8 @@ import spack.cmd
 import spack.config
 from spack.error import SpackError
 
-_command_paths = []
 _extension_regexp = re.compile(r'spack-([\w]*)')
 _extension_command_map = None
-
-
-class CommandNotFoundError(SpackError):
-    """Exception class thrown when a requested command is not recognized as
-    such.
-    """
-    def __init__(self, cmd_name):
-        super(CommandNotFoundError, self).__init__(
-            '{0} is not a recognized Spack command or extension command.'
-            .format(cmd_name),
-            'Known commands: {0}'.format(' '.join(spack.cmd.all_commands())))
-
-
-class ExtensionNamingError(SpackError):
-    """Exception class thrown when a configured extension does not follow
-    the expected naming convention.
-    """
-    def __init__(self, path):
-        super(ExtensionNamingError, self).__init__(
-            '{0} does not match the format for a Spack extension path.'
-            .format(path))
 
 
 def _init_extension_command_map():
@@ -50,7 +28,6 @@ def _init_extension_command_map():
         for path in extension_paths:
             extension = extension_name(path)
             command_path = os.path.join(path, extension, 'cmd')
-            _command_paths.append(command_path)
             commands = spack.cmd.find_commands(command_path)
             _extension_command_map.update(
                 ((command, path) for command in
@@ -58,18 +35,19 @@ def _init_extension_command_map():
 
 
 def reset_command_cache():
-    """For testing purposes, reset the command cache e.g. for a modified
-    extension configuration.
+    """For testing purposes, reset the extension command cache e.g. for a
+    modified extension configuration.
     """
-    global _command_paths
-    _command_paths = []
     global _extension_command_map
     _extension_command_map = None
 
 
 def get_command_paths():
-    _init_extension_command_map()
-    return _command_paths
+    extension_command_map = get_extension_command_map()
+    command_paths\
+        = list((os.path.join(path, extension_name(path), 'cmd') for path in
+                extension_command_map.values()))
+    return command_paths
 
 
 def get_extension_command_map():
@@ -177,3 +155,27 @@ def get_template_dirs():
     extension_dirs = spack.config.get('config:extensions') or []
     extensions = [os.path.join(x, 'templates') for x in extension_dirs]
     return extensions
+
+
+########################################
+# Exceptions
+########################################
+class CommandNotFoundError(SpackError):
+    """Exception class thrown when a requested command is not recognized as
+    such.
+    """
+    def __init__(self, cmd_name):
+        super(CommandNotFoundError, self).__init__(
+            '{0} is not a recognized Spack command or extension command.'
+            .format(cmd_name),
+            'Known commands: {0}'.format(' '.join(spack.cmd.all_commands())))
+
+
+class ExtensionNamingError(SpackError):
+    """Exception class thrown when a configured extension does not follow
+    the expected naming convention.
+    """
+    def __init__(self, path):
+        super(ExtensionNamingError, self).__init__(
+            '{0} does not match the format for a Spack extension path.'
+            .format(path))
