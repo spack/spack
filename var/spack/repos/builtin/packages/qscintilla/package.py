@@ -41,6 +41,7 @@ class Qscintilla(QMakePackage):
         spack_env.set('INSTALL_ROOT', prefix)
 
 
+    #python bindings aren't compiling yet: can't find pyqt4.core etc
     def make_python_bindings(self):
         os.chdir(str(self.stage.source_path)+'/Python')
         python = which('python')
