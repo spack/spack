@@ -480,7 +480,7 @@ class Stage(object):
            No-op if this stage checks code out of a repository."""
         if self.fetcher is not self.default_fetcher and \
            self.skip_checksum_for_mirror:
-            tty.warn("Fetching from mirror without a checksum!",
+            tty.debug("Fetching from mirror without a checksum!",
                      "This package is normally checked out from a version "
                      "control system, but it has been archived on a spack "
                      "mirror.  This means we cannot know a checksum for the "
