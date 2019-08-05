@@ -14,19 +14,13 @@ class Percept(CMakePackage):
     homepage = "https://github.com/PerceptTools/percept"
     git      = "https://github.com/PerceptTools/percept.git"
 
-    # This package file was created at percept
-    # commit dc1c8ec0175213146ac139946beca185a84c22e8
-    version('develop', branch='master')
+    version('master', branch='master')
 
-    depends_on('googletest~shared@:1.8.0')
+    depends_on('googletest~shared')
     depends_on('opennurbs@percept')
     depends_on('boost+graph+mpi')
     depends_on('yaml-cpp+pic~shared@0.5.3:')
-    # Percept was initially tested against Trilinos 12.12.1
-    depends_on('trilinos~shared+exodus+tpetra+epetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+aztec+sacado~openmp+shards+intrepid+cgns@master,12.12.1:')
-
-    patch('fix_cmakelists.patch')
-    patch('fix_header.patch')
+    depends_on('trilinos~shared+exodus+tpetra+epetra+epetraext+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+aztec+sacado~openmp+shards+intrepid+cgns@master,12.14.1:')
 
     def cmake_args(self):
         spec = self.spec
@@ -49,7 +43,6 @@ class Percept(CMakePackage):
             spec['opennurbs'].prefix.lib,
             '-DPERCEPT_TPLS_INSTALL_DIR:PATH=%s' %
             spec['googletest'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
         ])
 
         return options
