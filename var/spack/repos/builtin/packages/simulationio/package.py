@@ -15,6 +15,7 @@ class Simulationio(CMakePackage):
     git      = "https://github.com/eschnett/SimulationIO.git"
 
     version('develop', branch='master')
+    version('9.0.1', sha256='c2f6c99417165f6eb8cbb9c44822d119586675abb34eabd553eb80f44b53e0c8')
     version('1.0.0', '5cbf1d0084eb436d861ffcdd297eaa08')
     version('0.1.0', '00f7dabc08ed1ab77858785ce0809f50')
 
@@ -28,7 +29,8 @@ class Simulationio(CMakePackage):
     depends_on('julia', when='+julia', type=('build', 'run'))
     depends_on('py-h5py', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
+    depends_on('python@3:', when='@9: +python', type=('build', 'run'))
+    depends_on('python@2.7:2.8', when='@:8 +python', type=('build', 'run'))
     depends_on('swig', type='build')
 
     extends('python')

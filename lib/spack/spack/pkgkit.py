@@ -27,6 +27,7 @@ from spack.build_systems.r import RPackage
 from spack.build_systems.perl import PerlPackage
 from spack.build_systems.intel import IntelPackage
 from spack.build_systems.meson import MesonPackage
+from spack.build_systems.sip import SIPPackage
 
 from spack.mixins import filter_compiler_wrappers
 

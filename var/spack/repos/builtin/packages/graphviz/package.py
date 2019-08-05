@@ -72,6 +72,17 @@ class Graphviz(AutotoolsPackage):
     variant('gtkplus', default=False,
             description='Build with GTK+ support')
 
+    patch('http://www.linuxfromscratch.org/patches/blfs/svn/graphviz-2.40.1-qt5-1.patch',
+          sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
+          when='+qt^qt@5:')
+    patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.38.0_icc_sfio.patch',
+          sha256='393a0a772315a89dcc970b5efd4765d22dba83493d7956303673eb89c45b949f',
+          level=0,
+          when='%intel')
+    patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.40.1_icc_vmalloc.patch',
+          sha256='813e6529e79161a18b0f24a969b7de22f8417b2e942239e658b5402884541bc2',
+          when='%intel')
+
     parallel = False
 
     # These language bindings have been tested, we know they work.

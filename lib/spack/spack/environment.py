@@ -822,7 +822,7 @@ class Environment(object):
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
 
-    def concretize(self, force=False, _display=True):
+    def concretize(self, force=False):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -834,6 +834,10 @@ class Environment(object):
         Arguments:
             force (bool): re-concretize ALL specs, even those that were
                already concretized
+
+        Returns:
+            List of specs that have been concretized. Each entry is a tuple of
+            the user spec and the corresponding concretized spec.
         """
         if force:
             # Clear previously concretized specs
@@ -855,21 +859,15 @@ class Environment(object):
                 concrete = old_specs_by_hash[h]
                 self._add_concrete_spec(s, concrete, new=False)
 
-        # concretize any new user specs that we haven't concretized yet
+        # Concretize any new user specs that we haven't concretized yet
+        concretized_specs = []
         for uspec, uspec_constraints in zip(
                 self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
-                tty.msg('Concretizing %s' % uspec)
                 concrete = _concretize_from_constraints(uspec_constraints)
                 self._add_concrete_spec(uspec, concrete)
-
-                if _display:
-                    # Display concretized spec to the user
-                    sys.stdout.write(concrete.tree(
-                        recurse_dependencies=True,
-                        status_fn=spack.spec.Spec.install_status,
-                        hashlen=7, hashes=True)
-                    )
+                concretized_specs.append((uspec, concrete))
+        return concretized_specs
 
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
@@ -1298,6 +1296,25 @@ class Environment(object):
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def display_specs(concretized_specs):
+    """Displays the list of specs returned by `Environment.concretize()`.
+
+    Args:
+        concretized_specs (list): list of specs returned by
+            `Environment.concretize()`
+    """
+    def _tree_to_display(spec):
+        return spec.tree(
+            recurse_dependencies=True,
+            status_fn=spack.spec.Spec.install_status,
+            hashlen=7, hashes=True)
+
+    for user_spec, concrete_spec in concretized_specs:
+        tty.msg('Concretized {0}'.format(user_spec))
+        sys.stdout.write(_tree_to_display(concrete_spec))
+        print('')
 
 
 def _concretize_from_constraints(spec_constraints):
