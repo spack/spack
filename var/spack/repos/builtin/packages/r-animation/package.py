@@ -21,5 +21,6 @@ class RAnimation(RPackage):
     version('2.5', sha256='b232fef1b318c79710e5e1923d87baba4c85ffe2c77ddb188130e0911d8cb55f')
 
     depends_on('r-magick', type=('build', 'run'))
-    depends_on('graphicsmagick')
+    depends_on('image-magick')
     depends_on('ffmpeg')
+    depends_on('texlive')
