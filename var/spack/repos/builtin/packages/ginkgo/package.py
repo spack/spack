@@ -15,6 +15,8 @@ class Ginkgo(CMakePackage, CudaPackage):
     url      = "https://github.com/ginkgo-project/ginkgo.git"
     git      = "https://github.com/ginkgo-project/ginkgo.git"
 
+    maintainers = ['tcojean', 'hartwiganzt']
+
     version('develop', branch='develop')
     version('master', branch='master')
     version('1.0.0', commit='4524464')  # v1.0.0
