@@ -21,13 +21,3 @@ diff -u c-blosc-1.16.3/CMakeLists.txt c-blosc-1.16.3.mod/CMakeLists.txt
          set(COMPILER_SUPPORT_SSE2 TRUE)
          if(CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7)
              set(COMPILER_SUPPORT_AVX2 TRUE)
-共通のサブディレクトリー: c-blosc-1.16.3/LICENSES と c-blosc-1.16.3.mod/LICENSES
-共通のサブディレクトリー: c-blosc-1.16.3/appveyor と c-blosc-1.16.3.mod/appveyor
-共通のサブディレクトリー: c-blosc-1.16.3/bench と c-blosc-1.16.3.mod/bench
-共通のサブディレクトリー: c-blosc-1.16.3/blosc と c-blosc-1.16.3.mod/blosc
-共通のサブディレクトリー: c-blosc-1.16.3/cmake と c-blosc-1.16.3.mod/cmake
-共通のサブディレクトリー: c-blosc-1.16.3/compat と c-blosc-1.16.3.mod/compat
-共通のサブディレクトリー: c-blosc-1.16.3/examples と c-blosc-1.16.3.mod/examples
-共通のサブディレクトリー: c-blosc-1.16.3/internal-complibs と c-blosc-1.16.3.mod/internal-complibs
-共通のサブディレクトリー: c-blosc-1.16.3/test_package と c-blosc-1.16.3.mod/test_package
-共通のサブディレクトリー: c-blosc-1.16.3/tests と c-blosc-1.16.3.mod/tests
