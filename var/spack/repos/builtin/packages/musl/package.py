@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Musl(MakefilePackage):
+class Musl(Package):
     """Musl is a libc, an implementation of the standard library
     functionality described in the ISO C and POSIX standards, plus common
     extensions, intended for use on Linux-based systems. Whereas the kernel
@@ -31,9 +31,9 @@ class Musl(MakefilePackage):
     version('1.1.21', sha256='c742b66f6f49c9e5f52f64d8b79fecb5a0f6e0203fca176c70ca20f6be285f44')
     version('1.1.20', sha256='44be8771d0e6c6b5f82dd15662eb2957c9a3173a19a8b49966ac0542bbd40d61')
 
-    phases = ['edit', 'configure', 'build', 'install']
+    phases = ['configure', 'build', 'install']
 
-    def edit(self, spec, prefix):
+    def patch(self):
         config = FileFilter('configure')
         if self.compiler.name == 'gcc':
             config.filter("WRAPCC_GCC = .*'", "WRAPCC_GCC = {0}'".
@@ -45,11 +45,11 @@ class Musl(MakefilePackage):
     def configure_args(self):
         args = ['--prefix={0}'.format(prefix)]
         if self.compiler.name == 'gcc':
-            args.extend(['--enable-wrapper=gcc'])
+            args.append('--enable-wrapper=gcc')
         elif self.compiler.name == 'clang':
-            args.extend(['--enable-wrapper=clang'])
+            args.append('--enable-wrapper=clang')
         else:
-            args.extend(['--enable-wrapper=no'])
+            args.append('--enable-wrapper=no')
         return args
 
     def configure(self, spec, prefix):
