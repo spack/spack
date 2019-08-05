@@ -45,6 +45,7 @@ modules:
       - placement-algorithm
       - psp-validation
       - py-basalt
+      - py-bbp-analysis-framework
       - py-bglibpy
       - py-bluepy
       - py-bluepymm

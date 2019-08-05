@@ -39,7 +39,8 @@ packages:
       - compiler
       - python
     specs:
-      - py-simwriter@0.4.3 ^py-rpy2@2.8.6 ^openjdk
+      - py-bbp-analysis-framework@0.6.39
+      - py-simwriter@0.4.3
       - py-entity-management@1.0.9
 
   gnu-stable-parallel:
