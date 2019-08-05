@@ -929,3 +929,27 @@ repo:
         yield repo, repodir
 
     shutil.rmtree(str(repodir))
+
+
+##########
+# Class and fixture to work around problems raising exceptions in directives,
+# which cause tests like test_from_list_url to hang for Python 2.x metaclass
+# processing.
+#
+# At this point only version and patch directive handling has been addressed.
+##########
+
+class MockBundle(object):
+    has_code = False
+    name = 'mock-bundle'
+    versions = {}
+
+
+@pytest.fixture
+def mock_directive_bundle(monkeypatch):
+    yield MockBundle()
+
+    # Make sure any directive functions overriden by tests are cleared before
+    # proceeding with subsequent tests that may depend on the original
+    # functions.
+    spack.directives.DirectiveMeta._directives_to_be_executed = []

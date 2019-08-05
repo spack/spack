@@ -458,17 +458,22 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
 
     """
     def _execute_patch(pkg_or_dep):
+        pkg = pkg_or_dep
+        if isinstance(pkg, Dependency):
+            pkg = pkg.pkg
+
+        if hasattr(pkg, 'has_code') and not pkg.has_code:
+            raise UnsupportedPackageDirective(
+                'Patches are not allowed in {0}: package has no code.'.
+                format(pkg.name))
+
         when_spec = make_when_spec(when)
         if not when_spec:
             return
 
-        # if this spec is identical to some other, then append this
+        # If this spec is identical to some other, then append this
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
-
-        pkg = pkg_or_dep
-        if isinstance(pkg, Dependency):
-            pkg = pkg.pkg
 
         global _patch_order_index
         ordering_key = (pkg.name, _patch_order_index)
@@ -646,3 +651,7 @@ class CircularReferenceError(DirectiveError):
 
 class DependencyPatchError(DirectiveError):
     """Raised for errors with patching dependencies."""
+
+
+class UnsupportedPackageDirective(DirectiveError):
+    """Raised when an invalid or unsupported package directive is specified."""
