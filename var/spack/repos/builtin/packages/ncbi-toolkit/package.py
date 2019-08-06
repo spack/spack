@@ -18,6 +18,9 @@ class NcbiToolkit(AutotoolsPackage):
     version('21_0_0', '14e021e08b1a78ac9cde98d0cab92098',
             url='ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/ARCHIVE/2018/Apr_2_2018/ncbi_cxx--21_0_0.tar.gz')
 
+    variant('debug', default=False,
+            description='Build debug versions of libs and apps')
+
     depends_on('boost@1.35.0:')
     depends_on('bzip2')
     depends_on('jpeg')
@@ -34,7 +37,10 @@ class NcbiToolkit(AutotoolsPackage):
     depends_on('bamtools')
 
     def configure_args(self):
-        return ['--without-sybase', '--without-fastcgi']
+        args = ['--without-sybase', '--without-fastcgi']
+        if '+debug' not in self.spec:
+            args += ['--without-debug']
+        return args
 
     def patch(self):
         with working_dir(join_path('src', 'util', 'image')):
@@ -64,5 +70,5 @@ class NcbiToolkit(AutotoolsPackage):
 
     def build(self, spec, prefix):
         with working_dir(join_path(glob(
-                '*-DebugMT64')[0], 'build')):
+                '*MT64')[0], 'build')):
             make('all_r')
