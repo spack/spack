@@ -26,8 +26,8 @@ class Qscintilla(QMakePackage):
     # Without private sip moduele, python bindings will not compile
     # Ref: https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html   
     # TODO implement private sip module for py-pyqt4
-    depends_on('py-pyqt4@:4.12.1', type='build', when='@qt4') 
-    depends_on('py-pyqt5', type='build', when='qt@5')
+    depends_on('py-pyqt4@:4.12.1', type='build') 
+    #depends_on('py-pyqt5', type='build') # when='qt@5' not working?
     depends_on('python', type=('build', 'run'))
 
     # with qt@4.8.6, didn't have much luck in compiling newer versions
@@ -48,28 +48,19 @@ class Qscintilla(QMakePackage):
     # it gets rid of 'Nothing installed error'
     # without it libqscintilla is installed under qt_prefix, is that how it should be?
     def setup_environment(self, spack_env, run_env):
-        spack_env.set('INSTALL_ROOT', prefix)
-
-
-    def make_python_bindings(self):
-        os.chdir(str(self.stage.source_path)+'/Python')
-        python = which('python')
-        if self.version < Version('5'):
-            python('configure.py')
-        else:
-            python('configure.py -pyqt=PyQt5')
-
-
-    def make_designer_qt(self):
-        pass # not implemented yet
+        spack_env.set('INSTALL_ROOT', self.prefix)
 
 
     def make_variants(self):
         if '+python' in self.spec:
-            make_python_bindings(self)
+            os.chdir(str(self.stage.source_path)+'/Python')
+            python = which('python')
+            if self.version < Version('5'):
+                python('configure.py')
+            else:
+                python('configure.py -pyqt=PyQt5')
         if '+designer' in self.spec:
-            make_designer_qt(self)
-
+            pass # not implemented yet
 
     run_before('qmake')(chdir)
 
