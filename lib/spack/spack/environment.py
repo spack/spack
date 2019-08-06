@@ -905,6 +905,13 @@ class Environment(object):
         This will automatically concretize the single spec, but it won't
         affect other as-yet unconcretized specs.
         """
+        if self.concretize_together:
+            msg = 'cannot install a single spec in an environment that is ' \
+                  'configured to be concretized together. Run instead:\n\n' \
+                  '    $ spack add <spec>\n' \
+                  '    $ spack install\n'
+            raise SpackEnvironmentError(msg)
+
         spec = Spec(user_spec)
 
         if self.add(spec):
