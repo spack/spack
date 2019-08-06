@@ -230,13 +230,6 @@ def tmp_path_for_stage(tmpdir, config):
 
 
 @pytest.fixture
-def clear_stage_root(monkeypatch):
-    """Ensure stage root is not set."""
-    monkeypatch.setattr(spack.stage, '_stage_root', None)
-    yield
-
-
-@pytest.fixture
 def tmp_build_stage_dir(tmpdir, config):
     """Establish the temporary build_stage for the mock archive."""
     test_stage_path = tmpdir.join('stage')

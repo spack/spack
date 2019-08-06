@@ -80,7 +80,7 @@ def _first_accessible_path(paths):
     return None
 
 
-# Cached temporary stage path root
+# Cached stage path root
 _stage_root = None
 
 
@@ -214,8 +214,7 @@ class Stage(object):
         self.name = name
         self.mirror_path = mirror_path
 
-        # Use the provided path or construct a path, which is named if this is
-        # a named stage.
+        # Use the provided path or construct an optionally named stage path.
         if path is not None:
             self.path = path
         else:

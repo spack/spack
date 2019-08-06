@@ -14,6 +14,7 @@ pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
 spec = SpackCommand('spec')
 
 
+@pytest.mark.TLD
 def test_spec():
     output = spec('mpileaks')
 

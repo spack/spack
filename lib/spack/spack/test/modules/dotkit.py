@@ -14,6 +14,7 @@ writer_cls = spack.modules.dotkit.DotkitModulefileWriter
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestDotkit(object):
 
+    @pytest.mark.TLD
     def test_dotkit(self, modulefile_content, module_configuration):
         """Tests the generation of a dotkit file that loads dependencies
         automatically.

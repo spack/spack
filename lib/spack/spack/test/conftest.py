@@ -16,7 +16,7 @@ import py
 import pytest
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import mkdirp, remove_linked_tree
+from llnl.util.filesystem import remove_linked_tree
 
 import spack.architecture
 import spack.compilers
@@ -121,23 +121,34 @@ def reset_compiler_cache():
     spack.compilers._compiler_cache = {}
 
 
-@pytest.fixture(scope='session', autouse=True)
-def mock_stage(tmpdir_factory, config):
-    """Mocks up a fake stage directory for use by tests."""
-    new_stage = str(tmpdir_factory.mktemp('mock-stage'))
+@pytest.fixture
+def clear_stage_root(monkeypatch):
+    """Ensure stage root is not set."""
+    monkeypatch.setattr(spack.stage, '_stage_root', None)
+    yield
 
-    # Set the stage path to the temporary path.
+
+@pytest.fixture(scope='function', autouse=True)
+def mock_stage(clear_stage_root, tmpdir_factory):
+    """Establish the temporary build_stage for the mock archive."""
+    new_stage = tmpdir_factory.mktemp('mock-stage').join('tmp')
+    new_stage_path = str(new_stage)
+
+    # Set test_stage_path as the default directory to use for test stages.
     current = spack.config.get('config:build_stage')
-    spack.config.set('config',
-                     {'build_stage': [new_stage]}, scope='user')
-    source_path = os.path.join(new_stage, spack.stage._source_path_subdir)
-    mkdirp(source_path)
+    spack.config.set('config', {'build_stage': new_stage_path}, scope='user')
 
-    yield new_stage
+    # Ensure the source directory exists
+    source_path = new_stage.join(spack.stage._source_path_subdir)
+    source_path.ensure(dir=True)
+
+    yield new_stage_path
 
     spack.config.set('config', {'build_stage': current}, scope='user')
-    if os.path.isdir(source_path):
-        shutil.rmtree(source_path)
+
+    # Clean up the test stage directory
+    if os.path.isdir(new_stage_path):
+        shutil.rmtree(new_stage_path)
 
 
 @pytest.fixture(scope='session')

@@ -440,10 +440,10 @@ class Configuration(object):
             scopes = [self._validate_scope(scope)]
 
         merged_section = syaml.syaml_dict()
-        for scope in scopes:
+        for scope_ in scopes:
             # read potentially cached data from the scope.
 
-            data = scope.get_section(section)
+            data = scope_.get_section(section)
 
             # Skip empty configs
             if not data or not isinstance(data, dict):
