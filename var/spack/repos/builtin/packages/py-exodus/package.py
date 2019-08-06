@@ -15,8 +15,6 @@ class PyExodus(PythonPackage):
 
     version('2.0.2', sha256='4e896a2034b94cf7b4fb33d86a68e29a7d3b08e57541e444db34dddc6ac1ef68')
 
-    extends('python')
-
     depends_on('musl', type='run', when='%clang')
     depends_on('musl', type='run', when='%gcc')
     depends_on('py-setuptools', type=('build', 'run'))
