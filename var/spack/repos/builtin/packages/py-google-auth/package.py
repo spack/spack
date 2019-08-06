@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyGoogleAuth(PythonPackage):
-    """This library simplifies using Google’s various server-to-server
+    """This library simplifies using Google's various server-to-server
     authentication mechanisms to access Google APIs."""
 
     homepage = "https://github.com/GoogleCloudPlatform/google-auth-library-python"

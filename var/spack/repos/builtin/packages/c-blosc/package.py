@@ -33,6 +33,7 @@ class CBlosc(CMakePackage):
     depends_on('zstd')
     depends_on('lz4')
 
+    patch('gcc.patch', when="@1.12.1:1.17.0")
     patch('test_forksafe.patch', when='@1.15.0:1.17.0%intel')
 
     def cmake_args(self):
