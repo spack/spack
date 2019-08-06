@@ -129,26 +129,31 @@ def clear_stage_root(monkeypatch):
 
 
 @pytest.fixture(scope='function', autouse=True)
-def mock_stage(clear_stage_root, tmpdir_factory):
+def mock_stage(clear_stage_root, tmpdir_factory, request):
     """Establish the temporary build_stage for the mock archive."""
-    new_stage = tmpdir_factory.mktemp('mock-stage')
-    new_stage_path = str(new_stage)
+    # Workaround to skip mock_stage for 'nomockstage' test cases
+    if 'nomockstage' not in request.keywords:
+        new_stage = tmpdir_factory.mktemp('mock-stage')
+        new_stage_path = str(new_stage)
 
-    # Set test_stage_path as the default directory to use for test stages.
-    current = spack.config.get('config:build_stage')
-    spack.config.set('config', {'build_stage': new_stage_path}, scope='user')
+        # Set test_stage_path as the default directory to use for test stages.
+        current = spack.config.get('config:build_stage')
+        spack.config.set('config', {'build_stage': new_stage_path}, scope='user')
 
-    # Ensure the source directory exists
-    source_path = new_stage.join(spack.stage._source_path_subdir)
-    source_path.ensure(dir=True)
+        # Ensure the source directory exists
+        source_path = new_stage.join(spack.stage._source_path_subdir)
+        source_path.ensure(dir=True)
 
-    yield new_stage_path
+        yield new_stage_path
 
-    spack.config.set('config', {'build_stage': current}, scope='user')
+        spack.config.set('config', {'build_stage': current}, scope='user')
 
-    # Clean up the test stage directory
-    if os.path.isdir(new_stage_path):
-        shutil.rmtree(new_stage_path)
+        # Clean up the test stage directory
+        if os.path.isdir(new_stage_path):
+            shutil.rmtree(new_stage_path)
+    else:
+        # Must yield a path to avoid a TypeError on test teardown
+        yield str(tmpdir_factory)
 
 
 @pytest.fixture(scope='session')

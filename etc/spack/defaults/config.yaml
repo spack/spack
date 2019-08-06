@@ -56,7 +56,7 @@ config:
   #
   # The build stage can be purged with `spack clean --stage`.
   build_stage:
-    - ~/.spack/stage
+    - $tempdir/spack-stage
 
 
   # Cache directory for already downloaded source tarballs and archived

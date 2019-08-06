@@ -38,6 +38,7 @@ def test_disable_locking(tmpdir):
     assert old_value == spack.config.get('config:locks')
 
 
+@pytest.mark.nomockstage
 def test_lock_checks_user(tmpdir):
     """Ensure lock checks work with a self-owned, self-group repo."""
     uid = os.getuid()
@@ -70,6 +71,7 @@ def test_lock_checks_user(tmpdir):
     lk.check_lock_safety(path)
 
 
+@pytest.mark.nomockstage
 def test_lock_checks_group(tmpdir):
     """Ensure lock checks work with a self-owned, non-self-group repo."""
     uid = os.getuid()
