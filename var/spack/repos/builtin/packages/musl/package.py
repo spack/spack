@@ -33,8 +33,27 @@ class Musl(Package):
 
     phases = ['configure', 'build', 'install']
 
+    def patch(self):
+        config = FileFilter('configure')
+        if self.compiler.name == 'gcc':
+            config.filter("WRAPCC_GCC = .*'", "WRAPCC_GCC = {0}'".
+                          format(self.compiler.cc))
+        elif self.compiler.name == 'clang':
+            config.filter("WRAPCC_CLANG = .*'", "WRAPCC_CLANG = {0}'".
+                          format(self.compiler.cc))
+
+    def configure_args(self):
+        args = ['--prefix={0}'.format(prefix)]
+        if self.compiler.name == 'gcc':
+            args.append('--enable-wrapper=gcc')
+        elif self.compiler.name == 'clang':
+            args.append('--enable-wrapper=clang')
+        else:
+            args.append('--enable-wrapper=no')
+        return args
+
     def configure(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
+        configure(*self.configure_args())
 
     def build(self, spec, prefix):
         make()

@@ -17,6 +17,7 @@ class Amrex(CMakePackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('19.08', commit='bdd1146139e8727a513d451075f900c172eb81fd')  # tag:19.08
     version('18.10.1', commit='260b53169badaa760b91dfc60ea6b2ea3d9ccf06')  # tag:18.10.1
     version('18.10', commit='d37a266c38092e1174096e245326e9eead1f4e03')  # tag:18.10
     version('18.09.1', commit='88120db4736c325a2d3d2c291adacaffd3bf224b')  # tag:18.09.1
@@ -51,7 +52,7 @@ class Amrex(CMakePackage):
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
-    depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@develop +sundials')
+    depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08: +sundials')
     depends_on('python@2.7:', type='build')
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
     depends_on('cmake@3.13:',  type='build', when='@18.11:')

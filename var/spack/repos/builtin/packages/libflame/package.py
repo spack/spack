@@ -51,6 +51,12 @@ class Libflame(AutotoolsPackage):
     # https://groups.google.com/forum/#!topic/libflame-discuss/lQKEfjyudOY
     patch('Makefile_5.1.0.patch', when='@5.1.0')
 
+    def flag_handler(self, name, flags):
+        # -std=gnu99 at least required, old versions of GCC default to -std=c90
+        if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
+            flags.append('-std=gnu99')
+        return (flags, None, None)
+
     def configure_args(self):
         config_args = []
 
@@ -83,7 +89,6 @@ class Libflame(AutotoolsPackage):
             config_args.append("--disable-supermatrix")
 
         # https://github.com/flame/libflame/issues/21
-        if self.spec.satisfies('@5.1.99:'):
-            config_args.append("--enable-max-arg-list-hack")
+        config_args.append("--enable-max-arg-list-hack")
 
         return config_args

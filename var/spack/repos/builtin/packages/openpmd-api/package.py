@@ -92,3 +92,26 @@ class OpenpmdApi(CMakePackage):
             args.append('-DopenPMD_USE_INTERNAL_CATCH:BOOL=OFF')
 
         return args
+
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        # pre-load dependent CMake-PUBLIC header-only libs
+        run_env.prepend_path('CMAKE_PREFIX_PATH', spec['mpark-variant'].prefix)
+        run_env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
+
+        # more deps searched in openPMDConfig.cmake
+        if spec.satisfies("+mpi"):
+            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['mpi'].prefix)
+        if spec.satisfies("+adios1"):
+            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['adios'].prefix)
+        if spec.satisfies("+adios2"):
+            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['adios2'].prefix)
+        if spec.satisfies("+hdf5"):
+            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['hdf5'].prefix)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # pre-load dependent CMake-PUBLIC header-only libs
+        spack_env.prepend_path('CMAKE_PREFIX_PATH',
+                               self.spec['mpark-variant'].prefix)
+        spack_env.prepend_path('CPATH',
+                               self.spec['mpark-variant'].prefix.include)

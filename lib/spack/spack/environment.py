@@ -1235,9 +1235,11 @@ class Environment(object):
             # Remove any specs in yaml that are not in internal representation
             for ayl in active_yaml_lists:
                 # If it's not a string, it's a matrix. Those can't have changed
+                # If it is a string that starts with '$', it's a reference.
+                # Those also can't have changed.
                 ayl[name][:] = [s for s in ayl.setdefault(name, [])
-                                if not isinstance(s, six.string_types) or
-                                Spec(s) in speclist.specs]
+                                if (not isinstance(s, six.string_types)) or
+                                s.startswith('$') or Spec(s) in speclist.specs]
 
             # Put the new specs into the first active list from the yaml
             new_specs = [entry for entry in speclist.yaml_list
