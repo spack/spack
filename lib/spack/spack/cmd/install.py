@@ -200,15 +200,16 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
     # handle active environment, if any
     def install(spec, kwargs):
         env = ev.get_env(cli_args, 'install')
+
         if env:
             env.install(abstract_spec, spec, **kwargs)
             env.write()
         else:
             spec.package.do_install(**kwargs)
-            spack.config.set('config:active_tree', '~/.spack/opt/spack',
-                             scope='user')
-            spack.config.set('config:active_upstream', None,
-                             scope='user')
+        spack.config.set('config:active_tree', '~/.spack/opt/spack',
+                         scope='user')
+        spack.config.set('config:active_upstream', None,
+                         scope='user')
 
     try:
         if cli_args.things_to_install == 'dependencies':
@@ -234,6 +235,31 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
 
 def install(parser, args, **kwargs):
+    # Install Package to Global Upstream for multi-user use
+    if args.install_global:
+        spack.config.set('config:active_upstream', 'global',
+                         scope='user')
+        global_root = spack.config.get('upstreams')
+        global_root = global_root['global']['install_tree']
+        global_root = spack.util.path.canonicalize_path(global_root)
+        spack.config.set('config:active_tree', global_root,
+                         scope='user')
+    elif args.upstream:
+        if args.upstream not in spack.config.get('upstreams'):
+            tty.die("specified upstream does not exist")
+        spack.config.set('config:active_upstream', args.upstream,
+                         scope='user')
+        root = spack.config.get('upstreams')
+        root = root[args.upstream]['install_tree']
+        root = spack.util.path.canonicalize_path(root)
+        spack.config.set('config:active_tree', root, scope='user')
+    else:
+        spack.config.set('config:active_upstream', None,
+                         scope='user')
+        spack.config.set('config:active_tree',
+                         spack.config.get('config:install_tree'),
+                         scope='user')
+
     if not args.package and not args.specfiles:
         # if there are no args but an active environment or spack.yaml file
         # then install the packages from it.
