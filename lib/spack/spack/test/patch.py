@@ -8,7 +8,7 @@ import filecmp
 import pytest
 import collections
 
-from llnl.util.filesystem import mkdirp, working_dir
+from llnl.util.filesystem import working_dir, mkdirp
 
 import spack.patch
 import spack.paths

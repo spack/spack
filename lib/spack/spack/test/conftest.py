@@ -131,7 +131,7 @@ def clear_stage_root(monkeypatch):
 @pytest.fixture(scope='function', autouse=True)
 def mock_stage(clear_stage_root, tmpdir_factory):
     """Establish the temporary build_stage for the mock archive."""
-    new_stage = tmpdir_factory.mktemp('mock-stage').join('tmp')
+    new_stage = tmpdir_factory.mktemp('mock-stage')
     new_stage_path = str(new_stage)
 
     # Set test_stage_path as the default directory to use for test stages.
@@ -333,7 +333,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     shutil.rmtree(str(tmpdir))
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope

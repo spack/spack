@@ -176,7 +176,7 @@ def get_stage_path(stage, stage_name):
 
 
 @pytest.fixture
-def bad_stage_path(config):
+def bad_stage_path():
     """Temporarily ensure there is no accessible path for staging."""
     current = spack.config.get('config:build_stage')
     spack.config.set('config', {'build_stage': '/no/such/path'}, scope='user')
@@ -185,7 +185,7 @@ def bad_stage_path(config):
 
 
 @pytest.fixture
-def non_user_path_for_stage(config, monkeypatch):
+def non_user_path_for_stage(monkeypatch):
     """Temporarily use a Linux-standard non-user path for staging. """
     def _can_access(path, perms):
         return True
@@ -198,7 +198,7 @@ def non_user_path_for_stage(config, monkeypatch):
 
 
 @pytest.fixture
-def instance_path_for_stage(config):
+def instance_path_for_stage():
     """
     Temporarily use the "traditional" spack instance stage path for staging.
 
@@ -216,7 +216,7 @@ def instance_path_for_stage(config):
 
 
 @pytest.fixture
-def tmp_path_for_stage(tmpdir, config):
+def tmp_path_for_stage(tmpdir):
     """
     Use a temporary test directory for staging.
 
@@ -230,7 +230,7 @@ def tmp_path_for_stage(tmpdir, config):
 
 
 @pytest.fixture
-def tmp_build_stage_dir(tmpdir, config):
+def tmp_build_stage_dir(tmpdir):
     """Establish the temporary build_stage for the mock archive."""
     test_stage_path = tmpdir.join('stage')
 

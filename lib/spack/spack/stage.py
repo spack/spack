@@ -9,6 +9,7 @@ import stat
 import sys
 import errno
 import hashlib
+import tempfile
 import getpass
 from six import string_types
 from six import iteritems
@@ -31,6 +32,9 @@ from spack.util.crypto import prefix_bits, bit_length
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = 'spack-src'
+
+# The temporary stage name prefix.
+_stage_prefix = 'spack-stage-'
 
 
 def _adjust_stage_access(path):
@@ -211,21 +215,20 @@ class Stage(object):
         self.skip_checksum_for_mirror = True
 
         self.srcdir = None
+
+        # TODO: This uses a protected member of tempfile, but seemed the only
+        # TODO: way to get a temporary name.  It won't be the same as the
+        # temporary stage area in _stage_root.
         self.name = name
+        if name is None:
+            self.name = _stage_prefix + next(tempfile._get_candidate_names())
         self.mirror_path = mirror_path
 
         # Use the provided path or construct an optionally named stage path.
         if path is not None:
             self.path = path
         else:
-            self.path = get_stage_root()
-            if self.name is not None:
-                self.path = os.path.join(self.path, self.name)
-
-        if self.name is None:
-            # TODO: Is it appropriate to use the stage root dir as the name
-            # for locking when not a named stage?
-            self.name = os.path.basename(self.path)
+            self.path = os.path.join(get_stage_root(), self.name)
 
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
