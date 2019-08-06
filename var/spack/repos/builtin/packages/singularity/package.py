@@ -35,6 +35,9 @@ class Singularity(MakefilePackage):
     depends_on('squashfs', type='run')
     depends_on('git', when='@develop')  # mconfig uses it for version info
 
+    # TODO: add dependency to support fakeroot option, for example:
+    # depends_on('shadow-uidmap', type='run', when='@3.3:')
+
     # Go has novel ideas about how projects should be organized.
     # We'll point GOPATH at the stage dir, and move the unpacked src
     # tree into the proper subdir in our overridden do_stage below.
