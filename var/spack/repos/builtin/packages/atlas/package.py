@@ -104,7 +104,7 @@ class Atlas(Package):
 
         # Workaround for macOS Clang:
         # http://math-atlas.sourceforge.net/atlas_install/node66.html
-        if spec.satisfies('%clang platform=darwin'):
+        if spec.satisfies('@3.10.3: %clang platform=darwin'):
             options.append('--force-clang=' + spack_cc)
 
         # Lapack resource to provide full lapack build. Note that
