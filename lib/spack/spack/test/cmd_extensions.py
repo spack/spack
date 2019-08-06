@@ -19,11 +19,7 @@ def extension_root(tmpdir):
     return root
 
 
-@pytest.fixture()
-def hello_world_cmd(extension_root):
-    """Simple extension command with code contained in a single file."""
-    hello = extension_root.ensure('testcommand', 'cmd', 'hello.py')
-    hello.write("""
+_hello_world_cmd_text = """
 description = "hello world extension command"
 section = "test command"
 level = "long"
@@ -34,7 +30,14 @@ def setup_parser(subparser):
 
 def hello(parser, args):
     print('Hello world!')
-""")
+"""
+
+
+@pytest.fixture()
+def hello_world_cmd(extension_root):
+    """Simple extension command with code contained in a single file."""
+    hello = extension_root.ensure('testcommand', 'cmd', 'hello.py')
+    hello.write(_hello_world_cmd_text)
     list_of_modules = list(sys.modules.keys())
     with spack.config.override('config:extensions', [str(extension_root)]):
         spack.extensions.reset_command_cache()
@@ -100,6 +103,40 @@ def hello_folks():
         del sys.modules[module_name]
 
 
+@pytest.fixture()
+def subcommand_root(tmpdir):
+    root = tmpdir.mkdir('subcommand_root')
+    return root
+
+
+def _ensure_package(base, *parts):
+    bits = []
+    for bit in parts[:-1]:
+        bits.append(bit)
+        base.ensure(*(bits + ['__init__.py']))
+    return base.ensure(*parts)
+
+
+@pytest.fixture()
+def hello_world_sub_no_cmd(subcommand_root):
+    """Failed attempt at a subcommand (bad location)."""
+    hello = _ensure_package(subcommand_root, 'bad', 'hello.py')
+    hello.write(_hello_world_cmd_text)
+    sys.path.insert(0, str(subcommand_root))
+    yield
+    sys.path.pop()
+
+
+@pytest.fixture()
+def hello_world_sub_cmd(subcommand_root):
+    """Simulated subcommand."""
+    hello = _ensure_package(subcommand_root, 'good', 'cmd', 'hello.py')
+    hello.write(_hello_world_cmd_text)
+    sys.path.insert(0, str(subcommand_root))
+    yield
+    sys.path.pop()
+
+
 def test_simple_command_extension(hello_world_cmd):
     output = hello_world_cmd()
     assert 'Hello world!' in output
@@ -112,3 +149,13 @@ def test_command_with_import(hello_world_with_module_in_root):
     assert 'Hello folks!' in output
     output = hello_world_with_module_in_root('global')
     assert 'bar' in output
+
+
+def test_sub_missing_cmd(hello_world_sub_no_cmd):
+    with pytest.raises(ImportError) as e:
+        spack.cmd.get_module_from('hello', 'bad')
+    assert str(e.value) == 'No module named cmd.hello'
+
+
+def test_sub_cmd(hello_world_sub_cmd):
+    spack.cmd.get_module_from('hello', 'good')
