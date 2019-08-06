@@ -137,7 +137,8 @@ class Singularity(MakefilePackage):
         tty.warn("""
         For full functionality, you'll need to chown and chmod some files
         after installing the package.  This has security implications.
-        See: https://singularity.lbl.gov/docs-security for details.
+        See: https://sylabs.io/guides/3.2/admin-guide/admin_quickstart.html#singularity-security
+        for details.
 
         We've installed a script that will make the necessary changes;
         read through it and then execute it as root (e.g. via sudo).
