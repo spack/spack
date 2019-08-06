@@ -200,9 +200,11 @@ after_success:
   - ccache -s
   - case "$TEST_SUITE" in
         unit)
-            codecov --env PYTHON_VERSION
-                    --required
-                    --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
+            if [[ "$COVERAGE" == "true" ]]; then
+                codecov --env PYTHON_VERSION
+                        --required
+                        --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
+            fi
             ;;
     esac
 
