@@ -83,7 +83,7 @@ class PyNumpy(PythonPackage):
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90
         if self.spec.satisfies('%gcc@:5.1'):
-            flags.append(self.c99_flag)
+            flags.append(self.compiler.c99_flag)
         return (flags, None, None)
 
     @run_before('build')
