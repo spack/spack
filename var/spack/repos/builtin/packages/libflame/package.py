@@ -51,6 +51,12 @@ class Libflame(AutotoolsPackage):
     # https://groups.google.com/forum/#!topic/libflame-discuss/lQKEfjyudOY
     patch('Makefile_5.1.0.patch', when='@5.1.0')
 
+    def flag_handler(self, name, flags):
+        # -std=gnu99 at least required, old versions of GCC default to -std=c90
+        if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
+            flags.append('-std=gnu99')
+        return (flags, None, None)
+
     def configure_args(self):
         config_args = []
 
