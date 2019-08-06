@@ -34,6 +34,9 @@ import copy
 import os
 import sys
 import multiprocessing
+import re
+import getpass
+import tempfile
 from contextlib import contextmanager
 from six import string_types
 from six import iteritems
@@ -917,3 +920,43 @@ class ConfigFormatError(ConfigError):
 
         # give up and return None if nothing worked
         return None
+
+
+# Config variable substitutions
+replacements = {
+    'spack': spack.paths.prefix,
+    'user': getpass.getuser(),
+    'tempdir': tempfile.gettempdir(),
+}
+
+
+def substitute_config_variables(path):
+    """Substitute placeholders into paths.
+
+    Spack allows paths in configs to have some placeholders, as follows:
+
+    - $spack     The Spack instance's prefix
+    - $user      The current user's username
+    - $tempdir   Default temporary directory returned by tempfile.gettempdir()
+
+    These are substituted case-insensitively into the path, and users can
+    use either ``$var`` or ``${var}`` syntax for the variables.
+
+    """
+    # Look up replacements for re.sub in the replacements dict.
+    def repl(match):
+        m = match.group(0).strip('${}')
+        return replacements.get(m.lower(), match.group(0))
+
+    # Replace $var or ${var}.
+    return re.sub(r'(\$\w+\b|\$\{\w+\})', repl, path)
+
+
+def canonicalize_path(path):
+    """Substitute config vars, expand environment vars,
+       expand user home, take abspath."""
+    path = substitute_config_variables(path)
+    path = os.path.expandvars(path)
+    path = os.path.expanduser(path)
+    path = os.path.abspath(path)
+    return path
