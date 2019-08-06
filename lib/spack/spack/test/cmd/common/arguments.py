@@ -50,7 +50,6 @@ def ncores(monkeypatch, request):
     # on the available number of cores will be taken care of in the test
     ([], 16)
 ])
-@pytest.mark.TLD
 def test_setting_parallel_jobs(parser, cli_args, ncores, requested):
     expected = min(requested, ncores)
     namespace = parser.parse_args(cli_args)

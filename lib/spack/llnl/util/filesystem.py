@@ -348,7 +348,11 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
     abs_src = os.path.abspath(src)
+    if not abs_src.endswith(os.path.sep):
+        abs_src += os.path.sep
     abs_dest = os.path.abspath(dest)
+    if not abs_dest.endswith(os.path.sep):
+        abs_dest += os.path.sep
 
     # Stop early to avoid unnecessary recursion if being asked to copy from a
     # parent directory.

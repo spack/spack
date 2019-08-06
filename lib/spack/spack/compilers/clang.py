@@ -12,10 +12,10 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.paths
+import spack.stage
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
-import spack.stage
 
 
 #: compiler symlink mappings for mixed f77 compilers

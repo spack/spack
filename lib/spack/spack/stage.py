@@ -218,7 +218,7 @@ class Stage(object):
 
         # TODO: This uses a protected member of tempfile, but seemed the only
         # TODO: way to get a temporary name.  It won't be the same as the
-        # temporary stage area in _stage_root.
+        # TODO: temporary stage area in _stage_root.
         self.name = name
         if name is None:
             self.name = _stage_prefix + next(tempfile._get_candidate_names())
@@ -241,7 +241,7 @@ class Stage(object):
             if self.name not in Stage.stage_locks:
                 sha1 = hashlib.sha1(self.name.encode('utf-8')).digest()
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-                stage_lock_path = os.path.join(self.path, '.lock')
+                stage_lock_path = os.path.join(get_stage_root(), '.lock')
 
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
                     stage_lock_path, lock_id, 1)
@@ -642,10 +642,10 @@ class DIYStage(object):
         tty.msg("Sources for DIY stages are not cached")
 
 
-def ensure_access(file_):
+def ensure_access(file):
     """Ensure we can access a directory and die with an error if we can't."""
-    if not can_access(file_):
-        tty.die("Insufficient permissions for %s" % file_)
+    if not can_access(file):
+        tty.die("Insufficient permissions for %s" % file)
 
 
 def purge():

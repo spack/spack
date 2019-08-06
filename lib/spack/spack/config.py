@@ -101,7 +101,7 @@ config_defaults = {
         'checksum': True,
         'dirty': False,
         'build_jobs': min(16, multiprocessing.cpu_count()),
-        'build_stage': '$spack/var/spack/stage',
+        'build_stage': '$tempdir/spack-stage',
     }
 }
 
@@ -440,10 +440,10 @@ class Configuration(object):
             scopes = [self._validate_scope(scope)]
 
         merged_section = syaml.syaml_dict()
-        for scope_ in scopes:
+        for scope in scopes:
             # read potentially cached data from the scope.
 
-            data = scope_.get_section(section)
+            data = scope.get_section(section)
 
             # Skip empty configs
             if not data or not isinstance(data, dict):

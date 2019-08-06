@@ -7,7 +7,6 @@ import pytest
 from spack.main import print_setup_info
 
 
-@pytest.mark.TLD
 def test_print_shell_vars_sh(capsys):
     print_setup_info('sh')
     out, _ = capsys.readouterr()
@@ -18,7 +17,6 @@ def test_print_shell_vars_sh(capsys):
     assert "_sp_module_prefix" not in out
 
 
-@pytest.mark.TLD
 def test_print_shell_vars_csh(capsys):
     print_setup_info('csh')
     out, _ = capsys.readouterr()
@@ -29,7 +27,6 @@ def test_print_shell_vars_csh(capsys):
     assert "set _sp_module_prefix = " not in out
 
 
-@pytest.mark.TLD
 def test_print_shell_vars_sh_modules(capsys):
     print_setup_info('sh', 'modules')
     out, _ = capsys.readouterr()
@@ -40,7 +37,6 @@ def test_print_shell_vars_sh_modules(capsys):
     assert "_sp_module_prefix=" in out
 
 
-@pytest.mark.TLD
 def test_print_shell_vars_csh_modules(capsys):
     print_setup_info('csh', 'modules')
     out, _ = capsys.readouterr()

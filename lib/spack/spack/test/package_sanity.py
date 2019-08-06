@@ -42,7 +42,6 @@ def test_all_versions_are_lowercase():
     assert len(errors) == 0
 
 
-@pytest.mark.TLD
 def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
     defaults = spack.config.get('packages', scope='defaults')

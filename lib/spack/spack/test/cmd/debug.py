@@ -13,7 +13,6 @@ debug = SpackCommand('debug')
 
 
 def test_create_db_tarball(tmpdir, database):
-    # Allow for the fact that 
     with tmpdir.as_cwd():
         debug('create-db-tarball')
 
