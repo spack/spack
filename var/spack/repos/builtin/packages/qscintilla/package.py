@@ -7,7 +7,7 @@ from spack import *
 import os
 
 class Qscintilla(QMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """QScintilla is a port to Qt of Neil Hodgson's Scintilla C++ editor control. """
 
     homepage = "https://www.riverbankcomputing.com/software/qscintilla/intro"
     url      = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.2/QScintilla_gpl-2.11.2.tar.gz"
@@ -16,11 +16,11 @@ class Qscintilla(QMakePackage):
     # didn't have much luck with newer versions of Qscintilla and QT@4.8.6, so prefer the following version
     version('2.10.2', sha256='14b31d20717eed95ea9bea4cd16e5e1b72cee7ebac647cba878e0f6db6a65ed0', preferred=True)
 
-    # TODO add qt-designer as variant
-    # TODO add python bindings as variant
+    variant('python', default=True, description="Enable python bindings")
+    variant('designer', default=False, description="Enable pluging for Qt-Designer")
 
     # QScintilla so far tested to compile with Qt@4.8.6
-    depends_on('qt') #+phonon +dbus variants are causing compilation problems
+    depends_on('qt') # qt is not compiling with +phonon +dbus variants enabled
 
     # Beyond py-pyqt@4.12.1, pyqt4 needs its own sip module (not implemented yet)
     # Without private sip moduele, python bindings will not compile
@@ -44,7 +44,7 @@ class Qscintilla(QMakePackage):
         return args
 
 
-    # the following installs files under "/qscintilla_prefix/qmake_prefix"
+    # the following installs files under "/qscintilla_prefix/qt_prefix"
     # it gets rid of 'Nothing installed error'
     # without it libqscintilla is installed under qt_prefix, is that how it should be?
     def setup_environment(self, spack_env, run_env):
@@ -59,13 +59,16 @@ class Qscintilla(QMakePackage):
         else:
             python('configure.py -pyqt=PyQt5')
 
+
     def make_designer_qt(self):
         pass # not implemented yet
 
 
     def make_variants(self):
-        make_python_bindings(self)
-        make_designer_qt(self)
+        if '+python' in self.spec:
+            make_python_bindings(self)
+        if '+designer' in self.spec:
+            make_designer_qt(self)
 
 
     run_before('qmake')(chdir)
