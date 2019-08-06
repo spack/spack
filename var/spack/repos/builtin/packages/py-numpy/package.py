@@ -77,6 +77,15 @@ class PyNumpy(PythonPackage):
     # https://github.com/numpy/numpy/pull/13132
     patch('blas-lapack-order.patch', when='@1.15:1.16')
 
+    # GCC 4.8 is the minimum version that works
+    conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
+
+    def flag_handler(self, name, flags):
+        # -std=c99 at least required, old versions of GCC default to -std=c90
+        if self.spec.satisfies('%gcc@:5.1'):
+            flags.append(self.c99_flag)
+        return (flags, None, None)
+
     @run_before('build')
     def set_blas_lapack(self):
         # https://numpy.org/devdocs/user/building.html
