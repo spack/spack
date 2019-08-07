@@ -61,7 +61,6 @@ def _get_scope_and_section(args):
     """Extract config scope and section from arguments."""
     scope = args.scope
     section = args.section
-
     # w/no args and an active environment, point to env manifest
     if not args.section:
         env = ev.get_env(args, 'config edit')

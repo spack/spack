@@ -826,12 +826,25 @@ def default_modify_scope(section):
     if not default_edit_scope:
         default_edit_scope = 'user'
     platform_scope = _platform_scope(default_edit_scope)
-    if (platform_scope in spack.config.config.scopes) and (
+    if section == 'compilers':
+        # compiler config should always use the platform scope regardless of
+        # whether the associated config file exists
+        if platform_scope in spack.config.config.scopes:
+            return platform_scope
+        else:
+            tty.warn("No associated platform scope for {0},"
+                     "using {0} as default edit scope for compilers"
+                     .format(default_edit_scope))
+    elif (platform_scope in spack.config.config.scopes) and (
         spack.config.config.scopes[platform_scope].get_section(section)
     ):
+        # for all sections other than compiler config, we edit the associated
+        # platform scope *if* an associated file exists
         return platform_scope
-    else:
-        return default_edit_scope
+
+    # In other cases we return the default scope (this may be a platform scope
+    # if the user explicitly requested it)
+    return substitute_config_variables(default_edit_scope)
 
 
 def default_list_scope():
