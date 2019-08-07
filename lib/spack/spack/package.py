@@ -2361,7 +2361,15 @@ class Package(PackageBase):
 
 
 def install_dependency_symlinks(pkg, spec, prefix):
-    """Execute a dummy install and flatten dependencies"""
+    """
+    Execute a dummy install and flatten dependencies.
+
+    This routine can be used in a ``package.py`` definition by setting
+    ``install = install_dependency_symlinks``.
+
+    This feature comes in handy for creating a common location for the
+    the installation of third-party libraries.
+    """
     flatten_dependencies(spec, prefix)
 
 
