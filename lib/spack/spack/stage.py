@@ -44,7 +44,7 @@ def _adjust_stage_access(path):
 
     The caller is responsible for ensuring the canonicalized path exists.
     """
-    temp_path = canonicalize_path('$tempdir')
+    temp_path = sup.canonicalize_path('$tempdir')
     if path.startswith(temp_path) and path != temp_path:
         prefix = os.path.commonprefix([temp_path, path])
         user = getpass.getuser()
@@ -68,7 +68,7 @@ def _first_accessible_path(paths):
     for path in paths:
         try:
             # Try to create the path if it doesn't exist.
-            path = canonicalize_path(path)
+            path = sup.canonicalize_path(path)
             existed = os.path.exists(path)
             mkdirp(path)
 

@@ -138,7 +138,8 @@ def mock_stage(clear_stage_root, tmpdir_factory, request):
 
         # Set test_stage_path as the default directory to use for test stages.
         current = spack.config.get('config:build_stage')
-        spack.config.set('config', {'build_stage': new_stage_path}, scope='user')
+        spack.config.set('config',
+                         {'build_stage': new_stage_path}, scope='user')
 
         # Ensure the source directory exists
         source_path = new_stage.join(spack.stage._source_path_subdir)
