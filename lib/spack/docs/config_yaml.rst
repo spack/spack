@@ -115,8 +115,9 @@ deleted, but you can manually purge them with :ref:`spack clean --stage
 <cmd-spack-clean>`.
 
 .. note::
+
    The build will fail if there is no writable directory in the ``build_stage``
-  list.
+   list.
 
 --------------------
 ``source_cache``
