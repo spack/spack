@@ -23,7 +23,7 @@ class Papi(Package):
     url = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
     maintainers = ['G-Ragghianti']
 
-    version('develop', git="http://bitbucket.org/icl/papi")
+    version('5.7.0', 'd1a3bb848e292c805bc9f29e09c27870e2ff4cda6c2fba3b7da8b4bba6547589')
     version('5.6.0', 'fdd075860b2bc4b8de8b8b5c3abf594a')
     version('5.5.1', '86a8a6f3d0f34cd83251da3514aae15d')
     version('5.5.0', '5e1244a04ca031d4cc29b46ce3dd05b5')
