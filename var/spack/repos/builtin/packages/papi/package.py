@@ -35,7 +35,6 @@ class Papi(Package):
     variant('cuda', default=False, description='')
     variant('nvml', default=False, description='')
     variant('infiniband', default=False, description='')
-    variant('infiniband_umad', default=False, description='')
     variant('powercap', default=False, description='')
     variant('rapl', default=False, description='')
     variant('lmsensors', default=False, description='')
@@ -66,9 +65,6 @@ class Papi(Package):
                     "--with-nvml-libdir=%s/lib64/stubs" % spec['cuda'].prefix,
                     "--with-cuda-dir=%s" % spec['cuda'].prefix]
                 configure(*configure_args)
-        with working_dir("src/components/infiniband_umad"):
-            if '+infiniband_umad' in spec:
-                configure()
         with working_dir("src/components/lmsensors"):
             if '+lmsensors' in spec:
                 configure_args = [
