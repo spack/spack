@@ -38,7 +38,7 @@ class Swig(AutotoolsPackage):
 
     depends_on('pcre')
 
-    # Get repository does *not* include configure, so it calls autoreconf
+    # Git repository does *not* include configure script
     for _version in ['@fortran', '@master']:
         depends_on('autoconf', type='build', when=_version)
         depends_on('automake', type='build', when=_version)
