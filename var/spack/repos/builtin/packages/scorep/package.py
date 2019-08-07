@@ -15,6 +15,7 @@ class Scorep(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/scorep/scorep-4.1.tar.gz"
 
+    version('6.0',   '5dc1023eb766ba5407f0b5e0845ec786e0021f1da757da737db1fb71fc4236b8')
     version('5.0',   '0651614eacfc92ffbe5264a3efebd0803527ae6e8b11f7df99a56a02c37633e1')
     version('4.1',   '7bb6c1eecdd699b4a3207caf202866778ee01f15ff39a9ec198fcd872578fe63')
     version('4.0',   'f04478e0407d67eeb8c49c3c51d91e12')
@@ -35,6 +36,8 @@ class Scorep(AutotoolsPackage):
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
 
+    # SCOREP 6
+    depends_on('otf2@2.2:', when='@6:')
     # SCOREP 4 and 5
     depends_on('otf2@2.1:', when='@4:')
     depends_on('opari2@2.0:', when='@4:')

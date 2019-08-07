@@ -20,6 +20,7 @@ class Opari2(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/opari2/opari2-2.0.4.tar.gz"
 
+    version('2.0.5', '9034dd7596ac2176401090fd5ced45d0ab9a9404444ff767f093ccce68114ef5')
     version('2.0.4', 'f69e324792f66780b473daf2b3c81f58ee8188adc72b6fe0dacf43d4c1a0a131')
     version('2.0.3', 'f34674718ffdb098a48732a1eb9c1aa2')
     version('2.0.1', '74af78f1f27b8caaa4271e0b97fb0fba')
