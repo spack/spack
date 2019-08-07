@@ -28,8 +28,7 @@ def parser():
     (['test-package'], 0, [r'TestPackage(Package)', r'def install(self']),
     (['-n', 'test-named-package', 'file://example.tar.gz'], 1,
      [r'TestNamedPackage(Package)', r'def install(self']),
-    (['-t', 'bundle', 'test-bundle'], 2, [r'TestBundle(BundlePackage)']),
-    (['-n', 'test-named-bundle'], 1, [r'TestNamedBundle(BundlePackage)'])
+    (['-t', 'bundle', 'test-bundle'], 2, [r'TestBundle(BundlePackage)'])
 ])
 def test_create_template(parser, mock_test_repo, args, name_index, expected):
     """Test template creation."""
@@ -48,7 +47,7 @@ def test_create_template(parser, mock_test_repo, args, name_index, expected):
 
 
 @pytest.mark.parametrize('url,expected', [
-    (None, 'bundle'),
+    (None, 'generic'),
     ('downloads.sourceforge.net/octave/', 'octave'),
 ])
 def test_build_system_guesser_urls(parser, url, expected):

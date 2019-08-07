@@ -452,15 +452,15 @@ class BuildSystemGuesser:
         """Try to guess the type of build system used by a project based on
         the contents of its archive or the URL it was downloaded from."""
 
-        if url is None:
-            self.build_system = 'bundle'
-            return
-
         # Most octave extensions are hosted on Octave-Forge:
         #     http://octave.sourceforge.net/index.html
         # They all have the same base URL.
-        if 'downloads.sourceforge.net/octave/' in url:
+        if url is not None and 'downloads.sourceforge.net/octave/' in url:
             self.build_system = 'octave'
+            return
+
+        # Don't bother trying to process an archive file if stage not provided.
+        if stage is None:
             return
 
         # A list of clues that give us an idea of the build system a package
@@ -643,6 +643,9 @@ def get_build_system(args, guesser):
     Returns:
         str: The name of the build system template to use
     """
+    # Default template
+    template = 'generic'
+
     if args.template is not None:
         # Use a user-supplied template if one is present
         template = args.template
@@ -656,9 +659,6 @@ def get_build_system(args, guesser):
         else:
             msg = "This package looks like it uses the {0} build system"
             tty.msg(msg.format(template))
-    else:
-        template = 'bundle'
-        tty.warn("No URL provided.  Using the bundle package template.")
 
     return template
 
