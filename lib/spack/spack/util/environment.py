@@ -607,12 +607,12 @@ class EnvironmentModifications(object):
             env.unset(x)
 
         for x in modified_variables:
-            before = before[x]
-            after = after[x]
-            sep = return_separator_if_any(before, after)
+            value_before = before[x]
+            value_after = after[x]
+            sep = return_separator_if_any(value_before, value_after)
             if sep:
-                before_list = before.split(sep)
-                after_list = after.split(sep)
+                before_list = value_before.split(sep)
+                after_list = value_after.split(sep)
 
                 # Filter out empty strings
                 before_list = list(filter(None, before_list))
@@ -623,8 +623,8 @@ class EnvironmentModifications(object):
                     before_list = list(dedupe(before_list))
                     after_list = list(dedupe(after_list))
                     # The reassembled cleaned entries
-                    before = sep.join(before_list)
-                    after = sep.join(after_list)
+                    value_before = sep.join(before_list)
+                    value_after = sep.join(after_list)
 
                 # Paths that have been removed
                 remove_list = [
@@ -638,12 +638,12 @@ class EnvironmentModifications(object):
                     end = after_list.index(remaining_list[-1])
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
-                    env.prepend_path(x, after)
+                    env.prepend_path(x, value_after)
                     continue
 
-                if search not in before:
+                if search not in value_before:
                     # We just need to set the variable to the new value
-                    env.prepend_path(x, after)
+                    env.prepend_path(x, value_after)
                 else:
                     try:
                         prepend_list = after_list[:start]
@@ -663,7 +663,7 @@ class EnvironmentModifications(object):
                         env.prepend_path(x, item)
             else:
                 # We just need to set the variable to the new value
-                env.set(x, after)
+                env.set(x, value_after)
 
         return env
 

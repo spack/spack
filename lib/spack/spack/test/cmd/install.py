@@ -15,6 +15,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.config
+import spack.hash_types as ht
 import spack.package
 import spack.cmd.install
 from spack.error import SpackError
@@ -540,7 +541,7 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
             pkg_spec.concretize()
 
             with open(spec_yaml_path, 'w') as fd:
-                fd.write(pkg_spec.to_yaml(all_deps=True))
+                fd.write(pkg_spec.to_yaml(hash=ht.build_hash))
 
             install(
                 '--log-format=cdash',

@@ -35,6 +35,12 @@ class PyPygobject(PythonPackage):
     # for https://bugzilla.gnome.org/show_bug.cgi?id=668522
     patch('pygobject-2.28.6-gio-types-2.32.patch', when='@2.28.6')
 
+    # pygobject links directly using the compiler, not spack's wrapper.
+    # This causes it to fail to add the appropriate rpaths. This patch modifies
+    # pygobject's setup.py file to add -Wl,-rpath arguments for dependent
+    # libraries found with pkg-config.
+    patch('pygobject-3.28.3-setup-py.patch', when='@3.28.3')
+
     def url_for_version(self, version):
         url = 'http://ftp.gnome.org/pub/GNOME/sources/pygobject'
         return url + '/%s/pygobject-%s.tar.xz' % (version.up_to(2), version)

@@ -247,6 +247,7 @@ class CMakePackage(PackageBase):
             if self.generator == 'Unix Makefiles':
                 inspect.getmodule(self).make(*self.build_targets)
             elif self.generator == 'Ninja':
+                self.build_targets.append("-v")
                 inspect.getmodule(self).ninja(*self.build_targets)
 
     def install(self, spec, prefix):

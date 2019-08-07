@@ -85,7 +85,7 @@ class Lammps(CMakePackage):
     depends_on('mpi', when='+user-lb')
     depends_on('mpi', when='+user-h5md')
     depends_on('hdf5', when='+user-h5md')
-    depends_on('libjpeg', when='+jpeg')
+    depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
 

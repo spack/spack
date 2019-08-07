@@ -26,9 +26,9 @@ class Mpileaks(Package):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
+    url      = "https://github.com/LLNL/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
-    version('1.0', '8838c574b39202a57d7c2d68692718aa')
+    version('1.0', sha256='2e34cc4505556d1c1f085758e26f2f8eea0972db9382f051b2dcfb1d7d9e1825')
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')

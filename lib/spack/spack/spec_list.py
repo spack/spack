@@ -28,6 +28,12 @@ class SpecList(object):
         self.name = name
         self._reference = reference  # TODO: Do we need defensive copy here?
 
+        # Validate yaml_list before assigning
+        if not all(isinstance(s, string_types) or isinstance(s, (list, dict))
+                   for s in yaml_list):
+            raise ValueError(
+                "yaml_list can contain only valid YAML types!  Found:\n  %s"
+                % [type(s) for s in yaml_list])
         self.yaml_list = yaml_list[:]
 
         # Expansions can be expensive to compute and difficult to keep updated

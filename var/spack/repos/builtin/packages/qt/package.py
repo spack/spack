@@ -4,9 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import platform
+from spack.operating_systems.mac_os import macos_version
 import os
 import sys
+
+MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
 
 
 class Qt(Package):
@@ -16,6 +18,8 @@ class Qt(Package):
     url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
+
+    phases = ['configure', 'build', 'install']
 
     version('5.11.3', '859417642713cee2493ee3646a7fee782c9f1db39e41d7bb1322bba0c5f0ff4d')
     version('5.11.2', 'c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81')
@@ -30,6 +34,7 @@ class Qt(Package):
     version('5.4.0',  'e8654e4b37dd98039ba20da7a53877e6')
     version('5.3.2',  'febb001129927a70174467ecb508a682')
     version('5.2.1',  'a78408c887c04c34ce615da690e0b4c8')
+    version('4.8.7',  'd990ee66bf7ab0c785589776f35ba6ad')
     version('4.8.6',  '2edbe4d6c2eff33ef91732602f3518eb')
     version('4.8.5',  '1864987bdbb2f58f8ae8b350dfdbe133')
     version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009')
@@ -44,12 +49,24 @@ class Qt(Package):
             description="Build the Webkit extension")
     variant('examples',   default=False,
             description="Build examples.")
+    variant('framework',   default=False,
+            description="Build as a macOS Framework package.")
+    variant('tools',      default=True,
+            description="Build tools, including Qt Designer.")
     variant('dbus',       default=False,
             description="Build with D-Bus support.")
     variant('phonon',     default=False,
             description="Build with phonon support.")
     variant('opengl',     default=False,
             description="Build with OpenGL support.")
+    variant('sql',        default=True,
+            description="Build with SQL support.")
+    variant('shared',     default=True,
+            description='Build shared libraries.')
+    variant('ssl',    default=True,
+            description="Build with OpenSSL support.")
+    variant('freetype', default='spack', description='Freetype2 support',
+            values=('spack', 'qt', 'none'), multi=False)
 
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
@@ -70,15 +87,17 @@ class Qt(Package):
     # https://github.com/spack/spack/issues/1517
     patch('qt5-pcre.patch', when='@5:')
 
-    patch('qt4-corewlan-new-osx.patch', when='@4')
-    patch('qt4-pcre-include-conflict.patch', when='@4')
-    patch('qt4-el-capitan.patch', when='@4')
-
-    # Allow Qt's configure script to build the webkit option with more
-    # recent versions of gcc.
-    # https://github.com/spack/spack/issues/9205
-    # https://github.com/spack/spack/issues/9209
-    patch('qt4-gcc-and-webkit.patch', when='@4')
+    patch('qt4-pcre-include-conflict.patch', when='@4.8.6')
+    patch('qt4-tools.patch', when='@4+tools')
+    if not MACOS_VERSION:
+        # Allow Qt's configure script to build the webkit option with more
+        # recent versions of gcc.
+        # https://github.com/spack/spack/issues/9205
+        # https://github.com/spack/spack/issues/9209
+        patch('qt4-gcc-and-webkit.patch', when='@4:4.8.6')
+        patch('qt4-gcc-and-webkit-487.patch', when='@4.8.7')
+    else:
+        patch('qt4-mac.patch', when='@4.8.7')
 
     # Fix build failure with newer versions of GCC
     patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch',
@@ -91,84 +110,55 @@ class Qt(Package):
     patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
     patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
 
+    # Build-only dependencies
     depends_on("pkgconfig", type='build')
-    # Use system openssl for security.
-    depends_on("openssl@:1.0", when='@:5.9')
-    depends_on("openssl")
-    depends_on("glib", when='@4:')
-    depends_on("gtkplus", when='+gtk')
-    depends_on("libxml2")
-    depends_on("zlib")
-    depends_on("dbus", when='@4:+dbus')
-    depends_on("libtiff")
-    depends_on("libpng@1.2.57", when='@3')
-    depends_on("libpng", when='@4:')
-    depends_on("libmng")
-    depends_on("jpeg")
-    depends_on("icu4c")
-    depends_on("fontconfig", when=(sys.platform != 'darwin'))  # (Unix only)
-    depends_on("freetype")
-    depends_on("sqlite", type=('build', 'run'))
-    depends_on("pcre+multibyte", when='@5.0:5.8')
-    depends_on("pcre2+multibyte", when='@5.9:')
-    depends_on("double-conversion", when='@5.7:')
-    depends_on("harfbuzz", when='@5:')
-
-    # Core options:
-    # -doubleconversion  [system/qt/no]
-    # -iconv             [posix/sun/gnu/no] (Unix only)
-    # -pcre              [system/qt]
-
-    # Gui, printing, widget options:
-    # -harfbuzz          [system/qt/no]
-    # -xkbcommon-x11     [system/qt/no]
-    # -system-xkbcommon
-
-    # Database options:
-    # -sqlite            [system/qt]
-
-    # Qt3D options:
-    # -assimp            [system/qt/no]
-
-    # QtQml
-    depends_on("python", when='@5.7.0:', type='build')
-
-    # OpenGL hardware acceleration
-    depends_on("gl@3.2:", when='@4:+opengl')
-    # xcb is Linux-specific
-    depends_on("libxcb", when=sys.platform != 'darwin')
-    depends_on("xcb-util-image", when=sys.platform != 'darwin')
-    depends_on("xcb-util-keysyms", when=sys.platform != 'darwin')
-    depends_on("xcb-util-wm", when=sys.platform != 'darwin')
-    depends_on("xcb-util-renderutil", when=sys.platform != 'darwin')
-    depends_on("libxkbcommon", when=sys.platform != 'darwin')
-    depends_on("inputproto", when='@:5.8')
-    depends_on("libx11", when=sys.platform != 'darwin')
-
-    if sys.platform != 'darwin':
-        depends_on("libxext", when='@3:4.99')
-
-    # Webkit
     depends_on("flex", when='+webkit', type='build')
     depends_on("bison", when='+webkit', type='build')
+    depends_on("python", when='@5.7.0:', type='build')
+
+    # Dependencies, then variant- and version-specific dependencies
+    depends_on("icu4c")
+    depends_on("jpeg")
+    depends_on("libmng")
+    depends_on("libtiff")
+    depends_on("libxml2")
+    depends_on("zlib")
+    depends_on("freetype", when='freetype=spack')
     depends_on("gperf", when='+webkit')
+    depends_on("gtkplus", when='+gtk')
+    depends_on("openssl", when='+ssl')
+    depends_on("sqlite", when='+sql', type=('build', 'run'))
 
-    # Multimedia
-    # depends_on("gstreamer", when='+multimedia')
-    # depends_on("pulse", when='+multimedia')
-    # depends_on("flac", when='+multimedia')
-    # depends_on("ogg", when='+multimedia')
-    # -pulseaudio                [auto] (Unix only)
-    # -alsa                      [auto] (Unix only)
+    depends_on("libpng@1.2.57", when='@3')
+    depends_on("pcre+multibyte", when='@5.0:5.8')
+    depends_on("inputproto", when='@:5.8')
+    depends_on("openssl@:1.0", when='@:5.9+ssl')
 
-    # Webengine options:
-    # -webengine-alsa            [auto] (Linux only)
-    # -webengine-pulseaudio      [auto] (Linux only)
-    # -webengine-embedded-build  [auto] (Linux only)
-    # -webengine-icu             [system/qt] (Linux only)
-    # -webengine-ffmpeg          [system/qt] (Linux only)
-    # -webengine-opus            [system/qt] (Linux only)
-    # -webengine-webp            [system/qt] (Linux only)
+    depends_on("glib", when='@4:')
+    depends_on("libpng", when='@4:')
+    depends_on("dbus", when='@4:+dbus')
+    depends_on("gl@3.2:", when='@4:+opengl')
+
+    depends_on("harfbuzz", when='@5:')
+    depends_on("double-conversion", when='@5.7:')
+    depends_on("pcre2+multibyte", when='@5.9:')
+
+    # Non-macOS dependencies and special macOS constraints
+    if MACOS_VERSION is None:
+        depends_on("fontconfig")
+        depends_on("libx11")
+        depends_on("libxcb")
+        depends_on("libxkbcommon")
+        depends_on("xcb-util-image")
+        depends_on("xcb-util-keysyms")
+        depends_on("xcb-util-renderutil")
+        depends_on("xcb-util-wm")
+        depends_on("libxext", when='@3:4.99')
+        conflicts('+framework',
+                  msg="QT cannot be built as a framework except on macOS.")
+    else:
+        conflicts('platform=darwin', when='@4.8.6',
+                msg="QT 4 for macOS is only patched for 4.8.7")
 
     use_xcode = True
 
@@ -219,32 +209,91 @@ class Qt(Package):
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
 
+    @when('@4 platform=darwin')
     def patch(self):
-        if self.spec.satisfies('@4'):
-            # Fix qmake compilers in the default mkspec
-            filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                        'mkspecs/common/g++-base.conf')
-            filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                        'mkspecs/common/g++-base.conf')
+        ogl = self.spec['opengl'] if '+opengl' in self.spec else None
+        deployment_target = str(MACOS_VERSION.up_to(2))
 
-            # Necessary to build with GCC 6 and other modern compilers
-            # http://stackoverflow.com/questions/10354371/
-            filter_file('(^QMAKE_CXXFLAGS .*)', r'\1 -std=gnu++98',
-                        'mkspecs/common/gcc-base.conf')
+        patches = {
+            'MACOSX_DEPLOYMENT_TARGET': deployment_target,
+            'PREFIX': self.prefix,
+            'OPENGL_INCDIR': ogl.prefix.include if ogl else "",
+            'OPENGL_LIBS': ogl.libs.ld_flags if ogl else "",
+        }
 
-            filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                        'mkspecs/common/g++-unix.conf')
-        elif self.spec.satisfies('@5:'):
-            # Fix qmake compilers in the default mkspec
-            filter_file('^QMAKE_COMPILER .*', 'QMAKE_COMPILER = cc',
-                        'qtbase/mkspecs/common/g++-base.conf')
-            filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                        'qtbase/mkspecs/common/g++-base.conf')
-            filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                        'qtbase/mkspecs/common/g++-base.conf')
+        def repl(match):
+            # Replace the original config variable value with the one chosen
+            # here if it is mentioned in 'patches'; otherwise return the
+            # original value.
+            return patches.get(match.group(1), match.group(0))
 
-            filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                        'qtbase/mkspecs/common/g++-unix.conf')
+        files_to_filter = [
+            "configure",
+            "mkspecs/common/mac.conf",
+            "mkspecs/common/unix.conf",
+            "mkspecs/common/gcc-base-macx.conf",
+            "mkspecs/common/gcc-base.conf",
+            "qmake/generators/unix/unixmake.cpp",
+            "qmake/qmake.pri",
+            "src/tools/bootstrap/bootstrap.pro"
+        ]
+        if '%clang' in self.spec:
+            files_to_filter += [
+                "mkspecs/unsupported/macx-clang-libc++/qmake.conf",
+                "mkspecs/common/clang.conf"
+            ]
+        elif '%gcc' in self.spec:
+            files_to_filter += [
+                "mkspecs/common/g++-macx.conf",
+                "mkspecs/darwin-g++/qmake.conf"
+            ]
+
+        # Filter inserted configure variables
+        filter_file(r'@([a-zA-Z0-9_]+)@', repl, *files_to_filter)
+
+        # Remove debug build
+        files_to_filter = [
+            "src/3rdparty/webkit/Source/WebKit.pri",
+            "src/3rdparty/webkit/Source/WebKit/qt/declarative/declarative.pro",
+            "src/imports/qimportbase.pri",
+            "src/plugins/qpluginbase.pri",
+            "src/qbase.pri",
+            "tools/designer/src/components/lib/lib.pro",
+            "tools/designer/src/lib/lib.pro",
+            "tools/designer/src/plugins/activeqt/activeqt.pro",
+            "tools/designer/src/plugins/plugins.pri",
+            "tools/designer/src/uitools/uitools.pro",
+        ]
+        filter_file(r'(\+=.*)debug_and_release', r'\1', *files_to_filter)
+
+    @when('@4')  # *NOT* darwin/mac
+    def patch(self):
+        # Fix qmake compilers in the default mkspec
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
+                    'mkspecs/common/g++-base.conf')
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
+                    'mkspecs/common/g++-base.conf')
+
+        # Necessary to build with GCC 6 and other modern compilers
+        # http://stackoverflow.com/questions/10354371/
+        filter_file('(^QMAKE_CXXFLAGS .*)', r'\1 -std=gnu++98',
+                    'mkspecs/common/gcc-base.conf')
+
+        filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
+                    'mkspecs/common/g++-unix.conf')
+
+    @when('@5')
+    def patch(self):
+        # Fix qmake compilers in the default mkspec
+        filter_file('^QMAKE_COMPILER .*', 'QMAKE_COMPILER = cc',
+                    'qtbase/mkspecs/common/g++-base.conf')
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
+                    'qtbase/mkspecs/common/g++-base.conf')
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
+                    'qtbase/mkspecs/common/g++-base.conf')
+
+        filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
+                    'qtbase/mkspecs/common/g++-unix.conf')
 
     @property
     def common_config_args(self):
@@ -255,15 +304,37 @@ class Qt(Package):
             '-opensource',
             '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
             '-release',
-            '-shared',
             '-confirm-license',
-            '-openssl-linked',
             '-optimized-qmake',
-            '-system-freetype',
-            '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include),
             '-no-pch',
-            '-system-sqlite'
         ]
+
+        if self.spec.variants['freetype'].value == 'spack':
+            config_args.extend([
+                '-system-freetype',
+                '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include)
+            ])
+        elif self.spec.variants['freetype'].value == 'qt':
+            config_args.append('-qt-freetype')
+        else:
+            config_args.append('-no-freetype')
+
+        if '+ssl' in self.spec:
+            config_args.append('-openssl-linked')
+        else:
+            config_args.append('-no-openssl')
+
+        if '+sql' in self.spec:
+            config_args.append('-system-sqlite')
+        else:
+            comps = ['db2', 'ibase', 'oci', 'tds', 'mysql', 'odbc', 'psql',
+                     'sqlite', 'sqlite2']
+            config_args.extend("-no-sql-" + component for component in comps)
+
+        if '+shared' in self.spec:
+            config_args.append('-shared')
+        else:
+            config_args.append('-static')
 
         if self.spec.satisfies('@5:'):
             config_args.append('-system-harfbuzz')
@@ -272,7 +343,7 @@ class Qt(Package):
         if self.spec.satisfies('@5.7:'):
             config_args.append('-system-doubleconversion')
 
-        if sys.platform != 'darwin':
+        if not MACOS_VERSION:
             config_args.append('-fontconfig')
 
         if '@:5.7.1' in self.spec:
@@ -295,8 +366,8 @@ class Qt(Package):
         if '~examples' in self.spec:
             config_args.extend(['-nomake', 'examples'])
 
-        if '@4' in self.spec and '~phonon' in self.spec:
-            config_args.append('-no-phonon')
+        if '~tools' in self.spec:
+            config_args.extend(['-nomake', 'tools'])
 
         if '+dbus' in self.spec:
             dbus = self.spec['dbus'].prefix
@@ -307,7 +378,10 @@ class Qt(Package):
         else:
             config_args.append('-no-dbus')
 
-        if '@5:' in self.spec and sys.platform == 'darwin':
+        if MACOS_VERSION:
+            config_args.append('-{0}framework'.format(
+                '' if '+framework' in self.spec else 'no-'))
+        if '@5:' in self.spec and MACOS_VERSION:
             config_args.extend([
                 '-no-xinput2',
                 '-no-xcb-xlib',
@@ -317,39 +391,13 @@ class Qt(Package):
 
         # FIXME: else: -system-xcb ?
 
-        if '@4' in self.spec and sys.platform == 'darwin':
-            config_args.append('-cocoa')
-
-            mac_ver = tuple(platform.mac_ver()[0].split('.')[:2])
-            sdkname = 'macosx%s' % '.'.join(mac_ver)
-            sdkpath = which('xcrun')('--show-sdk-path',
-                                     '--sdk', sdkname,
-                                     output=str)
-            config_args.extend([
-                '-sdk', sdkpath.strip(),
-            ])
-            use_clang_platform = False
-            if self.spec.compiler.name == 'clang' and \
-               str(self.spec.compiler.version).endswith('-apple'):
-                use_clang_platform = True
-            # No one uses gcc-4.2.1 anymore; this is clang.
-            if self.spec.compiler.name == 'gcc' and \
-               str(self.spec.compiler.version) == '4.2.1':
-                use_clang_platform = True
-            if use_clang_platform:
-                config_args.append('-platform')
-                if mac_ver >= (10, 9):
-                    config_args.append('unsupported/macx-clang-libc++')
-                else:
-                    config_args.append('unsupported/macx-clang')
-
         return config_args
 
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
 
     @when('@3')
-    def configure(self):
+    def configure(self, spec, prefix):
         # A user reported that this was necessary to link Qt3 on ubuntu.
         # However, if LD_LIBRARY_PATH is not set the qt build fails, check
         # and set LD_LIBRARY_PATH if not set, update if it is set.
@@ -358,7 +406,7 @@ class Qt(Package):
         else:
             os.environ['LD_LIBRARY_PATH'] = os.pathsep + os.getcwd() + '/lib'
 
-        configure('-prefix', self.prefix,
+        configure('-prefix', prefix,
                   '-v',
                   '-thread',
                   '-shared',
@@ -366,36 +414,53 @@ class Qt(Package):
                   '-fast')
 
     @when('@4')
-    def configure(self):
-        configure('-fast',
-                  '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
-                  '-{0}webkit'.format('' if '+webkit' in self.spec else 'no-'),
-                  '-arch', str(self.spec.architecture.target),
-                  *self.common_config_args)
+    def configure(self, spec, prefix):
+        config_args = self.common_config_args
+
+        config_args.extend([
+            '-fast',
+            '-no-declarative-debug',
+            '-{0}gtkstyle'.format('' if '+gtk' in spec else 'no-'),
+            '-{0}webkit'.format('' if '+webkit' in spec else 'no-'),
+            '-{0}phonon'.format('' if '+phonon' in spec else 'no-'),
+            '-arch', str(spec.architecture.target),
+        ])
+
+        if '~examples' in self.spec:
+            config_args.extend(['-nomake', 'demos'])
+
+        if MACOS_VERSION:
+            sdkpath = which('xcrun')('--show-sdk-path', output=str).strip()
+            config_args.extend([
+                '-cocoa',
+                '-platform', 'unsupported/macx-clang-libc++',
+                '-sdk', sdkpath])
+
+        configure(*config_args)
 
     @when('@5.0:5.6')
-    def configure(self):
-        webkit_args = [] if '+webkit' in self.spec else ['-skip', 'qtwebkit']
+    def configure(self, spec, prefix):
+        webkit_args = [] if '+webkit' in spec else ['-skip', 'qtwebkit']
         configure('-no-eglfs',
                   '-no-directfb',
-                  '-{0}gtkstyle'.format('' if '+gtk' in self.spec else 'no-'),
+                  '-{0}gtkstyle'.format('' if '+gtk' in spec else 'no-'),
                   *(webkit_args + self.common_config_args))
 
     @when('@5.7:')
-    def configure(self):
+    def configure(self, spec, prefix):
         config_args = self.common_config_args
 
-        if not sys.platform == 'darwin':
+        if not MACOS_VERSION:
             config_args.extend([
                 '-system-xcb',
             ])
 
-        if '~webkit' in self.spec:
+        if '~webkit' in spec:
             config_args.extend([
                 '-skip', 'webengine',
             ])
 
-        if '~opengl' in self.spec and self.spec.satisfies('@5.10:'):
+        if '~opengl' in spec and spec.satisfies('@5.10:'):
             config_args.extend([
                 '-skip', 'webglplugin',
             ])
@@ -406,15 +471,16 @@ class Qt(Package):
             # https://wiki.qt.io/QtWayland
             config_args.extend(['-skip', 'wayland'])
 
-        if self.spec.satisfies('@5.7'):
+        if spec.satisfies('@5.7'):
             config_args.extend(['-skip', 'virtualkeyboard'])
 
         configure('-no-eglfs',
                   '-no-directfb',
-                  '-{0}gtk'.format('' if '+gtk' in self.spec else 'no-'),
+                  '-{0}gtk'.format('' if '+gtk' in spec else 'no-'),
                   *config_args)
 
-    def install(self, spec, prefix):
-        self.configure()
+    def build(self, spec, prefix):
         make()
+
+    def install(self, spec, prefix):
         make("install")

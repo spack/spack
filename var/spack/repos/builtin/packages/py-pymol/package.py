@@ -28,5 +28,5 @@ class PyPymol(PythonPackage):
     depends_on('freetype')
     depends_on('libxml2')
     depends_on('msgpack-c')
-    depends_on('py-pyqt', type=('build', 'run'))
+    depends_on('py-pyqt4', type=('build', 'run'))
     depends_on('freeglut')

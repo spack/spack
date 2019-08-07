@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.operating_systems.mac_os import macos_version
+from spack.operating_systems.mac_os import macos_version, macos_sdk_path
 from llnl.util import tty
 
 import glob
@@ -314,6 +314,12 @@ class Gcc(AutotoolsPackage):
                                 spec['cuda'].libs.directories[0]),
                             '--disable-bootstrap',
                             '--disable-multilib'])
+
+        if sys.platform == 'darwin':
+            options.extend([
+                '--with-native-system-header-dir=/usr/include',
+                '--with-sysroot={0}'.format(macos_sdk_path())
+            ])
 
         return options
 

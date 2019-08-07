@@ -15,4 +15,4 @@ class PyQtpy(PythonPackage):
     version('1.2.1', 'e2f783fb7f8e502815237bd8d30c6d11')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pyqt@4:',    type=('build', 'run'))
+    depends_on('py-pyqt4',    type=('build', 'run'))

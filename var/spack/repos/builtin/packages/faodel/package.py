@@ -10,29 +10,25 @@ class Faodel(CMakePackage):
     """Flexible, Asynchronous, Object Data-Exchange Libraries"""
 
     homepage = "https://github.com/faodel/faodel"
-    url      = "https://github.com/faodel/faodel/archive/v1.1811.2.tar.gz"
+    url      = "https://github.com/faodel/faodel/archive/v1.1906.1.tar.gz"
     git      = "https://github.com/faodel/faodel.git"
 
     maintainers = ['tkordenbrock', 'craigulmer']
 
+    version('1.1906.1', sha256='4b3caf469ae7db50e9bb8d652e4cb532d33d474279def0f8a483f69385648058')
     version('1.1811.2', sha256='22feb502dad0f56fb8af492f6e2cdc53a97fd6c31f6fa3c655be0a6266c46996')
     version('1.1811.1', sha256='8e95ee99b8c136ff687eb07a2481ee04560cb1526408eb22ab56cd9c60206916')
     version('1.1803.1', sha256='70ce7125c02601e14abe5985243d67adf677ed9e7a4dd6d3eaef8a97cf281a16')
 
-    variant('shared', default=True,
-            description='Build Faodel as shared libs')
-    variant('mpi', default=True,
-            description='Enable MPI')
-    variant('hdf5', default=False, description="Build the HDF5-based IOM in Kelpie")
+    variant('shared',   default=True,  description='Build Faodel as shared libs')
+    variant('mpi',      default=True,  description='Enable MPI')
 
-    variant('tcmalloc', default=True,
-            description='Use tcmalloc from gperftools in Lunasa, \
-                         potentially other places')
-    variant('logging', default='stdout', values=('stdout', 'sbl', 'disabled'),
-            description='Select where logging interface output is routed')
-    variant('network', default='nnti', values=('nnti', 'libfabric'),
-            description='RDMA Network library to use for \
-                         low-level communication')
+    variant('cereal',   default=False, description='Use Cereal to serialize NNTI data structures else XDR')
+    variant('hdf5',     default=False, description="Build the HDF5-based IOM in Kelpie")
+    variant('tcmalloc', default=True,  description='Use tcmalloc from gperftools in Lunasa, potentially other places')
+
+    variant('logging', default='stdout', values=('stdout', 'sbl', 'disabled'), description='Select where logging interface output is routed')
+    variant('network', default='nnti',   values=('nnti', 'libfabric'),         description='RDMA Network library to use for low-level communication')
 
     depends_on('mpi', when='+mpi')
     depends_on('boost@1.60.0:')
@@ -82,6 +78,8 @@ class Faodel(CMakePackage):
             '-DFaodel_LOGGING_METHOD:STRING={0}'.format(
                 spec.variants['logging'].value),
             '-DFaodel_NETWORK_LIBRARY:STRING={0}'.format(
-                spec.variants['network'].value)
+                spec.variants['network'].value),
+            '-DFaodel_ENABLE_CEREAL:BOOL={0}'.format(
+                'ON' if '+cereal' in spec else 'OFF')
         ]
         return args
