@@ -26,7 +26,7 @@ import spack.error
 import spack.util.lock
 import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
-from spack.util.path import canonicalize_path
+import spack.util.path as sup
 from spack.util.crypto import prefix_bits, bit_length
 
 
@@ -351,9 +351,11 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mirror_roots = [root if root.endswith('/') else root + '/'
-                            for root in mirrors.values()]
-            urls = [urljoin(root, self.mirror_path) for root in mirror_roots]
+            mir_roots = [
+                sup.substitute_path_variables(root) if root.endswith(os.sep)
+                else sup.substitute_path_variables(root) + os.sep
+                for root in mirrors.values()]
+            urls = [urljoin(root, self.mirror_path) for root in mir_roots]
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
