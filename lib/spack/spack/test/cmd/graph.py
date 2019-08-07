@@ -27,13 +27,6 @@ def test_graph_dot():
 
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
-def test_graph_normalize():
-    """Tests spack graph --normalize"""
-    graph('--normalize', 'dt-diamond')
-
-
-@pytest.mark.db
-@pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_static():
     """Tests spack graph --static"""
     graph('--static', 'dt-diamond')

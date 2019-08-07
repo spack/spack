@@ -29,7 +29,6 @@ class ManDb(AutotoolsPackage):
     # man pages are typically compressed, include all available
     # compression libraries
     depends_on('bzip2', type=('build', 'link', 'run'))
-    depends_on('lzma',  type=('build', 'link', 'run'))
     depends_on('xz',    type=('build', 'link', 'run'))
 
     def configure_args(self):

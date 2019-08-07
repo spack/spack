@@ -12,13 +12,14 @@ class Sundials(CMakePackage):
     """SUNDIALS (SUite of Nonlinear and DIfferential/ALgebraic equation
     Solvers)"""
 
-    homepage = "https://computation.llnl.gov/projects/sundials"
-    url = "https://computation.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/sundials"
+    url = "https://computing.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
     maintainers = ['cswoodward', 'gardner48', 'balos1']
 
     # ==========================================================================
     # Versions
     # ==========================================================================
+    version('4.1.0', sha256='280de1c27b2360170a6f46cb3799b2aee9dff3bddbafc8b08c291a47ab258aa5')
     version('4.0.1', sha256='29e409c8620e803990edbda1ebf49e03a38c08b9187b90658d86bddae913aed4')
     version('3.2.1', sha256='47d94d977ab2382cdcdd02f72a25ebd4ba8ca2634bbb2f191fe1636e71c86808')
     version('3.2.0', sha256='d2b690afecadf8b5a048bb27ab341de591d714605b98d3518985dfc2250e93f9')
@@ -499,12 +500,9 @@ class Sundials(CMakePackage):
             # Q: should the result be ordered by dependency?
         else:
             sun_libs = ['libsundials_' + p for p in query_parameters]
-        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
-                        [self.prefix, True]]
         is_shared = '+shared' in self.spec
-        for path, recursive in search_paths:
-            libs = find_libraries(sun_libs, root=path, shared=is_shared,
-                                  recursive=recursive)
-            if libs:
-                return libs
-        return None  # Raise an error
+
+        libs = find_libraries(sun_libs, root=self.prefix, shared=is_shared,
+                              recursive=True)
+
+        return libs or None  # Raise an error if no libs are found

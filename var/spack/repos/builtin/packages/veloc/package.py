@@ -17,7 +17,8 @@ class Veloc(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('1.0',    '98fe2d9abd2a1b53d7a52267dab91fae', preferred=True)
+    version('1.1',    '6af8f1706c853f924c6ae2ce934de668', preferred=True)
+    version('1.0',    '98fe2d9abd2a1b53d7a52267dab91fae')
     version('1.0rc1', 'c6db0de56b5b865183b1fa719ac74c1d')
 
     depends_on('boost~atomic~chrono~clanglibcpp~date_time~debug~exception'
@@ -29,6 +30,7 @@ class Veloc(CMakePackage):
     depends_on('mpi')
     depends_on('er')
     depends_on('axl')
+    depends_on('pdsh', when='@master')
     depends_on('cmake@3.9:', type='build')
 
     conflicts('%gcc@:4.9.3')

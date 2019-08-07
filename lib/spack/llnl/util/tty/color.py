@@ -59,9 +59,13 @@ The console can be reset later to plain text with '@.'.
 
 To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
+from __future__ import unicode_literals
 import re
 import sys
+
 from contextlib import contextmanager
+
+import six
 
 
 class ColorParseError(Exception):
@@ -244,7 +248,7 @@ def cescape(string):
     Returns:
         (str): the string with color codes escaped
     """
-    string = str(string)
+    string = six.text_type(string)
     string = string.replace('@', '@@')
     string = string.replace('}', '}}')
     return string

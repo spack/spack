@@ -14,8 +14,11 @@ class Geos(AutotoolsPackage):
        operators, as well as specific JTS enhanced topology functions."""
 
     homepage = "http://trac.osgeo.org/geos/"
-    url      = "http://download.osgeo.org/geos/geos-3.6.2.tar.bz2"
+    url      = "http://download.osgeo.org/geos/geos-3.7.2.tar.bz2"
 
+    maintainers = ['adamjstewart']
+
+    version('3.7.2', sha256='2166e65be6d612317115bfec07827c11b403c3f303e0a7420a2106bc999d7707')
     version('3.6.2', 'a32142343c93d3bf151f73db3baa651f')
     version('3.6.1', 'c97e338b3bc81f9848656e9d693ca6cc')
     version('3.6.0', '55de5fdf075c608d2d7b9348179ee649')
@@ -40,16 +43,14 @@ class Geos(AutotoolsPackage):
     variant('python', default=False, description='Enable Python support')
 
     extends('ruby', when='+ruby')
+    extends('python', when='+python')
 
     # Python 3 is supposedly supported, but I couldn't get it to work
     # https://trac.osgeo.org/geos/ticket/774
-    extends('python@:2', when='+python')
+    depends_on('python@:2', when='@:3.5')
 
     depends_on('swig', type='build', when='+ruby')
     depends_on('swig', type='build', when='+python')
-
-    # `make check` fails with:
-    # FAIL: geos_unit
 
     # I wasn't able to get the ruby bindings working.
     # It resulted in "Undefined symbols for architecture x86_64".

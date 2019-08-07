@@ -117,13 +117,13 @@ class Fenics(CMakePackage):
     for release in releases:
         version(release['version'], release['md5'], url=base_url.format(
             pkg='dolfin', version=release['version']))
-        for name, md5 in release['resources'].items():
-            resource(name=name,
-                     url=base_url.format(pkg=name, **release),
+        for rname, md5 in release['resources'].items():
+            resource(name=rname,
+                     url=base_url.format(pkg=rname, **release),
                      md5=md5,
                      destination='depends',
                      when='@{version}'.format(**release),
-                     placement=name)
+                     placement=rname)
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'

@@ -21,7 +21,7 @@ from contextlib import contextmanager
 
 import six
 from llnl.util import tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 from spack.util.executable import Executable
 
 __all__ = [
@@ -36,6 +36,7 @@ __all__ = [
     'filter_file',
     'find',
     'find_headers',
+    'find_all_headers',
     'find_libraries',
     'find_system_libraries',
     'fix_darwin_install_name',
@@ -422,14 +423,39 @@ def mkdirp(*paths, **kwargs):
     Keyword Aguments:
         mode (permission bits or None, optional): optional permissions to
             set on the created directory -- use OS default if not provided
+        mode_intermediate (permission bits or None, optional):
+            same as mode, but for newly-created intermediate directories
     """
     mode = kwargs.get('mode', None)
+    mode_intermediate = kwargs.get('mode_intermediate', None)
     for path in paths:
         if not os.path.exists(path):
             try:
+                intermediate_folders = []
+                if mode_intermediate is not None:
+                    # detect missing intermediate folders
+                    intermediate_path = os.path.dirname(path)
+
+                    while intermediate_path:
+                        if os.path.exists(intermediate_path):
+                            break
+
+                        intermediate_folders.append(intermediate_path)
+                        intermediate_path = os.path.dirname(intermediate_path)
+
+                # create folders
                 os.makedirs(path)
+
+                # leaf folder permissions
                 if mode is not None:
                     os.chmod(path, mode)
+
+                # for intermediate folders, change mode just for newly created
+                # ones and if mode_intermediate has been specified, otherwise
+                # intermediate folders list is not populated at all and default
+                # OS mode will be used
+                for intermediate_path in reversed(intermediate_folders):
+                    os.chmod(intermediate_path, mode_intermediate)
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
@@ -454,8 +480,10 @@ def working_dir(dirname, **kwargs):
 
     orig_dir = os.getcwd()
     os.chdir(dirname)
-    yield
-    os.chdir(orig_dir)
+    try:
+        yield
+    finally:
+        os.chdir(orig_dir)
 
 
 @contextmanager
@@ -604,6 +632,36 @@ def ancestor(dir, n=1):
     return parent
 
 
+def get_single_file(directory):
+    fnames = os.listdir(directory)
+    if len(fnames) != 1:
+        raise ValueError("Expected exactly 1 file, got {0}"
+                         .format(str(len(fnames))))
+    return fnames[0]
+
+
+@contextmanager
+def temp_cwd():
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        with working_dir(tmp_dir):
+            yield tmp_dir
+    finally:
+        shutil.rmtree(tmp_dir)
+
+
+@contextmanager
+def temp_rename(orig_path, temp_path):
+    same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
+    if not same_path:
+        shutil.move(orig_path, temp_path)
+    try:
+        yield
+    finally:
+        if not same_path:
+            shutil.move(temp_path, orig_path)
+
+
 def can_access(file_name):
     """True if we have read/write access to the file."""
     return os.access(file_name, os.R_OK | os.W_OK)
@@ -702,15 +760,32 @@ def set_executable(path):
     os.chmod(path, mode)
 
 
+def remove_empty_directories(root):
+    """Ascend up from the leaves accessible from `root` and remove empty
+    directories.
+
+    Parameters:
+        root (str): path where to search for empty directories
+    """
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for sd in subdirs:
+            sdp = os.path.join(dirpath, sd)
+            try:
+                os.rmdir(sdp)
+            except OSError:
+                pass
+
+
 def remove_dead_links(root):
-    """Removes any dead link that is present in root.
+    """Recursively removes any dead link that is present in root.
 
     Parameters:
         root (str): path where to search for dead links
     """
-    for file in os.listdir(root):
-        path = join_path(root, file)
-        remove_if_dead_link(path)
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for f in files:
+            path = join_path(dirpath, f)
+            remove_if_dead_link(path)
 
 
 def remove_if_dead_link(path):
@@ -956,10 +1031,46 @@ class HeaderList(FileList):
     commonly used compiler flags or names.
     """
 
+    # Make sure to only match complete words, otherwise path components such
+    # as "xinclude" will cause false matches.
+    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
+
     def __init__(self, files):
         super(HeaderList, self).__init__(files)
 
         self._macro_definitions = []
+        self._directories = None
+
+    @property
+    def directories(self):
+        """Directories to be searched for header files."""
+        values = self._directories
+        if values is None:
+            values = self._default_directories()
+        return list(dedupe(values))
+
+    @directories.setter
+    def directories(self, value):
+        value = value or []
+        # Accept a single directory as input
+        if isinstance(value, six.string_types):
+            value = [value]
+
+        self._directories = [os.path.normpath(x) for x in value]
+
+    def _default_directories(self):
+        """Default computation of directories based on the list of
+        header files.
+        """
+        dir_list = super(HeaderList, self).directories
+        values = []
+        for d in dir_list:
+            # If the path contains a subdirectory named 'include' then stop
+            # there and don't add anything else to the path.
+            m = self.include_regex.match(d)
+            value = os.path.join(*m.group(1, 2)) if m else d
+            values.append(value)
+        return values
 
     @property
     def headers(self):
@@ -1087,12 +1198,33 @@ def find_headers(headers, root, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the headers
-    suffix = 'h'
+    suffixes = [
+        # C
+        'h',
+        # C++
+        'hpp', 'hxx', 'hh', 'H', 'txx', 'tcc', 'icc',
+        # Fortran
+        'mod', 'inc',
+    ]
 
     # List of headers we are searching with suffixes
-    headers = ['{0}.{1}'.format(header, suffix) for header in headers]
+    headers = ['{0}.{1}'.format(header, suffix) for header in headers
+               for suffix in suffixes]
 
     return HeaderList(find(root, headers, recursive))
+
+
+def find_all_headers(root):
+    """Convenience function that returns the list of all headers found
+    in the directory passed as argument.
+
+    Args:
+        root (path): directory where to look recursively for header files
+
+    Returns:
+        List of all headers found in ``root`` and subdirectories.
+    """
+    return find_headers('*', root=root, recursive=True)
 
 
 class LibraryList(FileList):
@@ -1282,4 +1414,83 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # List of libraries we are searching with suffixes
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
-    return LibraryList(find(root, libraries, recursive))
+    if not recursive:
+        # If not recursive, look for the libraries directly in root
+        return LibraryList(find(root, libraries, False))
+
+    # To speedup the search for external packages configured e.g. in /usr,
+    # perform first non-recursive search in root/lib then in root/lib64 and
+    # finally search all of root recursively. The search stops when the first
+    # match is found.
+    for subdir in ('lib', 'lib64'):
+        dirname = join_path(root, subdir)
+        if not os.path.isdir(dirname):
+            continue
+        found_libs = find(dirname, libraries, False)
+        if found_libs:
+            break
+    else:
+        found_libs = find(root, libraries, True)
+
+    return LibraryList(found_libs)
+
+
+@memoized
+def can_access_dir(path):
+    """Returns True if the argument is an accessible directory.
+
+    Args:
+        path: path to be tested
+
+    Returns:
+        True if ``path`` is an accessible directory, else False
+    """
+    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
+
+
+@memoized
+def files_in(*search_paths):
+    """Returns all the files in paths passed as arguments.
+
+    Caller must ensure that each path in ``search_paths`` is a directory.
+
+    Args:
+        *search_paths: directories to be searched
+
+    Returns:
+        List of (file, full_path) tuples with all the files found.
+    """
+    files = []
+    for d in filter(can_access_dir, search_paths):
+        files.extend(filter(
+            lambda x: os.path.isfile(x[1]),
+            [(f, os.path.join(d, f)) for f in os.listdir(d)]
+        ))
+    return files
+
+
+def search_paths_for_executables(*path_hints):
+    """Given a list of path hints returns a list of paths where
+    to search for an executable.
+
+    Args:
+        *path_hints (list of paths): list of paths taken into
+            consideration for a search
+
+    Returns:
+        A list containing the real path of every existing directory
+        in `path_hints` and its `bin` subdirectory if it exists.
+    """
+    executable_paths = []
+    for path in path_hints:
+        if not os.path.isdir(path):
+            continue
+
+        path = os.path.abspath(path)
+        executable_paths.append(path)
+
+        bin_dir = os.path.join(path, 'bin')
+        if os.path.isdir(bin_dir):
+            executable_paths.append(bin_dir)
+
+    return executable_paths

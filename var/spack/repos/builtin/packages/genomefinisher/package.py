@@ -35,7 +35,7 @@ class Genomefinisher(Package):
 
         # Munge the helper script to explicitly point to java and the jar file
         # jar file.
-        java = spec['jdk'].prefix.bin.java
+        java = spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file(jar_file, join_path(prefix.bin, jar_file),

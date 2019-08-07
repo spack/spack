@@ -45,7 +45,7 @@ def test_view_projections(
     viewpath = str(tmpdir.mkdir('view_{0}'.format(cmd)))
     view_projection = {
         'projections': {
-            'all': '${PACKAGE}-${VERSION}'
+            'all': '{name}-{version}'
         }
     }
     projection_file = create_projection_file(tmpdir, view_projection)
@@ -65,8 +65,8 @@ def test_view_multiple_projections(
 
     viewpath = str(tmpdir.mkdir('view'))
     view_projection = s_yaml.syaml_dict(
-        [('extendee', '${PACKAGE}-${COMPILERNAME}'),
-         ('all', '${PACKAGE}-${VERSION}')]
+        [('extendee', '{name}-{compiler.name}'),
+         ('all', '{name}-{version}')]
     )
 
     projection_file = create_projection_file(tmpdir, view_projection)
@@ -87,8 +87,8 @@ def test_view_multiple_projections_all_first(
 
     viewpath = str(tmpdir.mkdir('view'))
     view_projection = s_yaml.syaml_dict(
-        [('all', '${PACKAGE}-${VERSION}'),
-         ('extendee', '${PACKAGE}-${COMPILERNAME}')]
+        [('all', '{name}-{version}'),
+         ('extendee', '{name}-{compiler.name}')]
     )
 
     projection_file = create_projection_file(tmpdir, view_projection)
@@ -145,7 +145,7 @@ def test_view_extension_projection(
     install('extension2@1.0')
 
     viewpath = str(tmpdir.mkdir('view'))
-    view_projection = {'all': '${PACKAGE}-${VERSION}'}
+    view_projection = {'all': '{name}-{version}'}
     projection_file = create_projection_file(tmpdir, view_projection)
     view('symlink', viewpath, '--projection-file={0}'.format(projection_file),
          'extension1@1.0')

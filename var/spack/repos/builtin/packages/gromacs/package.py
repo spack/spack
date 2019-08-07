@@ -25,6 +25,8 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('develop', branch='master')
+    version('2019.2', sha256='bcbf5cc071926bc67baa5be6fb04f0986a2b107e1573e15fadcb7d7fc4fb9f7e')
+    version('2019.1', sha256='b2c37ed2fcd0e64c4efcabdc8ee581143986527192e6e647a197c76d9c4583ec')
     version('2019', sha256='c5b281a5f0b5b4eeb1f4c7d4dc72f96985b566561ca28acc9c7c16f6ee110d0b')
     version('2018.4', sha256='6f2ee458c730994a8549d6b4f601ecfc9432731462f8bd4ffa35d330d9aaa891')
     version('2018.3', sha256='4423a49224972969c52af7b1f151579cea6ab52148d8d7cbae28c183520aa291')
@@ -37,6 +39,7 @@ class Gromacs(CMakePackage):
     version('5.1.5',  '831fe741bcd9f1612155dffc919885f2')
     version('5.1.4',  'ba2e34d59b3982603b4935d650c08040')
     version('5.1.2',  '614d0be372f1a6f1f36382b7a6fcab98')
+    version('4.5.5', sha256='e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba')
 
     variant('mpi', default=True, description='Activate MPI support')
     variant('shared', default=True,
@@ -57,6 +60,11 @@ class Gromacs(CMakePackage):
                     'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
+    variant('mdrun_only', default=False,
+            description='Enables the build of a cut-down version' +
+                         ' of libgromacs and/or the mdrun program')
+    variant('openmp', default=True, description='Enables OpenMP at configure time')
+    variant('double_precision', default=False, description='Enables a double-precision configuration')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
@@ -87,6 +95,8 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_GPU:BOOL=ON')
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
                            self.spec['cuda'].prefix)
+        else:
+            options.append('-DGMX_GPU:BOOL=OFF')
 
         simd_value = self.spec.variants['simd'].value
         if simd_value == 'auto':
@@ -100,5 +110,20 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
         else:
             options.append('-DGMX_USE_RDTSCP:BOOL=ON')
+
+        if '+mdrun_only' in self.spec:
+            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
+        else:
+            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=OFF')
+
+        if '~openmp' in self.spec:
+            options.append('-DGMX_OPENMP:BOOL=OFF')
+        else:
+            options.append('-DGMX_OPENMP:BOOL=ON')
+
+        if '+double_precision' in self.spec:
+            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
+        else:
+            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
 
         return options

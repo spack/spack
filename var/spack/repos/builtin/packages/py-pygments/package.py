@@ -17,6 +17,7 @@ class PyPygments(PythonPackage):
         'pygments.lexers', 'pygments.styles'
     ]
 
+    version('2.3.1', 'b7d04e2cd87c405938f1e494e2969814')
     version('2.2.0', '13037baca42f16917cbd5ad2fab50844')
     version('2.1.3', 'ed3fba2467c8afcda4d317e4ef2c6150')
     version('2.0.1', 'e0daf4c14a4fe5b630da765904de4d6c')

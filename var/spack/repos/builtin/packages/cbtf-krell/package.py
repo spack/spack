@@ -18,6 +18,7 @@ class CbtfKrell(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version('develop', branch='master')
+    version('1.9.3', branch='1.9.3')
     version('1.9.2', branch='1.9.2')
     version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
@@ -53,7 +54,7 @@ class CbtfKrell(CMakePackage):
     depends_on("binutils")
 
     # For boost
-    depends_on("boost@1.66.0:")
+    depends_on("boost@1.66.0:1.69.0")
 
     # For Dyninst
     depends_on("dyninst@develop", when='@develop')
@@ -103,6 +104,8 @@ class CbtfKrell(CMakePackage):
     depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999', type=('build', 'run'))
 
     depends_on("gotcha")
+
+    patch('arm.patch', when='target=aarch64')
 
     parallel = False
 

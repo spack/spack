@@ -1,0 +1,22 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyStratify(PythonPackage):
+    """Vectorized interpolators that are especially useful for
+    Nd vertical interpolation/stratification of atmospheric and
+    oceanographic datasets.
+    """
+
+    homepage = "https://github.com/SciTools-incubator/python-stratify"
+    url      = "https://pypi.io/packages/source/s/stratify/stratify-0.1.tar.gz"
+
+    version('0.1', sha256='5426f3b66e45e1010952d426e5a7be42cd45fe65f1cd73a98fee1eb7c110c6ee')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy',      type=('build', 'run'))
+    depends_on('py-cython',     type=('build', 'run'))

@@ -15,6 +15,7 @@ class Mafft(Package):
     homepage = "http://mafft.cbrc.jp/alignment/software/index.html"
     url      = "http://mafft.cbrc.jp/alignment/software/mafft-7.221-with-extensions-src.tgz"
 
+    version('7.407', sha256='1840b51a0b93f40b4d6076af996ee46396428d8dbaf7ba1d847abff9cb1463e5')
     version('7.221', 'b1aad911e51024d631722a2e061ba215')
 
     def install(self, spec, prefix):

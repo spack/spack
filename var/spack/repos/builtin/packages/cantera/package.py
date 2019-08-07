@@ -21,13 +21,15 @@ class Cantera(SConsPackage):
             description='Build the Cantera Python module')
     variant('matlab',     default=False,
             description='Build the Cantera Matlab toolbox')
+    variant('sundials',   default=True,
+            description='Build with Sundials')
 
     # Required dependencies
     depends_on('fmt@3.0.0:3.0.2', when='@2.3.0:')
     depends_on('googletest',      when='@2.3.0:')
     depends_on('eigen',           when='@2.3.0:')
     depends_on('boost')
-    depends_on('sundials')  # must be compiled with -fPIC
+    depends_on('sundials', when='+sundials')  # must be compiled with -fPIC
     depends_on('blas')
     depends_on('lapack')
 
@@ -42,6 +44,8 @@ class Cantera(SConsPackage):
 
     # Matlab toolbox dependencies
     extends('matlab', when='+matlab')
+
+    conflicts('~sundials', when='@2.3.0:')
 
     def build_args(self, spec, prefix):
         # Valid args can be found by running `scons help`
@@ -98,19 +102,20 @@ class Cantera(SConsPackage):
             ])
 
         # Sundials support
-        if spec.satisfies('@2.3.0:'):
-            args.append('system_sundials=y')
-        else:
-            args.extend([
-                'use_sundials=y',
-                'sundials_license={0}'.format(
-                    spec['sundials'].prefix.LICENSE)
-            ])
+        if '+sundials' in spec:
+            if spec.satisfies('@2.3.0:'):
+                args.append('system_sundials=y')
+            else:
+                args.extend([
+                    'use_sundials=y',
+                    'sundials_license={0}'.format(
+                        spec['sundials'].prefix.LICENSE)
+                ])
 
-        args.extend([
-            'sundials_include={0}'.format(spec['sundials'].prefix.include),
-            'sundials_libdir={0}'.format(spec['sundials'].prefix.lib),
-        ])
+            args.extend([
+                'sundials_include={0}'.format(spec['sundials'].prefix.include),
+                'sundials_libdir={0}'.format(spec['sundials'].prefix.lib),
+            ])
 
         # Python module
         if '+python' in spec:

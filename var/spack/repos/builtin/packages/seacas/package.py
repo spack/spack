@@ -67,8 +67,8 @@ class Seacas(CMakePackage):
 
     # Everything should be compiled position independent (-fpic)
 
-    depends_on('netcdf@4.6.2+mpi+parallel-netcdf', when='+mpi')
-    depends_on('netcdf@4.6.2~mpi', when='~mpi')
+    depends_on('netcdf@4.6.2:+mpi+parallel-netcdf', when='+mpi')
+    depends_on('netcdf@4.6.2:~mpi', when='~mpi')
     depends_on('cgns@develop+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@develop~mpi+scoping', when='+cgns ~mpi')
     depends_on('matio', when='+matio')

@@ -14,6 +14,7 @@ class Codes(AutotoolsPackage):
     git      = "https://xgitlab.cels.anl.gov/codes/codes.git"
 
     version('develop', branch='master')
+    version('1.1.0', tag='1.1.0')
     version('1.0.0', tag='1.0.0')
 
     variant('dumpi', default=False, description="Enable DUMPI support")

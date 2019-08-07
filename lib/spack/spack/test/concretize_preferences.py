@@ -124,11 +124,39 @@ class TestConcretizePreferences(object):
         spec = concretize('mpileaks')
         assert 'zmpi' in spec
 
-    def test_develop(self):
-        """Test concretization with develop version"""
-        spec = Spec('builtin.mock.develop-test')
+    def test_preferred(self):
+        """"Test packages with some version marked as preferred=True"""
+        spec = Spec('preferred-test')
         spec.concretize()
         assert spec.version == spack.spec.Version('0.2.15')
+
+        # now add packages.yaml with versions other than preferred
+        # ensure that once config is in place, non-preferred version is used
+        update_packages('preferred-test', 'version', ['0.2.16'])
+        spec = Spec('preferred-test')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.16')
+
+    def test_develop(self):
+        """Test concretization with develop-like versions"""
+        spec = Spec('develop-test')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.15')
+        spec = Spec('develop-test2')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.15')
+
+        # now add packages.yaml with develop-like versions
+        # ensure that once config is in place, develop-like version is used
+        update_packages('develop-test', 'version', ['develop'])
+        spec = Spec('develop-test')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('develop')
+
+        update_packages('develop-test2', 'version', ['0.2.15.develop'])
+        spec = Spec('develop-test2')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.15.develop')
 
     def test_no_virtuals_in_packages_yaml(self):
         """Verify that virtuals are not allowed in packages.yaml."""

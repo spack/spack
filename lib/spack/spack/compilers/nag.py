@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, get_compiler_version
+import spack.compiler
 
 
-class Nag(Compiler):
+class Nag(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
     cc_names = []
 
@@ -26,6 +26,9 @@ class Nag(Compiler):
         'cxx': 'c++',
         'f77': 'nag/nagfor',
         'fc': 'nag/nagfor'}
+
+    version_argument = '-V'
+    version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'
 
     @property
     def openmp_flag(self):
@@ -51,14 +54,3 @@ class Nag(Compiler):
     @property
     def fc_rpath_arg(self):
         return '-Wl,-Wl,,-rpath,,'
-
-    @classmethod
-    def default_version(cls, comp):
-        """The ``-V`` option works for nag compilers.
-        Output looks like this::
-
-            NAG Fortran Compiler Release 6.0(Hibiya) Build 1037
-            Product NPL6A60NA for x86-64 Linux
-        """
-        return get_compiler_version(
-            comp, '-V', r'NAG Fortran Compiler Release ([0-9.]+)')
