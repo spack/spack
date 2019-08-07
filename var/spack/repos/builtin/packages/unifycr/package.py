@@ -60,7 +60,18 @@ class Unifycr(AutotoolsPackage):
     # Parallel disabled to prevent tests from being run out-of-order when
     # installed with the --test={root, all} option.
     parallel = False
+    debug_build = False
     build_directory = 'spack-build'
+
+    # Only builds properly with debug symbols when flag_handler =
+    # build_system_flags.
+    # Override the default behavior in order to set debug_build which is used
+    # to set the --disable-silent-rules option when configuring.
+    def flag_handler(self, name, flags):
+        if name in ('cflags', 'cppflags'):
+            if '-g' in flags:
+                self.debug_build = True
+        return (None, None, flags)
 
     def configure_args(self):
         spec = self.spec
@@ -89,7 +100,7 @@ class Unifycr(AutotoolsPackage):
         if '+pmix' in spec:
             args.append('--enable-pmix')
 
-        if spack.config.get('config:debug'):
+        if self.debug_build:
             args.append('--disable-silent-rules')
         else:
             args.append('--enable-silent-rules')
