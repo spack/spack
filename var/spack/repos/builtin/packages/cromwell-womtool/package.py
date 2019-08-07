@@ -7,7 +7,7 @@ from spack import *
 import os.path
 
 
-class Womtool(Package):
+class CromwellWomtool(Package):
     """Command line utilities for interacting with the
        Workflow Object Model (WOM).
     """

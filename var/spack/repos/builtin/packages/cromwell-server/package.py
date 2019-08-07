@@ -7,7 +7,7 @@ from spack import *
 import os.path
 
 
-class Cromwell(Package):
+class CromwellServer(Package):
     """Scientific workflow engine designed for simplicity & scalability."""
 
     homepage = "http://cromwell.readthedocs.io/"
