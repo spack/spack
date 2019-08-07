@@ -31,12 +31,29 @@ class Swig(AutotoolsPackage):
     version('2.0.12', 'c3fb0b2d710cc82ed0154b91e43085a4')
     version('2.0.2',  'eaf619a4169886923e5f828349504a29')
     version('1.3.40', '2df766c9e03e02811b1ab4bba1c7b9cc')
+    version('master',
+            git='https://github.com/swig/swig.git')
+    version('fortran', branch='master',
+            git='https://github.com/swig-fortran/swig.git')
 
     depends_on('pcre')
+
+    # Get repository does *not* include configure, so it calls autoreconf
+    for _version in ['@fortran', '@master']:
+        depends_on('autoconf', type='build', when=_version)
+        depends_on('automake', type='build', when=_version)
+        depends_on('libtool', type='build', when=_version)
+    depends_on('pkgconfig', type='build')
 
     build_directory = 'spack-build'
 
     @run_after('install')
     def create_symlink(self):
+        # CMake compatibility: see https://github.com/spack/spack/pull/6240
         with working_dir(self.prefix.bin):
-            os.symlink('swig', 'swig%i.0' % self.spec.version[0])
+            os.symlink('swig', 'swig{0}'.format(self.spec.version.up_to(2)))
+
+    for _version in ['@fortran', '@master']:
+        @when(_version)
+        def autoreconf(self, spec, prefix):
+            which('sh')('./autogen.sh')
