@@ -833,7 +833,7 @@ def default_modify_scope(section):
             return platform_scope
         else:
             tty.warn("No associated platform scope for {0},"
-                     "using {0} as default edit scope for compilers"
+                     " using {0} as default edit scope for compilers"
                      .format(default_edit_scope))
     elif (platform_scope in spack.config.config.scopes) and (
         spack.config.config.scopes[platform_scope].get_section(section)

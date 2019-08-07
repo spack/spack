@@ -57,7 +57,7 @@ def setup_parser(subparser):
         help="print the file name that would be edited")
 
 
-def _get_scope_and_section(args):
+def _get_scope_and_section(args, edit=True):
     """Extract config scope and section from arguments."""
     scope = args.scope
     section = args.section
@@ -69,7 +69,11 @@ def _get_scope_and_section(args):
 
     # set scope defaults
     elif not args.scope:
-        scope = spack.config.default_modify_scope(section)
+        if edit:
+            scope = spack.config.default_modify_scope(section)
+        else:
+            # If we are reading rather than editing, use all scopes by default
+            scope = None
 
     return scope, section
 
