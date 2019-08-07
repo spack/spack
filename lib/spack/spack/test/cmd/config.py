@@ -48,7 +48,6 @@ def test_config_edit(mutable_config):
     """Ensure `spack config edit` edits the right paths."""
     user_path = spack.config.config.scopes['user'].path
 
-    comp_path = os.path.join(user_path, 'compilers.yaml')
     repos_path = os.path.join(user_path, 'repos.yaml')
 
     assert config('edit', '--print-file', 'repos').strip() == repos_path
