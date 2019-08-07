@@ -7,25 +7,27 @@ from spack import *
 import os.path
 
 
-class Cromwell(Package):
-    """Scientific workflow engine designed for simplicity & scalability."""
+class Womtool(Package):
+    """Command line utilities for interacting with the
+       Workflow Object Model (WOM).
+    """
 
-    homepage = "http://cromwell.readthedocs.io/"
-    url      = "https://github.com/broadinstitute/cromwell/releases/download/44/cromwell-44.jar"
+    homepage = "https://cromwell.readthedocs.io/en/stable/WOMtool/"
+    url      = "https://github.com/broadinstitute/cromwell/releases/download/44/womtool-44.jar"
 
-    version('44', sha256='8b411673f6b3c835c6031db3094a7404b9a371133794046fd295719d61e56db0', expand=False)
+    version('44', sha256='b17c0f4933d7b136c7d9760f7858f6439e3c6371f12492e2aeaab3209c28f80a', expand=False)
 
     depends_on('java@8', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = 'cromwell-{}.jar'.format(self.version)
+        jar_file = 'womtool-{}.jar'.format(self.version)
         install(jar_file, prefix.bin)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "cromwell.sh")
-        script = prefix.bin.cromwell
+        script_sh = join_path(os.path.dirname(__file__), "womtool.sh")
+        script = prefix.bin.womtool
         install(script_sh, script)
         set_executable(script)
 
@@ -34,5 +36,5 @@ class Cromwell(Package):
         java = self.spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
-        filter_file('cromwell.jar', join_path(prefix.bin, jar_file),
+        filter_file('womtool.jar', join_path(prefix.bin, jar_file),
                     script, **kwargs)
