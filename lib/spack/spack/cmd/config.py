@@ -72,8 +72,7 @@ def _get_scope_and_section(args, edit=True):
         if edit:
             scope = spack.config.default_modify_scope(section)
         else:
-            # If we are reading rather than editing, use all scopes by default
-            scope = None
+            scope = spack.config.default_list_scope()
 
     return scope, section
 
@@ -85,7 +84,7 @@ def config_get(args):
     the environment's manifest file (spack.yaml).
 
     """
-    scope, section = _get_scope_and_section(args)
+    scope, section = _get_scope_and_section(args, edit=False)
 
     if scope and scope.startswith('env:'):
         config_file = spack.config.config.get_config_filename(scope, section)
