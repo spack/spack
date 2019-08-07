@@ -8,7 +8,9 @@ import os.path
 
 
 class Cromwell(Package):
-    """Scientific workflow engine designed for simplicity & scalability."""
+    """Cromwell is a Workflow Management System geared towards scientific
+       workflows.
+    """
 
     homepage = "http://cromwell.readthedocs.io/"
     url      = "https://github.com/broadinstitute/cromwell/releases/download/44/cromwell-44.jar"
