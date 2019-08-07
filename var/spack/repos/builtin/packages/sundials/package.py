@@ -19,7 +19,8 @@ class Sundials(CMakePackage):
     # ==========================================================================
     # Versions
     # ==========================================================================
-    version('4.1.0', sha256='280de1c27b2360170a6f46cb3799b2aee9dff3bddbafc8b08c291a47ab258aa5')
+    version('5.0.0-dev.1', sha256='8c8e4fcb86497f8625b5dc38c9b6257c6e3097c472564436e2900de1d3d02206')
+    version('4.1.0', sha256='280de1c27b2360170a6f46cb3799b2aee9dff3bddbafc8b08c291a47ab258aa5', preferred=True)
     version('4.0.1', sha256='29e409c8620e803990edbda1ebf49e03a38c08b9187b90658d86bddae913aed4')
     version('3.2.1', sha256='47d94d977ab2382cdcdd02f72a25ebd4ba8ca2634bbb2f191fe1636e71c86808')
     version('3.2.0', sha256='d2b690afecadf8b5a048bb27ab341de591d714605b98d3518985dfc2250e93f9')
@@ -73,6 +74,8 @@ class Sundials(CMakePackage):
             description='Enable KLU sparse, direct solver')
     variant('superlu-mt', default=False,
             description='Enable SuperLU_MT sparse, direct solver')
+    variant('superlu-dist', default=False,
+            description='Enable SuperLU_DIST sparse, direct solver')
     variant('hypre',      default=False,
             description='Enable Hypre MPI parallel vector')
     variant('petsc',      default=False,
@@ -122,6 +125,7 @@ class Sundials(CMakePackage):
     conflicts('~int64',         when='@:2.7.0')
     conflicts('+examples-cuda', when='@:2.7.0')
     conflicts('+examples-raja', when='@:2.7.0')
+    conflicts('+superlu-dist',  when='@:4.1.0')
 
     # External libraries incompatible with 64-bit indices
     conflicts('+lapack', when='@3.0.0: +int64')
@@ -130,16 +134,14 @@ class Sundials(CMakePackage):
     # External libraries incompatible with single precision
     conflicts('+klu',   when='precision=single')
     conflicts('+hypre', when='+hypre@:2.12.0 precision=single')
+    conflicts('+superlu-dist', when='precision=single')
 
     # External libraries incompatible with extended (quad) precision
     conflicts('+lapack',     when='precision=extended')
     conflicts('+superlu-mt', when='precision=extended')
+    conflicts('+superlu-dist', when='precision=extended')
     conflicts('+klu',        when='precision=extended')
     conflicts('+hypre',      when='+hypre@:2.12.0 precision=extended')
-
-    # External libraries that need to be built with MPI
-    conflicts('+hypre', when='~mpi')
-    conflicts('+petsc', when='~mpi')
 
     # SuperLU_MT interface requires lapack for external blas (before v3.0.0)
     conflicts('+superlu-mt', when='@:2.7.0 ~lapack')
@@ -149,15 +151,13 @@ class Sundials(CMakePackage):
     # ==========================================================================
 
     # Build dependencies
-    depends_on('cmake@2.8.1:', type='build')
-    depends_on('cmake@2.8.12:', type='build', when='@3.1.2')
-    depends_on('cmake@3.0.2:', type='build', when='@4.0.0-dev.1')
-    depends_on('cmake@3.1.3:', type='build', when='@3.2.0,4.0.0-dev.2')
+    depends_on('cmake@3.1.3:', type='build')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+hypre')
     depends_on('mpi', when='+petsc')
+    depends_on('mpi', when='+superlu-dist')
 
     # Other parallelism dependencies
     depends_on('cuda', when='+cuda')
@@ -167,21 +167,20 @@ class Sundials(CMakePackage):
     depends_on('blas',         when='+lapack')
     depends_on('lapack',       when='+lapack')
     depends_on('suite-sparse', when='+klu')
+    depends_on('petsc+mpi',    when='+petsc')
+    depends_on('hypre+mpi',    when='+hypre')
+    depends_on('superlu-dist@6.1.1:', when='+superlu-dist')
 
     # Require that external libraries built with the same precision
     depends_on('petsc~double~complex', when='+petsc precision=single')
     depends_on('petsc+double~complex', when='+petsc precision=double')
 
     # Require that external libraries built with the same index type
-    depends_on('hypre', when='+hypre')
     depends_on('hypre~int64', when='+hypre ~int64')
     depends_on('hypre+int64', when='+hypre +int64')
-    depends_on('petsc', when='+petsc')
     depends_on('petsc~int64', when='+petsc ~int64')
     depends_on('petsc+int64', when='+petsc +int64')
-
-    # Require that PETSc is built with MPI
-    depends_on('petsc+mpi', when='+petsc')
+    depends_on('superlu-dist+int64', when='+superlu-dist +int64')
 
     # Require that SuperLU_MT built with external blas
     depends_on('superlu-mt+blas', when='+superlu-mt')
@@ -297,6 +296,19 @@ class Sundials(CMakePackage):
                 args.append('-DSUPERLUMT_THREAD_TYPE=OpenMP')
             else:
                 args.append('-DSUPERLUMT_THREAD_TYPE=Pthread')
+
+        # Building with SuperLU_DIST
+        if '+superlu-dist' in spec:
+            args.extend([
+                '-DSUPERLUDIST_ENABLE=ON',
+                '-DSUPERLUDIST_INCLUDE_DIR=%s'
+                % spec['superlu-dist'].prefix.include,
+                '-DSUPERLUDIST_LIBRARY_DIR=%s'
+                % spec['superlu-dist'].prefix.lib,
+                '-DSUPERLUDIST_LIBRARIES=%s'
+                % spec['blas'].libs,
+                '-DSUPERLUDIST_OpenMP=ON'
+            ])
 
         # Building with Hypre
         if '+hypre' in spec:
