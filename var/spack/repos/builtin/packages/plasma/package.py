@@ -71,8 +71,6 @@ class Plasma(CMakePackage):
         options = list()
 
         options.extend([
-            "-DCMAKE_INSTALL_PREFIX=%s" % prefix,
-            "-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib" % prefix,
             "-DBLAS_LIBRARIES=%s" % self.spec["blas"].libs.joined(";"),
             "-DLAPACK_LIBRARIES=%s" % self.spec["lapack"].libs.joined(";")
         ])
