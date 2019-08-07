@@ -25,6 +25,7 @@ packages:
       - asciitoh5@1.0
       - brainbuilder@0.11.3
       - connectome-tools@0.3.2
+      - spatial-index@0.0.1
       - spykfunc@0.14.3
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3

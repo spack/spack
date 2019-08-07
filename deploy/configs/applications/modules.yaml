@@ -56,6 +56,7 @@ modules:
       - py-simwriter
       - py-pytouchreader
       - reportinglib
+      - spatial-index
       - spykfunc
       - 'synapsetool%gcc'
       - steps
