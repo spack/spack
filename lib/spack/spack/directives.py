@@ -274,8 +274,8 @@ def version(ver, checksum=None, **kwargs):
         if checksum is not None:
             if hasattr(pkg, 'has_code') and not pkg.has_code:
                 raise VersionChecksumError(
-                    'Checksums not allowed in {0} (see \'{1}\' version).'.
-                    format(pkg.name, ver))
+                    "{0}: Checksums not allowed in no-code packages"
+                    "(see '{1}' version).".format(pkg.name, ver))
 
             kwargs['checksum'] = checksum
 
