@@ -43,7 +43,6 @@ import spack.paths
 import spack.build_environment as build_environment
 import spack.util.environment
 import spack.tengine as tengine
-import spack.util.environment
 import spack.error
 import spack.util.spack_yaml as syaml
 import spack.util.file_permissions as fp
