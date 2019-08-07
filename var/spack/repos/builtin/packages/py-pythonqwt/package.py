@@ -19,5 +19,5 @@ class PyPythonqwt(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.3:',   type=('build', 'run'))
     depends_on('py-sip',          type=('build', 'run'))
-    depends_on('py-pyqt@4:',      type=('build', 'run'))
+    depends_on('py-pyqt4',      type=('build', 'run'))
     depends_on('py-sphinx@1.1:',  type=('build', 'run'), when='+docs')

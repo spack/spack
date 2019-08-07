@@ -10,9 +10,9 @@ Tutorial: Spack 101
 =============================
 
 This is a full-day introduction to Spack with lectures and live demos.
-It was last presented at the `First Workshop on NSF and DOE High
-Performance Computing Tools
-<http://oaciss.uoregon.edu/NSFDOE19/agenda.html>`_ on July 10, 2019.
+It was last presented at the `Practice and Experience in Advanced
+Research Computing Conference (PEARC19)
+<https://www.pearc19.pearc.org/>`_ on July 31, 2019.
 
 You can use these materials to teach a course on Spack at your own site,
 or you can just skip ahead and read the live demo scripts to see how
@@ -23,17 +23,17 @@ Spack is used in practice.
 .. rubric:: Slides
 
 .. figure:: tutorial/sc16-tutorial-slide-preview.png
-   :target: https://spack.io/slides/Spack-DOE-NSF-Tutorial-2019.pdf
+   :target: https://spack.io/slides/spack-pearc19-tutorial-slides.pdf
    :height: 72px
    :align: left
    :alt: Slide Preview
 
-`Download Slides <https://spack.io/slides/Spack-DOE-NSF-Tutorial-2019.pdf>`_.
+`Download Slides <https://spack.io/slides/spack-pearc19-tutorial-slides.pdf>`_.
 
-**Full citation:** Todd Gamblin and Gregory Becker. Managing HPC Software
-Complexity with Spack.  Tutorial presented at the First Workshop on NSF
-and DOE High Performance Computing Tools.  July 9, 2019.  Eugene, Oregon,
-USA.
+**Full citation:** Levi Baber, Gregory Becker, Adam J. Stewart, and Todd
+Gamblin. Managing HPC Software Complexity with Spack.  Tutorial presented
+at the Practice and Experience in Advanced Research Computing Conference
+(PEARC19).  July 31, 2019.  Chicago, IL, USA.
 
 .. _sc16-live-demos:
 
