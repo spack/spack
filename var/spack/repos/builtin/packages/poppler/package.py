@@ -74,6 +74,9 @@ class Poppler(CMakePackage):
             '-DENABLE_SPLASH=OFF',
             '-DWITH_NSS3=OFF',
         ]
+	    
+	# Install header files
+	args.append('-DENABLE_UNSTABLE_API_ABI_HEADERS=ON')
 
         if '+cms' in spec:
             args.append('-DENABLE_CMS=lcms2')
