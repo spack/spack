@@ -12,7 +12,10 @@ class Poppler(CMakePackage):
     homepage = "https://poppler.freedesktop.org"
     url      = "https://poppler.freedesktop.org/poppler-0.77.0.tar.xz"
     list_url = "https://poppler.freedesktop.org/releases.html"
+    git      = "https://gitlab.freedesktop.org/poppler/poppler.git"
 
+    version('master', branch='master')
+    version('0.79.0', sha256='f985a4608fe592d2546d9d37d4182e502ff6b4c42f8db4be0a021a1c369528c8')
     version('0.77.0', sha256='7267eb4cbccd64a58244b8211603c1c1b6bf32c7f6a4ced2642865346102f36b')
     version('0.72.0', sha256='c1747eb8f26e9e753c4001ed951db2896edc1021b6d0f547a0bd2a27c30ada51')
     version('0.65.0', 'b9a0af02e43deb26265f130343e90d78')
