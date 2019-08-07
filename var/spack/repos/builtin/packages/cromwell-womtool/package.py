@@ -21,7 +21,7 @@ class CromwellWomtool(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = 'womtool-{}.jar'.format(self.version)
+        jar_file = 'womtool-{0}.jar'.format(self.version)
         install(jar_file, prefix.bin)
 
         # Set up a helper script to call java on the jar file,

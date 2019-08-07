@@ -21,7 +21,7 @@ class Cromwell(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = 'cromwell-{}.jar'.format(self.version)
+        jar_file = 'cromwell-{0}.jar'.format(self.version)
         install(jar_file, prefix.bin)
 
         # Set up a helper script to call java on the jar file,
