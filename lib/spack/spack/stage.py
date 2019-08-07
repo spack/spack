@@ -25,7 +25,7 @@ import spack.error
 import spack.util.lock
 import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
-from spack.util.path import canonicalize_path
+from spack.config import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 
 _source_path_subdir = 'spack-src'

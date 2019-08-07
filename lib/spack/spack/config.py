@@ -922,12 +922,13 @@ class ConfigFormatError(ConfigError):
         return None
 
 
-# Config variable substitutions
-replacements = {
-    'spack': spack.paths.prefix,
-    'user': getpass.getuser(),
-    'tempdir': tempfile.gettempdir(),
-}
+def _config_variable_substitutions():
+    return {
+        'spack': spack.paths.prefix,
+        'user': getpass.getuser(),
+        'tempdir': tempfile.gettempdir(),
+        'platform': spack.architecture.platform().name,
+    }
 
 
 def substitute_config_variables(path):
@@ -943,6 +944,8 @@ def substitute_config_variables(path):
     use either ``$var`` or ``${var}`` syntax for the variables.
 
     """
+    replacements = _config_variable_substitutions()
+
     # Look up replacements for re.sub in the replacements dict.
     def repl(match):
         m = match.group(0).strip('${}')

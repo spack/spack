@@ -23,7 +23,7 @@ import spack.schema.packages
 import spack.schema.mirrors
 import spack.schema.repos
 import spack.util.spack_yaml as syaml
-from spack.util.path import canonicalize_path
+from spack.config import canonicalize_path
 
 
 # sample config data
@@ -344,6 +344,11 @@ def test_substitute_tempdir(mock_config):
     assert tempdir + '/foo/bar/baz' == canonicalize_path(
         '$tempdir/foo/bar/baz'
     )
+
+
+def test_substitute_platform(mock_config):
+    assert '/path/to/base/test' == canonicalize_path(
+        '/path/to/base/$platform')
 
 
 def test_read_config(mock_config, write_config_file):
