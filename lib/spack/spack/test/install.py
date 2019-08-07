@@ -140,6 +140,41 @@ def test_installed_dependency_request_conflicts(
         dependent.concretize()
 
 
+def test_install_dependency_symlinks_pkg(
+        install_mockery, mock_fetch, mutable_mock_packages):
+    """Test dependency flattening/symlinks mock package."""
+    spec = Spec('flatten-deps')
+    spec.concretize()
+    pkg = spec.package
+    pkg.do_install()
+
+    # Ensure dependency directory exists after the installation.
+    dependency_dir = os.path.join(pkg.prefix, 'dependency-install')
+    assert os.path.isdir(dependency_dir)
+
+
+def test_flatten_deps(
+        install_mockery, mock_fetch, mutable_mock_packages):
+    """Explicitly test the flattening code for coverage purposes."""
+    # Unfortunately, executing the 'flatten-deps' spec's installation does
+    # not affect code coverage results, so be explicit here.
+    spec = Spec('dependent-install')
+    spec.concretize()
+    pkg = spec.package
+    pkg.do_install()
+
+    # Demonstrate that the directory does not appear under the spec
+    # prior to the flatten operation.
+    dependency_name = 'dependency-install'
+    assert dependency_name not in os.listdir(pkg.prefix)
+
+    # Flatten the dependencies and ensure the dependency directory is there.
+    spack.package.flatten_dependencies(spec, pkg.prefix)
+
+    dependency_dir = os.path.join(pkg.prefix, dependency_name)
+    assert os.path.isdir(dependency_dir)
+
+
 def test_installed_upstream_external(
         tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
     """Check that when a dependency package is recorded as installed in
