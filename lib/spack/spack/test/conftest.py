@@ -123,7 +123,7 @@ def reset_compiler_cache():
 
 @pytest.fixture
 def clear_stage_root(monkeypatch):
-    """Ensure stage root is not set."""
+    """Ensure spack.stage._stage_root is not set at test start."""
     monkeypatch.setattr(spack.stage, '_stage_root', None)
     yield
 

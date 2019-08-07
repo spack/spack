@@ -157,7 +157,7 @@ class Stage(object):
     """Shared dict of all stage locks."""
     stage_locks = {}
 
-    """Staging is, in general, managed by Spack."""
+    """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True
 
     def __init__(
