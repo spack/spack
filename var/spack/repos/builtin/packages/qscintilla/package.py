@@ -24,14 +24,16 @@ class Qscintilla(QMakePackage):
 
     # Beyond py-pyqt@4.12.1, pyqt4 needs its own sip module (not implemented yet)
     # Without private sip moduele, python bindings will not compile
-    # Ref: https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html   
+    # Ref: https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html···
     # TODO implement private sip module for py-pyqt4
-    depends_on('py-pyqt4@:4.12.1', type='build') 
+    depends_on('py-pyqt4@:4.12.1', type='build')·
     #depends_on('py-pyqt5', type='build') # when='qt@5' not working?
     depends_on('python', type=('build', 'run'))
+    depends_on('py-sip', type='build')
 
     # with qt@4.8.6, didn't have much luck in compiling newer versions
-    conflicts('qt@4', when='@2.10.3:') 
+    conflicts('qt@4', when='@2.10.3:')·
+
 
     def chdir(self):
         os.chdir(str(self.stage.source_path)+'/Qt4Qt5')
@@ -43,10 +45,9 @@ class Qscintilla(QMakePackage):
         args = ['CONFIG+=-std=c++11', 'DEFINES+=NO_CXX11_REGEX=1']
         return args
 
-
-    # the following installs files under "/qscintilla_prefix/qt_prefix"
-    # it gets rid of 'Nothing installed error'
-    # without it libqscintilla is installed under qt_prefix, is that how it should be?
+    # currently installation is done under path "/qscintilla_prefix/qt_prefix"
+    # without settting INSTALL_ROOT, qscintilla is installed under qt_prefix
+    # giving 'Nothing Installed Error'
     def setup_environment(self, spack_env, run_env):
         spack_env.set('INSTALL_ROOT', self.prefix)
 
@@ -56,11 +57,13 @@ class Qscintilla(QMakePackage):
             os.chdir(str(self.stage.source_path)+'/Python')
             python = which('python')
             if self.version < Version('5'):
-                python('configure.py')
+                # headers are installed under qscintilla_prefix/qt_prefix/include
+                full_prefix = str(self.prefix)+ str(self.spec['qt'].prefix)
+                python('configure.py', '--qsci-incdir='+full_prefix+'/include')
             else:
                 python('configure.py -pyqt=PyQt5')
         if '+designer' in self.spec:
-            pass # not implemented yet
+            pass # not implemented yet TODO
 
     run_before('qmake')(chdir)
 
