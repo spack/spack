@@ -816,15 +816,19 @@ def _merge_yaml(dest, source):
 #
 # Settings for commands that modify configuration
 #
-def default_modify_scope():
+def default_modify_scope(section):
     """Return the config scope that commands should modify by default.
 
     Commands that modify configuration by default modify the *highest*
     priority scope.
     """
     default_edit_scope = spack.config.get('config:default_edit_scope')
+    if not default_edit_scope:
+        default_edit_scope = 'user'
     platform_scope = _platform_scope(default_edit_scope)
-    if platform_scope in spack.config.config.scopes:
+    if (platform_scope in spack.config.config.scopes) and (
+        spack.config.config.scopes[platform_scope].get_section(section)
+    ):
         return platform_scope
     else:
         return default_edit_scope

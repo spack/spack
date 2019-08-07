@@ -70,7 +70,7 @@ def _get_scope_and_section(args):
 
     # set scope defaults
     elif not args.scope:
-        scope = spack.config.default_modify_scope()
+        scope = spack.config.default_modify_scope(section)
 
     return scope, section
 
