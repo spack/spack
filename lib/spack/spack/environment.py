@@ -1346,7 +1346,7 @@ def _concretize_from_constraints(spec_constraints):
                                    for d in invalid_msg.split()
                                    if d != 'or']
             invalid_deps = [c for c in spec_constraints
-                            if any(c.satisfies(invd)
+                            if any(c.satisfies(invd, strict=True)
                                    for invd in invalid_deps_string)]
             if len(invalid_deps) != len(invalid_deps_string):
                 raise e
