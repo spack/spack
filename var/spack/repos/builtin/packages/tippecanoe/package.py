@@ -19,5 +19,5 @@ class Tippecanoe(MakefilePackage):
     depends_on('zlib')
 
     def edit(self, spec, prefix):
-         makefile = FileFilter('Makefile')
-         makefile.filter('PREFIX \?= /usr/local', 'PREFIX = '+self.prefix)
+        makefile = FileFilter('Makefile')
+        makefile.filter('PREFIX \?= /usr/local', 'PREFIX = ' + self.prefix)
