@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import itertools
 from spack.spec_list import SpecList
 from spack.spec import Spec
 
@@ -143,3 +144,16 @@ class TestSpecList(object):
                                                otherlist.specs_as_yaml_list)
         assert speclist.specs == self.default_specs + otherlist.specs
         assert speclist._reference is new_ref
+
+    def test_spec_list_nested_matrices(self):
+        speclist = SpecList('specs', [{'matrix':
+                                           [[{'matrix':
+                                                  [['zlib', 'libelf'],
+                                                   ['%gcc', '%intel']]}],
+                                            ['+shared', '~shared']]}])
+
+        expected_components = itertools.product(['zlib', 'libelf'],
+                                                ['%gcc', '%intel'],
+                                                ['+shared', '~shared'])
+        expected = [Spec(' '.join(combo)) for combo in expected_components]
+        assert set(speclist.specs) == set(expected)
