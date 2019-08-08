@@ -28,5 +28,5 @@ class ROpenssl(RPackage):
     version('0.9.6', '7ef137929d9dd07db690d35db242ba4b')
     version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')
 
-    depends_on('r-askpass')
+    depends_on('r-askpass', when='@1.2:', type=('build', 'run'))
     depends_on('openssl@1.0.1:')

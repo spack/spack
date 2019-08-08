@@ -20,8 +20,8 @@ class RCoin(RPackage):
     version('1.1-3', '97d3d21f1e4a5762e36dd718dd2d0661')
 
     depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-libcoin@1.0-0:', type=('build', 'run'))
-    depends_on('r-matrixstats@0.54.0:', type=('build', 'run'))
     depends_on('r-modeltools@0.2-9:', type=('build', 'run'))
     depends_on('r-mvtnorm@1.0-5:', type=('build', 'run'))
     depends_on('r-multcomp', type=('build', 'run'))
+    depends_on('r-libcoin@1.0-0:', when='@1.3-0:', type=('build', 'run'))
+    depends_on('r-matrixstats@0.54.0:', when='@1.3-0:', type=('build', 'run'))
