@@ -1,0 +1,13 @@
+--- eemParallel_1.0.1.org/src/local_settings.mk	2014-07-20 21:48:22.000000000 +0900
++++ eemParallel_1.0.1/src/local_settings.mk	2019-08-08 10:13:00.510457360 +0900
+@@ -1,7 +1,7 @@
+ CXX     = mpicxx
+-CXXFLAGS= -Wall -Wno-sign-compare -g
+-CXXFLAGS+= -std=c++11 -DHAVE_UNORDERED_MAP
+-CXXFLAGS+= -DHAVE_SHUFFLE
++CXXFLAGS=
++CXXFLAGS+= -DHAVE_UNORDERED_MAP
++#CXXFLAGS+= -DHAVE_SHUFFLE
+ #CXXFLAGS+= -DSWITCHING_NUM_PROCS=4
+ #CXXFLAGS+= -DDEBUG
+ #CXXFLAGS+= -DDEBUG_MORE
