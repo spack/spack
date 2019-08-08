@@ -1352,7 +1352,7 @@ def _concretize_from_constraints(spec_constraints):
                 raise e
             invalid_constraints.extend(invalid_deps)
         except UnknownVariantError as e:
-            invalid_variants = re.findall(r"'(\w+)'", e.message)
+            invalid_variants = re.findall(r"'([\w-]+)'", e.message)
             invalid_deps = [c for c in spec_constraints
                             if any(name in c.variants
                                    for name in invalid_variants)]
