@@ -1535,7 +1535,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # is installed
                 if keep_stage is False:
                     self.stage.destroy()
-                    return self._update_explicit_entry_in_db(rec, explicit)
+                return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
 
