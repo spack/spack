@@ -18,6 +18,7 @@ class Hunspell(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('gettext')
 
     # TODO: If https://github.com/spack/spack/pull/12344 is merged, this
     # method is unnecessary.
