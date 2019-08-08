@@ -18,3 +18,9 @@ class Hunspell(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+
+    # TODO: If https://github.com/spack/spack/pull/12344 is merged, this
+    # method is unnecessary.
+    def autoreconf(self, spec, prefix):
+        autoreconf = which('autoreconf')
+        autoreconf('-fiv')
