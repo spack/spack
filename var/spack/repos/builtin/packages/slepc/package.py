@@ -37,7 +37,9 @@ class Slepc(Package):
     variant('blopex', default=False, description='Enables BLOPEX wrappers')
 
     # NOTE: make sure PETSc and SLEPc use the same python.
-    depends_on('python@2.6:2.8', type='build')
+    depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
+    depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
+
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@develop', when='@develop')
     depends_on('petsc@3.11:3.11.99', when='@3.11:3.11.99')

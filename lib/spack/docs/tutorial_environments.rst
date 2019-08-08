@@ -33,7 +33,7 @@ Let's look at the output of ``spack find`` at this point in the tutorial.
 
 .. code-block:: console
 
-   $ bin/spack find
+   $ spack find
    ==> 70 installed packages
    -- linux-ubuntu16.04-x86_64 / clang@3.8.0-2ubuntu4 --------------
    tcl@8.6.8  zlib@1.2.8  zlib@1.2.11

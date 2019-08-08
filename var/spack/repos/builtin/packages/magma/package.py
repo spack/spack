@@ -17,7 +17,7 @@ class Magma(CMakePackage):
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers = ['luszczek']
 
-    version('2.5.1-alpha1', sha256='0576ddef07e049e2674fa87caca06ffe96f8d92134ed8aea387b9523be0d7c77')
+    version('2.5.1', sha256='ce32c199131515336b30c92a907effe0c441ebc5c5bdb255e4b06b2508de109f')
     version('2.5.0', sha256='4fd45c7e46bd9d9124253e7838bbfb9e6003c64c2c67ffcff02e6c36d2bcfa33')
     version('2.4.0', sha256='4eb839b1295405fd29c8a6f5b4ed578476010bf976af46573f80d1169f1f9a4f')
     version('2.3.0', sha256='010a4a057d7aa1e57b9426bffc0958f3d06913c9151463737e289e67dd9ea608')
@@ -46,8 +46,8 @@ class Magma(CMakePackage):
         options = []
 
         options.extend([
-            '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix,
+            '-DCMAKE_INSTALL_PREFIX=%s' % self.prefix,
+            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix,
             '-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'),
             # As of MAGMA v2.3.0, CMakeLists.txt does not use the variable
             # BLAS_LIBRARIES, but only LAPACK_LIBRARIES, so we need to

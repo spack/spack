@@ -419,7 +419,7 @@ a ``packages.yaml`` file) could contain:
      ...
      packages:
        all:
-         compilers: [intel]
+         compiler: [intel]
      ...
 
 This configuration sets the default compiler for all packages to
