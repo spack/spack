@@ -37,7 +37,6 @@ class Iegenlib(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('-DCMAKE_BUILD_TYPE=Debug')
         args.append('-DGEN_PARSER=no')
         args.append('-DBUILD_PYTHON=no')
         return args
