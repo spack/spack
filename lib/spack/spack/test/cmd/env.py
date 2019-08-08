@@ -1159,7 +1159,7 @@ env:
         with ev.read('test'):
             concretize()
 
-        test = ev.read('test')
+        ev.read('test')
 
         # Regression test for handling of variants with dashes in them
         # will fail before this point if code regresses

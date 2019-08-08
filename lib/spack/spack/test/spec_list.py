@@ -146,11 +146,10 @@ class TestSpecList(object):
         assert speclist._reference is new_ref
 
     def test_spec_list_nested_matrices(self):
-        speclist = SpecList('specs', [{'matrix':
-                                           [[{'matrix':
-                                                  [['zlib', 'libelf'],
-                                                   ['%gcc', '%intel']]}],
-                                            ['+shared', '~shared']]}])
+        inner_matrix = [{'matrix': [['zlib', 'libelf'], ['%gcc', '%intel']]}]
+        outer_addition = ['+shared', '~shared']
+        outer_matrix = [{'matrix': [inner_matrix, outer_addition]}]
+        speclist = SpecList('specs', outer_matrix)
 
         expected_components = itertools.product(['zlib', 'libelf'],
                                                 ['%gcc', '%intel'],
