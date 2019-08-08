@@ -12,6 +12,7 @@ class Hunspell(AutotoolsPackage):
     homepage = "http://hunspell.github.io/"
     url      = "https://github.com/hunspell/hunspell/archive/v1.6.0.tar.gz"
 
+    version('1.7.0', sha256='57be4e03ae9dd62c3471f667a0d81a14513e314d4d92081292b90435944ff951')
     version('1.6.0', '047c3feb121261b76dc16cdb62f54483')
 
     depends_on('autoconf', type='build')
