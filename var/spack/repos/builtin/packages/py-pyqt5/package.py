@@ -18,10 +18,12 @@ class PyPyqt5(SIPPackage):
 
     version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9')
 
+    depends_on('py-sip@4.19.14:')
     # Without opengl support, I got the following error:
     # sip: QOpenGLFramebufferObject is undefined
     depends_on('qt@5:+opengl')
     depends_on('python@2.6:', type=('build', 'run'))
+    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
 
     # https://www.riverbankcomputing.com/static/Docs/PyQt5/installation.html
     def configure_args(self):

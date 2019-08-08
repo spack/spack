@@ -33,6 +33,12 @@ class Veclibfort(Package):
             'libvecLibFort', root=self.prefix, shared=shared, recursive=True
         )
 
+    @property
+    def headers(self):
+        # veclibfort does not come with any headers. Return an empty list
+        # to avoid `spec['blas'].headers` from crashing.
+        return HeaderList([])
+
     def install(self, spec, prefix):
         if sys.platform != 'darwin':
             raise InstallError('vecLibFort can be installed on macOS only')

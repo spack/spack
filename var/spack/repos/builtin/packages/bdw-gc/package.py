@@ -19,6 +19,13 @@ class BdwGc(AutotoolsPackage):
 
     variant('libatomic-ops', default=True,
             description='Use external libatomic-ops')
+    variant(
+        'threads',
+        default='none',
+        values=('none', 'posix', 'dgux386'),
+        multi=False,
+        description='Multithreading support'
+    )
 
     depends_on('libatomic-ops', when='+libatomic-ops')
 
@@ -28,7 +35,8 @@ class BdwGc(AutotoolsPackage):
         config_args = [
             '--enable-static',
             '--with-libatomic-ops={0}'.format(
-                'yes' if '+libatomic-ops' in spec else 'no')
+                'yes' if '+libatomic-ops' in spec else 'no'),
+            "--enable-threads={0}".format(spec.variants['threads'].value)
         ]
 
         return config_args
