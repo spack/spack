@@ -301,14 +301,6 @@ def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages):
                        match="fetch a package with a URL"):
         spec.package.do_fetch()
 
-    with pytest.raises(InvalidPackageOpError,
-                       match="stage a package with a URL"):
-        spec.package.do_stage()
-
-    with pytest.raises(InvalidPackageOpError,
-                       match="patch a package with a URL"):
-        spec.package.do_patch()
-
 
 def test_pkg_build_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.

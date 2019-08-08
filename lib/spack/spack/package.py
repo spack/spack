@@ -1056,7 +1056,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Will not fetch %s" %
                                  self.spec.format('{name}{@version}'), ck_msg)
 
-        self.stage.create()
         self.stage.fetch(mirror_only)
         self._fetch_time = time.time() - start_time
 
@@ -1073,22 +1072,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        if not self.has_code:
-            raise InvalidPackageOpError("Can only stage a package with a URL.")
+        # Always create the stage directory at this point.  Why?  A no-code
+        # package may want to use the installation process to install metadata.
+        self.stage.create()
 
-        self.do_fetch(mirror_only)     # this will create the stage
-        self.stage.expand_archive()
+        # Fetch/expand any associated code.
+        if self.has_code:
+            self.do_fetch(mirror_only)
+            self.stage.expand_archive()
 
-        if not os.listdir(self.stage.path):
-            raise FetchError("Archive was empty for %s" % self.name)
+            if not os.listdir(self.stage.path):
+                raise FetchError("Archive was empty for %s" % self.name)
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
         if not self.spec.concrete:
             raise ValueError("Can only patch concrete packages.")
-
-        if not self.has_code:
-            raise InvalidPackageOpError("Can only patch a package with a URL.")
 
         # Kick off the stage first.  This creates the stage.
         self.do_stage()
@@ -1519,25 +1518,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # module from the upstream Spack instance.
             return
 
-        if self.has_code:
-            # Ensure package code is not already installed
-            partial = self.check_for_unfinished_installation(keep_prefix,
-                                                             restage)
+        # Ensure package code is not already installed
+        partial = self.check_for_unfinished_installation(keep_prefix, restage)
 
-            layout = spack.store.layout
-            with spack.store.db.prefix_read_lock(self.spec):
-                if partial:
-                    tty.msg(
-                        "Continuing from partial install of %s" % self.name)
-                elif layout.check_installed(self.spec):
-                    msg = '{0.name} is already installed in {0.prefix}'
-                    tty.msg(msg.format(self))
-                    rec = spack.store.db.get_record(self.spec)
-                    # In case the stage directory has already been created,
-                    # this ensures it's removed after we checked that the spec
-                    # is installed
-                    if keep_stage is False:
-                        self.stage.destroy()
+        layout = spack.store.layout
+        with spack.store.db.prefix_read_lock(self.spec):
+            if partial:
+                tty.msg(
+                    "Continuing from partial install of %s" % self.name)
+            elif layout.check_installed(self.spec):
+                msg = '{0.name} is already installed in {0.prefix}'
+                tty.msg(msg.format(self))
+                rec = spack.store.db.get_record(self.spec)
+                # In case the stage directory has already been created,
+                # this ensures it's removed after we checked that the spec
+                # is installed
+                if keep_stage is False:
+                    self.stage.destroy()
                     return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
@@ -1559,11 +1556,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     dep.package.bootstrap_compiler(**comp_kwargs)
                 dep.package.do_install(**dep_kwargs)
 
-        # There's nothing left to do for a bundle (or no-code) package
-        if not self.has_code:
-            return
-
-        # Otherwise, install the package proper
+        # Then, install the package proper, which includes adding an entry
+        # in the DB for the package.
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
         if kwargs.get('use_cache', True):
@@ -1650,7 +1644,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     echo = logger.echo
                     self.log()
 
-                # Run post install hooks before build stage is removed.
+                # Run post install hooks for the code before build stage is
+                # removed.  This step requires stage.source_path and install
+                # phases.
                 spack.hooks.post_install(self.spec)
 
             # Stop timer.
@@ -1691,10 +1687,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # Ensure the metadata path exists as well
                 mkdirp(spack.store.layout.metadata_path(self.spec), mode=perms)
 
-            # Fork a child to do the actual installation
-            # we preserve verbosity settings across installs.
-            PackageBase._verbose = spack.build_environment.fork(
-                self, build_process, dirty=dirty, fake=fake)
+            # Fork a child to do the actual code installation.
+            # Preserve verbosity settings across installs.
+            if self.has_code:
+                PackageBase._verbose = spack.build_environment.fork(
+                    self, build_process, dirty=dirty, fake=fake)
 
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
