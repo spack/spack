@@ -23,4 +23,5 @@ class RAnimation(RPackage):
     depends_on('r-magick', type=('build', 'run'))
     depends_on('image-magick')
     depends_on('ffmpeg')
+    depends_on('swftools')
     depends_on('texlive')
