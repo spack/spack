@@ -490,7 +490,7 @@ class ViewDescriptor(object):
         view.clean()
         specs_in_view = set(view.get_all_specs())
 
-        if specs_in_view - set(all_specs):
+        if specs_in_view - set(specs_for_view):
             tty.error("Unexpected: specs are in view but not env")
             names_in_view = set(x.name for x in specs_in_view)
             all_names = set(x.name for x in all_specs)
