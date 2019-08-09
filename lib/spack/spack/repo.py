@@ -9,6 +9,7 @@ import contextlib
 import errno
 import functools
 import inspect
+import itertools
 import os
 import re
 import shutil
@@ -921,7 +922,9 @@ class Repo(object):
 
         # Install patch files needed by the package.
         mkdirp(path)
-        for patch in spec.patches:
+        all_possible_patches = itertools.chain.from_iterable(
+            spec.package.patches.values())
+        for patch in all_possible_patches:
             if patch.path:
                 if os.path.exists(patch.path):
                     install(patch.path, path)

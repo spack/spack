@@ -489,6 +489,21 @@ class ViewDescriptor(object):
 
         view.clean()
         specs_in_view = set(view.get_all_specs())
+
+        if specs_in_view - set(all_specs):
+            tty.error("Unexpected: specs are in view but not env")
+            names_in_view = set(x.name for x in specs_in_view)
+            all_names = set(x.name for x in all_specs)
+            if names_in_view - all_names:
+                tty.error(
+                    "The view contains names that aren't in the"
+                    " environment: " + ' '.join(names))
+            else:
+                tty.error(
+                    "The env contains different implementations of packages"
+                    " that are in the view")
+            raise ValueError()
+
         tty.msg("Updating view at {0}".format(self.root))
 
         rm_specs = specs_in_view - installed_specs_for_view
