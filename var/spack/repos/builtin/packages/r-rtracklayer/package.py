@@ -19,13 +19,13 @@ class RRtracklayer(RPackage):
     homepage = "https://bioconductor.org/packages/rtracklayer"
     git      = "https://git.bioconductor.org/packages/rtracklayer.git"
 
-    version('1.44.1', commit='4f7d4dcaf0a4ac9b21272518f974466e43b4b24d')
+    version('1.44.2', commit='9b586e550459c48f94423e9eebafa8311d209611')
     version('1.42.2', commit='76702f671faea736807d54aeecfbadcd152d94c5')
     version('1.40.6', commit='ba9a6e711504a702147383bc7abfcc36eb304df7')
     version('1.38.3', commit='f20db703c09dc7e808c09e9b78c15aec9e546248')
     version('1.36.6', commit='8c0ac7230f94e0c5a981acbb178c8de70e968131')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.44.1', type=('build', 'run'))
+    depends_on('r@3.6.0:3.6.9', when='@1.44.2', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.42.2', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.40.6', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.38.3', type=('build', 'run'))

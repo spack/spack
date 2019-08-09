@@ -44,6 +44,8 @@ class RAnnotationhub(RPackage):
 
     depends_on('r-curl', when='@2.10.1:', type=('build', 'run'))
 
+    depends_on('r-biocmanager', when='@2.14.5:', type=('build', 'run'))
+
     depends_on('r-biocfilecache@1.5.1:', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-dplyr', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-rappdirs', when='@2.16.0:', type=('build', 'run'))

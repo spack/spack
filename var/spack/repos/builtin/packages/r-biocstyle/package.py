@@ -31,3 +31,5 @@ class RBiocstyle(RPackage):
     depends_on('r-knitr@1.12:', when='@2.4.1:', type=('build', 'run'))
     depends_on('r-rmarkdown@1.2:', when='@2.4.1:', type=('build', 'run'))
     depends_on('r-yaml', when='@2.4.1:', type=('build', 'run'))
+
+    depends_on('r-biocmanager', when='@2.10.0:', type=('build', 'run'))

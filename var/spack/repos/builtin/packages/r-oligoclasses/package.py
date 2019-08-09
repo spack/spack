@@ -44,3 +44,4 @@ class ROligoclasses(RPackage):
     depends_on('r-dbi', when='@1.40.0:', type=('build', 'run'))
 
     depends_on('r-biocgenerics@0.27.1:', when='@1.44.0:', type=('build', 'run'))
+    depends_on('r-biocmanager', when='@1.44.0:', type=('build', 'run'))

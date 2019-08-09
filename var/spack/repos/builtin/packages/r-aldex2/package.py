@@ -41,3 +41,5 @@ class RAldex2(RPackage):
     depends_on('r-iranges', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-summarizedexperiment', when='@1.8.0:', type=('build', 'run'))
+
+    depends_on('r-multtest', when='@1.10.0:', type=('build', 'run'))

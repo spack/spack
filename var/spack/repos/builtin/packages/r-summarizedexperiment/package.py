@@ -17,13 +17,13 @@ class RSummarizedexperiment(RPackage):
     homepage = "https://bioconductor.org/packages/SummarizedExperiment"
     git      = "https://git.bioconductor.org/packages/SummarizedExperiment.git"
 
-    version('1.14.0', commit='cdb6caead5b51065d7d2180f75b93c2515d1df6c')
+    version('1.14.1', commit='2c68d99e11c7345e5ed388370822ea48395c64a4')
     version('1.12.0', commit='5f8416864636add121ec1d6737ebb89a42227fd7')
     version('1.10.1', commit='7ad2e991c8285bfc4b2e15b29d94cc86d07f8f2b')
     version('1.8.1', commit='9d8a29aa9c78bbc7dcc6472537e13fc0d11dc1f7')
     version('1.6.5', commit='ec69cd5cfbccaef148a9f6abdfb3e22e888695d0')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.14.0', type=('build', 'run'))
+    depends_on('r@3.6.0:3.6.9', when='@1.14.1', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.12.0', type=('build', 'run'))
     depends_on('r@3.5.0:3.5.9', when='@1.10.1', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.8.1', type=('build', 'run'))

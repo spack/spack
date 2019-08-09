@@ -42,3 +42,5 @@ class ROrganismdbi(RPackage):
     depends_on('r-s4vectors@0.9.25:', when='@1.18.1:', type=('build', 'run'))
 
     depends_on('r-genomicranges@1.31.13:', when='@1.22.0:', type=('build', 'run'))
+
+    depends_on('r-biocmanager', when='@1.24.0:', type=('build', 'run'))

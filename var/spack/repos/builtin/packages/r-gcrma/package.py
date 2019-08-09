@@ -32,3 +32,5 @@ class RGcrma(RPackage):
     depends_on('r-biocinstaller', when='@2.48.0:', type=('build', 'run'))
     depends_on('r-biostrings@2.11.32:', when='@2.48.0:', type=('build', 'run'))
     depends_on('r-xvector', when='@2.48.0:', type=('build', 'run'))
+
+    depends_on('r-biocmanager', when='@2.54.0:', type=('build', 'run'))
