@@ -20,4 +20,4 @@ class Tippecanoe(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
-        makefile.filter('PREFIX \?= /usr/local', 'PREFIX = ' + self.prefix)
+        makefile.filter(r'PREFIX \?= /usr/local', 'PREFIX = ' + self.prefix)
