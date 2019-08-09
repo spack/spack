@@ -22,6 +22,8 @@ class PySip(Package):
     version('4.16.5', '6d01ea966a53e4c7ae5c5e48c40e49e5')
 
     extends('python')
+    
+    variant('pyqt5', default=False, description="Build a sip module name PyQt5.sip")
 
     # https://www.riverbankcomputing.com/static/Docs/sip/installation.html
     phases = ['configure', 'build', 'install']
@@ -35,11 +37,12 @@ class PySip(Package):
             python('build.py', 'prepare')
 
     def configure(self, spec, prefix):
-        python('configure.py',
-               '--bindir={0}'.format(prefix.bin),
-               '--destdir={0}'.format(site_packages_dir),
-               '--incdir={0}'.format(python_include_dir),
-               '--sipdir={0}'.format(prefix.share.sip))
+        args = ['--bindir={0}'.format(prefix.bin), '--destdir={0}'.format(site_packages_dir), 
+                '--incdir={0}'.format(python_include_dir), '--sipdir={0}'.format(prefix.share.sip)]
+        if '+pyqt5' in self.spec:
+            args.append(['--sip-module=PyQt5.sip'])
+           
+        python('configure.py', *args)
 
     def build(self, spec, prefix):
         make()
