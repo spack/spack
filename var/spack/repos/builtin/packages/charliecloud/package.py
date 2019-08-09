@@ -13,8 +13,6 @@ class Charliecloud(MakefilePackage):
     url      = "https://github.com/hpc/charliecloud/releases/download/v0.9.10/charliecloud-0.9.10.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
 
-    depends_on('gcc')
-    depends_on('make')
     depends_on('rsync')
     depends_on('python@3')
     depends_on('py-lark-parser')
