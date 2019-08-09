@@ -26,9 +26,11 @@ class Skopeo(Package):
     depends_on('libgpg-error')
 
     def patch(self):
-        files = subprocess.check_output(
+        process_pipe = subprocess.Popen(
             ['grep', '-lR', '/etc/containers/', 'vendor'],
-            env={'PATH': '/usr/bin:/bin:/usr/sbin:/sbin'})
+            env={'PATH': '/usr/bin:/bin:/usr/sbin:/sbin'},
+            stdout=subprocess.PIPE)
+        files = process_pipe.communicate()[0]
 
         for f in files.splitlines():
             edit = FileFilter(f)
