@@ -963,8 +963,7 @@ class Spec(object):
         dep = self._dependencies.get(name)
         if dep is not None:
             return dep
-        raise InvalidDependencyError(
-            self.name + " does not depend on " + comma_or(name))
+        raise InvalidDependencyError(self.name, name)
 
     def _find_deps(self, where, deptype):
         deptype = dp.canonical_deptype(deptype)
@@ -2067,8 +2066,7 @@ class Spec(object):
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
         if extra:
-            raise InvalidDependencyError(
-                self.name + " does not depend on " + comma_or(extra))
+            raise InvalidDependencyError(self.name, extra)
 
         # This dictionary will store object IDs rather than Specs as keys
         # since the Spec __hash__ will change as patches are added to them
@@ -4156,6 +4154,10 @@ class InconsistentSpecError(SpecError):
 class InvalidDependencyError(SpecError):
     """Raised when a dependency in a spec is not actually a dependency
        of the package."""
+    def __init__(self, pkg, deps):
+        self.invalid_deps = deps
+        super(InvalidDependencyError, self).__init__(
+            'Package {0} does not depend on {1}'.format(pkg, comma_or(deps)))
 
 
 class NoProviderError(SpecError):
