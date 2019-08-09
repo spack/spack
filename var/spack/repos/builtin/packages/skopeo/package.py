@@ -26,11 +26,11 @@ class Skopeo(Package):
     depends_on('libgpg-error')
 
     def patch(self):
-        Files = subprocess.check_output(
+        files = subprocess.check_output(
             ['grep', '-lR', '/etc/containers/', 'vendor'],
             env={'PATH': '/usr/bin:/bin:/usr/sbin:/sbin'})
 
-        for f in Files.splitlines():
+        for f in files.splitlines():
             edit = FileFilter(f)
             edit.filter('/etc/containers/', '{0}/etc/containers/'.
                         format(self.prefix))
