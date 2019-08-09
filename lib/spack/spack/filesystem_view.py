@@ -412,7 +412,11 @@ class YamlFilesystemView(FilesystemView):
         remove_extension = ft.partial(self.remove_extension,
                                       with_dependents=with_dependents)
 
-        set(map(remove_extension, extensions))
+        tty.msg("Extensions to remove: " +
+                ' '.join(x.name for x in extensions))
+        for spec in extensions:
+            tty.msg("Removing extension: " + spec.name)
+            remove_extension(spec)
         set(map(self.remove_standalone, standalones))
 
         self._purge_empty_directories()
