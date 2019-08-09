@@ -25,3 +25,4 @@ class RReadxl(RPackage):
     depends_on('r-tibble@1.3.1:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.18:', type=('build', 'run'))
     depends_on('r-cellranger', type=('build', 'run'))
+    depends_on('r-progress', when='@1.2.0:', type=('build', 'run'))
