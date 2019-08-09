@@ -25,6 +25,7 @@ class NetcdfCxx4(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
+    depends_on('m4', type='build')
 
     force_autoreconf = True
 
