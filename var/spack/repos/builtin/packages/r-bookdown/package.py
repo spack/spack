@@ -14,6 +14,7 @@ class RBookdown(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/bookdown_0.5.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/bookdown"
 
+    version('0.12', sha256='38eb4c5b877ccd85b16cfe74a48c3bc53de2f276da98e5515f37e7a06e065bb0')
     version('0.5', '7bad360948e2b22d28397870b9319f17')
 
     depends_on('r-yaml@2.1.14:', when='@:0.10', type=('build', 'run'))

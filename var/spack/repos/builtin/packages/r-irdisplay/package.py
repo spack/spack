@@ -15,6 +15,7 @@ class RIrdisplay(RPackage):
     homepage = "https://irkernel.github.io"
     url      = "https://cran.rstudio.com/src/contrib/IRdisplay_0.4.4.tar.gz"
 
+    version('0.7.0', sha256='91eac9acdb92ed0fdc58e5da284aa4bb957ada5eef504fd89bec136747999089')
     version('0.4.4', '5be672fb82185b90f23bd99ac1e1cdb6')
 
     depends_on('r-repr', type=('build', 'run'))

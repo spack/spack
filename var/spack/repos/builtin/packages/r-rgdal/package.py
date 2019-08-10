@@ -21,6 +21,7 @@ class RRgdal(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/rgdal_1.3-9.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/rgdal"
 
+    version('1.4-4', sha256='2532e76e0af27d145f799d70006a5dbecb2d3be698e3d0bbf580f4c41a34c5d7')
     version('1.3-9', sha256='3e44f88d09894be4c0abd8874d00b40a4a5f4542b75250d098ffbb3ba41e2654')
     version('1.2-16', 'de83bf08519a53de68a7632ecb7f2dc9')
 

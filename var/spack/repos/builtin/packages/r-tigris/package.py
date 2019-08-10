@@ -14,8 +14,10 @@ class RTigris(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/tigris_0.5.3.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/tigris"
 
+    version('0.8.2', sha256='ed8d6ab25332c2cc800858d58324bd8264772d8a916a3f0a8d489250a7e7140e')
     version('0.5.3', 'c11cb459bf134d3deb1a641a60c86413')
 
+    depends_on('r@3.3.0:')
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-rgdal', type=('build', 'run'))

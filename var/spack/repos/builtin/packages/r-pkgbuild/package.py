@@ -13,6 +13,7 @@ class RPkgbuild(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/pkgbuild_1.0.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pkgbuild/"
 
+    version('1.0.4', sha256='2934efa5ff9ccfe1636d360aedec36713f3bb3128a493241dbb728d842ea3b5f')
     version('1.0.3', sha256='c93aceb499886e42bcd61eb7fb59e47a76c9ba5ab5349a426736d46c8ce21f4d')
 
     depends_on('r@3.1:', type=('build', 'run'))

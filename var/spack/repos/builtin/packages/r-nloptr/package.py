@@ -20,6 +20,7 @@ class RNloptr(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/nloptr_1.0.4.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/nloptr"
 
+    version('1.2.1', sha256='1f86e33ecde6c3b0d2098c47591a9cd0fa41fb973ebf5145859677492730df97')
     version('1.0.4', 'f2775dfb4f7f5552d46937a04c062b0d')
 
     depends_on('r-testthat', type=('build', 'run'))

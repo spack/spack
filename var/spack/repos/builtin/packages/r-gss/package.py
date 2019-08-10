@@ -14,4 +14,5 @@ class RGss(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/gss_2.1-7.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/gss"
 
+    version('2.1-10', sha256='26c47ecae6a9b7854a1b531c09f869cf8b813462bd8093e3618e1091ace61ee2')
     version('2.1-7', '4a6bd96339d22b40c932895b64504fb2')

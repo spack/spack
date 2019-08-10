@@ -18,6 +18,7 @@ class RQuantreg(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/quantreg_5.29.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/quantreg"
 
+    version('5.51', sha256='df1330d245f66ee6d924b209bd4c15d44ff8cce52667959ec0d299975428bdb1')
     version('5.42.1', sha256='4cc2b0883c52694e58fcfde83e30e4a54be9f4d9cbcf6138f6498cc8e0b3ccab')
     version('5.40', sha256='86e310a235009ab85635dfb8803c175f80a35892e237db2525c4ef37a98936eb')
     version('5.29', '643ca728200d13f8c2e62365204e9907')

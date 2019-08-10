@@ -15,6 +15,7 @@ class RKnitr(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/knitr_1.14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/knitr"
 
+    version('1.24', sha256='e80c2043b445a7e576b62ae8510cce89322660fe388881d799a706d35cd27b89')
     version('1.23', sha256='063bfb3300fc9f3e7d223c346e19b93beced0e6784470b9bef2524868a206a99')
     version('1.17', '4407ccf8f2a51629800d6d5243cf3e70')
     version('1.14', 'ef0fbeaa9372f99ffbc57212a7781511')

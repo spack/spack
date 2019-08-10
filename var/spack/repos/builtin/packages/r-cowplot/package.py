@@ -19,6 +19,7 @@ class RCowplot(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/cowplot_0.8.0.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/cowplot"
 
+    version('1.0.0', sha256='70f9a7c46d10f409d1599f1afc9fd3c947051cf2b430f01d903c64ef1e6c98a5')
     version('0.9.3', sha256='3e10475fd7506ea9297ed72eb1a3acf858c6fa99d26e46fc39654eba000c3dcb')
     version('0.9.2', sha256='8b92ce7f92937fde06b0cfb86c7634a39b3b2101e362cc55c4bec6b3fde1d28f')
     version('0.9.1', sha256='953fd9d6ff370472b9f5a9ee867a423bea3e26e406d08a2192ec1872a2e60047')
