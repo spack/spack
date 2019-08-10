@@ -12,7 +12,6 @@ class ROpenxlsx(RPackage):
     'Rcpp', read/write times are comparable to the 'xlsx' and 'XLConnect'
     packages with the added benefit of removing the dependency on Java."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/awalker89/openxlsx"
     url      = "https://cloud.r-project.org/src/contrib/openxlsx_4.1.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/openxlsx"
