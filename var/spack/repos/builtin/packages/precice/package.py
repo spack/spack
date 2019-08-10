@@ -58,22 +58,31 @@ class Precice(CMakePackage):
                 return on
             return off
 
-        libxml2_includes = spec['libxml2'].headers.directories[0]
         cmake_args = [
             '-DBUILD_SHARED_LIBS:BOOL=%s' % variant_bool('+shared'),
             '-DMPI:BOOL=%s' % variant_bool('+mpi'),
-
-            '-DTPL_ENABLE_BOOST=ON' if xsdk_mode else None,
-            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-
-            '-DTPL_ENABLE_EIGEN3=ON' if xsdk_mode else None,
-            '-DEIGEN3_INCLUDE_DIR=%s' % spec['eigen'].prefix,
-
-            '-DTPL_ENABLE_LIBXML2=ON' if xsdk_mode else None,
-            '-DLIBXML2_INCLUDE_DIRS=%s' % libxml2_includes,
-            '-DLIBXML2_LIBRARIES=%s' % spec['libxml2'].libs[0],
         ]
 
+        # Boost
+        if xsdk_mode:
+            cmake_args.append('-DTPL_ENABLE_BOOST=ON')
+        cmake_args.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
+
+        # Eigen3
+        if xsdk_mode:
+            cmake_args.append('-DTPL_ENABLE_EIGEN3=ON')
+        cmake_args.append('-DEIGEN3_INCLUDE_DIR=%s' % spec['eigen'].prefix)
+
+        # LibXML2
+        if xsdk_mode:
+            cmake_args.append('-DTPL_ENABLE_LIBXML2=ON')
+        libxml2_includes = spec['libxml2'].headers.directories[0]
+        cmake_args.extend([
+            '-DLIBXML2_INCLUDE_DIRS=%s' % libxml2_includes,
+            '-DLIBXML2_LIBRARIES=%s' % spec['libxml2'].libs[0],
+        ])
+
+        # PETSc
         if '+petsc' in spec:
             cmake_args.extend([
                 '-DTPL_ENABLE_PETSC:BOOL=ON' if xsdk_mode else '-DPETSC=ON',
@@ -83,6 +92,7 @@ class Precice(CMakePackage):
         else:
             cmake_args.append('-DPETSC:BOOL=OFF')
 
+        # Python
         if '+python' in spec:
             python_library = spec['python'].libs[0]
             python_include = spec['python'].headers.directories[0]
@@ -97,4 +107,4 @@ class Precice(CMakePackage):
         else:
             cmake_args.append('-DPYTHON:BOOL=OFF')
 
-        return [e for e in cmake_args if e is not None]
+        return cmake_args
