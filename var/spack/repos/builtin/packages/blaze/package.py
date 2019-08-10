@@ -16,8 +16,11 @@ class Blaze(Package):
     """
 
     homepage = "https://bitbucket.org/blaze-lib/blaze/overview"
-    url      = "https://bitbucket.org/blaze-lib/blaze/downloads/blaze-3.4.tar.gz"
+    url      = "https://bitbucket.org/blaze-lib/blaze/downloads/blaze-3.5.tar.gz"
+    git      = "https://bitbucket.org/blaze-lib/blaze.git"
 
+    version('master', branch='master')
+    version('3.5', sha256='f50d4a57796b8012d3e6d416667d9abe6f4d95994eb9deb86cd4491381dec624')
     version('3.4', sha256='fd474ab479e81d31edf27d4a529706b418f874caa7b046c67489128c20dda66f')
     version('3.3', sha256='138cbb7b95775c10bf56a5ab3596a32205751299b19699984b6ed55b1bf989d0')
     version('3.2', '47bd4a4f1b6292f5a6f71ed9d5287480')
