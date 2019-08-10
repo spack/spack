@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import collections
+import pkgutil
 import re
 import sys
 import tempfile
@@ -22,49 +23,6 @@ import spack.package
 import spack.repo
 from spack.util.executable import which
 from spack.version import ver
-
-
-#: generate the problem space, establish cardinality constraints
-_generate = """\
-% One version, arch, etc. per package
-{ version(P, V) : version(P, V) } = 1             :- node(P).
-{ arch_platform(P, A) : arch_platform(P, A) } = 1 :- node(P).
-{ arch_os(P, A) : arch_os(P, A) } = 1             :- node(P).
-{ arch_target(P, T) : arch_target(P, T) } = 1     :- node(P).
-
-% one variant value for single-valued variants.
-{ variant_value(P, V, X) : variant_value(P, V, X) } = 1
-    :- node(P), variant(P, V), not variant_single_value(P, V).
-"""
-
-#: define the rules of Spack concretization
-_define = """\
-% dependencies imply new nodes.
-node(D) :- node(P), depends_on(P, D).
-
-% propagate platform, os, target downwards
-arch_platform(D, A) :- node(D), depends_on(P, D), arch_platform(P, A).
-arch_os(D, A) :- node(D), depends_on(P, D), arch_os(P, A).
-arch_target(D, A) :- node(D), depends_on(P, D), arch_target(P, A).
-
-% if a variant is set to anything, it is considered "set".
-variant_set(P, V) :- variant_set(P, V, _).
-
-% variant_set is an explicitly set variant value. If it's not "set",
-% we revert to the default value. If it is set, we force the set value
-variant_value(P, V, X) :- node(P), variant(P, V), variant_set(P, V, X).
-"""
-
-#: what parts of the model to display to read models back in
-_display = """\
-#show node/1.
-#show depends_on/2.
-#show version/2.
-#show variant_value/3.
-#show arch_platform/2.
-#show arch_os/2.
-#show arch_target/2.
-"""
 
 
 def _id(thing):
@@ -152,8 +110,11 @@ class AspGenerator(object):
 
     def title(self, name):
         self.out.write('\n')
+        self.out.write("%" + ("-" * 76))
+        self.out.write('\n')
         self.out.write("%% %s\n" % name)
-        self.out.write("% -----------------------------------------\n")
+        self.out.write("%" + ("-" * 76))
+        self.out.write('\n')
 
     def section(self, name):
         self.out.write("\n")
@@ -287,25 +248,22 @@ class AspGenerator(object):
         pkgs = list(set(spack.package.possible_dependencies(*pkgs))
                     | set(pkg_names))
 
-        self.title("Generate")
-        self.out.write(_generate)
+        self.out.write(pkgutil.get_data('spack.solver', 'concretize.lp'))
 
-        self.title("Define")
-        self.out.write(_define)
-
-        self.title("Package Constraints")
+        self.title('Package Constraints')
         for pkg in pkgs:
-            self.section(pkg)
+            self.section('Package: %s' % pkg)
             self.pkg_rules(pkg)
+        self.out.write('\n')
 
-        self.title("Spec Constraints")
+        self.title('Spec Constraints')
         for spec in specs:
-            self.section(str(spec))
+            self.section('Spec: %s' % pkg)
             self.spec_rules(spec)
+            self.out.write('\n')
 
-        self.title("Display")
-        self.out.write(_display)
-        self.out.write('\n\n')
+        self.out.write(pkgutil.get_data('spack.solver', 'display.lp'))
+        self.out.write('\n')
 
 
 class ResultParser(object):
@@ -417,6 +375,7 @@ def highlight(string):
     string = re.sub(r'\bSATISFIABLE', "@G{SATISFIABLE}", string)
 
     return string
+
 
 #
 # These are handwritten parts for the Spack ASP model.
