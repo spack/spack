@@ -57,6 +57,11 @@ class Poppler(CMakePackage):
     depends_on('qt@5.0:',      when='@0.62.0:+qt')
     depends_on('qt@4.0:4.8.6', when='@:0.61.999+qt')
 
+    # Splash is unconditionally disabled. Unfortunately there's
+    # a small section of code in the QT5 wrappers that expects it
+    # to be present.
+    patch('poppler_page_splash.patch', when='@0.64.0: ^qt@5.0:')
+
     # Only needed to run `make test`
     resource(
         name='test',
@@ -74,9 +79,9 @@ class Poppler(CMakePackage):
             '-DENABLE_SPLASH=OFF',
             '-DWITH_NSS3=OFF',
         ]
-	    
-	# Install header files
-	args.append('-DENABLE_UNSTABLE_API_ABI_HEADERS=ON')
+
+        # Install header files
+        args.append('-DENABLE_UNSTABLE_API_ABI_HEADERS=ON')
 
         if '+cms' in spec:
             args.append('-DENABLE_CMS=lcms2')
