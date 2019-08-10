@@ -495,9 +495,10 @@ class ViewDescriptor(object):
             names_in_view = set(x.name for x in specs_in_view)
             all_names = set(x.name for x in all_specs)
             if names_in_view - all_names:
+                extra_names_in_view = names_in_view - all_names
                 tty.error(
                     "The view contains names that aren't in the"
-                    " environment: " + ' '.join(names))
+                    " environment: " + ' '.join(extra_names_in_view))
             else:
                 tty.error(
                     "The env contains different implementations of packages"
