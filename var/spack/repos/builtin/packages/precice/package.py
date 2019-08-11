@@ -96,8 +96,10 @@ class Precice(CMakePackage):
         if '+python' in spec:
             python_library = spec['python'].libs[0]
             python_include = spec['python'].headers.directories[0]
-            numpy_include  = spec['py-numpy'].prefix.lib.join(
-                'python2.7/site-packages/numpy/core/include')
+            numpy_include = join_path(
+                spec['py-numpy'].prefix,
+                spec['python'].package.site_packages_dir,
+                'numpy', 'core', 'include')
             cmake_args.extend([
                 '-DTPL_ENABLE_PYTHON:BOOL=ON' if xsdk_mode else '-DPYTHON=ON',
                 '-DPYTHON_INCLUDE_DIR=%s' % python_include,
