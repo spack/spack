@@ -7,18 +7,19 @@ from spack import *
 
 
 class Qwtpolar(QMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """The QwtPolar library contains classes for displaying values on a polar coordinate system."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://qwtpolar.sourceforge.io"
     url      = "https://sourceforge.net/projects/qwtpolar/files/qwtpolar/1.1.1/qwtpolar-1.1.1.tar.bz2"
 
     version('1.1.1', sha256='6168baa9dbc8d527ae1ebf2631313291a1d545da268a05f4caa52ceadbe8b295')
 
-    depends_on('qt')
+    depends_on('qt@4.4:')
     depends_on('qwt@6.1:')
 
-#    def qmake_args(self):
-#        # FIXME: If not needed delete this function
-#        args = []
-#        return args
+    def patch(self):
+        # Modify hardcoded prefix
+        filter_file(r'/usr/local/qwtpolar-\$\$QWT_POLAR_VERSION.*',
+                    self.prefix, 'qwtpolarconfig.pri')
+        # Don't build examples as they're causing qmake to throw errors
+        filter_file(r'QwtPolarExamples','', 'qwtpolarconfig.pri')
