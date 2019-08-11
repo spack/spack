@@ -32,7 +32,7 @@ class RDevtools(RPackage):
     depends_on('r-cli', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-pkgbuild@1.0.3:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-pkgload@1.0.2:', when='@2.0.0:', type=('build', 'run'))
-    depends_on('r-cmdcheck@1.3.3:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-rcmdcheck@1.3.3:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-remotes@2.1.0:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-roxygen2@6.1.1:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-sessioninfo@1.1.1:', when='@2.0.0:', type=('build', 'run'))
