@@ -43,7 +43,8 @@ class Precice(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('petsc@3.6:', when='+petsc')
     depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
-    depends_on('py-numpy@1.16.4', when='+python', type=('build', 'run'))
+    # numpy 1.17+ requires Python 3
+    depends_on('py-numpy@:1.16', when='+python', type=('build', 'run'))
 
     def cmake_args(self):
         """Populate cmake arguments for precice."""
