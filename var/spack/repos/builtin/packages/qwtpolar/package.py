@@ -7,7 +7,9 @@ from spack import *
 
 
 class Qwtpolar(QMakePackage):
-    """The QwtPolar library contains classes for displaying values on a polar coordinate system."""
+    """The QwtPolar library contains classes for displaying values on a polar
+    coordinate system.
+    """
 
     homepage = "https://qwtpolar.sourceforge.io"
     url      = "https://sourceforge.net/projects/qwtpolar/files/qwtpolar/1.1.1/qwtpolar-1.1.1.tar.bz2"
@@ -22,4 +24,4 @@ class Qwtpolar(QMakePackage):
         filter_file(r'/usr/local/qwtpolar-\$\$QWT_POLAR_VERSION.*',
                     self.prefix, 'qwtpolarconfig.pri')
         # Don't build examples as they're causing qmake to throw errors
-        filter_file(r'QwtPolarExamples','', 'qwtpolarconfig.pri')
+        filter_file(r'QwtPolarExamples', '', 'qwtpolarconfig.pri')
