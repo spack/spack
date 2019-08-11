@@ -32,4 +32,4 @@ class RJanitor(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-snakecase@0.9.2:', when='@1.1.0:', type=('build', 'run'))
     depends_on('r-purrr', when='@1.1.0:', type=('build', 'run'))
-    depends_on('r-rlamg', when='@1.1.0:', type=('build', 'run'))
+    depends_on('r-rlang', when='@1.1.0:', type=('build', 'run'))

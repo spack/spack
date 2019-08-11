@@ -52,7 +52,7 @@ class RSeurat(RPackage):
     depends_on('r-fnn', when='@:2.3.2', type=('build', 'run'))
     depends_on('r-vgam', when='@:2.3.2', type=('build', 'run'))
     depends_on('r-matrix@1.2.14:', type=('build', 'run'))
-    depends_on('r-colorbrewer', type=('build', 'run'))
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))
