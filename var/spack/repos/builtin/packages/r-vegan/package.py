@@ -18,7 +18,7 @@ class RVegan(RPackage):
     version('2.5-4', sha256='5116a440111fca49b5f95cfe888b180ff29a112e6301d5e2ac5cae0e628493e0')
     version('2.4-3', 'db17d4c4b9a4d421246abd5b36b00fec')
 
-    depends_on('r@3.4:')
+    depends_on('r@3.4:', type=('build', 'run'))
     depends_on('r-permute@0.9-0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

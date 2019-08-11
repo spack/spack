@@ -10,8 +10,9 @@ class RCrosstalk(RPackage):
     """Provides building blocks for allowing HTML widgets to communicate with
     each other, with Shiny or without (i.e. static .html files)."""
 
-    homepage = "https://cloud.r-project.org/web/packages/crosstalk/index.html"
+    homepage = "https://cloud.r-project.org/package=crosstalk"
     url      = "https://cloud.r-project.org/src/contrib/crosstalk_1.0.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/crosstalk"
 
     version('1.0.0', 'c13c21b81af2154be3f08870fd3a7077')
 

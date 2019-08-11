@@ -12,6 +12,7 @@ class RUuid(RPackage):
     Identifiers)."""
 
     homepage = "http://www.rforge.net/uuid"
-    url      = "https://cran.rstudio.com/src/contrib/uuid_0.1-2.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/uuid_0.1-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/uuid"
 
     version('0.1-2', 'f97d000c0b16bca455fb5bf2cd668ddf')

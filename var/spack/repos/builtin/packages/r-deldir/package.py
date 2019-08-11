@@ -13,7 +13,7 @@ class RDeldir(RPackage):
     tessellations to sub-windows. Calculates perimeters of tessellations.
     Summarises information about the tiles of the tessellation."""
 
-    homepage = "https://cloud.R-project.org/package=deldir"
+    homepage = "https://cloud.r-project.org/package=deldir"
     url      = "https://cloud.r-project.org/src/contrib/deldir_0.1-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/deldir"
 
@@ -21,4 +21,4 @@ class RDeldir(RPackage):
     version('0.1-21', sha256='b9dabcc1813c7a0f8edaf720a94bdd611a83baf3d3e52e861d352369e815690c')
     version('0.1-14', '6a22b13d962615cd9d51b6eae403409f')
 
-    depends_on('r@0.99:')
+    depends_on('r@0.99:', type=('build', 'run'))

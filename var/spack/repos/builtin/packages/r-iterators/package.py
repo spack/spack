@@ -10,7 +10,7 @@ class RIterators(RPackage):
     """Support for iterators, which allow a programmer to traverse through all
     the elements of a vector, list, or other collection of data."""
 
-    homepage = "https://cloud.r-project.org/web/packages/iterators/index.html"
+    homepage = "https://cloud.r-project.org/package=iterators"
     url      = "https://cloud.r-project.org/src/contrib/iterators_1.0.8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/iterators"
 

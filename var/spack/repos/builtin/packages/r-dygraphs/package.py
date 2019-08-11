@@ -13,7 +13,7 @@ class RDygraphs(RPackage):
     axis-display and interactive features like zoom/pan and series/point
     highlighting."""
 
-    homepage = "https://cloud.r-project.org/web/packages/dygraphs/index.html"
+    homepage = "https://cloud.r-project.org/package=dygraphs"
     url      = "https://cloud.r-project.org/src/contrib/dygraphs_0.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dygraphs"
 

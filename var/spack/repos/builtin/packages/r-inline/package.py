@@ -11,7 +11,7 @@ class RInline(RPackage):
     inlined C, C++ or Fortran code supporting .C and .Call calling
     conventions."""
 
-    homepage = "https://cloud.r-project.org/web/packages/inline/index.html"
+    homepage = "https://cloud.r-project.org/package=inline"
     url      = "https://cloud.r-project.org/src/contrib/inline_0.3.14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/inline"
 

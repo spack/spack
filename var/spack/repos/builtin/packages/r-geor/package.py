@@ -10,7 +10,7 @@ class RGeor(RPackage):
     """Geostatistical analysis including traditional, likelihood-based
        and Bayesian methods."""
 
-    homepage = "https://cloud.r-project.org/web/packages/geoR/"
+    homepage = "https://cloud.r-project.org/package=geoR"
     url      = "https://cloud.r-project.org/src/contrib/geoR_1.7-5.2.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/geoR"
 

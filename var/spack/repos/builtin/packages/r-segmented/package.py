@@ -11,7 +11,7 @@ class RSegmented(RPackage):
     one or more segmented (i.e., piecewise-linear) relationships. Several
     variables with multiple breakpoints are allowed."""
 
-    homepage = "https://cloud.R-project.org/package=segmented"
+    homepage = "https://cloud.r-project.org/package=segmented"
     url      = "https://cloud.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/segmented"
 

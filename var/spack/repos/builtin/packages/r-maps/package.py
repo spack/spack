@@ -10,7 +10,7 @@ class RMaps(RPackage):
     """Display of maps. Projection code and larger maps are in separate
     packages ('mapproj' and 'mapdata')."""
 
-    homepage = "https://cloud.r-project.org/"
+    homepage = "https://cloud.r-project.org/package=maps"
     url      = "https://cloud.r-project.org/src/contrib/maps_3.1.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/maps"
 

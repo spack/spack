@@ -19,7 +19,7 @@ class RJsonlite(RPackage):
     use with dynamic data in systems and applications."""
 
     homepage = "https://github.com/jeroenooms/jsonlite"
-    url      = "https://cran.rstudio.com/src/contrib/jsonlite_1.5.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/jsonlite_1.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/jsonlite"
 
     version('1.6', sha256='88c5b425229966b7409145a6cabc72db9ed04f8c37ee95901af0146bb285db53')

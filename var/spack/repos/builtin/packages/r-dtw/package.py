@@ -11,7 +11,7 @@ class RDtw(RPackage):
     in R. DTW computes the optimal (least cumulative distance) alignment
     between points of two time series."""
 
-    homepage = "https://cloud.r-project.org/web/packages/dtw/index.html"
+    homepage = "https://cloud.r-project.org/package=dtw"
     url      = "https://cloud.r-project.org/src/contrib/dtw_1.18-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dtw"
 

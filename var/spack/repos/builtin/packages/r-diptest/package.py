@@ -9,7 +9,7 @@ from spack import *
 class RDiptest(RPackage):
     """diptest: Hartigan's Dip Test Statistic for Unimodality - Corrected"""
 
-    homepage = "https://cloud.R-project.org/package=diptest"
+    homepage = "https://cloud.r-project.org/package=diptest"
     url      = "https://cloud.r-project.org/src/contrib/diptest_0.75-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/diptest"
 

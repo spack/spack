@@ -10,7 +10,7 @@ class RPolynom(RPackage):
     """A collection of functions to implement a class for univariate polynomial
     manipulations."""
 
-    homepage = "https://cran.r-project.org/package=polynom"
+    homepage = "https://cloud.r-project.org/package=polynom"
     url      = "https://cloud.r-project.org/src/contrib/polynom_1.4-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/polynom"
 

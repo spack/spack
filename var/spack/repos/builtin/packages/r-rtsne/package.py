@@ -10,7 +10,7 @@ class RRtsne(RPackage):
     """An R wrapper around the fast T-distributed Stochastic Neighbor
     Embedding implementation."""
 
-    homepage = "https://cloud.R-project.org/package=Rtsne"
+    homepage = "https://cloud.r-project.org/package=Rtsne"
     url      = "https://cloud.r-project.org/src/contrib/Rtsne_0.13.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Rtsne"
 

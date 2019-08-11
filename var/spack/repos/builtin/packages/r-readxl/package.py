@@ -15,7 +15,7 @@ class RReadxl(RPackage):
 
     homepage = "http://readxl.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/readxl_1.1.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/readxl/readxl_1.0.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/readxl"
 
     version('1.3.1', sha256='24b441713e2f46a3e7c6813230ad6ea4d4ddf7e0816ad76614f33094fbaaaa96')
     version('1.3.0', sha256='8379d1026dcfc662d073eb1c69ed1d90aa6439d6cb3c6fc1b5d1db4f51b3fadc')

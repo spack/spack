@@ -12,7 +12,7 @@ class RFormula(RPackage):
     side and/or multiple responses on the left-hand side."""
 
     homepage = "https://cloud.r-project.org/package=Formula"
-    url      = "https://cran.rstudio.com/src/contrib/Formula_1.2-2.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/Formula_1.2-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Formula"
 
     version('1.2-3', sha256='1411349b20bd09611a9fd0ee6d15f780c758ad2b0e490e908facb49433823872')

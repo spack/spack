@@ -10,9 +10,9 @@ class RPbapply(RPackage):
     """A lightweight package that adds progress bar to vectorized R
     apply functions."""
 
-    homepage = "https://cloud.r-project.org/web/packages/pbapply/index.html"
+    homepage = "https://cloud.r-project.org/package=pbapply"
     url      = "https://cloud.r-project.org/src/contrib/pbapply_1.3-3.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/pbapply"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pbapply"
 
     version('1.4-1', sha256='b3633349181db944e1dfc4422b4728a6562e454117a232cbb51633906cd27cad')
     version('1.3-4', sha256='cdfdaf9b8aecbe48daac858aecaf65a766b74a363d1eb7cd6ebf27c0549f6552')

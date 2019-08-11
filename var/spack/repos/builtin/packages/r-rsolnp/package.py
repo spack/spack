@@ -10,9 +10,9 @@ class RRsolnp(RPackage):
     """General Non-linear Optimization Using Augmented Lagrange Multiplier
     Method."""
 
-    homepage = "https://cran.r-project.org/package=Rsolnp"
-    url      = "https://cran.rstudio.com/src/contrib/Rsolnp_1.16.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/Rsolnp"
+    homepage = "https://cloud.r-project.org/package=Rsolnp"
+    url      = "https://cloud.r-project.org/src/contrib/Rsolnp_1.16.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/Rsolnp"
 
     version('1.16', '507e1e1a64f5f1d32b7e4e12ed19599f')
 

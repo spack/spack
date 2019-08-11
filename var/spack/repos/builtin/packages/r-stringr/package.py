@@ -13,7 +13,7 @@ class RStringr(RPackage):
     vectors in the same way, and the output from one function is easy to feed
     into the input of another."""
 
-    homepage = "https://cloud.r-project.org/web/packages/stringr/index.html"
+    homepage = "https://cloud.r-project.org/package=stringr"
     url      = "https://cloud.r-project.org/src/contrib/stringr_1.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/stringr"
 

@@ -9,7 +9,7 @@ from spack import *
 class RRegistry(RPackage):
     """Provides a generic infrastructure for creating and using registries."""
 
-    homepage = "https://cloud.r-project.org/web/packages/registry/index.html"
+    homepage = "https://cloud.r-project.org/package=registry"
     url      = "https://cloud.r-project.org/src/contrib/registry_0.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/registry"
 

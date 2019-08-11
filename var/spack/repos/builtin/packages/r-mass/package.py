@@ -10,7 +10,7 @@ class RMass(RPackage):
     """Functions and datasets to support Venables and Ripley, "Modern Applied
     Statistics with S" (4th edition, 2002)."""
 
-    homepage = "https://cloud.r-project.org/web/packages/MASS/index.html"
+    homepage = "https://cloud.r-project.org/package=MASS"
     url      = "https://cloud.r-project.org/src/contrib/MASS_7.3-47.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/MASS"
 

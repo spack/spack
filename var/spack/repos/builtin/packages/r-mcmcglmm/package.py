@@ -9,7 +9,7 @@ from spack import *
 class RMcmcglmm(RPackage):
     """MCMC Generalised Linear Mixed Models."""
 
-    homepage = "https://cloud.r-project.org/web/packages/MCMCglmm/index.html"
+    homepage = "https://cloud.r-project.org/package=MCMCglmm"
     url      = "https://cloud.r-project.org/src/contrib/MCMCglmm_2.25.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/MCMCglmm"
 

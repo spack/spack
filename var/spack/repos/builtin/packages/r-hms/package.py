@@ -10,8 +10,8 @@ class RHms(RPackage):
     """Implements an S3 class for storing and formatting time-of-day values,
        based on the 'difftime' class."""
 
-    homepage = "https://cran.rstudio.com/web/packages/hms/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/hms_0.3.tar.gz"
+    homepage = "https://cloud.r-project.org/package=hms"
+    url      = "https://cloud.r-project.org/src/contrib/hms_0.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/hms"
 
     version('0.5.0', sha256='a87872665c3bf3901f597d78c152e7805f7129e4dbe27397051de4cf1a76561b')

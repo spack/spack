@@ -13,6 +13,7 @@ class RMgraster(RPackage):
 
     homepage = "https://github.com/braithwaite/MGRASTer/"
     url      = "https://cloud.r-project.org/src/contrib/MGRASTer_0.9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/MGRASTer"
 
     version('0.9', '902c7ad4180b858d6b6428ea26d7652a')
 

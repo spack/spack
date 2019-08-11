@@ -9,7 +9,7 @@ from spack import *
 class RMisc3d(RPackage):
     """A collection of miscellaneous 3d plots, including isosurfaces."""
 
-    homepage = "https://cloud.r-project.org/web/packages/misc3d/index.html"
+    homepage = "https://cloud.r-project.org/package=misc3d"
     url      = "https://cloud.r-project.org/src/contrib/misc3d_0.8-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/misc3d"
 

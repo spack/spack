@@ -12,7 +12,7 @@ class RKnitr(RPackage):
     Literate Programming techniques."""
 
     homepage = "https://cloud.r-project.org/package=knitr"
-    url      = "https://cran.rstudio.com/src/contrib/knitr_1.14.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/knitr_1.14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/knitr"
 
     version('1.24', sha256='e80c2043b445a7e576b62ae8510cce89322660fe388881d799a706d35cd27b89')

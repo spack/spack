@@ -12,7 +12,7 @@ class RDbi(RPackage):
     virtual and need to be extended by the various R/DBMS implementations."""
 
     homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/DBI_0.7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/DBI"
 
     version('1.0.0', sha256='ff16f118eb3f759183441835e932b87358dd80ab9800ce576a8f3df1b6f01cf5')

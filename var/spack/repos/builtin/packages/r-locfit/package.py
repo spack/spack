@@ -9,8 +9,8 @@ from spack import *
 class RLocfit(RPackage):
     """Local regression, likelihood and density estimation."""
 
-    homepage = "https://cran.rstudio.com/web/packages/locfit/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/locfit_1.5-9.1.tar.gz"
+    homepage = "https://cloud.r-project.org/package=locfit"
+    url      = "https://cloud.r-project.org/src/contrib/locfit_1.5-9.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/locfit"
 
     version('1.5-9.1', '38af7791c9cda78e2804020e65ac7fb4')

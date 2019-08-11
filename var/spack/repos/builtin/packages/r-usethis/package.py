@@ -18,7 +18,7 @@ class RUsethis(RPackage):
 
     version('1.5.1', sha256='9e3920a04b0df82adf59eef2c1b2b4d835c4a757a51b3c163b8fc619172f561d')
 
-    depends_on('r@3.2:')
+    depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-clipr@0.3.0:', type=('build', 'run'))
     depends_on('r-clisymbols', type=('build', 'run'))
     depends_on('r-crayon', type=('build', 'run'))

@@ -10,7 +10,7 @@ class RQuadprog(RPackage):
     """This package contains routines and documentation for solving
        quadratic programming problems."""
 
-    homepage = "https://cloud.r-project.org/web/packages/quadprog/index.html"
+    homepage = "https://cloud.r-project.org/package=quadprog"
     url      = "https://cloud.r-project.org/src/contrib/quadprog_1.5-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/quadprog"
 

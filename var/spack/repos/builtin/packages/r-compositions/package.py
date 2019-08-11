@@ -9,7 +9,7 @@ from spack import *
 class RCompositions(RPackage):
     """Compositional Data Analysis"""
 
-    homepage = "https://cloud.r-project.org/web/packages/compositions/index.html"
+    homepage = "https://cloud.r-project.org/package=compositions"
     url      = "https://cloud.r-project.org/src/contrib/compositions_1.40-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/compositions"
 

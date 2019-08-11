@@ -15,4 +15,4 @@ class RMultitaper(RPackage):
 
     version('1.0-14', sha256='c84c122541dc2874131446e23b212259b3b00590d701efee49e6740fd74a8d13')
 
-    depends_on('r@3.0:', type='build')
+    depends_on('r@3.0:', type=('build', 'run'))

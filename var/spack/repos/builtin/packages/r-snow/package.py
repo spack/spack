@@ -9,7 +9,7 @@ from spack import *
 class RSnow(RPackage):
     """Support for simple parallel computing in R."""
 
-    homepage = "https://cloud.r-project.org/web/packages/snow/index.html"
+    homepage = "https://cloud.r-project.org/package=snow"
     url      = "https://cloud.r-project.org/src/contrib/snow_0.4-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/snow"
 

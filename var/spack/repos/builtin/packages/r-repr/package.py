@@ -19,7 +19,7 @@ class RRepr(RPackage):
     version('1.0.0', sha256='98b2eb1058c1cb2caa8f98708b63726f5564b45de03d38b95ff6b963a8261f49')
     version('0.9', 'db5ff74893063b492f684e42283070bd')
 
-    depends_on('r@3.0.1:')
+    depends_on('r@3.0.1:', type=('build', 'run'))
     depends_on('r-htmltools', when='@0.13:', type=('build', 'run'))
     depends_on('r-base64enc', when='@0.13:', type=('build', 'run'))
     depends_on('r-jsonlite', when='@0.19.1:', type=('build', 'run'))

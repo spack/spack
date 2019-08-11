@@ -11,7 +11,7 @@ class RPlot3d(RPackage):
        slice plots, surface plots, scatter plots, etc. Includes data sets from
        oceanography."""
 
-    homepage = "https://cloud.R-project.org/package=plot3D"
+    homepage = "https://cloud.r-project.org/package=plot3D"
     url      = "https://cloud.r-project.org/src/contrib/plot3D_1.1.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/plot3D"
 

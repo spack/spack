@@ -15,7 +15,7 @@ class RLearnbayes(RPackage):
     for regression models, hierarchical models, Bayesian tests, and
     illustrations of Gibbs sampling."""
 
-    homepage = "https://cloud.R-project.org/package=LearnBayes"
+    homepage = "https://cloud.r-project.org/package=LearnBayes"
     url      = "https://cloud.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/LearnBayes"
 

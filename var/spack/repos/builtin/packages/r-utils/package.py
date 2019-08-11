@@ -11,7 +11,7 @@ class RUtils(RPackage):
     developing R packages."""
 
     homepage = "https://github.com/HenrikBengtsson/R.utils"
-    url      = "https://cran.rstudio.com/src/contrib/R.utils_2.5.0.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/R.utils_2.5.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/R.utils"
 
     version('2.9.0', sha256='b2aacc5a55d3ea86c41ac576d2583e446af145f4cb1103ad7b6f95b09ab09ff0')

@@ -12,7 +12,7 @@ class RGplots(RPackage):
     """Various R Programming Tools for Plotting Data."""
 
     homepage = "https://cloud.r-project.org/package=gplots"
-    url      = "https://cran.rstudio.com/src/contrib/gplots_3.0.1.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/gplots_3.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gplots"
 
     version('3.0.1.1', sha256='7db103f903a25d174cddcdfc7b946039b61e236c95084b90ad17f1a41da3770c')

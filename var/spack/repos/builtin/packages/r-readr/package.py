@@ -12,9 +12,9 @@ class RReadr(RPackage):
        flexibly parse many types of data found in the wild, while still cleanly
        failing when data unexpectedly changes."""
 
-    homepage = "https://cran.rstudio.com/web/packages/readr/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/readr_1.1.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/readr/"
+    homepage = "https://cloud.r-project.org/package=readr"
+    url      = "https://cloud.r-project.org/src/contrib/readr_1.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/readr"
 
     version('1.3.1', sha256='33f94de39bb7f2a342fbb2bd4e5afcfec08798eac39672ee18042ac0b349e4f3')
     version('1.1.1', 'cffb6669664f6a0f6fe172542e64cb47')

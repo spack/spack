@@ -9,7 +9,7 @@ from spack import *
 class RGtable(RPackage):
     """Tools to make it easier to work with "tables" of 'grobs'."""
 
-    homepage = "https://cloud.r-project.org/web/packages/gtable/index.html"
+    homepage = "https://cloud.r-project.org/package=gtable"
     url      = "https://cloud.r-project.org/src/contrib/gtable_0.2.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gtable"
 

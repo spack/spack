@@ -12,7 +12,7 @@ class RColorspace(RPackage):
     Qualitative, sequential, and diverging color palettes based on HCL colors
     are provided."""
 
-    homepage = "https://cloud.r-project.org/web/packages/colorspace/index.html"
+    homepage = "https://cloud.r-project.org/package=colorspace"
     url      = "https://cloud.r-project.org/src/contrib/colorspace_1.3-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/colorspace"
 

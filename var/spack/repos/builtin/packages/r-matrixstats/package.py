@@ -14,8 +14,8 @@ class RMatrixstats(RPackage):
        vector-based methods, e.g. binMeans(), madDiff() and
        weightedMedian()."""
 
-    homepage = "https://cran.rstudio.com/web/packages/matrixStats/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/matrixStats_0.52.2.tar.gz"
+    homepage = "https://cloud.r-project.org/package=matrixStats"
+    url      = "https://cloud.r-project.org/src/contrib/matrixStats_0.52.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/matrixStats"
 
     version('0.54.0', sha256='8f0db4e181300a208b9aedbebfdf522a2626e6675d2662656efb8ba71b05a06f')

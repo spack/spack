@@ -15,7 +15,7 @@ class RForeach(RPackage):
     evaluation of a function. Using foreach without side effects also
     facilitates executing the loop in parallel."""
 
-    homepage = "https://cloud.r-project.org/web/packages/foreach/index.html"
+    homepage = "https://cloud.r-project.org/package=foreach"
     url      = "https://cloud.r-project.org/src/contrib/foreach_1.4.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/foreach"
 

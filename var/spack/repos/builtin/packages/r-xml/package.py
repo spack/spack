@@ -11,7 +11,7 @@ class RXml(RPackage):
     (including DTDs), both local and accessible via HTTP or FTP. Also offers
     access to an 'XPath' "interpreter"."""
 
-    homepage = "https://cloud.r-project.org/web/packages/XML/index.html"
+    homepage = "https://cloud.r-project.org/package=XML"
     url      = "https://cloud.r-project.org/src/contrib/XML_3.98-1.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/XML"
 

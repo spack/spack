@@ -10,7 +10,7 @@ class RInum(RPackage):
     """Enum-type representation of vectors and representation of intervals,
     including a method of coercing variables in data frames."""
 
-    homepage = "https://cran.r-project.org/package=inum"
+    homepage = "https://cloud.r-project.org/package=inum"
     url      = "https://cloud.r-project.org/src/contrib/inum_1.0-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/inum"
 

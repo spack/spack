@@ -17,7 +17,7 @@ class RFilehash(RPackage):
     are currently available and new formats can easily be incorporated by third
     parties for use in the 'filehash' framework."""
 
-    homepage = 'https://cloud.r-project.org/'
+    homepage = "https://cloud.r-project.org/package=filehash"
     url      = "https://cloud.r-project.org/src/contrib/filehash_2.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/filehash"
 

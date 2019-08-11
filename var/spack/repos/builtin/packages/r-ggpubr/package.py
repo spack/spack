@@ -18,7 +18,7 @@ class RGgpubr(RPackage):
     version('0.2', sha256='06c3075d8c452840662f5d041c3d966494b87254a52a858c849b9e1e96647766')
     version('0.1.2', '42a5749ae44121597ef511a7424429d1')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-ggrepel', type=('build', 'run'))

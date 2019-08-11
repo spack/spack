@@ -15,9 +15,9 @@ class RCowplot(RPackage):
     theme that is used in the Wilke lab, hence the package name,
     which stands for Claus O. Wilke's plot package."""
 
-    homepage = "https://cran.r-project.org/package=cowplot"
-    url      = "https://cran.rstudio.com/src/contrib/cowplot_0.8.0.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/cowplot"
+    homepage = "https://cloud.r-project.org/package=cowplot"
+    url      = "https://cloud.r-project.org/src/contrib/cowplot_0.8.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/cowplot"
 
     version('1.0.0', sha256='70f9a7c46d10f409d1599f1afc9fd3c947051cf2b430f01d903c64ef1e6c98a5')
     version('0.9.3', sha256='3e10475fd7506ea9297ed72eb1a3acf858c6fa99d26e46fc39654eba000c3dcb')

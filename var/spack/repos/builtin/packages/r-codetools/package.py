@@ -9,7 +9,7 @@ from spack import *
 class RCodetools(RPackage):
     """Code analysis tools for R."""
 
-    homepage = "https://cloud.r-project.org/web/packages/codetools/index.html"
+    homepage = "https://cloud.r-project.org/package=codetools"
     url      = "https://cloud.r-project.org/src/contrib/codetools_0.2-15.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/codetools"
 

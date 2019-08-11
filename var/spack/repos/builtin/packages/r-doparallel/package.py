@@ -10,7 +10,7 @@ class RDoparallel(RPackage):
     """Provides a parallel backend for the %dopar% function using the parallel
     package."""
 
-    homepage = "https://cloud.r-project.org/web/packages/doParallel/index.html"
+    homepage = "https://cloud.r-project.org/package=doParallel"
     url      = "https://cloud.r-project.org/src/contrib/doParallel_1.0.10.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/doParallel"
 

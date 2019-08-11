@@ -11,7 +11,7 @@ class RGlobaloptions(RPackage):
        filtering on the values, making options invisible or private."""
 
     homepage = "https://cloud.r-project.org/package=GlobalOptions"
-    url      = "https://cran.rstudio.com/src/contrib/GlobalOptions_0.0.12.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/GlobalOptions_0.0.12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/GlobalOptions"
 
     version('0.1.0', sha256='567a0a51f6b7b14127302f00e6e4944befd4964c069f96a9e61256e8c3c79ef2')

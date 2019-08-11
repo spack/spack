@@ -10,7 +10,7 @@ class RMitools(RPackage):
     """Tools to perform analyses and combine results from multiple-imputation
     datasets."""
 
-    homepage = "https://cran.r-project.org/package=mitools"
+    homepage = "https://cloud.r-project.org/package=mitools"
     url      = "https://cloud.r-project.org/src/contrib/mitools_2.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/mitools"
 

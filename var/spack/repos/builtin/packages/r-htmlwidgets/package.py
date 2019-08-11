@@ -12,7 +12,7 @@ class RHtmlwidgets(RPackage):
     applications."""
 
     homepage = "https://cloud.r-project.org/package=htmlTable"
-    url      = "https://cran.rstudio.com/src/contrib/htmlwidgets_0.9.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/htmlwidgets_0.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/htmlwidgets"
 
     version('1.3', sha256='f1e4ffabc29e6cfe857f627da095be3cfcbe0e1f02ae75e572f10b4a026c5a12')

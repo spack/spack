@@ -9,7 +9,7 @@ from spack import *
 class RBayesm(RPackage):
     """Bayesian Inference for Marketing/Micro-Econometrics"""
 
-    homepage = "https://cloud.r-project.org/web/packages/bayesm/index.html"
+    homepage = "https://cloud.r-project.org/package=bayesm"
     url      = "https://cloud.r-project.org/src/contrib/bayesm_3.1-0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/bayesm"
 

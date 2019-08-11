@@ -22,4 +22,4 @@ class RPermute(RPackage):
     version('0.9-5', sha256='d2885384a07497e8df273689d6713fc7c57a7c161f6935f3572015e16ab94865')
     version('0.9-4', '569fc2442d72a1e3b7e2d456019674c9')
 
-    depends_on('r@2.14:')
+    depends_on('r@2.14:', type=('build', 'run'))

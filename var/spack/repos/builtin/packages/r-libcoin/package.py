@@ -13,7 +13,7 @@ class RLibcoin(RPackage):
     CRAN package 'coin' implements all user interfaces and is ready to be used
     by anyone."""
 
-    homepage = "https://cran.r-project.org/package=libcoin"
+    homepage = "https://cloud.r-project.org/package=libcoin"
     url      = "https://cloud.r-project.org/src/contrib/libcoin_1.0-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/libcoin"
 

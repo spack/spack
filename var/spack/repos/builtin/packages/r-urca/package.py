@@ -10,7 +10,7 @@ class RUrca(RPackage):
     """Unit root and cointegration tests encountered in applied econometric
     analysis are implemented."""
 
-    homepage = "https://cran.r-project.org/package=urca"
+    homepage = "https://cloud.r-project.org/package=urca"
     url      = "https://cloud.r-project.org/src/contrib/urca_1.3-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/urca"
 

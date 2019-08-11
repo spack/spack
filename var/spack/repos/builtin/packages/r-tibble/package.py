@@ -11,7 +11,7 @@ class RTibble(RPackage):
     capabilities than traditional data frames."""
 
     homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/tibble_1.3.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tibble"
 
     version('2.1.3', sha256='9a8cea9e6b5d24a7e9bf5f67ab38c40b2b6489eddb0d0edb8a48a21ba3574e1a')
@@ -23,8 +23,7 @@ class RTibble(RPackage):
     version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
     version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
 
-    depends_on('r@3.1.2:')
-
+    depends_on('r@3.1.2:', type=('build', 'run'))
     depends_on('r-assertthat', type=('build', 'run'), when='@:1.3.1')
     depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
     depends_on('r-rcpp@0.12.3:', type=('build', 'run'), when='@:1.3.4')

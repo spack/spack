@@ -9,7 +9,7 @@ from spack import *
 class RGridbase(RPackage):
     """Integration of base and grid graphics."""
 
-    homepage = "https://cloud.r-project.org/web/packages/gridBase/index.html"
+    homepage = "https://cloud.r-project.org/package=gridBase"
     url      = "https://cloud.r-project.org/src/contrib/gridBase_0.4-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gridBase"
 

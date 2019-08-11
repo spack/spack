@@ -20,4 +20,4 @@ class RKernlab(RPackage):
     version('0.9-26', sha256='954940478c6fcf60433e50e43cf10d70bcb0a809848ca8b9d683bf371cd56077')
     version('0.9-25', '1182a2a336a79fd2cf70b4bc5a35353f')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))

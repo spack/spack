@@ -11,7 +11,7 @@ class RForeign(RPackage):
     Info, Minitab, S, SAS, SPSS, Stata, Systat and Weka and for reading and
     writing some dBase files."""
 
-    homepage = "https://cloud.r-project.org/web/packages/foreign/index.html"
+    homepage = "https://cloud.r-project.org/package=foreign"
     url      = "https://cloud.r-project.org/src/contrib/foreign_0.8-66.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/foreign"
 

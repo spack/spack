@@ -11,7 +11,7 @@ class RRcppprogress(RPackage):
     computations taking place in c++ code, and support for interrupting
     those computations even in multithreaded code, typically using OpenMP."""
 
-    homepage = "https://cloud.r-project.org/web/packages/RcppProgress/index.html"
+    homepage = "https://cloud.r-project.org/package=RcppProgress"
     url      = "https://cloud.r-project.org/src/contrib/RcppProgress_0.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppProgress"
 

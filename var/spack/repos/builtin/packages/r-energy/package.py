@@ -9,7 +9,7 @@ from spack import *
 class REnergy(RPackage):
     """E-Statistics: Multivariate Inference via the Energy of Data"""
 
-    homepage = "https://cloud.r-project.org/web/packages/energy/index.html"
+    homepage = "https://cloud.r-project.org/package=energy"
     url      = "https://cloud.r-project.org/src/contrib/energy_1.7-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/energy"
 

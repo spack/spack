@@ -11,7 +11,7 @@ class RSfsmisc(RPackage):
     ETH Zurich, quite a few related to graphics;
     some were ported from S-plus."""
 
-    homepage = "https://cloud.r-project.org/web/packages/sfsmisc/index.html"
+    homepage = "https://cloud.r-project.org/package=sfsmisc"
     url      = "https://cloud.r-project.org/src/contrib/sfsmisc_1.1-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/sfsmisc"
 

@@ -13,7 +13,7 @@ class RMagrittr(RPackage):
     support for the type of right-hand side expressions. For more information,
     see package vignette."""
 
-    homepage = "https://cloud.r-project.org/web/packages/magrittr/index.html"
+    homepage = "https://cloud.r-project.org/package=magrittr"
     url      = "https://cloud.r-project.org/src/contrib/magrittr_1.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/magrittr"
 

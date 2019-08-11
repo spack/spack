@@ -11,7 +11,7 @@ class RDeoptimr(RPackage):
        Evolution stochastic algorithm for global optimization of
        nonlinear programming problems."""
 
-    homepage = "https://cloud.r-project.org/web/packages/DEoptimR/index.html"
+    homepage = "https://cloud.r-project.org/package=DEoptimR"
     url      = "https://cloud.r-project.org/src/contrib/DEoptimR_1.0-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/DEoptimR"
 

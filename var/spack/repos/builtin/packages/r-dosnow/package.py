@@ -10,7 +10,7 @@ class RDosnow(RPackage):
     """Provides a parallel backend for the %dopar% function using the snow
     package of Tierney, Rossini, Li, and Sevcikova."""
 
-    homepage = "https://cran.r-project.org/package=doSNOW"
+    homepage = "https://cloud.r-project.org/package=doSNOW"
     url      = "https://cloud.r-project.org/src/contrib/doSNOW_1.0.18.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/doSNOW"
 

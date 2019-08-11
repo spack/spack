@@ -12,7 +12,7 @@ class RAbind(RPackage):
     higher-dimensional arrays. Also provides functions 'adrop', 'asub', and
     'afill' for manipulating, extracting and replacing data in arrays."""
 
-    homepage = "https://cloud.r-project.org/"
+    homepage = "https://cloud.r-project.org/package=abind"
     url      = "https://cloud.r-project.org/src/contrib/abind_1.4-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/abind"
 

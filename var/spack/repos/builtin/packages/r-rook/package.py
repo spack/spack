@@ -11,7 +11,7 @@ class RRook(RPackage):
     for building and running Rook applications. To get started, be sure and
     read the 'Rook' help file first."""
 
-    homepage = "https://cran.r-project.org/package=Rook"
+    homepage = "https://cloud.r-project.org/package=Rook"
     url      = "https://cloud.r-project.org/src/contrib/Rook_1.1-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Rook"
 

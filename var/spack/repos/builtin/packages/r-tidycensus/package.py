@@ -13,9 +13,9 @@ class RTidycensus(RPackage):
     data frames, and optionally returns a list-column with feature
     geometry for many geographies."""
 
-    homepage = "https://cran.r-project.org/package=tidycensus"
-    url      = "https://cran.rstudio.com/src/contrib/tidycensus_0.3.1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/tidycensus"
+    homepage = "https://cloud.r-project.org/package=tidycensus"
+    url      = "https://cloud.r-project.org/src/contrib/tidycensus_0.3.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/tidycensus"
 
     version('0.9.2', sha256='2454525301caff9eaaf6ebe14f58706ece1fbace6187ce8bf3fff04c842b9536')
     version('0.3.1', '420d046b5a408d321e775c3d410e7699')

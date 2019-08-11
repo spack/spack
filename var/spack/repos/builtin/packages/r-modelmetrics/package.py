@@ -18,7 +18,6 @@ class RModelmetrics(RPackage):
     version('1.2.0', sha256='3021ae88733695a35d66e279e8e61861431f14c9916a341f0a562f675cf6ede9')
     version('1.1.0', 'd43175001f0531b8810d2802d76b7b44')
 
-    depends_on('r@3.2.2:')
-
+    depends_on('r@3.2.2:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-data-table', when='@1.2.0:', type=('build', 'run'))

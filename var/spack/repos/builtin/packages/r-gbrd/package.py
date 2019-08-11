@@ -10,7 +10,7 @@ class RGbrd(RPackage):
     """Provides utilities for processing Rd objects and files. Extract argument
     descriptions and other parts of the help pages of functions."""
 
-    homepage = "https://cran.r-project.org/package=gbRd"
+    homepage = "https://cloud.r-project.org/package=gbRd"
     url      = "https://cloud.r-project.org/src/contrib/gbRd_0.4-11.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gbRd"
 

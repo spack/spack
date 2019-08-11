@@ -11,7 +11,7 @@ class RAmap(RPackage):
        (With robust methods, and parallelized functions)."""
 
     homepage = "http://mulcyber.toulouse.inra.fr/projects/amap/"
-    url      = "https://cran.rstudio.com/src/contrib/amap_0.8-16.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/amap_0.8-16.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/amap/"
 
     version('0.8-17', sha256='6b8473d1d35a9cbc611661882c8f681162e8f913f911ccd51629200ae72289c6')

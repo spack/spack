@@ -11,9 +11,9 @@ class RDiffusionmap(RPackage):
     computations taking place in c++ code, and support for interrupting those
     computations even in multithreaded code, typically using OpenMP."""
 
-    homepage = "https://cloud.r-project.org/web/packages/diffusionMap/index.html"
+    homepage = "https://cloud.r-project.org/package=diffusionMap"
     url      = "https://cloud.r-project.org/src/contrib/diffusionMap_1.1-0.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/diffusionMap"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/diffusionMap"
 
     version('1.1-0.1', sha256='b24cf841af2566ac36f4ede2885f2ff355a7905398444d6d89747315d99a8486')
     version('1.1-0', 'cc7d728087ba08d9299ae3a64a8d8919')

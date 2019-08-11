@@ -10,7 +10,7 @@ class RRstudioapi(RPackage):
     """Access the RStudio API (if available) and provide informative error
     messages when it's not."""
 
-    homepage = "https://cloud.r-project.org/web/packages/rstudioapi/index.html"
+    homepage = "https://cloud.r-project.org/package=rstudioapi"
     url      = "https://cloud.r-project.org/src/contrib/rstudioapi_0.7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rstudioapi"
 

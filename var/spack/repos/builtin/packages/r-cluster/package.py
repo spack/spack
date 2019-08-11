@@ -11,8 +11,8 @@ class RCluster(RPackage):
     Rousseeuw, Anja Struyf and Mia Hubert, based on Kaufman and Rousseeuw
     (1990) "Finding Groups in Data"."""
 
-    homepage = "https://cloud.r-project.org/web/packages/cluster/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.7-1.tar.gz"
+    homepage = "https://cloud.r-project.org/package=cluster"
+    url      = "https://cloud.r-project.org/src/contrib/cluster_2.0.7-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/cluster"
 
     version('2.1.0', sha256='eaf955bef8f616ea563351ec7f597c445aec43e65991ca975e382ef1fd70aa14')

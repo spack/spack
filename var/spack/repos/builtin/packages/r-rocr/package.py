@@ -24,7 +24,7 @@ class RRocr(RPackage):
     three commands and reasonable default values for all optional
     parameters."""
     homepage = "https://cloud.r-project.org/package=ROCR"
-    url      = "https://cran.rstudio.com/src/contrib/ROCR_1.0-7.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/ROCR_1.0-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ROCR"
 
     version('1.0-7', '46cbd43ae87fc4e1eff2109529a4820e')

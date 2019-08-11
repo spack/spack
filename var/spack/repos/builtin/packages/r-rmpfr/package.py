@@ -21,7 +21,7 @@ class RRmpfr(RPackage):
     version('0.7-1', sha256='9b3021617a22b0710b0f1acc279290762317ff123fd9e8fd03f1449f4bbfe204')
     version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
 
-    depends_on('r@3.3.0:')
+    depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-gmp@0.5-8:', type=('build', 'run'))
     depends_on('mpfr@3.0.0:')
     depends_on('gmp@4.2.3:')

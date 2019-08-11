@@ -12,7 +12,7 @@ class RCoda(RPackage):
        diagnostic tests of convergence to the equilibrium distribution
        of the Markov chain."""
 
-    homepage = "https://cloud.r-project.org/web/packages/coda/index.html"
+    homepage = "https://cloud.r-project.org/package=coda"
     url      = "https://cloud.r-project.org/src/contrib/coda_0.19-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/coda"
 

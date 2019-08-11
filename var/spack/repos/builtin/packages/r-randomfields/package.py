@@ -11,8 +11,8 @@ class RRandomfields(RPackage):
        are provided, as well as methods for the simulation of extreme
        value random fields."""
 
-    homepage = "https://cloud.r-project.org/web/packages/RandomFields"
-    url = "https://cloud.r-project.org/src/contrib/RandomFields_3.1.50.tar.gz"
+    homepage = "https://cloud.r-project.org/package=RandomFields"
+    url      = "https://cloud.r-project.org/src/contrib/RandomFields_3.1.50.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RandomFields"
 
     version('3.3.6', sha256='51b7bfb4e5bd7fd0ce1207c77f428508a6cd3dfc9de01545a8724dfd9c050213')

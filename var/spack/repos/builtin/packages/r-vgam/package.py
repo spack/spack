@@ -10,9 +10,9 @@ class RVgam(RPackage):
     """An implementation of about 6 major classes of statistical regression
     models."""
 
-    homepage = "https://cloud.r-project.org/web/packages/VGAM/index.html"
+    homepage = "https://cloud.r-project.org/package=VGAM"
     url      = "https://cloud.r-project.org/src/contrib/VGAM_1.0-4.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/VGAM"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/VGAM"
 
     version('1.1-1', sha256='de192bd65a7e8818728008de8e60e6dd3b61a13616c887a43e0ccc8147c7da52')
     version('1.0-6', sha256='121820a167411e847b41bdcb0028b55842d0ccc0c3471755c67449837e0fe3b9')
@@ -22,6 +22,6 @@ class RVgam(RPackage):
     version('1.0-1', '778182585c774036ac3d10240cf63b40')
     version('1.0-0', '81da7b3a797b5e26b9e859dc2f373b7b')
 
-    depends_on('r@3.4.0:')
+    depends_on('r@3.4.0:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))

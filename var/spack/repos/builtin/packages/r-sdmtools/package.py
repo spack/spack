@@ -13,9 +13,9 @@ class RSdmtools(RPackage):
     This packages provides a set of tools for post processing the outcomes of
     species distribution modeling exercises."""
 
-    homepage = "https://cloud.r-project.org/web/packages/SDMTools/index.html"
+    homepage = "https://cloud.r-project.org/package=SDMTools"
     url      = "https://cloud.r-project.org/src/contrib/SDMTools_1.1-221.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/SDMTools"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/SDMTools"
 
     version('1.1-221.1', sha256='3825856263bdb648ca018b27dc6ab8ceaef24691215c197f8d5cd17718b54fbb')
     version('1.1-221', '3604da1783d0c6081b62b29d35a32c3c')

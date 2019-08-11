@@ -12,9 +12,9 @@ class RSn(RPackage):
     related statistical methods for data fitting and diagnostics, in the
     univariate and the multivariate case."""
 
-    homepage = "https://cloud.r-project.org/web/packages/sn/index.html"
+    homepage = "https://cloud.r-project.org/package=sn"
     url      = "https://cloud.r-project.org/src/contrib/sn_1.5-0.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/sn"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/sn"
 
     version('1.5-4', sha256='46677ebc109263a68f62b5cf53ec59916cda490e5bc5bbb08276757a677f8674')
     version('1.5-3', sha256='cc21b97ddd674c9b1296260f2a72ffb085cdcb877c8332f0bfa96ff028517183')

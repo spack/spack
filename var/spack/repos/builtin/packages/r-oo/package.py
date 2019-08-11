@@ -16,7 +16,7 @@ class ROo(RPackage):
     standard S3 classes without any tricks."""
 
     homepage = "https://github.com/HenrikBengtsson/R.oo"
-    url      = "https://cran.rstudio.com/src/contrib/R.oo_1.21.0.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/R.oo_1.21.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/R.oo"
 
     version('1.22.0', sha256='c0862e4608fb2b8f91ec4494d46c2f3ba7bc44999f9aa3d7b9625d3792e7dd4c')

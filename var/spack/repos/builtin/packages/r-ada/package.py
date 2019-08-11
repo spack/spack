@@ -10,7 +10,7 @@ class RAda(RPackage):
     """Performs discrete, real, and gentle boost under both exponential
     and logistic loss on a given data set."""
 
-    homepage = "https://cloud.r-project.org/web/packages/ada/index.html"
+    homepage = "https://cloud.r-project.org/package=ada"
     url      = "https://cloud.r-project.org/src/contrib/ada_2.0-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ada"
 

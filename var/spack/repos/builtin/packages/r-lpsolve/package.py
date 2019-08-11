@@ -14,7 +14,7 @@ class RLpsolve(RPackage):
        problems, and transportation problems. This version calls
        lp_solve"""
 
-    homepage = "https://cloud.r-project.org/web/packages/lpSolve/index.html"
+    homepage = "https://cloud.r-project.org/package=lpSolve"
     url      = "https://cloud.r-project.org/src/contrib/lpSolve_5.6.13.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lpSolve"
 

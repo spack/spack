@@ -10,7 +10,7 @@ class RNetworkd3(RPackage):
     """Creates 'D3' 'JavaScript' network, tree, dendrogram, and Sankey graphs
     from 'R'."""
 
-    homepage = "http://cloud.r-project.org/package=networkD3"
+    homepage = "https://cloud.r-project.org/package=networkD3"
     url      = "https://cloud.r-project.org/src/contrib/networkD3_0.2.12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/networkD3"
 

@@ -9,7 +9,7 @@ from spack import *
 class RLeaps(RPackage):
     """leaps: Regression Subset Selection"""
 
-    homepage = "https://cloud.R-project.org/package=leaps"
+    homepage = "https://cloud.r-project.org/package=leaps"
     url      = "https://cloud.r-project.org/src/contrib/leaps_3.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/leaps"
 

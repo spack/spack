@@ -9,9 +9,9 @@ from spack import *
 class RTclust(RPackage):
     """Provides functions for robust trimmed clustering."""
 
-    homepage = "https://cloud.r-project.org/web/packages/tclust/index.html"
+    homepage = "https://cloud.r-project.org/package=tclust"
     url      = "https://cloud.r-project.org/src/contrib/tclust_1.3-1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/tclust"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/tclust"
 
     version('1.4-1', sha256='4b0be612c8ecd7b4eb19a44ab6ac8f5d40515600ae1144c55989b6b41335ad9e')
     version('1.3-1',  '5415d74682588d4a6fb8ce166fc75661')

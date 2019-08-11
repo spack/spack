@@ -12,7 +12,7 @@ class RBase64(RPackage):
        package instead."""
 
     homepage = "https://cloud.r-project.org/package=base64"
-    url      = "https://cran.rstudio.com/src/contrib/base64_2.0.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/base64_2.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/base64"
 
     version('2.0', 'f5a653842f75ad717ef6a00969868ae5')

@@ -13,7 +13,7 @@ class RLattice(RPackage):
     handle most nonstandard requirements. See ?Lattice for an introduction."""
 
     homepage = "http://lattice.r-forge.r-project.org/"
-    url      = "https://cran.rstudio.com/src/contrib/lattice_0.20-35.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/lattice_0.20-35.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lattice"
 
     version('0.20-38', sha256='fdeb5e3e50dbbd9d3c5e2fa3eef865132b3eef30fbe53a10c24c7b7dfe5c0a2d')

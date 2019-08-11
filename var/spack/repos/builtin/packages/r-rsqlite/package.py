@@ -11,7 +11,7 @@ class RRsqlite(RPackage):
     interface compliant with the DBI package. The source for the SQLite engine
     (version 3.8.6) is included."""
 
-    homepage = "https://cran.rstudio.com/web/packages/RSQLite/index.html"
+    homepage = "https://cloud.r-project.org/package=RSQLite"
     url      = "https://cloud.r-project.org/src/contrib/RSQLite_2.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RSQLite"
 

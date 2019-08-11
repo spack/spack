@@ -11,7 +11,7 @@ class RCairo(RPackage):
        bitmap (PNG, JPEG, TIFF), vector (PDF, SVG, PostScript) and display
        (X11 and Win32) output"""
 
-    homepage = "https://cloud.r-project.org/web/packages/Cairo/index.html"
+    homepage = "https://cloud.r-project.org/package=Cairo"
     url      = "https://cloud.r-project.org/src/contrib/Cairo_1.5-9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Cairo"
 

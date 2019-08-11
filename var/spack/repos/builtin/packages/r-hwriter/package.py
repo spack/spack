@@ -10,7 +10,8 @@ class RHwriter(RPackage):
     """Easy-to-use and versatile functions to
     output R objects in HTML format."""
 
-    homepage = "https://cran.rstudio.com/web/packages/hwriter/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/hwriter_1.3.2.tar.gz"
+    homepage = "https://cloud.r-project.org/package=hwriter"
+    url      = "https://cloud.r-project.org/src/contrib/hwriter_1.3.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/hwriter"
+
     version('1.3.2', '9eef49df2eb68bbf3a16b5860d933517')

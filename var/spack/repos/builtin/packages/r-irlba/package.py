@@ -11,7 +11,7 @@ class RIrlba(RPackage):
     decompositions and principal component analysis of large sparse or dense
     matrices."""
 
-    homepage = "https://cloud.r-project.org/web/packages/irlba/index.html"
+    homepage = "https://cloud.r-project.org/package=irlba"
     url      = "https://cloud.r-project.org/src/contrib/irlba_2.1.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/irlba"
 

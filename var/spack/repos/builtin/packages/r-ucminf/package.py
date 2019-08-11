@@ -13,7 +13,7 @@ class RUcminf(RPackage):
     input to the line search algorithm. The interface of 'ucminf' is designed
     for easy interchange with 'optim'."""
 
-    homepage = "https://cran.r-project.org/package=ucminf"
+    homepage = "https://cloud.r-project.org/package=ucminf"
     url      = "https://cloud.r-project.org/src/contrib/ucminf_1.1-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ucminf"
 

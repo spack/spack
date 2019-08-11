@@ -20,8 +20,8 @@ class RBit64(RPackage):
     inter- active data exploration
     and manipulation and optionally leverage caching."""
 
-    homepage = "https://cran.rstudio.com/web/packages/bit64/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/bit64_0.9-7.tar.gz"
+    homepage = "https://cloud.r-project.org/package=bit64"
+    url      = "https://cloud.r-project.org/src/contrib/bit64_0.9-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/bit64"
 
     version('0.9-7', 'ac4bc39827338c552d329d3d4d2339c2')

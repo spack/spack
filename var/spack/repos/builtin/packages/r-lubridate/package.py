@@ -14,7 +14,7 @@ class RLubridate(RPackage):
     a consistent and memorable syntax that makes working with dates easy and
     fun."""
 
-    homepage = "https://cloud.r-project.org/web/packages/lubridate/index.html"
+    homepage = "https://cloud.r-project.org/package=lubridate"
     url      = "https://cloud.r-project.org/src/contrib/lubridate_1.7.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lubridate"
 

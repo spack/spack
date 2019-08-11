@@ -15,8 +15,8 @@ class RHtmltable(RPackage):
     few text formatting functions that help outputting text
     compatible with HTML/'LaTeX'."""
 
-    homepage = "https://cloud.R-project.org/package=htmlTable"
-    url      = "https://cran.rstudio.com/src/contrib/htmlTable_1.11.2.tar.gz"
+    homepage = "https://cloud.r-project.org/package=htmlTable"
+    url      = "https://cloud.r-project.org/src/contrib/htmlTable_1.11.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/htmlTable"
 
     version('1.13.1', sha256='689f32b65da6a57ad500e8d9ef3309d346401dca277c6b264a46c8d7c75884d0')

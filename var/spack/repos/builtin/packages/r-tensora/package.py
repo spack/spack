@@ -11,7 +11,7 @@ class RTensora(RPackage):
        with tensors and computation with datasets of tensors on a higher level
        abstraction."""
 
-    homepage = "https://cloud.r-project.org/web/packages/tensorA/index.html"
+    homepage = "https://cloud.r-project.org/package=tensorA"
     url      = "https://cloud.r-project.org/src/contrib/tensorA_0.36.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tensorA"
 

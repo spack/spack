@@ -11,7 +11,7 @@ class RRjags(RPackage):
     """Interface to the JAGS MCMC library.
        Usage: $ spack load r-rjags """
 
-    homepage = "https://cloud.r-project.org/web/packages/rjags/index.html"
+    homepage = "https://cloud.r-project.org/package=rjags"
     url      = "https://cloud.r-project.org/src/contrib/rjags_4-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rjags/"
 
