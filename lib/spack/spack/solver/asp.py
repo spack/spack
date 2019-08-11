@@ -25,6 +25,10 @@ from spack.util.executable import which
 from spack.version import ver
 
 
+#: max line length for ASP programs in characters
+_max_line = 80
+
+
 def _id(thing):
     """Quote string if needed for it to be a valid identifier."""
     return '"%s"' % str(thing)
@@ -137,7 +141,10 @@ class AspGenerator(object):
 
     def rule(self, head, body):
         """ASP rule (an implication)."""
-        self.out.write("%s :- %s.\n" % (head, body))
+        rule_line = "%s :- %s.\n" % (head, body)
+        if len(rule_line) > _max_line:
+            rule_line = re.sub(r' \| ', "\n| ", rule_line)
+        self.out.write(rule_line)
 
     def constraint(self, body):
         """ASP integrity constraint (rule with no head; can't be true)."""
