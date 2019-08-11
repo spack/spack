@@ -226,18 +226,14 @@ class AspGenerator(object):
 
         # seed architecture at the root (we'll propagate later)
         # TODO: use better semantics.
-        arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-        spec_arch = spec.architecture
-        if spec_arch:
-            if spec_arch.platform:
-                arch.platform = spec_arch.platform
-            if spec_arch.os:
-                arch.os = spec_arch.os
-            if spec_arch.target:
-                arch.target = spec_arch.target
-        self.fact(fn.arch_platform(spec.name, arch.platform))
-        self.fact(fn.arch_os(spec.name, arch.os))
-        self.fact(fn.arch_target(spec.name, arch.target))
+        arch = spec.architecture
+        if arch:
+            if arch.platform:
+                self.fact(fn.arch_platform_set(spec.name, arch.platform))
+            if arch.os:
+                self.fact(fn.arch_os_set(spec.name, arch.os))
+            if arch.target:
+                self.fact(fn.arch_target_set(spec.name, arch.target))
 
         # variants
         for vname, variant in spec.variants.items():
@@ -267,6 +263,14 @@ class AspGenerator(object):
 
         concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
         self.out.write(concretize_lp.decode("utf-8"))
+
+        self.h1('General Constraints')
+
+        self.h2('Default architecture')
+        default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        self.fact(fn.arch_platform_default(default_arch.platform))
+        self.fact(fn.arch_os_default(default_arch.os))
+        self.fact(fn.arch_target_default(default_arch.target))
 
         self.h1('Package Constraints')
         for pkg in pkgs:

@@ -39,7 +39,29 @@ variant_value(P, V, X) :- node(P), variant(P, V), not variant_set(P, V),
 % Architecture semantics
 %-----------------------------------------------------------------------------
 
+% arch fields for pkg P are set if set to anything
+arch_platform_set(P) :- arch_platform_set(P, _).
+arch_os_set(P) :- arch_os_set(P, _).
+arch_target_set(P) :- arch_target_set(P, _).
+
+% avoid info warnings (see variants)
+#defined arch_platform_set/2.
+#defined arch_os_set/2.
+#defined arch_target_set/2.
+
+% if architecture value is set, it's the value
+arch_platform(P, A) :- node(P), arch_platform_set(P, A).
+arch_os(P, A) :- node(P), arch_os_set(P, A).
+arch_target(P, A) :- node(P), arch_target_set(P, A).
+
+% if no architecture is set, fall back to the default architecture value.
+arch_platform(P, A) :- node(P), not arch_platform_set(P),
+                       arch_platform_default(A).
+arch_os(P, A)       :- node(P), not arch_os_set(P), arch_os_default(A).
+arch_target(P, A)   :- node(P), not arch_target_set(P), arch_target_default(A).
+
 % propagate platform, os, target downwards
-arch_platform(D, A) :- node(D), depends_on(P, D), arch_platform(P, A).
-arch_os(D, A) :- node(D), depends_on(P, D), arch_os(P, A).
-arch_target(D, A) :- node(D), depends_on(P, D), arch_target(P, A).
+% TODO: handle multiple dependents and arch compatibility
+arch_platform_set(D, A) :- node(D), depends_on(P, D), arch_platform_set(P, A).
+arch_os_set(D, A) :- node(D), depends_on(P, D), arch_os_set(P, A).
+arch_target_set(D, A) :- node(D), depends_on(P, D), arch_target_set(P, A).
