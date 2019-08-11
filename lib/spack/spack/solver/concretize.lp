@@ -25,6 +25,13 @@ arch_target(D, A) :- node(D), depends_on(P, D), arch_target(P, A).
 % if a variant is set to anything, it is considered 'set'.
 variant_set(P, V) :- variant_set(P, V, _).
 
+% suppress wranings about this atom being unset.  It's only set if some
+% spec or some package sets it, and without this, clingo will give
+% warnings like 'info: atom does not occur in any rule head'.
+#defined variant_set/3.
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(P, V, X) :- node(P), variant(P, V), variant_set(P, V, X).
+variant_value(P, V, X) :- node(P), variant(P, V), not variant_set(P, V),
+                 variant_default_value(P, V, X).

@@ -196,14 +196,17 @@ class AspGenerator(object):
             single = fn.variant_single_value(pkg.name, name)
             if single_value:
                 self.rule(single, fn.node(pkg.name))
-                self.rule(fn.variant_value(pkg.name, name, variant.default),
-                          self._not(fn.variant_set(pkg.name, name)))
+                self.rule(
+                    fn.variant_default_value(pkg.name, name, variant.default),
+                    fn.node(pkg.name))
             else:
                 self.rule(self._not(single), fn.node(pkg.name))
                 defaults = variant.default.split(',')
                 for val in defaults:
-                    self.rule(fn.variant_value(pkg.name, name, val),
-                              self._not(fn.variant_set(pkg.name, name)))
+                    self.rule(
+                        fn.variant_default_value(pkg.name, name, val),
+                        fn.node(pkg.name))
+            self.out.write('\n')
 
         # dependencies
         for name, conditions in pkg.dependencies.items():
@@ -231,7 +234,7 @@ class AspGenerator(object):
 
         # variants
         for vname, variant in spec.variants.items():
-            self.fact(fn.variant_value(spec.name, vname, variant.value))
+            self.fact(fn.variant_set(spec.name, vname, variant.value))
 
         # TODO
         # dependencies
@@ -265,9 +268,10 @@ class AspGenerator(object):
 
         self.title('Spec Constraints')
         for spec in specs:
-            self.section('Spec: %s' % pkg)
-            self.spec_rules(spec)
-            self.out.write('\n')
+            for dep in spec.traverse():
+                self.section('Spec: %s' % str(dep))
+                self.spec_rules(dep)
+                self.out.write('\n')
 
         self.out.write(pkgutil.get_data('spack.solver', 'display.lp'))
         self.out.write('\n')
