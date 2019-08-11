@@ -1,6 +1,6 @@
-% -----------------------------------------
+%=============================================================================
 % Generate
-% -----------------------------------------
+%=============================================================================
 % One version, arch, etc. per package
 { version(P, V) : version(P, V)} = 1              :- node(P).
 { arch_platform(P, A) : arch_platform(P, A) } = 1 :- node(P).
@@ -11,16 +11,15 @@
 { variant_value(P, V, X) : variant_value(P, V, X) } = 1
     :- node(P), variant(P, V), not variant_single_value(P, V).
 
-% -----------------------------------------
+%=============================================================================
 % Define
-% -----------------------------------------
+%=============================================================================
 % dependencies imply new nodes.
 node(D) :- node(P), depends_on(P, D).
 
-% propagate platform, os, target downwards
-arch_platform(D, A) :- node(D), depends_on(P, D), arch_platform(P, A).
-arch_os(D, A) :- node(D), depends_on(P, D), arch_os(P, A).
-arch_target(D, A) :- node(D), depends_on(P, D), arch_target(P, A).
+%-----------------------------------------------------------------------------
+% Variant semantics
+%-----------------------------------------------------------------------------
 
 % if a variant is set to anything, it is considered 'set'.
 variant_set(P, V) :- variant_set(P, V, _).
@@ -35,3 +34,12 @@ variant_set(P, V) :- variant_set(P, V, _).
 variant_value(P, V, X) :- node(P), variant(P, V), variant_set(P, V, X).
 variant_value(P, V, X) :- node(P), variant(P, V), not variant_set(P, V),
                  variant_default_value(P, V, X).
+
+%-----------------------------------------------------------------------------
+% Architecture semantics
+%-----------------------------------------------------------------------------
+
+% propagate platform, os, target downwards
+arch_platform(D, A) :- node(D), depends_on(P, D), arch_platform(P, A).
+arch_os(D, A) :- node(D), depends_on(P, D), arch_os(P, A).
+arch_target(D, A) :- node(D), depends_on(P, D), arch_target(P, A).

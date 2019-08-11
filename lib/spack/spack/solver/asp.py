@@ -112,13 +112,19 @@ class AspGenerator(object):
         self.out = out
         self.func = AspFunctionBuilder()
 
-    def title(self, name):
+    def title(self, name, char):
         self.out.write('\n')
-        self.out.write("%" + ("-" * 76))
+        self.out.write("%" + (char * 76))
         self.out.write('\n')
         self.out.write("%% %s\n" % name)
-        self.out.write("%" + ("-" * 76))
+        self.out.write("%" + (char * 76))
         self.out.write('\n')
+
+    def h1(self, name):
+        self.title(name, "=")
+
+    def h2(self, name):
+        self.title(name, "-")
 
     def section(self, name):
         self.out.write("\n")
@@ -186,6 +192,7 @@ class AspGenerator(object):
 
         # versions
         self.pkg_version_rules(pkg)
+        self.out.write('\n')
 
         # variants
         for name, variant in pkg.variants.items():
@@ -258,23 +265,23 @@ class AspGenerator(object):
         pkgs = list(set(spack.package.possible_dependencies(*pkgs))
                     | set(pkg_names))
 
-        self.out.write(pkgutil.get_data('spack.solver', 'concretize.lp'))
+        concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
+        self.out.write(concretize_lp.decode("utf-8"))
 
-        self.title('Package Constraints')
+        self.h1('Package Constraints')
         for pkg in pkgs:
-            self.section('Package: %s' % pkg)
+            self.h2('Package: %s' % pkg)
             self.pkg_rules(pkg)
-        self.out.write('\n')
 
-        self.title('Spec Constraints')
+        self.h1('Spec Constraints')
         for spec in specs:
             for dep in spec.traverse():
-                self.section('Spec: %s' % str(dep))
+                self.h2('Spec: %s' % str(dep))
                 self.spec_rules(dep)
-                self.out.write('\n')
 
-        self.out.write(pkgutil.get_data('spack.solver', 'display.lp'))
         self.out.write('\n')
+        display_lp = pkgutil.get_data('spack.solver', 'display.lp')
+        self.out.write(display_lp.decode("utf-8"))
 
 
 class ResultParser(object):
@@ -375,7 +382,7 @@ def highlight(string):
     string = re.sub(r'(\w[\w-]+)\(([^)]*)\)', r'@C{\1}@w{(}\2@w{)}', string)
 
     # comments
-    string = re.sub(r'(%.*)$', r'@K\1@.', string, flags=re.MULTILINE)
+    string = re.sub(r'(%.*)$', r'@w\1@.', string, flags=re.MULTILINE)
 
     # strings
     string = re.sub(r'("[^"]*")', r'@m{\1}', string)
