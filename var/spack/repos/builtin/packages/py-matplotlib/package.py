@@ -131,11 +131,6 @@ class PyMatplotlib(PythonPackage):
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
     @run_before('build')
-    def set_cc(self):
-        if self.spec.satisfies('%intel'):
-            env['CC'] = spack_cxx
-
-    @run_before('build')
     def set_backend(self):
         """Set build options with regards to backend GUI libraries."""
 
