@@ -42,7 +42,7 @@ class Precice(CMakePackage):
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
     depends_on('petsc@3.6:', when='+petsc')
-    depends_on('python@2.7.16', when='+python', type=('build', 'run'))
+    depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
     depends_on('py-numpy@1.16.4', when='+python', type=('build', 'run'))
 
     def cmake_args(self):
