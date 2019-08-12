@@ -408,6 +408,9 @@ class YamlFilesystemView(FilesystemView):
         remove_extension = ft.partial(self.remove_extension,
                                       with_dependents=with_dependents)
 
+        # TODO: note this does not sort extensions topologically so may run
+        # into deactivation errors. Either 'force' should be used automatically
+        # or a 'force' option should be provided.
         tty.msg("Extensions to remove: " +
                 ' '.join(x.name for x in extensions))
         for spec in extensions:
