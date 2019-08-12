@@ -10,3 +10,5 @@
 #show arch_platform/2.
 #show arch_os/2.
 #show arch_target/2.
+#show node_compiler/2.
+#show node_compiler_version/3.

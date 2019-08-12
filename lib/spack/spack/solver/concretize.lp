@@ -6,6 +6,9 @@
 { arch_platform(P, A) : arch_platform(P, A) } = 1 :- node(P).
 { arch_os(P, A) : arch_os(P, A) } = 1             :- node(P).
 { arch_target(P, T) : arch_target(P, T) } = 1     :- node(P).
+{ node_compiler(P, C) : node_compiler(P, C) } = 1 :- node(P).
+{ node_compiler_version(P, C, V) :
+  node_compiler_version(P, C, V) } = 1            :- node(P).
 
 % one variant value for single-valued variants.
 { variant_value(P, V, X) : variant_value(P, V, X) } = 1
@@ -65,3 +68,43 @@ arch_target(P, A)   :- node(P), not arch_target_set(P), arch_target_default(A).
 arch_platform_set(D, A) :- node(D), depends_on(P, D), arch_platform_set(P, A).
 arch_os_set(D, A) :- node(D), depends_on(P, D), arch_os_set(P, A).
 arch_target_set(D, A) :- node(D), depends_on(P, D), arch_target_set(P, A).
+
+%-----------------------------------------------------------------------------
+% Compiler semantics
+%-----------------------------------------------------------------------------
+
+% compiler fields are set if set to anything
+node_compiler_set(P) :- node_compiler_set(P, _).
+node_compiler_version_set(P, C) :- node_compiler_version_set(P, C, _).
+
+% avoid warnings: these are set by generated code and it's ok if they're not
+#defined node_compiler_set/2.
+#defined node_compiler_version_set/3.
+
+% if compiler value of node is set to anything, it's the value.
+node_compiler(P, C)
+  :- node(P), compiler(C), node_compiler_set(P, C).
+node_compiler_version(P, C, V)
+  :- node(P), compiler(C), compiler_version(C, V), node_compiler(P, C),
+     node_compiler_version_set(P, C, V).
+
+% node compiler versions can only be from the available compiler versions
+node_compiler_version(P, C, V)
+  :- node(P), compiler(C), node_compiler(P, C),
+     compiler_version(C, V).
+
+% if no compiler is set, fall back to default.
+node_compiler(P, C)
+  :- node(P), compiler(C), not node_compiler_set(P),
+     node_compiler_default(P, C).
+node_compiler_version(P, C, V)
+  :- node(P), compiler(C), compiler_version(C, V),
+     not node_compiler_version_set(P, C, V),
+     node_compiler_default_version(P, C, V).
+
+% propagate compiler, compiler version to dependencies
+node_compiler_set(D, C)
+  :- node(D), compiler(C), depends_on(P, D), node_compiler_set(P, C).
+node_compiler_version_set(D, C, V)
+  :- node(D), compiler(C), depends_on(P, D), node_compiler(D, C),
+     node_compiler_version_set(P, C, V).

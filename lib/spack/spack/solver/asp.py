@@ -20,6 +20,7 @@ import spack
 import spack.cmd
 import spack.spec
 import spack.package
+import spack.package_prefs
 import spack.repo
 from spack.util.executable import which
 from spack.version import ver
@@ -187,6 +188,45 @@ class AspGenerator(object):
                     self._or(fn.version(spec.name, v) for v in possible),
                     fn.node(spec.name))
 
+    def compiler_defaults(self):
+        """Facts about available compilers."""
+        compilers = spack.compilers.all_compiler_specs()
+
+        compiler_versions = collections.defaultdict(lambda: set())
+        for compiler in compilers:
+            compiler_versions[compiler.name].add(compiler.version)
+
+        for compiler in compiler_versions:
+            self.fact(fn.compiler(compiler))
+            self.rule(
+                self._or(
+                    fn.compiler_version(compiler, v)
+                    for v in sorted(compiler_versions[compiler])),
+                fn.compiler(compiler))
+
+    def package_compiler_defaults(self, pkg):
+        """Add facts about the default compiler.
+
+        TODO: integrate full set of preferences into the solve (this only
+        TODO: considers the top preference)
+        """
+        # get list of all compilers
+        compiler_list = spack.compilers.all_compiler_specs()
+        if not compiler_list:
+            raise spack.compilers.NoCompilersError()
+
+        # prefer package preferences, then latest version
+        ppk = spack.package_prefs.PackagePrefs(pkg.name, 'compiler')
+        compiler_list = sorted(
+            compiler_list, key=lambda x: (x.name, x.version), reverse=True)
+        compiler_list = sorted(compiler_list, key=ppk)
+
+        # write out default rules for this package's compilers
+        default_compiler = compiler_list[0]
+        self.fact(fn.node_compiler_default(pkg.name, default_compiler.name))
+        self.fact(fn.node_compiler_default_version(
+            pkg.name, default_compiler.name, default_compiler.version))
+
     def pkg_rules(self, pkg):
         pkg = packagize(pkg)
 
@@ -215,6 +255,9 @@ class AspGenerator(object):
                         fn.node(pkg.name))
             self.out.write('\n')
 
+        # default compilers for this package
+        self.package_compiler_defaults(pkg)
+
         # dependencies
         for name, conditions in pkg.dependencies.items():
             for cond, dep in conditions.items():
@@ -239,13 +282,27 @@ class AspGenerator(object):
         for vname, variant in spec.variants.items():
             self.fact(fn.variant_set(spec.name, vname, variant.value))
 
+        # compiler and compiler version
+        if spec.compiler:
+            self.fact(fn.node_compiler_set(spec.name, spec.compiler.name))
+            if spec.compiler.concrete:
+                self.fact(fn.node_compiler_version_set(
+                    spec.name, spec.compiler.name, spec.compiler.version))
+
         # TODO
         # dependencies
-        # compiler
         # external_path
         # external_module
         # compiler_flags
         # namespace
+
+    def arch_defaults(self):
+        """Add facts about the default architecture for a package."""
+        self.h2('Default architecture')
+        default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        self.fact(fn.arch_platform_default(default_arch.platform))
+        self.fact(fn.arch_os_default(default_arch.os))
+        self.fact(fn.arch_target_default(default_arch.target))
 
     def generate_asp_program(self, specs):
         """Write an ASP program for specs.
@@ -265,12 +322,8 @@ class AspGenerator(object):
         self.out.write(concretize_lp.decode("utf-8"))
 
         self.h1('General Constraints')
-
-        self.h2('Default architecture')
-        default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-        self.fact(fn.arch_platform_default(default_arch.platform))
-        self.fact(fn.arch_os_default(default_arch.os))
-        self.fact(fn.arch_target_default(default_arch.target))
+        self.compiler_defaults()
+        self.arch_defaults()
 
         self.h1('Package Constraints')
         for pkg in pkgs:
@@ -320,6 +373,13 @@ class ResultParser(object):
 
     def version(self, pkg, version):
         self._specs[pkg].versions = ver([version])
+
+    def node_compiler(self, pkg, compiler):
+        self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
+
+    def node_compiler_version(self, pkg, compiler, version):
+        self._specs[pkg].compiler.versions = spack.version.VersionList(
+            [version])
 
     def depends_on(self, pkg, dep):
         self._specs[pkg]._add_dependency(
