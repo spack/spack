@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Skopeo(Package):
+class Skopeo(MakefilePackage):
     """skopeo is a command line utility that performs various operations on
     container images and image repositories."""
 
