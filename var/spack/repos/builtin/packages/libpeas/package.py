@@ -44,6 +44,10 @@ class Libpeas(AutotoolsPackage):
         url += '{0}/libpeas-{1}.tar.xz'
         return url.format(version.up_to(2), version)
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
     def setup_environment(self, spack_env, run_env):
         # Let
         #
@@ -74,6 +78,8 @@ class Libpeas(AutotoolsPackage):
 
         spack_env.append_path('LDFLAGS',
                               python_ldflags)
+        spack_env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+        run_env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
 
     def autoreconf(self, spec, prefix):
         autoreconf_args = ['-ivf']
