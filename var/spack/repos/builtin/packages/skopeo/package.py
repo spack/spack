@@ -34,8 +34,10 @@ class Skopeo(MakefilePackage):
             edit.filter('/etc/containers/', '{0}/etc/containers/'.
                         format(self.prefix))
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         make('binary-local')
+
+    def install(self, spec, prefix):
         make('binary-local', 'install',
              'DESTDIR={0}'.format(prefix),
              'PREFIX={0}'.format(prefix))
