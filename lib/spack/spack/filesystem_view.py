@@ -405,14 +405,6 @@ class YamlFilesystemView(FilesystemView):
                          to_deactivate))
         standalones = to_deactivate - extensions
 
-        # Please note that a traversal of the DAG in post-order and then
-        # forcibly removing each package should remove the need to specify
-        # with_dependents for deactivating extensions/allow removal without
-        # additional checks (force=True). If removal performance becomes
-        # unbearable for whatever reason, this should be the first point of
-        # attack.
-        #
-        # see: https://github.com/spack/spack/pull/3227#discussion_r117147475
         remove_extension = ft.partial(self.remove_extension,
                                       with_dependents=with_dependents)
 
