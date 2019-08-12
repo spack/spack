@@ -47,14 +47,14 @@ class Visit(CMakePackage):
             '-DVTK_MINOR_VERSION={0}'.format(spec['vtk'].version[1]),
             '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),
             '-DVISIT_USE_GLEW=OFF',
-            '-DCMAKE_CXX_FLAGS=-fPIC',
-            '-DCMAKE_C_FLAGS=-fPIC'
+            '-DCMAKE_CXX_FLAGS=' + self.compiler.pic_flag,
+            '-DCMAKE_C_FLAGS=' + self.compiler.pic_flag,
         ]
 
-        if(spec.variants['python'].value):
+        if '+python' in spec:
             args.append('-DPYTHON_DIR:PATH={0}'.format(spec['python'].home))
 
-        if(spec.variants['gui'].value):
+        if '+gui' in spec:
             qt_bin = spec['qt'].prefix.bin
             args.append(
                 '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin))
@@ -63,18 +63,18 @@ class Visit(CMakePackage):
             args.append('-DVISIT_SERVER_COMPONENTS_ONLY=ON')
             args.append('-DVISIT_ENGINE_ONLY=ON')
 
-        if(spec.variants['hdf5'].value):
+        if '+hdf5' in spec:
             args.append(
                 '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix))
             if spec.satisfies('^hdf5+mpi', strict=True):
                 args.append('-DVISIT_HDF5_MPI_DIR:PATH={0}'.format(
                     spec['hdf5'].prefix))
 
-        if(spec.variants['silo'].value):
+        if '+silo' in spec:
             args.append(
                 '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix))
 
-        if(spec.variants['mpi'].value):
+        if '+mpi' in spec:
             args.append('-DVISIT_PARALLEL=ON')
             args.append('-DVISIT_C_COMPILER={0}'.format(spec['mpi'].mpicc))
             args.append('-DVISIT_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
