@@ -24,7 +24,7 @@ class Skopeo(MakefilePackage):
     depends_on('libassuan')
     depends_on('libgpg-error')
 
-    def patch(self):
+    def edit(self, spec, prefix):
         grep = which('grep')
         files = grep('-lR', '/etc/containers/', 'vendor', output=str,
                      env={'PATH': '/usr/bin:/bin:/usr/sbin:/sbin'})
@@ -32,7 +32,7 @@ class Skopeo(MakefilePackage):
         for f in files.splitlines():
             edit = FileFilter(f)
             edit.filter('/etc/containers/', '{0}/etc/containers/'.
-                        format(self.prefix))
+                        format(prefix))
 
     def build(self, spec, prefix):
         make('binary-local')
