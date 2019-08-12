@@ -721,6 +721,16 @@ class TestStage(object):
         # Make sure the cached stage path values are changed appropriately.
         assert spack.stage._stage_root == path
 
+        # Add then purge a couple of directories
+        dir1 = tmpdir.join('dir1')
+        dir1.ensure(dir=True)
+        dir2 = tmpdir.join('dir2')
+        dir2.ensure(dir=True)
+
+        spack.stage.purge()
+        assert not os.path.exists(str(dir1))
+        assert not os.path.exists(str(dir2))
+
     def test_get_stage_root_in_spack(self, clear_stage_root,
                                      instance_path_for_stage):
         """Ensure an instance path stage root is a suitable path."""
@@ -799,3 +809,39 @@ class TestStage(object):
         assert os.path.isfile(readmefn)
         with open(readmefn) as _file:
             _file.read() == _readme_contents
+
+
+@pytest.fixture
+def tmp_build_stage_nondir(tmpdir):
+    """Establish the temporary build_stage pointing to non-directory."""
+    test_stage_path = tmpdir.join('stage')
+    test_stage_path.ensure(dir=False)
+
+    # Set test_stage_path as the default directory to use for test stages.
+    current = spack.config.get('config:build_stage')
+    spack.config.set('config',
+                     {'build_stage': [str(test_stage_path)]}, scope='user')
+
+    yield test_stage_path
+
+    spack.config.set('config', {'build_stage': current}, scope='user')
+
+
+def test_stage_create_replace_path(tmp_build_stage_nondir):
+    """Ensure stage creation replaces a non-directory path."""
+    path = str(tmp_build_stage_nondir)
+
+    assert os.path.exists(path)
+    assert not os.path.isdir(path)
+
+    stage = Stage(path)
+    stage.create()  # Should ensure the path is converted to a dir
+
+    assert os.path.isdir(stage.path)
+
+
+def test_cannot_access():
+    """Ensure can_access dies with the expected error."""
+    with pytest.raises(SystemExit, matches='Insufficient permissions'):
+        # It's far more portable to use a non-existent filename.
+        spack.stage.ensure_access('/no/such/file')

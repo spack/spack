@@ -482,9 +482,6 @@ class ResourceStage(Stage):
     def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
         super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
         self.root_stage = root
-        # Ensure the resource has its own stage path
-        if self.path == root.path:
-            self.path = os.path.join(self.path, 'resource-stage')
         self.resource = resource
 
     def restage(self):
