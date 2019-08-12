@@ -558,6 +558,7 @@ class Environment(object):
         # the manifest file
 
         specs_in_env = self.all_specs()
+        specs_in_env = set(x.copy(deps=('link', 'run')) for x in specs_in_env)
         if not self.views:
             return
         for view_descriptor in self.views.values():
