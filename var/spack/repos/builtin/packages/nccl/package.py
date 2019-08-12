@@ -10,8 +10,9 @@ class Nccl(MakefilePackage):
     """Optimized primitives for collective multi-GPU communication."""
 
     homepage = "https://github.com/NVIDIA/nccl"
-    url      = "https://github.com/NVIDIA/nccl/archive/v1.3.4-1.tar.gz"
+    url      = "https://github.com/NVIDIA/nccl/archive/v2.4.8-1.tar.gz"
 
+    version('2.4.8-1', sha256='e2260da448ebbebe437f74768a346d28c74eabdb92e372a3dc6652a626318924')
     version('2.4.6-1', sha256='ea4421061a7b9c454f2e088f68bfdbbcefab80ce81cafc70ee6c7742b1439591')
     version('2.4.2-1', sha256='e3dd04b22eb541394bd818e5f78ac23a09cc549690d5d55d6fccc1a36155385a')
     version('2.3.7-1', sha256='e6eff80d9d2db13c61f8452e1400ca2f098d2dfe42857cb23413ce081c5b9e9b')

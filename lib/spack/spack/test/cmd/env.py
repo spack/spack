@@ -1139,6 +1139,33 @@ env:
                         user.variants['shared'].value)
 
 
+def test_stack_concretize_extraneous_variants_with_dash(tmpdir, config,
+                                                        mock_packages):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - install:
+        - matrix:
+            - [$packages]
+            - ['shared=False', '+shared-libs']
+  specs:
+    - $install
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            concretize()
+
+        ev.read('test')
+
+        # Regression test for handling of variants with dashes in them
+        # will fail before this point if code regresses
+        assert True
+
+
 def test_stack_definition_extension(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:

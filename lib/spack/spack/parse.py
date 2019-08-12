@@ -143,7 +143,7 @@ class Parser(object):
 
     def setup(self, text):
         if isinstance(text, string_types):
-            text = shlex.split(text)
+            text = shlex.split(str(text))
         self.text = text
         self.push_tokens(self.lexer.lex(text))
 

@@ -697,6 +697,10 @@ class Llvm(CMakePackage):
         if '+omp_tsan' in spec:
             cmake_args.append('-DLIBOMP_TSAN_SUPPORT=ON')
 
+        if self.compiler.name == 'gcc':
+            gcc_prefix = ancestor(self.compiler.cc, 2)
+            cmake_args.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
+
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
         return cmake_args
