@@ -564,7 +564,6 @@ class Environment(object):
         for view_descriptor in self.views.values():
             self._check_views_debug(specs_in_env, view_descriptor.view())
 
-
     def _check_views_debug(self, specs_in_env, view):
         specs_in_view = set(view.get_all_specs())
         if specs_in_view - set(specs_in_env):
