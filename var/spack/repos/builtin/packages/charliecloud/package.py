@@ -13,11 +13,17 @@ class Charliecloud(MakefilePackage):
     url      = "https://github.com/hpc/charliecloud/releases/download/v0.9.10/charliecloud-0.9.10.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
 
-    depends_on('rsync')
-    depends_on('python@3')
-    depends_on('py-lark-parser')
-    depends_on('py-sphinx')
-    depends_on('py-sphinx-rtd-theme')
+    depends_on('python@3.4:', type=('build', 'run'))
+
+    # experimental builder (ch-grow)
+    variant('ch-grow', default=False, description='bundle dependencies for unprivileged builder')
+    depends_on('py-lark-parser', type='run', when='+ch-grow')
+
+    # man pages and html docs
+    variant('docs', default=False, description='Build man pages and html docs')
+    depends_on('rsync',               type='build', when='+doc')
+    depends_on('py-sphinx',           type='build', when='+doc')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+doc')
 
     version('master', branch='master')
     version('0.10',   sha256='5cf00b170e7568750ca0b828c43c0857c39674860b480d757057450d69f1a21e')
