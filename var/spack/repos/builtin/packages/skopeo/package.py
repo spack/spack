@@ -5,7 +5,6 @@
 
 
 from spack import *
-import subprocess
 
 
 class Skopeo(Package):
@@ -26,11 +25,9 @@ class Skopeo(Package):
     depends_on('libgpg-error')
 
     def patch(self):
-        process_pipe = subprocess.Popen(
-            ['grep', '-lR', '/etc/containers/', 'vendor'],
-            env={'PATH': '/usr/bin:/bin:/usr/sbin:/sbin'},
-            stdout=subprocess.PIPE)
-        files = process_pipe.communicate()[0]
+        grep = which('grep')
+        files = grep('-lR', '/etc/containers/', 'vendor', output=str,
+                     env={'PATH': '/usr/bin:/bin:/usr/sbin:/sbin'})
 
         for f in files.splitlines():
             edit = FileFilter(f)
