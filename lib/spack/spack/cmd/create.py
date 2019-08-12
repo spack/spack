@@ -459,10 +459,6 @@ class BuildSystemGuesser:
             self.build_system = 'octave'
             return
 
-        # Don't bother trying to process an archive file if stage not provided.
-        if stage is None:
-            return
-
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.

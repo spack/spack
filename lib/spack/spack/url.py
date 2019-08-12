@@ -610,11 +610,6 @@ def parse_name_offset(path, v=None):
     # suffix: Any kind of query string that begins with a '?'
     path, ext, suffix = split_url_extension(path)
 
-    # No need to go through the regular expressions if the scheme or protocol
-    # is missing.
-    if ':' not in path:
-        return path, 0, len(path), -1, ''
-
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
 

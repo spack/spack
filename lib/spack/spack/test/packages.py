@@ -375,12 +375,6 @@ def test_rpath_args(mutable_database):
 
 def test_bundle_version_checksum(mock_directive_bundle):
     """Test raising exception on a version checksum with a bundle package."""
-    # Note the original approach to this test, which involved creating
-    # an extra repository with a suitably defined BundlePackage package.py
-    # file, would cause url_fetch::test_from_list_url tests to hang when
-    # run with this test from Python 2.6/2.7 (not Python 3).  The issue was
-    # traced to spack.util.web's _spider's NonDaemonPool.map and associated
-    # with metaclass handling.
     with pytest.raises(VersionChecksumError, match="Checksums not allowed"):
         version = spack.directives.version('1.0', checksum='1badpkg')
         version(mock_directive_bundle)

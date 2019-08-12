@@ -46,17 +46,23 @@ def test_create_template(parser, mock_test_repo, args, name_index, expected):
             assert entry in content
 
 
-@pytest.mark.parametrize('url,expected', [
-    (None, 'generic'),
-    ('downloads.sourceforge.net/octave/', 'octave'),
-])
-def test_build_system_guesser_urls(parser, url, expected):
-    """Test basic build systems based solely on urls."""
+def test_build_system_guesser_no_stage(parser):
+    """Test build system guesser when stage not provided."""
     guesser = spack.cmd.create.BuildSystemGuesser()
 
     # Ensure get the expected build system
-    opts = {'stage': None, 'url': url}
-    guesser(**opts)
+    with pytest.raises(AttributeError,
+                       matches="'NoneType' object has no attribute"):
+        guesser(None, '/the/url/does/not/matter')
+
+
+def test_build_system_guesser_octave(parser):
+    """Test build system guesser for the octave URL special case."""
+    url, expected = 'downloads.sourceforge.net/octave/', 'octave'
+    guesser = spack.cmd.create.BuildSystemGuesser()
+
+    # Ensure get the expected build system
+    guesser(None, url)
     assert guesser.build_system == expected
 
     # Also ensure get the correct template

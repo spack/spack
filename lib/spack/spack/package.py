@@ -1056,6 +1056,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Will not fetch %s" %
                                  self.spec.format('{name}{@version}'), ck_msg)
 
+        self.stage.create()
         self.stage.fetch(mirror_only)
         self._fetch_time = time.time() - start_time
 
