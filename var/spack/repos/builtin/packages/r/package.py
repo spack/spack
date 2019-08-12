@@ -1,28 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
+import re
 
 from spack import *
 
@@ -39,6 +21,9 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('3.6.0', sha256='36fcac3e452666158e62459c6fc810adc247c7109ed71c5b6c3ad5fc2bf57509')
+    version('3.5.3', sha256='2bfa37b7bd709f003d6b8a172ddfb6d03ddd2d672d6096439523039f7a8e678c')
+    version('3.5.2', sha256='e53d8c3cf20f2b8d7a9c1631b6f6a22874506fb392034758b3bb341c586c5b62')
     version('3.5.1', sha256='0463bff5eea0f3d93fa071f79c18d0993878fd4f2e18ae6cf22c1639d11457ed')
     version('3.5.0', 'c0455dbfa76ca807e4dfa93d49dcc817')
     version('3.4.4', '9d6f73be072531e95884c7965ff80cd8')
@@ -64,6 +49,8 @@ class R(AutotoolsPackage):
             description='Enable X11 support (call configure --with-x)')
     variant('memory_profiling', default=False,
             description='Enable memory profiling')
+    variant('rmath', default=False,
+            description='Build standalone Rmath library')
 
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
@@ -78,7 +65,7 @@ class R(AutotoolsPackage):
     depends_on('bzip2')
     depends_on('libtiff')
     depends_on('jpeg')
-    depends_on('cairo')
+    depends_on('cairo+pdf')
     depends_on('cairo+X', when='+X')
     depends_on('cairo~X', when='~X')
     depends_on('pango')
@@ -86,9 +73,10 @@ class R(AutotoolsPackage):
     depends_on('pango~X', when='~X')
     depends_on('freetype')
     depends_on('tcl')
-    depends_on('tk')
+    depends_on('tk', when='+X')
     depends_on('libx11', when='+X')
     depends_on('libxt', when='+X')
+    depends_on('libxmu', when='+X')
     depends_on('curl')
     depends_on('pcre')
     depends_on('java')
@@ -103,12 +91,23 @@ class R(AutotoolsPackage):
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
 
+    @run_after('build')
+    def build_rmath(self):
+        if '+rmath' in self.spec:
+            with working_dir('src/nmath/standalone'):
+                make()
+
+    @run_after('install')
+    def install_rmath(self):
+        if '+rmath' in self.spec:
+            with working_dir('src/nmath/standalone'):
+                make('install')
+
     def configure_args(self):
         spec   = self.spec
         prefix = self.prefix
 
         tcl_config_path = join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')
-        tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
 
         config_args = [
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
@@ -116,14 +115,27 @@ class R(AutotoolsPackage):
             '--enable-BLAS-shlib',
             '--enable-R-framework=no',
             '--with-tcl-config={0}'.format(tcl_config_path),
-            '--with-tk-config={0}'.format(tk_config_path),
+            'LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(join_path(prefix, 'rlib',
+                                                            'R', 'lib')),
         ]
+        if '^tk' in spec:
+            tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
+            config_args.append('--with-tk-config={0}'.format(tk_config_path))
 
         if '+external-lapack' in spec:
-            config_args.extend([
-                '--with-blas={0}'.format(spec['blas'].libs),
-                '--with-lapack'
-            ])
+            if '^mkl' in spec and 'gfortran' in self.compiler.fc:
+                mkl_re = re.compile(r'(mkl_)intel(_i?lp64\b)')
+                config_args.extend([
+                    mkl_re.sub(r'\g<1>gf\g<2>',
+                               '--with-blas={0}'.format(
+                                   spec['blas'].libs.ld_flags)),
+                    '--with-lapack'
+                ])
+            else:
+                config_args.extend([
+                    '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
+                    '--with-lapack'
+                ])
 
         if '+X' in spec:
             config_args.append('--with-x')
@@ -132,6 +144,10 @@ class R(AutotoolsPackage):
 
         if '+memory_profiling' in spec:
             config_args.append('--enable-memory-profiling')
+
+        # Set FPICFLAGS for compilers except 'gcc'.
+        if self.compiler.name != 'gcc':
+            config_args.append('FPICFLAGS={0}'.format(self.compiler.pic_flag))
 
         return config_args
 

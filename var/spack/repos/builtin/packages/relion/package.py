@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,10 +15,7 @@ class Relion(CMakePackage, CudaPackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
 
-    version('3.0_beta',
-            git='https://bitbucket.org/scheres/relion-3.0_beta.git')
-    version('2.1', preferred='true', tag='2.1')
-    version('2.0.3', tag='2.0.3')
+    version('3.0.7', tag='3.0.7')
     # relion has no develop branch though pulling from master
     # should be considered the same as develop
     version('develop', branch='master')
@@ -63,11 +41,8 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('fltk', when='+gui')
     depends_on('libtiff')
 
-    # relion 3 supports cuda 9
-    # relion < 3 does not
     depends_on('cuda', when='+cuda')
-    depends_on('cuda@9:', when='@3: +cuda')
-    depends_on('cuda@8.0:8.99', when='@:2 +cuda')
+    depends_on('cuda@9:10.99', when='@3: +cuda')
 
     def cmake_args(self):
 

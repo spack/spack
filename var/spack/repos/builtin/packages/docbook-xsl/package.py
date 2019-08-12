@@ -1,49 +1,35 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 from spack import *
 
 
 class DocbookXsl(Package):
-    """Docbook XSL vocabulary."""
-    homepage = "http://docbook.sourceforge.net/"
-    url = "https://downloads.sourceforge.net/project/docbook/docbook-xsl/1.79.1/docbook-xsl-1.79.1.tar.bz2"
+    """DocBook XSLT 1.0 Stylesheets."""
 
-    version('1.79.1', 'b48cbf929a2ad85e6672f710777ca7bc')
+    homepage = "https://github.com/docbook/xslt10-stylesheets"
+    url      = "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-1.79.2.tar.bz2"
+
+    version('1.79.2', sha256='316524ea444e53208a2fb90eeb676af755da96e1417835ba5f5eb719c81fa371')
 
     depends_on('docbook-xml')
 
+    patch('docbook-xsl-1.79.2-stack_fix-1.patch', when='@1.79.2')
+
     def install(self, spec, prefix):
-        for item in os.listdir('.'):
-            src = os.path.abspath(item)
-            dst = os.path.join(prefix, item)
-            if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
-            else:
-                install(src, dst)
+        install_tree('.', prefix)
+
+    @property
+    def catalog(self):
+        return os.path.join(self.prefix, 'catalog.xml')
 
     def setup_environment(self, spack_env, run_env):
-        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
+        catalog = self.catalog
         run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        catalog = self.catalog
+        spack_env.prepend_path("XML_CATALOG_FILES", catalog)

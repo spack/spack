@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,6 +11,9 @@ class Muparser(Package):
     homepage = "http://muparser.beltoforion.de/"
     url      = "https://github.com/beltoforion/muparser/archive/v2.2.5.tar.gz"
 
+    version('2.2.6.1', '410d29b4c58d1cdc2fc9ed1c1c7f67fe')
+    # 2.2.6 presents itself as 2.2.5, don't add it to Spack
+    # version('2.2.6', 'f197b2815ca0422b2091788a78f2dc8a')
     version('2.2.5', '02dae671aa5ad955fdcbcd3fee313fb7')
 
     # Replace std::auto_ptr by std::unique_ptr
@@ -37,10 +21,30 @@ class Muparser(Package):
     patch('auto_ptr.patch',
           when='@2.2.5')
 
+    depends_on('cmake@3.1.0:', when='@2.2.6:', type='build')
+
+    # Cmake build since 2.2.6
+    @when('@2.2.6:')
+    def install(self, spec, prefix):
+        cmake_args = [
+            '-DENABLE_SAMPLES=OFF',
+            '-DENABLE_OPENMP=OFF',
+            '-DBUILD_SHARED_LIBS=ON'
+        ]
+
+        cmake_args.extend(std_cmake_args)
+
+        with working_dir('spack-build', create=True):
+            cmake('..', *cmake_args)
+            make()
+            make('install')
+
+    @when('@2.2.5')
     def install(self, spec, prefix):
         options = ['--disable-debug',
+                   '--disable-samples',
                    '--disable-dependency-tracking',
-                   'CXXFLAGS=-std=c++11',
+                   'CXXFLAGS={0}'.format(self.compiler.cxx11_flag),
                    '--prefix=%s' % prefix]
 
         configure(*options)

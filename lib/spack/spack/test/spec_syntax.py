@@ -1,34 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import pytest
 import shlex
 
 import spack.store
 import spack.spec as sp
 from spack.parse import Token
-from spack.spec import Spec, parse, parse_anonymous_spec
+from spack.spec import Spec
 from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
 from spack.spec import DuplicateArchitectureError, DuplicateVariantError
@@ -116,7 +97,7 @@ class TestSpecSyntax(object):
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
-        spec = shlex.split(spec)
+        spec = shlex.split(str(spec))
         lex_output = sp.SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type == sp.ID or tok.type == sp.VAL:
@@ -222,8 +203,8 @@ class TestSpecSyntax(object):
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
 
         self.check_parse(
-            "x arch=test-redhat6-None "
-            " ^y arch=test-None-x86_64 "
+            "x arch=test-redhat6-None"
+            " ^y arch=test-None-x86_64"
             " ^z arch=linux-None-None",
 
             "x os=fe "
@@ -231,11 +212,11 @@ class TestSpecSyntax(object):
             "^z platform=linux")
 
         self.check_parse(
-            "x arch=test-debian6-x86_64 "
+            "x arch=test-debian6-x86_64"
             " ^y arch=test-debian6-x86_64",
 
-            "x os=default_os target=default_target "
-            "^y os=default_os target=default_target")
+            "x os=default_os target=default_target"
+            " ^y os=default_os target=default_target")
 
         self.check_parse("x ^y", "x@: ^y@:")
 
@@ -329,15 +310,15 @@ class TestSpecSyntax(object):
         assert len(specs) == 2
 
     @pytest.mark.db
-    def test_ambiguous_hash(self, database):
+    def test_ambiguous_hash(self, mutable_database):
         x1 = Spec('a')
         x1._hash = 'xy'
         x1._concrete = True
         x2 = Spec('a')
         x2._hash = 'xx'
         x2._concrete = True
-        database.add(x1, spack.store.layout)
-        database.add(x2, spack.store.layout)
+        mutable_database.add(x1, spack.store.layout)
+        mutable_database.add(x2, spack.store.layout)
 
         # ambiguity in first hash character
         self._check_raises(AmbiguousHashError, ['/x'])
@@ -551,18 +532,3 @@ class TestSpecSyntax(object):
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
-
-
-@pytest.mark.parametrize('spec,anon_spec,spec_name', [
-    ('openmpi languages=go', 'languages=go', 'openmpi'),
-    ('openmpi @4.6:', '@4.6:', 'openmpi'),
-    ('openmpi languages=go @4.6:', 'languages=go @4.6:', 'openmpi'),
-    ('openmpi @4.6: languages=go', '@4.6: languages=go', 'openmpi'),
-])
-def test_parse_anonymous_specs(spec, anon_spec, spec_name):
-
-    expected = parse(spec)
-    spec = parse_anonymous_spec(anon_spec, spec_name)
-
-    assert len(expected) == 1
-    assert spec in expected

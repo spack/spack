@@ -1,0 +1,37 @@
+From 8089fa02122fed0a6394eba14bbedcb1d18e2384 Mon Sep 17 00:00:00 2001
+From: Kevin Atkinson <kevina@gnu.org>
+Date: Thu, 29 Dec 2016 00:50:31 -0500
+Subject: [PATCH] Compile Fixes for GCC 7.
+
+Closes #519.
+---
+ modules/filter/tex.cpp | 2 +-
+ prog/check_funs.cpp    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/modules/filter/tex.cpp b/modules/filter/tex.cpp
+index a979539..19ab63c 100644
+--- a/modules/filter/tex.cpp
++++ b/modules/filter/tex.cpp
+@@ -174,7 +174,7 @@ namespace {
+ 
+     if (c == '{') {
+ 
+-      if (top.in_what == Parm || top.in_what == Opt || top.do_check == '\0')
++      if (top.in_what == Parm || top.in_what == Opt || *top.do_check == '\0')
+ 	push_command(Parm);
+ 
+       top.in_what = Parm;
+diff --git a/prog/check_funs.cpp b/prog/check_funs.cpp
+index db54f3d..89ee09d 100644
+--- a/prog/check_funs.cpp
++++ b/prog/check_funs.cpp
+@@ -647,7 +647,7 @@ static void print_truncate(FILE * out, const char * word, int width) {
+     }
+   }
+   if (i == width-1) {
+-    if (word == '\0')
++    if (*word == '\0')
+       put(out,' ');
+     else if (word[len] == '\0')
+       put(out, word, len);

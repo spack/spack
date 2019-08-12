@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import sys
 
 from spack import *
@@ -32,8 +13,14 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2019.3.199', '06de2b54f4812e7c39a118536259c942029fe1d6d8918ad9df558a83c4162b8f',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15275/l_mkl_2019.3.199.tgz")
+    version('2019.1.144', '5205a460a9c685f7a442868367389b2d0c25e1455346bc6a37c5b8ff90a20fbb',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14895/l_mkl_2019.1.144.tgz")
     version('2019.0.117', 'd9e1b6b96fbffd4b306c7e8291f141a2',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13575/l_mkl_2019.0.117.tgz")
+    version('2018.4.274', '18eb3cde3e6a61a88f25afff25df762a560013f650aaf363f7d3d516a0d04881',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13725/l_mkl_2018.4.274.tgz")
     version('2018.3.222', '3e63646a4306eff95e8d0aafd53a2983',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13005/l_mkl_2018.3.222.tgz")
     version('2018.2.199', 'fd31b656a8eb859c89495b9cc41230b4',
@@ -72,6 +59,7 @@ class IntelMkl(IntelPackage):
     provides('lapack')
     provides('scalapack')
     provides('mkl')
+    provides('fftw-api@3', when='@2017:')
 
     if sys.platform == 'darwin':
         # there is no libmkl_gnu_thread on macOS

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -36,6 +17,7 @@ class PyMarkdown(PythonPackage):
     homepage = "https://pythonhosted.org/Markdown/"
     url      = "https://pypi.io/packages/source/m/markdown/Markdown-2.6.11.tar.gz"
 
+    version('3.1.1', sha256='2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a')
     version('2.6.11', sha256='a856869c7ff079ad84a3e19cd87a64998350c2b94e9e08e44270faef33400f81')
     version('2.6.7', sha256='daebf24846efa7ff269cfde8c41a48bb2303920c7b2c7c5e04fa82e6282d05c0')
     version('2.6.6', sha256='9a292bb40d6d29abac8024887bcfc1159d7a32dc1d6f1f6e8d6d8e293666c504')
@@ -49,5 +31,8 @@ class PyMarkdown(PythonPackage):
     version('2.5.1', sha256='8f81ed12c18608a502828acb7d318f362c42f4eca97d01e93cadfc52c1e40b73')
     version('2.5', sha256='6ba74a1e7141c9603750d80711b639a7577bffb785708e6260090239ee5bc76d')
 
-    depends_on('python@2.7:2.8,3.2:3.4')
+    depends_on('python@2.7:2.8,3.2:3.4', when='@:2.6.7')
+    depends_on('python@2.7:2.8,3.2:3.6', when='@2.6.8:2.6.11')
+    depends_on('python@2.7:2.8,3.3.5:', when='@3.1.1:')
+
     depends_on('py-setuptools', type='build', when='@2.6.11:')

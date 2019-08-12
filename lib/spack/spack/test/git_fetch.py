@@ -1,36 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
+import shutil
 
 import pytest
 
-from llnl.util.filesystem import working_dir, touch
+from llnl.util.filesystem import working_dir, touch, mkdirp
 
 import spack.repo
 import spack.config
 from spack.spec import Spec
+from spack.stage import Stage
 from spack.version import ver
 from spack.fetch_strategy import GitFetchStrategy
 from spack.util.executable import which
@@ -40,8 +23,11 @@ pytestmark = pytest.mark.skipif(
     not which('git'), reason='requires git to be installed')
 
 
+_mock_transport_error = 'Mock HTTP transport error'
+
+
 @pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1', '1.7.10', '1.7.0'])
-def git_version(request):
+def git_version(request, monkeypatch):
     """Tests GitFetchStrategy behavior for different git versions.
 
     GitFetchStrategy tries to optimize using features of newer git
@@ -59,13 +45,38 @@ def git_version(request):
         if test_git_version > real_git_version:
             pytest.skip("Can't test clone logic for newer version of git.")
 
-        # patch the fetch strategy to think it's using a lower git version.
+        # Patch the fetch strategy to think it's using a lower git version.
         # we use this to test what we'd need to do with older git versions
         # using a newer git installation.
-        git_version_method = GitFetchStrategy.git_version
-        GitFetchStrategy.git_version = test_git_version
+        monkeypatch.setattr(GitFetchStrategy, 'git_version', ver('1.7.1'))
         yield
-        GitFetchStrategy.git_version = git_version_method
+
+
+@pytest.fixture
+def mock_bad_git(monkeypatch):
+    """
+    Test GitFetchStrategy behavior with a bad git command for git >= 1.7.1
+    to trigger a SpackError.
+    """
+    def bad_git(*args, **kwargs):
+        """Raise a SpackError with the transport message."""
+        raise spack.error.SpackError(_mock_transport_error)
+
+    # Patch the fetch strategy to think it's using a git version that
+    # will error out when git is called.
+    monkeypatch.setattr(GitFetchStrategy, 'git', bad_git)
+    monkeypatch.setattr(GitFetchStrategy, 'git_version', ver('1.7.1'))
+    yield
+
+
+def test_bad_git(tmpdir, mock_bad_git):
+    """Trigger a SpackError when attempt a fetch with a bad git."""
+    testpath = str(tmpdir)
+
+    with pytest.raises(spack.error.SpackError):
+        fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
+        with Stage(fetcher, path=testpath):
+            fetcher.fetch()
 
 
 @pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
@@ -120,3 +131,41 @@ def test_fetch(type_of_test,
             assert os.path.isfile(file_path)
 
             assert h('HEAD') == h(t.revision)
+
+
+@pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
+def test_debug_fetch(type_of_test, mock_git_repository, config):
+    """Fetch the repo with debug enabled."""
+    # Retrieve the right test parameters
+    t = mock_git_repository.checks[type_of_test]
+
+    # Construct the package under test
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    pkg.versions[ver('git')] = t.args
+
+    # Fetch then ensure source path exists
+    with pkg.stage:
+        with spack.config.override('config:debug', True):
+            pkg.do_fetch()
+            assert os.path.isdir(pkg.stage.source_path)
+
+
+def test_git_extra_fetch(tmpdir):
+    """Ensure a fetch after 'expanding' is effectively a no-op."""
+    testpath = str(tmpdir)
+
+    fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
+    with Stage(fetcher, path=testpath) as stage:
+        mkdirp(stage.source_path)
+        fetcher.fetch()   # Use fetcher to fetch for code coverage
+        shutil.rmtree(stage.source_path)
+
+
+def test_needs_stage():
+    """Trigger a NoStageError when attempt a fetch without a stage."""
+    with pytest.raises(spack.fetch_strategy.NoStageError,
+                       matches=_mock_transport_error):
+        fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
+        fetcher.fetch()

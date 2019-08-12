@@ -1,36 +1,17 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
+import pytest
 
 from llnl.util.argparsewriter import ArgparseWriter
 
 import spack.cmd
 import spack.main
-from spack.main import SpackCommand
 
-commands = SpackCommand('commands')
+commands = spack.main.SpackCommand('commands')
 
 parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
@@ -68,3 +49,63 @@ def test_rst():
             assert prog in out
             assert re.sub(r' ', '-', prog) in out
     Subcommands().write(parser)
+
+
+def test_rst_with_input_files(tmpdir):
+    filename = tmpdir.join('file.rst')
+    with filename.open('w') as f:
+        f.write('''
+.. _cmd-spack-fetch:
+cmd-spack-list:
+.. _cmd-spack-stage:
+_cmd-spack-install:
+.. _cmd-spack-patch:
+''')
+
+    out = commands('--format=rst', str(filename))
+    for name in ['fetch', 'stage', 'patch']:
+        assert (':ref:`More documentation <cmd-spack-%s>`' % name) in out
+
+    for name in ['list', 'install']:
+        assert (':ref:`More documentation <cmd-spack-%s>`' % name) not in out
+
+
+def test_rst_with_header(tmpdir):
+    fake_header = 'this is a header!\n\n'
+
+    filename = tmpdir.join('header.txt')
+    with filename.open('w') as f:
+        f.write(fake_header)
+
+    out = commands('--format=rst', '--header', str(filename))
+    assert out.startswith(fake_header)
+
+    with pytest.raises(spack.main.SpackCommandError):
+        commands('--format=rst', '--header', 'asdfjhkf')
+
+
+def test_rst_update(tmpdir):
+    update_file = tmpdir.join('output')
+
+    # not yet created when commands is run
+    commands('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read()
+
+    # created but older than commands
+    with update_file.open('w') as f:
+        f.write('empty\n')
+    update_file.setmtime(0)
+    commands('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read() != 'empty\n'
+
+    # newer than commands
+    with update_file.open('w') as f:
+        f.write('empty\n')
+    commands('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read() == 'empty\n'

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -69,15 +50,19 @@ class LlvmOpenmpOmpt(CMakePackage):
         # CMAKE rpath variable prevents standalone error
         # where this package wants the llvm tools path
         if '+standalone' in self.spec:
-                cmake_args.extend(
-                    ['-DLIBOMP_STANDALONE_BUILD=true',
-                     '-DCMAKE_BUILD_WITH_INSTALL_RPATH=true',
-                     '-DLIBOMP_USE_DEBUGGER=false'])
+            cmake_args.extend(
+                ['-DLIBOMP_STANDALONE_BUILD=true',
+                 '-DCMAKE_BUILD_WITH_INSTALL_RPATH=true',
+                 '-DLIBOMP_USE_DEBUGGER=false'])
 
         # Build llvm-openmp-ompt using the tr6_forwards branch
         # This requires the version to be 5.0 (50)
         if '@tr6_forwards' in self.spec:
-                cmake_args.extend(
-                    ['-DLIBOMP_OMP_VERSION=50'])
+            cmake_args.extend(
+                ['-DLIBOMP_OMP_VERSION=50'])
 
         return cmake_args
+
+    @property
+    def libs(self):
+        return find_libraries('libomp', root=self.prefix, recursive=True)

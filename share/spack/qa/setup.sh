@@ -1,22 +1,48 @@
 #!/bin/bash -e
 #
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
 # Description:
 #     Common setup code to be sourced by Spack's test scripts.
 #
 
 QA_DIR="$(dirname ${BASH_SOURCE[0]})"
-SPACK_ROOT="$QA_DIR/../../.."
+export SPACK_ROOT=$(realpath "$QA_DIR/../../..")
 
 # Source the setup script
 . "$SPACK_ROOT/share/spack/setup-env.sh"
 
+# by default coverage is off.
+coverage=""
+coverage_run=""
+
+# bash coverage depends on some other factors -- there are issues with
+# kcov for Python 2.6, unit tests, and build tests.
+if [[ $TEST_SUITE == unit &&   # kcov segfaults for the MPICH build test
+      $TRAVIS_OS_NAME == linux &&
+      $TRAVIS_PYTHON_VERSION != 2.6 ]];
+then
+    BASH_COVERAGE="true"
+else
+    BASH_COVERAGE="false"
+fi
+
 # Set up some variables for running coverage tests.
-if [[ "$TEST_SUITE" == "unit" || "$TEST_SUITE" == "build" ]]; then
+if [[ "$COVERAGE" == "true" ]]; then
+    # these set up coverage for Python
     coverage=coverage
     coverage_run="coverage run"
-else
-    coverage=""
-    coverage_run=""
+
+    if [ "$BASH_COVERAGE" = true ]; then
+        mkdir -p coverage
+        cc_script="$SPACK_ROOT/lib/spack/env/cc"
+        bashcov=$(realpath ${QA_DIR}/bashcov)
+        sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$cc_script"
+    fi
 fi
 
 #

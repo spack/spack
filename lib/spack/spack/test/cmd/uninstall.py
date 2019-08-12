@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import pytest
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
@@ -56,7 +37,7 @@ def test_installed_dependents():
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures('database')
+@pytest.mark.usefixtures('mutable_database')
 def test_recursive_uninstall():
     """Test recursive uninstall."""
     uninstall('-y', '-a', '--dependents', 'callpath')
@@ -71,3 +52,32 @@ def test_recursive_uninstall():
     assert len(mpileaks_specs) == 0
     assert len(callpath_specs) == 0
     assert len(mpi_specs) == 3
+
+
+@pytest.mark.db
+@pytest.mark.regression('3690')
+@pytest.mark.usefixtures('mutable_database')
+@pytest.mark.parametrize('constraint,expected_number_of_specs', [
+    ('dyninst', 7), ('libelf', 5)
+])
+def test_uninstall_spec_with_multiple_roots(
+        constraint, expected_number_of_specs
+):
+    uninstall('-y', '-a', '--dependents', constraint)
+
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == expected_number_of_specs
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('mutable_database')
+@pytest.mark.parametrize('constraint,expected_number_of_specs', [
+    ('dyninst', 13), ('libelf', 13)
+])
+def test_force_uninstall_spec_with_ref_count_not_zero(
+        constraint, expected_number_of_specs
+):
+    uninstall('-f', '-y', constraint)
+
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == expected_number_of_specs

@@ -1,27 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
 import os
 from datetime import datetime
 
@@ -39,7 +21,7 @@ from spack.spec import Spec
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
 
-description = "manage mirrors"
+description = "manage mirrors (source and binary)"
 section = "config"
 level = "long"
 
@@ -63,9 +45,9 @@ def setup_parser(subparser):
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
     create_parser.add_argument(
-        '-o', '--one-version-per-spec', action='store_const',
-        const=1, default=0,
-        help="only fetch one 'preferred' version per spec, not all known")
+        '-n', '--versions-per-spec', type=int,
+        default=1,
+        help="the number of versions to fetch for each spec")
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -160,6 +142,7 @@ def _read_specs_from_file(filename):
                 s.package
                 specs.append(s)
             except SpackError as e:
+                tty.debug(e)
                 tty.die("Parse error in %s, line %d:" % (filename, i + 1),
                         ">>> " + string, str(e))
     return specs
@@ -181,7 +164,7 @@ def mirror_create(args):
         # If nothing is passed, use all packages.
         if not specs:
             specs = [Spec(n) for n in spack.repo.all_package_names()]
-            specs.sort(key=lambda s: s.format("$_$@").lower())
+            specs.sort(key=lambda s: s.format("{name}{@version}").lower())
 
         # If the user asked for dependencies, traverse spec DAG get them.
         if args.dependencies:
@@ -211,7 +194,7 @@ def mirror_create(args):
 
         # Actually do the work to create the mirror
         present, mirrored, error = spack.mirror.create(
-            directory, specs, num_versions=args.one_version_per_spec)
+            directory, specs, num_versions=args.versions_per_spec)
         p, m, e = len(present), len(mirrored), len(error)
 
         verb = "updated" if existed else "created"
@@ -223,7 +206,8 @@ def mirror_create(args):
             "  %-4d failed to fetch." % e)
         if error:
             tty.error("Failed downloads:")
-            colify(s.cformat("$_$@") for s in error)
+            colify(s.cformat("{name}{@version}") for s in error)
+            sys.exit(1)
 
 
 def mirror(parser, args):
@@ -232,5 +216,8 @@ def mirror(parser, args):
               'remove': mirror_remove,
               'rm': mirror_remove,
               'list': mirror_list}
+
+    if args.no_checksum:
+        spack.config.set('config:checksum', False, scope='command_line')
 
     action[args.mirror_command](args)

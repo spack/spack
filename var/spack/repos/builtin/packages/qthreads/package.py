@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -39,6 +20,7 @@ class Qthreads(AutotoolsPackage):
     homepage = "http://www.cs.sandia.gov/qthreads/"
 
     url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
+    version("1.14", "3e6eb58baf78dc961b19a37b2dc4f9a5")
     version("1.12", "c857d175f8135eaa669f3f8fa0fb0c09")
     version("1.11", "68b5f9a41cfd1a2ac112cc4db0612326")
     version("1.10", "d1cf3cf3f30586921359f7840171e551")
@@ -46,12 +28,21 @@ class Qthreads(AutotoolsPackage):
     patch("restrict.patch", when="@:1.10")
     patch("trap.patch", when="@:1.10")
 
-    depends_on("hwloc")
+    variant(
+        'hwloc',
+        default=True,
+        description='hwloc support'
+    )
+
+    depends_on("hwloc@1.0:1.99", when="+hwloc")
 
     def configure_args(self):
         spec = self.spec
-        args = [
-            "--enable-guard-pages",
-            "--with-topology=hwloc",
-            "--with-hwloc=%s" % spec["hwloc"].prefix]
+        if "+hwloc" in self.spec:
+            args = [
+                "--enable-guard-pages",
+                "--with-topology=hwloc",
+                "--with-hwloc=%s" % spec["hwloc"].prefix]
+        else:
+            args = ["--with-topology=no"]
         return args

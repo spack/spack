@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import llnl.util.tty as tty
 
 import spack.repo
@@ -34,9 +15,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs (default: #cpus)")
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="don't remove the install prefix if installation fails")
@@ -48,6 +27,14 @@ def setup_parser(subparser):
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
 
+    cache_group = subparser.add_mutually_exclusive_group()
+    cache_group.add_argument(
+        '--use-cache', action='store_true', dest='use_cache', default=True,
+        help="check for pre-built Spack packages in mirrors (default)")
+    cache_group.add_argument(
+        '--no-cache', action='store_false', dest='use_cache', default=True,
+        help="do not check for pre-built Spack packages in mirrors")
+
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
@@ -57,9 +44,9 @@ def bootstrap(parser, args, **kwargs):
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'install_deps': 'dependencies',
-        'make_jobs': args.jobs,
         'verbose': args.verbose,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'use_cache': args.use_cache
     })
 
     # Define requirement dictionary defining general specs which need

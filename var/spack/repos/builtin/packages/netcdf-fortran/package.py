@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,12 @@ class NetcdfFortran(AutotoolsPackage):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.4.3.tar.gz"
 
+    version('4.4.5', 'edb51c7320a9024b419b7a87e05fa79a')
     version('4.4.4', 'e855c789cd72e1b8bc1354366bf6ac72')
     version('4.4.3', 'bfd4ae23a34635b273d3eb0d91cbde9e')
+
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
     depends_on('netcdf')
 
@@ -40,8 +25,20 @@ class NetcdfFortran(AutotoolsPackage):
     # https://github.com/Unidata/netcdf-fortran/issues/94
     patch('nag.patch', when='@:4.4.4%nag')
 
-    def configure_args(self):
-        return ['CPPFLAGS=-I' + self.spec['netcdf'].prefix.include]
+    def flag_handler(self, name, flags):
+        if name in ['cflags', 'fflags'] and '+pic' in self.spec:
+            flags.append(self.compiler.pic_flag)
+        elif name == 'cppflags':
+            flags.append(self.spec['netcdf'].headers.cpp_flags)
+        elif name == 'ldflags':
+            # We need to specify LDFLAGS to get correct dependency_libs
+            # in libnetcdff.la, so packages that use libtool for linking
+            # could correctly link to all the dependencies even when the
+            # building takes place outside of Spack environment, i.e.
+            # without Spack's compiler wrappers.
+            flags.append(self.spec['netcdf'].libs.search_flags)
+
+        return None, None, flags
 
     @property
     def libs(self):

@@ -1,3 +1,8 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _developer_guide:
 
 ===============
@@ -483,7 +488,7 @@ supply ``--profile`` to Spack on the command line, before any subcommands.
 
 ``spack --profile`` output looks like this:
 
-.. command-output:: spack --profile graph dyninst
+.. command-output:: spack --profile graph hdf5
    :ellipsis: 25
 
 The bottom of the output shows the top most time consuming functions,

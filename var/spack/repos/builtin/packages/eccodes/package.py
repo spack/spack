@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
 from spack import *
 
@@ -36,6 +17,7 @@ class Eccodes(CMakePackage):
 
     maintainers = ['skosukhin']
 
+    version('2.13.0', sha256='c5ce1183b5257929fc1f1c8496239e52650707cfab24f4e0e1f1a471135b8272')
     version('2.5.0', '5a7e92c58418d855082fa573efd352aa')
     version('2.2.0', 'b27e6f0a3eea5b92dac37372e4c45a62')
 
@@ -75,7 +57,9 @@ class Eccodes(CMakePackage):
     # Can be built with Python2 or Python3.
     depends_on('python', when='+memfs', type='build')
     # The interface works only for Python2.
-    depends_on('python@2.6:2.999', when='+python',
+    # Python 3 support was added in 2.13.0:
+    # https://confluence.ecmwf.int/display/ECC/Python+3+interface+for+ecCodes
+    depends_on('python@2.6:2.999', when='@:2.12+python',
                type=('build', 'link', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     extends('python', when='+python')

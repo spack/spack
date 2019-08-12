@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,28 +14,30 @@ class PyRasterio(PythonPackage):
     arrays."""
 
     homepage = "https://github.com/mapbox/rasterio"
-    url      = "https://github.com/mapbox/rasterio/archive/1.0a12.zip"
+    url      = "https://pypi.io/packages/source/r/rasterio/rasterio-1.0.24.tar.gz"
 
-    version('1.0a12', 'e078ca02b3513b65a9be5bb3f528b4da')
+    maintainers = ['adamjstewart']
+    import_modules = ['rasterio', 'rasterio.rio']
 
-    variant('aws', default=False,
-        description='Enable testing with Amazon Web Services')
+    version('1.0.24', sha256='4839479621045211f66868ec49625979693450bc2e476f23e7e8ac4804eaf452')
+    version('1.0a12', sha256='47d460326e04c64590ff56952271a184a6307f814efc34fb319c12e690585f3c')
 
+    depends_on('python@3:', type=('build', 'run'), when='@1.1:')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
-
-    # Only use py-enum34 with Python2
-    # depends_on('py-enum34', type='run', when='^python@:2.7')
-
-    depends_on('py-attrs', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-cligj', type=('build', 'run'))
-    depends_on('py-click', type=('build', 'run'))
     depends_on('py-affine', type=('build', 'run'))
-    depends_on('py-snuggs', type=('build', 'run'))
-    depends_on('gdal')
+    depends_on('py-attrs', type=('build', 'run'))
+    depends_on('py-click@4:7', type=('build', 'run'))
+    depends_on('py-cligj@0.5:', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-snuggs@1.4.1:', type=('build', 'run'))
+    depends_on('py-click-plugins', type=('build', 'run'))
+    depends_on('py-enum34', type='run', when='^python@:3.3')
+    depends_on('gdal@1.11:')
     depends_on('jpeg')
-
-    # (Commented out for now: py-boto3 is not yet a Spack package)
-    # Some (optional) tests use py-boto3 for Amazon Web Services
-    # depends_on('py-boto3', type=('build', 'run'), when='+aws')
+    depends_on('py-pytest@2.8.2:', type='test')
+    depends_on('py-boto3@1.2.4:', type='test')
+    depends_on('py-packaging', type='test')
+    depends_on('py-hypothesis', type='test')
+    depends_on('py-futures', type='test', when='^python@:3.1')
+    depends_on('py-mock', type='test', when='^python@:3.1')

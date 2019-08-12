@@ -1,33 +1,14 @@
-##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
 
 class Flecsi(CMakePackage):
-    """FleCSI is a compile-time configurable framework designed to support
+    '''FleCSI is a compile-time configurable framework designed to support
        multi-physics application development. As such, FleCSI attempts to
        provide a very general set of infrastructure design patterns that can
        be specialized and extended to suit the needs of a broad variety of
@@ -35,26 +16,66 @@ class Flecsi(CMakePackage):
        mesh topology, mesh geometry, and mesh adjacency information,
        n-dimensional hashed-tree data structures, graph partitioning
        interfaces,and dependency closures.
-    """
-    homepage = "http://flecsi.lanl.gov/"
-    git      = "https://github.com/laristra/flecsi.git"
+    '''
+    homepage = 'http://flecsi.lanl.gov/'
+    git      = 'https://github.com/laristra/flecsi.git'
 
-    version('develop', branch='master', submodules=True)
+    version('develop', branch='master', submodules=False)
+    variant('backend', default='mpi', values=('serial', 'mpi', 'legion'),
+            description='Backend to use for distributed memory')
+    variant('caliper', default=False,
+            description='Enable Caliper Support')
+    variant('graphviz', default=False,
+            description='Enable GraphViz Support')
+    variant('tutorial', default=False,
+            description='Build FleCSI Tutorials')
+    variant('flecstan', default=False,
+            description='Build FleCSI Static Analyzer')
 
-    variant('mpi', default=True,
-            description='Build on top of mpi conduit for mpi inoperability')
-
-    depends_on("cmake@3.1:", type='build')
-    depends_on("legion+shared", when='~mpi')
-    depends_on("legion+shared+mpi", when='+mpi')
-    depends_on("parmetis")
+    depends_on('cmake@3.1:',  type='build')
+    # Requires cinch > 1.0 due to cinchlog installation issue
+    depends_on('cinch@1.01:', type='build')
+    depends_on('mpi', when='backend=mpi')
+    depends_on('mpi', when='backend=legion')
+    depends_on('gasnet@2019.3.0 ~pshm', when='backend=legion')
+    depends_on('legion@ctrl-rep +shared +mpi', when='backend=legion')
+    depends_on('boost@1.59.0: cxxstd=11 +program_options')
+    depends_on('metis@5.1.0:')
+    depends_on('parmetis@4.0.3:')
+    depends_on('caliper', when='+caliper')
+    depends_on('graphviz', when='+graphviz')
+    depends_on('python@3.0:', when='+tutorial')
+    depends_on('llvm', when='+flecstan')
 
     def cmake_args(self):
-        options = ['-DENABLE_UNIT_TESTS=ON']
+        options = ['-DCMAKE_BUILD_TYPE=debug']
+        options.append('-DCINCH_SOURCE_DIR=' + self.spec['cinch'].prefix)
 
-        if '+mpi' in self.spec:
-            options.extend([
-                '-DENABLE_MPI=ON',
-            ])
+        if self.spec.variants['backend'].value == 'legion':
+            options.append('-DFLECSI_RUNTIME_MODEL=legion')
+        elif self.spec.variants['backend'].value == 'mpi':
+            options.append('-DFLECSI_RUNTIME_MODEL=mpi')
+        else:
+            options.append('-DFLECSI_RUNTIME_MODEL=serial')
+            options.append(
+                '-DENABLE_MPI=OFF',
+            )
+
+        if '+tutorial' in self.spec:
+            options.append('-DENABLE_FLECSIT=ON')
+            options.append('-DENABLE_FLECSI_TUTORIAL=ON')
+        else:
+            options.append('-DENABLE_FLECSIT=OFF')
+            options.append('-DENABLE_FLECSI_TUTORIAL=OFF')
+
+        if '+caliper' in self.spec:
+            options.append('-DENABLE_CALIPER=ON')
+        else:
+            options.append('-DENABLE_CALIPER=OFF')
+
+        if '+flecstan' in self.spec:
+            options.append('-DENABLE_FLECSTAN=ON')
+        else:
+            options.append('-DENABLE_FLECSTAN=OFF')
 
         return options

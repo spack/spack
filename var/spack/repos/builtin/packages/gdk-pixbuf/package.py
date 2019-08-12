@@ -1,53 +1,87 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class GdkPixbuf(AutotoolsPackage):
+class GdkPixbuf(Package):
     """The Gdk Pixbuf is a toolkit for image loading and pixel buffer
        manipulation. It is used by GTK+ 2 and GTK+ 3 to load and
        manipulate images. In the past it was distributed as part of
        GTK+ 2 but it was split off into a separate package in
        preparation for the change to GTK+ 3."""
-    homepage = "https://developer.gnome.org/gdk-pixbuf/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/2.31/gdk-pixbuf-2.31.2.tar.xz"
-    list_url = "http://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
-    list_depth = 2
 
+    homepage = "https://developer.gnome.org/gdk-pixbuf/"
+    url      = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/2.38/gdk-pixbuf-2.38.0.tar.xz"
+    list_url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
+    list_depth = 1
+
+    version('2.38.0', sha256='dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47')
     version('2.31.2', '6be6bbc4f356d4b79ab4226860ab8523')
 
-    depends_on("pkgconfig", type="build")
-    depends_on("gettext")
-    depends_on("glib")
-    depends_on("jpeg")
-    depends_on("libpng")
-    depends_on("libtiff")
-    depends_on("gobject-introspection")
+    depends_on('meson@0.46.0:', type='build', when='@2.37.92:')
+    depends_on('meson@0.45.0:', type='build', when='@2.37.0:')
+    depends_on('ninja', type='build', when='@2.37.0:')
+    depends_on('shared-mime-info', type='build', when='@2.36.8: platform=linux')
+    depends_on('shared-mime-info', type='build', when='@2.36.8: platform=cray')
+    depends_on('pkgconfig', type='build')
+    # Building the man pages requires libxslt and the Docbook stylesheets
+    depends_on('libxslt', type='build')
+    depends_on('docbook-xsl', type='build')
+    depends_on('gettext')
+    depends_on('glib@2.38.0:')
+    depends_on('jpeg')
+    depends_on('libpng')
+    depends_on('zlib')
+    depends_on('libtiff')
+    depends_on('gobject-introspection')
+
+    # Replace the docbook stylesheet URL with the one that our
+    # docbook-xsl package uses/recognizes.
+    patch('docbook-cdn.patch')
+
+    def url_for_version(self, version):
+        url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/{0}/gdk-pixbuf-{1}.tar.xz"
+        return url.format(version.up_to(2), version)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path("XDG_DATA_DIRS",
                                self.prefix.share)
         run_env.prepend_path("XDG_DATA_DIRS",
                              self.prefix.share)
+
+    def install(self, spec, prefix):
+        with working_dir('spack-build', create=True):
+            meson('..', *std_meson_args)
+            ninja('-v')
+            if self.run_tests:
+                ninja('test')
+            ninja('install')
+
+    def configure_args(self):
+        args = []
+        # disable building of gtk-doc files following #9771
+        args.append('--disable-gtk-doc-html')
+        true = which('true')
+        args.append('GTKDOC_CHECK={0}'.format(true))
+        args.append('GTKDOC_CHECK_PATH={0}'.format(true))
+        args.append('GTKDOC_MKPDF={0}'.format(true))
+        args.append('GTKDOC_REBASE={0}'.format(true))
+        return args
+
+    @when('@:2.36')
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix), *self.configure_args())
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')
+        if self.run_tests:
+            make('installcheck')
+
+    def setup_environment(self, spack_env, run_env):
+        # The "post-install.sh" script uses gdk-pixbuf-query-loaders,
+        # which was installed earlier.
+        spack_env.prepend_path('PATH', self.prefix.bin)

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,9 +14,10 @@ class PyMultiqc(PythonPackage):
     homepage = "https://multiqc.info"
     url      = "https://pypi.io/packages/source/m/multiqc/multiqc-1.0.tar.gz"
 
-    version('1.5', 'c9fc5f54a75b1d0c3e119e0db7f5fe72')
-    version('1.3', '78fef8a89c0bd40d559b10c1f736bbcd')
-    version('1.0', '0b7310b3f75595e5be8099fbed2d2515')
+    version('1.7', '02e6a7fac7cd9ed036dcc6c92b8f8bcacbd28983ba6be53afb35e08868bd2d68')
+    version('1.5', 'fe0ffd2b0d1067365ba4e54ae8991f2f779c7c684b037549b617020ea883310a')
+    version('1.3', 'cde17845680131e16521ace04235bb9496c78c44cdc7b5a0fb6fd93f4ad7a13b')
+    version('1.0', '1a49331a3d3f2e591a6e9902bc99b16e9205731f0cd2d6eaeee0da3d0f0664c9')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')
@@ -44,7 +26,7 @@ class PyMultiqc(PythonPackage):
     depends_on('py-lzstring', type=('build', 'run'))
     depends_on('py-future@0.14.1:', type=('build', 'run'))
     depends_on('py-spectra@0.0.10:', type=('build', 'run'))
-    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-matplotlib@2.0.0:2.9.9', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-simplejson', type=('build', 'run'))

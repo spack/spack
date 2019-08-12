@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -42,12 +23,18 @@ class PyRequests(PythonPackage):
         'requests.packages.urllib3.contrib._securetransport'
     ]
 
+    version('2.21.0', sha256='502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e')
     version('2.14.2', '4c3c169ed67466088a2a6947784fe444')
     version('2.13.0', '921ec6b48f2ddafc8bb6160957baf444')
     version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')
     version('2.3.0',  '7449ffdc8ec9ac37bbcd286003c80f00')
 
     depends_on('py-setuptools', type='build')
+
+    depends_on('py-chardet@3.0.2:3.0.999', type=('build', 'run'), when='@2.16.0:')
+    depends_on('py-idna@2.5', type=('build', 'run'), when='@2.16.0:')
+    depends_on('py-urllib3@1.21.1:1.21.999', type=('build', 'run'), when='@2.16.0:')
+    depends_on('py-certifi@2017.4.17', type=('build', 'run'), when='@2.16.0:')
 
     depends_on('py-pytest@2.8.0:',        type='test')
     depends_on('py-pytest-cov',           type='test')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -36,9 +17,9 @@ class Openjpeg(CMakePackage):
     """
 
     homepage = 'https://github.com/uclouvain/openjpeg'
-    url = 'https://github.com/uclouvain/openjpeg/archive/v2.3.0.tar.gz'
-    list_url = 'https://github.com/uclouvain/openjpeg/releases'
+    url = 'https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz'
 
+    version('2.3.1', sha256='63f5a4713ecafc86de51bfad89cc07bb788e9bba24ebbf0c4ca637621aadb6a9')
     version('2.3.0', '6a1f8aaa1fe55d2088e3a9c942e0f698')
     version('2.2.0', '269bb0b175476f3addcc0d03bd9a97b6')
     version('2.1.2', '40a7bfdcc66280b3c1402a0eb1a27624')

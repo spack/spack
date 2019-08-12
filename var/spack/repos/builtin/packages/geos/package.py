@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,8 +14,11 @@ class Geos(AutotoolsPackage):
        operators, as well as specific JTS enhanced topology functions."""
 
     homepage = "http://trac.osgeo.org/geos/"
-    url      = "http://download.osgeo.org/geos/geos-3.6.2.tar.bz2"
+    url      = "http://download.osgeo.org/geos/geos-3.7.2.tar.bz2"
 
+    maintainers = ['adamjstewart']
+
+    version('3.7.2', sha256='2166e65be6d612317115bfec07827c11b403c3f303e0a7420a2106bc999d7707')
     version('3.6.2', 'a32142343c93d3bf151f73db3baa651f')
     version('3.6.1', 'c97e338b3bc81f9848656e9d693ca6cc')
     version('3.6.0', '55de5fdf075c608d2d7b9348179ee649')
@@ -59,16 +43,14 @@ class Geos(AutotoolsPackage):
     variant('python', default=False, description='Enable Python support')
 
     extends('ruby', when='+ruby')
+    extends('python', when='+python')
 
     # Python 3 is supposedly supported, but I couldn't get it to work
     # https://trac.osgeo.org/geos/ticket/774
-    extends('python@:2', when='+python')
+    depends_on('python@:2', when='@:3.5')
 
     depends_on('swig', type='build', when='+ruby')
     depends_on('swig', type='build', when='+python')
-
-    # `make check` fails with:
-    # FAIL: geos_unit
 
     # I wasn't able to get the ruby bindings working.
     # It resulted in "Undefined symbols for architecture x86_64".

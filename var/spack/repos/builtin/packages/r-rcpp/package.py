@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -40,6 +21,10 @@ class RRcpp(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/Rcpp_0.12.13.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/Rcpp"
 
+    version('1.0.0',   sha256='b7378bf0dda17ef72aa3f2a318a9cb5667bef50b601dc1096431e17426e18bc2')
+    version('0.12.19', sha256='63aeb6d4b58cd2899ded26f38a77d461397d5b0dc5936f187d3ca6cd958ab582')
+    version('0.12.18', sha256='fcecd01e53cfcbcf58dec19842b7235a917b8d98988e4003cc090478c5bbd300')
+    version('0.12.17', sha256='4227c45c92416b5378ed5761495f9b3932d481bae9a190fb584d17c10744af23')
     version('0.12.16', 'ab5107766c63d66065ed1a92a4cab1b7')
     version('0.12.15', 'bebac0782862c15c2944764343e55582')
     version('0.12.14', '89a3dbad0aa3e345b9d0b862fa1fc56a')
@@ -49,3 +34,5 @@ class RRcpp(RPackage):
     version('0.12.9', '691c49b12794507288b728ede03668a5')
     version('0.12.6', 'db4280fb0a79cd19be73a662c33b0a8b')
     version('0.12.5', 'f03ec05b4e391cc46e7ce330e82ff5e2')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))

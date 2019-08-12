@@ -1,33 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
 from spack.util.editor import editor
+from spack.util.executable import Executable, which
 
 
 def pre_install(spec):
@@ -56,8 +38,26 @@ def set_up_license(pkg):
             # Create a new license file
             write_license_file(pkg, license_path)
             # Open up file in user's favorite $EDITOR for editing
-            editor(license_path)
-            tty.msg("Added global license file %s" % license_path)
+            editor_exe = None
+            if 'VISUAL' in os.environ:
+                editor_exe = Executable(os.environ['VISUAL'])
+                # gvim runs in the background by default so we force it to run
+                # in the foreground to make sure the license file is updated
+                # before we try to install
+                if 'gvim' in os.environ['VISUAL']:
+                    editor_exe.add_default_arg('-f')
+            elif 'EDITOR' in os.environ:
+                editor_exe = Executable(os.environ['EDITOR'])
+            else:
+                editor_exe = which('vim', 'vi', 'emacs', 'nano')
+            if editor_exe is None:
+                raise EnvironmentError(
+                    'No text editor found! Please set the VISUAL and/or EDITOR'
+                    ' environment variable(s) to your preferred text editor.')
+
+            def editor_wrapper(exe, args):
+                editor_exe(license_path)
+            editor(license_path, _exec_func=editor_wrapper)
         else:
             # Use already existing license file
             tty.msg("Found already existing license %s" % license_path)
