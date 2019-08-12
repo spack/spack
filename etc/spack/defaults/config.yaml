@@ -54,7 +54,9 @@ config:
   # builds directly inside Spack's instance without staging them in a
   # temporary space.
   #
-  # The build stage can be purged with `spack clean --stage`.
+  # The build stage can be purged with `spack clean --stage` and
+  # `spack clean -a`, so it is important that the specified directory uniquely
+  # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/spack-stage
 
