@@ -1,4 +1,4 @@
-/cmake/gmxDetectCpu.cmake
+--- a/cmake/gmxDetectCpu.cmake
 +++ b/cmake/gmxDetectCpu.cmake
 @@ -83,7 +83,7 @@ function(gmx_run_cpu_detection TYPE)
                  set(GCC_INLINE_ASM_DEFINE "-DGMX_X86_GCC_INLINE_ASM=0")
