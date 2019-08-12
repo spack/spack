@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Blaze(Package):
+class Blaze(CMakePackage):
     """Blaze is an open-source, high-performance C++ math library for dense and
     sparse arithmetic. With its state-of-the-art Smart Expression Template
     implementation Blaze combines the elegance and ease of use of a
@@ -18,6 +18,9 @@ class Blaze(Package):
     homepage = "https://bitbucket.org/blaze-lib/blaze/overview"
     url      = "https://bitbucket.org/blaze-lib/blaze/downloads/blaze-3.5.tar.gz"
     git      = "https://bitbucket.org/blaze-lib/blaze.git"
+
+    # Blaze requires at least cmake 3.8.0 for C++14 features.
+    depends_on('cmake@3.8.0:', type='build')
 
     version('master', branch='master')
     version('3.5', sha256='f50d4a57796b8012d3e6d416667d9abe6f4d95994eb9deb86cd4491381dec624')
@@ -39,6 +42,3 @@ class Blaze(Package):
     version('1.2', 'b1511324456c3f70fce198a2b63e71ef')
     version('1.1', '5e52ebe68217f2e50d66dfdb9803d51e')
     version('1.0', 'a46508a2965ace9d89ded30a386d9548')
-
-    def install(self, spec, prefix):
-        install_tree('blaze', join_path(prefix.include, 'blaze'))
