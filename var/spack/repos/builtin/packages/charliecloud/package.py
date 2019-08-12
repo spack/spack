@@ -34,9 +34,9 @@ class Charliecloud(MakefilePackage):
 
     # man pages and html docs
     variant('docs', default=False, description='Build man pages and html docs')
-    depends_on('rsync',               type='build', when='+doc')
-    depends_on('py-sphinx',           type='build', when='+doc')
-    depends_on('py-sphinx-rtd-theme', type='build', when='+doc')
+    depends_on('rsync',               type='build', when='+docs')
+    depends_on('py-sphinx',           type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
     def url_for_version(self, version):
         if version >= Version('0.9.8'):
