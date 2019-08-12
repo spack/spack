@@ -17,7 +17,7 @@ class Papi(Package):
        enables software engineers to see, in near real time, the
        relation between software performance and processor events.  In
        addition Component PAPI provides access to a collection of
-       components that expose performance measurement opportunites
+       components that expose performance measurement opportunities
        across the hardware and software stack."""
     homepage = "http://icl.cs.utk.edu/papi/index.html"
     url = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
@@ -31,13 +31,13 @@ class Papi(Package):
     version('5.4.1', '9134a99219c79767a11463a76b0b01a2')
     version('5.3.0', '367961dd0ab426e5ae367c2713924ffb')
 
-    variant('example', default=True, description='')
-    variant('cuda', default=False, description='')
-    variant('nvml', default=False, description='')
-    variant('infiniband', default=False, description='')
-    variant('powercap', default=False, description='')
-    variant('rapl', default=False, description='')
-    variant('lmsensors', default=False, description='')
+    variant('example', default=True, description='Install the example files')
+    variant('cuda', default=False, description='Enable CUDA support')
+    variant('nvml', default=False, description='Enable NVML support')
+    variant('infiniband', default=False, description='Enable Infiniband support')
+    variant('powercap', default=False, description='Enable powercap interface support')
+    variant('rapl', default=False, description='Enable RAPL support')
+    variant('lmsensors', default=False, description='Enable lm_sensors support')
 
     conflicts('+cuda', when='@:5.6.0')
     conflicts('+nvml', when='@:5.6.0')
@@ -51,22 +51,22 @@ class Papi(Package):
     patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8')
 
     def setup_environment(self, spack_env, run_env):
-        if '+cuda' in self.spec or 'nvml' in self.spec:
+        if '+cuda' in self.spec or '+nvml' in self.spec:
             spack_env.set('CUDA_DIR', self.spec['cuda'].prefix)
             run_env.prepend_path('LD_LIBRARY_PATH',
                                  join_path(self.spec['cuda'].prefix,
                                            "extras/CUPTI/lib64"))
 
     def install(self, spec, prefix):
-        with working_dir("src/components/nvml"):
-            if '+nvml' in spec:
+        if '+nvml' in spec:
+            with working_dir("src/components/nvml"):
                 configure_args = [
                     "--with-nvml-incdir=%s/include" % spec['cuda'].prefix,
                     "--with-nvml-libdir=%s/lib64/stubs" % spec['cuda'].prefix,
                     "--with-cuda-dir=%s" % spec['cuda'].prefix]
                 configure(*configure_args)
-        with working_dir("src/components/lmsensors"):
-            if '+lmsensors' in spec:
+        if '+lmsensors' in spec:
+            with working_dir("src/components/lmsensors"):
                 configure_args = [
                     "--with-sensors_incdir=%s/include/sensors" %
                     spec['lm-sensors'].prefix,
