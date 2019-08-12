@@ -16,7 +16,7 @@ class Charliecloud(MakefilePackage):
     depends_on('python@3.4:', type=('build', 'run'))
 
     # experimental builder (ch-grow)
-    variant('ch-grow', default=False, description='bundle dependencies for unprivileged builder')
+    variant('ch-grow', default=False, description='Bundle dependencies for unprivileged builder')
     depends_on('py-lark-parser', type='run', when='+ch-grow')
 
     # man pages and html docs
