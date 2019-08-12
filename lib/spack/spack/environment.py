@@ -581,7 +581,6 @@ class Environment(object):
                     " that are in the view")
             raise ValueError()
 
-
     def _read_manifest(self, f):
         """Read manifest file and set up user specs."""
         self.yaml = _read_yaml(f)
