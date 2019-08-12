@@ -26,7 +26,7 @@ class Umoci(MakefilePackage):
 
     depends_on('go')
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         mkdirp(join_path(self.stage.source_path,
                'src', 'github.com', 'openSUSE', 'umoci'))
 
@@ -34,4 +34,7 @@ class Umoci(MakefilePackage):
             tar = which('tar')
             tar('zxf', self.stage.archive_file, '--strip-components=1')
             make('GOPATH={0}'.format(self.stage.source_path))
+
+    def install(self, spec, prefix):
+        with working_dir(join_path('src', 'github.com', 'openSUSE', 'umoci')):
             make('PREFIX=', 'DESTDIR={0}'.format(prefix), 'install')
