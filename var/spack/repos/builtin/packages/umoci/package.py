@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Umoci(Package):
+class Umoci(MakefilePackage):
     """umoci modifies Open Container images, intending to be a
     complete manipulation tool for OCI images."""
 
