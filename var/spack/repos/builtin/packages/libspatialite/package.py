@@ -16,6 +16,6 @@ class Libspatialite(AutotoolsPackage):
     version('4.3.0a', '6b380b332c00da6f76f432b10a1a338c')
 
     depends_on('sqlite')
-    depends_on('proj')
+    depends_on('proj@:5')
     depends_on('geos')
     depends_on('freexl')

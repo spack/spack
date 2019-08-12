@@ -9,7 +9,7 @@ where it makes sense.
 """
 import pytest
 
-from spack.version import Version, ver
+from spack.version import Version, VersionList, ver
 
 
 def assert_ver_lt(a, b):
@@ -90,13 +90,62 @@ def check_union(expected, a, b):
     assert ver(expected) == ver(a).union(ver(b))
 
 
+def test_string_prefix():
+    assert_ver_eq('xsdk-0.2.0', 'xsdk-0.2.0')
+    assert_ver_lt('xsdk-0.2.0', 'xsdk-0.3')
+    assert_ver_gt('xsdk-0.3', 'xsdk-0.2.0')
+
+
 def test_two_segments():
     assert_ver_eq('1.0', '1.0')
     assert_ver_lt('1.0', '2.0')
     assert_ver_gt('2.0', '1.0')
+
+
+def test_develop():
     assert_ver_eq('develop', 'develop')
+    assert_ver_eq('develop.local', 'develop.local')
     assert_ver_lt('1.0', 'develop')
     assert_ver_gt('develop', '1.0')
+    assert_ver_eq('1.develop', '1.develop')
+    assert_ver_lt('1.1', '1.develop')
+    assert_ver_gt('1.develop', '1.0')
+    assert_ver_gt('0.5.develop', '0.5')
+    assert_ver_lt('0.5', '0.5.develop')
+    assert_ver_lt('1.develop', '2.1')
+    assert_ver_gt('2.1', '1.develop')
+    assert_ver_lt('1.develop.1', '1.develop.2')
+    assert_ver_gt('1.develop.2', '1.develop.1')
+    assert_ver_lt('develop.1', 'develop.2')
+    assert_ver_gt('develop.2', 'develop.1')
+    # other +infinity versions
+    assert_ver_gt('master', '9.0')
+    assert_ver_gt('head', '9.0')
+    assert_ver_gt('trunk', '9.0')
+    assert_ver_gt('develop', '9.0')
+    # hierarchical develop-like versions
+    assert_ver_gt('develop', 'master')
+    assert_ver_gt('master', 'head')
+    assert_ver_gt('head', 'trunk')
+    assert_ver_gt('9.0', 'system')
+    # not develop
+    assert_ver_lt('mydevelopmentnightmare', '1.1')
+    assert_ver_lt('1.mydevelopmentnightmare', '1.1')
+    assert_ver_gt('1.1', '1.mydevelopmentnightmare')
+
+
+def test_isdevelop():
+    assert ver('develop').isdevelop()
+    assert ver('develop.1').isdevelop()
+    assert ver('develop.local').isdevelop()
+    assert ver('master').isdevelop()
+    assert ver('head').isdevelop()
+    assert ver('trunk').isdevelop()
+    assert ver('1.develop').isdevelop()
+    assert ver('1.develop.2').isdevelop()
+    assert not ver('1.1').isdevelop()
+    assert not ver('1.mydevelopmentnightmare.3').isdevelop()
+    assert not ver('mydevelopmentnightmare.3').isdevelop()
 
 
 def test_three_segments():
@@ -499,3 +548,15 @@ def test_get_item():
     # Raise TypeError on tuples
     with pytest.raises(TypeError):
         b.__getitem__(1, 2)
+
+
+def test_list_highest():
+    vl = VersionList(['master', '1.2.3', 'develop', '3.4.5', 'foobar'])
+    assert vl.highest() == Version('develop')
+    assert vl.lowest() == Version('foobar')
+    assert vl.highest_numeric() == Version('3.4.5')
+
+    vl2 = VersionList(['master', 'develop'])
+    assert vl2.highest_numeric() is None
+    assert vl2.preferred() == Version('develop')
+    assert vl2.lowest() == Version('master')

@@ -17,6 +17,7 @@ class PyPytest(PythonPackage):
         '_pytest.mark', 'pytest'
     ]
 
+    version('4.3.0', 'e1913b607c5c4e7d886ba6f13a43617e')
     version('3.7.2', 'd12d0d556a21fd8633e105f1a8d5a0f9')
     version('3.7.1', '2704e16bb2c11af494167f80a7cd37c4')
     version('3.5.1', 'ffd870ee3ca561695d2f916f0f0f3c0b')

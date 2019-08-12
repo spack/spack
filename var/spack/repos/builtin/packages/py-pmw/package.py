@@ -12,4 +12,5 @@ class PyPmw(PythonPackage):
     homepage = "https://pypi.python.org/pypi/Pmw"
     url      = "https://pypi.io/packages/source/P/Pmw/Pmw-2.0.0.tar.gz"
 
+    version('2.0.1', '8080b0fabc731ff236f97e88e13b3938')
     version('2.0.0', 'c7c3f26c4f5abaa99807edefee578fc0')

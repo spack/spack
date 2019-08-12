@@ -7,7 +7,12 @@ if [ "$CURRENTLY_BUILDING_DOCKER_IMAGE" '!=' '1' ] ; then
 
 uid="`id -u`"
 if [ "$uid" '=' '0' ] ; then
-    for key_type in dsa ecdsa ed25519 rsa ; do
+    key_types="dsa ecdsa rsa"
+    if [ "$DOCKERFILE_BASE" '!=' 'centos:6' ] ; then
+        key_types="${key_types} ed25519"
+    fi
+
+    for key_type in $key_types ; do
         private_key_file="/etc/ssh/ssh_host_${key_type}_key"
         public_key_file="$private_key_file.pub"
 

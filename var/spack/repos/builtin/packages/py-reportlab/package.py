@@ -14,3 +14,9 @@ class PyReportlab(PythonPackage):
     url      = "https://pypi.io/packages/source/r/reportlab/reportlab-3.4.0.tar.gz"
 
     version('3.4.0', '3f2522cf3b69cd84426c216619bbff53')
+
+    # py-reportlab provides binaries that duplicate those of other packages,
+    # thus interfering with activation.
+    # - easy_install, provided by py-setuptools
+    # - pip, provided by py-pip
+    extends('python', ignore=r'bin/.*')

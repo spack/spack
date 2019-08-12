@@ -16,17 +16,18 @@ class Cgns(CMakePackage):
     git      = "https://github.com/CGNS/CGNS"
 
     version('develop', branch='develop')
-    version('master', branch='master')
-    version('3.3.1', '65c55998270c3e125e28ec5c3742e15d')
-    version('3.3.0', '64e5e8d97144c1462bee9ea6b2a81d7f')
+    version('master',  branch='master')
+    version('3.4.0',   sha256='6372196caf25b27d38cf6f056258cb0bdd45757f49d9c59372b6dbbddb1e05da')
+    version('3.3.1',   sha256='81093693b2e21a99c5640b82b267a495625b663d7b8125d5f1e9e7aaa1f8d469')
+    version('3.3.0',   sha256='8422c67994f8dc6a2f201523a14f6c7d7e16313bdd404c460c16079dbeafc662')
 
-    variant('hdf5', default=True, description='Enable HDF5 interface')
+    variant('hdf5',    default=True,  description='Enable HDF5 interface')
     variant('fortran', default=False, description='Enable Fortran interface')
-    variant('scoping', default=True, description='Enable scoping')
-    variant('mpi', default=True, description='Enable parallel cgns')
-    variant('int64', default=False, description='Build with 64-bit integers')    
+    variant('scoping', default=True,  description='Enable scoping')
+    variant('mpi',     default=True,  description='Enable parallel cgns')
+    variant('int64',   default=False, description='Build with 64-bit integers')
 
-    depends_on('hdf5', when='+hdf5~mpi')
+    depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')
 

@@ -16,6 +16,7 @@ class Xsimd(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('7.2.3', sha256='bbc673ad3e9d4523503a4222da05886e086b0e0bd6bd93d03ea3b663c74297b9')
     version('4.0.0', '4186ec94985daa3fc284d9d0d4aa03e8')
     version('3.1.0', '29c1c525116cbda28f610e2bf24a827e')
 

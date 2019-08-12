@@ -9,19 +9,26 @@ from spack import *
 class PyPyproj(PythonPackage):
     """Python interface to the PROJ.4 Library."""
 
-    homepage = "http://jswhit.github.io/pyproj/"
-    url      = "https://github.com/jswhit/pyproj/tarball/v1.9.5.1rel"
-    git      = "https://www.github.com/jswhit/pyproj.git"
+    homepage = "https://github.com/pyproj4/pyproj"
+    url      = "https://pypi.io/packages/source/p/pyproj/pyproj-2.2.0.tar.gz"
+    git      = "https://github.com/pyproj4/pyproj.git"
 
-    # This is not a tagged release of pyproj.
-    # The changes in this "version" fix some bugs, especially with Python3 use.
-    version('1.9.5.1.1', commit='0be612cc9f972e38b50a90c946a9b353e2ab140f')
-    version('1.9.5.1', 'a4b80d7170fc82aee363d7f980279835')
+    maintainers = ['citibeth', 'adamjstewart']
+    import_modules = ['pyproj']
 
-    depends_on('py-cython', type='build')
+    version('2.2.0',   sha256='0a4f793cc93539c2292638c498e24422a2ec4b25cb47545addea07724b2a56e5')
+    version('1.9.6',   sha256='e0c02b1554b20c710d16d673817b2a89ff94738b0b537aead8ecb2edc4c4487b')
+    version('1.9.5.1', sha256='53fa54c8fa8a1dfcd6af4bf09ce1aae5d4d949da63b90570ac5ec849efaf3ea8')
+
+    depends_on('python@:2', when='@:1.9.5.1')
+    depends_on('python@3:', when='@2.3:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-cython', type='build')
+    depends_on('py-aenum', type=('build', 'run'), when='@2.2:^python@:3.5')
+    depends_on('proj')
+    depends_on('proj@:5',   when='@:1')
+    depends_on('proj@6.1:', when='@2.2:')
+    depends_on('proj@6.0:', when='@2.0:')
 
-    # NOTE: py-pyproj does NOT depends_on('proj').
-    # The py-proj git repo actually includes the correct version of PROJ.4,
-    # which is built internally as part of the py-proj build.
-    # Adding depends_on('proj') will cause mysterious build errors.
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('PROJ_DIR', self.spec['proj'].prefix)

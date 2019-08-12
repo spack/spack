@@ -19,6 +19,8 @@ class Lmod(AutotoolsPackage):
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
     url      = 'https://github.com/TACC/Lmod/archive/7.4.11.tar.gz'
 
+    version('8.1.5', sha256='3e5846d3d8e593cbcdfa0aed1474569bf5b5cfd19fd288de22051823d449d344')
+    version('8.0.9', sha256='9813c22ae4dd21eb3dc480f6ce307156512092b4bca954bf8aacc15944f23673')
     version('7.8.15', sha256='00a257f5073d656adc73045997c28f323b7a4f6d901f1c57b7db2b0cd6bee6e6')
     version('7.8', sha256='40388380a36a00c3ce929a9f88c8fffc93deeabf87a7c3f8864a82acad38c3ba')
     version('7.7.29', 'bd3f171995e6863505e8a958d158ced1')
@@ -40,7 +42,7 @@ class Lmod(AutotoolsPackage):
     depends_on('lua@5.1:')
     depends_on('lua-luaposix', type=('build', 'run'))
     depends_on('lua-luafilesystem', type=('build', 'run'))
-    depends_on('tcl', type=('build', 'run'))
+    depends_on('tcl', type=('build', 'link', 'run'))
 
     patch('fix_tclsh_paths.patch', when='@:6.4.3')
     patch('0001-fix-problem-with-MODULESHOME-and-issue-271.patch', when='@7.3.28:7.4.10')
@@ -49,7 +51,7 @@ class Lmod(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         stage_lua_path = join_path(
-            self.stage.path, 'Lmod-{version}', 'src', '?.lua')
+            self.stage.source_path, 'src', '?.lua')
         spack_env.append_path('LUA_PATH', stage_lua_path.format(
             version=self.version), separator=';')
 

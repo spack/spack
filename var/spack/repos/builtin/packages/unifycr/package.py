@@ -16,57 +16,45 @@ class Unifycr(AutotoolsPackage):
 
     homepage = "https://github.com/LLNL/UnifyCR"
     git      = "https://github.com/LLNL/UnifyCR.git"
+    url      = "https://github.com/LLNL/UnifyCR/releases/download/v0.2.0/unifycr-0.2.0.tar.gz"
 
     version('develop', branch='dev', preferred=True)
-    version('0.1.1', tag='v0.1.1')
+    version('0.2.0', sha256='7439b0e885234bc64e8cbb449d8abfadd386692766b6f00647a7b6435efb2066')
 
     variant('debug', default='False', description='Enable debug build options')
     variant('hdf5', default='False', description='Build with parallel HDF5 (install with `^hdf5~mpi` for serial)')
     variant('numa', default='False', description='Build with NUMA')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on('autoconf',  type='build')
+    depends_on('automake',  type='build')
+    depends_on('libtool',   type='build')
+    depends_on('m4',        type='build')
+    depends_on('pkgconfig', type='build')
 
     # Required dependencies
     # Latest version of GOTCHA has API changes that break UnifyCR.
     # Updates to UnifyCR are coming in order to fix this.
+    depends_on('flatcc')
     depends_on('gotcha@0.0.2')
     depends_on('leveldb')
+    depends_on('margo')
     depends_on('mpi')
-    depends_on('pkgconfig')
 
     # Optional dependencies
-
-    # UnifyCR's integration with HDF5 is still a WIP and is currently
-    # configured for serial only. HDF5 is parallel by default.
-    #
-    # To build with serial HDF5, use `spack install unifycr+hdf5 ^hdf5~mpi`
-    #
-    # Once UnifyCR is compatible with parallel HDF5, excluding `^hdf5~mpi` from
-    # the install line will build UnifyCR with parallel HDF5.
-
-    # v0.1.1 not HDF5 compatible; can change when v0.1.1 is no longer supported
-    depends_on('hdf5', when='@0.1.2: +hdf5')
+    depends_on('hdf5', when='+hdf5')
     depends_on('numactl',  when='+numa')
 
-    # we depend on numactl, which does't currently build on darwin
+    # we depend on numactl, which doesn't currently build on darwin
     conflicts('platform=darwin', when='+numa')
-    conflicts('+hdf5', when='@:0.1.1')
 
     # Parallel disabled to prevent tests from being run out-of-order when
-    # installed with the --test={root, all} option. Can potentially change if
-    # we add a +test configure option and variant.
+    # installed with the --test={root, all} option.
     parallel = False
     build_directory = 'spack-build'
 
     def configure_args(self):
         spec = self.spec
         args = []
-
-        if spec.satisfies('@0.1.1'):
-            env['CC'] = spec['mpi'].mpicc
 
         # UnifyCR's configure requires the exact path for HDF5
         def hdf5_compiler_path(name):
@@ -89,7 +77,7 @@ class Unifycr(AutotoolsPackage):
 
         return args
 
-#    @when('@develop') TODO: uncomment when we `make dist` a stable release
+    @when('@develop')
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')

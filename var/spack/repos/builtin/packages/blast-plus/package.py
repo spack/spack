@@ -23,6 +23,8 @@ class BlastPlus(AutotoolsPackage):
     homepage = "http://blast.ncbi.nlm.nih.gov/"
     url      = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.6.0/ncbi-blast-2.6.0+-src.tar.gz"
 
+    version('2.9.0', sha256='a390cc2d7a09422759fc178db84de9def822cbe485916bbb2ec0d215dacdc257')
+    version('2.8.1', sha256='e03dd1a30e37cb8a859d3788a452c5d70ee1f9102d1ee0f93b2fbd145925118f')
     version('2.7.1', sha256='10a78d3007413a6d4c983d2acbf03ef84b622b82bd9a59c6bd9fbdde9d0298ca')
     version('2.6.0',  'c8ce8055b10c4d774d995f88c7cc6225')
     version('2.2.30', 'f8e9a5eb368173142fe6867208b73715')
@@ -100,10 +102,11 @@ class BlastPlus(AutotoolsPackage):
             '--with-bin-release',
             '--without-debug',
             '--with-mt',
-            '--with-64',
             '--without-boost',
         ]
 
+        if 'aarch64' not in spec.architecture.target.lower():
+            config_args.append('--with-64')
         if '+static' in spec:
             config_args.append('--with-static')
             # FIXME

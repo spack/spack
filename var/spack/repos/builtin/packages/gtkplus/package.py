@@ -32,6 +32,7 @@ class Gtkplus(AutotoolsPackage):
     depends_on('inputproto', when='@3:')
     depends_on('fixesproto', when='@3:')
     depends_on('at-spi2-atk', when='@3:')
+    depends_on('gettext', when='@3:')
 
     patch('no-demos.patch', when='@2:2.99')
 

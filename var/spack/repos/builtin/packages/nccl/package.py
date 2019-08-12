@@ -12,6 +12,8 @@ class Nccl(MakefilePackage):
     homepage = "https://github.com/NVIDIA/nccl"
     url      = "https://github.com/NVIDIA/nccl/archive/v1.3.4-1.tar.gz"
 
+    version('2.4.6-1', sha256='ea4421061a7b9c454f2e088f68bfdbbcefab80ce81cafc70ee6c7742b1439591')
+    version('2.4.2-1', sha256='e3dd04b22eb541394bd818e5f78ac23a09cc549690d5d55d6fccc1a36155385a')
     version('2.3.7-1', sha256='e6eff80d9d2db13c61f8452e1400ca2f098d2dfe42857cb23413ce081c5b9e9b')
     version('2.3.5-5', sha256='bac9950b4d3980c25baa8e3e4541d2dfb4d21edf32ad3b89022d04920357142f')
     version('2.2',     '5b9ce7fbdce0fde68e0f66318e6ff422')

@@ -17,6 +17,7 @@ class Beast2(Package):
     homepage = "http://beast2.org/"
     url      = "https://github.com/CompEvol/beast2/releases/download/v2.4.6/BEAST.v2.4.6.Linux.tgz"
 
+    version('2.5.2', sha256='2feb2281b4f7cf8f7de1a62de50f52a8678ed0767fc72f2322e77dde9b8cd45f')
     version('2.4.6', 'b446f4ab121df9b991f7bb7ec94c8217')
 
     depends_on('java')

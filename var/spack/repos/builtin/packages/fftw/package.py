@@ -6,6 +6,8 @@
 from spack import *
 
 import llnl.util.lang
+# os is used for rename, etc in patch()
+import os
 
 
 class Fftw(AutotoolsPackage):
@@ -107,6 +109,13 @@ class Fftw(AutotoolsPackage):
 
         return find_libraries(libraries, root=self.prefix, recursive=True)
 
+    def patch(self):
+        # If fftw/config.h exists in the source tree, it will take precedence
+        # over the copy in build dir.  As only the latter has proper config
+        # for our build, this is a problem.  See e.g. issue #7372 on github
+        if os.path.isfile('fftw/config.h'):
+            os.rename('fftw/config.h', 'fftw/config.h.SPACK_RENAMED')
+
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:
             autoreconf = which('autoreconf')
@@ -169,10 +178,10 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make()
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make()
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make()
 
@@ -184,10 +193,10 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make("check")
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make("check")
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make("check")
 
@@ -198,9 +207,9 @@ class Fftw(AutotoolsPackage):
         if '+float' in spec:
             with working_dir('float'):
                 make("install")
-        if '+long_double' in spec:
+        if spec.satisfies('@3:+long_double'):
             with working_dir('long-double'):
                 make("install")
-        if '+quad' in spec:
+        if spec.satisfies('@3:+quad'):
             with working_dir('quad'):
                 make("install")

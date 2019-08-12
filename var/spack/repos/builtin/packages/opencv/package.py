@@ -25,6 +25,15 @@ class Opencv(CMakePackage):
     git      = 'https://github.com/opencv/opencv.git'
 
     version('master', branch='master')
+    version('4.1.0-openvino', sha256='58764d2487c6fb4cd950fb46483696ae7ae28e257223d6e44e162caa22ee9e5c')
+    version('4.1.0',          sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7', preferred=True)
+    version('4.0.1-openvino', sha256='8cbe32d12a70decad7a8327eb4fba46016a9c47ff3ba6e114d27b450f020716f')
+    version('4.0.1',          sha256='7b86a0ee804244e0c407321f895b15e4a7162e9c5c0d2efc85f1cadec4011af4')
+    version('4.0.0-openvino', sha256='aa910078ed0b7e17bd10067e04995c131584a6ed6d0dcc9ca44a292aa8e296fc')
+    version('4.0.0',          sha256='3787b3cc7b21bba1441819cb00c636911a846c0392ddf6211d398040a1e4886c')
+    version('3.4.6',          sha256='e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d')
+    version('3.4.5',          sha256='0c57d9dd6d30cbffe68a09b03f4bebe773ee44dc8ff5cd6eaeb7f4d5ef3b428e')
+    version('3.4.4',          sha256='a35b00a71d77b484f73ec485c65fe56c7a6fa48acd5ce55c197aef2e13c78746')
     version('3.4.3',    '712896f5815938c014c199dde142d508')
     version('3.4.1',    'a0b7a47899e67b3490ea31edc4f6e8e6')
     version('3.4.0',    '170732dc760e5f7ddeccbe53ba5d16a6')
@@ -70,6 +79,8 @@ class Opencv(CMakePackage):
 
     # Optional 3rd party components
     variant('cuda', default=True, description='Activates support for CUDA')
+    # Cuda@10.0.130 does not support gcc > 7
+    conflicts('%gcc@7:', when='+cuda')
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
     variant('ipp_iw', default=True, description='Build IPP IW from source')
@@ -107,7 +118,8 @@ class Opencv(CMakePackage):
     depends_on('qt', when='+qt')
     depends_on('java', when='+java')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('protobuf@3.1.0', when='@3.3.0: +dnn')
+    depends_on('protobuf@3.5.0', when='@3.4.1: +dnn')
+    depends_on('protobuf@3.1.0', when='@3.3.0:3.4.0 +dnn')
 
     depends_on('ffmpeg', when='+videoio')
     depends_on('mpi', when='+videoio')
@@ -200,6 +212,9 @@ class Opencv(CMakePackage):
                 'ON' if '+tiff' in spec else 'OFF')),
             '-DWITH_VTK:BOOL={0}'.format((
                 'ON' if '+vtk' in spec else 'OFF')),
+            '-DWITH_PROTOBUF:BOOL={0}'.format((
+                'ON' if '@3.3.0: +dnn' in spec else 'OFF')),
+            '-DBUILD_PROTOBUF:BOOL=OFF',
         ])
 
         # Media I/O

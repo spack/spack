@@ -55,6 +55,7 @@ import spack.schema.repos
 import spack.schema.packages
 import spack.schema.modules
 import spack.schema.config
+import spack.schema.upstreams
 from spack.error import SpackError
 
 # Hacked yaml for configuration files preserves line numbers.
@@ -69,6 +70,7 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
+    'upstreams': spack.schema.upstreams.schema
 }
 
 #: Builtin paths to configuration files in Spack
@@ -98,7 +100,7 @@ config_defaults = {
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
-        'build_jobs': multiprocessing.cpu_count(),
+        'build_jobs': min(16, multiprocessing.cpu_count()),
     }
 }
 

@@ -15,6 +15,7 @@ class Htslib(AutotoolsPackage):
     version('1.8', '54e9b3a04251fa59b1878f6b546b5c79')
     version('1.7', 'd3cc7e080a9a8c4161d8f62b56d3b98d')
     version('1.6', 'd6fd14e208aca7e08cbe9072233d0af9')
+    version('1.5', sha256='a02b515ea51d86352b089c63d778fb5e8b9d784937cf157e587189cb97ad922d')
     version('1.4', '2a22ff382654c033c40e4ec3ea880050')
     version('1.3.1', '16d78f90b72f29971b042e8da8be6843')
     version('1.2', '64026d659c3b062cfb6ddc8a38e9779f')

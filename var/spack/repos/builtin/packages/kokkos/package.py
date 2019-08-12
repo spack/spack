@@ -15,6 +15,8 @@ class Kokkos(Package):
     git      = "https://github.com/kokkos/kokkos.git"
 
     version('develop', branch='develop')
+    version('2.8.00', sha256='1c72661f2d770517bff98837001b42b9c677d1df29f7493a1d7c008549aff630')
+    version('2.7.24', sha256='a308a80ea1488f4c18884b828ce7ae9f5210b9a6b2f61b208d875084d8da8cb0')
     version('2.7.00',  'b357f9374c1008754babb4495f95e392')
     version('2.5.00',  '2db83c56587cb83b772d0c81a3228a21')
     version('2.04.11', 'd4849cee6eb9001d61c30f1d9fe74336')
@@ -26,7 +28,10 @@ class Kokkos(Package):
     version('2.02.15', 'de41e38f452a50bb03363c519fe20769')
     version('2.02.07', 'd5baeea70109249f7dca763074ffb202')
 
+    variant('debug', default=False, description="Build debug version of Kokkos")
+
     variant('serial', default=True, description="enable Serial backend (default)")
+    variant('pthreads', default=False, description="enable Pthreads backend")
     variant('qthreads', default=False, description="enable Qthreads backend")
     variant('cuda', default=False, description="enable Cuda backend")
     variant('openmp', default=False, description="enable OpenMP backend")
@@ -120,10 +125,9 @@ class Kokkos(Package):
     # conflicts on kokkos version and cuda enabled
     # see kokkos issue #1296
     # https://github.com/kokkos/kokkos/issues/1296
-    conflicts('+cuda', when='@2.5.00:develop',
-        msg='Kokkos build system has issue when CUDA enabled'
-        ' in version 2.5.00 through 2.7.00, and develop until '
-        'issue #1296 is resolved.')
+    conflicts('+cuda', when='@2.5.00:2.7.00',
+        msg='Kokkos build system has issue (#1296) when CUDA enabled'
+        ' in version 2.5.00 through 2.7.00.')
 
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')
@@ -146,11 +150,17 @@ class Kokkos(Package):
             if '+pic' in spec:
                 g_args.append('--cxxflags=-fPIC')
 
+            # Build Debug
+            if '+debug' in spec:
+                g_args.append('--debug')
+
             # Backends
             if '+serial' in spec:
                 g_args.append('--with-serial')
             if '+openmp' in spec:
                 g_args.append('--with-openmp')
+            if '+pthreads' in spec:
+                g_args.append('--with-pthread')
             if '+qthreads' in spec:
                 g_args.append('--with-qthreads=%s' % spec['qthreads'].prefix)
             if '+cuda' in spec:

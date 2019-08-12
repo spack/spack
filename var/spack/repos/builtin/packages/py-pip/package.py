@@ -12,6 +12,7 @@ class PyPip(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pip"
     url      = "https://pypi.io/packages/source/p/pip/pip-9.0.1.tar.gz"
 
+    version('19.0.3', sha256='6e6f197a1abfb45118dbb878b5c859a0edbdd33fd250100bc015b67fded4b9f2')
     version('18.1', sha256='c0a292bd977ef590379a3f05d7b7f65135487b67470f6281289a94e015650ea1')
     version('10.0.1', '83a177756e2c801d0b3a6f7b0d4f3f7e')
     version('9.0.1', '35f01da33009719497f01a4ba69d63c9')

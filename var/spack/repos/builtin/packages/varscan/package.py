@@ -36,5 +36,5 @@ class Varscan(Package):
                     script, **kwargs)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('VARSCAN_HOME', self.prefix)
+        run_env.set('VARSCAN_HOME', self.prefix.jar)
         run_env.set('CLASSPATH', self.prefix.jar)

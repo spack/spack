@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -42,6 +44,18 @@ class Elpa(AutotoolsPackage):
         return find_libraries(
             libname, root=self.prefix, shared=True, recursive=True
         )
+
+    @property
+    def headers(self):
+        suffix = '_openmp' if self.spec.satisfies('+openmp') else ''
+        incdir = os.path.join(
+            self.spec.prefix.include,
+            'elpa{suffix}-{version!s}'.format(
+                suffix=suffix, version=self.spec.version))
+
+        hlist = find_all_headers(incdir)
+        hlist.directories = [incdir]
+        return hlist
 
     build_directory = 'spack-build'
 

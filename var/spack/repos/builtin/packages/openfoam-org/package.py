@@ -17,7 +17,7 @@
 ##############################################################################
 #
 # Notes
-# - The openfoam-org package is a modified version of the openfoam-com package.
+# - The openfoam-org package is a modified version of the openfoam package.
 #   If changes are needed here, consider if they should also be applied there.
 #
 # - Building with boost/cgal is not included, since some of the logic is not
@@ -40,11 +40,11 @@ import os
 import llnl.util.tty as tty
 
 from spack import *
-from spack.pkg.builtin.openfoam_com import add_extra_files
-from spack.pkg.builtin.openfoam_com import write_environ
-from spack.pkg.builtin.openfoam_com import rewrite_environ_files
-from spack.pkg.builtin.openfoam_com import mplib_content
-from spack.pkg.builtin.openfoam_com import OpenfoamArch
+from spack.pkg.builtin.openfoam import add_extra_files
+from spack.pkg.builtin.openfoam import write_environ
+from spack.pkg.builtin.openfoam import rewrite_environ_files
+from spack.pkg.builtin.openfoam import mplib_content
+from spack.pkg.builtin.openfoam import OpenfoamArch
 
 
 class OpenfoamOrg(Package):
@@ -76,7 +76,6 @@ class OpenfoamOrg(Package):
     variant('source', default=True,
             description='Install library/application sources and tutorials')
 
-    provides('openfoam')
     depends_on('mpi')
     depends_on('zlib')
     depends_on('flex',  type='build')
@@ -128,7 +127,7 @@ class OpenfoamOrg(Package):
         return settings
 
     def setup_environment(self, spack_env, run_env):
-        # This should be similar to the openfoam-com package,
+        # This should be similar to the openfoam package,
         # but sourcing the etc/bashrc here seems to exit with an error.
         # ... this needs to be examined in more detail.
         #
@@ -345,7 +344,7 @@ class OpenfoamOrg(Package):
         # Make build log visible - it contains OpenFOAM-specific information
         with working_dir(self.projectdir):
             os.symlink(
-                join_path('.spack', 'build.out'),
+                join_path(os.path.relpath(self.install_log_path)),
                 join_path('log.' + str(self.foam_arch)))
 
         if not self.config['link']:

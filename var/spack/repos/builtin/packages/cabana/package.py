@@ -19,10 +19,12 @@ class Cabana(CMakePackage):
 
     variant('serial', default=True, description="enable Serial backend (default)")
     variant('openmp', default=False, description="enable OpenMP backend")
+    variant('cuda', default=False, description="enable Cuda backend")
 
     depends_on("cmake@3.9:", type='build')
     depends_on("kokkos+serial", when="+serial")
     depends_on("kokkos+openmp", when="+openmp")
+    depends_on("kokkos+cuda", when="+cuda")
 
     def cmake_args(self):
         options = [
@@ -30,7 +32,9 @@ class Cabana(CMakePackage):
             '-DCabana_ENABLE_Serial=%s'  % (
                 'On' if '+serial'  in self.spec else 'Off'),
             '-DCabana_ENABLE_OpenMP=%s'  % (
-                'On' if '+openmp'  in self.spec else 'Off')
+                'On' if '+openmp'  in self.spec else 'Off'),
+            '-DCabana_ENABLE_Cuda=%s'  % (
+                'On' if '+cuda'  in self.spec else 'Off')
         ]
 
         return options

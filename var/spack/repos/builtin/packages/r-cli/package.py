@@ -15,6 +15,7 @@ class RCli(RPackage):
     url      = "https://cran.r-project.org/src/contrib/cli_1.0.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/cli"
 
+    version('1.0.1', 'ef80fbcde15760fd55abbf9413b306e3971b2a7034ab8c415fb52dc0088c5ee4')
     version('1.0.0', 'e6c4169541d394d6d435c4b430b1dd77')
 
     depends_on('r-assertthat', type=('build', 'run'))

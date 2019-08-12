@@ -35,7 +35,7 @@ sys.path.insert(0, spack_external_libs)
 # (see #9206 for a broader description of the issue).
 #
 # Briefly: ruamel.yaml produces a .pth file when installed with pip that
-# makes the site installed package the preferred one, even tough sys.path
+# makes the site installed package the preferred one, even though sys.path
 # is modified to point to another version of ruamel.yaml.
 if 'ruamel.yaml' in sys.modules:
     del sys.modules['ruamel.yaml']

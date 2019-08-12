@@ -5,7 +5,7 @@
 
 """Schema for packages.yaml configuration files.
 
-.. literalinclude:: ../spack/schema/packages.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
    :lines: 13-
 """
 

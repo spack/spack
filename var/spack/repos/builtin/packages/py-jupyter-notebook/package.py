@@ -38,5 +38,6 @@ class PyJupyterNotebook(PythonPackage):
     depends_on('py-nbformat', type=('build', 'run'))
     depends_on('py-nbconvert', type=('build', 'run'))
     depends_on('py-ipykernel', type=('build', 'run'))
+    depends_on('py-ipykernel@5.1.0:', when='@4.2.0:', type=('build', 'run'))
     depends_on('py-terminado@0.3.3:', when="+terminal", type=('build', 'run'))
     depends_on('py-ipywidgets', when="+terminal", type=('build', 'run'))

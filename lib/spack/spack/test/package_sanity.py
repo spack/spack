@@ -75,8 +75,7 @@ def test_no_fixme():
         r'example.com',
     ]
     for name in spack.repo.all_package_names():
-        repo = spack.repo.Repo(spack.paths.packages_path)
-        filename = repo.filename_for_package_name(name)
+        filename = spack.repo.path.filename_for_package_name(name)
         with open(filename, 'r') as package_file:
             for i, line in enumerate(package_file):
                 pattern = next((r for r in fixme_regexes
@@ -87,3 +86,11 @@ def test_no_fixme():
                         (filename, i, line.strip())
                     )
             assert [] == errors
+
+
+def test_docstring():
+    """Ensure that every package has a docstring."""
+
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.get(name)
+        assert pkg.__doc__

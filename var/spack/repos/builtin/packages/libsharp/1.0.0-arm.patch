@@ -1,0 +1,13 @@
+diff -ru spack-src/configure.ac spack-src.new/configure.ac
+--- spack-src/configure.ac	2019-07-19 13:59:16.000000000 +0900
++++ spack-src.new/configure.ac	2019-07-19 14:13:36.973408139 +0900
+@@ -49,7 +49,7 @@
+ 
+ case $CCTYPE in
+   gcc)
+-    CCFLAGS="-O3 -fno-tree-vectorize -ffast-math -fomit-frame-pointer -std=c99 -pedantic -Wextra -Wall -Wno-unknown-pragmas -Wshadow -Wmissing-prototypes -Wfatal-errors -march=native"
++    CCFLAGS="-O3 -fno-tree-vectorize -ffast-math -fomit-frame-pointer -std=c99 -pedantic -Wextra -Wall -Wno-unknown-pragmas -Wshadow -Wmissing-prototypes -Wfatal-errors"
+     GCCVERSION="`$CC -dumpversion 2>&1`"
+     echo "Using gcc version $GCCVERSION"
+     AC_SUBST(GCCVERSION)
+Only in spack-src.new: configure.ac.new

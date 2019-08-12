@@ -7,7 +7,7 @@ from spack import *
 
 
 class SofaC(MakefilePackage):
-    "Standards of Fundamental Astronomy (SOFA) library for ANSI C."
+    """Standards of Fundamental Astronomy (SOFA) library for ANSI C."""
 
     homepage = "http://www.iausofa.org/current_C.html"
     url      = "http://www.iausofa.org/2018_0130_C/sofa_c-20180130.tar.gz"

@@ -20,9 +20,9 @@ class Papi(Package):
        components that expose performance measurement opportunities
        across the hardware and software stack."""
     homepage = "http://icl.cs.utk.edu/papi/index.html"
-    url = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
     maintainers = ['G-Ragghianti']
 
+    url = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
     version('5.7.0', 'd1a3bb848e292c805bc9f29e09c27870e2ff4cda6c2fba3b7da8b4bba6547589')
     version('5.6.0', 'fdd075860b2bc4b8de8b8b5c3abf594a')
     version('5.5.1', '86a8a6f3d0f34cd83251da3514aae15d')
@@ -48,7 +48,7 @@ class Papi(Package):
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
-    patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8')
+    patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8:')
 
     def setup_environment(self, spack_env, run_env):
         if '+cuda' in self.spec or '+nvml' in self.spec:

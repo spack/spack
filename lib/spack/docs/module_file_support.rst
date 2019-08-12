@@ -355,14 +355,14 @@ list of environment modifications.
 
   with the following snippet:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
+  .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/r/package.py
      :pyobject: R.setup_environment
 
   The ``r`` package also knows which environment variable should be modified
   to make language extensions provided by other packages available, and modifies
   it appropriately in the override of the second method:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
+  .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/r/package.py
      :pyobject: R.setup_dependent_environment
 
 .. _modules-yaml:
@@ -374,7 +374,7 @@ Write a configuration file
 The configuration files that control module generation behavior
 are named ``modules.yaml``. The default configuration:
 
-.. literalinclude:: ../../../etc/spack/defaults/modules.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/modules.yaml
    :language: yaml
 
 activates the hooks to generate ``tcl`` and ``dotkit`` module files and inspects
@@ -535,10 +535,10 @@ most likely via the ``+blas`` variant specification.
 
        modules:
          tcl:
-           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+           naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
            all:
              conflict:
-               - '${PACKAGE}'
+               - '{name}'
                - 'intel/14.0.1'
 
      will create module files that will conflict with ``intel/14.0.1`` and with the
@@ -600,6 +600,9 @@ The configuration above will generate dotkit module files that will not contain
 modifications to either ``CPATH`` or ``LIBRARY_PATH`` and environment module
 files that instead will contain these modifications.
 
+
+.. _autoloading-dependencies:
+
 """""""""""""""""""""
 Autoload dependencies
 """""""""""""""""""""
@@ -618,7 +621,21 @@ activated using ``spack activate``:
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.
+``direct`` or ``all``.  The default is ``none``.
+
+.. tip::
+  Building external software
+     Setting ``autoload`` to ``direct`` for all packages can be useful
+     when building software outside of a Spack installation that depends on
+     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
+     as appropriate):
+
+  .. code-block:: yaml
+
+     modules:
+       lmod:
+         all:
+           autoload: 'direct'
 
 .. note::
   TCL prerequisites

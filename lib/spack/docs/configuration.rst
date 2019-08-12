@@ -459,7 +459,7 @@ account all scopes. For example, to see the fully merged
      install_tree: $spack/opt/spack
      template_dirs:
      - $spack/templates
-     directory_layout: ${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}
+     directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
      module_roots:
        tcl: $spack/share/spack/modules
        lmod: $spack/share/spack/lmod
@@ -510,7 +510,7 @@ down the problem:
    ./my-scope/config.yaml:2                                install_tree: /path/to/some/tree
    /home/myuser/spack/etc/spack/defaults/config.yaml:23    template_dirs:
    /home/myuser/spack/etc/spack/defaults/config.yaml:24    - $spack/templates
-   /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: ${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}
+   /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
    /home/myuser/spack/etc/spack/defaults/config.yaml:32    module_roots:
    /home/myuser/spack/etc/spack/defaults/config.yaml:33      tcl: $spack/share/spack/modules
    /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod

@@ -8,6 +8,7 @@ import shutil
 import glob
 import tempfile
 import re
+from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
@@ -33,6 +34,7 @@ class DirectoryLayout(object):
 
     def __init__(self, root):
         self.root = root
+        self.check_upstream = True
 
     @property
     def hidden_file_paths(self):
@@ -73,6 +75,16 @@ class DirectoryLayout(object):
     def path_for_spec(self, spec):
         """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
+
+        if spec.external:
+            return spec.external_path
+        if self.check_upstream:
+            upstream, record = spack.store.db.query_by_spec_hash(
+                spec.dag_hash())
+            if upstream:
+                raise SpackError(
+                    "Internal error: attempted to call path_for_spec on"
+                    " upstream-installed package.")
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
@@ -164,24 +176,24 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def __init__(self, root, **kwargs):
         super(YamlDirectoryLayout, self).__init__(root)
-        self.metadata_dir   = kwargs.get('metadata_dir', '.spack')
         self.hash_len       = kwargs.get('hash_len')
         self.path_scheme    = kwargs.get('path_scheme') or (
-            "${ARCHITECTURE}/"
-            "${COMPILERNAME}-${COMPILERVER}/"
-            "${PACKAGE}-${VERSION}-${HASH}")
+            "{architecture}/"
+            "{compiler.name}-{compiler.version}/"
+            "{name}-{version}-{hash}")
         if self.hash_len is not None:
-            if re.search(r'\${HASH:\d+}', self.path_scheme):
+            if re.search(r'{hash:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
                     "Conflicting options for installation layout hash length")
             self.path_scheme = self.path_scheme.replace(
-                "${HASH}", "${HASH:%d}" % self.hash_len)
+                "{hash}", "{hash:%d}" % self.hash_len)
 
+        # If any of these paths change, downstream databases may not be able to
+        # locate files in older upstream databases
+        self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'build.out'  # build log.
-        self.build_env_name      = 'build.env'  # build environment
-        self.packages_dir        = 'repos'      # archive of package.py files
+        self.packages_dir        = 'repos'  # archive of package.py files
 
     @property
     def hidden_file_paths(self):
@@ -189,9 +201,6 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
-
-        if spec.external:
-            return spec.external_path
 
         path = spec.format(self.path_scheme)
         return path
@@ -222,20 +231,17 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
+    @contextmanager
+    def disable_upstream_check(self):
+        self.check_upstream = False
+        yield
+        self.check_upstream = True
+
     def metadata_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir)
-
-    def build_log_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.build_log_name)
-
-    def build_env_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.build_env_name)
+        return os.path.join(spec.prefix, self.metadata_dir)
 
     def build_packages_path(self, spec):
-        return os.path.join(self.path_for_spec(spec), self.metadata_dir,
-                            self.packages_dir)
+        return os.path.join(self.metadata_path(spec), self.packages_dir)
 
     def create_install_directory(self, spec):
         _check_concrete(spec)
@@ -248,15 +254,26 @@ class YamlDirectoryLayout(DirectoryLayout):
         # Cannot import at top of file
         from spack.package_prefs import get_package_dir_permissions
         from spack.package_prefs import get_package_group
+
+        # Each package folder can have its own specific permissions, while
+        # intermediate folders (arch/compiler) are set with full access to
+        # everyone (0o777) and install_tree root folder is the chokepoint
+        # for restricting global access.
+        # So, whoever has access to the install_tree is allowed to install
+        # packages for same arch/compiler and since no data is stored in
+        # intermediate folders, it does not represent a security threat.
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
-        mkdirp(spec.prefix, mode=perms)
+        perms_intermediate = 0o777
+
+        mkdirp(spec.prefix, mode=perms, mode_intermediate=perms_intermediate)
         if group:
             chgrp(spec.prefix, group)
             # Need to reset the sticky group bit after chgrp
             os.chmod(spec.prefix, perms)
 
         mkdirp(self.metadata_path(spec), mode=perms)
+
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):
