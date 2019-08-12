@@ -490,21 +490,6 @@ class ViewDescriptor(object):
         view.clean()
         specs_in_view = set(view.get_all_specs())
 
-        if specs_in_view - set(specs_for_view):
-            tty.error("Unexpected: specs are in view but not env")
-            names_in_view = set(x.name for x in specs_in_view)
-            all_names = set(x.name for x in all_specs)
-            if names_in_view - all_names:
-                extra_names_in_view = names_in_view - all_names
-                tty.error(
-                    "The view contains names that aren't in the"
-                    " environment: " + ' '.join(extra_names_in_view))
-            else:
-                tty.error(
-                    "The env contains different implementations of packages"
-                    " that are in the view")
-            raise ValueError()
-
         tty.msg("Updating view at {0}".format(self.root))
 
         rm_specs = specs_in_view - installed_specs_for_view
@@ -571,6 +556,31 @@ class Environment(object):
             self.views = {default_view_name: ViewDescriptor(with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
+
+        specs_in_env = self.all_specs()
+        if not self.views:
+            return
+        for view_descriptor in self.views.values():
+            self._check_views_debug(specs_in_env, view_descriptor.view())
+
+
+    def _check_views_debug(self, specs_in_env, view):
+        specs_in_view = set(view.get_all_specs())
+        if specs_in_view - set(specs_in_env):
+            tty.error("Unexpected: specs are in view but not env")
+            names_in_view = set(x.name for x in specs_in_view)
+            all_names = set(x.name for x in specs_in_env)
+            if names_in_view - all_names:
+                extra_names_in_view = names_in_view - all_names
+                tty.error(
+                    "The view contains names that aren't in the"
+                    " environment: " + ' '.join(extra_names_in_view))
+            else:
+                tty.error(
+                    "The env contains different implementations of packages"
+                    " that are in the view")
+            raise ValueError()
+
 
     def _read_manifest(self, f):
         """Read manifest file and set up user specs."""
