@@ -1688,9 +1688,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             # Fork a child to do the actual code installation.
             # Preserve verbosity settings across installs.
-            if self.has_code:
-                PackageBase._verbose = spack.build_environment.fork(
-                    self, build_process, dirty=dirty, fake=fake)
+            PackageBase._verbose = spack.build_environment.fork(
+                self, build_process, dirty=dirty, fake=fake)
 
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
