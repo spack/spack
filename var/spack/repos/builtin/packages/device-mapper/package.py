@@ -8,7 +8,9 @@ from spack import *
 
 class DeviceMapper(AutotoolsPackage):
     """The Device-mapper is a component of the linux kernel (since version
-    2.6) that supports logical volume management."""
+    2.6) that supports logical volume management.  This package provides
+    the userspace configuration tools (dmsetup), library (libdevmapper) and
+    header files. """
 
     homepage = "https://www.sourceware.org/dm"
     url      = "https://sourceware.org/pub/lvm2/releases/LVM2.2.03.05.tgz"
