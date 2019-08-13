@@ -8,9 +8,13 @@ import os
 import shutil
 import sys
 
+import json
+from csv import reader as csvreader
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.binary_distribution as bindist
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -30,7 +34,35 @@ def update_kwargs_from_args(args, kwargs):
     """Parse cli arguments and construct a dictionary
     that will be passed to Package.do_install API"""
 
+    copts = {
+        "force":True,
+        "allow_root":True,
+        "path":None,
+        "key":None,
+        "no_rebuild_index":False,
+        "rel":False}
+
+    if args.cache is not None:
+        cos = list(csvreader(args.cache))[0]
+        for co in cos:
+            o = co.split('=',1)
+            if o[0] not in copts:
+                tty.die("invalid option in argument --cache '{0}'".format(o[0]))
+
+            if len(o) == 1:
+                if type(copts[o[0]]) != bool:
+                    tty.die("option to --cache is not bool, expects value '{0}'".format(o[0]))
+                copts[o[0]] = True
+            else:
+                copts[o[0]] = o[1]
+
     kwargs.update({
+        'cache_force': copts['force'],
+        'cache_rel': copts['rel'],
+        'cache_allow_root': copts['allow_root'],
+        'cache_path': copts['path'],
+        'cache_key': copts['key'],
+        'cache_no_rebuild_index': copts['no_rebuild_index'],
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
@@ -167,6 +199,12 @@ buildstamp which, when combined with build name, site and project,
 uniquely identifies the build, provide this argument to identify
 the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
     )
+    subparser.add_argument(
+            "--cache",
+            default=None,
+            nargs="+",
+            metavar="caching_options",
+            help="""path=<path-to-cache-dir>[,force][,rel][,allow_root][,key=<path-to-signing-key>][,no_rebuild]""")
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
@@ -223,8 +261,7 @@ def install(parser, args, **kwargs):
         env = ev.get_env(args, 'install')
         if env:
             if not args.only_concrete:
-                concretized_specs = env.concretize()
-                ev.display_specs(concretized_specs)
+                env.concretize()
                 env.write()
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)

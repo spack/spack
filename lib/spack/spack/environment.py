@@ -10,6 +10,10 @@ import shutil
 import copy
 import socket
 
+import json
+from csv import reader as csvreader
+import spack.binary_distribution as bindist
+
 import ruamel.yaml
 import six
 
@@ -32,6 +36,7 @@ import spack.architecture as architecture
 from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
+
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -141,12 +146,12 @@ def activate(
             cmds += 'set prompt="%s ${prompt}";\n' % prompt
     else:
         if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
-            prompt = r"\[\033[0;92m\]{}\[\033[0m\]".format(prompt)
+            prompt = r"\[\033[0;92m\]{0}\[\033[0m\]".format(prompt)
 
         cmds += 'export SPACK_ENV=%s;\n' % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
-            cmds += 'if [ -z "${SPACK_OLD_PS1}" ]; then\n'
+            cmds += 'if [ -z ${SPACK_OLD_PS1} ]; then\n'
             cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
             cmds += 'else\n'
             cmds += '    export PS1="${SPACK_OLD_PS1}";\n'
@@ -820,7 +825,7 @@ class Environment(object):
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
 
-    def concretize(self, force=False):
+    def concretize(self, force=False, _display=True):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -832,10 +837,6 @@ class Environment(object):
         Arguments:
             force (bool): re-concretize ALL specs, even those that were
                already concretized
-
-        Returns:
-            List of specs that have been concretized. Each entry is a tuple of
-            the user spec and the corresponding concretized spec.
         """
         if force:
             # Clear previously concretized specs
@@ -857,15 +858,21 @@ class Environment(object):
                 concrete = old_specs_by_hash[h]
                 self._add_concrete_spec(s, concrete, new=False)
 
-        # Concretize any new user specs that we haven't concretized yet
-        concretized_specs = []
+        # concretize any new user specs that we haven't concretized yet
         for uspec, uspec_constraints in zip(
                 self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
+                tty.msg('Concretizing %s' % uspec)
                 concrete = _concretize_from_constraints(uspec_constraints)
                 self._add_concrete_spec(uspec, concrete)
-                concretized_specs.append((uspec, concrete))
-        return concretized_specs
+
+                if _display:
+                    # Display concretized spec to the user
+                    sys.stdout.write(concrete.tree(
+                        recurse_dependencies=True,
+                        status_fn=spack.spec.Spec.install_status,
+                        hashlen=7, hashes=True)
+                    )
 
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
@@ -1000,6 +1007,32 @@ class Environment(object):
 
     def install_all(self, args=None):
         """Install all concretized specs in an environment."""
+        #copts = {
+        #    "force":True,
+        #    "use_rel":False,
+        #    "allow_root":True,
+        #    "path":None,
+        #    "key":None,
+        #    "no_rebuild_index":False,
+        #    "rel":False}
+
+        #if args.cache is not None:
+        #    cos = list(csvreader(args.cache))[0]
+        #    for co in cos:
+        #        o = co.split('=',1)
+        #        if o[0] not in copts:
+        #            tty.die("invalid option to --cache '{0}'".format(o[0]))
+
+        #        if len(o) == 1:
+        #            if type(copts[o[0]]) != bool:
+        #                tty.die("option to --cache is not bool, expects value '{0}'".format(o[0]))
+        #            copts[o[0]] = True
+        #        else:
+        #            copts[o[0]] = o[1]
+        #        
+        #    #print(json.dumps(copts,indent=1))
+
+
         for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[concretized_hash]
 
@@ -1008,8 +1041,13 @@ class Environment(object):
             kwargs = dict()
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
+            #print(json.dumps(kwargs,indent=1))
+            #sys.exit(0)
 
             self._install(spec, **kwargs)
+            #bindist.build_tarball(spec, copts['path'], copts['force'], copts['rel'],
+            #                  True if copts['key'] is None else False, copts['allow_root'],
+            #                  copts['key'], not copts['no_rebuild_index'])
 
             if not spec.external:
                 # Link the resulting log file into logs dir
@@ -1294,25 +1332,6 @@ class Environment(object):
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
-
-
-def display_specs(concretized_specs):
-    """Displays the list of specs returned by `Environment.concretize()`.
-
-    Args:
-        concretized_specs (list): list of specs returned by
-            `Environment.concretize()`
-    """
-    def _tree_to_display(spec):
-        return spec.tree(
-            recurse_dependencies=True,
-            status_fn=spack.spec.Spec.install_status,
-            hashlen=7, hashes=True)
-
-    for user_spec, concrete_spec in concretized_specs:
-        tty.msg('Concretized {0}'.format(user_spec))
-        sys.stdout.write(_tree_to_display(concrete_spec))
-        print('')
 
 
 def _concretize_from_constraints(spec_constraints):
