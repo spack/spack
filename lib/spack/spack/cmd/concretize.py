@@ -18,5 +18,6 @@ def setup_parser(subparser):
 
 def concretize(parser, args):
     env = ev.get_env(args, 'concretize', required=True)
-    env.concretize(force=args.force)
+    concretized_specs = env.concretize(force=args.force)
+    ev.display_specs(concretized_specs)
     env.write()

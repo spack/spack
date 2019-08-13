@@ -195,3 +195,12 @@ class Grass(AutotoolsPackage):
             args.append('--without-geos')
 
         return args
+
+    # see issue: https://github.com/spack/spack/issues/11325
+    # 'Platform.make' is created after configure step
+    # hence invoke the following function afterwards
+    @run_after('configure')
+    def fix_iconv_linking(self):
+        makefile = FileFilter('include/Make/Platform.make')
+        makefile.filter(r'^ICONVLIB\s*=\s*', 'ICONVLIB = -liconv')
+        return None

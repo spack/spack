@@ -1,0 +1,30 @@
+--- a/configure.ac	2019-04-08 12:14:26.000000000 -0400
++++ b/configure.ac	2019-04-08 12:15:03.000000000 -0400
+@@ -170,16 +170,8 @@
+ 	BROWSER="open"
+ 	JSHEXT=jnilib
+ 	AC_DEFINE_UNQUOTED(DARWIN_DYLIB,"$DARWIN_DYLIB",[Define for Darwin-style shared library names.])
+-	case "${host_os}" in
+-	*darwin9*)
+-		DARWIN9=yes
+-		;;
+-        esac
+-	case "${host_os}" in
+-	*darwin9.4* | *darwin9.5* )
+-		EXTRA_SMYRNA_LDFLAGS="-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib"
+-		;;
+-        esac
++        DARWIN9=yes
++        EXTRA_SMYRNA_LDFLAGS="-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib"
+ 	;;
+   * ) # This sucks!  Whatever happened to standards for file system layout?   (Good job its no longer used unless fontconfig is unavailable.)
+ 	DEFAULT_FONTPATH="/usr/share/fonts/sun/TrueType:/usr/share/fonts/TrueType:/usr/X11/lib/X11/fonts/TrueType:/usr/share/fonts/sun/Type1:/usr/openwin/lib/X11/fonts/Type1:/usr/share/fonts/X11/Type1:/usr/share/fonts/default/Type1:/usr/X11R6/lib/X11/fonts/TrueType:/usr/X11R6/lib/X11/fonts/truetype:/usr/X11R6/lib/X11/fonts/TTF:/usr/share/fonts/truetype:/usr/openwin/lib/X11/fonts/TrueType:/usr/X11R6/lib/X11/fonts/Type1:/usr/common/share/fonts/ttf";
+--- a/plugin/quartz/Makefile.am	2019-04-06 08:33:24.000000000 -0400
++++ b/plugin/quartz/Makefile.am	2019-04-08 12:32:41.000000000 -0400
+@@ -39,5 +39,5 @@
+
+ if WITH_DARWIN9
+ libgvplugin_quartz_la_LDFLAGS += -Wl,-exported_symbol,_gvplugin_quartz_LTX_library
+-AM_LIBTOOLSFLAGS = --tag=CC
++AM_LIBTOOLFLAGS = --tag=CC
+ endif

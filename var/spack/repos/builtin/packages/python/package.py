@@ -107,6 +107,7 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
+    depends_on('gettext')
 
     # Optional dependencies
     # See detect_modules() in setup.py for details

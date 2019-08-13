@@ -40,6 +40,7 @@ class NetlibLapack(CMakePackage):
 
     patch('ibm-xl.patch', when='@3.7: %xl')
     patch('ibm-xl.patch', when='@3.7: %xl_r')
+    patch('ibm-xl.patch', when='@3.7: %cce@9:')
 
     # https://github.com/Reference-LAPACK/lapack/issues/228
     # TODO: update 'when' once the version of lapack
