@@ -946,10 +946,17 @@ class MockBundle(object):
 
 
 @pytest.fixture
-def mock_directive_bundle(monkeypatch):
-    yield MockBundle()
+def mock_directive_bundle():
+    """Return a mock bundle package for directive tests."""
+    return MockBundle()
 
-    # Make sure any directive functions overriden by tests are cleared before
+
+@pytest.fixture
+def clear_directive_functions():
+    """Clear all overidden directive functions for subsequent tests."""
+    yield
+
+    # Make sure any directive functions overidden by tests are cleared before
     # proceeding with subsequent tests that may depend on the original
     # functions.
     spack.directives.DirectiveMeta._directives_to_be_executed = []

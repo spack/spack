@@ -373,14 +373,16 @@ def test_rpath_args(mutable_database):
     assert 'mpich' in rpath_args
 
 
-def test_bundle_version_checksum(mock_directive_bundle):
+def test_bundle_version_checksum(mock_directive_bundle,
+                                 clear_directive_functions):
     """Test raising exception on a version checksum with a bundle package."""
     with pytest.raises(VersionChecksumError, match="Checksums not allowed"):
         version = spack.directives.version('1.0', checksum='1badpkg')
         version(mock_directive_bundle)
 
 
-def test_bundle_patch_directive(mock_directive_bundle):
+def test_bundle_patch_directive(mock_directive_bundle,
+                                clear_directive_functions):
     """Test raising exception on a patch directive with a bundle package."""
     with pytest.raises(spack.directives.UnsupportedPackageDirective,
                        match="Patches are not allowed"):
