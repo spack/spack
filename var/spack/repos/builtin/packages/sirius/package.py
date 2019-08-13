@@ -21,6 +21,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('shared', default=False, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
     variant('fortran', default=False, description="Build Fortran bindings")
+    variant('python', default=False, description="Build Python bindings")
     variant('elpa', default=False, description="Use ELPA")
     variant('vdwxc', default=False, description="Enable libvdwxc support")
     variant('scalapack', default=False, description="Enable scalapack support")
@@ -34,6 +35,8 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spglib')
     depends_on('hdf5+hl')
     depends_on('pkgconfig', type='build')
+    depends_on('py-mpi4py', when='+python')
+    depends_on('py-pybind11', when='+python')
 
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
@@ -44,7 +47,7 @@ class Sirius(CMakePackage, CudaPackage):
     conflicts('+shared', when='@6.3.0:')  # option to build shared libraries has been removed
 
     # TODO:
-    # add support for MKL, MAGMA, CRAY_LIBSCI, Python bindings, testing
+    # add support for MAGMA, CRAY_LIBSCI, ROCm, testing
 
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
@@ -96,6 +99,7 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+vdwxc'),
             _def('+scalapack'),
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
+            _def('+python', 'CREATE_PYTHON_MODULE'),
             _def('+cuda')
         ]
 
