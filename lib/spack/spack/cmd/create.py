@@ -527,7 +527,10 @@ def get_name(args):
     if args.name is not None:
         # Use a user-supplied name if one is present
         name = args.name
-        tty.msg("Using specified package name: '{0}'".format(name))
+        if len(args.name.strip()) > 0:
+            tty.msg("Using specified package name: '{0}'".format(name))
+        else:
+            tty.die("A package name must be provided when using the option.")
     elif args.url is not None:
         # Try to guess the package name based on the URL
         try:
