@@ -7,7 +7,7 @@ from spack import *
 
 
 class DeviceMapper(AutotoolsPackage):
-    """The Device-mapper is a component of the linux kernel (since version
+    """The device-mapper is a component of the linux kernel (since version
     2.6) that supports logical volume management.  This package provides
     the userspace configuration tools (dmsetup), library (libdevmapper) and
     header files."""
