@@ -125,6 +125,9 @@ class Sirius(CMakePackage, CudaPackage):
                     spec['scalapack'].libs.joined(';')),
             ]
 
+        if spec['blas'].name in ['intel-mkl', 'intel-parallel-studio']:
+            args += ['-DUSE_MKL=ON']
+
         if '+elpa' in spec:
             elpa_incdir = os.path.join(
                 spec['elpa'].headers.directories[0],
