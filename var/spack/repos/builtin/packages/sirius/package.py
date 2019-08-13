@@ -90,7 +90,7 @@ class Sirius(CMakePackage, CudaPackage):
                 flag if flag else "USE_{0}".format(
                     variant.strip('+~').upper()
                 ),
-                "ON" if spec.satisfies(variant) else "OFF"
+                "ON" if variant in spec else "OFF"
             )
 
         args = [
@@ -111,10 +111,8 @@ class Sirius(CMakePackage, CudaPackage):
 
         args += [
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS={0}'.format(lapack.prefix.include),
             '-DLAPACK_LIBRARIES={0}'.format(lapack.libs.joined(';')),
             '-DBLAS_FOUND=true',
-            '-DBLAS_INCLUDE_DIRS={0}'.format(blas.prefix.include),
             '-DBLAS_LIBRARIES={0}'.format(blas.libs.joined(';')),
         ]
 
@@ -127,14 +125,14 @@ class Sirius(CMakePackage, CudaPackage):
                     spec['scalapack'].libs.joined(';')),
             ]
 
-        if spec.satisfies('+elpa'):
+        if '+elpa' in spec:
             elpa_incdir = os.path.join(
                 spec['elpa'].headers.directories[0],
                 'elpa'
             )
             args += ["-DELPA_INCLUDE_DIR={0}".format(elpa_incdir)]
 
-        if spec.satisfies('+cuda'):
+        if '+cuda' in spec:
             cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch:
                 args += [
