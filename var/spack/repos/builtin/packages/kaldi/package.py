@@ -76,7 +76,7 @@ class Kaldi(Package):    # Does not use Autotools
             mkdirp(prefix.bin)
             for root, dirs, files in os.walk('.'):
                 for name in files:
-                    if name.endswith(".so") or name.endswith(".cc") \
+                    if name.endswith(".".format(dso_suffix)) or name.endswith(".cc") \
                             or name.endswith(".pptx"):
                         continue
                     if "configure" is name:
@@ -87,7 +87,7 @@ class Kaldi(Package):    # Does not use Autotools
             mkdir(prefix.lib)
             for root, dirs, files in os.walk('lib'):
                 for name in files:
-                    if name.endswith(".so"):
+                    if name.endswith(".".format(dso_suffix)):
                         fname, _ = os.path.splitext(name)
                         src = os.readlink(join(root, "{0}.{1}".format(fname, dso_suffix)))
                         install(src, prefix.lib)
