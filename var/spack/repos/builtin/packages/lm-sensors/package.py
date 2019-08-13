@@ -32,3 +32,10 @@ class LmSensors(MakefilePackage):
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix),
              'ETCDIR={0}/etc'.format(prefix))
+
+    @property
+    def libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            'libsensors', root=self.prefix, shared=shared, recursive=True
+        )

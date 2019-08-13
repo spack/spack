@@ -51,11 +51,10 @@ class Papi(Package):
     patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8:')
 
     def setup_environment(self, spack_env, run_env):
-        if '+cuda' in self.spec or '+nvml' in self.spec:
+        if '^cuda' in self.spec:
             spack_env.set('CUDA_DIR', self.spec['cuda'].prefix)
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.spec['cuda'].prefix,
-                                           "extras/CUPTI/lib64"))
+                                 self.spec['cuda'].prefix.extras.CUPTI.lib64)
 
     def install(self, spec, prefix):
         if '+nvml' in spec:
@@ -70,8 +69,8 @@ class Papi(Package):
                 configure_args = [
                     "--with-sensors_incdir=%s/include/sensors" %
                     spec['lm-sensors'].prefix,
-                    "--with-sensors_libdir=%s/lib64" %
-                    spec['lm-sensors'].prefix]
+                    "--with-sensors_libdir=%s" %
+                    spec['lm-sensors'].libs.directories[0]]
                 configure(*configure_args)
         with working_dir("src"):
 
