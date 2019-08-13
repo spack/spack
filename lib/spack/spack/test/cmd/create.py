@@ -24,20 +24,23 @@ def parser():
     return prs
 
 
-@pytest.mark.parametrize('args,name_index,expected', [
+@pytest.mark.parametrize('args,name,expected', [
     (['test-package'], 0, [r'TestPackage(Package)', r'def install(self']),
     (['-n', 'test-named-package', 'file://example.tar.gz'], 1,
      [r'TestNamedPackage(Package)', r'def install(self']),
+    (['file://example.tar.gz'], 'example',
+     [r'Example(Package)', r'def install(self']),
     (['-t', 'bundle', 'test-bundle'], 2, [r'TestBundle(BundlePackage)'])
 ])
-def test_create_template(parser, mock_test_repo, args, name_index, expected):
+def test_create_template(parser, mock_test_repo, args, name, expected):
     """Test template creation."""
     repo, repodir = mock_test_repo
 
     constr_args = parser.parse_args(['--skip-editor'] + args)
     spack.cmd.create.create(parser, constr_args)
 
-    filename = repo.filename_for_package_name(args[name_index])
+    pkg_name = args[name] if isinstance(name, int) else name
+    filename = repo.filename_for_package_name(pkg_name)
     assert os.path.exists(filename)
 
     with open(filename, 'r') as package_file:
