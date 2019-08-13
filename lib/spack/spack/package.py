@@ -138,8 +138,7 @@ class PackageMeta(
     spack.mixins.PackageMixinsMeta
 ):
     """
-    Package metaclass for supporting directives (e.g., depends_on) and
-    mixins (e.g., phases).
+    Package metaclass for supporting directives (e.g., depends_on) and phases
     """
     phase_fmt = '_InstallPhase_{0}'
 
@@ -389,7 +388,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
        p = Package()             # Done for you by spack
 
-       p.do_fetch()              # downloads tarball from a URL (or repo)
+       p.do_fetch()              # downloads tarball from a URL (or VCS)
        p.do_stage()              # expands tarball in a temp directory
        p.do_patch()              # applies patches to expanded source
        p.do_install()            # calls package's install() function
@@ -1551,8 +1550,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     Package._install_bootstrap_compiler(dep.package, **kwargs)
                 dep.package.do_install(**dep_kwargs)
 
-        # Then, install the package proper, which includes adding an entry
-        # in the DB for the package.
+        # Then install the compiler if it is not already installed.
         if install_deps:
             Package._install_bootstrap_compiler(self, **kwargs)
 
@@ -1643,9 +1641,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     echo = logger.echo
                     self.log()
 
-                # Run post install hooks for the code before build stage is
-                # removed.  This step requires stage.source_path and install
-                # phases.
+                # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self.spec)
 
             # Stop timer.
