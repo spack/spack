@@ -16,6 +16,7 @@ class Sirius(CMakePackage, CudaPackage):
     list_url = "https://github.com/electronic-structure/SIRIUS/releases"
 
     version('6.1.5', sha256='379f0a2e5208fd6d91c2bd4939c3a5c40002975fb97652946fa1bfe4a3ef97cb')
+    version('6.3.2', sha256='1723e5ad338dad9a816369a6957101b2cae7214425406b12e8712c82447a7ee5')
 
     variant('shared', default=False, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
@@ -38,29 +39,40 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('elpa~openmp', when='+elpa~openmp')
     depends_on('libvdwxc+mpi', when='+vdwxc')
     depends_on('scalapack', when='+scalapack')
-    depends_on("cuda", when="+cuda")
+    depends_on('cuda', when='+cuda')
+
+    conflicts('+shared', when='@6.3.0:')  # option to build shared libraries has been removed
 
     # TODO:
     # add support for MKL, MAGMA, CRAY_LIBSCI, Python bindings, testing
 
-    patch("strip-spglib-include-subfolder.patch")
-    patch("link-libraries-fortran.patch")
-    patch("cmake-fix-shared-library-installation.patch")
+    patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
+    patch("link-libraries-fortran.patch", when='@6.1.5')
+    patch("cmake-fix-shared-library-installation.patch", when='@6.1.5')
 
     @property
     def libs(self):
         libraries = []
 
-        if self.spec.satisfies('+fortran'):
-            libraries += ['libsirius_f']
+        if '@6.3.0:' in self.spec:
+            libraries += ['libsirius']
 
-        if self.spec.satisfies('+cuda'):
-            libraries += ['libsirius_cu']
+            return find_libraries(
+                libraries, root=self.prefix,
+                shared=False, recursive=True
+            )
 
-        return find_libraries(
-            libraries, root=self.prefix,
-            shared=self.spec.satisfies('+shared'), recursive=True
-        )
+        else:
+            if '+fortran' in self.spec:
+                libraries += ['libsirius_f']
+
+            if '+cuda' in self.spec:
+                libraries += ['libsirius_cu']
+
+            return find_libraries(
+                libraries, root=self.prefix,
+                shared='+shared' in self.spec, recursive=True
+            )
 
     def cmake_args(self):
         spec = self.spec
@@ -79,7 +91,6 @@ class Sirius(CMakePackage, CudaPackage):
             )
 
         args = [
-            '-DBUILD_SHARED_LIBS=ON',
             _def('+openmp'),
             _def('+elpa'),
             _def('+vdwxc'),
@@ -87,6 +98,9 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
             _def('+cuda')
         ]
+
+        if '@:6.2.999' in self.spec:
+            args += [_def('+shared', 'BUILD_SHARED_LIBS')]
 
         lapack = spec['lapack']
         blas = spec['blas']
