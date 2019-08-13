@@ -12,7 +12,7 @@ from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import mkdirp, chgrp
+from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.spec
