@@ -35,7 +35,6 @@ class LmSensors(MakefilePackage):
 
     @property
     def libs(self):
-        shared = True if '+shared' in self.spec else False
         return find_libraries(
-            'libsensors', root=self.prefix, shared=shared, recursive=True
+            'libsensors', root=self.prefix, shared=True, recursive=True
         )
