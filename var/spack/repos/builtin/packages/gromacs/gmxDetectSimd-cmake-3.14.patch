@@ -9,6 +9,3 @@
  
      # Prepare a default suggestion
      set(OUTPUT_SIMD "None")
--- 
-1.8.3.1
-
