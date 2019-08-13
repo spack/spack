@@ -1264,5 +1264,6 @@ class NoStageError(FetchError):
 class NoFetchStrategyError(FetchError):
     """Raised when attempt to retrieve fetch strategy for no-code pkg."""
     def __init__(self, pkg=None):
-        msg = "{0} is a no-code package so has no fetch strategy".format(pkg)
+        msg = ("{0} is a no-code package so has no fetch strategy.  Please "
+               "create a Spack issue to report the problem.").format(pkg)
         super(FetchError, self).__init__(msg)
