@@ -51,6 +51,7 @@ class Conduit(Package):
     # package variants
     ###########################################################################
 
+    # TODO: Change to link_type='shared'|'static'
     variant("shared", default=True, description="Build Conduit as shared libs")
     variant('test', default=True, description='Enable Conduit unit tests')
 

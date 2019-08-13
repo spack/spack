@@ -97,6 +97,7 @@ class Trilinos(CMakePackage):
             description='Compile with parallel-netcdf')
     variant('suite-sparse', default=True,
             description='Compile with SuiteSparse solvers')
+    # TODO: Change to superlu=('standard'|'dist')
     variant('superlu-dist', default=False,
             description='Compile with SuperluDist solvers')
     variant('superlu',      default=False,

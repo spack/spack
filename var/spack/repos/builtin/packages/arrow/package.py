@@ -26,7 +26,7 @@ class Arrow(CMakePackage):
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python')
     depends_on('rapidjson')
-    depends_on('snappy~shared')
+    depends_on('snappy~shared')   # Generates static library (with PIC code)
     depends_on('zlib+pic')
     depends_on('zstd+pic')
 

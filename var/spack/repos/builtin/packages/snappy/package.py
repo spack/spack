@@ -14,6 +14,7 @@ class Snappy(CMakePackage):
 
     version('1.1.7', 'ee9086291c9ae8deb4dac5e0b85bf54a')
 
+    # TODO: Change to link_type=('shared'|'pic'|'static')
     variant('shared', default=True, description='Build shared libraries')
     variant('pic', default=True, description='Build position independent code')
 

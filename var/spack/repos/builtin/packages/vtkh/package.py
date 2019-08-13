@@ -40,6 +40,7 @@ class Vtkh(Package):
     version('develop', branch='develop', submodules=True)
     version('0.1.0', branch='develop', tag='v0.1.0', submodules=True)
 
+    # TODO: Change to link_type='shared'|'static'
     variant("shared", default=True, description="Build vtk-h as shared libs")
     variant("mpi", default=True, description="build mpi support")
     variant("tbb", default=False, description="build tbb support")

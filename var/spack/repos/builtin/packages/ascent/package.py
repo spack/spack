@@ -73,9 +73,9 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake@3.9.2:3.9.999", type='build')
-    depends_on("conduit~python", when="~python")
+    depends_on("conduit", when="~python")
     depends_on("conduit+python", when="+python+shared")
-    depends_on("conduit~shared~python", when="~shared")
+    depends_on("conduit~shared~python", when="~shared")   # ~shared is OK for now
 
     #######################
     # Python
@@ -97,12 +97,12 @@ class Ascent(Package):
     #############################
 
     depends_on("vtkh@develop",             when="+vtkh")
-    depends_on("vtkh@develop~openmp",      when="+vtkh~openmp")
+    depends_on("vtkh@develop",      when="+vtkh~openmp")
     depends_on("vtkh@develop+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("vtkh@develop+cuda~openmp", when="+vtkh+cuda~openmp")
+    depends_on("vtkh@develop+cuda", when="+vtkh+cuda~openmp")
 
     depends_on("vtkh@develop~shared",             when="~shared+vtkh")
-    depends_on("vtkh@develop~shared~openmp",      when="~shared+vtkh~openmp")
+    depends_on("vtkh@develop~shared",      when="~shared+vtkh~openmp")
     depends_on("vtkh@develop~shared+cuda",        when="~shared+vtkh+cuda")
     depends_on("vtkh@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
 
