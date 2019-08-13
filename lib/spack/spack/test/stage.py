@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
+import grp
 import os
 import collections
 import shutil
@@ -40,7 +41,7 @@ _include_hidden = 2
 _include_extra = 3
 
 # Some standard unix directory that does NOT include the username
-_non_user_root = '/opt'
+_non_user_root = os.path.join(os.path.sep, 'opt')
 
 
 # Mock fetch directories are expected to appear as follows:
@@ -673,14 +674,48 @@ class TestStage(object):
         assert source_path.endswith(spack.stage._source_path_subdir)
         assert not os.path.exists(source_path)
 
-    def test_first_accessible_path(self):
-        """Test _first_accessible_path with list where only one exists."""
-        dir_ = tempfile.gettempdir()
-        name = os.path.join(str(dir_), 'spack')
-        files = ['/no/such/file/path', name]
+    def test_first_accessible_path(self, tmpdir):
+        """Test _first_accessible_path names."""
+        spack_dir = tmpdir.join('spack-test-fap')
+        name = str(spack_dir)
+        files = [os.path.join(os.path.sep, 'no', 'such', 'path'), name]
+
+        # Ensure the tmpdir path is returned since the user should have access
         path = spack.stage._first_accessible_path(files)
-        shutil.rmtree(name)
         assert path == name
+        assert os.path.isdir(path)
+
+        # Ensure an existing path is returned
+        spack_subdir = spack_dir.join('existing').ensure(dir=True)
+        subdir = str(spack_subdir)
+        path = spack.stage._first_accessible_path([subdir])
+        assert path == subdir
+
+        # Cleanup
+        shutil.rmtree(str(name))
+
+    def test_first_accessible_perms(self, tmpdir):
+        """Test _first_accessible_path permissions."""
+        name = str(tmpdir.join('first', 'path'))
+        path = spack.stage._first_accessible_path([name])
+
+        # Ensure the non-existent path was created
+        assert path == name
+        assert os.path.isdir(path)
+
+        # Ensure the non-existent subdirectories have their parent's perms
+        prefix = str(tmpdir)
+        status = os.stat(prefix)
+        group = grp.getgrgid(status.st_gid)[0]
+        parts = path[len(prefix):].split(os.path.sep)
+        for part in parts:
+            prefix = os.path.join(prefix, part)
+            prefix_status = os.stat(prefix)
+            assert group == grp.getgrgid(os.stat(prefix).st_gid)[0]
+            assert status.st_mode == prefix_status.st_mode
+
+        # Cleanup
+        shutil.rmtree(os.path.dirname(name))
 
     def test_get_stage_root_bad_path(self, clear_stage_root, bad_stage_path):
         """Ensure an invalid stage path root raises a StageError."""
@@ -814,27 +849,29 @@ class TestStage(object):
 @pytest.fixture
 def tmp_build_stage_nondir(tmpdir):
     """Establish the temporary build_stage pointing to non-directory."""
-    test_stage_path = tmpdir.join('stage')
+    test_stage_path = tmpdir.join('stage', 'afile')
     test_stage_path.ensure(dir=False)
 
     # Set test_stage_path as the default directory to use for test stages.
     current = spack.config.get('config:build_stage')
-    spack.config.set('config',
-                     {'build_stage': [str(test_stage_path)]}, scope='user')
+    stage_dir = os.path.dirname(str(test_stage_path))
+    spack.config.set('config', {'build_stage': [stage_dir]}, scope='user')
 
     yield test_stage_path
 
     spack.config.set('config', {'build_stage': current}, scope='user')
 
 
-def test_stage_create_replace_path(tmp_build_stage_nondir):
+def test_stage_create_replace_path(tmp_build_stage_dir):
     """Ensure stage creation replaces a non-directory path."""
-    path = str(tmp_build_stage_nondir)
+    _, test_stage_path = tmp_build_stage_dir
+    test_stage_path.ensure(dir=True)
 
-    assert os.path.exists(path)
-    assert not os.path.isdir(path)
+    nondir = test_stage_path.join('afile')
+    nondir.ensure(dir=False)
+    path = str(nondir)
 
-    stage = Stage(path)
+    stage = Stage(path, name='')
     stage.create()  # Should ensure the path is converted to a dir
 
     assert os.path.isdir(stage.path)

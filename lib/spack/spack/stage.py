@@ -17,7 +17,7 @@ from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import remove_linked_tree, chgrp, copy_mode
+from llnl.util.filesystem import remove_linked_tree
 
 import spack.paths
 import spack.caches
@@ -37,45 +37,30 @@ _source_path_subdir = 'spack-src'
 _stage_prefix = 'spack-stage-'
 
 
-def _adjust_stage_access(path):
-    """
-    Adjust permissions and group for the stage directory but only if it is in
-    ``$tempdir`` since it is shared on some systems.
-
-    The caller is responsible for ensuring the canonicalized path exists.
-    """
-    temp_path = sup.canonicalize_path('$tempdir')
-    if path.startswith(temp_path) and path != temp_path:
-        prefix = os.path.commonprefix([temp_path, path])
-        user = getpass.getuser()
-        group = grp.getgrgid(os.stat(prefix).st_gid)[0]
-        parts = path[len(prefix):].strip(os.path.sep).split(os.path.sep)
-        for part in parts:
-            if part != user:
-                prefix = os.path.join(prefix, part)
-                try:
-                    copy_mode(temp_path, prefix)
-                    chgrp(prefix, group)
-                except OSError as e:
-                    tty.debug('OSError changing access to {0}: {1}'.
-                              format(prefix, str(e)))
-            else:
-                break
-
-
 def _first_accessible_path(paths):
-    """Find the first path that is accessible, creating if needed."""
+    """Find the first path that is accessible, creating it if necessary."""
     for path in paths:
         try:
-            # Try to create the path if it doesn't exist.
+            # Ensure the user has access, creating the directory if necessary.
             path = sup.canonicalize_path(path)
-            existed = os.path.exists(path)
-            mkdirp(path)
+            if os.path.exists(path):
+                if can_access(path):
+                    return path
+            else:
+                # The path doesn't exist so create it and adjust permissions
+                # and group as needed (e.g., shared ``$tempdir``).
+                prefix = os.path.sep
+                parts = path.strip(os.path.sep).split(os.path.sep)
+                for part in parts:
+                    prefix = os.path.join(prefix, part)
+                    if not os.path.exists(prefix):
+                        break
+                parent = os.path.dirname(prefix)
+                group = grp.getgrgid(os.stat(parent).st_gid)[0]
+                mkdirp(path, group=group, default_perms='parents')
 
-            if can_access(path):
-                if not existed:
-                    _adjust_stage_access(path)
-                return path
+                if can_access(path):
+                    return path
 
         except OSError as e:
             tty.debug('OSError while checking stage path %s: %s' % (
@@ -453,8 +438,10 @@ class Stage(object):
         """
         # Emulate file permissions for tempfile.mkdtemp.
         if not os.path.exists(self.path):
+            print("TLD: %s does not exist, creating it" % self.path)
             mkdirp(self.path, mode=stat.S_IRWXU)
         elif not os.path.isdir(self.path):
+            print("TLD: %s is not a directory, replacing it" % self.path)
             os.remove(self.path)
             mkdirp(self.path, mode=stat.S_IRWXU)
 
