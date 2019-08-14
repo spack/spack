@@ -12,6 +12,7 @@ class PyKerasPreprocessing(PythonPackage):
     homepage = "http://keras.io"
     url      = "https://github.com/keras-team/keras-preprocessing/archive/1.0.5.tar.gz"
 
+    version('1.1.0', sha256='26f26354370f4a08a029137630d72870e99e924cd8f6e04c2f6fc0bd86708275')
     version('1.0.9', sha256='045a9b3faf4f6d63493cc3ca396659cc0395727b280c988fb9b6c7ff8157f09b')
     version('1.0.5', sha256='8a1d20d8dd2204d82616648f1b40615ea9f5ff0f8f94fdc6d9fe3c2238476c89')
     version('1.0.4', sha256='9f36ffeab4545f039880d6eaf8f8b3a6c8eba14618cec25c60d69a281398e5ea')
