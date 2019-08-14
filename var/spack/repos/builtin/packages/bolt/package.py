@@ -25,14 +25,17 @@ class Bolt(CMakePackage):
     version("1.0rc1", "77733ba2ad9440c29b36d1c1411a9793")
     version("1.0b1", "df76beb3a7f13ae2dcaf9ab099eea87b")
 
+    depends_on('argobots')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
 
     def cmake_args(self):
+        spec = self.spec
         options = [
             '-DLIBOMP_USE_ITT_NOTIFY=off',
-            '-DLIBOMP_USE_ARGOBOTS=on'
+            '-DLIBOMP_USE_ARGOBOTS=on',
+            '-DLIBOMP_ARGOBOTS_INSTALL_DIR=' + spec['argobots'].prefix
         ]
 
         return options
