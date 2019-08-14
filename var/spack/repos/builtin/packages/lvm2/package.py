@@ -29,8 +29,6 @@ class Lvm2(AutotoolsPackage):
         url = "https://sourceware.org/pub/lvm2/releases/LVM2.{0}.tgz"
         return url.format(version)
 
-    provides('device-mapper')
-
     variant('pkgconfig', default=True,
             description='install pkgconfig support')
 
