@@ -21,6 +21,7 @@ class Umoci(MakefilePackage):
     version('0.4.0', sha256='66997e270dee8abc9796385b162a1e8e32dd2ee2359e5200af4e6671cc1e76a0')
 
     depends_on('go')
+    depends_on('go-md2man', type='build')
 
     def build(self, spec, prefix):
         provider = 'github.com'
