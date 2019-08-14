@@ -22,10 +22,11 @@ class Butterflypack(CMakePackage):
 
     homepage = "https://github.com/liuyangzhuan/ButterflyPACK"
     git      = "https://github.com/liuyangzhuan/ButterflyPACK.git"
-
+    url      = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v1.0.0.tar.gz"
     maintainers = ['liuyangzhuan']
 
     version('master', branch='master')
+    version('1.0.0', sha256='86c5eb09a18522367d63ce2bacf67ca1c9813ef351a1443baaab3c53f0d77232')
 
     variant('shared', default=True, description='Build shared libraries')
 
@@ -50,10 +51,8 @@ class Butterflypack(CMakePackage):
             '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
             libs.joined(";"),
             '-DTPL_ARPACK_LIBRARIES=%s' % spec['arpack-ng'].libs.joined(";"),
+            '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
         ]
 
-        args.extend([
-            '-DBUILD_SHARED_LIBS=%s' % on_off('+shared')
-        ])
 
         return args
