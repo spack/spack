@@ -31,6 +31,8 @@ class Charliecloud(MakefilePackage):
     # experimental builder (ch-grow)
     variant('builder', default=False, description='Bundle dependencies for unprivileged builder (ch-grow)')
     depends_on('py-lark-parser', type='run', when='+builder')
+    depends_on('skopeo', type='run', when='+builder')
+    depends_on('umoci', type='run', when='+builder')
 
     # man pages and html docs
     variant('docs', default=False, description='Build man pages and html docs')
