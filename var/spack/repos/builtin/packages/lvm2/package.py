@@ -42,4 +42,6 @@ class Lvm2(AutotoolsPackage):
                 format(self.prefix.etc.lvm)]
         if self.spec.satisfies('+pkgconfig'):
             args.append('--enable-pkgconfig')
+        else:
+            args.append('--disable-pkgconfig')
         return args
