@@ -20,8 +20,7 @@ class GoMd2man(Package):
              url='https://github.com/russross/blackfriday/archive/v1.5.2.tar.gz',
              sha256='626138a08abb8579474a555e9d45cb5260629a2c07e8834428620a650dc9f195',
              placement='blackfriday',
-             destination='{0}'.format(join_path(
-                 'src', 'github.com', 'russross')))
+             destination=join_path('src', 'github.com', 'russross'))
 
     def patch(self):
         mkdirp(join_path(self.stage.source_path,
@@ -37,7 +36,7 @@ class GoMd2man(Package):
     def install(self, spec, prefix):
 
         with working_dir('src'):
-            env['GOPATH'] = '{0}'.format(self.stage.source_path)
+            env['GOPATH'] = self.stage.source_path
             go = which('go')
             go('build', '-v', join_path(
                'github.com', 'cpuguy83', 'go-md2man'))
