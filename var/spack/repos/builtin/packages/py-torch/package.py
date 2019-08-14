@@ -168,8 +168,7 @@ class PyTorch(PythonPackage):
                           self.spec['cudnn'].libs.directories[0])
             build_env.set('CUDNN_INCLUDE_DIR',
                           self.spec['cudnn'].prefix.include)
-            build_env.set('CUDNN_LIBRARY',
-                          self.spec['cudnn'].libs[0])
+            build_env.set('CUDNN_LIBRARY', self.spec['cudnn'].libs[0])
 
         enable_or_disable('fbgemm')
         enable_or_disable('test', keyword='BUILD')
@@ -180,8 +179,7 @@ class PyTorch(PythonPackage):
                           self.spec['miopen'].libs.directories[0])
             build_env.set('MIOPEN_INCLUDE_DIR',
                           self.spec['miopen'].prefix.include)
-            build_env.set('MIOPEN_LIBRARY',
-                          self.spec['miopen'].libs[0])
+            build_env.set('MIOPEN_LIBRARY', self.spec['miopen'].libs[0])
 
         enable_or_disable('mkldnn')
         if '+mkldnn' in self.spec:
@@ -194,7 +192,8 @@ class PyTorch(PythonPackage):
         enable_or_disable('nccl')
         if '+nccl' in self.spec:
             build_env.set('NCCL_ROOT', self.spec['nccl'].prefix)
-            build_env.set('NCCL_LIB_DIR', self.spec['nccl'].libs.directories[0])
+            build_env.set('NCCL_LIB_DIR',
+                          self.spec['nccl'].libs.directories[0])
             build_env.set('NCCL_INCLUDE_DIR', self.spec['nccl'].prefix.include)
 
         enable_or_disable('caffe2_ops', keyword='BUILD')
