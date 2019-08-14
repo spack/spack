@@ -1,0 +1,46 @@
+diff -ru spack-src/global-1/PacBio/include/charb.hpp spack-src.new/global-1/PacBio/include/charb.hpp
+--- spack-src/global-1/PacBio/include/charb.hpp 2018-01-23 05:03:06.000000000 +0900
++++ spack-src.new/global-1/PacBio/include/charb.hpp     2019-08-14 10:32:47.741826823 +0900
+@@ -25,6 +25,7 @@
+ #include <stdexcept>
+ #include <string>
+ #include <cstring>
++#include <csignal>
+ #include <istream>
+ #include <assert.h>
+
+@@ -186,7 +187,11 @@
+     }
+     cptr      += char_read;
+     if(cptr == b.base_)
++#ifdef __x86_64
+       asm("int3;");
++#else
++      raise(SIGTRAP);
++#endif
+     if(cptr < b.end_ - 1 || *(cptr - 1) == '\n')
+       break;
+     size_t off  = cptr  - b.base_;
+diff -ru spack-src/global-1/SuperReads/include/charb.hpp spack-src.new/global-1/SuperReads/include/charb.hpp
+--- spack-src/global-1/SuperReads/include/charb.hpp     2018-12-15 01:57:56.000000000 +0900
++++ spack-src.new/global-1/SuperReads/include/charb.hpp 2019-08-14 10:34:10.501841240 +0900
+@@ -25,6 +25,7 @@
+ #include <stdexcept>
+ #include <string>
+ #include <cstring>
++#include <csignal>
+ #include <istream>
+ #include <assert.h>
+
+@@ -186,7 +187,11 @@
+     }
+     cptr      += char_read;
+     if(cptr == b.base_)
++#ifdef __x86_64
+       asm("int3;");
++#else
++      raise(SIGTRAP);
++#endif
+     if(cptr < b.end_ - 1 || *(cptr - 1) == '\n')
+       break;
+     size_t off  = cptr  - b.base_;
