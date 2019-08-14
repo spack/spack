@@ -37,9 +37,9 @@ class Lvm2(AutotoolsPackage):
 
     def configure_args(self):
         args = ['--with-confdir={0}'.
-                format(join_path(self.prefix, 'etc')),
+                format(self.prefix.etc),
                 '--with-default-system-dir={0}'.
-                format(join_path(self.prefix, 'etc', 'lvm'))]
+                format(self.prefix.etc.lvm)]
         if self.spec.satisfies('+pkgconfig'):
             args.append('--enable-pkgconfig')
         return args
