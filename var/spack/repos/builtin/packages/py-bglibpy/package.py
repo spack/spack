@@ -13,13 +13,11 @@ class PyBglibpy(PythonPackage):
     git = "ssh://bbpcode.epfl.ch/sim/BGLibPy"
 
     version('develop', branch='master')
-    version('4.1.2', commit='d01c9359edf92e39be5b840b5bb975da1c960988')
-    version('4.0.27', commit='42d9c1f891ef1ec9af6d72c49ff3b7726a009951')
-    version('4.0.17', commit='e90513f52a7d9ca3c16877ae7a2bcb8df31c8545')
+    version('4.1.4', commit='e54d294460e5bdf6b9990bc10a4606b412b76d90')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('neuron+python~mpi', type='run')
     depends_on('py-h5py~mpi@2.3:', type='run')
-
     depends_on('py-bluepy@0.13.2:', type='run')
+    depends_on('py-libsonata', type='run')

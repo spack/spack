@@ -112,7 +112,7 @@ packages:
       - py-bluepymm@0.6.38 ^neuron~mpi
       - py-bluepyopt@1.6.56 ^neuron~mpi
       - py-efel@3.0.22
-      - py-bglibpy ^neuron~mpi
+      - py-bglibpy@4.1.4 ^neuron~mpi
 
 
   #### cellular ####
