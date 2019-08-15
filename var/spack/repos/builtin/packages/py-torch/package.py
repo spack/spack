@@ -68,8 +68,8 @@ class PyTorch(PythonPackage):
     variant('qnnpack', default=False, description='Enables QNNPACK build (quantized 8-bit operators)')
     variant('distributed', default=False, description='Enables distributed (c10d, gloo, mpi, etc.) build')
     variant('nccl', default=False, description='Use Spack-installed NCCL')
-    variant('caffe2_ops', default=False, description='Enables Caffe2 operators build')
-    variant('gloo_ibverbs', default=False, description='Enables features related to distributed support')
+    variant('caffe2', default=False, description='Enables Caffe2 operators build')
+    variant('gloo', default=False, description='Enables features related to distributed support')
     variant('opencv', default=False, description='Enables use of OpenCV for additional operators')
     variant('openmp', default=True, description='Enables use of OpenMP for parallelization')
     variant('ffmpeg', default=False, description='Enables use of ffmpeg for additional operators')
@@ -122,8 +122,9 @@ class PyTorch(PythonPackage):
     depends_on('nnpack', when='+nnpack')
     # TODO: add dependency: https://github.com/pytorch/QNNPACK
     depends_on('qnnpack', when='+qnnpack')
+    depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
-    depends_on('gloo', when='+gloo_ibverbs')
+    depends_on('gloo', when='+gloo')
     depends_on('opencv', when='+opencv')
     depends_on('llvm-openmp', when='%clang platform=darwin +openmp')
     depends_on('ffmpeg', when='+ffmpeg')
@@ -134,27 +135,31 @@ class PyTorch(PythonPackage):
     depends_on('tbb', when='+tbb')
 
     def setup_environment(self, build_env, run_env):
-        def enable_or_disable(variant, keyword='USE', newer=False):
+        def enable_or_disable(variant, keyword='USE', var=None, newer=False):
             """Set environment variable to enable or disable support for a
             particular variant.
 
             Parameters:
                 variant (str): the variant to check
                 keyword (str): the prefix to use for enabling/disabling
+                var (str): CMake variable to set. Defaults to variant.upper()
                 newer (bool): newer variants that never used NO_*
             """
+            if var is None:
+                var = variant.upper()
+
             # Version 1.1.0 switched from NO_* to USE_* or BUILD_*
             # But some newer variants have always used USE_* or BUILD_*
             if self.spec.satisfies('@1.1:') or newer:
                 if '+' + variant in self.spec:
-                    build_env.set(keyword + '_' + variant.upper(), 'ON')
+                    build_env.set(keyword + '_' + var, 'ON')
                 else:
-                    build_env.set(keyword + '_' + variant.upper(), 'OFF')
+                    build_env.set(keyword + '_' + var, 'OFF')
             else:
                 if '+' + variant in self.spec:
-                    build_env.unset('NO_' + variant.upper())
+                    build_env.unset('NO_' + var)
                 else:
-                    build_env.set('NO_' + variant.upper(), 'ON')
+                    build_env.set('NO_' + var, 'ON')
 
         build_env.set('MAX_JOBS', make_jobs)
 
@@ -190,14 +195,15 @@ class PyTorch(PythonPackage):
         enable_or_disable('distributed')
 
         enable_or_disable('nccl')
+        enable_or_disable('nccl', var='SYSTEM_NCCL')
         if '+nccl' in self.spec:
             build_env.set('NCCL_ROOT', self.spec['nccl'].prefix)
             build_env.set('NCCL_LIB_DIR',
                           self.spec['nccl'].libs.directories[0])
             build_env.set('NCCL_INCLUDE_DIR', self.spec['nccl'].prefix.include)
 
-        enable_or_disable('caffe2_ops', keyword='BUILD')
-        enable_or_disable('gloo_ibverbs', newer=True)
+        enable_or_disable('caffe2', keyword='BUILD', var='CAFFE2_OPS')
+        enable_or_disable('gloo', var='GLOO_IBVERBS', newer=True)
         enable_or_disable('opencv', newer=True)
         enable_or_disable('openmp', newer=True)
         enable_or_disable('ffmpeg', newer=True)
