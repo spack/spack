@@ -209,7 +209,7 @@ class PyTorch(PythonPackage):
         enable_or_disable('ffmpeg', newer=True)
         enable_or_disable('leveldb', newer=True)
         enable_or_disable('lmdb', newer=True)
-        enable_or_disable('binary', newer=True)
+        enable_or_disable('binary', keyword='BUILD', newer=True)
 
         build_env.set('PYTORCH_BUILD_VERSION', self.version)
         build_env.set('PYTORCH_BUILD_NUMBER', 0)
