@@ -20,9 +20,11 @@ class Skopeo(MakefilePackage):
     version('0.1.36', sha256='42f9b0bf53ae44bc294be400e2c5259f977ffa4d5dbac3576b0b5e23d59791fd')
 
     depends_on('go')
+    depends_on('go-md2man', type='build')
     depends_on('gpgme')
     depends_on('libassuan')
     depends_on('libgpg-error')
+    depends_on('lvm2')
 
     def edit(self, spec, prefix):
         grep = which('grep')
