@@ -37,6 +37,76 @@
 </details>
 
 <details>
+  <summary>Q: How do I add/update my package/module versions?</summary>
+
+  We want to add a new version 2.0.0 to `mypackage`.
+
+  Make sure you're setup as per [the instructions](https://github.com/BlueBrain/spack#building-software-on-bluebrain5).
+
+  Change your package recipe to add or update the version specifying the 
+  correspondant tag or commit.
+  
+  ```
+  spack edit mypackage
+  ...
+  version('2.0.0', tag='v2.0.0')
+  ...
+  ```
+
+  Then you can edit the packages yaml files depending on the type 
+  of package (`bbp-packages.yaml`, `external-libraries.yaml`…).
+  
+  Assuming `mypackage` is an external library:
+  ```
+  vim deploy/packages/external-libraries.yaml
+  ```
+
+  Under the spec section
+  ```
+  - mypackage@2.0.0
+  ```
+
+  After that you should edit the module file that will be at 
+  `deploy/config/external-libraries/`
+  ```
+  vim deploy/config/external-libraries/modules.yaml
+  ```
+
+  Under the whitelist section, ensure that your software is mentioned:
+  ```
+  - mypackage
+  ```
+  
+  Now you are ready to create a new branch and a PR with the changes.
+  You can check the Jenkins build of your PR [on Blue Ocean](https://bbpcode.epfl.ch/ci/blue/organizations/jenkins/hpc.spack-deployment/activity).
+  
+</details>
+
+<details>
+  <summary>Q: How do I test my modules from the PR?</summary>
+
+  If you followed the previous point you should be able to see if your 
+  PR was succesfully built [on Blue Ocean](https://bbpcode.epfl.ch/ci/blue/organizations/jenkins/hpc.spack-deployment/activity).
+
+  Then you can log into `BB5` and run the following commands:
+  ```
+  module purge
+  unset MODULEPATH
+  source /gpfs/bbp.cscs.ch/apps/hpc/jenkins/pulls/xxx/config/modules.sh
+  ```
+  Where `xxx` is the number of your PR.
+
+  At this point you should have the environment ready, so if your module 
+  was built correctly you should be able to load it.
+  ```
+  module load mypackage
+  ```
+
+  Now you are ready to test `mypackage`
+
+</details>
+
+<details>
   <summary>Q: Why do I have to rebuild the entire world?</summary>
 
   If you are on the `BB5`, you shouldn't need to.
