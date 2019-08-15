@@ -1083,6 +1083,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             if not os.listdir(self.stage.path):
                 raise FetchError("Archive was empty for %s" % self.name)
+        else:
+            # Support for post-install hooks requires a stage.source_path
+            mkdirp(self.stage.source_path)
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
@@ -2369,6 +2372,9 @@ build_system_flags = PackageBase.build_system_flags
 
 class BundlePackage(PackageBase):
     """General purpose bundle, or no-code, package class."""
+    #: There are no phases by default but the property is required to support
+    #: post-install hooks (e.g., for module generation).
+    phases = []
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
     build_system_class = 'BundlePackage'

@@ -10,7 +10,7 @@ from llnl.util.filesystem import working_dir, is_exe
 
 import spack.repo
 import spack.config
-from spack.fetch_strategy import FailedDownloadError, NoFetchStrategyError
+from spack.fetch_strategy import FailedDownloadError
 from spack.fetch_strategy import from_list_url, URLFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
@@ -120,10 +120,11 @@ def test_from_list_url_unspecified(mock_packages, config):
 
 
 def test_nosource_from_list_url(mock_packages, config):
+    """This test confirms BundlePackages do not have list url."""
     pkg = spack.repo.get('nosource')
 
-    with pytest.raises(NoFetchStrategyError, match="has no fetch strategy"):
-        from_list_url(pkg)
+    fetch_strategy = from_list_url(pkg)
+    assert fetch_strategy is None
 
 
 def test_hash_detection(checksum_type):

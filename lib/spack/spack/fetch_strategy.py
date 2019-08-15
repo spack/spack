@@ -158,6 +158,47 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
         return cls.url_attr in args
 
 
+class BundleFetchStrategy(FetchStrategy):
+    """
+    Fetch strategy associated with bundle, or no-code, packages.
+
+    Having a basic fetch strategy is a requirement for executing post-install
+    hooks.
+    """
+    #: This is a concrete fetch strategy for no-code packages.
+    enabled = True
+
+    #: There is no associated URL keyword in ``version()`` for no-code
+    #: packages but this property is required for some strategy-related
+    #: functions (e.g., check_pkg_attributes).
+    url_attr = ''
+
+    def fetch(self):
+        tty.msg("No code to fetch.")
+        return True
+
+    def check(self):
+        tty.msg("No code to check.")
+
+    def expand(self):
+        tty.msg("No archive to expand.")
+
+    def reset(self):
+        tty.msg("No code to reset.")
+
+    def archive(self, destination):
+        tty.msg("No code to archive.")
+
+    @property
+    def cachable(self):
+        tty.msg("No code to cache.")
+        return False
+
+    def source_id(self):
+        tty.msg("No code to be uniquely identified.")
+        return ''
+
+
 @pattern.composite(interface=FetchStrategy)
 class FetchStrategyComposite(object):
     """Composite for a FetchStrategy object.
@@ -1103,8 +1144,10 @@ def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
 
+    # No-code packages have a custom fetch strategy since there is no
+    # URL to process.
     if not pkg.has_code:
-        raise NoFetchStrategyError(pkg)
+        return BundleFetchStrategy()
 
     check_pkg_attributes(pkg)
 
@@ -1148,8 +1191,6 @@ def from_list_url(pkg):
     """If a package provides a URL which lists URLs for resources by
        version, this can can create a fetcher for a URL discovered for
        the specified package's version."""
-    if not pkg.has_code:
-        raise NoFetchStrategyError(pkg)
 
     if pkg.list_url is not None:
         try:
@@ -1259,11 +1300,3 @@ class NoStageError(FetchError):
         super(NoStageError, self).__init__(
             "Must call FetchStrategy.set_stage() before calling %s" %
             method.__name__)
-
-
-class NoFetchStrategyError(FetchError):
-    """Raised when attempt to retrieve fetch strategy for no-code pkg."""
-    def __init__(self, pkg=None):
-        msg = ("{0} is a no-code package so has no fetch strategy.  Please "
-               "create a Spack issue to report the problem.").format(pkg)
-        super(FetchError, self).__init__(msg)

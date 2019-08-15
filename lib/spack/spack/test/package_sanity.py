@@ -56,18 +56,12 @@ def test_all_virtual_packages_have_default_providers():
 
 
 def test_package_version_consistency():
-    """Make sure all versions on builtin packages either produce a fetcher
-       (if have code) or raise an exception (if no code)."""
+    """Make sure all versions on builtin packages produce a fetcher."""
     for name in spack.repo.all_package_names():
         pkg = spack.repo.get(name)
         spack.fetch_strategy.check_pkg_attributes(pkg)
         for version in pkg.versions:
-            if pkg.has_code:
-                assert spack.fetch_strategy.for_package_version(pkg, version)
-            else:
-                with pytest.raises(spack.fetch_strategy.NoFetchStrategyError,
-                                   matches='has no fetch strategy'):
-                    spack.fetch_strategy.for_package_version(pkg, version)
+            assert spack.fetch_strategy.for_package_version(pkg, version)
 
 
 def test_no_fixme():

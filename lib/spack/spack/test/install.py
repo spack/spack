@@ -330,11 +330,33 @@ def test_uninstall_by_spec_errors(mutable_database):
 def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages):
     """Test install phases with the nosource package."""
     spec = Spec('nosource').concretized()
-    spec.package.do_install()
+    pkg = spec.package
 
+    # Make sure install works even though there is no associated code.
+    pkg.do_install()
+
+    # Also make sure an error is raised if `do_fetch` is called.
     with pytest.raises(InvalidPackageOpError,
                        match="fetch a package with a URL"):
-        spec.package.do_fetch()
+        pkg.do_fetch()
+
+
+def test_nosource_pkg_install_post_install(
+        install_mockery, mock_fetch, mock_packages):
+    """Test install phases with the nosource package with post-install."""
+    spec = Spec('nosource-install').concretized()
+    pkg = spec.package
+
+    # Make sure both the install and post-install package methods work.
+    pkg.do_install()
+
+    # Ensure the file created in the package's `install` method exists.
+    install_txt = os.path.join(spec.prefix, 'install.txt')
+    assert os.path.isfile(install_txt)
+
+    # Ensure the file created in the package's `post-install` method exists.
+    post_install_txt = os.path.join(spec.prefix, 'post-install.txt')
+    assert os.path.isfile(post_install_txt)
 
 
 def test_pkg_build_paths(install_mockery):
