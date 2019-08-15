@@ -54,5 +54,4 @@ class Butterflypack(CMakePackage):
             '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
         ]
 
-
         return args
