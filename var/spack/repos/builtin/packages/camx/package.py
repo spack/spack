@@ -13,7 +13,8 @@ class Camx(MakefilePackage):
     '''Comprehensive Air Quality Model with Extensions.'''
 
     homepage = 'http://www.camx.com'
-    url      = 'http://www.camx.com/download/CAMx_v6-50-src-180430.tgz'
+    # Upstream obfuscates their download URL to get you to fill out their
+    # registration form and accept their license agreement.
 
     version('6.50',
             url='http://www.camx.com/getmedia/caaf7983-616b-4207-bd10-c2b404bda78d/CAMx_v6-50-src-180430.tgz',
