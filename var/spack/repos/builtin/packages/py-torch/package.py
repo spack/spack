@@ -12,6 +12,7 @@ class PyTorch(PythonPackage):
 
     homepage = "https://pytorch.org/"
     git      = "https://github.com/pytorch/pytorch.git"
+    install_time_test_callbacks = ['install_test', 'import_module_test']
 
     maintainers = ['adamjstewart']
     import_modules = [
@@ -229,5 +230,8 @@ class PyTorch(PythonPackage):
         enable_or_disable('tbb', newer=True)
 
     def test(self):
+        pass
+
+    def install_test(self):
         with working_dir('test'):
             python('run_test.py')
