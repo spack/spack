@@ -14,7 +14,12 @@ class Percept(CMakePackage):
     homepage = "https://github.com/PerceptTools/percept"
     git      = "https://github.com/PerceptTools/percept.git"
 
-    version('master', branch='master')
+    # The open version of Percept does not seem to be supported on
+    # github and it doesn't have tags. So we specify a specific commit
+    # here and the patch allows us to build the mesh_transfer exe and
+    # creates a make install target so Spack can install Percept
+    version('master', commit='363cdd0050443760d54162f140b2fb54ed9decf0')
+    patch('cmakelists.patch')
 
     depends_on('googletest~shared')
     depends_on('opennurbs@percept')
