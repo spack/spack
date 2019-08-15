@@ -152,4 +152,4 @@ def get_path_from_module_contents(text, module_name):
             return path[:path.find('/bin')]
 
     # Unable to find module path
-    return None
+    return ''
