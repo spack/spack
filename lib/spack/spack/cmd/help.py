@@ -91,7 +91,7 @@ def setup_parser(subparser):
     help_spec_group = subparser.add_mutually_exclusive_group()
     help_spec_group.add_argument(
         '--spec', action='store_const', dest='guide', const='spec',
-        default=None, help='print all available commands')
+        default=None, help='print guide to specs')
 
 
 def help(parser, args):
