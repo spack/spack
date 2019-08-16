@@ -17,7 +17,6 @@ from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
 import spack.config
-import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
@@ -33,9 +32,6 @@ ignore_files = r'^\.|^__init__.py$|^#'
 
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
-
-# Cache found spack commands.
-_all_commands = None
 
 
 def python_name(cmd_name):
@@ -78,16 +74,6 @@ def find_commands(*command_paths):
     return command_list
 
 
-def all_commands():
-    """Return all top level commands available with Spack."""
-    global _all_commands
-    if _all_commands is None:
-        extension_paths = spack.extensions.get_command_paths()
-        _all_commands\
-            = find_commands(spack.paths.command_path, *extension_paths)
-    return _all_commands
-
-
 def remove_options(parser, *options):
     """Remove some options from a parser."""
     for option in options:
@@ -122,34 +108,6 @@ def get_module_from(cmd_name, namespace):
         tty.die("Command module %s (%s) must define function '%s'." %
                 (module.__name__, module.__file__, pname))
     return module
-
-
-def get_module(cmd_name):
-    """Imports the module for a particular Spack or extension top-level
-    command name and returns it.
-
-    Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
-    """
-    require_cmd_name(cmd_name)
-    try:
-        module = get_module_from(cmd_name, 'spack')
-    except ImportError:
-        module = spack.extensions.load_command_extension(cmd_name)
-    return module
-
-
-def get_command(cmd_name):
-    """Imports a top level command's function from a module and returns it.
-
-    Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
-    """
-    require_cmd_name(cmd_name)
-    pname = python_name(cmd_name)
-    return getattr(get_module(cmd_name), pname)
 
 
 def parse_specs(args, **kwargs):
