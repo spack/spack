@@ -62,8 +62,8 @@ def extension_name(path):
         path (str): path where the extension resides
 
     Returns:
-        The extension name or None if path doesn't match the format
-        for Spack's extension.
+        The extension name. An exception is raised if path doesn't match
+        the format for Spack's extension.
     """
     regexp_match = re.search(_extension_regexp, os.path.basename(path))
     if not regexp_match:
@@ -78,7 +78,8 @@ def load_command_extension(command):
         command (str): name of the command
 
     Returns:
-        A valid module object if the command is found or None
+        A valid module object; an exception is raised if the command is
+      not found.
     """
     extension_command_map = get_extension_command_map()
     if command not in extension_command_map:
