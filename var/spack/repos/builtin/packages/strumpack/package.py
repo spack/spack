@@ -24,6 +24,7 @@ class Strumpack(CMakePackage):
     maintainers = ['pghysels']
 
     version('master', branch='master')
+    version('3.2.0', sha256='34d93e1b2a3b8908ef89804b7e08c5a884cbbc0b2c9f139061627c0d2de282c1')
     version('3.1.1', sha256='c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778')
     version('3.1.0', sha256='b4f91b7d433955518b04538be1c726afc5de4bffb163e982ef8844d391b26fa7')
     version('3.0.3', sha256='2bd2a40d9585b769ae4ba461de02c6e36433bf2b21827f824a50f2fdf73389f7')
@@ -39,6 +40,8 @@ class Strumpack(CMakePackage):
             description='Enable use of ParMetis')
     variant('scotch', default=False,
             description='Enable use of Scotch')
+    variant('butterflypack', default=True,
+            description='Enable use of ButterflyPACK')
     variant('c_interface', default=True,
             description='Enable C interface')
     variant('count_flops', default=False,
@@ -59,8 +62,11 @@ class Strumpack(CMakePackage):
     depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch')
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
+    depends_on('butterflypack@1.0.0', when='+butterflypack+mpi')
 
     conflicts('+parmetis', when='~mpi')
+    conflicts('+butterflypack', when='~mpi')
+    conflicts('+butterflypack', when='@:3.1.1')
 
     patch('intel-19-compile.patch', when='@3.1.1')
 
@@ -90,7 +96,8 @@ class Strumpack(CMakePackage):
         if spec.satisfies('@3.0.4:'):
             args.extend([
                 '-DTPL_ENABLE_PARMETIS=%s' % on_off('+parmetis'),
-                '-DTPL_ENABLE_SCOTCH=%s' % on_off('+scotch')
+                '-DTPL_ENABLE_SCOTCH=%s' % on_off('+scotch'),
+                '-DTPL_ENABLE_BPACK=%s' % on_off('+butterflypack')
             ])
         else:
             args.extend([
