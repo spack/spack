@@ -5,18 +5,18 @@
 from spack import *
 
 
-class Unifycr(AutotoolsPackage):
+class Unifyfs(AutotoolsPackage):
     """User level file system that enables applications to use node-local
     storage as burst buffers for shared files. Supports scalable and efficient
     aggregation of I/O bandwidth from burst buffers while having the same life
     cycle as a batch-submitted job.
-    UnifyCR is designed to support common I/O workloads, including
-    checkpoint/restart. While primarily designed for N-N write/read, UnifyCR
+    UnifyFS is designed to support common I/O workloads, including
+    checkpoint/restart. While primarily designed for N-N write/read, UnifyFS
     compliments its functionality with the support for N-1 write/read."""
 
-    homepage = "https://github.com/LLNL/UnifyCR"
-    git      = "https://github.com/LLNL/UnifyCR.git"
-    url      = "https://github.com/LLNL/UnifyCR/releases/download/v0.2.0/unifycr-0.2.0.tar.gz"
+    homepage = "https://github.com/LLNL/UnifyFS"
+    git      = "https://github.com/LLNL/UnifyFS.git"
+    url      = "https://github.com/LLNL/UnifyFS/releases/download/v0.2.0/unifycr-0.2.0.tar.gz"
     maintainers = ['CamStan']
 
     version('develop', branch='dev', preferred=True)
@@ -37,8 +37,8 @@ class Unifycr(AutotoolsPackage):
 
     # Required dependencies
     depends_on('flatcc')
-    # Latest version of GOTCHA has API changes that break UnifyCR.
-    # Updates to UnifyCR are coming in order to fix this.
+    # Latest version of GOTCHA has API changes that break UnifyFS.
+    # Updates to UnifyFS are coming in order to fix this.
     depends_on('gotcha@0.0.2')
     depends_on('leveldb')
     depends_on('margo')
@@ -51,7 +51,7 @@ class Unifycr(AutotoolsPackage):
 
     conflicts('^mercury~bmi')
     conflicts('^mercury~sm')
-    # UnifyCR depends on numactl, which doesn't currently build on darwin.
+    # UnifyFS depends on numactl, which doesn't currently build on darwin.
     conflicts('platform=darwin', when='+numa')
     # Known compatibility issues with ifort and xlf. Fixes coming.
     conflicts('%intel', when='+fortran')
@@ -77,7 +77,7 @@ class Unifycr(AutotoolsPackage):
         spec = self.spec
         args = []
 
-        # UnifyCR's configure requires the exact path for HDF5
+        # UnifyFS's configure requires the exact path for HDF5
         def hdf5_compiler_path(name):
             if '~mpi' in spec[name]:  # serial HDF5
                 return spec[name].prefix.bin.h5cc
