@@ -72,7 +72,8 @@ class Precice(CMakePackage):
         # Eigen3
         if xsdk_mode:
             cmake_args.append('-DTPL_ENABLE_EIGEN3=ON')
-        cmake_args.append('-DEIGEN3_INCLUDE_DIR=%s' % spec['eigen'].prefix)
+        cmake_args.append(
+            '-DEIGEN3_INCLUDE_DIR=%s' % spec['eigen'].headers.directories[0])
 
         # LibXML2
         if xsdk_mode:
