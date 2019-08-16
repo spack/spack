@@ -152,9 +152,12 @@ def test_command_with_import(hello_world_with_module_in_root):
 
 
 def test_sub_missing_cmd(hello_world_sub_no_cmd):
+    expected_message\
+        = 'No module named {0}'.\
+        format('cmd.hello' if sys.version_info[0] < 3 else "'bad.cmd'")
     with pytest.raises(ImportError) as e:
         spack.cmd.get_module_from('hello', 'bad')
-    assert str(e.value) == 'No module named cmd.hello'
+    assert str(e.value) == expected_message
 
 
 def test_sub_cmd(hello_world_sub_cmd):
