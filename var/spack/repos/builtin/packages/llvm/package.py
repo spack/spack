@@ -583,7 +583,9 @@ class Llvm(CMakePackage):
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
-    # Backport from llvm master and add additional test.
+    # Backport from llvm master + additional fix
+    # see  https://bugs.llvm.org/show_bug.cgi?id=39696
+    # for a bug report about this problem in llvm master.
     patch('constexpr_longdouble.patch', when='@7:8+libcxx')
 
     @run_before('cmake')
