@@ -493,6 +493,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Allow custom staging paths for packages
         self.path = None
 
+        # Keep track of whether or not this package was installed from
+        # a binary cache.
+        self.installed_from_binary_cache = False
+
         # Check versions in the versions dict.
         for v in self.versions:
             assert (isinstance(v, Version))
@@ -1420,6 +1424,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         binary_distribution.extract_tarball(
             binary_spec, tarball, allow_root=False,
             unsigned=False, force=False)
+        self.installed_from_binary_cache = True
         spack.store.db.add(
             self.spec, spack.store.layout, explicit=explicit)
         return True
