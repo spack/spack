@@ -4289,3 +4289,8 @@ Autotools-based packages would be easy (and should be done by a
 developer who actively uses Autotools).  Packages that use
 non-standard build systems can gain ``setup`` functionality by
 subclassing ``StagedPackage`` directly.
+
+.. Emacs local variables
+   Local Variables:
+   fill-column: 79
+   End:
