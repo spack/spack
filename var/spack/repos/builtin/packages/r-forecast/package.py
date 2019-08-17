@@ -19,6 +19,7 @@ class RForecast(RPackage):
     version('8.6', sha256='4279e4f700e26310bae39419ab4a9b5918a850148667a5e577a4807d53eb4d02')
     version('8.2', '3ef095258984364c100b771b3c90d15e')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-ggplot2@2.2.1:', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))

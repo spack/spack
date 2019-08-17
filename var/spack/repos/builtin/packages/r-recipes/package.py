@@ -19,6 +19,7 @@ class RRecipes(RPackage):
 
     version('0.1.6', sha256='51e0db72de171d58d13ad8ffcf1dea402ab8f82100d161722041b6fd014cbfd9')
 
+    depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))
     depends_on('r-generics', type=('build', 'run'))
     depends_on('r-glue', type=('build', 'run'))

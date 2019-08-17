@@ -17,4 +17,5 @@ class RRjava(RPackage):
     version('0.9-11', sha256='c28ae131456a98f4d3498aa8f6eac9d4df48727008dacff1aa561fc883972c69')
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 
+    depends_on('r@2.5:', type=('build', 'run'))
     depends_on('java')

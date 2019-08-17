@@ -17,6 +17,8 @@ class RGlobaloptions(RPackage):
     version('0.1.0', sha256='567a0a51f6b7b14127302f00e6e4944befd4964c069f96a9e61256e8c3c79ef2')
     version('0.0.12', '6c268b3b27874918ba62eb0f6aa0a3e5')
 
+    depends_on('r@2.10:', when='@:0.0.12', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@0.0.13:', type=('build', 'run'))
     depends_on('r-testthat', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))
     depends_on('r-markdown', type=('build', 'run'))

@@ -19,5 +19,6 @@ class RCli(RPackage):
     version('1.0.1', 'ef80fbcde15760fd55abbf9413b306e3971b2a7034ab8c415fb52dc0088c5ee4')
     version('1.0.0', 'e6c4169541d394d6d435c4b430b1dd77')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-assertthat', type=('build', 'run'))
     depends_on('r-crayon@1.3.4:', type=('build', 'run'))

@@ -28,6 +28,7 @@ class RMlr(RPackage):
     version('2.12.1', 'abddfc9dfe95f290a233ecd97969a4ec')
     version('2.12', '94ee7495aeafb432c8af5a8bdd26c25f')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-paramhelpers@1.10:', type=('build', 'run'))
     depends_on('r-bbmisc@1.11:', type=('build', 'run'))
     depends_on('r-backports@1.1.0:', type=('build', 'run'))

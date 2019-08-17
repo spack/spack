@@ -19,6 +19,7 @@ class RPryr(RPackage):
     version('0.1.3', sha256='6acd88341dde4fe247a5cafd3949b281dc6742b7d60f68b57c1feb84b96739ac')
     version('0.1.2', '66b597a762aa15a3b7037779522983b6')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))

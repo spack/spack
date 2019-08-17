@@ -15,3 +15,5 @@ class RNcbit(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ncbit"
 
     version('2013.03.29', '29582d7e5c8bbf9683c57c4f6ac3e891')
+
+    depends_on('r@2.10:', type=('build', 'run'))

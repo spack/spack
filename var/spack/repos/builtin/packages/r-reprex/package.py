@@ -23,6 +23,8 @@ class RReprex(RPackage):
     version('0.2.1', sha256='5d234ddfbcadc5a5194a58eb88973c51581e7e2e231f146974af8f42747b45f3')
     version('0.1.1', 'fcd89995d7b35a2ddd4269973937bde3')
 
+    depends_on('r@3.0.2:', when='@:0.1.2', type=('build', 'run'))
+    depends_on('r@3.1:', when='@0.2.0:', type=('build', 'run'))
     depends_on('r-callr@2.0.0:', type=('build', 'run'))
     depends_on('r-clipr@0.4.0:', type=('build', 'run'))
     depends_on('r-knitr', when='@:0.1.9', type=('build', 'run'))

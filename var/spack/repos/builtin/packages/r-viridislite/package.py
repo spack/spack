@@ -16,4 +16,4 @@ class RViridislite(RPackage):
     version('0.3.0', sha256='780ea12e7c4024d5ba9029f3a107321c74b8d6d9165262f6e64b79e00aa0c2af')
     version('0.2.0', '04a04415cf651a2b5f964b261896c0fb')
 
-    depends_on('r@2.1.0:', type=('build', 'run'))
+    depends_on('r@2.10:', type=('build', 'run'))

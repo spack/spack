@@ -23,3 +23,6 @@ class RRlang(RPackage):
     version('0.1.4', 'daed5104d557c0cbfb4a654ec8ffb579')
     version('0.1.2', '170f8cf7b61898040643515a1746a53a')
     version('0.1.1', '38a51a0b8f8487eb52b4f3d986313682')
+
+    depends_on('r@3.1.0:', when='@:0.3.4', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@0.4.0:', type=('build', 'run'))

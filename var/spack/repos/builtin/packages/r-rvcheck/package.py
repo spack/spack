@@ -17,5 +17,6 @@ class RRvcheck(RPackage):
     version('0.1.3', sha256='0b59986c1ccc5b89f8aca8fa7cf62d0b875719addb40e08dbda1791cfd334fc4')
     version('0.0.9', '7e9821de754577f94fdcbf7b02a20edc')
 
-    depends_on('r@3.4.0:', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@:0.1.1', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@0.1.3:', type=('build', 'run'))
     depends_on('r-rlang', when='@0.1.1:', type=('build', 'run'))

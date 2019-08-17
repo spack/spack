@@ -19,6 +19,7 @@ class RQuantmod(RPackage):
     version('0.4-10', 'e4119c673567801eee16dcbbd0265de8')
     version('0.4-5', 'cab3c409e4de3df98a20f1ded60f3631')
 
+    depends_on('r@3.2.0:', when='@0.4-11:', type=('build', 'run'))
     depends_on('r-xts@0.9-0:', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))
     depends_on('r-ttr', type=('build', 'run'))

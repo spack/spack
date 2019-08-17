@@ -17,7 +17,7 @@ class RShinydashboard(RPackage):
     version('0.7.0', 'a572695884e3b45320b0ab5a7b364ffd')
     version('0.6.1', '0f6ad0448237e10d53d4d27ade1c6863')
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-htmltools@0.2.6:', type=('build', 'run'))
     depends_on('r-shiny@1.0.0:', type=('build', 'run'))
     depends_on('r-promises', when='@0.7.1:', type=('build', 'run'))

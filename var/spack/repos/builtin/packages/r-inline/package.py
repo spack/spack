@@ -17,3 +17,5 @@ class RInline(RPackage):
 
     version('0.3.15', sha256='ff043fe13c1991a3b285bed256ff4a9c0ba10bee764225a34b285875b7d69c68')
     version('0.3.14', '9fe304a6ebf0e3889c4c6a7ad1c50bca')
+
+    depends_on('r@2.4.0:', type=('build', 'run'))

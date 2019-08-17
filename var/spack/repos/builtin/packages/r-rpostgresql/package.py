@@ -24,5 +24,6 @@ class RRpostgresql(RPackage):
     version('0.6-2', sha256='080118647208bfa2621bcaac0d324891cc513e07618fa22e3c50ec2050e1b0d5')
     version('0.4-1', 'e7b22e212afbb2cbb88bab937f93e55a')
 
+    depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-dbi@0.3:', type=('build', 'run'))
     depends_on('postgresql')

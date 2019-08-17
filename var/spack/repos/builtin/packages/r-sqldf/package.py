@@ -24,6 +24,7 @@ class RSqldf(RPackage):
 
     version('0.4-11', '85def6fe2418569370c24e53522d2c2d')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-gsubfn@0.6:', type=('build', 'run'))
     depends_on('r-proto', type=('build', 'run'))
     depends_on('r-rsqlite', type=('build', 'run'))

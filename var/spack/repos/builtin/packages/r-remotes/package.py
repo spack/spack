@@ -17,3 +17,5 @@ class RRemotes(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/remotes"
 
     version('2.1.0', sha256='8944c8f6fc9f0cd0ca04d6cf1221b716eee08facef9f4b4c4d91d0346d6d68a7')
+
+    depends_on('r@2.6.0:', type=('build', 'run'))

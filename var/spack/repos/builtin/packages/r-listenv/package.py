@@ -18,3 +18,5 @@ class RListenv(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/listenv"
 
     version('0.7.0', sha256='6126020b111870baea08b36afa82777cd578e88c17db5435cd137f11b3964555')
+
+    depends_on('r@3.1.2:', type=('build', 'run'))

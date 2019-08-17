@@ -16,4 +16,5 @@ class RFs(RPackage):
 
     version('1.3.1', sha256='d6934dca8f835d8173e3fb9fd4d5e2740c8c04348dd2bcc57df1b711facb46bc')
 
+    depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))

@@ -17,3 +17,6 @@ class RProxy(RPackage):
 
     version('0.4-23', sha256='9dd4eb0978f40e4fcb55c8a8a26266d32eff9c63ac9dfe70cf1f664ca9c3669d')
     version('0.4-19', '279a01a1cc12ed50208c98196d78a5d7')
+
+    depends_on('r@3.3.2:', when='@:0.4-20', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@0.4-21:', type=('build', 'run'))

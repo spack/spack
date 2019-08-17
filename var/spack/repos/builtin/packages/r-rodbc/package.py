@@ -17,3 +17,5 @@ class RRodbc(RPackage):
     version('1.3-13', 'c52ef9139c2ed85adc53ad6effa7d68e')
 
     depends_on('unixodbc')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))

@@ -17,4 +17,5 @@ class RPlot3d(RPackage):
 
     version('1.1.1', '5135aa1f3cf6106f2ded3f393a24e75d')
 
+    depends_on('r@2.15:', type=('build', 'run'))
     depends_on('r-misc3d', type=('build', 'run'))

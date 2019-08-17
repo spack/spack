@@ -18,5 +18,6 @@ class RLatticeextra(RPackage):
 
     version('0.6-28', '771938f25d0983763369b48a1153b26c')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-rcolorbrewer', type=('build', 'run'))

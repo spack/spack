@@ -19,6 +19,8 @@ class RCoin(RPackage):
     version('1.2-2', sha256='d518065d3e1eb00121cb4e0200e1e4ae6b68eca6e249afc38bbffa35d24105bb')
     version('1.1-3', '97d3d21f1e4a5762e36dd718dd2d0661')
 
+    depends_on('r@2.14.0:', when='@:1.2-2', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@1.3-0:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-modeltools@0.2-9:', type=('build', 'run'))
     depends_on('r-mvtnorm@1.0-5:', type=('build', 'run'))

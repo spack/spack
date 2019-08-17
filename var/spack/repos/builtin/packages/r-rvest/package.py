@@ -18,6 +18,9 @@ class RRvest(RPackage):
     version('0.3.3', sha256='b10a87fa2d733f7c0fc567242ef0ab10a1a77d58d51796996cc0fd81381a556f')
     version('0.3.2', '78c88740850e375fc5da50d37734d1b2')
 
+    depends_on('r@3.0.1:', when='@:0.3.2', type=('build', 'run'))
+    depends_on('r@3.1:', when='@0.3.3', type=('build', 'run'))
+    depends_on('r@3.2:', when='@0.3.4:', type=('build', 'run'))
     depends_on('r-xml2', type=('build', 'run'))
     depends_on('r-httr@0.5:', type=('build', 'run'))
     depends_on('r-selectr', type=('build', 'run'))

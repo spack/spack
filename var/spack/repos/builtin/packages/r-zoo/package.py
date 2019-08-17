@@ -22,4 +22,6 @@ class RZoo(RPackage):
     version('1.7-14', '8c577a7c1e535c899ab14177b1039c32')
     version('1.7-13', '99521dfa4c668e692720cefcc5a1bf30')
 
+    depends_on('r@2.10.0:', when='@:1.8-1', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@1.8-2:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

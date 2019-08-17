@@ -21,6 +21,7 @@ class RDiffusionmap(RPackage):
     version('0.0-2', 'b599f47ebf30127e34ce2219dc3e43ae')
     version('0.0-1', '20c2cc2fffb5237d5c0216207016c2a1')
 
+    depends_on('r@2.4.0:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-scatterplot3d', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))

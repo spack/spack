@@ -16,4 +16,5 @@ class RAda(RPackage):
 
     version('2.0-5', '25ac0dc2650fba9e19f3d15c7c6721c1')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-rpart', type=('build', 'run'))

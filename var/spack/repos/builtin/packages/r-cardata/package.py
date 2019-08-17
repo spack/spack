@@ -15,3 +15,5 @@ class RCardata(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/carData"
 
     version('3.0-2', sha256='3b5c4eff1cc1e456a5331084774503eaa06cf61fb7acf6b9e8a6bfabd5735494')
+
+    depends_on('r@3.0:', type=('build', 'run'))

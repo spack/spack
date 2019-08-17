@@ -16,3 +16,5 @@ class RGss(RPackage):
 
     version('2.1-10', sha256='26c47ecae6a9b7854a1b531c09f869cf8b813462bd8093e3618e1091ace61ee2')
     version('2.1-7', '4a6bd96339d22b40c932895b64504fb2')
+
+    depends_on('r@2.14.0:', type=('build', 'run'))

@@ -18,5 +18,5 @@ class RStatnetCommon(RPackage):
     version('4.2.0', sha256='1176c3303436ebe858d02979cf0a0c33e4e2d1f3637516b4761d573ccd132461')
     version('3.3.0', '36bc11098dcd3652a4beb05c156ad6c8')
 
-    depends_on('r@3.5:', type=('build', 'run'))
+    depends_on('r@3.5:', when='@4.2.0:', type=('build', 'run'))
     depends_on('r-coda', when='@4.1.2:', type=('build', 'run'))

@@ -15,4 +15,5 @@ class RUdunits2(RPackage):
 
     version('0.13', 'c8717808c740ef70eed7aea93c7c4c7d')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('udunits2')

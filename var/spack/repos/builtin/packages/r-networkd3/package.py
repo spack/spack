@@ -18,6 +18,7 @@ class RNetworkd3(RPackage):
     version('0.3', sha256='6f9d6b35bb1562883df734bef8fbec166dd365e34c6e656da7be5f8a8d42343c')
     version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-htmlwidgets@0.3.2:', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

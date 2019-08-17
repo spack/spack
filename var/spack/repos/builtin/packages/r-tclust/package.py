@@ -20,6 +20,7 @@ class RTclust(RPackage):
     version('1.1-03', 'f1cc9278bdb068acce4623a9d98b7b62')
     version('1.1-02', '6f206501b0341fb5623208d145984f5a')
 
+    depends_on('r@2.12.0:', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))
     depends_on('r-mclust', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))

@@ -19,7 +19,8 @@ class RSeurat(RPackage):
     version('2.1.0', '46427837bb739883f9b7addd08fccee5')
     version('2.0.1', 'a77794891e93b9fa1ef41735fe8424ea')
 
-    depends_on('r@3.4.0:', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@:2.3.0', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@2.3.1:', type=('build', 'run'))
     depends_on('r-ggplot2@3.0.0:', type=('build', 'run'))
     depends_on('r-gplots', when='@:2.3.4', type=('build', 'run'))
     depends_on('r-reshape2', when='@:2.3.4', type=('build', 'run'))
@@ -81,4 +82,4 @@ class RSeurat(RPackage):
     depends_on('r-rsvd', when='@3.0.0:', type=('build', 'run'))
     depends_on('r-scales', when='@3.0.0:', type=('build', 'run'))
     depends_on('r-sctransform@0.2.0:', when='@3.0.0:', type=('build', 'run'))
-    depends_on('java', when='@:2.3.3')
+    depends_on('java', when='@:2.3.0', )

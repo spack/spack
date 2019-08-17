@@ -24,7 +24,7 @@ class RGgplot2(RPackage):
     version('2.2.1', '14c5a3507bc123c6e7e9ad3bef7cee5c')
     version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
 
-    depends_on('r@3.1:', type=('build', 'run'))
+    depends_on('r@3.1:', when='@:3.1.1', type=('build', 'run'))
     depends_on('r@3.2:', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-gtable@0.1.1:', type=('build', 'run'))

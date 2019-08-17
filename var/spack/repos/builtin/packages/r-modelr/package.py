@@ -19,6 +19,8 @@ class RModelr(RPackage):
     version('0.1.3', sha256='e536b247c17d6cacf10565dd8a1b744efc90a8815c70edd54371e413e6d1b423')
     version('0.1.1', 'ce5fd088fb7850228ab1e34d241a975d')
 
+    depends_on('r@3.1:', when='@:0.1.4', type=('build', 'run'))
+    depends_on('r@3.2:', when='@0.1.5:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-purrr@0.2.2:', type=('build', 'run'))
     depends_on('r-lazyeval@0.2.0:', when='@:0.1.1', type=('build', 'run'))

@@ -22,6 +22,7 @@ class RSelectr(RPackage):
     version('0.4-0', sha256='40cd51bfe499954b300742c49f92167a68964b974268a7f47ca8864f32020ece')
     version('0.3-1', '7190fcdea1823ad7ef429cab6938e960')
 
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-testthat', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))

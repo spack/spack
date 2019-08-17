@@ -19,3 +19,5 @@ class RMnormt(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/mnormt"
 
     version('1.5-5', '19b5be2e9ed33b92d7a716bfcca6b2c7')
+
+    depends_on('r@2.2.0:', type=('build', 'run'))

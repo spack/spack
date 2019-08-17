@@ -21,6 +21,10 @@ class RKnitr(RPackage):
     version('1.14', 'ef0fbeaa9372f99ffbc57212a7781511')
     version('0.6',  'c67d6db84cd55594a9e870c90651a3db')
 
+    depends_on('r@2.14.1:', when='@:1.9', type=('build', 'run'))
+    depends_on('r@3.0.2:', when='@1.10:1.14', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@1.15:1.22', type=('build', 'run'))
+    depends_on('r@3.2.3:', when='@1.23:', type=('build', 'run'))
     depends_on('r-evaluate@0.10:', type=('build', 'run'))
     depends_on('r-digest@:1.17', type=('build', 'run'))
     depends_on('r-formatr@:1.14', type=('build', 'run'))

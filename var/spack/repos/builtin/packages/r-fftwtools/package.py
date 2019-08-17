@@ -21,4 +21,5 @@ class RFftwtools(RPackage):
 
     version('0.9-8', '2d1258fbaf0940b57ed61c8d6cd6694d')
 
+    depends_on('r@2.15.2:', type=('build', 'run'))
     depends_on('fftw@3.1.2:')

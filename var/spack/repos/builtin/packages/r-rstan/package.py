@@ -26,6 +26,8 @@ class RRstan(RPackage):
     version('2.17.2', '60f4a0284c58f5efc1b1cbf488d7edda')
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 
+    depends_on('r@3.0.2:', when='@:2.17.3', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@2.18.1:', type=('build', 'run'))
     depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
     depends_on('r-stanheaders', type=('build', 'run'))
     depends_on('r-inline', type=('build', 'run'))

@@ -22,4 +22,5 @@ class ROo(RPackage):
     version('1.22.0', sha256='c0862e4608fb2b8f91ec4494d46c2f3ba7bc44999f9aa3d7b9625d3792e7dd4c')
     version('1.21.0', 'f0062095c763faaeba30558303f68bc3')
 
+    depends_on('r@2.13.0:', type=('build', 'run'))
     depends_on('r-methodss3@1.7.1:', type=('build', 'run'))

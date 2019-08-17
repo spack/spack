@@ -16,6 +16,7 @@ class RDosnow(RPackage):
 
     version('1.0.18', sha256='70e7bd82186e477e3d1610676d4c6a75258ac08f104ecf0dcc971550ca174766')
 
+    depends_on('r@2.5.0:', type=('build', 'run'))
     depends_on('r-foreach@1.2.0:', type=('build', 'run'))
     depends_on('r-iterators@1.0.0:', type=('build', 'run'))
     depends_on('r-snow@0.3.0:', type=('build', 'run'))

@@ -17,4 +17,5 @@ class RUtils(RPackage):
     version('2.9.0', sha256='b2aacc5a55d3ea86c41ac576d2583e446af145f4cb1103ad7b6f95b09ab09ff0')
     version('2.5.0', 'a728ef3ceb35cafc4c39ea577cecc38b')
 
+    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-oo@1.22.0:', type=('build', 'run'))

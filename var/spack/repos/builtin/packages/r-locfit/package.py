@@ -15,4 +15,5 @@ class RLocfit(RPackage):
 
     version('1.5-9.1', '38af7791c9cda78e2804020e65ac7fb4')
 
+    depends_on('r@2.0.1:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

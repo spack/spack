@@ -16,4 +16,5 @@ class RRsolnp(RPackage):
 
     version('1.16', '507e1e1a64f5f1d32b7e4e12ed19599f')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-truncnorm', type=('build', 'run'))

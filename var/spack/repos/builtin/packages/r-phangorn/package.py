@@ -20,6 +20,7 @@ class RPhangorn(RPackage):
     version('2.5.3', sha256='a306585a0aabe7360a2adaf9116ae2993fb5ceff641b198f2e01e4329d3768af')
     version('2.3.1', '85e7309900d061432508ab6f7e3e627e')
 
+    depends_on('r@3.2.0:', type=('build', 'run'))
     depends_on('r-ape@5.0:', type=('build', 'run'))
     depends_on('r-quadprog', type=('build', 'run'))
     depends_on('r-igraph@1.0:', type=('build', 'run'))

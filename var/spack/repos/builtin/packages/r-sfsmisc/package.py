@@ -18,3 +18,6 @@ class RSfsmisc(RPackage):
     version('1.1-4', sha256='44b6a9c859922e86b7182e54eb781d3264f3819f310343518ebc66f54f305c7d')
     version('1.1-3', sha256='58eff7d4a9c79212321858efe98d2a6153630e263ff0218a31d5e104b8b545f8')
     version('1.1-0', '1ba4303076e2bbf018f7eecc7d04e178')
+
+    depends_on('r@3.0.1:', when='@:1.1-1', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@1.1-2:', type=('build', 'run'))

@@ -20,5 +20,6 @@ class RRgooglemaps(RPackage):
     version('1.4.2', sha256='b479996fcb72f067644a7ea7f00325e44e76efd202e84aaab022753c4a6d5584')
     version('1.2.0.7', '2e1df804f0331b4122d841105f0c7ea5')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))
     depends_on('r-rjsonio@:1.3.9', type=('build', 'run'))

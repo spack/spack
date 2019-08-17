@@ -14,3 +14,5 @@ class RCorpcor(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/corpcor"
 
     version('1.6.9', '7f447d9f389e5d7dedb5fe5baedca925')
+
+    depends_on('r@3.0.2:', type=('build', 'run'))

@@ -19,4 +19,5 @@ class RGlobals(RPackage):
 
     version('0.12.4', sha256='7985356ad75afa1f795f8267a20dee847020c0207252dc075c614cef55d8fe6b')
 
+    depends_on('r@3.1.2:', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))

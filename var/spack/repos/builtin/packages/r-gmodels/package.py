@@ -16,5 +16,6 @@ class RGmodels(RPackage):
     version('2.18.1', sha256='626140a34eb8c53dd0a06511a76c71bc61c48777fa76fcc5e6934c9c276a1369')
     version('2.16.2', 'f13e5feb2a8b9f0cd47fdf25ddc74228')
 
+    depends_on('r@1.9.0:', type=('build', 'run'))
     depends_on('r-gdata', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

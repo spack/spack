@@ -22,3 +22,5 @@ class RStatmod(RPackage):
 
     version('1.4.32', sha256='2f67a1cfa66126e6345f8a40564a3077d08f1748f17cb8c8fb05c94ed0f57e20')
     version('1.4.30', '34e60132ce3df38208f9dc0db0479151')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))

@@ -26,7 +26,8 @@ class RDplyr(RPackage):
     version('0.7.0', sha256='27b3593c09da5e99c0c4fb19ea826edd2cab619f8aaefd0cfd2a4140a0bd9410')
     version('0.5.0', sha256='93d3b829f1c2d38e14a4f2fa7d6398fc6c1a9e4189b3e78bc38a0eb0e864454f')
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
+    depends_on('r@3.1.2:', when='@:0.8.0.1', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@0.8.1:', type=('build', 'run'))
     depends_on('r-assertthat@0.2.0:', type=('build', 'run'))
     depends_on('r-bindrcpp@0.2.0:', when='@:0.7.9', type=('build', 'run'))
     depends_on('r-glue@1.3.0:', type=('build', 'run'))

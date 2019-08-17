@@ -18,6 +18,7 @@ class RVctrs(RPackage):
 
     version('0.2.0', sha256='5bce8f228182ecaa51230d00ad8a018de9cf2579703e82244e0931fe31f20016')
 
+    depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-backports', type=('build', 'run'))
     depends_on('r-ellipsis@0.2.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))

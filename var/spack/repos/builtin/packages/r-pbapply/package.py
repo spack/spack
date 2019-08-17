@@ -21,3 +21,5 @@ class RPbapply(RPackage):
     version('1.3-1', '13d64dead441426aa96a3bf3fde29daf')
     version('1.3-0', 'a3f93cd05054657a01893a3817fa1f08')
     version('1.2-2', '23e2bfe531c704b79308b0b5fbe1ace8')
+
+    depends_on('r@3.2.0:', type=('build', 'run'))

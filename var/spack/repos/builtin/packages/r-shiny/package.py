@@ -20,6 +20,7 @@ class RShiny(RPackage):
     version('1.0.5', '419dd5d3ea0bd87a07f8f0b1ef14fc13')
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-httpuv@1.5.0:', type=('build', 'run'))
     depends_on('r-mime@0.3:', type=('build', 'run'))
     depends_on('r-jsonlite@0.9.16:', type=('build', 'run'))

@@ -24,6 +24,7 @@ class RBroom(RPackage):
     version('0.5.1', sha256='da9e6bf7cb8f960b83309cf107743976cc32b54524675f6471982abe3d1aae2e')
     version('0.4.2', '6eabab1f2eaec10f93cf9aa56d6a61de')
 
+    depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-plyr', when='@:0.4.2', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))
     depends_on('r-tidyr', type=('build', 'run'))

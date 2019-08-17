@@ -22,6 +22,7 @@ class RPlotly(RPackage):
     version('4.5.6', 'e6e00177fa64dc6b1a199facfd73f585')
     version('4.5.2', '7eb11b24a9faa9a572657fd89ed72fa5')
 
+    depends_on('r@3.2.0:', type=('build', 'run'))
     depends_on('r-ggplot2@3.0.0:', type=('build', 'run'))
     depends_on('r-httr', type=('build', 'run'))
     depends_on('r-base64enc', type=('build', 'run'))

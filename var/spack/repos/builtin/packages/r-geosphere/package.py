@@ -19,4 +19,5 @@ class RGeosphere(RPackage):
     version('1.5-7', sha256='9d9b555e2d59a5ae174ae654652121f169fbc3e9cf66c2491bfbe0684b6dd8a0')
     version('1.5-5', '28efb7a8e266c7f076cdbcf642455f3e')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))

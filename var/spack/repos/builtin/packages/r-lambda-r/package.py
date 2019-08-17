@@ -18,4 +18,5 @@ class RLambdaR(RPackage):
     version('1.2.3', sha256='0cd8e37ba1a0960888016a85d492da51a57df54bd65ff920b08c79a3bfbe8631')
     version('1.2', 'bda49898b85ad5902880a31f43b432e2')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-formatr', type=('build', 'run'))

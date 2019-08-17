@@ -23,7 +23,8 @@ class RTibble(RPackage):
     version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
     version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
 
-    depends_on('r@3.1.2:', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@1.3.0:', type=('build', 'run'))
+    depends_on('r@3.1.2:', when='@:1.2', type=('build', 'run'))
     depends_on('r-assertthat', type=('build', 'run'), when='@:1.3.1')
     depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
     depends_on('r-rcpp@0.12.3:', type=('build', 'run'), when='@:1.3.4')

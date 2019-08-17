@@ -27,6 +27,7 @@ class RJanitor(RPackage):
     version('1.1.1', sha256='404b41f56e571fab4c95ef62e79cb4f3bb34d5bb6e4ea737e748ff269536176b')
     version('0.3.0', '76036c54693b91aef19d468107ae066a')
 
+    depends_on('r@3.1.2:', type=('build', 'run'))
     depends_on('r-dplyr@0.7.0:', type=('build', 'run'))
     depends_on('r-tidyr@0.7.0:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

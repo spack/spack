@@ -20,4 +20,6 @@ class RCluster(RPackage):
     version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
     version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r@3.0.1:', when='@:2.0.6', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@2.0.7:2.0.7-1', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@2.0.8:', type=('build', 'run'))

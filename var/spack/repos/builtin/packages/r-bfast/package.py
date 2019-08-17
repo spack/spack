@@ -15,6 +15,7 @@ class RBfast(RPackage):
 
     version('1.5.7', sha256='01585fe8944d05ebdb13795214077bc1365f0c0372e2a1f7edb914356dace558')
 
+    depends_on('r@2.15.0:', type=('build', 'run'))
     depends_on('r-strucchange', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))
     depends_on('r-forecast', type=('build', 'run'))

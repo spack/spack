@@ -21,7 +21,9 @@ class RHttr(RPackage):
     version('1.2.1', 'c469948dedac9ab3926f23cf484b33d9')
     version('1.1.0', '5ffbbc5c2529e49f00aaa521a2b35600')
 
-    depends_on('r@3.2:', type=('build', 'run'))
+    depends_on('r@3.0.0:', when='@:1.3.1', type=('build', 'run'))
+    depends_on('r@3.1:', when='@1.4.0', type=('build', 'run'))
+    depends_on('r@3.2:', when='@1.4.1:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-mime', type=('build', 'run'))
     depends_on('r-curl@3.0.0:', type=('build', 'run'))

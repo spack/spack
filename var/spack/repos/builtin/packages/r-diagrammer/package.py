@@ -17,7 +17,7 @@ class RDiagrammer(RPackage):
     version('1.0.0', sha256='2b186dae1b19018681b979e9444bf16559c42740d8382676fbaf3b0f8a44337e')
     version('0.8.4', '9ee295c744f5d4ba9a84289ca7bdaf1a')
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@0.9.2:', type=('build', 'run'))
     depends_on('r-htmlwidgets@1.0:', type=('build', 'run'))
     depends_on('r-igraph@1.1.2:', type=('build', 'run'))
     depends_on('r-influencer@0.1.0:', type=('build', 'run'))

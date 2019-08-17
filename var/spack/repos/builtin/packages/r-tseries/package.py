@@ -17,6 +17,7 @@ class RTseries(RPackage):
     version('0.10-46', sha256='12940afd1d466401160e46f993ed4baf28a42cef98d3757b66ee15e916e07222')
     version('0.10-42', '3feaa5c463bc967d749323163d9bc836')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-quadprog', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))
     depends_on('r-quantmod@0.4-9:', type=('build', 'run'))

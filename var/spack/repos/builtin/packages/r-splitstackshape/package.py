@@ -26,4 +26,5 @@ class RSplitstackshape(RPackage):
     version('1.4.6', sha256='b9888f9508babdb8e09f57674facaa8b158a06255ef1e61c8df813f58881860f')
     version('1.4.4', '54d2554fe92dfc4670a000b45baacc28')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-data-table@1.9.4:', type=('build', 'run'))

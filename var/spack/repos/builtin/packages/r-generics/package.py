@@ -15,3 +15,5 @@ class RGenerics(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/generics"
 
     version('0.0.2', sha256='71b3d1b719ce89e71dd396ac8bc6aa5f1cd99bbbf03faff61dfbbee32fec6176')
+
+    depends_on('r@3.1:', type=('build', 'run'))

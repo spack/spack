@@ -15,4 +15,5 @@ class RClustergeneration(RPackage):
 
     version('1.3.4', sha256='7c591ad95a8a9d7fb0e4d5d80dfd78f7d6a63cf7d11eb53dd3c98fdfb5b868aa')
 
+    depends_on('r@2.9.1:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

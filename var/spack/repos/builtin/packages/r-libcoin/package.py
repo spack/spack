@@ -19,4 +19,5 @@ class RLibcoin(RPackage):
 
     version('1.0-4', sha256='91dcbaa0ab8c2109aa54c3eda29ad0acd67c870efcda208e27acce9d641c09c5')
 
+    depends_on('r@3.4.0:', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))

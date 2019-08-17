@@ -17,7 +17,7 @@ class RViridis(RPackage):
     version('0.5.0', sha256='fea477172c1e11be40554545260b36d6ddff3fe6bc3bbed87813ffb77c5546cd')
     version('0.4.0', 'f874384cbedf459f6c309ddb40b354ea')
 
-    depends_on('r@2.1.0:', type=('build', 'run'))
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-viridislite@0.3.0:', type=('build', 'run'))
     depends_on('r-ggplot2@1.0.1:', type=('build', 'run'))
     depends_on('r-gridextra', type=('build', 'run'))

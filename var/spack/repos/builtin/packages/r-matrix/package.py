@@ -21,4 +21,6 @@ class RMatrix(RPackage):
     version('1.2-8', '4a6406666bf97d3ec6b698eea5d9c0f5')
     version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
 
+    depends_on('r@3.0.1:', when='@:1.2-12', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@1.2.13:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

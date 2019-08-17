@@ -21,4 +21,5 @@ class RGooglevis(RPackage):
     version('0.6.3', sha256='17d104c5d4e6ab7b984df229cd51be19681e4726077afec7c61a33f6e4c0b6ef')
     version('0.6.0', 'ec36fd2a6884ddc7baa894007d0d0468')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))

@@ -17,5 +17,6 @@ class RMpm(RPackage):
 
     version('1.0-22', '91885c421cafd89ce8893ccf827165a2')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-kernsmooth', type=('build', 'run'))

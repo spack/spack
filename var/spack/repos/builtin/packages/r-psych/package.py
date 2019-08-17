@@ -32,6 +32,7 @@ class RPsych(RPackage):
     version('1.8.10', sha256='e8901ddab14729bfccbd82a8824fbb6523c10c2cd8fb7199b1ca56a7ffcb6e58')
     version('1.7.8', 'db37f2f85ff5470ee40bbc0a58ebe22b')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-mnormt', type=('build', 'run'))
     depends_on('r-foreign', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

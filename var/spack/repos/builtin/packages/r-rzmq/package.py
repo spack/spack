@@ -18,4 +18,5 @@ class RRzmq(RPackage):
     version('0.9.4', sha256='03fbda756d823c11fba359b94a6213c3440e61973331668eaac35779717f73ad')
     version('0.7.7', '8ba18fd1c222d1eb25bb622ccd2897e0')
 
-    depends_on('zeromq')
+    depends_on('r@3.1.0:', when='@0.9.0:', type=('build', 'run'))
+    depends_on('zeromq@3.0.0:')

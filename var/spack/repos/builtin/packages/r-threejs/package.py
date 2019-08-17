@@ -17,6 +17,7 @@ class RThreejs(RPackage):
     version('0.3.1', sha256='71750b741672a435ecf749b69c72f0681aa8bb795e317f4e3056d5e33f6d79e8')
     version('0.2.2', '35c179b10813c5e4bd3e7827fae6627b')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-htmlwidgets@0.3.2:', type=('build', 'run'))
     depends_on('r-base64enc', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))

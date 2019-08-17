@@ -15,3 +15,5 @@ class RHwriter(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/hwriter"
 
     version('1.3.2', '9eef49df2eb68bbf3a16b5860d933517')
+
+    depends_on('r@2.6.0:', type=('build', 'run'))

@@ -20,6 +20,7 @@ class RTidyr(RPackage):
     version('0.7.2', '42d723bf04c5c1c59e27a8be14f3a6b6')
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')
 
+    depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-dplyr@0.7.0:', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))

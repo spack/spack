@@ -24,5 +24,6 @@ class RSn(RPackage):
     version('1.2-4', 'bf3a47b05016326e910fdb4cc4967e4d')
     version('1.2-3', '290ae511d974a6beb4c3c79c0106858f')
 
+    depends_on('r@2.15.3:', type=('build', 'run'))
     depends_on('r-mnormt@1.5-4:', type=('build', 'run'))
     depends_on('r-numderiv', type=('build', 'run'))

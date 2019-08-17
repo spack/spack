@@ -15,3 +15,5 @@ class RGtable(RPackage):
 
     version('0.3.0', sha256='fd386cc4610b1cc7627dac34dba8367f7efe114b968503027fb2e1265c67d6d3')
     version('0.2.0', '124090ae40b2dd3170ae11180e0d4cab')
+
+    depends_on('r@3.0:', type=('build', 'run'))

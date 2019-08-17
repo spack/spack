@@ -22,4 +22,5 @@ class RDtw(RPackage):
     version('1.15',   'd3b6fdb0b866ff2e5b178c37bcfc7c55')
     version('1.14-3', 'a7b878e8dda7a61df22356d0a81540c5')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-proxy', type=('build', 'run'))

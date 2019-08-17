@@ -19,3 +19,5 @@ class RSquarem(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/SQUAREM"
 
     version('2017.10-1', sha256='9b89905b436f1cf3faa9e3dabc585a76299e729e85ca659bfddb4b7cba11b283')
+
+    depends_on('r@3.0:', type=('build', 'run'))

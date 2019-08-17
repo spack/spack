@@ -18,7 +18,8 @@ class RHaven(RPackage):
     version('2.1.0', sha256='c0a1cf1b039549fb3ad833f9644ed3f142790236ad755d2ee7bd3d8109e3ae74')
     version('1.1.0', '8edd4b7683f8c36b5bb68582ac1b8733')
 
-    depends_on('r@3.2:', type=('build', 'run'))
+    depends_on('r@3.1:', when='@:2.1.0', type=('build', 'run'))
+    depends_on('r@3.2:', when='@2.1.1:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.4:', type=('build', 'run'))
     depends_on('r-readr@0.1.0:', type=('build', 'run'))
     depends_on('r-hms', type=('build', 'run'))

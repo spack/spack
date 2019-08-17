@@ -15,3 +15,5 @@ class RDichromat(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dichromat"
 
     version('2.0-0', '84e194ac95a69763d740947a7ee346a6')
+
+    depends_on('r@2.10:', type=('build', 'run'))

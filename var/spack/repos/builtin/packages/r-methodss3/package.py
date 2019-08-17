@@ -22,3 +22,5 @@ class RMethodss3(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/R.methodsS3"
 
     version('1.7.1', 'c88e815837f268affd4f2a39c737d969')
+
+    depends_on('r@2.13.0:', type=('build', 'run'))

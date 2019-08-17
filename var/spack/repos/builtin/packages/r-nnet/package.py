@@ -15,3 +15,5 @@ class RNnet(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/nnet"
 
     version('7.3-12', 'dc7c6f0d0de53d8fc72b44554400a74e')
+
+    depends_on('r@2.14:', type=('build', 'run'))

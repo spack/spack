@@ -20,6 +20,7 @@ class RSctransform(RPackage):
 
     version('0.2.0', sha256='d7f4c7958693823454f1426b23b0e1e9c207ad61a7a228602a1885a1318eb3e4')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-future', type=('build', 'run'))

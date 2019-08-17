@@ -20,6 +20,7 @@ class RSf(RPackage):
     version('0.7-5', sha256='53ed0567f502216a116c4848f5a9262ca232810f82642df7b98e0541a2524868')
     version('0.5-5', '53ff32d0c9bf2844666c68ce7d75beb2')
 
+    depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.18:', type=('build', 'run'))
     depends_on('r-dbi@0.8:', type=('build', 'run'))
     depends_on('r-units@0.4-6:', type=('build', 'run'))

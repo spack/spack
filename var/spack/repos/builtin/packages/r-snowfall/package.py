@@ -19,4 +19,5 @@ class RSnowfall(RPackage):
 
     version('1.84-6.1', '5ec38116aa9cac237d56f59ba5bd60e3')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-snow', type=('build', 'run'))

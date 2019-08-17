@@ -21,6 +21,7 @@ class RGgally(RPackage):
     version('1.4.0', sha256='9a47cdf004c41f5e4024327b94227707f4dad3a0ac5556d8f1fba9bf0a6355fe')
     version('1.3.2', 'efe58133ba8431198af7afb6bcb76264')
 
+    depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-ggplot2@2.2.0:', type=('build', 'run'))
     depends_on('r-gtable@0.2.0:', type=('build', 'run'))
     depends_on('r-plyr@1.8.3:', type=('build', 'run'))

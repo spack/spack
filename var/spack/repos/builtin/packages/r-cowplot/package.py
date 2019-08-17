@@ -26,7 +26,7 @@ class RCowplot(RPackage):
     version('0.9.0', sha256='d5632f78294c3678c08d3eb090abe1eec5cc9cd15cb5d96f9c43794ead098cb5')
     version('0.8.0', sha256='a617fde25030fe764f20967fb753a953d73b47745a2146c97c2565eb4d06700d')
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@:0.9.4', type=('build', 'run'))
     depends_on('r@3.5.0:', when='@1.0.0:', type=('build', 'run'))
     depends_on('r-ggplot2@2.1.0:', type=('build', 'run'))
     depends_on('r-gtable@0.1.2:', type=('build', 'run'))

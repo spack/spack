@@ -19,7 +19,8 @@ class RCaret(RPackage):
     version('6.0-73', 'ca869e3357b5358f028fb926eb62eb70')
     version('6.0-70', '202d7abb6a679af716ea69fb2573f108')
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@:6.0-81', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@6.0-82:', type=('build', 'run'))
     depends_on('r-lattice@0.20:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-car', when='@:6.0-73', type=('build', 'run'))

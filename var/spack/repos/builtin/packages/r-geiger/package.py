@@ -17,6 +17,7 @@ class RGeiger(RPackage):
     version('2.0.6.1', sha256='2a95e20a3a90c096343b014344dd97e699e954da99c151c17fc6c245c77dba0b')
     version('2.0.6', 'e5e1a407ea56805227d0f91bf6d95afc')
 
+    depends_on('r@2.15.0:', type=('build', 'run'))
     depends_on('r-ape@3.0-6:', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))
     depends_on('r-subplex', type=('build', 'run'))
