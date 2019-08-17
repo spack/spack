@@ -9,6 +9,7 @@ from llnl.util import tty
 
 import glob
 import os
+import re
 import sys
 
 
@@ -420,8 +421,21 @@ class Gcc(AutotoolsPackage):
         set_install_permissions(specs_file)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('CC', join_path(self.spec.prefix.bin, 'gcc'))
-        run_env.set('CXX', join_path(self.spec.prefix.bin, 'g++'))
-        run_env.set('FC', join_path(self.spec.prefix.bin, 'gfortran'))
-        run_env.set('F77', join_path(self.spec.prefix.bin, 'gfortran'))
-        run_env.set('F90', join_path(self.spec.prefix.bin, 'gfortran'))
+        # Search prefix directory for possibly modified compiler names
+        from spack.compilers.gcc import Gcc as GccCompiler
+        compiler_names = {}
+        bin_path = self.spec.prefix.bin
+        for name in os.listdir(bin_path):
+            path = os.path.join(bin_path, name)
+            if os.path.isfile(path) and not os.path.islink(path):
+                for suffix in GccCompiler.suffixes:
+                    name = re.sub(suffix, "", name)
+                compiler_names[name] = path
+
+        # Only set environment variables for languages that are enabled
+        run_env.set('CC', compiler_names['gcc'])
+        run_env.set('CXX', compiler_names['g++'])
+        if 'gfortran' in compiler_names:
+            run_env.set('FC', compiler_names['gfortran'])
+            run_env.set('F77', compiler_names['gfortran'])
+            run_env.set('F90', compiler_names['gfortran'])
