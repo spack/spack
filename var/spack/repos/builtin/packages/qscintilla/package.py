@@ -35,6 +35,7 @@ class Qscintilla(QMakePackage):
     conflicts('qt@4', when='@2.10.3:')·
 
 
+    @run_before('qmake')
     def chdir(self):
         os.chdir(str(self.stage.source_path)+'/Qt4Qt5')
 
@@ -45,6 +46,7 @@ class Qscintilla(QMakePackage):
         args = ['CONFIG+=-std=c++11', 'DEFINES+=NO_CXX11_REGEX=1']
         return args
 
+
     # currently installation is done under path "/qscintilla_prefix/qt_prefix"
     # without settting INSTALL_ROOT, qscintilla is installed under qt_prefix
     # giving 'Nothing Installed Error'
@@ -52,6 +54,7 @@ class Qscintilla(QMakePackage):
         spack_env.set('INSTALL_ROOT', self.prefix)
 
 
+    @run_after('install')
     def make_variants(self):
         if '+python' in self.spec:
             os.chdir(str(self.stage.source_path)+'/Python')
@@ -65,6 +68,8 @@ class Qscintilla(QMakePackage):
         if '+designer' in self.spec:
             pass # not implemented yet TODO
 
-    run_before('qmake')(chdir)
 
-    run_after('install')(make_variants)
+    @run_after('qmake')
+    def fix_install_path(self):
+        makefile=FileFilter('Makefile')
+        makefile.filter(r'\$\(INSTALL_ROOT\)'+self.spec['qt'].prefix, '$(INSTALL_ROOT)')
