@@ -21,7 +21,7 @@ class Qgis(CMakePackage):
 
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
-    depends_on('qt@5.9.0:')
+    depends_on('qt@5.9.0:+dbus')
     depends_on('proj@4.4.0:')
     depends_on('geos@3.4.0:')
     depends_on('sqlite@3.0.0:')
@@ -36,18 +36,27 @@ class Qgis(CMakePackage):
     depends_on('qscintilla')
     depends_on('gsl')
     depends_on('qjson')
-    depends_on('requests')
+    depends_on('py-requests')
     depends_on('py-psycopg2')
     depends_on('python@3.0.0:')
     #depends_on('qtkeychain') # Not implemented yet, is it a "key" dependency?
+
+    # more deps discovered during compilation
+    depends_on('libzip')
+    depends_on('expat')
+    depends_on('postgresql')
+    depends_on('exiv2')
 
     depends_on('cmake@3.0.0:', type='build')
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
 
-#    def cmake_args(self):
-#        # FIXME: Add arguments other than
-#        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-#        # FIXME: If not needed delete this function
-#        args = []
-#        return args
+    def cmake_args(self):
+        args = []
+        args.append("-DEXPAT_LIBRARY={0}".format(self.spec['expat'].libs))
+        args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].libs)+'/pkgconfig')
+        args.append('-DPOSTGRES_PREFIX={0}'.format(self.spec['postgresql'].prefix))
+        args.append('-DWITH_QTWEBKIT=OFF')
+        args.append('-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix) + str(self.spec['qt'].prefix)+'/include')
+        args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix) + str(self.spec['qt'].prefix)+'/lib')
+        return args
