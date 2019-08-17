@@ -305,12 +305,12 @@ def compilers_for_arch(arch_spec, scope=None):
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
-class StrongReference(object):
+class CacheReference(object):
     """This acts as a hashable reference to any object (regardless of whether
        the object itself is hashable) and also prevents the object from being
-       garbage-collected (so if two StrongReference objects are equal, they
+       garbage-collected (so if two CacheReference objects are equal, they
        will refer to the same object, since it will not have been gc'ed since
-       the creation of the first StrongReference).
+       the creation of the first CacheReference).
     """
     def __init__(self, val):
         self.val = val
@@ -320,7 +320,7 @@ class StrongReference(object):
         return self.id
 
     def __eq__(self, other):
-        return isinstance(other, StrongReference) and self.id == other.id
+        return isinstance(other, CacheReference) and self.id == other.id
 
 
 def compiler_from_dict(items):
@@ -362,12 +362,12 @@ def _compiler_from_config_entry(items):
        the same Compiler object (regardless of whether the dictionary
        entries have changed).
     """
-    config_id = StrongReference(items)
+    config_id = CacheReference(items)
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
         compiler = compiler_from_dict(items)
-        _compiler_cache[StrongReference(items)] = compiler
+        _compiler_cache[config_id] = compiler
 
     return compiler
 
