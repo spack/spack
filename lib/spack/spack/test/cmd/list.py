@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import pytest
 
 from spack.main import SpackCommand
@@ -64,10 +45,12 @@ def test_list_format_name_only():
 
 
 @pytest.mark.maybeslow
-def test_list_format_rst():
-    output = list('--format', 'rst')
-    assert '.. _cloverleaf3d:' in output
-    assert '.. _hdf5:' in output
+def test_list_format_version_json():
+    output = list('--format', 'version_json')
+    assert '  {"name": "cloverleaf3d",' in output
+    assert '  {"name": "hdf5",' in output
+    import json
+    json.loads(output)
 
 
 @pytest.mark.maybeslow
@@ -78,3 +61,30 @@ def test_list_format_html():
 
     assert '<div class="section" id="hdf5">' in output
     assert '<h1>hdf5' in output
+
+
+def test_list_update(tmpdir):
+    update_file = tmpdir.join('output')
+
+    # not yet created when list is run
+    list('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read()
+
+    # created but older than any package
+    with update_file.open('w') as f:
+        f.write('empty\n')
+    update_file.setmtime(0)
+    list('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read() != 'empty\n'
+
+    # newer than any packages
+    with update_file.open('w') as f:
+        f.write('empty\n')
+    list('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read() == 'empty\n'

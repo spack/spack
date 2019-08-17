@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import division
 
 import os
@@ -31,6 +12,8 @@ import collections
 import inspect
 from datetime import datetime, timedelta
 from six import string_types
+import sys
+
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
@@ -165,30 +148,44 @@ def has_method(cls, name):
     return False
 
 
-class memoized(object):
-    """Decorator that caches the results of a function, storing them
-       in an attribute of that function."""
+def union_dicts(*dicts):
+    """Use update() to combine all dicts into one.
 
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
+    This builds a new dictionary, into which we ``update()`` each element
+    of ``dicts`` in order.  Items from later dictionaries will override
+    items from earlier dictionaries.
 
-    def __call__(self, *args):
+    Args:
+        dicts (list): list of dictionaries
+
+    Return: (dict): a merged dictionary containing combined keys and
+        values from ``dicts``.
+
+    """
+    result = {}
+    for d in dicts:
+        result.update(d)
+    return result
+
+
+def memoized(func):
+    """Decorator that caches the results of a function, storing them in
+    an attribute of that function.
+    """
+    func.cache = {}
+
+    @functools.wraps(func)
+    def _memoized_function(*args):
         if not isinstance(args, collections.Hashable):
             # Not hashable, so just call the function.
-            return self.func(*args)
+            return func(*args)
 
-        if args not in self.cache:
-            self.cache[args] = self.func(*args)
-        return self.cache[args]
+        if args not in func.cache:
+            func.cache[args] = func(*args)
 
-    def __get__(self, obj, objtype):
-        """Support instance methods."""
-        return functools.partial(self.__call__, obj)
+        return func.cache[args]
 
-    def clear(self):
-        """Expunge cache so that self.func will be called again."""
-        self.cache.clear()
+    return _memoized_function
 
 
 def list_modules(directory, **kwargs):
@@ -323,7 +320,7 @@ def check_kwargs(kwargs, fun):
     if kwargs:
         raise TypeError(
             "'%s' is an invalid keyword argument for function %s()."
-            % (next(kwargs.iterkeys()), fun.__name__))
+            % (next(iter(kwargs)), fun.__name__))
 
 
 def match_predicate(*args):
@@ -447,7 +444,8 @@ def pretty_string_to_date(date_str, now=None):
 
     Args:
         date_str (str): string representing a date. This string might be
-            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``)
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``,
+            ``YYYY-MM-DD HH:MM``, ``YYYY-MM-DD HH:MM:SS``)
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
     Returns:
@@ -459,13 +457,17 @@ def pretty_string_to_date(date_str, now=None):
     now = now or datetime.now()
 
     # datetime formats
-    pattern[re.compile('^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
-    pattern[re.compile('^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
+    pattern[re.compile(r'^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
+    pattern[re.compile(r'^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m'
     )
-    pattern[re.compile('^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m-%d'
     )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M')
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
 
     pretty_regex = re.compile(
         r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')
@@ -561,6 +563,9 @@ class Singleton(object):
     def __contains__(self, element):
         return element in self.instance
 
+    def __call__(self, *args, **kwargs):
+        return self.instance(*args, **kwargs)
+
     def __iter__(self):
         return iter(self.instance)
 
@@ -588,3 +593,33 @@ class LazyReference(object):
 
     def __repr__(self):
         return repr(self.ref_function())
+
+
+def load_module_from_file(module_name, module_path):
+    """Loads a python module from the path of the corresponding file.
+
+    Args:
+        module_name (str): namespace where the python module will be loaded,
+            e.g. ``foo.bar``
+        module_path (str): path of the python file containing the module
+
+    Returns:
+        A valid module object
+
+    Raises:
+        ImportError: when the module can't be loaded
+        FileNotFoundError: when module_path doesn't exist
+    """
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(module_name, module_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
+        import importlib.machinery
+        loader = importlib.machinery.SourceFileLoader(module_name, module_path)
+        module = loader.load_module()
+    elif sys.version_info[0] == 2:
+        import imp
+        module = imp.load_source(module_name, module_path)
+    return module

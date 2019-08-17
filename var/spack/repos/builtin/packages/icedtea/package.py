@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -37,7 +18,6 @@ class Icedtea(AutotoolsPackage):
 
     version('3.4.0',  'eba66765b92794495e16b83f23640872')
 
-    provides('java@8', when='@3.4.0:3.99.99')
     variant('X', default=False, description="Build with GUI support.")
     variant('shenandoah', default=False,
             description="Build with the shenandoah gc. Only for version 3+")
@@ -81,6 +61,9 @@ class Icedtea(AutotoolsPackage):
     depends_on('lcms')
     depends_on('zlib')
     depends_on('alsa-lib')
+
+    provides('java')
+    provides('java@8', when='@3.4.0:3.99.99')
 
     force_autoreconf = True
 
@@ -139,6 +122,20 @@ class Icedtea(AutotoolsPackage):
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/shenandoah.tar.xz',
              when='@3.4.0')
 
+    # FIXME:
+    # 1. `extends('java')` doesn't work, you need to use `extends('icedtea')`
+    # 2. Packages cannot extend multiple packages, see #987
+    # 3. Update `YamlFilesystemView.merge` to allow a Package to completely
+    #    override how it is symlinked into a view prefix. Then, spack activate
+    #    can symlink all *.jar files to `prefix.lib.ext`
+    extendable = True
+
+    @property
+    def home(self):
+        """For compatibility with the ``jdk`` package, so that other packages
+        can say ``spec['java'].home`` regardless of the Java provider."""
+        return self.prefix
+
     def configure_args(self):
         os.environ['POTENTIAL_CXX'] = os.environ['CXX']
         os.environ['POTENTIAL_CC'] = os.environ['CC']
@@ -175,7 +172,34 @@ class Icedtea(AutotoolsPackage):
         return args
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('JAVA_HOME', self.spec.prefix)
+        """Set JAVA_HOME."""
+
+        run_env.set('JAVA_HOME', self.home)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('JAVA_HOME', self.prefix)
+        """Set JAVA_HOME and CLASSPATH.
+
+        CLASSPATH contains the installation prefix for the extension and any
+        other Java extensions it depends on."""
+
+        spack_env.set('JAVA_HOME', self.home)
+
+        class_paths = []
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
+            if d.package.extends(self.spec):
+                class_paths.extend(find(d.prefix, '*.jar'))
+
+        classpath = os.pathsep.join(class_paths)
+        spack_env.set('CLASSPATH', classpath)
+
+        # For runtime environment set only the path for
+        # dependent_spec and prepend it to CLASSPATH
+        if dependent_spec.package.extends(self.spec):
+            class_paths = find(dependent_spec.prefix, '*.jar')
+            classpath = os.pathsep.join(class_paths)
+            run_env.prepend_path('CLASSPATH', classpath)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        """Allows spec['java'].home to work."""
+
+        self.spec.home = self.home

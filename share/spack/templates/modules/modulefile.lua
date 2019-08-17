@@ -73,11 +73,11 @@ end
 {% block environment %}
 {% for command_name, cmd in environment_modifications %}
 {% if command_name == 'PrependPath' %}
-prepend_path("{{ cmd.name }}", "{{ cmd.value }}")
+prepend_path("{{ cmd.name }}", "{{ cmd.value }}", "{{ cmd.separator }}")
 {% elif command_name == 'AppendPath' %}
-append_path("{{ cmd.name }}", "{{ cmd.value }}")
+append_path("{{ cmd.name }}", "{{ cmd.value }}", "{{ cmd.separator }}")
 {% elif command_name == 'RemovePath' %}
-remove_path("{{ cmd.name }}", "{{ cmd.value }}")
+remove_path("{{ cmd.name }}", "{{ cmd.value }}", "{{ cmd.separator }}")
 {% elif command_name == 'SetEnv' %}
 setenv("{{ cmd.name }}", "{{ cmd.value }}")
 {% elif command_name == 'UnsetEnv' %}

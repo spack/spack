@@ -1,3 +1,8 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 ########################################################################
 # This is a wrapper around the spack command that forwards calls to
 # 'spack use' and 'spack unuse' to shell functions.  This in turn
@@ -58,6 +63,47 @@ case cd:
         cd `\spack location $_sp_arg $_sp_args`
     endif
     breaksw
+case env:
+    shift _sp_args  # get rid of 'env'
+
+    set _sp_arg=""
+    [ $#_sp_args -gt 0 ] && set _sp_arg = ($_sp_args[1])
+
+    if ( "$_sp_arg" == "-h" ) then
+        \spack env -h
+    else
+        switch ($_sp_arg)
+            case activate:
+                set _sp_env_arg=""
+                [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
+
+                if ( "$_sp_env_arg" == "" || "$_sp_args" =~ "*--sh*" || "$_sp_args" =~ "*--csh*" || "$_sp_args" =~ "*-h*" ) then
+                    # no args or args contain -h/--help, --sh, or --csh: just execute
+                    \spack $_sp_flags env $_sp_args
+                else
+                    shift _sp_args  # consume 'activate' or 'deactivate'
+                    # actual call to activate: source the output
+                    eval `\spack $_sp_flags env activate --csh $_sp_args`
+                endif
+                breaksw
+            case deactivate:
+                set _sp_env_arg=""
+                [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
+
+                if ( "$_sp_env_arg" != "" ) then
+                    # with args: execute the command
+                    \spack $_sp_flags env $_sp_args
+                else
+                    # no args: source the output
+                    eval `\spack $_sp_flags env deactivate --csh`
+                endif
+                breaksw
+            default:
+                echo default
+                \spack $_sp_flags env $_sp_args
+                breaksw
+        endsw
+    endif
 case use:
 case unuse:
 case load:
@@ -74,25 +120,25 @@ case unload:
     # tool's commands to add/remove the result from the environment.
     switch ($_sp_subcommand)
         case "use":
-            set _sp_full_spec = ( "`\spack $_sp_flags module find --module-type dotkit $_sp_spec`" )
+            set _sp_full_spec = ( "`\spack $_sp_flags module dotkit find $_sp_spec`" )
             if ( $? == 0 ) then
                 use $_sp_module_args $_sp_full_spec
             endif
             breaksw
         case "unuse":
-            set _sp_full_spec = ( "`\spack $_sp_flags module find --module-type dotkit $_sp_spec`" )
+            set _sp_full_spec = ( "`\spack $_sp_flags module dotkit find $_sp_spec`" )
             if ( $? == 0 ) then
                 unuse $_sp_module_args $_sp_full_spec
             endif
             breaksw
         case "load":
-            set _sp_full_spec = ( "`\spack $_sp_flags module find --module-type tcl $_sp_spec`" )
+            set _sp_full_spec = ( "`\spack $_sp_flags module tcl find $_sp_spec`" )
             if ( $? == 0 ) then
                 module load $_sp_module_args $_sp_full_spec
             endif
             breaksw
         case "unload":
-            set _sp_full_spec = ( "`\spack $_sp_flags module find --module-type tcl $_sp_spec`" )
+            set _sp_full_spec = ( "`\spack $_sp_flags module tcl find $_sp_spec`" )
             if ( $? == 0 ) then
                 module unload $_sp_module_args $_sp_full_spec
             endif
@@ -108,3 +154,4 @@ endsw
 _sp_end:
 unset _sp_args _sp_full_spec _sp_modtype _sp_module_args
 unset _sp_sh_cmd _sp_spec _sp_subcommand _sp_flags
+unset _sp_arg _sp_env_arg

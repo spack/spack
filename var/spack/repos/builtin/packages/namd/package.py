@@ -1,29 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import platform
-import shutil
 import sys
 import os
 from spack import *
@@ -44,7 +24,7 @@ class Namd(MakefilePackage):
     variant('interface', default='none', values=('none', 'tcl', 'python'),
             description='Enables TCL and/or python interface')
 
-    depends_on('charm')
+    depends_on('charmpp')
 
     depends_on('fftw@:2.99', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
@@ -58,8 +38,8 @@ class Namd(MakefilePackage):
 
     def _copy_arch_file(self, lib):
         config_filename = 'arch/{0}.{1}'.format(self.arch, lib)
-        shutil.copy('arch/Linux-x86_64.{0}'.format(lib),
-                    config_filename)
+        copy('arch/Linux-x86_64.{0}'.format(lib),
+             config_filename)
         if lib == 'tcl':
             filter_file(r'-ltcl8\.5',
                         '-ltcl{0}'.format(self.spec['tcl'].version.up_to(2)),
@@ -112,7 +92,7 @@ class Namd(MakefilePackage):
 
         self._copy_arch_file('base')
 
-        opts = ['--charm-base', spec['charm'].prefix]
+        opts = ['--charm-base', spec['charmpp'].prefix]
         fftw_version = spec.variants['fftw'].value
         if fftw_version == 'none':
             opts.append('--without-fftw')

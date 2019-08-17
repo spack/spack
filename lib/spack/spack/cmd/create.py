@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import os
@@ -47,30 +28,14 @@ level = "short"
 
 
 package_template = '''\
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# ----------------------------------------------------------------------------
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
 #
 # This is a template package file for Spack.  We've put "FIXME"
 # next to all the things you'll want to change. Once you've handled
@@ -83,9 +48,8 @@ package_template = '''\
 #     spack edit {name}
 #
 # See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
+# ----------------------------------------------------------------------------
+
 from spack import *
 
 
@@ -190,6 +154,18 @@ class CMakePackageTemplate(PackageTemplate):
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
+class MesonPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for meson-based packages"""
+
+    base_class_name = 'MesonPackage'
+
+    body = """\
+    def meson_args(self):
         # FIXME: If not needed delete this function
         args = []
         return args"""
@@ -374,6 +350,28 @@ class IntelPackageTemplate(PackageTemplate):
     # FIXME: Override `setup_environment` if necessary."""
 
 
+class SIPPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for SIP packages."""
+
+    base_class_name = 'SIPPackage'
+
+    body = """\
+    def configure_args(self, spec, prefix):
+        # FIXME: Add arguments other than --bindir and --destdir
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+    def __init__(self, name, *args):
+        # If the user provided `--name py-pyqt4`, don't rename it py-py-pyqt4
+        if not name.startswith('py-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to py-{0}".format(name))
+            name = 'py-{0}'.format(name)
+
+        super(SIPPackageTemplate, self).__init__(name, *args)
+
+
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
@@ -389,6 +387,8 @@ templates = {
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
+    'meson':      MesonPackageTemplate,
+    'sip':        SIPPackageTemplate,
     'generic':    PackageTemplate,
 }
 
@@ -416,6 +416,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true',
         help="overwrite any existing package file with the same name")
+    subparser.add_argument(
+        '--skip-editor', action='store_true',
+        help="skip the edit session for the package (e.g., automation)")
 
 
 class BuildSystemGuesser:
@@ -459,6 +462,8 @@ class BuildSystemGuesser:
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
+            (r'/meson\.build$',       'meson'),
+            (r'/configure\.py$',      'sip'),
         ]
 
         # Peek inside the compressed file.
@@ -693,5 +698,6 @@ def create(parser, args):
     package.write(pkg_path)
     tty.msg("Created package file: {0}".format(pkg_path))
 
-    # Open up the new package file in your $EDITOR
-    editor(pkg_path)
+    # Optionally open up the new package file in your $EDITOR
+    if not args.skip_editor:
+        editor(pkg_path)

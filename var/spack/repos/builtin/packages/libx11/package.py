@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,8 +10,9 @@ class Libx11(AutotoolsPackage):
     """libX11 - Core X11 protocol client library."""
 
     homepage = "https://www.x.org/"
-    url      = "https://www.x.org/archive/individual/lib/libX11-1.6.5.tar.gz"
+    url      = "https://www.x.org/archive/individual/lib/libX11-1.6.7.tar.gz"
 
+    version('1.6.7', sha256='f62ab88c2a87b55e1dc338726a55bb6ed8048084fe6a3294a7ae324ca45159d1')
     version('1.6.5', '300b5831916ffcc375468431d856917e')
     version('1.6.3', '7d16653fe7c36209799175bb3dc1ae46')
 
@@ -44,6 +26,10 @@ class Libx11(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
     depends_on('perl', type='build')
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path('XLOCALEDIR', self.prefix.share.X11.locale)
+        run_env.prepend_path('XLOCALEDIR', self.prefix.share.X11.locale)
 
     @property
     def libs(self):

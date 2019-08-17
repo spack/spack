@@ -1,38 +1,75 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 import re
 
 import llnl.util.tty as tty
-import llnl.util.multiproc as mp
 
+import spack.error
+import spack.version
 from spack.architecture import OperatingSystem
-from spack.util.module_cmd import get_module_cmd
+from spack.util.module_cmd import module
+
+#: Possible locations of the Cray CLE release file,
+#: which we look at to get the CNL OS version.
+_cle_release_file = '/etc/opt/cray/release/cle-release'
+_clerelease_file  = '/etc/opt/cray/release/clerelease'
+
+
+def read_cle_release_file():
+    """Read the CLE release file and return a dict with its attributes.
+
+    This file is present on newer versions of Cray.
+
+    The release file looks something like this::
+
+        RELEASE=6.0.UP07
+        BUILD=6.0.7424
+        ...
+
+    The dictionary we produce looks like this::
+
+        {
+          "RELEASE": "6.0.UP07",
+          "BUILD": "6.0.7424",
+          ...
+        }
+
+    Returns:
+        dict: dictionary of release attributes
+    """
+    with open(_cle_release_file) as release_file:
+        result = {}
+        for line in release_file:
+            # use partition instead of split() to ensure we only split on
+            # the first '=' in the line.
+            key, _, value = line.partition('=')
+            result[key] = value.strip()
+        return result
+
+
+def read_clerelease_file():
+    """Read the CLE release file and return the Cray OS version.
+
+    This file is present on older versions of Cray.
+
+    The release file looks something like this::
+
+        5.2.UP04
+
+    Returns:
+        str: the Cray OS version
+    """
+    with open(_clerelease_file) as release_file:
+        for line in release_file:
+            return line.strip()
 
 
 class Cnl(OperatingSystem):
-    """ Compute Node Linux (CNL) is the operating system used for the Cray XC
+    """Compute Node Linux (CNL) is the operating system used for the Cray XC
     series super computers. It is a very stripped down version of GNU/Linux.
     Any compilers found through this operating system will be used with
     modules. If updated, user must make sure that version and name are
@@ -43,53 +80,72 @@ class Cnl(OperatingSystem):
         name = 'cnl'
         version = self._detect_crayos_version()
         super(Cnl, self).__init__(name, version)
+        self.modulecmd = module
 
     def __str__(self):
         return self.name + str(self.version)
 
-    def _detect_crayos_version(self):
-        modulecmd = get_module_cmd()
-        output = modulecmd("avail", "PrgEnv-", output=str, error=str)
-        matches = re.findall(r'PrgEnv-\w+/(\d+).\d+.\d+', output)
-        major_versions = set(matches)
-        latest_version = max(major_versions)
-        return latest_version
+    @classmethod
+    def _detect_crayos_version(cls):
+        if os.path.isfile(_cle_release_file):
+            release_attrs = read_cle_release_file()
+            v = spack.version.Version(release_attrs['RELEASE'])
+            return v[0]
+        elif os.path.isfile(_clerelease_file):
+            v = read_clerelease_file()
+            return spack.version.Version(v)[0]
+        else:
+            raise spack.error.UnsupportedPlatformError(
+                'Unable to detect Cray OS version')
 
-    def find_compilers(self, *paths):
-        # function-local so that cnl doesn't depend on spack.config
+    def arguments_to_detect_version_fn(self, paths):
         import spack.compilers
 
-        types = spack.compilers.all_compiler_types()
-        compiler_lists = mp.parmap(
-            lambda cmp_cls: self.find_compiler(cmp_cls, *paths), types)
+        command_arguments = []
+        for compiler_name in spack.compilers.supported_compilers():
+            cmp_cls = spack.compilers.class_for_compiler_name(compiler_name)
 
-        # ensure all the version calls we made are cached in the parent
-        # process, as well.  This speeds up Spack a lot.
-        clist = [comp for cl in compiler_lists for comp in cl]
-        return clist
+            # If the compiler doesn't have a corresponding
+            # Programming Environment, skip to the next
+            if cmp_cls.PrgEnv is None:
+                continue
 
-    def find_compiler(self, cmp_cls, *paths):
-        # function-local so that cnl doesn't depend on spack.config
-        import spack.spec
-
-        compilers = []
-        if cmp_cls.PrgEnv:
-            if not cmp_cls.PrgEnv_compiler:
+            if cmp_cls.PrgEnv_compiler is None:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            modulecmd = get_module_cmd()
+            compiler_id = spack.compilers.CompilerID(self, compiler_name, None)
+            detect_version_args = spack.compilers.DetectVersionArgs(
+                id=compiler_id, variation=(None, None),
+                language='cc', path='cc'
+            )
+            command_arguments.append(detect_version_args)
+        return command_arguments
 
-            output = modulecmd(
-                'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)
-            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_cls.PrgEnv_compiler
-            matches = re.findall(version_regex, output)
-            for name, version in matches:
-                v = version
-                comp = cmp_cls(
-                    spack.spec.CompilerSpec(name + '@' + v),
-                    self, "any",
-                    ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
+    def detect_version(self, detect_version_args):
+        import spack.compilers
+        modulecmd = self.modulecmd
+        compiler_name = detect_version_args.id.compiler_name
+        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
+        output = modulecmd('avail', compiler_cls.PrgEnv_compiler)
+        version_regex = r'(%s)/([\d\.]+[\d])' % compiler_cls.PrgEnv_compiler
+        matches = re.findall(version_regex, output)
+        version = tuple(version for _, version in matches)
+        compiler_id = detect_version_args.id
+        value = detect_version_args._replace(
+            id=compiler_id._replace(version=version)
+        )
+        return value, None
 
-                compilers.append(comp)
+    def make_compilers(self, compiler_id, paths):
+        import spack.spec
+        name = compiler_id.compiler_name
+        cmp_cls = spack.compilers.class_for_compiler_name(name)
+        compilers = []
+        for v in compiler_id.version:
+            comp = cmp_cls(
+                spack.spec.CompilerSpec(name + '@' + v),
+                self, "any",
+                ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
 
+            compilers.append(comp)
         return compilers

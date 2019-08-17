@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,8 +13,9 @@ class LibjpegTurbo(Package):
        transcoding."""
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://libjpeg-turbo.org/"
-    url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/1.5.90.tar.gz"
+    url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.2.tar.gz"
 
+    version('2.0.2', sha256='b45255bd476c19c7c6b198c07c0487e8b8536373b82f2b38346b32b4fa7bb942')
     version('1.5.90', '85f7f9c377b70cbf48e61726097d4efa')
     version('1.5.3', '5b7549d440b86c98a517355c102d155e')
     version('1.5.0', 'eff98ac84de05eafc65ae96caa6e23e9')
@@ -56,6 +38,22 @@ class LibjpegTurbo(Package):
     def libs(self):
         return find_libraries("libjpeg*", root=self.prefix, recursive=True)
 
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('@1.5.90:'):
+            return (None, None, flags)
+        else:
+            # compiler flags for earlier version are injected into the
+            # spack compiler wrapper
+            return (flags, None, None)
+
+    def flags_to_build_system_args(self, flags):
+        # This only handles cflags, other flags are discarded
+        cmake_flag_args = []
+        if 'cflags' in flags and flags['cflags']:
+            cmake_flag_args.append('-DCMAKE_C_FLAGS={0}'.format(
+                                   ' '.join(flags['cflags'])))
+        self.cmake_flag_args = cmake_flag_args
+
     @when('@1.3.1:1.5.3')
     def install(self, spec, prefix):
         autoreconf('-ifv')
@@ -66,6 +64,8 @@ class LibjpegTurbo(Package):
     @when('@1.5.90:')
     def install(self, spec, prefix):
         cmake_args = ['-GUnix Makefiles']
+        if hasattr(self, 'cmake_flag_args'):
+            cmake_args.extend(self.cmake_flag_args)
         cmake_args.extend(std_cmake_args)
         with working_dir('spack-build', create=True):
             cmake('..', *cmake_args)

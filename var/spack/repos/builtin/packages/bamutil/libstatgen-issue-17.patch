@@ -1,0 +1,16 @@
+diff --git a/general/Makefile b/general/Makefile
+index ed39442..d828c6b 100755
+--- a/libStatGen/general/Makefile
++++ b/libStatGen/general/Makefile
+@@ -8,7 +8,10 @@ ifeq ($(UNAME), Linux)
+   # an error, but allow unused results and variables for the
+   # time being.
+   #
+-  USER_WARNINGS ?= -Werror $(shell if [ X$(CCVERSION) \> X4.2.0 ] ; then echo " -Wno-strict-overflow" ; fi)
++  # Disable format-truncation check because StringBasics specifically tests
++  # to make sure snprintf truncates as expected.
++  USER_WARNINGS ?= -Werror -Wno-format-truncation $(shell if [ X$(CCVERSION) \> X7.0.0 ] ; then echo " -Wno-strict-overflow -Wno-format-truncation" ; elif [ X$(CCVERSION) \> X4.2.0 ] ; then echo " -Wno-strict-overflow" ; fi)
++#  USER_WARNINGS ?= -Werror $(shell if [ X$(CCVERSION) \> X4.2.0 ] ; then echo " -Wno-strict-overflow" ; fi)
+ #-Wno-strict-overflow
+ # -Wno-unused-variable $(shell if [ X$(CCVERSION) \> X4.2.0 ] ; then echo " -Wno-unused-result" ; fi)
+ endif

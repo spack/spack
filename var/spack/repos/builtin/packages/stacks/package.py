@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,12 +13,15 @@ class Stacks(AutotoolsPackage):
     homepage = "http://catchenlab.life.illinois.edu/stacks/"
     url      = "http://catchenlab.life.illinois.edu/stacks/source/stacks-1.46.tar.gz"
 
+    version('2.3b', sha256='a46786d8811a730ebcdc17891e89f50d4f4ae196734439dac86091f45c92ac72')
     version('1.46', '18b0568a4bba44fb4e5be0eb7ee2c08d')
 
     variant('sparsehash', default=True, description='Improve Stacks memory usage with SparseHash')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('sparsehash', when='+sparsehash')
+    depends_on('zlib', when='@2.3b:')
+    conflicts('%gcc@:4.9.0', when='@2.3b:')
 
     def configure_args(self):
         args = []

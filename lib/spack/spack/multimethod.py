@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """This module contains utilities for using multi-methods in
 spack. You can think of multi-methods like overloaded methods --
 they're methods with the same name, and we need to select a version
@@ -44,12 +25,13 @@ depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
 import functools
+import inspect
 
-from llnl.util.lang import caller_locals, get_calling_module_name
+from llnl.util.lang import caller_locals
 
 import spack.architecture
 import spack.error
-from spack.spec import parse_anonymous_spec
+from spack.spec import Spec
 
 
 class SpecMultiMethod(object):
@@ -64,11 +46,6 @@ class SpecMultiMethod(object):
        registered methods and their associated specs, and it tries
        to find one that matches the package's spec.  If it finds one
        (and only one), it will call that method.
-
-       The package author is responsible for ensuring that only one
-       condition on multi-methods ever evaluates to true.  If
-       multiple methods evaluate to true, this will raise an
-       exception.
 
        This is intended for use with decorators (see below).  The
        decorator (see docs below) creates SpecMultiMethods and
@@ -95,7 +72,7 @@ class SpecMultiMethod(object):
             functools.update_wrapper(self, default)
 
     def register(self, spec, method):
-        """Register a version of a method for a particular sys_type."""
+        """Register a version of a method for a particular spec."""
         self.method_list.append((spec, method))
 
         if not hasattr(self, '__name__'):
@@ -110,6 +87,7 @@ class SpecMultiMethod(object):
         # element in the list. The first registered function
         # will be the one 'wrapped'.
         wrapped_method = self.method_list[0][1]
+
         # Call functools.wraps manually to get all the attributes
         # we need to be disguised as the wrapped_method
         func = functools.wraps(wrapped_method)(
@@ -117,31 +95,45 @@ class SpecMultiMethod(object):
         )
         return func
 
+    def _get_method_by_spec(self, spec):
+        """Find the method of this SpecMultiMethod object that satisfies the
+           given spec, if one exists
+        """
+        for condition, method in self.method_list:
+            if spec.satisfies(condition):
+                return method
+        return self.default or None
+
     def __call__(self, package_self, *args, **kwargs):
         """Find the first method with a spec that matches the
            package's spec.  If none is found, call the default
            or if there is none, then raise a NoSuchMethodError.
         """
-        for spec, method in self.method_list:
-            if package_self.spec.satisfies(spec):
-                return method(package_self, *args, **kwargs)
+        spec_method = self._get_method_by_spec(package_self.spec)
+        if spec_method:
+            return spec_method(package_self, *args, **kwargs)
+        # Unwrap the MRO of `package_self by hand. Note that we can't
+        # use `super()` here, because using `super()` recursively
+        # requires us to know the class of `package_self`, as well as
+        # its superclasses for successive calls. We don't have that
+        # information within `SpecMultiMethod`, because it is not
+        # associated with the package class.
+        for cls in inspect.getmro(package_self.__class__)[1:]:
+            superself = cls.__dict__.get(self.__name__, None)
+            if isinstance(superself, SpecMultiMethod):
+                # Check parent multimethod for method for spec.
+                superself_method = superself._get_method_by_spec(
+                    package_self.spec
+                )
+                if superself_method:
+                    return superself_method(package_self, *args, **kwargs)
+            elif superself:
+                return superself(package_self, *args, **kwargs)
 
-        if self.default:
-            return self.default(package_self, *args, **kwargs)
-
-        else:
-            superclass = super(package_self.__class__, package_self)
-            superclass_fn = getattr(superclass, self.__name__, None)
-            if callable(superclass_fn):
-                return superclass_fn(*args, **kwargs)
-            else:
-                raise NoSuchMethodError(
-                    type(package_self), self.__name__, spec,
-                    [m[0] for m in self.method_list])
-
-    def __str__(self):
-        return "SpecMultiMethod {\n\tdefault: %s,\n\tspecs: %s\n}" % (
-            self.default, self.method_list)
+        raise NoSuchMethodError(
+            type(package_self), self.__name__, package_self.spec,
+            [m[0] for m in self.method_list]
+        )
 
 
 class when(object):
@@ -197,22 +189,17 @@ class when(object):
                   self.setup()
                   # Do more common install stuff
 
-       There must be one (and only one) @when clause that matches the
-       package's spec.  If there is more than one, or if none match,
-       then the method will raise an exception when it's called.
-
        Note that the default version of decorated methods must
        *always* come first.  Otherwise it will override all of the
        platform-specific versions.  There's not much we can do to get
        around this because of the way decorators work.
     """
 
-    def __init__(self, spec):
-        pkg = get_calling_module_name()
-        if spec is True:
-            spec = pkg
-        self.spec = (parse_anonymous_spec(spec, pkg)
-                     if spec is not False else None)
+    def __init__(self, condition):
+        if isinstance(condition, bool):
+            self.spec = Spec() if condition else None
+        else:
+            self.spec = Spec(condition)
 
     def __call__(self, method):
         # Get the first definition of the method in the calling scope

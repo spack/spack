@@ -1,28 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+from spack.spec import ConflictsInSpecError
 
 
 class Parsimonator(MakefilePackage):
@@ -34,14 +16,48 @@ class Parsimonator(MakefilePackage):
 
     version('1.0.2', commit='78368c6ab1e9adc7e9c6ec9256dd7ff2a5bb1b0a')
 
-    variant('sse', default=True, description='Enable SSE in order to substantially speed up execution')
+    variant('sse', default=False, description='Enable SSE in order to substantially speed up execution')
     variant('avx', default=False, description='Enable AVX in order to substantially speed up execution')
 
     conflicts('+avx', when='+sse')
 
+    patch('nox86.patch')
+
+    def flag_handler(self, name, flags):
+        arch = ''
+        spec = self.spec
+        if spec.satisfies("platform=cray"):
+            # FIXME; It is assumed that cray is x86_64.
+            # If you support arm on cray, you need to fix it.
+            arch = 'x86_64'
+        if (arch != 'x86_64' and not spec.satisfies("target=x86_64")):
+            if spec.satisfies("+sse"):
+                raise ConflictsInSpecError(
+                    spec,
+                    [(
+                        spec,
+                        spec.architecture.target,
+                        spec.variants['sse'],
+                        '+sse is valid only on x86_64'
+                    )]
+                )
+            if spec.satisfies("+avx"):
+                raise ConflictsInSpecError(
+                    spec,
+                    [(
+                        spec,
+                        spec.architecture.target,
+                        spec.variants['avx'],
+                        '+avx is valid only on x86_64'
+                    )]
+                )
+        return (flags, None, None)
+
     @property
     def makefile_file(self):
-        if '+sse' in self.spec:
+        if not self.spec.satisfies('target=x86_64'):
+            return 'Makefile.nosse'
+        elif '+sse' in self.spec:
             return 'Makefile.SSE3.gcc'
         elif '+avx' in self.spec:
             return 'Makefile.AVX.gcc'
@@ -57,7 +73,9 @@ class Parsimonator(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        if '+sse' in spec:
+        if not self.spec.satisfies('target=x86_64'):
+            install('parsimonator', prefix.bin)
+        elif '+sse' in spec:
             install('parsimonator-SSE3', prefix.bin)
         elif '+avx' in spec:
             install('parsimonator-AVX', prefix.bin)

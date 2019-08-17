@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -38,8 +19,14 @@ class RCowplot(RPackage):
     url      = "https://cran.rstudio.com/src/contrib/cowplot_0.8.0.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/cowplot"
 
-    version('0.8.0', 'bcb19c72734d8eb5d73db393c1235c3d')
+    version('0.9.3', sha256='3e10475fd7506ea9297ed72eb1a3acf858c6fa99d26e46fc39654eba000c3dcb')
+    version('0.9.2', sha256='8b92ce7f92937fde06b0cfb86c7634a39b3b2101e362cc55c4bec6b3fde1d28f')
+    version('0.9.1', sha256='953fd9d6ff370472b9f5a9ee867a423bea3e26e406d08a2192ec1872a2e60047')
+    version('0.9.0', sha256='d5632f78294c3678c08d3eb090abe1eec5cc9cd15cb5d96f9c43794ead098cb5')
+    version('0.8.0', sha256='a617fde25030fe764f20967fb753a953d73b47745a2146c97c2565eb4d06700d')
 
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-gtable', type=('build', 'run'))
-    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r-ggplot2@2.1.0:', type=('build', 'run'))
+    depends_on('r-gtable@0.1.2:', type=('build', 'run'))
+    depends_on('r-plyr@1.8.2:', type=('build', 'run'))
+    depends_on('r-scales', type=('build', 'run'))

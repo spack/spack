@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 from spack import *
@@ -37,17 +18,15 @@ class Atlas(Package):
     """
     homepage = "http://math-atlas.sourceforge.net/"
 
-    version('3.11.39', '5f3252fa980f5f060f93edd4669321e2',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.39/atlas3.11.39.tar.bz2')
+    # Developer (unstable)
+    version('3.11.41', sha256='477d567a8d683e891d786e9e8bb6ad6659daa9ba18e8dd0e2f70b7a54095f8de')
+    version('3.11.39', '5f3252fa980f5f060f93edd4669321e2')
+    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825')
 
-    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
+    # Stable
+    version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef', preferred=True)
+    version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da')
 
-    version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef',
-            url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.3/atlas3.10.3.tar.bz2')
-
-    version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da',
-            url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
     # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0
     # Lapack routines. Stick with 3.5.0 until this is fixed.
     resource(name='lapack',
@@ -65,10 +44,26 @@ class Atlas(Package):
         multi=False
     )
 
+    variant('tune_cpu', default=-1,
+        multi=False,
+        description="Number of threads to tune to,\
+                -1 for autodetect, 0 for no threading"
+    )
+
     provides('blas')
     provides('lapack')
 
     parallel = False
+
+    def url_for_version(self, version):
+        url = 'https://sourceforge.net/projects/math-atlas/files/'
+
+        if version >= Version('3.11'):
+            url += 'Developer%20%28unstable%29/{0}/atlas{0}.tar.bz2'
+        else:
+            url += 'Stable/{0}/atlas{0}.tar.bz2'
+
+        return url.format(version)
 
     def patch(self):
         # Disable thread check.  LLNL's environment does not allow
@@ -96,11 +91,21 @@ class Atlas(Package):
             '-b', '64'
         ])
 
+        # set number of cpu's to tune to
+        options.extend([
+            '-t', spec.variants['tune_cpu'].value
+        ])
+
         # set compilers:
         options.extend([
             '-C', 'ic', spack_cc,
             '-C', 'if', spack_f77
         ])
+
+        # Workaround for macOS Clang:
+        # http://math-atlas.sourceforge.net/atlas_install/node66.html
+        if spec.satisfies('@3.10.3: %clang platform=darwin'):
+            options.append('--force-clang=' + spack_cc)
 
         # Lapack resource to provide full lapack build. Note that
         # ATLAS only provides a few LAPACK routines natively.

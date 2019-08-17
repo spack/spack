@@ -1,31 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
-import shutil
-import glob
 
 
 class Yorick(Package):
@@ -35,7 +14,7 @@ class Yorick(Package):
        files of numbers. Yorick includes an interactive graphics package, and a
        binary file package capable of translating to and from the raw numeric
        formats of all modern computers. Yorick is written in ANSI C and runs on
-       most operating systems (\*nix systems, MacOS X, Windows).
+       most operating systems (*nix systems, MacOS X, Windows).
     """
 
     homepage = "http://dhmunro.github.io/yorick-doc/"
@@ -74,13 +53,4 @@ class Yorick(Package):
         make()
         make("install")
 
-        try:
-            os.makedirs(prefix)
-        except OSError:
-            pass
-        os.chdir("relocate")
-        for f in glob.glob('*'):
-            if os.path.isdir(f):
-                shutil.copytree(f, os.path.join(prefix, f))
-            else:
-                shutil.copy2(f, os.path.join(prefix, f))
+        install_tree('relocate', prefix)

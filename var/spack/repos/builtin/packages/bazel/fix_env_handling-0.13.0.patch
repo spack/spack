@@ -1,6 +1,6 @@
 --- a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java.orig	2018-05-23 12:11:29.319402761 +0200
 +++ b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java	2018-05-23 12:35:21.817904301 +0200
-@@ -150,6 +150,121 @@
+@@ -150,6 +150,126 @@
        builder.put("PATH", null);
        builder.put("LD_LIBRARY_PATH", null);
      }
@@ -53,6 +53,11 @@
 +      String spack_short_spec = System.getenv("SPACK_SHORT_SPEC");
 +      if (spack_short_spec != null) {
 +          builder.put("SPACK_SHORT_SPEC", spack_short_spec);
++      }
++
++      String spack_system_dirs = System.getenv("SPACK_SYSTEM_DIRS");
++      if (spack_system_dirs != null) {
++          builder.put("SPACK_SYSTEM_DIRS", spack_system_dirs);
 +      }
 +
 +      String spack_cc = System.getenv("SPACK_CC");

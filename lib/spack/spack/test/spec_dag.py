@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 These tests check Spec DAG operations using dummy packages.
 """
@@ -100,6 +81,74 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
         assert ('x' in spec)
         assert ('z' not in spec)
+
+
+@pytest.mark.usefixtures('config')
+def test_installed_deps():
+    """Preinstall a package P with a constrained build dependency D, then
+    concretize a dependent package which also depends on P and D, specifying
+    that the installed instance of P should be used. In this case, D should
+    not be constrained by P since P is already built.
+    """
+    default = ('build', 'link')
+    build_only = ('build',)
+
+    e = MockPackage('e', [], [])
+    d = MockPackage('d', [], [])
+    c_conditions = {
+        d.name: {
+            'c': 'd@2'
+        },
+        e.name: {
+            'c': 'e@2'
+        }
+    }
+    c = MockPackage('c', [d, e], [build_only, default],
+                    conditions=c_conditions)
+    b = MockPackage('b', [d, e], [default, default])
+    a = MockPackage('a', [b, c], [default, default])
+    mock_repo = MockPackageMultiRepo([a, b, c, d, e])
+
+    with spack.repo.swap(mock_repo):
+        c_spec = Spec('c')
+        c_spec.concretize()
+        assert c_spec['d'].version == spack.version.Version('2')
+
+        c_installed = spack.spec.Spec.from_dict(c_spec.to_dict())
+        for spec in c_installed.traverse():
+            setattr(spec.package, 'installed', True)
+
+        a_spec = Spec('a')
+        a_spec._add_dependency(c_installed, default)
+        a_spec.concretize()
+
+        assert a_spec['d'].version == spack.version.Version('3')
+        assert a_spec['e'].version == spack.version.Version('2')
+
+
+@pytest.mark.usefixtures('config')
+def test_specify_preinstalled_dep():
+    """Specify the use of a preinstalled package during concretization with a
+    transitive dependency that is only supplied by the preinstalled package.
+    """
+    default = ('build', 'link')
+
+    c = MockPackage('c', [], [])
+    b = MockPackage('b', [c], [default])
+    a = MockPackage('a', [b], [default])
+    mock_repo = MockPackageMultiRepo([a, b, c])
+
+    with spack.repo.swap(mock_repo):
+        b_spec = Spec('b')
+        b_spec.concretize()
+        for spec in b_spec.traverse():
+            setattr(spec.package, 'installed', True)
+
+        a_spec = Spec('a')
+        a_spec._add_dependency(b_spec, default)
+        a_spec.concretize()
+
+        assert set(x.name for x in a_spec.traverse()) == set(['a', 'b', 'c'])
 
 
 @pytest.mark.usefixtures('config')

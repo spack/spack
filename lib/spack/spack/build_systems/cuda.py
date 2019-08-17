@@ -1,30 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
-import platform
+
+import spack.variant
 
 
 class CudaPackage(PackageBase):
@@ -38,11 +20,12 @@ class CudaPackage(PackageBase):
             description='Build with CUDA')
     # see http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
     # https://developer.nvidia.com/cuda-gpus
-    variant('cuda_arch', default=None,
+    variant('cuda_arch',
             description='CUDA architecture',
-            values=('20', '30', '32', '35', '50', '52', '53', '60', '61',
-                    '62', '70'),
-            multi=True)
+            values=spack.variant.any_combination_of(
+                '20', '30', '32', '35', '50', '52', '53', '60', '61',
+                '62', '70', '72', '75'
+            ))
 
     # see http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # and http://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
@@ -59,23 +42,85 @@ class CudaPackage(PackageBase):
     depends_on("cuda@8:", when='cuda_arch=61')
     depends_on("cuda@8:", when='cuda_arch=62')
     depends_on("cuda@9:", when='cuda_arch=70')
+    depends_on("cuda@9:", when='cuda_arch=72')
+    depends_on("cuda@10:", when='cuda_arch=75')
 
     depends_on('cuda@:8', when='cuda_arch=20')
 
-    # Compiler conflicts:
+    # There are at least three cases to be aware of for compiler conflicts
+    # 1. Linux x86_64
+    # 2. Linux ppc64le
+    # 3. Mac OS X
+    # CUDA-compiler conflicts are version-to-version specific and are
+    # difficult to express with the current Spack conflict syntax
+
+    # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
-    conflicts('%gcc@5:', when='+cuda ^cuda@:7.5')
-    conflicts('%gcc@6:', when='+cuda ^cuda@:8')
-    conflicts('%gcc@7:', when='+cuda ^cuda@:9.1')
-    conflicts('%gcc@8:', when='+cuda ^cuda@:9.99')
-    if (platform.system() != "Darwin"):
-        conflicts('%clang@:3.4,3.7:', when='+cuda ^cuda@7.5')
-        conflicts('%clang@:3.7,4:', when='+cuda ^cuda@8:9.0')
-        conflicts('%clang@:3.7,5:', when='+cuda ^cuda@9.1')
-        conflicts('%clang@:3.7,6:', when='+cuda ^cuda@9.2')
-    conflicts('%intel@:14,16:', when='+cuda ^cuda@7.5')
-    conflicts('%intel@:14,17:', when='+cuda ^cuda@8.0.44')
-    conflicts('%intel@:14,18:', when='+cuda ^cuda@8.0.61:9')
+    arch_platform = ' arch=x86_64 platform=linux'
+    conflicts('%gcc@5:', when='+cuda ^cuda@:7.5' + arch_platform)
+    conflicts('%gcc@6:', when='+cuda ^cuda@:8' + arch_platform)
+    conflicts('%gcc@7:', when='+cuda ^cuda@:9.1' + arch_platform)
+    conflicts('%gcc@8:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%pgi@:14.8', when='+cuda ^cuda@:7.0.27' + arch_platform)
+    conflicts('%pgi@:15.3,15.5:', when='+cuda ^cuda@7.5' + arch_platform)
+    conflicts('%pgi@:16.2,16.0:16.3', when='+cuda ^cuda@8' + arch_platform)
+    conflicts('%pgi@:15,18:', when='+cuda ^cuda@9.0:9.1' + arch_platform)
+    conflicts('%pgi@:16', when='+cuda ^cuda@9.2.88:10' + arch_platform)
+    conflicts('%clang@:3.4', when='+cuda ^cuda@:7.5' + arch_platform)
+    conflicts('%clang@:3.7,4:',
+              when='+cuda ^cuda@8.0:9.0' + arch_platform)
+    conflicts('%clang@:3.7,4.1:',
+              when='+cuda ^cuda@9.1' + arch_platform)
+    conflicts('%clang@:3.7,5.1:', when='+cuda ^cuda@9.2' + arch_platform)
+    conflicts('%clang@:3.7,6.1:', when='+cuda ^cuda@10.0.130' + arch_platform)
+
+    # x86_64 vs. ppc64le differ according to NVidia docs
+    # Linux ppc64le compiler conflicts from Table from the docs below:
+    # https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
+    # https://docs.nvidia.com/cuda/archive/9.2/cuda-installation-guide-linux/index.html
+    # https://docs.nvidia.com/cuda/archive/9.1/cuda-installation-guide-linux/index.html
+    # https://docs.nvidia.com/cuda/archive/9.0/cuda-installation-guide-linux/index.html
+    # https://docs.nvidia.com/cuda/archive/8.0/cuda-installation-guide-linux/index.html
+
+    arch_platform = ' arch=ppc64le platform=linux'
+    # information prior to CUDA 9 difficult to find
+    conflicts('%gcc@6:', when='+cuda ^cuda@:9' + arch_platform)
+    conflicts('%gcc@8:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%pgi', when='+cuda ^cuda@:8' + arch_platform)
+    conflicts('%pgi@:16', when='+cuda ^cuda@:9.1.185' + arch_platform)
+    conflicts('%pgi@:17', when='+cuda ^cuda@:10' + arch_platform)
+    conflicts('%clang@4:', when='+cuda ^cuda@:9.0.176' + arch_platform)
+    conflicts('%clang@5:', when='+cuda ^cuda@:9.1' + arch_platform)
+    conflicts('%clang@6:', when='+cuda ^cuda@:9.2' + arch_platform)
+    conflicts('%clang@7:', when='+cuda ^cuda@10.0.130' + arch_platform)
+
+    # Intel is mostly relevant for x86_64 Linux, even though it also
+    # exists for Mac OS X. No information prior to CUDA 3.2 or Intel 11.1
+    conflicts('%intel@:11.0', when='+cuda ^cuda@:3.1')
+    conflicts('%intel@:12.0', when='+cuda ^cuda@5.5:')
+    conflicts('%intel@:13.0', when='+cuda ^cuda@6.0:')
+    conflicts('%intel@:13.2', when='+cuda ^cuda@6.5:')
+    conflicts('%intel@:14.9', when='+cuda ^cuda@7:')
+    # Intel 15.x is compatible with CUDA 7 thru current CUDA
+    conflicts('%intel@16.0:', when='+cuda ^cuda@:8.0.43')
+    conflicts('%intel@17.0:', when='+cuda ^cuda@:8.0.60')
+    conflicts('%intel@18.0:', when='+cuda ^cuda@:9.9')
+    conflicts('%intel@19.0:', when='+cuda ^cuda@:10.0')
+
+    # XL is mostly relevant for ppc64le Linux
+    conflicts('%xl@:12,14:', when='+cuda ^cuda@:9.1')
+    conflicts('%xl@:12,14:15,17:', when='+cuda ^cuda@9.2')
+    conflicts('%xl@17:', when='+cuda ^cuda@10.0.130')
+
+    # Mac OS X
+    # platform = ' platform=darwin'
+    # Apple XCode clang vs. LLVM clang are difficult to specify
+    # with spack syntax. Xcode clang name is `clang@x.y.z-apple`
+    # which precludes ranges being specified. We have proposed
+    # rename XCode clang to `clang@apple-x.y.z` or even
+    # `clang-apple@x.y.z as a possible fix.
+    # Compiler conflicts will be eventual taken from here:
+    # https://docs.nvidia.com/cuda/cuda-installation-guide-mac-os-x/index.html#abstract
 
     # Make sure cuda_arch can not be used without +cuda
     conflicts('~cuda', when='cuda_arch=20')
@@ -89,3 +134,5 @@ class CudaPackage(PackageBase):
     conflicts('~cuda', when='cuda_arch=61')
     conflicts('~cuda', when='cuda_arch=62')
     conflicts('~cuda', when='cuda_arch=70')
+    conflicts('~cuda', when='cuda_arch=72')
+    conflicts('~cuda', when='cuda_arch=75')

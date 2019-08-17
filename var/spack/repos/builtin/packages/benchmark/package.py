@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -36,6 +17,8 @@ class Benchmark(CMakePackage):
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
 
     version('develop', branch='master')
+    version('1.5.0', sha256='3c6a165b6ecc948967a1ead710d4a181d7b0fbcaa183ef7ea84604994966221a')
+    version('1.4.1', sha256='f8e525db3c42efc9c7f3bc5176a8fa893a9a9920bbd08cef30fb56a51854d60d')
     version('1.4.0', 'ccfaf2cd93ae20191b94f730b945423e')
     version('1.3.0', '19ce86516ab82d6ad3b17173cf307aac')
     version('1.2.0', '48d0b090cd7a84af2c4a28c8dc963c74')
@@ -48,7 +31,8 @@ class Benchmark(CMakePackage):
                     'MinSizeRel', 'Coverage'))
 
     depends_on("cmake@2.8.11:", type="build", when="@:1.1.0")
-    depends_on("cmake@2.8.12:", type="build", when="@1.2.0:")
+    depends_on("cmake@2.8.12:", type="build", when="@1.2.0:1.4")
+    depends_on("cmake@3.5.1:",  type="build", when="@1.5.0:")
 
     def cmake_args(self):
         # No need for testing for the install

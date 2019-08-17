@@ -1,47 +1,48 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import os
 
 
 class PySip(Package):
     """SIP is a tool that makes it very easy to create Python bindings for C
        and C++ libraries."""
-    homepage = "http://www.riverbankcomputing.com/software/sip/intro"
-    url      = "http://sourceforge.net/projects/pyqt/files/sip/sip-4.16.5/sip-4.16.5.tar.gz"
 
-    version('4.16.5', '6d01ea966a53e4c7ae5c5e48c40e49e5')
+    homepage = "https://www.riverbankcomputing.com/software/sip/intro"
+    url      = "https://www.riverbankcomputing.com/static/Downloads/sip/4.19.18/sip-4.19.18.tar.gz"
+    list_url = "https://www.riverbankcomputing.com/software/sip/download"
+    hg       = "https://www.riverbankcomputing.com/hg/sip"
+
+    version('develop', hg=hg)  # wasn't actually able to clone this
+    version('4.19.18', sha256='c0bd863800ed9b15dcad477c4017cdb73fa805c25908b0240564add74d697e1e')
+    version('4.19.13', sha256='e353a7056599bf5fbd5d3ff9842a6ab2ea3cf4e0304a0f925ec5862907c0d15e')
     version('4.16.7', '32abc003980599d33ffd789734de4c36')
+    version('4.16.5', '6d01ea966a53e4c7ae5c5e48c40e49e5')
 
     extends('python')
 
-    def install(self, spec, prefix):
+    # https://www.riverbankcomputing.com/static/Docs/sip/installation.html
+    phases = ['configure', 'build', 'install']
+
+    depends_on('flex', type='build', when='@develop')
+    depends_on('bison', type='build', when='@develop')
+
+    @run_before('configure')
+    def prepare(self):
+        if self.spec.satisfies('@develop'):
+            python('build.py', 'prepare')
+
+    def configure(self, spec, prefix):
         python('configure.py',
-               '--destdir=%s' % site_packages_dir,
-               '--bindir=%s' % spec.prefix.bin,
-               '--incdir=%s' % python_include_dir,
-               '--sipdir=%s' % os.path.join(spec.prefix.share, 'sip'))
+               '--bindir={0}'.format(prefix.bin),
+               '--destdir={0}'.format(site_packages_dir),
+               '--incdir={0}'.format(python_include_dir),
+               '--sipdir={0}'.format(prefix.share.sip))
+
+    def build(self, spec, prefix):
         make()
+
+    def install(self, spec, prefix):
         make('install')

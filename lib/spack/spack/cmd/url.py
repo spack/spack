@@ -1,32 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import division, print_function
-
 from collections import defaultdict
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
+import spack.fetch_strategy as fs
 import spack.repo
+import spack.util.crypto as crypto
 
 from llnl.util import tty
 from spack.url import parse_version_offset, parse_name_offset
@@ -87,12 +73,18 @@ def setup_parser(subparser):
         'summary',
         help='print a summary of how well we are parsing package urls')
 
+    # Stats
+    sp.add_parser(
+        'stats',
+        help='print statistics on versions and checksums for all packages')
+
 
 def url(parser, args):
     action = {
         'parse':   url_parse,
         'list':    url_list,
-        'summary': url_summary
+        'summary': url_summary,
+        'stats':   url_stats,
     }
 
     action[args.subcommand](args)
@@ -244,6 +236,77 @@ def url_summary(args):
     # Return statistics, only for testing purposes
     return (total_urls, correct_names, correct_versions,
             name_count_dict, version_count_dict)
+
+
+def url_stats(args):
+    stats = {}  # stats about fetchers in packages.
+    nvers = 0   # total number of versions
+    npkgs = 0   # total number of packages
+
+    def inc(fstype, category, attr=None):
+        """Increment statistics in the stats dict."""
+        categories = stats.setdefault(fstype, {})
+        if attr:
+            cat_stats = categories.setdefault(category, {})
+            val = cat_stats.setdefault(attr, 0)
+            stats[fstype][category][attr] = val + 1
+        else:
+            val = categories.setdefault(category, 0)
+            stats[fstype][category] = val + 1
+
+    # over all packages
+    for pkg in spack.repo.path.all_packages():
+        npkgs += 1
+
+        # look at each version
+        for v, args in pkg.versions.items():
+            # figure out what type of fetcher it is
+            fetcher = fs.for_package_version(pkg, v)
+            nvers += 1
+
+            fstype = fetcher.url_attr
+            inc(fstype, 'total')
+
+            # put some special stats in for particular types of fetchers.
+            if fstype == 'git':
+                if 'commit' in args:
+                    inc('git', 'security', 'commit')
+                else:
+                    inc('git', 'security', 'no commit')
+            elif fstype == 'url':
+                for h in crypto.hashes:
+                    if h in args:
+                        inc('url', 'checksums', h)
+                        break
+                else:
+                    if 'checksum' in args:
+                        h = crypto.hash_algo_for_digest(args['checksum'])
+                        inc('url', 'checksums', h)
+                    else:
+                        inc('url', 'checksums', 'no checksum')
+
+                # parse out the URL scheme (https/http/ftp/etc.)
+                urlinfo = urlparse(fetcher.url)
+                inc('url', 'schemes', urlinfo.scheme)
+
+    # print a nice summary table
+    tty.msg("%d total versions for %d packages:" % (nvers, npkgs))
+    line_width = 36
+    print("-" * line_width)
+    for fetcher, fetcher_stats in sorted(stats.items(), reverse=True):
+        fs_total = fetcher_stats['total']
+        fs_pct = float(fs_total) / nvers * 100
+        print("%-22s%5d%8.1f%%" % (fetcher, fs_total, fs_pct))
+
+        for category, cat_stats in sorted(fetcher_stats.items(), reverse=True):
+            if category == 'total':
+                continue
+            print("  %s" % category)
+
+            for name, number in sorted(cat_stats.items(), reverse=True):
+                pct = float(number) / fs_total * 100
+                print("    %-18s%5d%8.1f%%" % (name, number, pct))
+        print("-" * line_width)
 
 
 def print_name_and_version(url):

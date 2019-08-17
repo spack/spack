@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Components that manage Spack's installation tree.
 
 An install tree, or "build store" consists of two parts:
@@ -77,7 +58,8 @@ class Store(object):
     """
     def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
-        self.db = spack.database.Database(root)
+        self.db = spack.database.Database(
+            root, upstream_dbs=retrieve_upstream_dbs())
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, hash_len=hash_length, path_scheme=path_scheme)
 
@@ -103,3 +85,27 @@ store = llnl.util.lang.Singleton(_store)
 root = llnl.util.lang.LazyReference(lambda: store.root)
 db = llnl.util.lang.LazyReference(lambda: store.db)
 layout = llnl.util.lang.LazyReference(lambda: store.layout)
+
+
+def retrieve_upstream_dbs():
+    other_spack_instances = spack.config.get('upstreams', {})
+
+    install_roots = []
+    for install_properties in other_spack_instances.values():
+        install_roots.append(install_properties['install_tree'])
+
+    return _construct_upstream_dbs_from_install_roots(install_roots)
+
+
+def _construct_upstream_dbs_from_install_roots(
+        install_roots, _test=False):
+    accumulated_upstream_dbs = []
+    for install_root in reversed(install_roots):
+        upstream_dbs = list(accumulated_upstream_dbs)
+        next_db = spack.database.Database(
+            install_root, is_upstream=True, upstream_dbs=upstream_dbs)
+        next_db._fail_when_missing_deps = _test
+        next_db._read()
+        accumulated_upstream_dbs.insert(0, next_db)
+
+    return accumulated_upstream_dbs

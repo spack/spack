@@ -1,29 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from six import StringIO
 
+import spack.repo
 from spack.spec import Spec
 from spack.graph import AsciiGraph, topological_sort, graph_dot
 
@@ -66,34 +48,38 @@ def test_static_graph_mpileaks(mock_packages):
     assert '  "libelf" [label="libelf"]\n'     in dot
     assert '  "libdwarf" [label="libdwarf"]\n' in dot
 
+    mpi_providers = spack.repo.path.providers_for('mpi')
+    for spec in mpi_providers:
+        assert ('"mpileaks" -> "%s"' % spec.name) in dot
+        assert ('"callpath" -> "%s"' % spec.name) in dot
+
     assert '  "dyninst" -> "libdwarf"\n'  in dot
     assert '  "callpath" -> "dyninst"\n'  in dot
-    assert '  "mpileaks" -> "mpi"\n'      in dot
     assert '  "libdwarf" -> "libelf"\n'   in dot
-    assert '  "callpath" -> "mpi"\n'      in dot
     assert '  "mpileaks" -> "callpath"\n' in dot
     assert '  "dyninst" -> "libelf"\n'    in dot
 
 
-def test_dynamic_dot_graph_mpileaks(mock_packages):
+def test_dynamic_dot_graph_mpileaks(mock_packages, config):
     """Test dynamically graphing the mpileaks package."""
-    s = Spec('mpileaks').normalized()
+    s = Spec('mpileaks').concretized()
 
     stream = StringIO()
     graph_dot([s], static=False, out=stream)
 
     dot = stream.getvalue()
+    print(dot)
 
-    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('$_$/')
-    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('$_$/')
+    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('{name}')
+    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('{name}')
     callpath_hash, callpath_lbl = (
-        s['callpath'].dag_hash(), s['callpath'].format('$_$/'))
+        s['callpath'].dag_hash(), s['callpath'].format('{name}'))
     dyninst_hash, dyninst_lbl = (
-        s['dyninst'].dag_hash(), s['dyninst'].format('$_$/'))
+        s['dyninst'].dag_hash(), s['dyninst'].format('{name}'))
     libdwarf_hash, libdwarf_lbl = (
-        s['libdwarf'].dag_hash(), s['libdwarf'].format('$_$/'))
+        s['libdwarf'].dag_hash(), s['libdwarf'].format('{name}'))
     libelf_hash, libelf_lbl = (
-        s['libelf'].dag_hash(), s['libelf'].format('$_$/'))
+        s['libelf'].dag_hash(), s['libelf'].format('{name}'))
 
     assert '  "%s" [label="%s"]\n' % (mpileaks_hash, mpileaks_lbl) in dot
     assert '  "%s" [label="%s"]\n' % (callpath_hash, callpath_lbl) in dot

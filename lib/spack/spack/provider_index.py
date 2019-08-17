@@ -1,37 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
+
 from itertools import product as iproduct
 from six import iteritems
 from pprint import pformat
 
 import spack.error
-import spack.util.spack_yaml as syaml
-from yaml.error import MarkedYAMLError
+import spack.util.spack_json as sjson
 
 
 class ProviderIndex(object):
@@ -188,31 +169,26 @@ class ProviderIndex(object):
 
         return all(c in result for c in common)
 
-    def to_yaml(self, stream=None):
+    def to_json(self, stream=None):
         provider_list = self._transform(
             lambda vpkg, pset: [
                 vpkg.to_node_dict(), [p.to_node_dict() for p in pset]], list)
 
-        syaml.dump({'provider_index': {'providers': provider_list}},
-                   stream=stream)
+        sjson.dump({'provider_index': {'providers': provider_list}}, stream)
 
     @staticmethod
-    def from_yaml(stream):
-        try:
-            yfile = syaml.load(stream)
-        except MarkedYAMLError as e:
-            raise spack.spec.SpackYAMLError(
-                "error parsing YAML ProviderIndex cache:", str(e))
+    def from_json(stream):
+        data = sjson.load(stream)
 
-        if not isinstance(yfile, dict):
-            raise ProviderIndexError("YAML ProviderIndex was not a dict.")
+        if not isinstance(data, dict):
+            raise ProviderIndexError("JSON ProviderIndex data was not a dict.")
 
-        if 'provider_index' not in yfile:
+        if 'provider_index' not in data:
             raise ProviderIndexError(
                 "YAML ProviderIndex does not start with 'provider_index'")
 
         index = ProviderIndex()
-        providers = yfile['provider_index']['providers']
+        providers = data['provider_index']['providers']
         index.providers = _transform(
             providers,
             lambda vpkg, plist: (

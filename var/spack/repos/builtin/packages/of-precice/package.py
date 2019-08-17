@@ -1,32 +1,14 @@
-##############################################################################
-# Copyright (c) 2018 Mark Olesen, OpenCFD Ltd.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file was authored by Mark Olesen <mark.olesen@esi-group.com>
-# and is released as part of spack under the LGPL license.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 import llnl.util.tty as tty
 
 from spack import *
-from spack.pkg.builtin.openfoam_com import add_extra_files
+from spack.pkg.builtin.openfoam import add_extra_files
 
 
 class OfPrecice(Package):
@@ -60,7 +42,9 @@ class OfPrecice(Package):
         add_extra_files(self, self.common, self.assets)
         # Emit openfoam version immediately, if we resolved the wrong version
         # it takes a very long time to rebuild!
-        tty.info('Build for ' + self.spec['openfoam'].format('$_$@$%@+$+'))
+        tty.info('Build for ' + self.spec['openfoam'].format(
+            '{name}{@version}{%compiler}{compiler_flags}{variants}'
+        ))
 
     def configure(self, spec, prefix):
         """Generate spack-config.sh file."""

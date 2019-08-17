@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,7 +11,10 @@ class Harfbuzz(AutotoolsPackage):
     homepage = "http://www.freedesktop.org/wiki/Software/HarfBuzz/"
     url      = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-0.9.37.tar.bz2"
 
-    version('1.4.6', '21a78b81cd20cbffdb04b59ac7edfb410e42141869f637ae1d6778e74928d293')
+    version('2.3.1', sha256='f205699d5b91374008d6f8e36c59e419ae2d9a7bb8c5d9f34041b9a5abcae468')
+    version('2.1.3', sha256='613264460bb6814c3894e3953225c5357402915853a652d40b4230ce5faf0bee')
+    version('1.9.0', sha256='11eca62bf0ac549b8d6be55f4e130946399939cdfe7a562fdaee711190248b00')
+    version('1.4.6', sha256='21a78b81cd20cbffdb04b59ac7edfb410e42141869f637ae1d6778e74928d293')
     version('0.9.37', 'bfe733250e34629a188d82e3b971bc1e')
 
     depends_on("pkgconfig", type="build")
@@ -39,6 +23,18 @@ class Harfbuzz(AutotoolsPackage):
     depends_on("freetype")
     depends_on("cairo")
     depends_on("zlib")
+
+    def configure_args(self):
+        args = []
+        # disable building of gtk-doc files following #9771
+        args.append('--disable-gtk-doc-html')
+        true = which('true')
+        args.append('CXXFLAGS={0}'.format(self.compiler.cxx11_flag))
+        args.append('GTKDOC_CHECK={0}'.format(true))
+        args.append('GTKDOC_CHECK_PATH={0}'.format(true))
+        args.append('GTKDOC_MKPDF={0}'.format(true))
+        args.append('GTKDOC_REBASE={0}'.format(true))
+        return args
 
     def patch(self):
         change_sed_delimiter('@', ';', 'src/Makefile.in')
