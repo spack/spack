@@ -16,24 +16,26 @@ class Qscintilla(QMakePackage):
     # didn't have much luck with newer versions of Qscintilla and QT@4.8.6, so prefer the following version
     version('2.10.2', sha256='14b31d20717eed95ea9bea4cd16e5e1b72cee7ebac647cba878e0f6db6a65ed0', preferred=True)
 
-    variant('python', default=True, description="Enable python bindings")
+    variant('python', default=False, description="Enable python bindings")
     variant('designer', default=False, description="Enable pluging for Qt-Designer")
 
     # QScintilla so far tested to compile with Qt@4.8.6
     depends_on('qt') # qt is not compiling with +phonon +dbus variants enabled
 
+
     # Beyond py-pyqt@4.12.1, pyqt4 needs its own sip module (not implemented yet)
     # Without private sip moduele, python bindings will not compile
     # Ref: https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html···
     # TODO implement private sip module for py-pyqt4
-    depends_on('py-pyqt4@:4.12.1', type='build')·
-    #depends_on('py-pyqt5', type='build') # when='qt@5' not working?
+    depends_on('py-pyqt4', type='build', when='^qt@4')
+    depends_on('py-pyqt5', type='build', when='^qt@5')
     depends_on('python', type=('build', 'run'))
     depends_on('py-sip', type='build')
 
     # with qt@4.8.6, didn't have much luck in compiling newer versions
-    conflicts('qt@4', when='@2.10.3:')·
-
+    conflicts('qt@4', when='@2.10.3:')
+    conflicts('py-pyqt4@4.12.2:', when='+python') # private sip module not implemented yet
+    conflicts('py-pyqt5', when='+python') # private sip module not implemented yet
 
     @run_before('qmake')
     def chdir(self):
