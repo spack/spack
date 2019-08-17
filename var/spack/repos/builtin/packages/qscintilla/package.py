@@ -47,8 +47,7 @@ class Qscintilla(QMakePackage):
         return args
 
 
-    # currently installation is done under path "/qscintilla_prefix/qt_prefix"
-    # without settting INSTALL_ROOT, qscintilla is installed under qt_prefix
+    # When INSTALL_ROOT unset, qscintilla is installed under qt_prefix
     # giving 'Nothing Installed Error'
     def setup_environment(self, spack_env, run_env):
         spack_env.set('INSTALL_ROOT', self.prefix)
@@ -71,5 +70,5 @@ class Qscintilla(QMakePackage):
 
     @run_after('qmake')
     def fix_install_path(self):
-        makefile=FileFilter('Makefile')
-        makefile.filter(r'\$\(INSTALL_ROOT\)'+self.spec['qt'].prefix, '$(INSTALL_ROOT)')
+        makefile = FileFilter('Makefile')
+        makefile.filter(r'\$\(INSTALL_ROOT\)' + self.spec['qt'].prefix, '$(INSTALL_ROOT)')
