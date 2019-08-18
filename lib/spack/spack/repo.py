@@ -150,11 +150,11 @@ class FastPackageChecker(Mapping):
             pkg_dir = os.path.join(self.packages_path, pkg_name)
 
             # Warn about invalid names that look like packages.
-            if (not valid_module_name(pkg_name)
-                    and not pkg_name.startswith('.')):
-                msg = 'Skipping package at {0}. '
-                msg += '"{1}" is not a valid Spack module name.'
-                tty.warn(msg.format(pkg_dir, pkg_name))
+            if not valid_module_name(pkg_name):
+                if not pkg_name.startswith('.'):
+                    tty.warn('Skipping package at {0}. "{1}" is not '
+                             'a valid Spack module name.'.format(
+                                 pkg_dir, pkg_name))
                 continue
 
             # Construct the file name from the directory
