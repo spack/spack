@@ -23,13 +23,13 @@ class Libsecret(AutotoolsPackage):
     variant('gcrypt', default=True, description='Build with libgcrypt')
     variant('gobj', default=True, description='Build with gobject-introspection')
     # Optional Vala support is not implemented yet
-    #variant('vala', default=False, descript='Build with Vala support')
+    # variant('vala', default=False, descript='Build with Vala support')
 
     # https://gitlab.gnome.org/GNOME/libsecret/blob/master/meson.build
     depends_on('glib@2.44:')
     depends_on('libgcrypt@1.2.2:', when='+gcrypt')
     depends_on('gobject-introspection', when='+gobj')
-    #depends_on('vala', when='+vala') # Package doesn't exist yet
+    # depends_on('vala', when='+vala') # Package doesn't exist yet
 
     def url_for_version(self, version):
         url = 'http://ftp.gnome.org/pub/gnome/sources/libsecret'
