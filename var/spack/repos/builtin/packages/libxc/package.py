@@ -15,7 +15,8 @@ class Libxc(AutotoolsPackage):
 
     version('4.3.2',
             sha256=
-            'bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
+            '3bbe01971d0a43fb63b5c17d922388a39a3f0ae3bd37ae5f6fe31bca9ab63f3c')
+    #'bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
     version('4.2.3',
             sha256=
             '02e49e9ba7d21d18df17e9e57eae861e6ce05e65e966e1e832475aa09e344256')
