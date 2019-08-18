@@ -47,9 +47,9 @@ class Libint(AutotoolsPackage):
 
     def url_for_version(self, version):
         base_url = "https://github.com/evaleev/libint/archive"
-        if version == version('1.0.0'):
+        if version == Version('1.0.0'):
             return "{0}/LIBINT_1_00.tar.gz".format(base_url)
-        elif version < version('2.1.0'):
+        elif version < Version('2.1.0'):
             return "{0}/release-{1}.tar.gz".format(base_url, version.dashed)
         else:
             return "{0}/v{1}.tar.gz".format(base_url, version)
@@ -86,7 +86,7 @@ class Libint(AutotoolsPackage):
         optflags = self.optflags
 
         # Optimization flag names have changed in libint 2
-        if self.version < version('2.0.0'):
+        if self.version < Version('2.0.0'):
             config_args.extend([
                 '--with-cc-optflags={0}'.format(optflags),
                 '--with-cxx-optflags={0}'.format(optflags)
@@ -98,7 +98,7 @@ class Libint(AutotoolsPackage):
             ])
 
         # Options required by CP2K, removed in libint 2
-        if self.version < version('2.0.0'):
+        if self.version < Version('2.0.0'):
             config_args.extend(
                 ['--with-libint-max-am=5', '--with-libderiv-max-am1=4'])
         return config_args
