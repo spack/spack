@@ -19,12 +19,11 @@ class Qscintilla(QMakePackage):
     variant('python', default=False, description="Enable python bindings")
     variant('designer', default=False, description="Enable pluging for Qt-Designer")
 
-    # QScintilla so far tested to compile with Qt@4.8.6
-    depends_on('qt') # qt is not compiling with +phonon +dbus variants enabled
+    depends_on('qt') # qt@4 is not compiling with +phonon +dbus variants enabled
 
 
-    # Beyond py-pyqt@4.12.1, pyqt4 needs its own sip module (not implemented yet)
-    # Without private sip moduele, python bindings will not compile
+    # Beyond py-pyqt@4.12.1, pyqt needs its own sip module (not implemented yet)
+    # Without private sip module, python bindings will not compile
     # Ref: https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html
     # TODO implement private sip module for py-pyqt4
     depends_on('py-pyqt4', type='build', when='^qt@4')
@@ -34,8 +33,8 @@ class Qscintilla(QMakePackage):
 
     # with qt@4.8.6, didn't have much luck in compiling newer versions
     conflicts('qt@4', when='@2.10.3:')
-    conflicts('py-pyqt4@4.12.2:', when='+python') # private sip module not implemented yet
-    conflicts('py-pyqt5', when='+python') # private sip module not implemented yet
+    # conflicts('py-pyqt4@4.12.2:', when='+python') # private sip module not implemented yet
+    # conflicts('py-pyqt5', when='+python') # private sip module not implemented yet
 
     @run_before('qmake')
     def chdir(self):
@@ -49,7 +48,7 @@ class Qscintilla(QMakePackage):
         return args
 
 
-    # When INSTALL_ROOT unset, qscintilla is installed under qt_prefix
+    # When INSTALL_ROOT is unset, qscintilla is installed under qt_prefix
     # giving 'Nothing Installed Error'
     def setup_environment(self, spack_env, run_env):
         spack_env.set('INSTALL_ROOT', self.prefix)
