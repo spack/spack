@@ -64,7 +64,7 @@ class Libxc(AutotoolsPackage):
         # Libxc has a fortran90 interface: give clients the
         # possibility to query for it
         if 'fortran' in query_parameters:
-            if self.version < Version('4.0.0'):
+            if self.version < version('4.0.0'):
                 libraries = ['libxcf90'] + libraries
             else:  # starting from version 4 there is also a stable f03 iface
                 libraries = ['libxcf90', 'libxcf03'] + libraries
