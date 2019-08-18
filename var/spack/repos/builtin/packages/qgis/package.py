@@ -39,7 +39,7 @@ class Qgis(CMakePackage):
     depends_on('py-requests')
     depends_on('py-psycopg2')
     depends_on('python@3.0.0:')
-    #depends_on('qtkeychain') # Not implemented yet, is it a "key" dependency?
+    depends_on('qtkeychain')
 
     # more deps discovered during compilation
     depends_on('libzip')
