@@ -12,7 +12,7 @@ class Libxc(AutotoolsPackage):
 
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
     url = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
-    git = "https://gitlab.e-cam2020.eu/esl/libxc"
+    git = "https://gitlab.e-cam2020.eu:10443/esl/libxc.git"
 
     version('master', branch='master')
     version('4.3.4', tag="4.3.4")
