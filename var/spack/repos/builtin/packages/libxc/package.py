@@ -33,7 +33,8 @@ class Libxc(AutotoolsPackage):
             sha256=
             'ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00')
 
-    patch('configure_add_fj.patch')
+    if version == Version('4.3.2'):
+        patch('configure_add_fj.patch')
 
     def url_for_version(self, version):
         if version == Version('4.3.3'):
