@@ -47,9 +47,9 @@ class Libint(AutotoolsPackage):
 
     def url_for_version(self, version):
         base_url = "https://github.com/evaleev/libint/archive"
-        if version == Version('1.0.0'):
+        if version == version('1.0.0'):
             return "{0}/LIBINT_1_00.tar.gz".format(base_url)
-        elif version < Version('2.1.0'):
+        elif version < version('2.1.0'):
             return "{0}/release-{1}.tar.gz".format(base_url, version.dashed)
         else:
             return "{0}/v{1}.tar.gz".format(base_url, version)
