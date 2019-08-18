@@ -35,6 +35,10 @@ class Libxc(AutotoolsPackage):
 
     #if version == Version('4.3.2'):
     #    patch('configure_add_fj.patch')
+    depends_on('autoconf')
+    depends_on('automake')
+    depends_on('libtool')
+    depends_on('m4')
 
     def url_for_version(self, version):
         if version == Version('4.3.3'):
