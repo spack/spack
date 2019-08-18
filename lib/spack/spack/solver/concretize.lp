@@ -20,6 +20,9 @@
 % dependencies imply new nodes.
 node(D) :- node(P), depends_on(P, D).
 
+% do not warn for solves with no dependencies
+#defined depends_on/2.
+
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------
