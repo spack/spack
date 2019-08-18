@@ -60,12 +60,12 @@ class Qscintilla(QMakePackage):
         if '+python' in self.spec:
             os.chdir(str(self.stage.source_path)+'/Python')
             python = which('python')
+            cnfarg_inc = '--qsci-incdir='+self.prefix.include
+            cnfarg_lib = '--qsci-libdir='+self.prefix.lib
             if self.spec['qt'].version < Version('5'):
-                # headers are installed under qscintilla_prefix/qt_prefix/include
-                full_prefix = str(self.prefix)+ str(self.spec['qt'].prefix)
-                python('configure.py', '--qsci-incdir='+full_prefix+'/include')
+                python('configure.py', cnfarg_inc, cnfarg_lib)
             else:
-                python('configure.py', '--pyqt=PyQt5')
+                python('configure.py', '--pyqt=PyQt5', cnfarg_inc, cnfarg_lib)
         if '+designer' in self.spec:
             pass # not implemented yet TODO
 
