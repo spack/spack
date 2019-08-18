@@ -12,14 +12,14 @@ class Libxc(AutotoolsPackage):
 
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
     url = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
+    git = "https://gitlab.e-cam2020.eu/esl/libxc"
 
-    version('4.3.3',
-            sha256=
-            '7703db4b8eb78f2f3dea1aa23b50d08865b16cddbb1d9eac13a6eba65deced64')
+    version('master', branch='master')
+    version('4.3.4', tag="4.3.4")
+    version('4.3.3', tag="4.3.3")
     version('4.3.2',
             sha256=
-            '3bbe01971d0a43fb63b5c17d922388a39a3f0ae3bd37ae5f6fe31bca9ab63f3c')
-    #'bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
+            'bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
     version('4.2.3',
             sha256=
             '02e49e9ba7d21d18df17e9e57eae861e6ce05e65e966e1e832475aa09e344256')
@@ -33,24 +33,15 @@ class Libxc(AutotoolsPackage):
             sha256=
             'ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00')
 
-    #if version == Version('4.3.2'):
-    #    patch('configure_add_fj.patch')
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
-    depends_on('m4')
+    # patch('configure_add_fj.patch')
 
     def url_for_version(self, version):
-        if version == Version('4.3.3'):
-            return "https://gitlab.e-cam2020.eu/esl/libxc/-/archive/master/libxc-master.tar.gz"
         if version < Version('3.0.0'):
             return ("http://www.tddft.org/programs/octopus/"
                     "down.php?file=libxc/libxc-{0}.tar.gz".format(version))
 
-        #return ("http://www.tddft.org/programs/octopus/"
-        #        "down.php?file=libxc/{0}/libxc-{0}.tar.gz".format(version))
-        return "https://gitlab.e-cam2020.eu/esl/libxc/-/archive/{0}/libxc-{0}.tar.gz".format(
-            version)
+        return ("http://www.tddft.org/programs/octopus/"
+                "down.php?file=libxc/{0}/libxc-{0}.tar.gz".format(version))
 
     @property
     def libs(self):
@@ -73,7 +64,7 @@ class Libxc(AutotoolsPackage):
         # Libxc has a fortran90 interface: give clients the
         # possibility to query for it
         if 'fortran' in query_parameters:
-            if self.version < version('4.0.0'):
+            if self.version < Version('4.0.0'):
                 libraries = ['libxcf90'] + libraries
             else:  # starting from version 4 there is also a stable f03 iface
                 libraries = ['libxcf90', 'libxcf03'] + libraries
