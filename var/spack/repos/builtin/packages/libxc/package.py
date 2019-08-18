@@ -13,6 +13,9 @@ class Libxc(AutotoolsPackage):
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
     url = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
 
+    version('4.3.3',
+            sha256=
+            '30113fe9b7161cfed38675171ab1ebb3e2dfd569d747bdeb49f536295b64b5b6')
     version('4.3.2',
             sha256=
             '3bbe01971d0a43fb63b5c17d922388a39a3f0ae3bd37ae5f6fe31bca9ab63f3c')
