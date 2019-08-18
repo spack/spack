@@ -34,7 +34,7 @@ class Libxc(AutotoolsPackage):
     def url_for_version(self, version):
         if version == version('4.3.3'):
             return "https://gitlab.e-cam2020.eu/esl/libxc/-/archive/master/libxc-master.tar.gz"
-        if version < Version('3.0.0'):
+        if version < version('3.0.0'):
             return ("http://www.tddft.org/programs/octopus/"
                     "down.php?file=libxc/libxc-{0}.tar.gz".format(version))
 
