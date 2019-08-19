@@ -347,12 +347,22 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
+    abs_src = os.path.abspath(src)
+    if not abs_src.endswith(os.path.sep):
+        abs_src += os.path.sep
+    abs_dest = os.path.abspath(dest)
+    if not abs_dest.endswith(os.path.sep):
+        abs_dest += os.path.sep
+
+    # Stop early to avoid unnecessary recursion if being asked to copy from a
+    # parent directory.
+    if abs_dest.startswith(abs_src):
+        raise ValueError('Cannot copy ancestor directory {0} into {1}'.
+                         format(abs_src, abs_dest))
+
     mkdirp(dest)
 
-    src = os.path.abspath(src)
-    dest = os.path.abspath(dest)
-
-    for s, d in traverse_tree(src, dest, order='pre',
+    for s, d in traverse_tree(abs_src, abs_dest, order='pre',
                               follow_symlinks=not symlinks,
                               ignore=ignore,
                               follow_nonexisting=True):
@@ -361,7 +371,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             if symlinks:
                 target = os.readlink(s)
                 if os.path.isabs(target):
-                    new_target = re.sub(src, dest, target)
+                    new_target = re.sub(abs_src, abs_dest, target)
                     if new_target != target:
                         tty.debug("Redirecting link {0} to {1}"
                                   .format(target, new_target))
