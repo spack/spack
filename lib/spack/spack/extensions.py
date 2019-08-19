@@ -34,14 +34,6 @@ def _init_extension_command_map():
                  commands if command not in _extension_command_map))
 
 
-def reset_command_cache():
-    """For testing purposes, reset the extension command cache e.g. for a
-    modified extension configuration.
-    """
-    global _extension_command_map
-    _extension_command_map = None
-
-
 def get_command_paths():
     extension_command_map = get_extension_command_map()
     command_paths\

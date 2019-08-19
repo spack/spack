@@ -34,13 +34,18 @@ def hello(parser, args):
 
 
 @pytest.fixture()
-def hello_world_cmd(extension_root):
+def clean_extension_command_map(monkeypatch):
+    monkeypatch.setattr(spack.extensions, '_extension_command_map', None)
+    yield
+
+
+@pytest.fixture()
+def hello_world_cmd(extension_root, clean_extension_command_map):
     """Simple extension command with code contained in a single file."""
     hello = extension_root.ensure('testcommand', 'cmd', 'hello.py')
     hello.write(_hello_world_cmd_text)
     list_of_modules = list(sys.modules.keys())
     with spack.config.override('config:extensions', [str(extension_root)]):
-        spack.extensions.reset_command_cache()
         yield spack.main.SpackCommand('hello')
 
     to_be_deleted = [x for x in sys.modules if x not in list_of_modules]
@@ -49,7 +54,8 @@ def hello_world_cmd(extension_root):
 
 
 @pytest.fixture()
-def hello_world_with_module_in_root(extension_root):
+def hello_world_with_module_in_root(extension_root,
+                                    clean_extension_command_map):
     """Extension command with additional code in the root folder."""
     extension_root.ensure('testcommand', '__init__.py')
     command_root = extension_root.join('testcommand', 'cmd')
@@ -95,7 +101,6 @@ def hello_folks():
 """)
     list_of_modules = list(sys.modules.keys())
     with spack.config.override('config:extensions', [str(extension_root)]):
-        spack.extensions.reset_command_cache()
         yield spack.main.SpackCommand('hello')
 
     to_be_deleted = [x for x in sys.modules if x not in list_of_modules]
