@@ -159,9 +159,8 @@ class AspGenerator(object):
 
     def pkg_version_rules(self, pkg):
         pkg = packagize(pkg)
-        self.rule(
-            self._or(fn.version(pkg.name, v) for v in pkg.versions),
-            fn.node(pkg.name))
+        for v in pkg.versions:
+            self.fact(fn.version_declared(pkg.name, v))
 
     def spec_versions(self, spec):
         spec = specify(spec)
@@ -170,23 +169,20 @@ class AspGenerator(object):
             self.rule(fn.version(spec.name, spec.version),
                       fn.node(spec.name))
         else:
-            version = spec.versions
-            impossible, possible = [], []
-            for v in spec.package.versions:
-                if v.satisfies(version):
-                    possible.append(v)
-                else:
-                    impossible.append(v)
+            versions = list(spec.package.versions)
 
-            if impossible:
-                self.rule(
-                    self._and(self._not(fn.version(spec.name, v))
-                              for v in impossible),
-                    fn.node(spec.name))
-            if possible:
-                self.rule(
-                    self._or(fn.version(spec.name, v) for v in possible),
-                    fn.node(spec.name))
+            # if the spec declares a new version, add it to the
+            # possibilities.
+            if spec.versions.concrete and spec.version not in versions:
+                self.fact(fn.version_declared(spec.name, spec.version))
+                versions.append(spec.version)
+
+            # conflict with any versions that do not satisfy the spec
+            # TODO: need to traverse allspecs beforehand and ensure all
+            # TODO: versions are known so we can disallow them.
+            for v in versions:
+                if not v.satisfies(spec.versions):
+                    self.fact(fn.version_conflict(spec.name, v))
 
     def compiler_defaults(self):
         """Facts about available compilers."""
