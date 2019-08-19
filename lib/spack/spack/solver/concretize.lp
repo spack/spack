@@ -1,8 +1,20 @@
 %=============================================================================
 % Generate
 %=============================================================================
+
+%-----------------------------------------------------------------------------
+% Version semantics
+%-----------------------------------------------------------------------------
+
+% If something is a package, it has only one version and that must be a
+% possible version.
+1 { version(P, V) : version_possible(P, V) } 1 :- node(P).
+
+% If a version is declared but conflicted, it's not possible.
+version_possible(P, V) :- version_declared(P, V), not version_conflict(P, V).
+#defined version_conflict/2.
+
 % One version, arch, etc. per package
-{ version(P, V) : version(P, V)} = 1              :- node(P).
 { arch_platform(P, A) : arch_platform(P, A) } = 1 :- node(P).
 { arch_os(P, A) : arch_os(P, A) } = 1             :- node(P).
 { arch_target(P, T) : arch_target(P, T) } = 1     :- node(P).
@@ -92,9 +104,8 @@ node_compiler_version(P, C, V)
      node_compiler_version_set(P, C, V).
 
 % node compiler versions can only be from the available compiler versions
-node_compiler_version(P, C, V)
-  :- node(P), compiler(C), node_compiler(P, C),
-     compiler_version(C, V).
+:- node(P), compiler(C), node_compiler(P, C), node_compiler_version(P, C, V),
+   not compiler_version(C, V).
 
 % if no compiler is set, fall back to default.
 node_compiler(P, C)
