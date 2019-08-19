@@ -15,6 +15,7 @@ class Otf2(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/otf2/otf2-2.1.1.tar.gz"
 
+    version('2.2',   'd0519af93839dc778eddca2ce1447b1ee23002c41e60beac41ea7fe43117172d')
     version('2.1.1', 'e51ad0d8ca374d25f47426746ca629e7')
     version('2.1',   'e2994e53d9b7c2cbd0c4f564d638751e')
     version('2.0',   '5b546188b25bc1c4e285e06dddf75dfc')

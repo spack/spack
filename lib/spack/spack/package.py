@@ -512,6 +512,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Allow custom staging paths for packages
         self.path = None
 
+        # Keep track of whether or not this package was installed from
+        # a binary cache.
+        self.installed_from_binary_cache = False
+
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
             self.list_url = None
@@ -1436,6 +1440,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         binary_distribution.extract_tarball(
             binary_spec, tarball, allow_root=False,
             unsigned=False, force=False)
+        self.installed_from_binary_cache = True
         spack.store.db.add(
             self.spec, spack.store.layout, explicit=explicit)
         return True
@@ -1780,9 +1785,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 else:
                     partial = True
 
-        stage_is_managed_in_spack = self.stage.path.startswith(
-            spack.paths.stage_path)
-        if restage and stage_is_managed_in_spack:
+        if restage and self.stage.managed_by_spack:
             self.stage.destroy()
             self.stage.create()
 

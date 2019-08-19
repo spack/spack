@@ -10,7 +10,7 @@ import copy
 import spack.util.environment
 
 
-class Cp2k(MakefilePackage):
+class Cp2k(MakefilePackage, CudaPackage):
     """CP2K is a quantum chemistry and solid state physics software package
     that can perform atomistic simulations of solid state, liquid, molecular,
     periodic, material, crystal, and biological systems
@@ -43,6 +43,23 @@ class Cp2k(MakefilePackage):
     variant('sirius', default=False,
             description=('Enable planewave electronic structure'
                          ' calculations via SIRIUS'))
+
+    # override cuda_arch from CudaPackage since we only support one arch
+    # at a time and only specific ones for which we have parameter files
+    # for optimal kernels
+    variant('cuda_arch',
+            description='CUDA architecture',
+            default='none',
+            values=('none', '35', '37', '60'),
+            multi=False)
+    variant('cuda_arch_35_k20x', default=False,
+            description=('CP2K (resp. DBCSR) has specific parameter sets for'
+                         ' different GPU models. Enable this when building'
+                         ' with cuda_arch=35 for a K20x instead of a K40'))
+    variant('cuda_fft', default=False,
+            description=('Use CUDA also for FFTs in the PW part of CP2K'))
+    variant('cuda_blas', default=False,
+            description=('Use CUBLAS for general matrix operations in DBCSR'))
 
     depends_on('python', type='build')
 
@@ -91,18 +108,22 @@ class Cp2k(MakefilePackage):
     # to get JSON-based UPF format support used in combination with SIRIUS
     depends_on('json-fortran', when='+sirius')
 
+    # the bundled libcusmm uses numpy in the parameter prediction (v7+)
+    depends_on('py-numpy', when='@7:+cuda', type='build')
+
     # PEXSI, ELPA and SIRIUS need MPI in CP2K
     conflicts('~mpi', '+pexsi')
     conflicts('~mpi', '+elpa')
     conflicts('~mpi', '+sirius')
     conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
 
+    conflicts('~cuda', '+cuda_fft')
+    conflicts('~cuda', '+cuda_blas')
+
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
     # in the stage of cp2k@4.1
     depends_on('wannier90', when='@3.0+mpi', type='build')
-
-    # TODO : add dependency on CUDA
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts('%clang')
@@ -161,19 +182,23 @@ class Cp2k(MakefilePackage):
         elif '^mpi@2:' in spec:
             cppflags.append('-D__MPI_VERSION=2')
 
-        if '^intel-mkl' in spec:
-            cppflags.append('-D__FFTSG')
-
         cflags = optimization_flags[self.spec.compiler.name][:]
         cxxflags = optimization_flags[self.spec.compiler.name][:]
         fcflags = optimization_flags[self.spec.compiler.name][:]
+        nvflags = ['-O3']
         ldflags = []
         libs = []
+        gpuver = ''
 
         if '%intel' in spec:
             cflags.append('-fp-model precise')
             cxxflags.append('-fp-model precise')
-            fcflags.extend(['-fp-model source', '-heap-arrays 64'])
+            fcflags += [
+                '-fp-model source',
+                '-heap-arrays 64',
+                '-g',
+                '-traceback',
+            ]
         elif '%gcc' in spec:
             fcflags.extend([
                 '-ffree-form',
@@ -184,8 +209,12 @@ class Cp2k(MakefilePackage):
             fcflags.extend(['-Mfreeform', '-Mextend'])
 
         if '+openmp' in spec:
+            cflags.append(self.compiler.openmp_flag)
+            cxxflags.append(self.compiler.openmp_flag)
             fcflags.append(self.compiler.openmp_flag)
             ldflags.append(self.compiler.openmp_flag)
+            nvflags.append('-Xcompiler="{0}"'.format(
+                self.compiler.openmp_flag))
 
         ldflags.append(fftw.libs.search_flags)
 
@@ -230,6 +259,11 @@ class Cp2k(MakefilePackage):
         blas = spec['blas'].libs
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+
+        if self.spec.variants['blas'].value == 'mkl':
+            cppflags += ['-D__MKL']
+        elif self.spec.variants['blas'].value == 'accelerate':
+            cppflags += ['-D__ACCELERATE']
 
         # MPI
         if '+mpi' in self.spec:
@@ -309,14 +343,37 @@ class Cp2k(MakefilePackage):
             sirius = spec['sirius']
             cppflags.append('-D__SIRIUS')
             fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
-            libs += [
-                os.path.join(sirius.libs.directories[0],
-                             'libsirius_f.{0}'.format(dso_suffix))
-            ]
+            libs += list(sirius.libs)
 
             cppflags.append('-D__JSON')
             fcflags += ['$(shell pkg-config --cflags json-fortran)']
             libs += ['$(shell pkg-config --libs json-fortran)']
+
+        if self.spec.satisfies('+cuda'):
+            cppflags += ['-D__ACC']
+            libs += ['-lcudart', '-lnvrtc', '-lcuda']
+
+            if self.spec.satisfies('+cuda_blas'):
+                cppflags += ['-D__DBCSR_ACC=2']
+                libs += ['-lcublas']
+            else:
+                cppflags += ['-D__DBCSR_ACC']
+
+            if self.spec.satisfies('+cuda_fft'):
+                cppflags += ['-D__PW_CUDA']
+                libs += ['-lcufft', '-lcublas']
+
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            if cuda_arch:
+                gpuver = {
+                    '35': 'K40',
+                    '37': 'K80',
+                    '60': 'P100',
+                }[cuda_arch]
+
+                if (cuda_arch == '35'
+                        and self.spec.satisfies('+cuda_arch_35_k20x')):
+                    gpuver = 'K20X'
 
         if 'smm=libsmm' in spec:
             lib_dir = os.path.join(
@@ -349,6 +406,7 @@ class Cp2k(MakefilePackage):
         cflags.extend(cppflags)
         cxxflags.extend(cppflags)
         fcflags.extend(cppflags)
+        nvflags.extend(cppflags)
 
         with open(self.makefile, 'w') as mkf:
             if '+plumed' in self.spec:
@@ -373,11 +431,16 @@ class Cp2k(MakefilePackage):
             mkf.write('FC = {0}\n'.format(fc))
             mkf.write('LD = {0}\n'.format(fc))
 
+            if self.spec.satisfies('+cuda'):
+                mkf.write('NVCC = {0}\n'.format(
+                    os.path.join(self.spec['cuda'].prefix, 'bin', 'nvcc')))
+
             # Write compiler flags to file
             mkf.write('DFLAGS = {0}\n\n'.format(' '.join(dflags)))
             mkf.write('CPPFLAGS = {0}\n\n'.format(' '.join(cppflags)))
             mkf.write('CFLAGS = {0}\n\n'.format(' '.join(cflags)))
             mkf.write('CXXFLAGS = {0}\n\n'.format(' '.join(cxxflags)))
+            mkf.write('NVFLAGS = {0}\n\n'.format(' '.join(nvflags)))
             mkf.write('FCFLAGS = {0}\n\n'.format(' '.join(fcflags)))
             mkf.write('LDFLAGS = {0}\n\n'.format(' '.join(ldflags)))
             if '%intel' in spec:
@@ -385,6 +448,7 @@ class Cp2k(MakefilePackage):
                     ' '.join(ldflags) + ' -nofor_main')
                 )
             mkf.write('LIBS = {0}\n\n'.format(' '.join(libs)))
+            mkf.write('GPUVER = {0}\n\n'.format(gpuver))
             mkf.write('DATA_DIR = {0}\n\n'.format(self.prefix.share.data))
 
     @property
