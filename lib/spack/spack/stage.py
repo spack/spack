@@ -438,10 +438,8 @@ class Stage(object):
         """
         # Emulate file permissions for tempfile.mkdtemp.
         if not os.path.exists(self.path):
-            print("TLD: %s does not exist, creating it" % self.path)
             mkdirp(self.path, mode=stat.S_IRWXU)
         elif not os.path.isdir(self.path):
-            print("TLD: %s is not a directory, replacing it" % self.path)
             os.remove(self.path)
             mkdirp(self.path, mode=stat.S_IRWXU)
 
