@@ -53,10 +53,13 @@ class Qgis(CMakePackage):
 
     def cmake_args(self):
         args = []
+        # qtwebkit module was removed from qt as of version 5.6
+        # needs to be compiled as a separate package
+        args.append('-DWITH_QTWEBKIT=OFF')
+        # cmake couldn't determine the following paths
         args.append("-DEXPAT_LIBRARY={0}".format(self.spec['expat'].libs))
         args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].libs)+'/pkgconfig')
         args.append('-DPOSTGRES_PREFIX={0}'.format(self.spec['postgresql'].prefix))
-        args.append('-DWITH_QTWEBKIT=OFF')
         args.append('-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix)+'/include')
         args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib')
         return args
