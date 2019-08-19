@@ -24,10 +24,19 @@ class Eem(MakefilePackage):
     build_directory = 'src'
 
     patch('add_include.patch')
-    patch('fix_CXXFLAGS_for_K.patch', when='+K')
 
     def edit(self, spec, prefix):
-        filter_file('$(HOME)/local', '{0}'.format(prefix),
+        filter_file('$(HOME)/local', prefix,
                     './src/local_settings.mk', string=True)
-        filter_file('mpicxx', '{0}'.format(self.spec['mpi'].mpicxx),
+        filter_file('mpicxx', self.spec['mpi'].mpicxx,
                     './src/local_settings.mk', string=True)
+
+        if '+K' in self.spec:
+            makefile = FileFilter('./src/local_settings.mk')
+
+            makefile.filter('CXXFLAGS= -Wall -Wno-sign-compare -g',
+                            'CXXFLAGS=', string=True)
+            makefile.filter('CXXFLAGS+= -std=c++11 -DHAVE_UNORDERED_MAP',
+                            'CXXFLAGS+= -DHAVE_UNORDERED_MAP', string=True)
+            makefile.filter('CXXFLAGS+= -DHAVE_SHUFFLE',
+                            '#CXXFLAGS+= -DHAVE_SHUFFLE', string=True)
