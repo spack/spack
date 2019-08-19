@@ -278,7 +278,7 @@ def all_compilers(scope=None):
     compilers = list()
     for items in config:
         items = items['compiler']
-        compilers.append(compiler_from_config_entry(items))
+        compilers.append(_compiler_from_config_entry(items))
     return compilers
 
 
@@ -305,41 +305,69 @@ def compilers_for_arch(arch_spec, scope=None):
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
-def compiler_from_config_entry(items):
-    config_id = id(items)
+class CacheReference(object):
+    """This acts as a hashable reference to any object (regardless of whether
+       the object itself is hashable) and also prevents the object from being
+       garbage-collected (so if two CacheReference objects are equal, they
+       will refer to the same object, since it will not have been gc'ed since
+       the creation of the first CacheReference).
+    """
+    def __init__(self, val):
+        self.val = val
+        self.id = id(val)
+
+    def __hash__(self):
+        return self.id
+
+    def __eq__(self, other):
+        return isinstance(other, CacheReference) and self.id == other.id
+
+
+def compiler_from_dict(items):
+    cspec = spack.spec.CompilerSpec(items['spec'])
+    os = items.get('operating_system', None)
+    target = items.get('target', None)
+
+    if not ('paths' in items and
+            all(n in items['paths'] for n in _path_instance_vars)):
+        raise InvalidCompilerConfigurationError(cspec)
+
+    cls  = class_for_compiler_name(cspec.name)
+
+    compiler_paths = []
+    for c in _path_instance_vars:
+        compiler_path = items['paths'][c]
+        if compiler_path != 'None':
+            compiler_paths.append(compiler_path)
+        else:
+            compiler_paths.append(None)
+
+    mods = items.get('modules')
+    if mods == 'None':
+        mods = []
+
+    alias = items.get('alias', None)
+    compiler_flags = items.get('flags', {})
+    environment = items.get('environment', {})
+    extra_rpaths = items.get('extra_rpaths', [])
+
+    return cls(cspec, os, target, compiler_paths, mods, alias,
+               environment, extra_rpaths, **compiler_flags)
+
+
+def _compiler_from_config_entry(items):
+    """Note this is intended for internal use only. To avoid re-parsing
+       the same config dictionary this keeps track of its location in
+       memory. If you provide the same dictionary twice it will return
+       the same Compiler object (regardless of whether the dictionary
+       entries have changed).
+    """
+    config_id = CacheReference(items)
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
-        cspec = spack.spec.CompilerSpec(items['spec'])
-        os = items.get('operating_system', None)
-        target = items.get('target', None)
-
-        if not ('paths' in items and
-                all(n in items['paths'] for n in _path_instance_vars)):
-            raise InvalidCompilerConfigurationError(cspec)
-
-        cls  = class_for_compiler_name(cspec.name)
-
-        compiler_paths = []
-        for c in _path_instance_vars:
-            compiler_path = items['paths'][c]
-            if compiler_path != 'None':
-                compiler_paths.append(compiler_path)
-            else:
-                compiler_paths.append(None)
-
-        mods = items.get('modules')
-        if mods == 'None':
-            mods = []
-
-        alias = items.get('alias', None)
-        compiler_flags = items.get('flags', {})
-        environment = items.get('environment', {})
-        extra_rpaths = items.get('extra_rpaths', [])
-
-        compiler = cls(cspec, os, target, compiler_paths, mods, alias,
-                       environment, extra_rpaths, **compiler_flags)
-        _compiler_cache[id(items)] = compiler
+        compiler = compiler_from_dict(items)
+        _compiler_cache[config_id] = compiler
 
     return compiler
 
@@ -367,7 +395,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
                                      target != 'any'):
             continue
 
-        compilers.append(compiler_from_config_entry(items))
+        compilers.append(_compiler_from_config_entry(items))
 
     return compilers
 
