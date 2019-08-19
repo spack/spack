@@ -19,7 +19,7 @@ class Qgis(CMakePackage):
 
     version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
 
-    variant('grass', default=False, 'Build with GRASS providers and plugin')
+    variant('grass', default=False, description='Build with GRASS providers and plugin')
 
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
