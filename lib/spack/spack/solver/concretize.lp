@@ -14,21 +14,10 @@
 version_possible(P, V) :- version_declared(P, V), not version_conflict(P, V).
 #defined version_conflict/2.
 
-% One version, arch, etc. per package
-{ arch_platform(P, A) : arch_platform(P, A) } = 1 :- node(P).
-{ arch_os(P, A) : arch_os(P, A) } = 1             :- node(P).
-{ arch_target(P, T) : arch_target(P, T) } = 1     :- node(P).
-{ node_compiler(P, C) : node_compiler(P, C) } = 1 :- node(P).
-{ node_compiler_version(P, C, V) :
-  node_compiler_version(P, C, V) } = 1            :- node(P).
+%-----------------------------------------------------------------------------
+% Dependency semantics
+%-----------------------------------------------------------------------------
 
-% one variant value for single-valued variants.
-{ variant_value(P, V, X) : variant_value(P, V, X) } = 1
-    :- node(P), variant(P, V), not variant_single_value(P, V).
-
-%=============================================================================
-% Define
-%=============================================================================
 % dependencies imply new nodes.
 node(D) :- node(P), depends_on(P, D).
 
@@ -38,6 +27,10 @@ node(D) :- node(P), depends_on(P, D).
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------
+
+% one variant value for single-valued variants.
+1 { variant_value(P, V, X) : variant_value(P, V, X) } 1
+    :- node(P), variant(P, V), variant_single_value(P, V).
 
 % if a variant is set to anything, it is considered 'set'.
 variant_set(P, V) :- variant_set(P, V, _).
@@ -56,6 +49,11 @@ variant_value(P, V, X) :- node(P), variant(P, V), not variant_set(P, V),
 %-----------------------------------------------------------------------------
 % Architecture semantics
 %-----------------------------------------------------------------------------
+
+% one platform, os, target per node.
+1 { arch_platform(P, A) : arch_platform(P, A) } 1 :- node(P).
+1 { arch_os(P, A) : arch_os(P, A) } 1             :- node(P).
+1 { arch_target(P, T) : arch_target(P, T) } 1     :- node(P).
 
 % arch fields for pkg P are set if set to anything
 arch_platform_set(P) :- arch_platform_set(P, _).
@@ -87,6 +85,11 @@ arch_target_set(D, A) :- node(D), depends_on(P, D), arch_target_set(P, A).
 %-----------------------------------------------------------------------------
 % Compiler semantics
 %-----------------------------------------------------------------------------
+
+% one compiler per node
+{ node_compiler(P, C) : node_compiler(P, C) } = 1 :- node(P).
+{ node_compiler_version(P, C, V) :
+  node_compiler_version(P, C, V) } = 1            :- node(P).
 
 % compiler fields are set if set to anything
 node_compiler_set(P) :- node_compiler_set(P, _).
