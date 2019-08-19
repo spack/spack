@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -14,6 +15,7 @@ class Libint(AutotoolsPackage):
     homepage = "https://github.com/evaleev/libint"
     url = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
 
+    version('2.6.0', sha256='4ae47e8f0b5632c3d2a956469a7920896708e9f0e396ec10071b8181e4c8d9fa')
     version('2.4.2', sha256='86dff38065e69a3a51d15cfdc638f766044cb87e5c6682d960c14f9847e2eac3')
     version('2.4.1', sha256='0513be124563fdbbc7cd3c7043e221df1bda236a037027ba9343429a27db8ce4')
     version('2.4.0', sha256='52eb16f065406099dcfaceb12f9a7f7e329c9cfcf6ed9bfacb0cff7431dd6019')
@@ -44,6 +46,11 @@ class Libint(AutotoolsPackage):
         libtoolize()
         aclocal('-I', 'lib/autoconf')
         autoconf()
+
+        if '@2.6.0:' in spec:
+            # skip tarball creation and removal of dir with generated code
+            sed = which('sed')
+            sed('-i -e', 's|tgz$||', 'export/Makefile')
 
     @property
     def optflags(self):
@@ -89,4 +96,42 @@ class Libint(AutotoolsPackage):
                 '--with-libint-max-am=5',
                 '--with-libderiv-max-am1=4'
             ])
+
+        if '@2.6.0:' in self.spec:
+            config_args += ['--with-libint-exportdir=generated']
+
         return config_args
+
+    @property
+    def build_targets(self):
+        if '@2.6.0:' in self.spec:
+            return ['export']
+
+        return []
+
+    @when('@2.6.0:')
+    def install(self, spec, prefix):
+        """
+        Starting from libint 2.6.0 we're using the 2-stage build
+        to get support for the Fortran bindings, required by some
+        packages (CP2K notably).
+        """
+
+        # upstream says that using configure/make for the generated code
+        # is deprecated and one should use CMake, but with the currently
+        # recent 2.7.0.b1 it still doesn't work
+        with working_dir(os.path.join(self.build_directory, 'generated')):
+            # straight from the AutotoolsPackage class:
+            options = [
+                '--prefix={0}'.format(prefix),
+                '--enable-shared',
+                '--with-cxx-optflags={0}'.format(self.optflags),
+            ]
+
+            if '+fortran' in spec:
+                options += ['--enable-fortran']
+
+            configure = Executable('./configure')
+            configure(*options)
+            make()
+            make('install')
