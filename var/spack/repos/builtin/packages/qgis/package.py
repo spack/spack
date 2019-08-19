@@ -24,8 +24,7 @@ class Qgis(CMakePackage):
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
     depends_on('qt@5.9.0:+dbus')
-    depends_on('proj@4.4.0:', when='@3.8.1')
-    depends_on('proj@4.9.3:', when='@3.8.2')
+    depends_on('proj@4.4.0:')
     depends_on('geos@3.4.0:')
     depends_on('sqlite@3.0.0:')
     depends_on('libspatialite@4.2.0:')
@@ -54,6 +53,8 @@ class Qgis(CMakePackage):
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
     depends_on('python@3.0.0:', type=('build', 'run'))
+
+    conflicts('proj@:4.9.2', when='@3.8.2:')
 
     def cmake_args(self):
         args = []
