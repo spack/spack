@@ -8,7 +8,10 @@ from spack import *
 
 
 class NoversionBundle(BundlePackage):
-    """Simple bundle package with no version and one dependency"""
+    """
+    Simple bundle package with no version and one dependency, which
+    should be rejected for lack of a version.
+    """
 
     homepage = "http://www.example.com"
 

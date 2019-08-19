@@ -381,8 +381,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     **Package Lifecycle**
 
-    A code-based package's lifecycle over a run of Spack looks something
-    like this:
+    A package's lifecycle over a run of Spack looks something like this:
 
     .. code-block:: python
 
@@ -393,6 +392,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
        p.do_patch()              # applies patches to expanded source
        p.do_install()            # calls package's install() function
        p.do_uninstall()          # removes install directory
+
+    although packages that do not have code have nothing to fetch so omit
+    ``p.do_fetch()``.
 
     There are also some other commands that clean the build area:
 
@@ -422,11 +424,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     # These are default values for instance variables.
     #
 
-    # Automatically detecting packages with code cannot be based on the
-    # presence of URL-like package attributes since dozens of existing built-in
-    # packages override url_for_version() instead of specifying such an
-    # attribute.
-    #: Most Spack packages are used to install source or binary code.
+    #: Most Spack packages are used to install source or binary code while
+    #: those that do not can be used to install a set of other Spack packages.
     has_code = True
 
     #: By default we build in parallel.  Subclasses can override this.
@@ -1526,24 +1525,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # module from the upstream Spack instance.
             return
 
-        # Ensure package code is not already installed
+        # Ensure package is not already installed
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
-
-        layout = spack.store.layout
-        with spack.store.db.prefix_read_lock(self.spec):
-            if partial:
-                tty.msg(
-                    "Continuing from partial install of %s" % self.name)
-            elif layout.check_installed(self.spec):
-                msg = '{0.name} is already installed in {0.prefix}'
-                tty.msg(msg.format(self))
-                rec = spack.store.db.get_record(self.spec)
-                # In case the stage directory has already been created,
-                # this ensures it's removed after we checked that the spec
-                # is installed
-                if keep_stage is False:
-                    self.stage.destroy()
-                return self._update_explicit_entry_in_db(rec, explicit)
+        if partial:
+            tty.msg("Continuing from partial install of %s" % self.name)
+        else:
+            layout = spack.store.layout
+            with spack.store.db.prefix_read_lock(self.spec):
+                if layout.check_installed(self.spec):
+                    msg = '{0.name} is already installed in {0.prefix}'
+                    tty.msg(msg.format(self))
+                    rec = spack.store.db.get_record(self.spec)
+                    # In case the stage directory has already been created,
+                    # this ensures it's removed after we checked that the spec
+                    # is installed
+                    if keep_stage is False:
+                        self.stage.destroy()
+                    return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
 
@@ -1690,7 +1688,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # Ensure the metadata path exists as well
                 mkdirp(spack.store.layout.metadata_path(self.spec), mode=perms)
 
-            # Fork a child to do the actual code installation.
+            # Fork a child to do the actual installation.
             # Preserve verbosity settings across installs.
             PackageBase._verbose = spack.build_environment.fork(
                 self, build_process, dirty=dirty, fake=fake)

@@ -568,6 +568,6 @@ class TestConcretize(object):
 
     @pytest.mark.parametrize('spec', ['noversion', 'noversion-bundle'])
     def test_noversion_pkg(self, spec):
-        """Test concretization of no-version packages."""
+        """Test concretization failures for no-version packages."""
         with pytest.raises(NoValidVersionError, match="no valid versions"):
             Spec(spec).concretized()

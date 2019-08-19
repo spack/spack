@@ -7,7 +7,10 @@ from spack import *
 
 
 class Noversion(Package):
-    """Simple package with no version."""
+    """
+    Simple package with no version, which should be rejected since a version
+    is required.
+    """
 
     homepage = "http://www.example.com"
     url      = "http://www.example.com/a-1.0.tar.gz"

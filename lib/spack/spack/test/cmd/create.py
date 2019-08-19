@@ -71,7 +71,11 @@ def test_build_system_guesser_no_stage(parser):
 
 
 def test_build_system_guesser_octave(parser):
-    """Test build system guesser for the octave URL special case."""
+    """
+    Test build system guesser for the special case, where the same base URL
+    identifies the build system rather than guessing the build system from
+    files contained in the archive.
+    """
     url, expected = 'downloads.sourceforge.net/octave/', 'octave'
     guesser = spack.cmd.create.BuildSystemGuesser()
 

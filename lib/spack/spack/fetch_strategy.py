@@ -1192,7 +1192,7 @@ def from_list_url(pkg):
        version, this can can create a fetcher for a URL discovered for
        the specified package's version."""
 
-    if pkg.list_url is not None:
+    if pkg.list_url:
         try:
             versions = pkg.fetch_remote_versions()
             try:
