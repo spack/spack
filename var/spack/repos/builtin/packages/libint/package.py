@@ -7,6 +7,15 @@ import os
 from spack import *
 
 
+TUNE_VARIANTS = (
+    'none',
+    'cp2k-lmax-4',
+    'cp2k-lmax-5',
+    'cp2k-lmax-6',
+    'cp2k-lmax-7',
+)
+
+
 class Libint(AutotoolsPackage):
     """Libint is a high-performance library for computing
     Gaussian integrals in quantum mechanics.
@@ -24,6 +33,12 @@ class Libint(AutotoolsPackage):
     version('1.1.6', sha256='f201b0c621df678cfe8bdf3990796b8976ff194aba357ae398f2f29b0e2985a6')
     version('1.1.5', sha256='ec8cd4a4ba1e1a98230165210c293632372f0e573acd878ed62e5ec6f8b6174b')
 
+    variant('fortran', default=False,
+            description='Build & install Fortran bindings')
+    variant('tune', default='none', multi=False,
+            values=TUNE_VARIANTS,
+            description='Tune libint for use with the given package')
+
     # Build dependencies
     depends_on('autoconf@2.52:', type='build')
     depends_on('automake', type='build')
@@ -32,6 +47,11 @@ class Libint(AutotoolsPackage):
     # Libint 2 dependencies
     depends_on('boost', when='@2:')
     depends_on('gmp', when='@2:')
+
+    for tvariant in TUNE_VARIANTS[1:]:
+        conflicts('tune={0}'.format(tvariant), when='@:2.5.99',
+                  msg=('for versions prior to 2.6, tuning for specific'
+                       'codes/configurations is not supported'))
 
     def url_for_version(self, version):
         base_url = "https://github.com/evaleev/libint/archive"
@@ -49,8 +69,7 @@ class Libint(AutotoolsPackage):
 
         if '@2.6.0:' in spec:
             # skip tarball creation and removal of dir with generated code
-            sed = which('sed')
-            sed('-i -e', 's|tgz$||', 'export/Makefile')
+            filter_file(r'^(export::.*)\s+tgz$', r'\1', 'export/Makefile')
 
     @property
     def optflags(self):
@@ -99,6 +118,24 @@ class Libint(AutotoolsPackage):
 
         if '@2.6.0:' in self.spec:
             config_args += ['--with-libint-exportdir=generated']
+
+            tune_value = self.spec.variants['tune'].value
+            if tune_value.startswith('cp2k'):
+                lmax = int(tune_value.split('-lmax-')[1])
+                config_args += [
+                    '--enable-eri=1',
+                    '--enable-eri2=1',
+                    '--enable-eri3=1',
+                    '--with-max-am={0}'.format(lmax),
+                    '--with-eri-max-am={0},{1}'.format(lmax, lmax - 1),
+                    '--with-eri2-max-am={0},{1}'.format(lmax + 2, lmax + 1),
+                    '--with-eri3-max-am={0},{1}'.format(lmax + 2, lmax + 1),
+                    '--with-opt-am=3',
+                    # keep code-size at an acceptable limit,
+                    # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
+                    '--enable-generic-code',
+                    '--disable-unrolling',
+                ]
 
         return config_args
 
