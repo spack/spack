@@ -74,6 +74,9 @@ class Gromacs(CMakePackage):
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
 
+    patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:^cmake@3.14.0:')
+    patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
+
     def patch(self):
         if '+plumed' in self.spec:
             self.spec['plumed'].package.apply_patch(self)

@@ -196,7 +196,7 @@ def print_text_info(pkg):
     for line in formatter.lines:
         color.cprint(line)
 
-    if hasattr(pkg, 'phases'):
+    if hasattr(pkg, 'phases') and pkg.phases:
         color.cprint('')
         color.cprint(section_title('Installation Phases:'))
         phase_str = ''

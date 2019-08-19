@@ -121,14 +121,40 @@ def reset_compiler_cache():
     spack.compilers._compiler_cache = {}
 
 
-@pytest.fixture(scope='session', autouse=True)
-def mock_stage(tmpdir_factory):
-    """Mocks up a fake stage directory for use by tests."""
-    stage_path = spack.paths.stage_path
-    new_stage = str(tmpdir_factory.mktemp('mock_stage'))
-    spack.paths.stage_path = new_stage
-    yield new_stage
-    spack.paths.stage_path = stage_path
+@pytest.fixture
+def clear_stage_root(monkeypatch):
+    """Ensure spack.stage._stage_root is not set at test start."""
+    monkeypatch.setattr(spack.stage, '_stage_root', None)
+    yield
+
+
+@pytest.fixture(scope='function', autouse=True)
+def mock_stage(clear_stage_root, tmpdir_factory, request):
+    """Establish the temporary build_stage for the mock archive."""
+    # Workaround to skip mock_stage for 'nomockstage' test cases
+    if 'nomockstage' not in request.keywords:
+        new_stage = tmpdir_factory.mktemp('mock-stage')
+        new_stage_path = str(new_stage)
+
+        # Set test_stage_path as the default directory to use for test stages.
+        current = spack.config.get('config:build_stage')
+        spack.config.set('config',
+                         {'build_stage': new_stage_path}, scope='user')
+
+        # Ensure the source directory exists
+        source_path = new_stage.join(spack.stage._source_path_subdir)
+        source_path.ensure(dir=True)
+
+        yield new_stage_path
+
+        spack.config.set('config', {'build_stage': current}, scope='user')
+
+        # Clean up the test stage directory
+        if os.path.isdir(new_stage_path):
+            shutil.rmtree(new_stage_path)
+    else:
+        # Must yield a path to avoid a TypeError on test teardown
+        yield str(tmpdir_factory)
 
 
 @pytest.fixture(scope='session')
@@ -138,7 +164,7 @@ def ignore_stage_files():
     Used to track which leftover files in the stage have been seen.
     """
     # to start with, ignore the .lock file at the stage root.
-    return set(['.lock'])
+    return set(['.lock', spack.stage._source_path_subdir])
 
 
 def remove_whatever_it_is(path):
@@ -173,17 +199,19 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
 
     to tests that need it.
     """
+    stage_path = mock_stage
+
     yield
 
     files_in_stage = set()
-    if os.path.exists(spack.paths.stage_path):
-        files_in_stage = set(
-            os.listdir(spack.paths.stage_path)) - ignore_stage_files
+    if os.path.exists(stage_path):
+        stage_files = os.listdir(stage_path)
+        files_in_stage = set(stage_files) - ignore_stage_files
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(spack.paths.stage_path, f)
+            path = os.path.join(stage_path, f)
             remove_whatever_it_is(path)
     else:
         ignore_stage_files |= files_in_stage

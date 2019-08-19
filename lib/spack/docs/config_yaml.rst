@@ -85,38 +85,39 @@ See :ref:`modules` for details.
 
 Spack is designed to run out of a user home directory, and on many
 systems the home directory is a (slow) network file system.  On most systems,
-building in a temporary file system results in faster builds than building
-in the home directory.  Usually, there is also more space available in
-the temporary location than in the home directory. So, Spack tries to
-create build stages in temporary space.
+building in a temporary file system is faster.  Usually, there is also more
+space available in the temporary location than in the home directory.  If the
+username is not already in the path, Spack will also append the value of
+`$user` to the path.
+
+.. warning:: We highly recommend appending `spack-stage` to `$tempdir` in order
+   to ensure `spack clean` does not delete everything in `$tempdir`.
 
 By default, Spack's ``build_stage`` is configured like this:
 
 .. code-block:: yaml
 
    build_stage:
-    - $tempdir
-    - $spack/var/spack/stage
+    - $tempdir/spack-stage
 
-This is an ordered list of paths that Spack should search when trying to
+This can be an ordered list of paths that Spack should search when trying to
 find a temporary directory for the build stage.  The list is searched in
 order, and Spack will use the first directory to which it has write access.
-See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
+Specifying `~/.spack/stage` first will ensure each user builds in their home
+directory.  The historic Spack stage path `$spack/var/spack/stage` will build
+directly inside the Spack instance.  See :ref:`config-file-variables` for more
+on ``$tempdir`` and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
-``build_stage``, and it creates a symbolic link to that directory in
-``$spack/var/spack/stage``. This is used to track the temporary
-directory.  After the package is successfully installed, Spack deletes
+``build_stage``.  After the package is successfully installed, Spack deletes
 the temporary directory it used to build.  Unsuccessful builds are not
 deleted, but you can manually purge them with :ref:`spack clean --stage
 <cmd-spack-clean>`.
 
 .. note::
 
-   The last item in the list is ``$spack/var/spack/stage``.  If this is the
-   only writable directory in the ``build_stage`` list, Spack will build
-   *directly* in ``$spack/var/spack/stage`` and will not link to temporary
-   space.
+   The build will fail if there is no writable directory in the ``build_stage``
+   list.
 
 --------------------
 ``source_cache``
