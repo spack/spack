@@ -19,37 +19,41 @@ class Qgis(CMakePackage):
 
     version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
 
+    variant('grass', default=False, 'Build with GRASS providers and plugin')
+
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
     depends_on('qt@5.9.0:+dbus')
-    depends_on('proj@4.4.0:')
+    depends_on('proj@4.4.0:', when='@3.8.1')
+    depends_on('proj@4.9.3:', when='@3.8.2')
     depends_on('geos@3.4.0:')
     depends_on('sqlite@3.0.0:')
     depends_on('libspatialite@4.2.0:')
     depends_on('libspatialindex')
     depends_on('gdal@2.1.0:')
-    depends_on('qwt')
+    depends_on('qwt@5:')
     depends_on('qwtpolar')
-    depends_on('expat')
+    depends_on('expat@1.95:')
     depends_on('qca@2.2.1') # need to pass CMAKE_CXX_STANDARD=11 option
-    depends_on('py-pyqt5')
+    depends_on('py-pyqt5@5.3:') # must match Qt version
     depends_on('qscintilla')
-    depends_on('gsl')
     depends_on('qjson')
     depends_on('py-requests')
     depends_on('py-psycopg2')
-    depends_on('python@3.0.0:')
-    depends_on('qtkeychain')
-
-    # more deps discovered during compilation
+    depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('libzip')
-    depends_on('expat')
-    depends_on('postgresql')
     depends_on('exiv2')
 
+    # optionals
+    depends_on('postgresql@8:') # for PostGIS support
+    depends_on('gsl') # for georeferencer
+    depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass') # for georeferencer
+
+    # build
     depends_on('cmake@3.0.0:', type='build')
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
+    depends_on('python@3.0.0:', type=('build', 'run'))
 
     def cmake_args(self):
         args = []
