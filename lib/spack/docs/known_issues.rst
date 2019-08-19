@@ -48,16 +48,3 @@ A workaround is to explicitly activate the variants of dependencies as well:
 
 See https://github.com/spack/spack/issues/267 and
 https://github.com/spack/spack/issues/2546 for further details.
-
-
-----------------------------
-``spack setup`` doesn't work
-----------------------------
-
-**Status:** Work in progress
-
-Spack provides a ``setup`` command that is useful for the development of
-software outside of Spack. Unfortunately, this command no longer works.
-See https://github.com/spack/spack/issues/2597 and
-https://github.com/spack/spack/issues/2662 for details. This is expected
-to be fixed by https://github.com/spack/spack/pull/2664.
