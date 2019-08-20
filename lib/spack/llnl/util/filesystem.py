@@ -472,7 +472,8 @@ def mkdirp(*paths, **kwargs):
                     os.chmod(path, mode)
                 if group:
                     chgrp_if_not_world_writable(path, group)
-                    os.chmod(path, mode)  # reset sticky group bit after chgrp
+                    if mode is not None:
+                        os.chmod(path, mode)  # reset sticky grp bit post chgrp
 
                 # for intermediate folders, change mode just for newly created
                 # ones and if mode_intermediate has been specified, otherwise
