@@ -163,7 +163,11 @@ class BundleFetchStrategy(FetchStrategy):
     Fetch strategy associated with bundle, or no-code, packages.
 
     Having a basic fetch strategy is a requirement for executing post-install
-    hooks.
+    hooks.  Consequently, this class provides the API but does little more
+    than log messages.
+
+    TODO: Remove this class by refactoring resource handling and the link
+    between composite stages and composite fetch strategies (see #11981).
     """
     #: This is a concrete fetch strategy for no-code packages.
     enabled = True
@@ -1144,8 +1148,8 @@ def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
 
-    # No-code packages have a custom fetch strategy since there is no
-    # URL to process.
+    # No-code packages have a custom fetch strategy to work around issues
+    # with resource staging.
     if not pkg.has_code:
         return BundleFetchStrategy()
 
