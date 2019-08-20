@@ -99,7 +99,8 @@ class Cp2k(MakefilePackage, CudaPackage):
                    when='@7.0: lmax={0}'.format(lmax))
 
     depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
-    depends_on('libxc@4.0.3:', when='+libxc@6.0:', type='build')
+    depends_on('libxc@4.0.3:', when='+libxc@6.0:6.9', type='build')
+    depends_on('libxc@4.0.3:', when='+libxc@7.0:')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
@@ -309,14 +310,16 @@ class Cp2k(MakefilePackage, CudaPackage):
                 libs.append(wannier)
 
         if '+libxc' in spec:
-            libxc = spec['libxc:fortran,static']
-            cppflags += [
-                '-D__LIBXC',
-                libxc.headers.cpp_flags
-            ]
+            cppflags += ['-D__LIBXC']
 
-            ldflags.append(libxc.libs.search_flags)
-            libs.append(str(libxc.libs))
+            if '@:6.9' in spec:
+                libxc = spec['libxc:fortran,static']
+                cppflags += [libxc.headers.cpp_flags]
+                ldflags.append(libxc.libs.search_flags)
+                libs.append(str(libxc.libs))
+            else:
+                fcflags += ['$(shell pkg-config --cflags libxcf03)']
+                libs += ['$(shell pkg-config --libs libxcf03)']
 
         if '+pexsi' in self.spec:
             cppflags.append('-D__LIBPEXSI')
