@@ -21,7 +21,7 @@ class RCar(RPackage):
 
     depends_on('r@3.2.0:', when='@:3.0-2', type=('build', 'run'))
     depends_on('r@3.5.0:', when='@3.0-3:', type=('build', 'run'))
-    depends_on('r-cardata', when='@3.0:', type=('build', 'run'))
+    depends_on('r-cardata@3.0-0:', when='@3.0:', type=('build', 'run'))
     depends_on('r-abind', when='@3.0:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))
