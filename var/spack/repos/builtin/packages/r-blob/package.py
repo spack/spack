@@ -22,4 +22,4 @@ class RBlob(RPackage):
     depends_on('r-tibble', when='@:1.1.0', type=('build', 'run'))
     depends_on('r-prettyunits', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-rlang', when='@1.2.0:', type=('build', 'run'))
-    depends_on('r-vctrs', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r-vctrs@0.2.0:', when='@1.2.0:', type=('build', 'run'))
