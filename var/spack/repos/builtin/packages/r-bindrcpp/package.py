@@ -18,5 +18,5 @@ class RBindrcpp(RPackage):
     version('0.2', '2ed7f19fd9a12587f882d90060e7a343')
 
     depends_on('r-rcpp@0.12.16:', type=('build', 'run'))
-    depends_on('r-bindr@1.1.1:', type=('build', 'run'))
+    depends_on('r-bindr@0.1.1:', type=('build', 'run'))
     depends_on('r-plogr', type=('build', 'run'))
