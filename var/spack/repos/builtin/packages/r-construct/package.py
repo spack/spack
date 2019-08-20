@@ -27,3 +27,4 @@ class RConstruct(RPackage):
     depends_on('r-rstan@2.18.1:', type=('build', 'run'))
     depends_on('r-rstantools@1.5.0:', type=('build', 'run'))
     depends_on('r-stanheaders@2.18.0:', type=('build', 'run'))
+    depends_on('gmake', type='build')
