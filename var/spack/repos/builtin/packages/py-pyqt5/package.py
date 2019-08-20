@@ -14,11 +14,23 @@ class PyPyqt5(SIPPackage):
     homepage = "https://www.riverbankcomputing.com/software/pyqt/intro"
     url      = "https://www.riverbankcomputing.com/static/Downloads/PyQt5/5.13.0/PyQt5_gpl-5.13.0.tar.gz"
     list_url = "https://www.riverbankcomputing.com/software/pyqt/download5"
-    import_modules = ['PyQt5']
+
+    import_modules = [
+        'PyQt5', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtHelp',
+        'PyQt5.QtMultimedia', 'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNetwork',
+        'PyQt5.QtOpenGL', 'PyQt5.QtPrintSupport', 'PyQt5.QtQml',
+        'PyQt5.QtQuick', 'PyQt5.QtSvg', 'PyQt5.QtTest', 'PyQt5.QtWebChannel',
+        'PyQt5.QtWebEngineWidgets', 'PyQt5.QtWebSockets', 'PyQt5.QtWidgets',
+        'PyQt5.QtXml', 'PyQt5.QtXmlPatterns'
+    ]
 
     version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9')
 
-    depends_on('py-sip@4.19.14:')
+    # Concretizer is broken...
+    # depends_on('py-sip@4.19.14:')
+    # depends_on('py-sip module=PyQt5.sip', when='@5.11:')
+    depends_on('py-sip@4.19.14: module=PyQt5.sip')
+
     # Without opengl support, I got the following error:
     # sip: QOpenGLFramebufferObject is undefined
     depends_on('qt@5:+opengl')
