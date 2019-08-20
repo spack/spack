@@ -101,7 +101,6 @@ config_defaults = {
         'checksum': True,
         'dirty': False,
         'build_jobs': min(16, multiprocessing.cpu_count()),
-        'build_stage': '$tempdir/spack-stage',
     }
 }
 

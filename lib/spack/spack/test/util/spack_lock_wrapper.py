@@ -38,8 +38,6 @@ def test_disable_locking(tmpdir):
     assert old_value == spack.config.get('config:locks')
 
 
-# "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
-@pytest.mark.nomockstage
 def test_lock_checks_user(tmpdir):
     """Ensure lock checks work with a self-owned, self-group repo."""
     uid = os.getuid()
@@ -72,8 +70,6 @@ def test_lock_checks_user(tmpdir):
     lk.check_lock_safety(path)
 
 
-# "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
-@pytest.mark.nomockstage
 def test_lock_checks_group(tmpdir):
     """Ensure lock checks work with a self-owned, non-self-group repo."""
     uid = os.getuid()

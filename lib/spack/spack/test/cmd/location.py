@@ -11,7 +11,6 @@ from llnl.util.filesystem import mkdirp
 import spack.environment as ev
 from spack.main import SpackCommand, SpackCommandError
 import spack.paths
-import spack.stage
 
 
 # Everything here uses (or can use) the mock config and database.
@@ -129,4 +128,4 @@ def test_location_stage_dir(mock_spec):
 @pytest.mark.db
 def test_location_stages(mock_spec):
     """Tests spack location --stages."""
-    assert location('--stages').strip() == spack.stage.get_stage_root()
+    assert location('--stages').strip() == spack.paths.stage_path

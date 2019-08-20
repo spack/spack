@@ -14,7 +14,6 @@ import spack.cmd
 import spack.environment
 import spack.paths
 import spack.repo
-import spack.stage
 
 description = "print out locations of packages and spack directories"
 section = "basic"
@@ -77,7 +76,7 @@ def location(parser, args):
         print(spack.repo.path.first_repo().root)
 
     elif args.stages:
-        print(spack.stage.get_stage_root())
+        print(spack.paths.stage_path)
 
     else:
         specs = spack.cmd.parse_specs(args.spec)

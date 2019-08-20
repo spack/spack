@@ -12,7 +12,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.paths
-import spack.stage
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
@@ -280,7 +279,7 @@ class Clang(Compiler):
             raise OSError(msg)
 
         real_root = os.path.dirname(os.path.dirname(real_root))
-        developer_root = os.path.join(spack.stage.get_stage_root(),
+        developer_root = os.path.join(spack.paths.stage_path,
                                       'xcode-select',
                                       self.name,
                                       str(self.version))

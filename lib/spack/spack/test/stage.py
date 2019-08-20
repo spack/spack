@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
-import grp
 import os
 import collections
 import shutil
@@ -13,7 +12,7 @@ import getpass
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, working_dir
+from llnl.util.filesystem import working_dir
 
 import spack.paths
 import spack.stage
@@ -21,7 +20,6 @@ import spack.util.executable
 
 from spack.resource import Resource
 from spack.stage import Stage, StageComposite, ResourceStage, DIYStage
-from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = 'test-files'
@@ -39,10 +37,6 @@ _readme_contents = 'hello world!\n'
 _include_readme = 1
 _include_hidden = 2
 _include_extra = 3
-
-# Some standard unix directory that does NOT include the username
-_non_user_root = os.path.join(os.path.sep, 'opt')
-
 
 # Mock fetch directories are expected to appear as follows:
 #
@@ -139,7 +133,7 @@ def check_destroy(stage, stage_name):
     assert not os.path.exists(stage_path)
 
     # tmp stage needs to remove tmp dir too.
-    if not stage.managed_by_spack:
+    if spack.stage._use_tmp_stage:
         target = os.path.realpath(stage_path)
         assert not os.path.exists(target)
 
@@ -151,102 +145,153 @@ def check_setup(stage, stage_name, archive):
     # Ensure stage was created in the spack stage directory
     assert os.path.isdir(stage_path)
 
-    # Make sure it points to a valid directory
-    target = os.path.realpath(stage_path)
-    assert os.path.isdir(target)
-    assert not os.path.islink(target)
+    if spack.stage.get_tmp_root():
+        # Check that the stage dir is really a symlink.
+        assert os.path.islink(stage_path)
 
-    # Make sure the directory is in the place we asked it to
-    # be (see setUp, tearDown, and use_tmp)
-    assert target.startswith(str(archive.stage_path))
+        # Make sure it points to a valid directory
+        target = os.path.realpath(stage_path)
+        assert os.path.isdir(target)
+        assert not os.path.islink(target)
+
+        # Make sure the directory is in the place we asked it to
+        # be (see setUp, tearDown, and use_tmp)
+        assert target.startswith(str(archive.test_tmp_dir))
+
+    else:
+        # Make sure the stage path is NOT a link for a non-tmp stage
+        assert not os.path.islink(stage_path)
 
 
 def get_stage_path(stage, stage_name):
     """Figure out where a stage should be living. This depends on
     whether it's named.
     """
-    stage_path = spack.stage.get_stage_root()
     if stage_name is not None:
         # If it is a named stage, we know where the stage should be
-        return os.path.join(stage_path, stage_name)
+        return os.path.join(spack.paths.stage_path, stage_name)
     else:
         # If it's unnamed, ensure that we ran mkdtemp in the right spot.
         assert stage.path is not None
-        assert stage.path.startswith(stage_path)
+        assert stage.path.startswith(spack.paths.stage_path)
         return stage.path
 
 
 @pytest.fixture
-def bad_stage_path():
-    """Temporarily ensure there is no accessible path for staging."""
-    current = spack.config.get('config:build_stage')
-    spack.config.set('config', {'build_stage': '/no/such/path'}, scope='user')
+def no_path_for_stage(monkeypatch):
+    """Ensure there is no accessible path for staging."""
+    def _no_stage_path(paths):
+        return None
+
+    monkeypatch.setattr(spack.stage, '_first_accessible_path', _no_stage_path)
     yield
-    spack.config.set('config', {'build_stage': current}, scope='user')
 
 
 @pytest.fixture
-def non_user_path_for_stage(monkeypatch):
-    """Temporarily use a Linux-standard non-user path for staging. """
-    def _can_access(path, perms):
-        return True
-
-    current = spack.config.get('config:build_stage')
-    spack.config.set('config', {'build_stage': [_non_user_root]}, scope='user')
-    monkeypatch.setattr(os, 'access', _can_access)
-    yield
-    spack.config.set('config', {'build_stage': current}, scope='user')
-
-
-@pytest.fixture
-def instance_path_for_stage():
+def no_tmp_root_stage(monkeypatch):
     """
-    Temporarily use the "traditional" spack instance stage path for staging.
+    Disable use of a temporary root for staging.
+
+    Note that it can be important for other tests that the previous settings be
+    restored when the test case is over.
+    """
+    monkeypatch.setattr(spack.stage, '_tmp_root', None)
+    monkeypatch.setattr(spack.stage, '_use_tmp_stage', False)
+    yield
+
+
+@pytest.fixture
+def non_user_path_for_stage(config):
+    """
+    Use a non-user path for staging.
 
     Note that it can be important for other tests that the previous settings be
     restored when the test case is over.
     """
     current = spack.config.get('config:build_stage')
-    base = canonicalize_path(os.path.join('$spack', 'test-stage'))
-    mkdirp(base)
-    path = tempfile.mkdtemp(dir=base)
-    spack.config.set('config', {'build_stage': path}, scope='user')
+    spack.config.set('config', {'build_stage': ['/var/spack/non-path']},
+                     scope='user')
     yield
     spack.config.set('config', {'build_stage': current}, scope='user')
-    shutil.rmtree(base)
 
 
 @pytest.fixture
-def tmp_path_for_stage(tmpdir):
+def stage_path_for_stage(config):
     """
-    Use a temporary test directory for staging.
+    Use the basic stage_path for staging.
+
+    Note that it can be important for other tests that the previous settings be
+    restored when the test case is over.
+    """
+    current = spack.config.get('config:build_stage')
+    spack.config.set('config',
+                     {'build_stage': spack.paths.stage_path}, scope='user')
+    yield
+    spack.config.set('config', {'build_stage': current}, scope='user')
+
+
+@pytest.fixture
+def tmp_path_for_stage(tmpdir, config):
+    """
+    Use a built-in, temporary, test directory for staging.
 
     Note that it can be important for other tests that the previous settings be
     restored when the test case is over.
     """
     current = spack.config.get('config:build_stage')
     spack.config.set('config', {'build_stage': [str(tmpdir)]}, scope='user')
-    yield tmpdir
+    yield
     spack.config.set('config', {'build_stage': current}, scope='user')
 
 
 @pytest.fixture
-def tmp_build_stage_dir(tmpdir):
-    """Establish the temporary build_stage for the mock archive."""
-    test_stage_path = tmpdir.join('stage')
+def tmp_root_stage(monkeypatch):
+    """
+    Enable use of a temporary root for staging.
 
-    # Set test_stage_path as the default directory to use for test stages.
+    Note that it can be important for other tests that the previous settings be
+    restored when the test case is over.
+    """
+    monkeypatch.setattr(spack.stage, '_tmp_root', None)
+    monkeypatch.setattr(spack.stage, '_use_tmp_stage', True)
+    yield
+
+
+@pytest.fixture
+def tmpdir_for_stage(config, mock_stage_archive):
+    """
+    Use the mock_stage_archive's temporary directory for staging.
+
+    Note that it can be important for other tests that the previous settings be
+    restored when the test case is over.
+    """
+    archive = mock_stage_archive()
+    current = spack.config.get('config:build_stage')
+    spack.config.set(
+        'config',
+        {'build_stage': [str(archive.test_tmp_dir)]},
+        scope='user')
+    yield
+    spack.config.set('config', {'build_stage': current}, scope='user')
+
+
+@pytest.fixture
+def tmp_build_stage_dir(tmpdir, config):
+    """Establish the temporary build_stage for the mock archive."""
+    test_tmp_path = tmpdir.join('tmp')
+
+    # Set test_tmp_path as the default test directory to use for stages.
     current = spack.config.get('config:build_stage')
     spack.config.set('config',
-                     {'build_stage': [str(test_stage_path)]}, scope='user')
+                     {'build_stage': [str(test_tmp_path)]}, scope='user')
 
-    yield (tmpdir, test_stage_path)
+    yield (tmpdir, test_tmp_path)
 
     spack.config.set('config', {'build_stage': current}, scope='user')
 
 
 @pytest.fixture
-def mock_stage_archive(clear_stage_root, tmp_build_stage_dir, request):
+def mock_stage_archive(tmp_build_stage_dir, tmp_root_stage, request):
     """
     Create the directories and files for the staged mock archive.
 
@@ -256,7 +301,7 @@ def mock_stage_archive(clear_stage_root, tmp_build_stage_dir, request):
     # Mock up a stage area that looks like this:
     #
     # tmpdir/                test_files_dir
-    #     stage/             test_stage_path (where stage should be)
+    #     tmp/               test_tmp_path (where stage should be)
     #     <_archive_base>/   archive_dir_path
     #         <_readme_fn>   Optional test_readme (contains _readme_contents)
     #     <_extra_fn>        Optional extra file (contains _extra_contents)
@@ -264,8 +309,8 @@ def mock_stage_archive(clear_stage_root, tmp_build_stage_dir, request):
     #     <_archive_fn>      archive_url = file:///path/to/<_archive_fn>
     #
     def create_stage_archive(expected_file_list=[_include_readme]):
-        tmpdir, test_stage_path = tmp_build_stage_dir
-        test_stage_path.ensure(dir=True)
+        tmpdir, test_tmp_path = tmp_build_stage_dir
+        test_tmp_path.ensure(dir=True)
 
         # Create the archive directory and associated file
         archive_dir = tmpdir.join(_archive_base)
@@ -304,10 +349,10 @@ def mock_stage_archive(clear_stage_root, tmp_build_stage_dir, request):
             tar(*tar_args)
 
         Archive = collections.namedtuple(
-            'Archive', ['url', 'tmpdir', 'stage_path', 'archive_dir']
+            'Archive', ['url', 'tmpdir', 'test_tmp_dir', 'archive_dir']
         )
         return Archive(url=archive_url, tmpdir=tmpdir,
-                       stage_path=test_stage_path, archive_dir=archive_dir)
+                       test_tmp_dir=test_tmp_path, archive_dir=archive_dir)
 
     return create_stage_archive
 
@@ -323,33 +368,22 @@ def mock_noexpand_resource(tmpdir):
 @pytest.fixture
 def mock_expand_resource(tmpdir):
     """Sets up an expandable resource in tmpdir prior to staging."""
-    # Mock up an expandable resource:
-    #
-    # tmpdir/                    test_files_dir
-    #     resource-expand/       resource source dir
-    #         resource-file.txt  resource contents (contains 'test content')
-    #     resource.tar.gz        archive of resource content
-    #
-    subdir = 'resource-expand'
-    resource_dir = tmpdir.join(subdir)
-    resource_dir.ensure(dir=True)
-
+    resource_dir = tmpdir.join('resource-expand')
     archive_name = 'resource.tar.gz'
     archive = tmpdir.join(archive_name)
     archive_url = 'file://' + str(archive)
-
-    filename = 'resource-file.txt'
-    test_file = resource_dir.join(filename)
+    test_file = resource_dir.join('resource-file.txt')
+    resource_dir.ensure(dir=True)
     test_file.write('test content\n')
 
     with tmpdir.as_cwd():
         tar = spack.util.executable.which('tar', required=True)
-        tar('czf', str(archive_name), subdir)
+        tar('czf', str(archive_name), 'resource-expand')
 
     MockResource = collections.namedtuple(
         'MockResource', ['url', 'files'])
 
-    return MockResource(archive_url, [filename])
+    return MockResource(archive_url, ['resource-file.txt'])
 
 
 @pytest.fixture
@@ -370,7 +404,7 @@ def composite_stage_with_expanding_resource(
     resource_stage = ResourceStage(
         test_resource_fetcher, root_stage, test_resource)
     composite_stage.append(resource_stage)
-    return composite_stage, root_stage, resource_stage, mock_expand_resource
+    return composite_stage, root_stage, resource_stage
 
 
 @pytest.fixture
@@ -411,6 +445,7 @@ class TestStage(object):
 
     stage_name = 'spack-test-stage'
 
+    @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):
         archive = mock_stage_archive()
         with Stage(archive.url, name=self.stage_name) as stage:
@@ -423,12 +458,14 @@ class TestStage(object):
             check_setup(stage, self.stage_name, archive)
         check_destroy(stage, self.stage_name)
 
+    @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_setup_and_destroy_no_name_with_tmp(self, mock_stage_archive):
         archive = mock_stage_archive()
         with Stage(archive.url) as stage:
             check_setup(stage, None, archive)
         check_destroy(stage, None)
 
+    @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_noexpand_stage_file(
             self, mock_stage_archive, mock_noexpand_resource):
         """When creating a stage with a nonexpanding URL, the 'archive_file'
@@ -442,6 +479,7 @@ class TestStage(object):
             assert os.path.exists(stage.archive_file)
 
     @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_composite_stage_with_noexpand_resource(
             self, mock_stage_archive, mock_noexpand_resource):
         archive = mock_stage_archive()
@@ -467,10 +505,12 @@ class TestStage(object):
             os.path.join(composite_stage.source_path, resource_dst_name))
 
     @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_composite_stage_with_expand_resource(
-            self, composite_stage_with_expanding_resource):
+            self, mock_stage_archive, mock_expand_resource,
+            composite_stage_with_expanding_resource):
 
-        composite_stage, root_stage, resource_stage, mock_resource = (
+        composite_stage, root_stage, resource_stage = (
             composite_stage_with_expanding_resource)
 
         composite_stage.create()
@@ -479,24 +519,23 @@ class TestStage(object):
 
         assert composite_stage.expanded  # Archive is expanded
 
-        for fname in mock_resource.files:
+        for fname in mock_expand_resource.files:
             file_path = os.path.join(
                 root_stage.source_path, 'resource-dir', fname)
             assert os.path.exists(file_path)
 
-        # Perform a little cleanup
-        shutil.rmtree(root_stage.path)
-
     @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_composite_stage_with_expand_resource_default_placement(
-            self, composite_stage_with_expanding_resource):
+            self, mock_stage_archive, mock_expand_resource,
+            composite_stage_with_expanding_resource):
         """For a resource which refers to a compressed archive which expands
         to a directory, check that by default the resource is placed in
         the source_path of the root stage with the name of the decompressed
         directory.
         """
 
-        composite_stage, root_stage, resource_stage, mock_resource = (
+        composite_stage, root_stage, resource_stage = (
             composite_stage_with_expanding_resource)
 
         resource_stage.resource.placement = None
@@ -505,13 +544,10 @@ class TestStage(object):
         composite_stage.fetch()
         composite_stage.expand_archive()
 
-        for fname in mock_resource.files:
+        for fname in mock_expand_resource.files:
             file_path = os.path.join(
                 root_stage.source_path, 'resource-expand', fname)
             assert os.path.exists(file_path)
-
-        # Perform a little cleanup
-        shutil.rmtree(root_stage.path)
 
     def test_setup_and_destroy_no_name_without_tmp(self, mock_stage_archive):
         archive = mock_stage_archive()
@@ -674,108 +710,42 @@ class TestStage(object):
         assert source_path.endswith(spack.stage._source_path_subdir)
         assert not os.path.exists(source_path)
 
-    def test_first_accessible_path(self, tmpdir):
-        """Test _first_accessible_path names."""
-        spack_dir = tmpdir.join('spack-test-fap')
-        name = str(spack_dir)
-        files = [os.path.join(os.path.sep, 'no', 'such', 'path'), name]
+    def test_first_accessible_path_error(self):
+        """Test _first_accessible_path handling of an OSError."""
+        with tempfile.NamedTemporaryFile() as _file:
+            assert spack.stage._first_accessible_path([_file.name]) is None
 
-        # Ensure the tmpdir path is returned since the user should have access
-        path = spack.stage._first_accessible_path(files)
-        assert path == name
-        assert os.path.isdir(path)
+    def test_get_tmp_root_no_use(self, no_tmp_root_stage):
+        """Ensure not using tmp root results in no path."""
+        assert spack.stage.get_tmp_root() is None
 
-        # Ensure an existing path is returned
-        spack_subdir = spack_dir.join('existing').ensure(dir=True)
-        subdir = str(spack_subdir)
-        path = spack.stage._first_accessible_path([subdir])
-        assert path == subdir
-
-        # Cleanup
-        shutil.rmtree(str(name))
-
-    def test_first_accessible_perms(self, tmpdir):
-        """Test _first_accessible_path permissions."""
-        name = str(tmpdir.join('first', 'path'))
-        path = spack.stage._first_accessible_path([name])
-
-        # Ensure the non-existent path was created
-        assert path == name
-        assert os.path.isdir(path)
-
-        # Ensure the non-existent subdirectories have their parent's perms
-        prefix = str(tmpdir)
-        status = os.stat(prefix)
-        group = grp.getgrgid(status.st_gid)[0]
-        parts = path[len(prefix):].split(os.path.sep)
-        for part in parts:
-            prefix = os.path.join(prefix, part)
-            prefix_status = os.stat(prefix)
-            assert group == grp.getgrgid(os.stat(prefix).st_gid)[0]
-            assert status.st_mode == prefix_status.st_mode
-
-        # Cleanup
-        shutil.rmtree(os.path.dirname(name))
-
-    def test_get_stage_root_bad_path(self, clear_stage_root, bad_stage_path):
-        """Ensure an invalid stage path root raises a StageError."""
+    def test_get_tmp_root_no_stage_path(self, tmp_root_stage,
+                                        no_path_for_stage):
+        """Ensure using tmp root with no stage path raises StageError."""
         with pytest.raises(spack.stage.StageError,
                            match="No accessible stage paths in"):
-            assert spack.stage.get_stage_root() is None
+            spack.stage.get_tmp_root()
 
-        # Make sure the cached stage path values are unchanged.
-        assert spack.stage._stage_root is None
+    def test_get_tmp_root_non_user_path(self, tmp_root_stage,
+                                        non_user_path_for_stage):
+        """Ensure build_stage of tmp root with non-user path includes user."""
+        path = spack.stage.get_tmp_root()
+        assert path.endswith(os.path.join(getpass.getuser(), 'spack-stage'))
 
-    def test_get_stage_root_non_user_path(self, clear_stage_root,
-                                          non_user_path_for_stage):
-        """Ensure a non-user stage root includes the username."""
-        # The challenge here is whether the user has access to the standard
-        # non-user path.  If not, the path should still appear in the error.
-        try:
-            path = spack.stage.get_stage_root()
-            assert getpass.getuser() in path.split(os.path.sep)
+    def test_get_tmp_root_use(self, tmp_root_stage, tmp_path_for_stage):
+        """Ensure build_stage of tmp root provides has right ancestors."""
+        path = spack.stage.get_tmp_root()
+        shutil.rmtree(path)
+        assert path.rfind('test_get_tmp_root_use') > 0
+        assert path.endswith('spack-stage')
 
-            # Make sure the cached stage path values are changed appropriately.
-            assert spack.stage._stage_root == path
-        except OSError as e:
-            expected = os.path.join(_non_user_root, getpass.getuser())
-            assert expected in str(e)
-
-            # Make sure the cached stage path values are unchanged.
-            assert spack.stage._stage_root is None
-
-    def test_get_stage_root_tmp(self, clear_stage_root, tmp_path_for_stage):
-        """Ensure a temp path stage root is a suitable temp path."""
-        assert spack.stage._stage_root is None
-
-        tmpdir = tmp_path_for_stage
-        path = spack.stage.get_stage_root()
-        assert path == str(tmpdir)
-        assert 'test_get_stage_root_tmp' in path
-
-        # Make sure the cached stage path values are changed appropriately.
-        assert spack.stage._stage_root == path
-
-        # Add then purge a couple of directories
-        dir1 = tmpdir.join('dir1')
-        dir1.ensure(dir=True)
-        dir2 = tmpdir.join('dir2')
-        dir2.ensure(dir=True)
-
-        spack.stage.purge()
-        assert not os.path.exists(str(dir1))
-        assert not os.path.exists(str(dir2))
-
-    def test_get_stage_root_in_spack(self, clear_stage_root,
-                                     instance_path_for_stage):
-        """Ensure an instance path stage root is a suitable path."""
-        assert spack.stage._stage_root is None
-
-        path = spack.stage.get_stage_root()
-        assert 'spack' in path.split(os.path.sep)
-
-        # Make sure the cached stage path values are changed appropriately.
-        assert spack.stage._stage_root == path
+    def test_get_tmp_root_stage_path(self, tmp_root_stage,
+                                     stage_path_for_stage):
+        """
+        Ensure build_stage of tmp root with stage_path means use local path.
+        """
+        assert spack.stage.get_tmp_root() is None
+        assert not spack.stage._use_tmp_stage
 
     def test_stage_constructor_no_fetcher(self):
         """Ensure Stage constructor with no URL or fetch strategy fails."""
@@ -844,41 +814,3 @@ class TestStage(object):
         assert os.path.isfile(readmefn)
         with open(readmefn) as _file:
             _file.read() == _readme_contents
-
-
-@pytest.fixture
-def tmp_build_stage_nondir(tmpdir):
-    """Establish the temporary build_stage pointing to non-directory."""
-    test_stage_path = tmpdir.join('stage', 'afile')
-    test_stage_path.ensure(dir=False)
-
-    # Set test_stage_path as the default directory to use for test stages.
-    current = spack.config.get('config:build_stage')
-    stage_dir = os.path.dirname(str(test_stage_path))
-    spack.config.set('config', {'build_stage': [stage_dir]}, scope='user')
-
-    yield test_stage_path
-
-    spack.config.set('config', {'build_stage': current}, scope='user')
-
-
-def test_stage_create_replace_path(tmp_build_stage_dir):
-    """Ensure stage creation replaces a non-directory path."""
-    _, test_stage_path = tmp_build_stage_dir
-    test_stage_path.ensure(dir=True)
-
-    nondir = test_stage_path.join('afile')
-    nondir.ensure(dir=False)
-    path = str(nondir)
-
-    stage = Stage(path, name='')
-    stage.create()  # Should ensure the path is converted to a dir
-
-    assert os.path.isdir(stage.path)
-
-
-def test_cannot_access():
-    """Ensure can_access dies with the expected error."""
-    with pytest.raises(SystemExit, matches='Insufficient permissions'):
-        # It's far more portable to use a non-existent filename.
-        spack.stage.ensure_access('/no/such/file')
