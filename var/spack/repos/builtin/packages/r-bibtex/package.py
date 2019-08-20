@@ -19,4 +19,3 @@ class RBibtex(RPackage):
 
     depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
