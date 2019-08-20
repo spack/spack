@@ -36,4 +36,4 @@ class RApe(RPackage):
     depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.0:', type=('build', 'run'))
