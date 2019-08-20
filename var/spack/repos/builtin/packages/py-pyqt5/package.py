@@ -27,9 +27,9 @@ class PyPyqt5(SIPPackage):
     version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9')
 
     # Concretizer is broken...
-    # depends_on('py-sip@4.19.14:')
-    # depends_on('py-sip module=PyQt5.sip', when='@5.11:')
-    depends_on('py-sip@4.19.14: module=PyQt5.sip')
+    # depends_on('py-sip@4.19.14:', type=('build', 'run'))
+    # depends_on('py-sip module=PyQt5.sip', when='@5.11:', type=('build', 'run'))  # noqa: E501
+    depends_on('py-sip@4.19.14: module=PyQt5.sip', type=('build', 'run'))
 
     # Without opengl support, I got the following error:
     # sip: QOpenGLFramebufferObject is undefined

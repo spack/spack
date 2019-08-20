@@ -28,8 +28,8 @@ class PyPyqt4(SIPPackage):
             url='http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.3/PyQt-x11-gpl-4.11.3.tar.gz')
 
     # Concretizer is broken...
-    # depends_on('py-sip module=PyQt4.sip', when='@4.12.2:')
-    depends_on('py-sip module=PyQt4.sip')
+    # depends_on('py-sip module=PyQt4.sip', when='@4.12.2:', type=('build', 'run'))  # noqa: E501
+    depends_on('py-sip module=PyQt4.sip', type=('build', 'run'))
 
     # Supposedly can also be built with Qt 5 compatibility layer
     depends_on('qt@:4+phonon+dbus')

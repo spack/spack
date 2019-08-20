@@ -38,7 +38,7 @@ class SIPPackage(PackageBase):
     extends('python')
 
     depends_on('qt')
-    depends_on('py-sip')
+    depends_on('py-sip', type=('build', 'run'))
 
     def configure_file(self):
         """Returns the name of the configure file to use."""
