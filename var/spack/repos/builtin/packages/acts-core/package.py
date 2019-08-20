@@ -61,10 +61,9 @@ class ActsCore(CMakePackage):
     variant('material', default=False, description='Build the material plugin')
     variant('tgeo', default=False, description='Build the TGeo plugin')
 
-    depends_on('cmake @3.7:', type='build')
-    # Currently incompatible with boost 1.70.0, see also discussion at
-    #    https://gitlab.cern.ch/acts/acts-core/issues/592#note_2618474
-    depends_on('boost @1.62:1.69.99 +program_options +test')
+    depends_on('cmake @3.9:', type='build')
+    depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.99')
+    depends_on('boost @1.62: +program_options +test', when='@develop')
     depends_on('eigen @3.2.9:', type='build')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
     depends_on('root @6.10:', when='+tgeo @0.8.1:')
