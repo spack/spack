@@ -13,7 +13,7 @@ class RCrayon(RPackage):
     New styles can also be created easily. This package was inspired by the
     'chalk' 'JavaScript' project."""
 
-    homepage = "https://cloud.r-project.org/package=sourcetools"
+    homepage = "https://github.com/r-lib/crayon#readme"
     url      = "https://cloud.r-project.org/src/contrib/crayon_1.3.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/crayon"
 
