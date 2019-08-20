@@ -486,7 +486,10 @@ def mkdirp(*paths, **kwargs):
                     intermediate_mode = stat_info.st_mode
                     intermediate_group = stat_info.st_gid
                 else:
-                    raise Exception
+                    msg = 'The value %s is an invalid value ' % default_perms
+                    msg += 'for `default_perms`. Valid values are "args" and '
+                    msg += '"parents"'
+                    raise ValueError(msg)
 
                 for intermediate_path in reversed(intermediate_folders):
                     if intermediate_mode is not None:
