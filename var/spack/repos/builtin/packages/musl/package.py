@@ -43,7 +43,7 @@ class Musl(Package):
                           format(self.compiler.cc))
 
     def configure_args(self):
-        args = ['--prefix={0}'.format(prefix)]
+        args = ['--prefix={0}'.format(self.prefix)]
         if self.compiler.name == 'gcc':
             args.append('--enable-wrapper=gcc')
         elif self.compiler.name == 'clang':
