@@ -428,6 +428,17 @@ class Root(CMakePackage):
             env.append_path('CMAKE_PREFIX_PATH',
                             self.spec['lz4'].prefix)
         env.set('SPACK_INCLUDE_DIRS', '', force=True)
+        if '+x' in self.spec:
+            env.append_path('SPACK_INCLUDE_DIRS',
+                            self.spec['fontconfig'].prefix.include)
+            env.append_path('SPACK_INCLUDE_DIRS',
+                            self.spec['glew'].prefix.include)
+            env.append_path('SPACK_INCLUDE_DIRS',
+                            self.spec['libx11'].prefix.include)
+            env.append_path('SPACK_INCLUDE_DIRS',
+                            self.spec['mesa-glu'].prefix.include)
+            env.append_path('SPACK_INCLUDE_DIRS',
+                            self.spec['xproto'].prefix.include)
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)
