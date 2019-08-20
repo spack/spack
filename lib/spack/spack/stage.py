@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import grp
 import os
 import stat
 import sys
@@ -56,8 +55,8 @@ def _first_accessible_path(paths):
                     if not os.path.exists(prefix):
                         break
                 parent = os.path.dirname(prefix)
-                group = grp.getgrgid(os.stat(parent).st_gid)[0]
-                mkdirp(path, group=group, default_perms='parents')
+                gid = os.stat(parent).st_gid
+                mkdirp(path, group=gid, default_perms='parents')
 
                 if can_access(path):
                     return path
