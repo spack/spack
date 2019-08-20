@@ -21,7 +21,7 @@ class RAer(RPackage):
     version('1.2-5', '419df9dc8ee6e5edd79678fee06719ae')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-car@2.10-19:', type=('build', 'run'))
+    depends_on('r-car@2.0-19:', type=('build', 'run'))
     depends_on('r-lmtest', type=('build', 'run'))
     depends_on('r-sandwich@2.4-0:', type=('build', 'run'))
     depends_on('r-survival@2.37-5:', type=('build', 'run'))
