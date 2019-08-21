@@ -15,8 +15,9 @@ class Esmf(MakefilePackage):
     and utilities for developing individual models."""
 
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
-    url      = "http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_7_0_1/esmf_7_0_1_src.tar.gz"
+    url      = "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_7_1_0r/esmf_7_1_0r_src.tar.gz"
 
+    version('7.1.0r', '9e455bc36a0aaa9b87e0bdedc78a47f5')
     version('7.0.1', 'd3316ea79b032b8fb0cd40e5868a0261')
 
     variant('mpi',     default=True,  description='Build with MPI support')
@@ -52,17 +53,21 @@ class Esmf(MakefilePackage):
 
     # Allow different directories for creation and
     # installation of dynamic libraries on OSX:
-    patch('darwin_dylib_install_name.patch', when='platform=darwin')
+    patch('darwin_dylib_install_name.patch', when='platform=darwin @:7.0.99')
+
+    # Missing include file for gcc compilers on mac
+    # https://trac.macports.org/ticket/57493
+    patch('gcc_darwin.patch', when='platform=darwin @7.1.0r %gcc')
 
     # Make script from mvapich2.patch executable
-    @run_before('build')
     @when('@:7.0.99')
+    @run_before('build')
     def chmod_scripts(self):
         chmod = which('chmod')
         chmod('+x', 'scripts/libs.mvapich2f90')
 
     def url_for_version(self, version):
-        return "http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
+        return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
 
     def edit(self, spec, prefix):
         # Installation instructions can be found at:
