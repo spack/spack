@@ -29,3 +29,4 @@ class RGgally(RPackage):
     depends_on('r-rcolorbrewer', type=('build', 'run'))
     depends_on('r-reshape@0.8.5:', type=('build', 'run'))
     depends_on('r-rlang', when='@1.4.0:', type=('build', 'run'))
+    depends_on('openssl', when='@1.4.0:')
