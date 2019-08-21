@@ -29,3 +29,4 @@ class RDt(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-crosstalk', type=('build', 'run'))
     depends_on('r-promises', when='@0.5:', type=('build', 'run'))
+    depends_on('r-jsonlite@0.9.16:', when='@0.8:', type=('build', 'run'))
