@@ -34,4 +34,5 @@ class RDigest(RPackage):
     version('0.6.11', '52a864f55846b48b3cab0b5d0304a82a')
     version('0.6.9',  '48048ce6c466bdb124716e45ba4a0e83')
 
-    depends_on('r@2.4.1:', type=('build', 'run'))
+    depends_on('r@2.4.1:', when='@:0.6.15', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@0.6.16:', type=('build', 'run'))
