@@ -856,7 +856,7 @@ from this file system with the following ``config.yaml``:
 
    It is important to distinguish the build stage directory from other
    directories in your scratch space to ensure ``spack clean`` does not
-   remove unrelated files.  See :ref:`_config-yaml` for details.
+   remove unrelated files.  See :ref:`config-yaml` for details.
 
 On systems with compilers that absolutely *require* environment variables
 like ``LD_LIBRARY_PATH``, it is possible to prevent Spack from cleaning
