@@ -19,6 +19,3 @@ class RGlobaloptions(RPackage):
 
     depends_on('r@2.10:', when='@:0.0.12', type=('build', 'run'))
     depends_on('r@3.3.0:', when='@0.0.13:', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-markdown', type=('build', 'run'))
