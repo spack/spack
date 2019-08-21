@@ -90,8 +90,9 @@ space available in the temporary location than in the home directory.  If the
 username is not already in the path, Spack will also append the value of
 `$user` to the path.
 
-.. warning:: We highly recommend appending `spack-stage` to `$tempdir` in order
-   to ensure `spack clean` does not delete everything in `$tempdir`.
+.. warning:: We highly recommend appending ``spack-stage`` to ``$tempdir`` in
+   order to ensure ``spack clean`` does not delete unrelated files from
+   ``$tempdir``.
 
 By default, Spack's ``build_stage`` is configured like this:
 
@@ -103,8 +104,8 @@ By default, Spack's ``build_stage`` is configured like this:
 This can be an ordered list of paths that Spack should search when trying to
 find a temporary directory for the build stage.  The list is searched in
 order, and Spack will use the first directory to which it has write access.
-Specifying `~/.spack/stage` first will ensure each user builds in their home
-directory.  The historic Spack stage path `$spack/var/spack/stage` will build
+Specifying ``~/.spack/stage`` first will ensure each user builds in their home
+directory.  The historic Spack stage path ``$spack/var/spack/stage`` will build
 directly inside the Spack instance.  See :ref:`config-file-variables` for more
 on ``$tempdir`` and ``$spack``.
 
