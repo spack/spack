@@ -18,3 +18,4 @@ class RFs(RPackage):
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('gmake', type=('build', 'run'))
