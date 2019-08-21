@@ -20,6 +20,6 @@ class RDendextend(RPackage):
     depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-magrittr@1.0.1:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-fpc', type=('build', 'run'))
+    depends_on('r-fpc', when='@:1.10.0', type=('build', 'run'))
     depends_on('r-whisker', when='@:1.5.2', type=('build', 'run'))
     depends_on('r-viridis', type=('build', 'run'))
