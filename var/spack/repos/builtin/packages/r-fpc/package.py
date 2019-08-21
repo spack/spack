@@ -25,7 +25,7 @@ class RFpc(RPackage):
     depends_on('r-prabclus', type=('build', 'run'))
     depends_on('r-class', type=('build', 'run'))
     depends_on('r-diptest', type=('build', 'run'))
-    depends_on('r-mvtnorm', type=('build', 'run'))
+    depends_on('r-mvtnorm', when='@:2.2-2', type=('build', 'run'))
     depends_on('r-robustbase', type=('build', 'run'))
     depends_on('r-kernlab', type=('build', 'run'))
     depends_on('r-trimcluster', when='@:2.1-10', type=('build', 'run'))
