@@ -226,7 +226,10 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
-    gid = grp.getgrnam(group).gr_gid
+    if isinstance(group, six.string_types):
+        gid = grp.getgrnam(group).gr_gid
+    else:
+        gid = group
     os.chown(path, -1, gid)
 
 
@@ -424,6 +427,13 @@ def get_filetype(path_name):
     return output.strip()
 
 
+def chgrp_if_not_world_writable(path, group):
+    """chgrp path to group if path is not world writable"""
+    mode = os.stat(path).st_mode
+    if not mode & stat.S_IWOTH:
+        chgrp(path, group)
+
+
 def mkdirp(*paths, **kwargs):
     """Creates a directory, as well as parent directories if needed.
 
@@ -431,27 +441,38 @@ def mkdirp(*paths, **kwargs):
         paths (str): paths to create with mkdirp
 
     Keyword Aguments:
-        mode (permission bits or None, optional): optional permissions to
-            set on the created directory -- use OS default if not provided
-        mode_intermediate (permission bits or None, optional):
-            same as mode, but for newly-created intermediate directories
+        mode (permission bits or None, optional): optional permissions to set
+            on the created directory -- use OS default if not provided
+        group (group name or None, optional): optional group for permissions of
+            final created directory -- use OS default if not provided. Only
+            used if world write permissions are not set
+        default_perms ('parents' or 'args', optional): The default permissions
+            that are set for directories that are not themselves an argument
+            for mkdirp. 'parents' means intermediate directories get the
+            permissions of their direct parent directory, 'args' means
+            intermediate get the same permissions specified in the arguments to
+            mkdirp -- default value is 'args'
     """
     mode = kwargs.get('mode', None)
-    mode_intermediate = kwargs.get('mode_intermediate', None)
+    group = kwargs.get('group', None)
+    default_perms = kwargs.get('default_perms', 'args')
+
     for path in paths:
         if not os.path.exists(path):
             try:
+                # detect missing intermediate folders
                 intermediate_folders = []
-                if mode_intermediate is not None:
-                    # detect missing intermediate folders
-                    intermediate_path = os.path.dirname(path)
+                last_parent = ''
 
-                    while intermediate_path:
-                        if os.path.exists(intermediate_path):
-                            break
+                intermediate_path = os.path.dirname(path)
 
-                        intermediate_folders.append(intermediate_path)
-                        intermediate_path = os.path.dirname(intermediate_path)
+                while intermediate_path:
+                    if os.path.exists(intermediate_path):
+                        last_parent = intermediate_path
+                        break
+
+                    intermediate_folders.append(intermediate_path)
+                    intermediate_path = os.path.dirname(intermediate_path)
 
                 # create folders
                 os.makedirs(path)
@@ -459,13 +480,36 @@ def mkdirp(*paths, **kwargs):
                 # leaf folder permissions
                 if mode is not None:
                     os.chmod(path, mode)
+                if group:
+                    chgrp_if_not_world_writable(path, group)
+                    if mode is not None:
+                        os.chmod(path, mode)  # reset sticky grp bit post chgrp
 
                 # for intermediate folders, change mode just for newly created
                 # ones and if mode_intermediate has been specified, otherwise
                 # intermediate folders list is not populated at all and default
                 # OS mode will be used
+                if default_perms == 'args':
+                    intermediate_mode = mode
+                    intermediate_group = group
+                elif default_perms == 'parents':
+                    stat_info = os.stat(last_parent)
+                    intermediate_mode = stat_info.st_mode
+                    intermediate_group = stat_info.st_gid
+                else:
+                    msg = "Invalid value: '%s'. " % default_perms
+                    msg += "Choose from 'args' or 'parents'."
+                    raise ValueError(msg)
+
                 for intermediate_path in reversed(intermediate_folders):
-                    os.chmod(intermediate_path, mode_intermediate)
+                    if intermediate_mode is not None:
+                        os.chmod(intermediate_path, intermediate_mode)
+                    if intermediate_group is not None:
+                        chgrp_if_not_world_writable(intermediate_path,
+                                                    intermediate_group)
+                        os.chmod(intermediate_path,
+                                 intermediate_mode)  # reset sticky bit after
+
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
