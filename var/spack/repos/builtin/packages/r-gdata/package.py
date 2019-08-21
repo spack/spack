@@ -34,3 +34,4 @@ class RGdata(RPackage):
 
     depends_on('r@2.3.0:', type=('build', 'run'))
     depends_on('r-gtools', type=('build', 'run'))
+    depends_on('perl@5.10.0:')
