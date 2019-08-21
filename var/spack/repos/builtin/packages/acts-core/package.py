@@ -58,7 +58,7 @@ class ActsCore(CMakePackage):
     variant('dd4hep', default=False, description='Build the DD4hep plugin')
     variant('identification', default=False, description='Build the Identification plugin')
     variant('json', default=False, description='Build the Json plugin')
-    variant('material', default=False, description='Build the material plugin')
+    variant('material', default=False, description='Build the material plugin', when='@:0.9.99')
     variant('tgeo', default=False, description='Build the TGeo plugin')
 
     depends_on('cmake @3.9:', type='build')
