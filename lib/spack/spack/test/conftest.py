@@ -585,8 +585,8 @@ def module_configuration(monkeypatch, request):
 ##########
 
 
-@pytest.fixture(scope='session')
-def mock_archive(tmpdir_factory):
+@pytest.fixture(scope='session', params=[('.tar.gz', 'z')])
+def mock_archive(request, tmpdir_factory):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
@@ -615,8 +615,10 @@ def mock_archive(tmpdir_factory):
 
     # Archive it
     with tmpdir.as_cwd():
-        archive_name = '{0}.tar.gz'.format(spack.stage._source_path_subdir)
-        tar('-czf', archive_name, spack.stage._source_path_subdir)
+        archive_name = '{0}{1}'.format(spack.stage._source_path_subdir,
+                                       request.param[0])
+        tar('-c{0}f'.format(request.param[1]), archive_name,
+            spack.stage._source_path_subdir)
 
     Archive = collections.namedtuple('Archive',
                                      ['url', 'path', 'archive_file',
