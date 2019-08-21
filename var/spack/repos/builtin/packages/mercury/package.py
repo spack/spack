@@ -52,6 +52,10 @@ class Mercury(CMakePackage):
     conflicts('+ofi', when='@:0.9')    # libfabric support was added in 1.0.0
     conflicts('~ofi', when='+udreg')   # udreg option is specific to OFI
 
+    # Fix CMake check_symbol_exists
+    # See https://github.com/mercury-hpc/mercury/issues/299
+    patch('fix-cmake-3.15-check_symbol_exists.patch', when='@:1.0.1')
+
     def cmake_args(self):
         """Populate cmake arguments for Mercury."""
         spec = self.spec
