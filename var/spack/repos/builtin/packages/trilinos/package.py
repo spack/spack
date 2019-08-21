@@ -450,21 +450,12 @@ class Trilinos(CMakePackage):
             options.extend(['-DUSE_XSDK_DEFAULTS=YES'])
 
         if '+stk' in spec:
-            # Currently these are fairly specific to the Nalu package
-            # They can likely change when necessary in the future
             options.extend([
-                '-DTrilinos_ENABLE_STKMesh:BOOL=ON',
-                '-DTrilinos_ENABLE_STKNGP:BOOL=ON',
-                '-DTrilinos_ENABLE_STKSimd:BOOL=ON',
-                '-DTrilinos_ENABLE_STKIO:BOOL=ON',
-                '-DTrilinos_ENABLE_STKTransfer:BOOL=ON',
-                '-DTrilinos_ENABLE_STKSearch:BOOL=ON',
-                '-DTrilinos_ENABLE_STKUtil:BOOL=ON',
-                '-DTrilinos_ENABLE_STKTopology:BOOL=ON',
-                '-DTrilinos_ENABLE_STKUnit_tests:BOOL=ON',
-                '-DTrilinos_ENABLE_STKUnit_test_utils:BOOL=ON',
-                '-DTrilinos_ENABLE_STKClassic:BOOL=OFF',
-                '-DTrilinos_ENABLE_STKExprEval:BOOL=ON'
+                '-DTrilinos_ENABLE_STK:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTrilinos_ENABLE_STK:BOOL=OFF'
             ])
 
         if '+dtk' in spec:
@@ -474,21 +465,19 @@ class Trilinos(CMakePackage):
             ])
 
         if '+exodus' in spec:
-            # Currently these are fairly specific to the Nalu package
-            # They can likely change when necessary in the future
             options.extend([
                 '-DTrilinos_ENABLE_SEACAS:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASExodus:BOOL=ON',
+                '-DTrilinos_ENABLE_SEACASIoss:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASEpu:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASExodiff:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASNemspread:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASNemslice:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASIoss:BOOL=ON'
+                '-DTrilinos_ENABLE_SEACASNemslice:BOOL=ON'
             ])
         else:
             options.extend([
-                '-DTrilinos_ENABLE_SEACAS:BOOL=OFF',
-                '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF'
+                '-DTrilinos_ENABLE_SEACASExodus:BOOL=OFF',
+                '-DTrilinos_ENABLE_SEACASIoss:BOOL=OFF'
             ])
 
         if '+chaco' in spec:

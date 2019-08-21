@@ -5,7 +5,6 @@
 
 
 from spack import *
-import os
 
 
 class G4realsurface(Package):
@@ -19,10 +18,11 @@ class G4realsurface(Package):
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
-        install_path = join_path(prefix.share, 'data',
-                                 os.path.basename(self.stage.source_path))
+        install_path = join_path(prefix.share, 'data', 'RealSurface{0}'
+                                 .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
     def url_for_version(self, version):
         """Handle version string."""
-        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/RealSurface.1.0.tar.gz" % version)
+        return "http://geant4-data.web.cern.ch/geant4-data/datasets/{0}RealSurface.{1}.tar.gz".format(
+            "G4" if version > Version('1.0') else "", version)

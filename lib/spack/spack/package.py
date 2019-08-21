@@ -493,6 +493,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Allow custom staging paths for packages
         self.path = None
 
+        # Keep track of whether or not this package was installed from
+        # a binary cache.
+        self.installed_from_binary_cache = False
+
         # Check versions in the versions dict.
         for v in self.versions:
             assert (isinstance(v, Version))
@@ -1420,6 +1424,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         binary_distribution.extract_tarball(
             binary_spec, tarball, allow_root=False,
             unsigned=False, force=False)
+        self.installed_from_binary_cache = True
         spack.store.db.add(
             self.spec, spack.store.layout, explicit=explicit)
         return True
@@ -1534,14 +1539,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dep_kwargs['install_deps'] = False
             for dep in self.spec.traverse(order='post', root=False):
                 if spack.config.get('config:install_missing_compilers', False):
-                    tty.debug('Bootstrapping {0} compiler for {1}'.format(
-                        self.spec.compiler, self.name
-                    ))
-                    comp_kwargs = kwargs.copy()
-                    comp_kwargs['explicit'] = False
-                    comp_kwargs['install_deps'] = True
-                    dep.package.bootstrap_compiler(**comp_kwargs)
+                    Package._install_bootstrap_compiler(dep.package, **kwargs)
                 dep.package.do_install(**dep_kwargs)
+
+        # Then, install the compiler if it is not already installed.
+        if install_deps:
+            Package._install_bootstrap_compiler(self, **kwargs)
 
         # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
@@ -1705,6 +1708,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # check the filesystem for it.
             self.stage.created = False
 
+    @staticmethod
+    def _install_bootstrap_compiler(pkg, **install_kwargs):
+        tty.debug('Bootstrapping {0} compiler for {1}'.format(
+            pkg.spec.compiler, pkg.name
+        ))
+        comp_kwargs = install_kwargs.copy()
+        comp_kwargs['explicit'] = False
+        comp_kwargs['install_deps'] = True
+        pkg.bootstrap_compiler(**comp_kwargs)
+
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.
 
@@ -1756,9 +1769,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 else:
                     partial = True
 
-        stage_is_managed_in_spack = self.stage.path.startswith(
-            spack.paths.stage_path)
-        if restage and stage_is_managed_in_spack:
+        if restage and self.stage.managed_by_spack:
             self.stage.destroy()
             self.stage.create()
 
@@ -2361,7 +2372,15 @@ class Package(PackageBase):
 
 
 def install_dependency_symlinks(pkg, spec, prefix):
-    """Execute a dummy install and flatten dependencies"""
+    """
+    Execute a dummy install and flatten dependencies.
+
+    This routine can be used in a ``package.py`` definition by setting
+    ``install = install_dependency_symlinks``.
+
+    This feature comes in handy for creating a common location for the
+    the installation of third-party libraries.
+    """
     flatten_dependencies(spec, prefix)
 
 

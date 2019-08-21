@@ -6,6 +6,7 @@
 import os
 import filecmp
 import pytest
+import collections
 
 from llnl.util.filesystem import working_dir, mkdirp
 
@@ -31,10 +32,10 @@ url2_archive_sha256 = 'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcda
 
 
 @pytest.fixture()
-def mock_stage(tmpdir, monkeypatch):
-    # don't disrupt the spack install directory with tests.
-    mock_path = str(tmpdir)
-    monkeypatch.setattr(spack.paths, 'stage_path', mock_path)
+def mock_patch_stage(tmpdir_factory, monkeypatch):
+    # Don't disrupt the spack install directory with tests.
+    mock_path = str(tmpdir_factory.mktemp('mock-patch-stage'))
+    monkeypatch.setattr(spack.stage, '_stage_root', mock_path)
     return mock_path
 
 
@@ -51,7 +52,7 @@ data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
      '252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
      None)
 ])
-def test_url_patch(mock_stage, filename, sha256, archive_sha256):
+def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256):
     # Make a patch object
     url = 'file://' + filename
     pkg = spack.repo.get('patch')
@@ -60,13 +61,9 @@ def test_url_patch(mock_stage, filename, sha256, archive_sha256):
 
     # make a stage
     with Stage(url) as stage:  # TODO: url isn't used; maybe refactor Stage
-        # TODO: there is probably a better way to mock this.
-        stage.mirror_path = mock_stage  # don't disrupt the spack install
+        stage.mirror_path = mock_patch_stage
 
-        # Fake a source path and ensure the directory exists
-        with working_dir(stage.path):
-            mkdirp(spack.stage._source_path_subdir)
-
+        mkdirp(stage.source_path)
         with working_dir(stage.source_path):
             # write a file to be patched
             with open('foo.txt', 'w') as f:
@@ -314,3 +311,11 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
         libelf, libdwarf, fake,
         'builtin.mock.patch-several-dependencies',
         spec.package.package_dir)
+
+
+def test_file_patch_no_file():
+    # Give it the attributes we need to construct the error message
+    FakePackage = collections.namedtuple('FakePackage', ['name', 'namespace'])
+    fp = FakePackage('fake-package', 'test')
+    with pytest.raises(ValueError, match=r'FilePatch:.*'):
+        spack.patch.FilePatch(fp, 'nonexistent_file', 0, '')

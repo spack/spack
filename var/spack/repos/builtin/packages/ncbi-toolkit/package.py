@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from glob import glob
+
 from spack import *
 
 
@@ -10,13 +12,19 @@ class NcbiToolkit(AutotoolsPackage):
     """NCBI C++ Toolkit"""
 
     homepage = "https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/"
-    url      = "ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/CURRENT/ncbi_cxx--21_0_0.tar.gz"
+    url      = "ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/CURRENT/ncbi_cxx--22_0_0.tar.gz"
 
-    version('21_0_0', '14e021e08b1a78ac9cde98d0cab92098')
+    version('22_0_0', 'e352d25b24c3a2d087c2cf3cedf6ea95',
+            url='ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/ARCHIVE/2019/Mar_28_2019/ncbi_cxx--22_0_0.tar.gz')
+    version('21_0_0', '14e021e08b1a78ac9cde98d0cab92098',
+            url='ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/ARCHIVE/2018/Apr_2_2018/ncbi_cxx--21_0_0.tar.gz')
+
+    variant('debug', default=False,
+            description='Build debug versions of libs and apps')
 
     depends_on('boost@1.35.0:')
     depends_on('bzip2')
-    depends_on('libjpeg')
+    depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('libxml2')
@@ -30,17 +38,38 @@ class NcbiToolkit(AutotoolsPackage):
     depends_on('bamtools')
 
     def configure_args(self):
-        return ['--without-sybase', '--without-fastcgi']
+        args = ['--without-sybase', '--without-fastcgi']
+        if '+debug' not in self.spec:
+            args += ['--without-debug']
+        return args
 
     def patch(self):
         with working_dir(join_path('src', 'util', 'image')):
             filter_file(r'jpeg_start_compress(&cinfo, true)',
                         'jpeg_start_compress(&cinfo, TRUE)',
                         'image_io_jpeg.cpp', string=True)
+        # TODO: Convert these substitutions into BOOST_VERSION preprocessor
+        # patches to send upstream.
+        if self.spec.satisfies('^boost@1.69:'):
+            with working_dir(join_path('include', 'corelib')):
+                filter_file(r'(boost::unit_test::decorator::collector)',
+                            r'\1_t', 'test_boost.hpp')
+        if self.spec.satisfies('^boost@1.70:'):
+            with working_dir(join_path('include', 'corelib')):
+                filter_file(('unit_test::ut_detail::'
+                             'ignore_unused_variable_warning'),
+                            'ignore_unused', 'test_boost.hpp', string=True)
+            with working_dir(join_path('src', 'corelib')):
+                for file_ in ['test_boost.cpp', 'teamcity_boost.cpp']:
+                    filter_file(
+                        r'(void log_build_info\s*\(.*ostream&[^)]*)\);',
+                        r'\1, bool log_build_info = true);', file_)
+                    filter_file(r'(::log_build_info\(.*ostream.*&[^)]+)\)',
+                                r'\1, bool log_build_info)', file_)
+                    filter_file(r'(log_build_info\(ostr)\)', r'\1, true)',
+                                file_)
 
     def build(self, spec, prefix):
-        compiler_version = self.compiler.version.joined
-
-        with working_dir(join_path(
-                'GCC{0}-DebugMT64'.format(compiler_version), 'build')):
+        with working_dir(join_path(glob(
+                '*MT64')[0], 'build')):
             make('all_r')

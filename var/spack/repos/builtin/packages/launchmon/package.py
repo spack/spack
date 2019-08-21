@@ -26,6 +26,8 @@ class Launchmon(AutotoolsPackage):
     depends_on("boost")
     depends_on("spectrum-mpi", when='arch=ppc64le')
 
+    patch('launchmon-char-conv.patch', when='@1.0.2')
+
     def setup_environment(self, spack_env, run_env):
         if self.spec.satisfies('@master'):
             # automake for launchmon requires the AM_PATH_LIBGCRYPT macro

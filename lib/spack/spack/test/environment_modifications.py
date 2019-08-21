@@ -14,6 +14,9 @@ from spack.util.environment import SetEnv, UnsetEnv
 from spack.util.environment import filter_system_paths, is_system_path
 
 
+datadir = os.path.join(spack_root, 'lib', 'spack', 'spack', 'test', 'data')
+
+
 def test_inspect_path(tmpdir):
     inspections = {
         'bin': ['PATH'],
@@ -55,7 +58,7 @@ def test_exclude_paths_from_inspection():
 
 
 @pytest.fixture()
-def prepare_environment_for_tests():
+def prepare_environment_for_tests(working_env):
     """Sets a few dummy variables in the current environment, that will be
     useful for the tests below.
     """
@@ -67,11 +70,6 @@ def prepare_environment_for_tests():
     os.environ['PATH_LIST_WITH_SYSTEM_PATHS'] \
         = '/usr/include:' + os.environ['REMOVE_PATH_LIST']
     os.environ['PATH_LIST_WITH_DUPLICATES'] = os.environ['REMOVE_PATH_LIST']
-    yield
-    for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST', 'REMOVE_PATH_LIST',
-              'PATH_LIST_WITH_SYSTEM_PATHS', 'PATH_LIST_WITH_DUPLICATES'):
-        if x in os.environ:
-            del os.environ[x]
 
 
 @pytest.fixture
@@ -109,18 +107,12 @@ def miscellaneous_paths():
 @pytest.fixture
 def files_to_be_sourced():
     """Returns a list of files to be sourced"""
-    datadir = os.path.join(
-        spack_root, 'lib', 'spack', 'spack', 'test', 'data'
-    )
-
-    files = [
+    return [
         os.path.join(datadir, 'sourceme_first.sh'),
         os.path.join(datadir, 'sourceme_second.sh'),
         os.path.join(datadir, 'sourceme_parameters.sh'),
         os.path.join(datadir, 'sourceme_unicode.sh')
     ]
-
-    return files
 
 
 def test_set(env):
@@ -322,8 +314,125 @@ def test_preserve_environment(prepare_environment_for_tests):
     assert os.environ['PATH_LIST'] == '/path/second:/path/third'
 
 
+@pytest.mark.parametrize('files,expected,deleted', [
+    # Sets two variables
+    ((os.path.join(datadir, 'sourceme_first.sh'),),
+     {'NEW_VAR': 'new', 'UNSET_ME': 'overridden'}, []),
+    # Check if we can set a variable to different values depending
+    # on command line parameters
+    ((os.path.join(datadir, 'sourceme_parameters.sh'),),
+     {'FOO': 'default'}, []),
+    (([os.path.join(datadir, 'sourceme_parameters.sh'), 'intel64'],),
+     {'FOO': 'intel64'}, []),
+    # Check unsetting variables
+    ((os.path.join(datadir, 'sourceme_second.sh'),),
+     {'PATH_LIST': '/path/first:/path/second:/path/fourth'},
+     ['EMPTY_PATH_LIST']),
+    # Check that order of sourcing matters
+    ((os.path.join(datadir, 'sourceme_unset.sh'),
+      os.path.join(datadir, 'sourceme_first.sh')),
+     {'NEW_VAR': 'new', 'UNSET_ME': 'overridden'}, []),
+    ((os.path.join(datadir, 'sourceme_first.sh'),
+      os.path.join(datadir, 'sourceme_unset.sh')),
+     {'NEW_VAR': 'new'}, ['UNSET_ME']),
+
+])
+@pytest.mark.usefixtures('prepare_environment_for_tests')
+def test_environment_from_sourcing_files(files, expected, deleted):
+
+    env = environment.environment_after_sourcing_files(*files)
+
+    # Test that variables that have been modified are still there and contain
+    # the expected output
+    for name, value in expected.items():
+        assert name in env
+        assert value in env[name]
+
+    # Test that variables that have been unset are not there
+    for name in deleted:
+        assert name not in env
+
+
 def test_clear(env):
     env.set('A', 'dummy value')
     assert len(env) > 0
     env.clear()
     assert len(env) == 0
+
+
+@pytest.mark.parametrize('env,blacklist,whitelist', [
+    # Check we can blacklist a literal
+    ({'SHLVL': '1'}, ['SHLVL'], []),
+    # Check whitelist takes precedence
+    ({'SHLVL': '1'}, ['SHLVL'], ['SHLVL']),
+])
+def test_sanitize_literals(env, blacklist, whitelist):
+
+    after = environment.sanitize(env, blacklist, whitelist)
+
+    # Check that all the whitelisted variables are there
+    assert all(x in after for x in whitelist)
+
+    # Check that the blacklisted variables that are not
+    # whitelisted are there
+    blacklist = list(set(blacklist) - set(whitelist))
+    assert all(x not in after for x in blacklist)
+
+
+@pytest.mark.parametrize('env,blacklist,whitelist,expected,deleted', [
+    # Check we can blacklist using a regex
+    ({'SHLVL': '1'}, ['SH.*'], [], [], ['SHLVL']),
+    # Check we can whitelist using a regex
+    ({'SHLVL': '1'}, ['SH.*'], ['SH.*'], ['SHLVL'], []),
+    # Check regex to blacklist Modules v4 related vars
+    ({'MODULES_LMALTNAME': '1', 'MODULES_LMCONFLICT': '2'},
+     ['MODULES_(.*)'], [], [], ['MODULES_LMALTNAME', 'MODULES_LMCONFLICT']),
+    ({'A_modquar': '1', 'b_modquar': '2', 'C_modshare': '3'},
+     [r'(\w*)_mod(quar|share)'], [], [],
+     ['A_modquar', 'b_modquar', 'C_modshare']),
+])
+def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
+
+    after = environment.sanitize(env, blacklist, whitelist)
+
+    assert all(x in after for x in expected)
+    assert all(x not in after for x in deleted)
+
+
+@pytest.mark.regression('12085')
+@pytest.mark.parametrize('before,after,search_list', [
+    # Set environment variables
+    ({}, {'FOO': 'foo'}, [environment.SetEnv('FOO', 'foo')]),
+    # Unset environment variables
+    ({'FOO': 'foo'}, {}, [environment.UnsetEnv('FOO')]),
+    # Append paths to an environment variable
+    ({'FOO_PATH': '/a/path'}, {'FOO_PATH': '/a/path:/b/path'},
+     [environment.AppendPath('FOO_PATH', '/b/path')]),
+    ({}, {'FOO_PATH': '/a/path:/b/path'}, [
+        environment.AppendPath('FOO_PATH', '/a/path:/b/path')
+    ]),
+    ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/b/path'}, [
+        environment.RemovePath('FOO_PATH', '/a/path')
+    ]),
+    ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/a/path:/c/path'}, [
+        environment.RemovePath('FOO_PATH', '/b/path'),
+        environment.AppendPath('FOO_PATH', '/c/path')
+    ]),
+    ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/c/path:/a/path'}, [
+        environment.RemovePath('FOO_PATH', '/b/path'),
+        environment.PrependPath('FOO_PATH', '/c/path')
+    ]),
+    # Modify two variables in the same environment
+    ({'FOO': 'foo', 'BAR': 'bar'}, {'FOO': 'baz', 'BAR': 'baz'}, [
+        environment.SetEnv('FOO', 'baz'),
+        environment.SetEnv('BAR', 'baz'),
+    ]),
+])
+def test_from_environment_diff(before, after, search_list):
+
+    mod = environment.EnvironmentModifications.from_environment_diff(
+        before, after
+    )
+
+    for item in search_list:
+        assert item in mod

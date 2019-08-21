@@ -19,23 +19,33 @@ class OpenkimModels(CMakePackage):
        compatible with the kim-api package.
     """
     homepage = "https://openkim.org/"
-    url      = "https://s3.openkim.org/archives/collection/openkim-models-2019-03-29.txz"
+    url      = "https://s3.openkim.org/archives/collection/openkim-models-2019-07-25.txz"
+
+    maintainers = ['ellio167']
 
     extends('kim-api')
+    depends_on('kim-api@2.1.0:', when='@2019-07-25:')
+    depends_on('kim-api@:2.0.2', when='@:2019-03-29')
 
     version(
+       '2019-07-25',
+       sha256='50338084ece92ec0fb13b0bbdf357b5d7450e26068ba501f23c315f814befc26')
+    version(
        '2019-03-29',
-       sha256='053dda2023fe4bb6d7c1d66530c758c4e633bbf1f1be17b6b075b276fe8874f6',
-       extension='txz',
-       url='https://s3.openkim.org/archives/collection/openkim-models-2019-03-29.txz')
+       sha256='053dda2023fe4bb6d7c1d66530c758c4e633bbf1f1be17b6b075b276fe8874f6')
 
     def cmake_args(self):
         args = []
         args.append(('-DKIM_API_MODEL_DRIVER_INSTALL_PREFIX={0}'
                      + '/lib/kim-api/model-drivers').format(prefix))
-        args.append('-DKIM_API_MODEL_INSTALL_PREFIX={0}/lib/kim-api/models'
-                    .format(prefix))
-        args.append('-DKIM_API_SIMULATOR_MODEL_INSTALL_PREFIX={0}/lib/'
-                    'kim-api/simulator-models'
-                    .format(prefix))
+
+        if self.spec.satisfies('@2019-07-25:'):
+            args.append(('-DKIM_API_PORTABLE_MODEL_INSTALL_PREFIX={0}'
+                         + '/lib/kim-api/portable-models').format(prefix))
+        else:
+            args.append(('-DKIM_API_MODEL_INSTALL_PREFIX={0}'
+                         + '/lib/kim-api/models').format(prefix))
+
+        args.append(('-DKIM_API_SIMULATOR_MODEL_INSTALL_PREFIX={0}'
+                     + '/lib/kim-api/simulator-models').format(prefix))
         return args

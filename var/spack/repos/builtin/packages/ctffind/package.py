@@ -14,5 +14,5 @@ class Ctffind(AutotoolsPackage):
 
     version('4.1.8', '8ae9d9abe363141a3792981b5a2fae94')
 
-    depends_on('wx')
+    depends_on('wxwidgets')
     depends_on('fftw@3:')

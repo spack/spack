@@ -16,6 +16,7 @@ from six import StringIO
 import llnl.util.tty.color
 import llnl.util.lang as lang
 
+from spack.util.string import comma_or
 import spack.directives
 import spack.error as error
 
@@ -778,9 +779,10 @@ class DuplicateVariantError(error.SpecError):
 class UnknownVariantError(error.SpecError):
     """Raised when an unknown variant occurs in a spec."""
 
-    def __init__(self, pkg, variant):
+    def __init__(self, pkg, variants):
+        self.unknown_variants = variants
         super(UnknownVariantError, self).__init__(
-            'Package {0} has no variant {1}!'.format(pkg, variant)
+            'Package {0} has no variant {1}!'.format(pkg, comma_or(variants))
         )
 
 

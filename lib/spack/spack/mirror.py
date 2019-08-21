@@ -104,7 +104,8 @@ def get_matching_versions(specs, **kwargs):
         if spec.concrete:
             matching_spec.append(spec)
             pkg_versions -= 1
-            version_order.remove(spec.version)
+            if spec.version in version_order:
+                version_order.remove(spec.version)
 
         for v in version_order:
             # Generate no more than num_versions versions for each spec.

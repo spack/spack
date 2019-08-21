@@ -69,7 +69,7 @@ pass() {
 #
 succeeds() {
     printf "'%s' succeeds ... " "$*"
-    output=$("$@" 2>&1)
+    output=$($* 2>&1)
     err="$?"
 
     if [ "$err" != 0 ]; then
@@ -137,6 +137,35 @@ contains() {
     fi
 }
 
+#
+# Ensure that a variable is set.
+#
+is_set() {
+    printf "'%s' is set ... " "$1"
+    if eval "[ -z \${${1:-}+x} ]"; then
+        fail
+        echo_msg "$1 was not set!"
+    else
+        pass
+    fi
+}
+
+#
+# Ensure that a variable is not set.
+# Fails and prints the value of the variable if it is set.
+#
+is_not_set() {
+    printf "'%s' is not set ... " "$1"
+    if eval "[ ! -z \${${1:-}+x} ]"; then
+        fail
+        echo_msg "$1 was set:"
+        echo "    $1"
+    else
+        pass
+    fi
+}
+
+
 # -----------------------------------------------------------------------
 # Instead of invoking the module/use/dotkit commands, we print the
 # arguments that Spack invokes the command with, so we can check that
@@ -163,11 +192,16 @@ unuse() {
 # Make sure no environment is active
 unset SPACK_ENV
 
-# fail with undefined variables
+# fail on undefined variables
 set -u
 
 # Source setup-env.sh before tests
 .  share/spack/setup-env.sh
+
+# bash should expand aliases even when non-interactive
+if [ -n "${BASH:-}" ]; then
+    shopt -s expand_aliases
+fi
 
 title "Testing setup-env.sh with $_sp_shell"
 
@@ -191,17 +225,36 @@ b_install=$(spack location -i b)
 b_module=$(spack -m module tcl find b)
 b_dotkit=$(spack -m module dotkit find b)
 
+# create a test environment for tesitng environment commands
+echo "Creating a mock environment"
+spack env create spack_test_env
+test_env_location=$(spack location -e spack_test_env)
+
 # ensure that we uninstall b on exit
 cleanup() {
+    if [ "$?" != 0 ]; then
+        trapped_error=true
+    else
+        trapped_error=false
+    fi
+
+    echo "Removing test environment before exiting."
+    spack env deactivate 2>1 > /dev/null
+    spack env rm -y spack_test_env
+
     title "Cleanup"
-    echo "Removing test package before exiting test script."
-    spack -m uninstall -yf b
-    spack -m uninstall -yf a
+    echo "Removing test packages before exiting."
+    spack -m uninstall -yf b a
 
     echo
     echo "$success tests succeeded."
     echo "$errors tests failed."
-    if [ "$errors" = 0 ]; then
+
+    if [ "$trapped_error" = true ]; then
+        echo "Exited due to an error."
+    fi
+
+    if [ "$errors" = 0 ] && [ "$trapped_error" = false ]; then
         pass
         exit 0
     else
@@ -275,6 +328,10 @@ title 'Testing `spack env`'
 contains "usage: spack env " spack env -h
 contains "usage: spack env " spack env --help
 
+title 'Testing `spack env list`'
+contains " spack env list " spack env list -h
+contains " spack env list " spack env list --help
+
 title 'Testing `spack env activate`'
 contains "No such environment:" spack env activate no_such_environment
 contains "usage: spack env activate " spack env activate
@@ -287,6 +344,29 @@ contains "usage: spack env deactivate " spack env deactivate no_such_environment
 contains "usage: spack env deactivate " spack env deactivate -h
 contains "usage: spack env deactivate " spack env deactivate --help
 
-title 'Testing `spack env list`'
-contains " spack env list " spack env list -h
-contains " spack env list " spack env list --help
+title 'Testing activate and deactivate together'
+echo "Testing 'spack env activate spack_test_env'"
+spack env activate spack_test_env
+is_set SPACK_ENV
+
+echo "Testing 'spack env deactivate'"
+spack env deactivate
+is_not_set SPACK_ENV
+
+echo "Testing 'spack env activate spack_test_env'"
+spack env activate spack_test_env
+is_set SPACK_ENV
+
+echo "Testing 'despacktivate'"
+despacktivate
+is_not_set SPACK_ENV
+
+echo "Testing 'spack env activate --prompt spack_test_env'"
+spack env activate --prompt spack_test_env
+is_set SPACK_ENV
+is_set SPACK_OLD_PS1
+
+echo "Testing 'despacktivate'"
+despacktivate
+is_not_set SPACK_ENV
+is_not_set SPACK_OLD_PS1

@@ -6,6 +6,7 @@
 import hashlib
 import os
 import os.path
+import inspect
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -110,7 +111,30 @@ class FilePatch(Patch):
     def __init__(self, pkg, relative_path, level, working_dir,
                  ordering_key=None):
         self.relative_path = relative_path
-        abs_path = os.path.join(pkg.package_dir, self.relative_path)
+
+        # patches may be defined by relative paths to parent classes
+        # search mro to look for the file
+        abs_path = None
+        # At different times we call FilePatch on instances and classes
+        pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
+        for cls in inspect.getmro(pkg_cls):
+            if not hasattr(cls, 'module'):
+                # We've gone too far up the MRO
+                break
+
+            # Cannot use pkg.package_dir because it's a property and we have
+            # classes, not instances.
+            pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
+            path = os.path.join(pkg_dir, self.relative_path)
+            if os.path.exists(path):
+                abs_path = path
+                break
+
+        if abs_path is None:
+            msg = 'FilePatch: Patch file %s for ' % relative_path
+            msg += 'package %s.%s does not exist.' % (pkg.namespace, pkg.name)
+            raise ValueError(msg)
+
         super(FilePatch, self).__init__(pkg, abs_path, level, working_dir)
         self.path = abs_path
         self._sha256 = None
@@ -168,9 +192,8 @@ class UrlPatch(Patch):
             fetch_digest = self.archive_sha256
 
         fetcher = fs.URLFetchStrategy(self.url, fetch_digest)
-        mirror = os.path.join(
-            os.path.dirname(stage.mirror_path),
-            os.path.basename(self.url))
+        mirror = os.path.join(os.path.dirname(stage.mirror_path),
+                              os.path.basename(self.url))
 
         self.stage = spack.stage.Stage(fetcher, mirror_path=mirror)
         self.stage.create()

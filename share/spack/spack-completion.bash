@@ -404,7 +404,7 @@ function _spack_diy {
         compgen -W "-h --help -j --jobs -d --source-path
                     -i --ignore-dependencies -n --no-checksum
                     --keep-prefix --skip-patch -q --quiet --clean
-                    --dirty" -- "$cur"
+                    --dirty -u --until" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -697,6 +697,16 @@ function _spack_log_parse {
     then
         compgen -W "-h --help --show -c --context -p --profile -w --width
                     -j --jobs" -- "$cur"
+    fi
+}
+
+function _spack_maintainers {
+    if $list_options
+    then
+        compgen -W "-h --help -a --all --maintained --unmaintained
+                    --by-user" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 

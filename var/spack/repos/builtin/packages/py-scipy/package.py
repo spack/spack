@@ -12,8 +12,9 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "http://www.scipy.org/"
-    url = "https://pypi.io/packages/source/s/scipy/scipy-0.19.1.tar.gz"
+    url = "https://pypi.io/packages/source/s/scipy/scipy-1.3.0.tar.gz"
 
+    maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
     import_modules = [
@@ -22,14 +23,14 @@ class PyScipy(PythonPackage):
         'scipy.interpolate', 'scipy.io', 'scipy.linalg', 'scipy.misc',
         'scipy.ndimage', 'scipy.odr', 'scipy.optimize', 'scipy.signal',
         'scipy.sparse', 'scipy.spatial', 'scipy.special', 'scipy.stats',
-        'scipy.weave', 'scipy.io.arff', 'scipy.io.harwell_boeing',
-        'scipy.io.matlab', 'scipy.optimize._lsq', 'scipy.sparse.csgraph',
-        'scipy.sparse.linalg', 'scipy.sparse.linalg.dsolve',
-        'scipy.sparse.linalg.eigen', 'scipy.sparse.linalg.isolve',
-        'scipy.sparse.linalg.eigen.arpack', 'scipy.sparse.linalg.eigen.lobpcg',
-        'scipy.special._precompute'
+        'scipy.io.arff', 'scipy.io.harwell_boeing', 'scipy.io.matlab',
+        'scipy.optimize._lsq', 'scipy.sparse.csgraph', 'scipy.sparse.linalg',
+        'scipy.sparse.linalg.dsolve', 'scipy.sparse.linalg.eigen',
+        'scipy.sparse.linalg.isolve', 'scipy.sparse.linalg.eigen.arpack',
+        'scipy.sparse.linalg.eigen.lobpcg', 'scipy.special._precompute'
     ]
 
+    version('1.3.0', sha256='c3bb4bd2aca82fb498247deeac12265921fe231502a6bc6edea3ee7fe6c40a7a')
     version('1.2.1', sha256='e085d1babcb419bbe58e2e805ac61924dac4ca45a07c9fa081144739e500aa3c')
     version('1.1.0', 'aa6bcc85276b6f25e17bcfc4dede8718')
     version('1.0.0', '53fa34bd3733a9a4216842b6000f7316')
@@ -42,9 +43,15 @@ class PyScipy(PythonPackage):
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
     depends_on('python@2.6:2.8,3.2:')
+    depends_on('python@2.7:2.8,3.4:', when='@0.18:')
+    depends_on('python@3.5:', when='@1.3:')
     depends_on('py-setuptools', type='build')
-    depends_on('py-nose', type='test')
-    depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
+    depends_on('py-pytest', type='test')
+    depends_on('py-numpy@1.5.1:+blas+lapack', type=('build', 'run'))
+    depends_on('py-numpy@1.6.2:+blas+lapack', type=('build', 'run'), when='@0.16:')
+    depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'), when='@0.18:')
+    depends_on('py-numpy@1.8.2:+blas+lapack', type=('build', 'run'), when='@0.19:')
+    depends_on('py-numpy@1.13.3:+blas+lapack', type=('build', 'run'), when='@1.3:')
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
     # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0

@@ -24,13 +24,22 @@ class Adios2(CMakePackage):
 
     variant('shared', default=True,
             description='Also build shared libraries')
+    variant('pic', default=True,
+            description='Enable position independent code '
+                        '(for usage of static in shared downstream deps)')
     variant('mpi', default=True,
             description='Enable MPI')
+
     # transforms
+    variant('blosc', default=True,
+            description='Enable Blosc transforms')
     variant('bzip2', default=True,
-            description='Enable BZip2 compression')
+            description='Enable BZip2 transforms')
     variant('zfp', default=True,
-            description='Enable ZFP compression')
+            description='Enable ZFP transforms')
+    variant('png', default=True,
+            description='Enable ZFP transforms')
+
     # sz is broken in 2.2.0: https://github.com/ornladios/ADIOS2/issues/705
     # variant('sz', default=True,
     #         description='Enable SZ compression')
@@ -43,9 +52,10 @@ class Adios2(CMakePackage):
     variant('hdf5', default=False,
             description='Enable the HDF5 engine')
     variant('adios1', default=False,
-            description='Enable the ADIOS 1.x engine')
+            description='Enable the ADIOS 1.x engine '
+                        '(in 2.3.0+ integrated in BPFile engine)')
     # language bindings
-    variant('python', default=True,
+    variant('python', default=False,
             description='Enable the Python >= 2.7 bindings')
     variant('fortran', default=True,
             description='Enable the Fortran bindings')
@@ -55,8 +65,14 @@ class Adios2(CMakePackage):
     conflicts('%intel@:15')
     conflicts('%pgi@:14')
 
+    # shared libs must have position-independent code
+    conflicts('+shared ~pic')
+
     # DataMan needs dlopen
     conflicts('+dataman', when='~shared')
+
+    # BPFile engine was emulated via a ADIOS1 engine prior to v2.3.0
+    conflicts('+adios1', when='@2.3.0:')
 
     depends_on('cmake@3.6.0:', type='build')
     depends_on('pkgconfig', type='build', when='@2.2.0:')
@@ -70,10 +86,13 @@ class Adios2(CMakePackage):
 
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
-    depends_on('adios', when='+adios1')
-    depends_on('adios+mpi', when='+adios1+mpi')
+    depends_on('adios', when='@:2.2.99 +adios1')
+    depends_on('adios+mpi', when='@:2.2.99 +adios1+mpi')
 
+    depends_on('c-blosc', when='@2.4.0: +blosc')
     depends_on('bzip2', when='+bzip2')
+    depends_on('libpng@1.6:', when='@2.4.0: +png')
+    # depends_on('mgard', when='@2.3.0: +mgard')
     depends_on('zfp', when='+zfp')
     # depends_on('sz@:1.4.12', when='+sz')
 
@@ -82,17 +101,22 @@ class Adios2(CMakePackage):
     depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='+python')
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi +python')
 
+    # Fix findmpi when called by dependees
+    # See https://github.com/ornladios/ADIOS2/pull/1632
+    patch('cmake-update-findmpi.patch', when='@2.4.0')
+
     def cmake_args(self):
         spec = self.spec
 
         args = [
-            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format(
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
             '-DADIOS2_BUILD_TESTING=OFF',
             '-DADIOS2_USE_MPI={0}'.format(
                 'ON' if '+mpi' in spec else 'OFF'),
             '-DADIOS2_USE_BZip2={0}'.format(
                 'ON' if '+bzip2' in spec else 'OFF'),
+            '-DADIOS2_USE_MGARD=OFF',
             '-DADIOS2_USE_ZFP={0}'.format(
                 'ON' if '+zfp' in spec else 'OFF'),
             '-DADIOS2_USE_SZ={0}'.format(
@@ -103,13 +127,26 @@ class Adios2(CMakePackage):
                 'ON' if '+dataman' in spec else 'OFF'),
             '-DADIOS2_USE_HDF5={0}'.format(
                 'ON' if '+hdf5' in spec else 'OFF'),
-            '-DADIOS2_USE_ADIOS1={0}'.format(
-                'ON' if '+adios1' in spec else 'OFF'),
             '-DADIOS2_USE_Python={0}'.format(
                 'ON' if '+python' in spec else 'OFF'),
             '-DADIOS2_USE_Fortran={0}'.format(
                 'ON' if '+fortran' in spec else 'OFF')
         ]
+
+        # option removed and integrated in internal BPFile engine
+        if self.spec.version < Version('2.3.0'):
+            args.append('-DADIOS2_USE_ADIOS1={0}'.format(
+                'ON' if '+adios1' in spec else 'OFF'))
+
+        if self.spec.version >= Version('2.4.0'):
+            args.append('-DADIOS2_USE_Blosc={0}'.format(
+                'ON' if '+blosc' in spec else 'OFF'))
+            args.append('-DADIOS2_USE_PNG={0}'.format(
+                'ON' if '+png' in spec else 'OFF'))
+
+        if spec.satisfies('~shared'):
+            args.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL={0}'.format(
+                'ON' if '+pic' in spec else 'OFF'))
         if spec.satisfies('+python'):
             args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
                         % self.spec['python'].command.path)

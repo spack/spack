@@ -23,15 +23,17 @@ class Kealib(CMakePackage):
     Development work on this project has been funded by Landcare Research.
     """
     homepage = "http://www.kealib.org/"
-    url      = "https://bitbucket.org/chchrsc/kealib/get/kealib-1.4.10.tar.gz"
+    url      = "https://bitbucket.org/chchrsc/kealib/downloads/kealib-1.4.11.tar.gz"
     hg       = "https://bitbucket.org/chchrsc/kealib"
 
+    maintainers = ['gillins']
+
     version('develop', hg=hg)
-    version('1.4.11', '90f581c794bb7c7e6d76b0ad29f0ca40')
-    version('1.4.10', '5684aeb2085a67a4270c73e79d4ab768')
-    version('1.4.9',  'a095d0b9d6de1d609ffaf242e00cc2b6')
-    version('1.4.8',  '1af2514c908f9168ff6665cc012815ad')
-    version('1.4.7',  '6139e31e50f552247ddf98f489948893')
+    version('1.4.11', sha256='3d64cdec560c7a338ccb38e3a456db4e3b176ac62f945daa6e332e60fe4eca90')
+    version('1.4.10', sha256='b1bd2d6834d2fe09ba456fce77f7a9452b406dbe302f7ef1aabe924e45e6bb5e')
+    version('1.4.9',  sha256='1c80489f17114a229097c2e8c61d5e4c82ea63ae631c81a817fef95cfd527174')
+    version('1.4.8',  sha256='0f24d8478865abcb17865c8f49c0370095726c529b8ac373ffae018ad3d40a02')
+    version('1.4.7',  sha256='ec38751b3b555d3a26f0c7445f2d2cd9d7c3a3502237519a206a50cb58df56ec')
 
     depends_on('cmake@2.8.10:', type='build')
     depends_on('hdf5+cxx+hl')
