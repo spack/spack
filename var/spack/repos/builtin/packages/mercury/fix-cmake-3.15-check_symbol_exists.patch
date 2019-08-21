@@ -1,0 +1,30 @@
+diff --git a/src/util/CMakeLists.txt b/src/util/CMakeLists.txt
+index 69d1dfab..88746473 100644
+--- a/src/util/CMakeLists.txt
++++ b/src/util/CMakeLists.txt
+@@ -16,6 +16,7 @@ set(MERCURY_UTIL_BUILD_INCLUDE_DEPENDENCIES
+ # External dependencies
+ #------------------------------------------------------------------------------
+ include(CheckIncludeFiles)
++include(CheckSymbolExists)
+ include(CheckTypeSize)
+ 
+ # Threads
+@@ -35,7 +36,7 @@ if(CMAKE_USE_PTHREADS_INIT)
+   check_type_size(PTHREAD_MUTEX_ADAPTIVE_NP HG_UTIL_HAS_PTHREAD_MUTEX_ADAPTIVE_NP)
+ 
+   # Detect pthread_condattr_setclock
+-  CHECK_SYMBOL_EXISTS(pthread_condattr_setclock pthread.h HG_UTIL_HAS_PTHREAD_CONDATTR_SETCLOCK)
++  check_symbol_exists(pthread_condattr_setclock pthread.h HG_UTIL_HAS_PTHREAD_CONDATTR_SETCLOCK)
+ endif()
+ 
+ # Rt
+@@ -57,7 +58,7 @@ mark_as_advanced(MERCURY_USE_MONOTONIC_CLOCK)
+ check_include_files("time.h" HG_UTIL_HAS_TIME_H)
+ if(HG_UTIL_HAS_TIME_H)
+   # Detect clock_gettime
+-  CHECK_SYMBOL_EXISTS(clock_gettime time.h HG_UTIL_HAS_CLOCK_GETTIME)
++  check_symbol_exists(clock_gettime time.h HG_UTIL_HAS_CLOCK_GETTIME)
+ endif()
+ 
+ # Detect <sys/time.h>
