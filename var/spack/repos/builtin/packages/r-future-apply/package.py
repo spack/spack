@@ -23,3 +23,4 @@ class RFutureApply(RPackage):
 
     depends_on('r@3.2.0:', type=('build', 'run'))
     depends_on('r-future@1.13.0:', type=('build', 'run'))
+    depends_on('r-globals@0.12.4:', type=('build', 'run'))
