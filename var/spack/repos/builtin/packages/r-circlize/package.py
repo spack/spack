@@ -27,6 +27,6 @@ class RCirclize(RPackage):
     version('0.4.0', '0dbf1b481930a759d6f413d17f8ae1c4')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-globaloptions', type=('build', 'run'))
+    depends_on('r-globaloptions@0.1.0:', type=('build', 'run'))
     depends_on('r-shape', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))

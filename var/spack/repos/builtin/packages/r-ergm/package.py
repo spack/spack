@@ -21,11 +21,11 @@ class RErgm(RPackage):
 
     depends_on('r-robustbase@0.93-5:', type=('build', 'run'))
     depends_on('r-coda@0.19-2:', type=('build', 'run'))
-    depends_on('r-trust@01-7:', type=('build', 'run'))
+    depends_on('r-trust@0.1.7:', type=('build', 'run'))
     depends_on('r-matrix@1.2-17:', type=('build', 'run'))
     depends_on('r-lpsolve@5.6.13:', type=('build', 'run'))
     depends_on('r-mass@7.3-51.4:', type=('build', 'run'))
-    depends_on('r-statnet-common@3.3:', type=('build', 'run'))
+    depends_on('r-statnet-common@4.3.0:', type=('build', 'run'))
     depends_on('r-network@1.15:', type=('build', 'run'))
     depends_on('r-purrr@0.3.2:', when='@3.10.0:', type=('build', 'run'))
     depends_on('r-rlang@0.3.4:', when='@3.10.0:', type=('build', 'run'))

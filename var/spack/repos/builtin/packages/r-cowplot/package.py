@@ -28,8 +28,8 @@ class RCowplot(RPackage):
 
     depends_on('r@3.3.0:', when='@:0.9.4', type=('build', 'run'))
     depends_on('r@3.5.0:', when='@1.0.0:', type=('build', 'run'))
-    depends_on('r-ggplot2@2.1.0:', type=('build', 'run'))
-    depends_on('r-gtable@0.1.2:', type=('build', 'run'))
+    depends_on('r-ggplot2@2.1.1:', type=('build', 'run'))
+    depends_on('r-gtable', type=('build', 'run'))
     depends_on('r-plyr@1.8.2:', when='@:0.9.9', type=('build', 'run'))
     depends_on('r-scales', type=('build', 'run'))
     depends_on('r-rlang', when='@1.0.0:', type=('build', 'run'))

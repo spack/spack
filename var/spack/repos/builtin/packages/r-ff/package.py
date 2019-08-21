@@ -18,4 +18,4 @@ class RFf(RPackage):
     version('2.2-13', '4adf8840d24cb6e2927a3ef885c86fcd')
 
     depends_on('r@2.10.1:', type=('build', 'run'))
-    depends_on('r-bit', type=('build', 'run'))
+    depends_on('r-bit@1.1-13:', type=('build', 'run'))
