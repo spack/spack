@@ -41,7 +41,6 @@ def _first_accessible_path(paths):
     for path in paths:
         try:
             # Ensure the user has access, creating the directory if necessary.
-            path = sup.canonicalize_path(path)
             if os.path.exists(path):
                 if can_access(path):
                     return path
@@ -80,9 +79,11 @@ def get_stage_root():
         if isinstance(candidates, string_types):
             candidates = [candidates]
 
-        path = _first_accessible_path(candidates)
+        resolved_candidates = [sup.canonicalize_path(x) for x in candidates]
+        path = _first_accessible_path(resolved_candidates)
         if not path:
-            raise StageError("No accessible stage paths in:", candidates)
+            raise StageError("No accessible stage paths in:",
+                             ' '.join(resolved_candidates))
 
         # Ensure that any temp path is unique per user, so users don't
         # fight over shared temporary space.
