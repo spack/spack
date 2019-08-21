@@ -24,4 +24,5 @@ class RHaven(RPackage):
     depends_on('r-readr@0.1.0:', type=('build', 'run'))
     depends_on('r-hms', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-forcats', type=('build', 'run'))
+    depends_on('r-forcats@0.2.0:', type=('build', 'run'))
+    depends_on('gmake', type='build')
