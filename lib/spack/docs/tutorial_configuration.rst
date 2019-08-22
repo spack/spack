@@ -849,7 +849,15 @@ from this file system with the following ``config.yaml``:
 
    config:
      build_stage:
-       - /scratch/$user
+       - /scratch/$user/spack-stage
+
+
+.. note::
+
+   It is important to distinguish the build stage directory from other
+   directories in your scratch space to ensure ``spack clean`` does not
+   inadvertently remove unrelated files.  See :ref:`config-yaml` for 
+   details.
 
 
 On systems with compilers that absolutely *require* environment variables

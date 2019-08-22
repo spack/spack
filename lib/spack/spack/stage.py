@@ -47,15 +47,30 @@ def _first_accessible_path(paths):
             else:
                 # The path doesn't exist so create it and adjust permissions
                 # and group as needed (e.g., shared ``$tempdir``).
+                user = getpass.getuser()
                 prefix = os.path.sep
                 parts = path.strip(os.path.sep).split(os.path.sep)
+
+                # Permissions for ancestors of `$user` should be inherited
+                # from the parent directory while those from `$user` down
+                # should be private a la tempfile.mkdtemp.
+                kwargs = {'default_perms': 'parents'}
+                first = True
                 for part in parts:
+                    if part == user:
+                        kwargs['default_perms'] = 'args'
+                        kwargs['mode'] = stat.S_IRWXU
+                        kwargs['group'] = None
                     prefix = os.path.join(prefix, part)
                     if not os.path.exists(prefix):
-                        break
-                parent = os.path.dirname(prefix)
-                gid = os.stat(parent).st_gid
-                mkdirp(path, group=gid, default_perms='parents')
+                        if part != user and first:
+                            parent = os.path.dirname(prefix)
+                            kwargs['group'] = os.stat(parent).st_gid
+                            kwargs['mode'] = os.stat(parent).st_mode
+                        mkdirp(path, **kwargs)
+                        if first:
+                            assert os.getuid() == os.stat(prefix).st_uid
+                            first = False
 
                 if can_access(path):
                     return path
@@ -86,11 +101,12 @@ def get_stage_root():
                              ' '.join(resolved_candidates))
 
         # Ensure that any temp path is unique per user, so users don't
-        # fight over shared temporary space.
+        # fight over shared temporary space.  Emulate file permissions
+        # tempfile.mkdtemp.
         user = getpass.getuser()
         if user not in path:
             path = os.path.join(path, user)
-            mkdirp(path)
+            mkdirp(path, mode=stat.S_IRWXU)
 
         _stage_root = path
 
@@ -637,6 +653,7 @@ def purge():
     root = get_stage_root()
     if os.path.isdir(root):
         for stage_dir in os.listdir(root):
+            # TODO/TLD: Only remove hashed directories
             stage_path = os.path.join(root, stage_dir)
             remove_linked_tree(stage_path)
 
