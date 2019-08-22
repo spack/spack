@@ -50,12 +50,6 @@ class Gasnet(AutotoolsPackage):
             # TODO: factor IB suport out into architecture description.
             "--enable-par",
             "--enable-mpi-compat",
-            #"--enable-smp",
-            #"--enable-smp-safe",
-            #"--enable-segment-fast",
-            #"--enable-pshm" if '+pshm' in self.spec else "--disable-pshm",
-            #"--with-segment-mmap-max={0}".format(
-            #    self.spec.variants['segment-mmap-max'].value),
             # for consumers with shared libs
             "CC=%s %s" % (spack_cc, self.compiler.pic_flag),
             "CXX=%s %s" % (spack_cxx, self.compiler.pic_flag),
@@ -67,7 +61,10 @@ class Gasnet(AutotoolsPackage):
             args.append('--disable-aligned-segments')
 
         if '+mpi' in self.spec:
-            args.extend(['--enable-mpi', '--disable-udp', '--disable-ibv', "MPI_CC=%s %s"
+            args.extend(['--enable-mpi', 
+                         '--disable-udp', 
+                         '--disable-ibv', 
+                         'MPI_CC=%s %s'
                         % (self.spec['mpi'].mpicc, self.compiler.pic_flag)])
 
         if '+ibv' in self.spec:
