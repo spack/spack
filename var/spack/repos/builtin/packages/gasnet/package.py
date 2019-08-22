@@ -61,9 +61,9 @@ class Gasnet(AutotoolsPackage):
             args.append('--disable-aligned-segments')
 
         if '+mpi' in self.spec:
-            args.extend(['--enable-mpi', 
-                         '--disable-udp', 
-                         '--disable-ibv', 
+            args.extend(['--enable-mpi',
+                         '--disable-udp',
+                         '--disable-ibv',
                          'MPI_CC=%s %s'
                         % (self.spec['mpi'].mpicc, self.compiler.pic_flag)])
 
