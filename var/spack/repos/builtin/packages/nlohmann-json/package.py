@@ -23,8 +23,6 @@ class NlohmannJson(CMakePackage):
 
     variant('single_header', default=True,
         description='Use amalgamated single-header')
-    variant('test', default=True,
-        description='Build the tests')
 
     depends_on('cmake@3.8:', type='build')
 
@@ -43,7 +41,7 @@ class NlohmannJson(CMakePackage):
             '-DJSON_MultipleHeaders:BOOL={0}'.format(
                 'ON' if '~single_header' in spec else 'OFF'),
             '-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if '+test' in spec else 'OFF')
+                'ON' if self.run_tests else 'OFF')
         ]
 
         return args
