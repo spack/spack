@@ -9,7 +9,6 @@ from spack import *
 class PyFastcache(PythonPackage):
     """C implementation of Python 3 functools.lru_cache"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/pbrady/fastcache"
     url      = "https://pypi.io/packages/source/f/fastcache/fastcache-1.1.0.tar.gz"
 
