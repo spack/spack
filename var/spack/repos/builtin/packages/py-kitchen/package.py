@@ -11,7 +11,6 @@ class PyKitchen(PythonPackage):
     """
 
     homepage = "https://fedorahosted.org/kitchen"
-    version('1.2.6', sha256='b84cf582f1bd1556b60ebc7370b9d331eb9247b6b070ce89dfe959cba2c0b03c')
     url      = "https://pypi.io/packages/source/k/kitchen/kitchen-1.2.6.tar.gz"
 
     version('1.2.6', sha256='b84cf582f1bd1556b60ebc7370b9d331eb9247b6b070ce89dfe959cba2c0b03c')
