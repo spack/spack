@@ -22,9 +22,7 @@ class EcpIoSdk(CMakePackage):
     variant('darshan', default=True, description="Enable Darshan")
     variant('mercury', default=True, description="Enable Mercury")
     variant('unifyfs', default=True, description="Enable UnifyFS")
-
-    # Broken dependency: boost
-    # variant('veloc', default=False, description="Enable VeloC")
+    variant('veloc', default=True, description="Enable VeloC")
 
     # Currently no spack packages
     # variant('romio', default=False, description="Enable ROMIO")
