@@ -137,10 +137,8 @@ class PackageMeta(
     spack.directives.DirectiveMeta,
     spack.mixins.PackageMixinsMeta
 ):
-    """Conveniently transforms attributes to permit extensible phases
-
-    Iterates over the attribute 'phases' and creates / updates private
-    InstallPhase attributes in the class that is being initialized
+    """
+    Package metaclass for supporting directives (e.g., depends_on) and phases
     """
     phase_fmt = '_InstallPhase_{0}'
 
@@ -148,7 +146,14 @@ class PackageMeta(
     _InstallPhase_run_after = {}
 
     def __new__(cls, name, bases, attr_dict):
+        """
+        Instance creation is preceded by phase attribute transformations.
 
+        Conveniently transforms attributes to permit extensible phases by
+        iterating over the attribute 'phases' and creating / updating private
+        InstallPhase attributes in the class that will be initialized in
+        __init__.
+        """
         if 'phases' in attr_dict:
             # Turn the strings in 'phases' into InstallPhase instances
             # and add them as private attributes
@@ -338,11 +343,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     ***The Package class***
 
-    A package defines how to fetch, verify (via, e.g., sha256), build,
-    and install a piece of software.  A Package also defines what other
-    packages it depends on, so that dependencies can be installed along
-    with the package itself.  Packages are written in pure python by
-    users of Spack.
+    At its core, a package consists of a set of software to be installed.
+    A package may focus on a piece of software and its associated software
+    dependencies or it may simply be a set, or bundle, of software.  The
+    former requires defining how to fetch, verify (via, e.g., sha256), build,
+    and install that software and the packages it depends on, so that
+    dependencies can be installed along with the package itself.   The latter,
+    sometimes referred to as a ``no-source`` package, requires only defining
+    the packages to be built.
+
+    Packages are written in pure Python.
 
     There are two main parts of a Spack package:
 
@@ -353,12 +363,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
          used as input to the concretizer.
 
       2. **Package instances**. Once instantiated, a package is
-         essentially an installer for a particular piece of
-         software. Spack calls methods like ``do_install()`` on the
-         ``Package`` object, and it uses those to drive user-implemented
-         methods like ``patch()``, ``install()``, and other build steps.
-         To install software, An instantiated package needs a *concrete*
-         spec, which guides the behavior of the various install methods.
+         essentially a software installer.  Spack calls methods like
+         ``do_install()`` on the ``Package`` object, and it uses those to
+         drive user-implemented methods like ``patch()``, ``install()``, and
+         other build steps.  To install software, an instantiated package
+         needs a *concrete* spec, which guides the behavior of the various
+         install methods.
 
     Packages are imported from repos (see ``repo.py``).
 
@@ -377,11 +387,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
        p = Package()             # Done for you by spack
 
-       p.do_fetch()              # downloads tarball from a URL
+       p.do_fetch()              # downloads tarball from a URL (or VCS)
        p.do_stage()              # expands tarball in a temp directory
        p.do_patch()              # applies patches to expanded source
        p.do_install()            # calls package's install() function
        p.do_uninstall()          # removes install directory
+
+    although packages that do not have code have nothing to fetch so omit
+    ``p.do_fetch()``.
 
     There are also some other commands that clean the build area:
 
@@ -392,7 +405,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                  # re-expands the archive.
 
     The convention used here is that a ``do_*`` function is intended to be
-    called internally by Spack commands (in spack.cmd).  These aren't for
+    called internally by Spack commands (in ``spack.cmd``).  These aren't for
     package writers to override, and doing so may break the functionality
     of the Package class.
 
@@ -400,7 +413,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     override anything in this class.  That is not usually required.
 
     For most use cases.  Package creators typically just add attributes
-    like ``url`` and ``homepage``, or functions like ``install()``.
+    like ``homepage`` and, for a code-based package, ``url``, or functions
+    such as ``install()``.
     There are many custom ``Package`` subclasses in the
     ``spack.build_systems`` package that make things even easier for
     specific build systems.
@@ -409,6 +423,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #
     # These are default values for instance variables.
     #
+
+    #: Most Spack packages are used to install source or binary code while
+    #: those that do not can be used to install a set of other Spack packages.
+    has_code = True
 
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
@@ -482,7 +500,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
-    #: List of attributes which affect do not affect a package's content.
+    #: List of attributes to be excluded from a package's hash.
     metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
                       'make_jobs']
 
@@ -496,21 +514,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Keep track of whether or not this package was installed from
         # a binary cache.
         self.installed_from_binary_cache = False
-
-        # Check versions in the versions dict.
-        for v in self.versions:
-            assert (isinstance(v, Version))
-
-        # Check version descriptors
-        for v in sorted(self.versions):
-            assert (isinstance(self.versions[v], dict))
-
-        # Version-ize the keys in versions dict
-        try:
-            self.versions = dict((Version(v), h)
-                                 for v, h in self.versions.items())
-        except ValueError as e:
-            raise ValueError("In package %s: %s" % (self.name, e.message))
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -1032,6 +1035,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only fetch concrete packages.")
 
+        if not self.has_code:
+            raise InvalidPackageOpError("Can only fetch a package with a URL.")
+
         start_time = time.time()
         checksum = spack.config.get('config:checksum')
         if checksum and self.version not in self.versions:
@@ -1069,11 +1075,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        self.do_fetch(mirror_only)     # this will create the stage
-        self.stage.expand_archive()
+        # Always create the stage directory at this point.  Why?  A no-code
+        # package may want to use the installation process to install metadata.
+        self.stage.create()
 
-        if not os.listdir(self.stage.path):
-            raise FetchError("Archive was empty for %s" % self.name)
+        # Fetch/expand any associated code.
+        if self.has_code:
+            self.do_fetch(mirror_only)
+            self.stage.expand_archive()
+
+            if not os.listdir(self.stage.path):
+                raise FetchError("Archive was empty for %s" % self.name)
+        else:
+            # Support for post-install hooks requires a stage.source_path
+            mkdirp(self.stage.source_path)
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
@@ -1542,7 +1557,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     Package._install_bootstrap_compiler(dep.package, **kwargs)
                 dep.package.do_install(**dep_kwargs)
 
-        # Then, install the compiler if it is not already installed.
+        # Then install the compiler if it is not already installed.
         if install_deps:
             Package._install_bootstrap_compiler(self, **kwargs)
 
@@ -1674,8 +1689,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # Ensure the metadata path exists as well
                 mkdirp(spack.store.layout.metadata_path(self.spec), mode=perms)
 
-            # Fork a child to do the actual installation
-            # we preserve verbosity settings across installs.
+            # Fork a child to do the actual installation.
+            # Preserve verbosity settings across installs.
             PackageBase._verbose = spack.build_environment.fork(
                 self, build_process, dirty=dirty, fake=fake)
 
@@ -2357,6 +2372,19 @@ env_flags = PackageBase.env_flags
 build_system_flags = PackageBase.build_system_flags
 
 
+class BundlePackage(PackageBase):
+    """General purpose bundle, or no-code, package class."""
+    #: There are no phases by default but the property is required to support
+    #: post-install hooks (e.g., for module generation).
+    phases = []
+    #: This attribute is used in UI queries that require to know which
+    #: build-system class we are using
+    build_system_class = 'BundlePackage'
+
+    #: Bundle packages do not have associated source or binary code.
+    has_code = False
+
+
 class Package(PackageBase):
     """General purpose class with a single ``install``
     phase that needs to be coded by packagers.
@@ -2526,6 +2554,10 @@ class NoURLError(PackageError):
     def __init__(self, cls):
         super(NoURLError, self).__init__(
             "Package %s has no version with a URL." % cls.__name__)
+
+
+class InvalidPackageOpError(PackageError):
+    """Raised when someone tries perform an invalid operation on a package."""
 
 
 class ExtensionError(PackageError):

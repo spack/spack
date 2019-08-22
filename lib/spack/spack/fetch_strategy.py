@@ -165,6 +165,51 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
         return cls.url_attr in args
 
 
+class BundleFetchStrategy(FetchStrategy):
+    """
+    Fetch strategy associated with bundle, or no-code, packages.
+
+    Having a basic fetch strategy is a requirement for executing post-install
+    hooks.  Consequently, this class provides the API but does little more
+    than log messages.
+
+    TODO: Remove this class by refactoring resource handling and the link
+    between composite stages and composite fetch strategies (see #11981).
+    """
+    #: This is a concrete fetch strategy for no-code packages.
+    enabled = True
+
+    #: There is no associated URL keyword in ``version()`` for no-code
+    #: packages but this property is required for some strategy-related
+    #: functions (e.g., check_pkg_attributes).
+    url_attr = ''
+
+    def fetch(self):
+        tty.msg("No code to fetch.")
+        return True
+
+    def check(self):
+        tty.msg("No code to check.")
+
+    def expand(self):
+        tty.msg("No archive to expand.")
+
+    def reset(self):
+        tty.msg("No code to reset.")
+
+    def archive(self, destination):
+        tty.msg("No code to archive.")
+
+    @property
+    def cachable(self):
+        tty.msg("No code to cache.")
+        return False
+
+    def source_id(self):
+        tty.msg("No code to be uniquely identified.")
+        return ''
+
+
 @pattern.composite(interface=FetchStrategy)
 class FetchStrategyComposite(object):
     """Composite for a FetchStrategy object.
@@ -1117,6 +1162,12 @@ def _from_merged_attrs(fetcher, pkg, version):
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
+
+    # No-code packages have a custom fetch strategy to work around issues
+    # with resource staging.
+    if not pkg.has_code:
+        return BundleFetchStrategy()
+
     check_pkg_attributes(pkg)
 
     if not isinstance(version, Version):
@@ -1159,6 +1210,7 @@ def from_list_url(pkg):
     """If a package provides a URL which lists URLs for resources by
        version, this can can create a fetcher for a URL discovered for
        the specified package's version."""
+
     if pkg.list_url:
         try:
             versions = pkg.fetch_remote_versions()
