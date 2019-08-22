@@ -22,6 +22,7 @@ class Vtk(CMakePackage):
 
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
+    version('8.1.0', sha256='6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7')
     version('8.0.1', '692d09ae8fadc97b59d35cab429b261a')
     version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')
     version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
@@ -32,7 +33,6 @@ class Vtk(CMakePackage):
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('python', default=False, description='Enable Python support')
-    variant('python3', default=False, description='Enable Python3 support')
     variant('qt', default=False, description='Build with support for Qt')
     variant('xdmf', default=False, description='Build XDMF file support')
     variant('ffmpeg', default=False, description='Build with FFMPEG support')
@@ -43,21 +43,16 @@ class Vtk(CMakePackage):
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
-    conflicts('+python', when='+python3')
-    conflicts('+python3', when='@:8.0')
+    conflicts('^python@3:', when='@:8.0')
 
     extends('python', when='+python')
-    extends('python', when='+python3')
 
-    depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
-    depends_on('python@3:', when='+python3', type=('build', 'run'))
-
+    depends_on('python@2.7:', when='+python', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python+mpi', type='run')
-    depends_on('py-mpi4py', when='+python3+mpi', type='run')
 
     # python3.7 compatibility patch backported from upstream
     # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
-    patch('python3.7-const-char.patch', when='@:8.1.1 ^python@3.7:')
+    patch('python3.7-const-char.patch', when='@7.0.0:8.1.1 ^python@3.7:')
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
@@ -87,7 +82,7 @@ class Vtk(CMakePackage):
     depends_on('freetype')
     depends_on('glew')
     depends_on('hdf5')
-    depends_on('libjpeg')
+    depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')
     depends_on('lz4')
@@ -129,6 +124,9 @@ class Vtk(CMakePackage):
             '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
             '-DNETCDF_CXX_ROOT={0}'.format(spec['netcdf-cxx'].prefix),
 
+            # Allow downstream codes (e.g. VisIt) to override VTK's classes
+            '-DVTK_ALL_NEW_OBJECT_FACTORY:BOOL=ON',
+
             # Disable wrappers for other languages.
             '-DVTK_WRAP_JAVA=OFF',
             '-DVTK_WRAP_TCL=OFF',
@@ -144,12 +142,13 @@ class Vtk(CMakePackage):
             cmake_args.extend(['-DModule_vtkIOFFMPEG:BOOL=ON'])
 
         # Enable/Disable wrappers for Python.
-        if '+python' in spec or '+python3' in spec:
+        if '+python' in spec:
             cmake_args.extend([
                 '-DVTK_WRAP_PYTHON=ON',
                 '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON'
             ])
+            if '+mpi' in spec:
+                cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON')
         else:
             cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
 
@@ -206,12 +205,10 @@ class Vtk(CMakePackage):
             if '+mpi' in spec:
                 cmake_args.extend(["-DModule_vtkIOParallelXdmf3:BOOL=ON"])
 
-        cmake_args.extend([
-            '-DVTK_USE_SYSTEM_GLEW:BOOL=ON',
+        cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=' + opengl_ver)
 
-            '-DVTK_RENDERING_BACKEND:STRING=OpenGL{0}'.format(
-                '2' if '+opengl2' in spec else ''),
-        ])
+        if spec.satisfies('@:8.1.0'):
+            cmake_args.append('-DVTK_USE_SYSTEM_GLEW:BOOL=ON')
 
         if '+osmesa' in spec:
             cmake_args.extend([
@@ -220,9 +217,10 @@ class Vtk(CMakePackage):
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON'])
 
         else:
-            cmake_args.extend([
-                '-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF',
-                '-DOpenGL_GL_PREFERENCE:STRING=LEGACY'])
+            cmake_args.append('-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF')
+            if spec.satisfies('@:7.9.9'):
+                # This option is gone in VTK 8.1.2
+                cmake_args.append('-DOpenGL_GL_PREFERENCE:STRING=LEGACY')
 
             if 'darwin' in spec.architecture:
                 cmake_args.extend([
@@ -262,10 +260,11 @@ class Vtk(CMakePackage):
             if (self.spec.satisfies('%clang') and
                 self.compiler.is_apple and
                 self.compiler.version >= Version('5.1.0')):
-                cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
+                cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS='])
 
             # A bug in tao pegtl causes build failures with intel compilers
             if '%intel' in spec and spec.version >= Version('8.2'):
                 cmake_args.append(
                     '-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF')
+
         return cmake_args

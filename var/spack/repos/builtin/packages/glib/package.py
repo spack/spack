@@ -145,3 +145,18 @@ class Glib(AutotoolsPackage):
 
         files = [join_path(self.prefix.bin, file) for file in files]
         filter_file(pattern, repl, *files, backup=False)
+
+    @run_after('install')
+    def gettext_libdir(self):
+        # Packages that link to glib were also picking up -lintl from glib's
+        # glib-2.0.pc file. However, packages such as py-pygobject were
+        # bypassing spack's compiler wrapper for linking and thus not finding
+        # the gettext library directory. The patch below explitly adds the
+        # appropriate -L path.
+        spec = self.spec
+        if spec.satisfies('@2:2.99'):
+            pattern = 'Libs:'
+            repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
+                   spec['gettext'].prefix.lib)
+            myfile = join_path(self.prefix.lib.pkgconfig, 'glib-2.0.pc')
+            filter_file(pattern, repl, myfile, backup=False)

@@ -26,7 +26,9 @@ class Blis(Package):
     url      = "https://github.com/flame/blis/archive/0.4.0.tar.gz"
     git      = "https://github.com/flame/blis.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('0.6.0', sha256='ad5765cc3f492d0c663f494850dafc4d72f901c332eb442f404814ff2995e5a9')
+    version('0.5.0', sha256='1a004d69c139e8a0448c6a6007863af3a8c3551b8d9b8b73fe08e8009f165fa8')
     version('0.4.0', sha256='9c7efd75365a833614c01b5adfba93210f869d92e7649e0b5d9edc93fc20ea76')
     version('0.3.2', sha256='b87e42c73a06107d647a890cbf12855925777dc7124b0c7698b90c5effa7f58f')
     version('0.3.1', sha256='957f28d47c5cf71ffc62ce8cc1277e17e44d305b1c2fa8506b0b55617a9f28e4')

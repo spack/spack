@@ -28,6 +28,7 @@ class Pumi(CMakePackage):
     # it compares greater than a numbered version (e.g., 2.1.0). The spack
     # version string 'master' compares less than a numbered version.
     version('develop', branch='master')
+    version('2.2.1', commit='cd826205db21b8439026db1f6af61a8ed4a18564')  # tag 2.2.1
     version('2.2.0', commit='8c7e6f13943893b2bc1ece15003e4869a0e9634f')  # tag 2.2.0
     version('2.1.0', commit='840fbf6ec49a63aeaa3945f11ddb224f6055ac9f')
 

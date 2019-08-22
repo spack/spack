@@ -5,11 +5,17 @@
 
 import os
 import pytest
+import shutil
 
+from llnl.util.filesystem import mkdirp, touch, working_dir
+
+from spack.package import \
+    InstallError, InvalidPackageOpError, PackageBase, PackageStillNeededError
 import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
+from spack.package import _spack_build_envfile, _spack_build_logfile
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
@@ -133,6 +139,41 @@ def test_installed_dependency_request_conflicts(
         'conflicting-dependent ^/' + dependency_hash)
     with pytest.raises(spack.spec.UnsatisfiableSpecError):
         dependent.concretize()
+
+
+def test_install_dependency_symlinks_pkg(
+        install_mockery, mock_fetch, mutable_mock_packages):
+    """Test dependency flattening/symlinks mock package."""
+    spec = Spec('flatten-deps')
+    spec.concretize()
+    pkg = spec.package
+    pkg.do_install()
+
+    # Ensure dependency directory exists after the installation.
+    dependency_dir = os.path.join(pkg.prefix, 'dependency-install')
+    assert os.path.isdir(dependency_dir)
+
+
+def test_flatten_deps(
+        install_mockery, mock_fetch, mutable_mock_packages):
+    """Explicitly test the flattening code for coverage purposes."""
+    # Unfortunately, executing the 'flatten-deps' spec's installation does
+    # not affect code coverage results, so be explicit here.
+    spec = Spec('dependent-install')
+    spec.concretize()
+    pkg = spec.package
+    pkg.do_install()
+
+    # Demonstrate that the directory does not appear under the spec
+    # prior to the flatten operation.
+    dependency_name = 'dependency-install'
+    assert dependency_name not in os.listdir(pkg.prefix)
+
+    # Flatten the dependencies and ensure the dependency directory is there.
+    spack.package.flatten_dependencies(spec, pkg.prefix)
+
+    dependency_dir = os.path.join(pkg.prefix, dependency_name)
+    assert os.path.isdir(dependency_dir)
 
 
 def test_installed_upstream_external(
@@ -269,3 +310,161 @@ def test_failing_build(install_mockery, mock_fetch):
 
 class MockInstallError(spack.error.SpackError):
     pass
+
+
+def test_uninstall_by_spec_errors(mutable_database):
+    """Test exceptional cases with the uninstall command."""
+
+    # Try to uninstall a spec that has not been installed
+    rec = mutable_database.get_record('zmpi')
+    with pytest.raises(InstallError, matches="not installed"):
+        PackageBase.uninstall_by_spec(rec.spec)
+
+    # Try an unforced uninstall of a spec with dependencies
+    rec = mutable_database.get_record('mpich')
+
+    with pytest.raises(PackageStillNeededError, matches="cannot uninstall"):
+        PackageBase.uninstall_by_spec(rec.spec)
+
+
+def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages):
+    """Test install phases with the nosource package."""
+    spec = Spec('nosource').concretized()
+    pkg = spec.package
+
+    # Make sure install works even though there is no associated code.
+    pkg.do_install()
+
+    # Also make sure an error is raised if `do_fetch` is called.
+    with pytest.raises(InvalidPackageOpError,
+                       match="fetch a package with a URL"):
+        pkg.do_fetch()
+
+
+def test_nosource_pkg_install_post_install(
+        install_mockery, mock_fetch, mock_packages):
+    """Test install phases with the nosource package with post-install."""
+    spec = Spec('nosource-install').concretized()
+    pkg = spec.package
+
+    # Make sure both the install and post-install package methods work.
+    pkg.do_install()
+
+    # Ensure the file created in the package's `install` method exists.
+    install_txt = os.path.join(spec.prefix, 'install.txt')
+    assert os.path.isfile(install_txt)
+
+    # Ensure the file created in the package's `post-install` method exists.
+    post_install_txt = os.path.join(spec.prefix, 'post-install.txt')
+    assert os.path.isfile(post_install_txt)
+
+
+def test_pkg_build_paths(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    log_path = spec.package.log_path
+    assert log_path.endswith(_spack_build_logfile)
+
+    env_path = spec.package.env_path
+    assert env_path.endswith(_spack_build_envfile)
+
+    # Backward compatibility checks
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        # Start with the older of the previous log filenames
+        older_log = 'spack-build.out'
+        touch(older_log)
+        assert spec.package.log_path.endswith(older_log)
+
+        # Now check the newer log filename
+        last_log = 'spack-build.txt'
+        os.rename(older_log, last_log)
+        assert spec.package.log_path.endswith(last_log)
+
+        # Check the old environment file
+        last_env = 'spack-build.env'
+        os.rename(last_log, last_env)
+        assert spec.package.env_path.endswith(last_env)
+
+    # Cleanup
+    shutil.rmtree(log_dir)
+
+
+def test_pkg_install_paths(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    log_path = os.path.join(spec.prefix, '.spack', _spack_build_logfile)
+    assert spec.package.install_log_path == log_path
+
+    env_path = os.path.join(spec.prefix, '.spack', _spack_build_envfile)
+    assert spec.package.install_env_path == env_path
+
+    # Backward compatibility checks
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        # Start with the older of the previous install log filenames
+        older_log = 'build.out'
+        touch(older_log)
+        assert spec.package.install_log_path.endswith(older_log)
+
+        # Now check the newer install log filename
+        last_log = 'build.txt'
+        os.rename(older_log, last_log)
+        assert spec.package.install_log_path.endswith(last_log)
+
+        # Check the old install environment file
+        last_env = 'build.env'
+        os.rename(last_log, last_env)
+        assert spec.package.install_env_path.endswith(last_env)
+
+    # Cleanup
+    shutil.rmtree(log_dir)
+
+
+def test_pkg_install_log(install_mockery):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package').concretized()
+
+    # Attempt installing log without the build log file
+    with pytest.raises(IOError, match="No such file or directory"):
+        spec.package.log()
+
+    # Set up mock build files and try again
+    log_path = spec.package.log_path
+    log_dir = os.path.dirname(log_path)
+    mkdirp(log_dir)
+    with working_dir(log_dir):
+        touch(log_path)
+        touch(spec.package.env_path)
+
+    install_path = os.path.dirname(spec.package.install_log_path)
+    mkdirp(install_path)
+
+    spec.package.log()
+
+    assert os.path.exists(spec.package.install_log_path)
+    assert os.path.exists(spec.package.install_env_path)
+
+    # Cleanup
+    shutil.rmtree(log_dir)
+
+
+def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
+    """Test attempts to perform install phases with unconcretized spec."""
+    spec = Spec('trivial-install-test-package')
+
+    with pytest.raises(ValueError, match="only install concrete packages"):
+        spec.package.do_install()
+
+    with pytest.raises(ValueError, match="fetch concrete packages"):
+        spec.package.do_fetch()
+
+    with pytest.raises(ValueError, match="stage concrete packages"):
+        spec.package.do_stage()
+
+    with pytest.raises(ValueError, match="patch concrete packages"):
+        spec.package.do_patch()

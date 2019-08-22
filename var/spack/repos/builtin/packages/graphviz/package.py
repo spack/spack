@@ -4,8 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.operating_systems.mac_os import macos_version
+
 import os
 import sys
+
+
+MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
 
 
 class Graphviz(AutotoolsPackage):
@@ -17,102 +22,79 @@ class Graphviz(AutotoolsPackage):
     # This commit hash is tag='stable_release_2.40.1'
     version('2.40.1', commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
 
-    # We try to leave language bindings enabled if they don't cause
-    # build issues or add dependencies.
-    variant('sharp', default=False,
-            description='Enable for optional sharp language bindings'
-            ' (not yet functional)')
-    variant('go', default=False,
-            description='Enable for optional go language bindings'
-            ' (not yet functional)')
-    variant('guile', default=False,
-            description='Enable for optional guile language bindings'
-            ' (not yet functional)')
-    variant('io', default=False,
-            description='Enable for optional io language bindings'
-            ' (not yet functional)')
-    variant('java', default=False,  # Spack has no Java support
-            description='Enable for optional java language bindings')
-    variant('lua', default=False,
-            description='Enable for optional lua language bindings'
-            ' (not yet functional)')
-    variant('ocaml', default=False,
-            description='Enable for optional ocaml language bindings'
-            ' (not yet functional)')
-    variant('perl', default=False,    # Spack has no Perl support
-            description='Enable for optional perl language bindings')
-    variant('php', default=False,
-            description='Enable for optional php language bindings'
-            ' (not yet functional)')
-    variant('python', default=False,    # Build issues with Python 2/3
-            description='Enable for optional python language bindings'
-            ' (not yet functional)')
-    variant('r', default=False,
-            description='Enable for optional r language bindings'
-            ' (not yet functional)')
-    variant('ruby', default=False,
-            description='Enable for optional ruby language bindings'
-            ' (not yet functional)')
-    variant('tcl', default=False,
-            description='Enable for optional tcl language bindings'
-            ' (not yet functional)')
+    # Language bindings
+    language_bindings = ['java']
 
-    variant('pangocairo', default=False,
-            description='Build with pango+cairo support (more output formats)')
-    variant('libgd', default=False,
-            description='Build with libgd support (more output formats)')
-    variant('gts', default=False,
-            description='Build with GNU Triangulated Surface Library')
+    # Additional language bindings are nominally supported by GraphViz via SWIG
+    # but are untested and need the proper dependencies added:
+    # language_bindings += ['sharp', 'go', 'guile', 'io', 'lua', 'ocaml',
+    #                       'perl', 'php', 'python', 'r', 'ruby', 'tcl']
+
+    for lang in language_bindings:
+        variant(lang, default=False,
+                description='Enable for optional {0} language '
+                'bindings'.format(lang))
+
+    # Feature variants
     variant('expat', default=False,
             description='Build with Expat support (enables HTML-like labels)')
+    variant('gts', default=False,
+            description='Build with GNU Triangulated Surface Library')
     variant('ghostscript', default=False,
             description='Build with Ghostscript support')
-    variant('qt', default=False,
-            description='Build with Qt support')
     variant('gtkplus', default=False,
             description='Build with GTK+ support')
+    variant('libgd', default=False,
+            description='Build with libgd support (more output formats)')
+    variant('pangocairo', default=False,
+            description='Build with pango+cairo support (more output formats)')
+    variant('qt', default=False,
+            description='Build with Qt support')
+    variant('quartz', default=(MACOS_VERSION is not None),
+            description='Build with Quartz and PDF support')
+    variant('x', default=False,
+            description='Use the X Window System')
 
-    parallel = False
+    patch('http://www.linuxfromscratch.org/patches/blfs/svn/graphviz-2.40.1-qt5-1.patch',
+          sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
+          when='+qt^qt@5:')
+    patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.38.0_icc_sfio.patch',
+          sha256='393a0a772315a89dcc970b5efd4765d22dba83493d7956303673eb89c45b949f',
+          level=0,
+          when='%intel')
+    patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.40.1_icc_vmalloc.patch',
+          sha256='813e6529e79161a18b0f24a969b7de22f8417b2e942239e658b5402884541bc2',
+          when='%intel')
 
-    # These language bindings have been tested, we know they work.
-    tested_bindings = ('+java', )
+    if not MACOS_VERSION:
+        conflicts('+quartz',
+                  msg="Graphviz can only be build with Quartz on macOS.")
+    elif MACOS_VERSION >= Version('10.9'):
+        # Doesn't detect newer mac os systems as being new
+        patch('fix-quartz-darwin.patch')
 
-    # These language bindings have not yet been tested.  They
-    # likely need additional dependencies to get working.
-    untested_bindings = (
-        '+perl',
-        '+sharp', '+go', '+guile', '+io',
-        '+lua', '+ocaml', '+php',
-        '+python', '+r', '+ruby', '+tcl')
-
-    for b in tested_bindings + untested_bindings:
-        depends_on('swig', type='build', when=b)
-
+    # Language dependencies
     depends_on('java', when='+java')
-    depends_on('python@2:2.8', when='+python')
+    for lang in language_bindings:
+        depends_on('swig', when=('+' + lang))
 
-    # +pangocairo
-    depends_on('cairo', when='+pangocairo')
-    depends_on('pango', when='+pangocairo')
-    depends_on('freetype', when='+pangocairo')
-    depends_on('glib', when='+pangocairo')
-    depends_on('fontconfig', when='+pangocairo')
-    depends_on('libpng', when='+pangocairo')
-    depends_on('zlib', when='+pangocairo')
-    # +libgd
+    # Feature dependencies
+    depends_on('expat', when='+expat')
     depends_on('libgd', when='+libgd')
     depends_on('fontconfig', when='+libgd')
     depends_on('freetype', when='+libgd')
-    # +gts
-    depends_on('gts', when='+gts')
-    # +expat
-    depends_on('expat', when='+expat')
-    # +ghostscript
     depends_on('ghostscript', when='+ghostscript')
-    # +qt
-    depends_on('qt', when='+qt')
-    # +gtkplus
     depends_on('gtkplus', when='+gtkplus')
+    depends_on('gts', when='+gts')
+    depends_on('cairo', when='+pangocairo')
+    depends_on('fontconfig', when='+pangocairo')
+    depends_on('freetype', when='+pangocairo')
+    depends_on('glib', when='+pangocairo')
+    depends_on('libpng', when='+pangocairo')
+    depends_on('pango', when='+pangocairo')
+    depends_on('zlib', when='+pangocairo')
+    depends_on('qt@4', when='+qt')
+    depends_on('libx11', when="+x")
 
     # Build dependencies
     depends_on('pkgconfig', type='build')
@@ -123,6 +105,8 @@ class Graphviz(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
 
+    parallel = False
+
     def autoreconf(self, spec, prefix):
         # We need to generate 'configure' when checking out sources from git
         # If configure exists nothing needs to be done
@@ -132,54 +116,34 @@ class Graphviz(AutotoolsPackage):
         bash = which('bash')
         bash('./autogen.sh', 'NOCONFIG')
 
+    def setup_environment(self, spack_env, run_env):
+        if '+quartz' in self.spec:
+            spack_env.set('OBJC', self.compiler.cc)
+
+    @when('%clang platform=darwin')
+    def patch(self):
+        # When using Clang, replace GCC's libstdc++ with LLVM's libc++
+        mkdirs = ['cmd/dot', 'cmd/edgepaint', 'cmd/mingle', 'plugin/gdiplus']
+        filter_file(r'-lstdc\+\+', '-lc++', 'configure.ac',
+                    *(d + '/Makefile.am' for d in mkdirs))
+
     def configure_args(self):
         spec = self.spec
-        options = []
+        args = ['--disable-silent-rules']
 
-        need_swig = False
+        use_swig = False
+        for lang in self.language_bindings:
+            if '+' + lang in spec:
+                use_swig = True
+                args.append('--enable-' + lang)
 
-        for var in self.untested_bindings:
-            if var in spec:
-                raise InstallError(
-                    "The variant {0} for language bindings has not been "
-                    "tested.  It might or might not work.  To try it "
-                    "out, run `spack edit graphviz`, and then move '{0}' "
-                    "from the `untested_bindings` list to the "
-                    "`tested_bindings` list.  Be prepared to add "
-                    "required dependencies.  "
-                    "Please then submit a pull request to "
-                    "http://github.com/spack/spack".format(var))
-            options.append('--disable-%s' % var[1:])
+        args.append('--{0}-swig'.format('enable' if use_swig else 'disable'))
 
-        for var in self.tested_bindings:
-            if var in spec:
-                need_swig = True
-                options.append('--enable-{0}'.format(var[1:]))
-            else:
-                options.append('--disable-{0}'.format(var[1:]))
+        for var in ["expat", "gts", "ghostscript", "libgd", "pangocairo",
+                    "qt", "quartz", "x"]:
+            args += self.with_or_without(var)
 
-        if need_swig:
-            options.append('--enable-swig=yes')
-        else:
-            options.append('--enable-swig=no')
+        args.append('--{0}-gtk'.format(
+            "with" if "+gtkplus" in spec else "without"))
 
-        for var in ('+pangocairo', '+libgd', '+gts', '+expat', '+ghostscript',
-                    '+qt', '+gtkplus'):
-            feature = var[1:]
-            if feature == 'gtkplus':
-                # In spack terms, 'gtk+' is 'gtkplus' while
-                # the relative configure option is 'gtk'
-                feature = 'gtk'
-            if var in spec:
-                options.append('--with-{0}'.format(feature))
-            else:
-                options.append('--without-{0}'.format(feature))
-
-        # On OSX fix the compiler error:
-        # In file included from tkStubLib.c:15:
-        # /usr/include/tk.h:78:11: fatal error: 'X11/Xlib.h' file not found
-        #       include <X11/Xlib.h>
-        if sys.platform == 'darwin':
-            options.append('CFLAGS=-I/opt/X11/include')
-
-        return options
+        return args

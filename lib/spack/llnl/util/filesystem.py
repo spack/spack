@@ -226,7 +226,10 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
-    gid = grp.getgrnam(group).gr_gid
+    if isinstance(group, six.string_types):
+        gid = grp.getgrnam(group).gr_gid
+    else:
+        gid = group
     os.chown(path, -1, gid)
 
 
@@ -347,12 +350,22 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
+    abs_src = os.path.abspath(src)
+    if not abs_src.endswith(os.path.sep):
+        abs_src += os.path.sep
+    abs_dest = os.path.abspath(dest)
+    if not abs_dest.endswith(os.path.sep):
+        abs_dest += os.path.sep
+
+    # Stop early to avoid unnecessary recursion if being asked to copy from a
+    # parent directory.
+    if abs_dest.startswith(abs_src):
+        raise ValueError('Cannot copy ancestor directory {0} into {1}'.
+                         format(abs_src, abs_dest))
+
     mkdirp(dest)
 
-    src = os.path.abspath(src)
-    dest = os.path.abspath(dest)
-
-    for s, d in traverse_tree(src, dest, order='pre',
+    for s, d in traverse_tree(abs_src, abs_dest, order='pre',
                               follow_symlinks=not symlinks,
                               ignore=ignore,
                               follow_nonexisting=True):
@@ -361,7 +374,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             if symlinks:
                 target = os.readlink(s)
                 if os.path.isabs(target):
-                    new_target = re.sub(src, dest, target)
+                    new_target = re.sub(abs_src, abs_dest, target)
                     if new_target != target:
                         tty.debug("Redirecting link {0} to {1}"
                                   .format(target, new_target))
@@ -414,6 +427,13 @@ def get_filetype(path_name):
     return output.strip()
 
 
+def chgrp_if_not_world_writable(path, group):
+    """chgrp path to group if path is not world writable"""
+    mode = os.stat(path).st_mode
+    if not mode & stat.S_IWOTH:
+        chgrp(path, group)
+
+
 def mkdirp(*paths, **kwargs):
     """Creates a directory, as well as parent directories if needed.
 
@@ -421,16 +441,75 @@ def mkdirp(*paths, **kwargs):
         paths (str): paths to create with mkdirp
 
     Keyword Aguments:
-        mode (permission bits or None, optional): optional permissions to
-            set on the created directory -- use OS default if not provided
+        mode (permission bits or None, optional): optional permissions to set
+            on the created directory -- use OS default if not provided
+        group (group name or None, optional): optional group for permissions of
+            final created directory -- use OS default if not provided. Only
+            used if world write permissions are not set
+        default_perms ('parents' or 'args', optional): The default permissions
+            that are set for directories that are not themselves an argument
+            for mkdirp. 'parents' means intermediate directories get the
+            permissions of their direct parent directory, 'args' means
+            intermediate get the same permissions specified in the arguments to
+            mkdirp -- default value is 'args'
     """
     mode = kwargs.get('mode', None)
+    group = kwargs.get('group', None)
+    default_perms = kwargs.get('default_perms', 'args')
+
     for path in paths:
         if not os.path.exists(path):
             try:
+                # detect missing intermediate folders
+                intermediate_folders = []
+                last_parent = ''
+
+                intermediate_path = os.path.dirname(path)
+
+                while intermediate_path:
+                    if os.path.exists(intermediate_path):
+                        last_parent = intermediate_path
+                        break
+
+                    intermediate_folders.append(intermediate_path)
+                    intermediate_path = os.path.dirname(intermediate_path)
+
+                # create folders
                 os.makedirs(path)
+
+                # leaf folder permissions
                 if mode is not None:
                     os.chmod(path, mode)
+                if group:
+                    chgrp_if_not_world_writable(path, group)
+                    if mode is not None:
+                        os.chmod(path, mode)  # reset sticky grp bit post chgrp
+
+                # for intermediate folders, change mode just for newly created
+                # ones and if mode_intermediate has been specified, otherwise
+                # intermediate folders list is not populated at all and default
+                # OS mode will be used
+                if default_perms == 'args':
+                    intermediate_mode = mode
+                    intermediate_group = group
+                elif default_perms == 'parents':
+                    stat_info = os.stat(last_parent)
+                    intermediate_mode = stat_info.st_mode
+                    intermediate_group = stat_info.st_gid
+                else:
+                    msg = "Invalid value: '%s'. " % default_perms
+                    msg += "Choose from 'args' or 'parents'."
+                    raise ValueError(msg)
+
+                for intermediate_path in reversed(intermediate_folders):
+                    if intermediate_mode is not None:
+                        os.chmod(intermediate_path, intermediate_mode)
+                    if intermediate_group is not None:
+                        chgrp_if_not_world_writable(intermediate_path,
+                                                    intermediate_group)
+                        os.chmod(intermediate_path,
+                                 intermediate_mode)  # reset sticky bit after
+
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
@@ -1389,7 +1468,25 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # List of libraries we are searching with suffixes
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
-    return LibraryList(find(root, libraries, recursive))
+    if not recursive:
+        # If not recursive, look for the libraries directly in root
+        return LibraryList(find(root, libraries, False))
+
+    # To speedup the search for external packages configured e.g. in /usr,
+    # perform first non-recursive search in root/lib then in root/lib64 and
+    # finally search all of root recursively. The search stops when the first
+    # match is found.
+    for subdir in ('lib', 'lib64'):
+        dirname = join_path(root, subdir)
+        if not os.path.isdir(dirname):
+            continue
+        found_libs = find(dirname, libraries, False)
+        if found_libs:
+            break
+    else:
+        found_libs = find(root, libraries, True)
+
+    return LibraryList(found_libs)
 
 
 @memoized
@@ -1443,6 +1540,7 @@ def search_paths_for_executables(*path_hints):
         if not os.path.isdir(path):
             continue
 
+        path = os.path.abspath(path)
         executable_paths.append(path)
 
         bin_dir = os.path.join(path, 'bin')

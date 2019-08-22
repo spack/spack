@@ -20,7 +20,7 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        self.exe = shlex.split(name)
+        self.exe = shlex.split(str(name))
         self.default_env = {}
         self.returncode = None
 

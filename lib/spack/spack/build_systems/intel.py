@@ -25,10 +25,10 @@ from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.build_environment import dso_suffix
 
-
 # A couple of utility functions that might be useful in general. If so, they
 # should really be defined elsewhere, unless deemed heretical.
 # (Or na"ive on my part).
+
 
 def debug_print(msg, *args):
     '''Prints a message (usu. a variable) and the callers' names for a couple
@@ -114,6 +114,14 @@ class IntelPackage(PackageBase):
         'intel-mkl@11.3.0:11.3.999':  2016,
         'intel-mpi@5.1:5.99':         2016,
     }
+
+    # Below is the list of possible values for setting auto dispatch functions
+    # for the Intel compilers. Using these allows for the building of fat
+    # binaries that will detect the CPU SIMD capabilities at run time and
+    # activate the appropriate extensions.
+    auto_dispatch_options = ('COMMON-AVX512', 'MIC-AVX512', 'CORE-AVX512',
+                             'CORE-AVX2', 'CORE-AVX-I', 'AVX', 'SSE4.2',
+                             'SSE4.1', 'SSSE3', 'SSE3', 'SSE2')
 
     @property
     def license_required(self):
@@ -927,6 +935,11 @@ class IntelPackage(PackageBase):
                 'MPIF90': compiler_wrapper_commands['MPIF90'],
             })
 
+        # Ensure that the directory containing the compiler wrappers is in the
+        # PATH. Spack packages add `prefix.bin` to their dependents' paths,
+        # but because of the intel directory hierarchy that is insufficient.
+        spack_env.prepend_path('PATH', os.path.dirname(wrapper_vars['MPICC']))
+
         for key, value in wrapper_vars.items():
             spack_env.set(key, value)
 
@@ -1240,6 +1253,30 @@ class IntelPackage(PackageBase):
             compiler_cfg = os.path.abspath(f + '.cfg')
             with open(compiler_cfg, 'w') as fh:
                 fh.write('-Xlinker -rpath={0}\n'.format(compilers_lib_dir))
+
+    @run_after('install')
+    def configure_auto_dispatch(self):
+        if self._has_compilers:
+            if ('auto_dispatch=none' in self.spec):
+                return
+
+            compilers_bin_dir = self.component_bin_dir('compiler')
+
+            for compiler_name in 'icc icpc ifort'.split():
+                f = os.path.join(compilers_bin_dir, compiler_name)
+                if not os.path.isfile(f):
+                    raise InstallError(
+                        'Cannot find compiler command to configure '
+                        'auto_dispatch:\n\t' + f)
+
+                ad = []
+                for x in IntelPackage.auto_dispatch_options:
+                    if 'auto_dispatch={0}'.format(x) in self.spec:
+                        ad.append(x)
+
+                compiler_cfg = os.path.abspath(f + '.cfg')
+                with open(compiler_cfg, 'a') as fh:
+                    fh.write('-ax{0}\n'.format(','.join(ad)))
 
     @run_after('install')
     def filter_compiler_wrappers(self):

@@ -41,7 +41,7 @@ def _find_exe_from_env_var(var):
         return None, []
 
     # split env var into executable and args if needed
-    args = shlex.split(exe)
+    args = shlex.split(str(exe))
     if not args:
         return None, []
 

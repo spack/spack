@@ -106,6 +106,7 @@ class Mvapich2(AutotoolsPackage):
     depends_on('rdma-core', when='fabrics=nemesistcpib')
     depends_on('rdma-core', when='fabrics=nemesisibtcp')
     depends_on('libfabric', when='fabrics=nemesisofi')
+    depends_on('slurm', when='process_managers=slurm')
 
     conflicts('fabrics=psm2', when='@:2.1')  # psm2 support was added at version 2.2
 
@@ -142,7 +143,8 @@ class Mvapich2(AutotoolsPackage):
         if 'process_managers=slurm' in spec:
             opts = [
                 '--with-pmi=pmi2',
-                '--with-pm=slurm'
+                '--with-pm=slurm',
+                '--with-slurm={0}'.format(spec['slurm'].prefix),
             ]
 
         return opts

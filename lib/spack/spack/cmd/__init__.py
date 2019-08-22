@@ -264,7 +264,7 @@ def display_specs(specs, args=None, **kwargs):
         hashes = True
         hlen = None
 
-    nfmt = '{namespace}{name}' if namespace else '{name}'
+    nfmt = '{namespace}.{name}' if namespace else '{name}'
     ffmt = ''
     if full_compiler or flags:
         ffmt += '{%compiler.name}'

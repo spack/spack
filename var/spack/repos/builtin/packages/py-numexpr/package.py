@@ -9,14 +9,14 @@ from spack import *
 class PyNumexpr(PythonPackage):
     """Fast numerical expression evaluator for NumPy"""
     homepage = "https://pypi.python.org/pypi/numexpr"
-    url      = "https://pypi.io/packages/source/n/numexpr/numexpr-2.6.9.tar.gz"
+    url      = "https://github.com/pydata/numexpr/archive/v2.6.9.tar.gz"
 
-    version('2.6.9', sha256='fc218b777cdbb14fa8cff8f28175ee631bacabbdd41ca34e061325b6c44a6fa6')
-    version('2.6.5', 'c9b5859c11bd6da092f6c8a84a472e77')
-    version('2.6.1', '6365245705b446426df9543ad218dd8e')
-    version('2.5',   '84f66cced45ba3e30dcf77a937763aaa')
-    version('2.4.6', '17ac6fafc9ea1ce3eb970b9abccb4fbd')
+    version('2.6.9', sha256='d57267bbdf10906f5ed7841b3484bec4af0494102b50e89ba316924cc7a7fd46')
+    version('2.6.5', sha256='fe78a78e002806e87e012b6105f3b3d52d47fc7a72bafb56341fcec7ce02cfd7')
+    version('2.6.1', sha256='e92c83d066fa8da63864d69b5f218287cc31437ae844db77390f2183123aab22')
+    version('2.5',   sha256='4ca111a9a27c9513c2e2f5b70c0a84ea69081d7d8e4512d4c3f26a485292de0d')
+    version('2.4.6', sha256='2681faf55a3f19ba4424cc3d6f0a10610ebd49f029f8453f0ba64dd5c0fe4e0f')
 
-    depends_on('python@2.6:')
-    depends_on('py-numpy@1.6:', type=('build', 'run'))
+    depends_on('python@2.6:', type=('build', 'run'))
+    depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

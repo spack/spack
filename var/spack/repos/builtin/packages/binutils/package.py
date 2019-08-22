@@ -13,6 +13,7 @@ class Binutils(AutotoolsPackage):
     homepage = "http://www.gnu.org/software/binutils/"
     url      = "https://ftpmirror.gnu.org/binutils/binutils-2.28.tar.bz2"
 
+    version('2.32', sha256='de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d')
     version('2.31.1', 'ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0')
     version('2.29.1', '9af59a2ca3488823e453bb356fe0f113')
     version('2.28', '9e8340c96626b469a603c15c9d843727')
@@ -91,3 +92,12 @@ class Binutils(AutotoolsPackage):
             for current_file in glob.glob(join_path(self.build_directory,
                                                     'bfd', '*.h')):
                 install(current_file, extradir)
+
+    def flag_handler(self, name, flags):
+        # To ignore the errors of narrowing conversions for
+        # the Fujitsu compiler
+        if name == 'cxxflags'\
+           and (self.compiler.name == 'fj' or self.compiler.name == 'clang')\
+           and self.version <= ver('2.31.1'):
+            flags.append('-Wno-narrowing')
+        return (flags, None, None)

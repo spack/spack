@@ -56,7 +56,7 @@ def test_all_virtual_packages_have_default_providers():
 
 
 def test_package_version_consistency():
-    """Make sure all versions on builtin packages can produce a fetcher."""
+    """Make sure all versions on builtin packages produce a fetcher."""
     for name in spack.repo.all_package_names():
         pkg = spack.repo.get(name)
         spack.fetch_strategy.check_pkg_attributes(pkg)

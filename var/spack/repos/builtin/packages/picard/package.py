@@ -42,7 +42,7 @@ class Picard(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         # The list of files to install varies with release...
-        # ... but skip the spack-{build.env}.out files.
+        # ... but skip the spack-build-{env}out.txt files.
         files = [x for x in glob.glob("*") if not re.match("^spack-", x)]
         for f in files:
             install(f, prefix.bin)

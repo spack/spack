@@ -201,18 +201,29 @@ class YamlFilesystemView(FilesystemView):
                 # Write projections file to new view
                 # Not strictly necessary as the empty file is the empty
                 # projection but it makes sense for consistency
-                mkdirp(os.path.dirname(projections_path))
-                with open(projections_path, 'w') as f:
-                    f.write(s_yaml.dump({'projections': self.projections}))
+                try:
+                    mkdirp(os.path.dirname(projections_path))
+                    with open(projections_path, 'w') as f:
+                        f.write(s_yaml.dump({'projections': self.projections}))
+                except OSError as e:
+                    if self.projections:
+                        raise e
         elif not os.path.exists(projections_path):
             # Write projections file to new view
             mkdirp(os.path.dirname(projections_path))
             with open(projections_path, 'w') as f:
                 f.write(s_yaml.dump({'projections': self.projections}))
         else:
-            msg = 'View at %s has projections file' % self._root
-            msg += ' and was passed projections manually.'
-            raise ConflictingProjectionsError(msg)
+            # Ensure projections are the same from each source
+            # Read projections file from view
+            with open(projections_path, 'r') as f:
+                projections_data = s_yaml.load(f)
+                spack.config.validate(projections_data,
+                                      spack.schema.projections.schema)
+                if self.projections != projections_data['projections']:
+                    msg = 'View at %s has projections file' % self._root
+                    msg += ' which does not match projections passed manually.'
+                    raise ConflictingProjectionsError(msg)
 
         self.extensions_layout = YamlViewExtensionsLayout(self, layout)
 

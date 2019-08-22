@@ -109,14 +109,52 @@ def no_chdir():
         assert os.getcwd() == original_wd
 
 
-@pytest.fixture(scope='session', autouse=True)
-def mock_stage(tmpdir_factory):
-    """Mocks up a fake stage directory for use by tests."""
-    stage_path = spack.paths.stage_path
-    new_stage = str(tmpdir_factory.mktemp('mock_stage'))
-    spack.paths.stage_path = new_stage
-    yield new_stage
-    spack.paths.stage_path = stage_path
+@pytest.fixture(scope='function', autouse=True)
+def reset_compiler_cache():
+    """Ensure that the compiler cache is not shared across Spack tests
+
+    This cache can cause later tests to fail if left in a state incompatible
+    with the new configuration. Since tests can make almost unlimited changes
+    to their setup, default to not use the compiler cache across tests."""
+    spack.compilers._compiler_cache = {}
+    yield
+    spack.compilers._compiler_cache = {}
+
+
+@pytest.fixture
+def clear_stage_root(monkeypatch):
+    """Ensure spack.stage._stage_root is not set at test start."""
+    monkeypatch.setattr(spack.stage, '_stage_root', None)
+    yield
+
+
+@pytest.fixture(scope='function', autouse=True)
+def mock_stage(clear_stage_root, tmpdir_factory, request):
+    """Establish the temporary build_stage for the mock archive."""
+    # Workaround to skip mock_stage for 'nomockstage' test cases
+    if 'nomockstage' not in request.keywords:
+        new_stage = tmpdir_factory.mktemp('mock-stage')
+        new_stage_path = str(new_stage)
+
+        # Set test_stage_path as the default directory to use for test stages.
+        current = spack.config.get('config:build_stage')
+        spack.config.set('config',
+                         {'build_stage': new_stage_path}, scope='user')
+
+        # Ensure the source directory exists
+        source_path = new_stage.join(spack.stage._source_path_subdir)
+        source_path.ensure(dir=True)
+
+        yield new_stage_path
+
+        spack.config.set('config', {'build_stage': current}, scope='user')
+
+        # Clean up the test stage directory
+        if os.path.isdir(new_stage_path):
+            shutil.rmtree(new_stage_path)
+    else:
+        # Must yield a path to avoid a TypeError on test teardown
+        yield str(tmpdir_factory)
 
 
 @pytest.fixture(scope='session')
@@ -126,7 +164,7 @@ def ignore_stage_files():
     Used to track which leftover files in the stage have been seen.
     """
     # to start with, ignore the .lock file at the stage root.
-    return set(['.lock'])
+    return set(['.lock', spack.stage._source_path_subdir])
 
 
 def remove_whatever_it_is(path):
@@ -161,17 +199,19 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
 
     to tests that need it.
     """
+    stage_path = mock_stage
+
     yield
 
     files_in_stage = set()
-    if os.path.exists(spack.paths.stage_path):
-        files_in_stage = set(
-            os.listdir(spack.paths.stage_path)) - ignore_stage_files
+    if os.path.exists(stage_path):
+        stage_files = os.listdir(stage_path)
+        files_in_stage = set(stage_files) - ignore_stage_files
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(spack.paths.stage_path, f)
+            path = os.path.join(stage_path, f)
             remove_whatever_it_is(path)
     else:
         ignore_stage_files |= files_in_stage
@@ -394,45 +434,58 @@ def _populate(mock_db):
         _install('externaltest')
 
 
+@pytest.fixture(scope='session')
+def _store_dir_and_cache(tmpdir_factory):
+    """Returns the directory where to build the mock database and
+    where to cache it.
+    """
+    store = tmpdir_factory.mktemp('mock_store')
+    cache = tmpdir_factory.mktemp('mock_store_cache')
+    return store, cache
+
+
 @pytest.fixture(scope='module')
-def database(tmpdir_factory, mock_packages, config):
-    """Creates a mock database with some packages installed note that
-    the ref count for dyninst here will be 3, as it's recycled
+def database(tmpdir_factory, mock_packages, config, _store_dir_and_cache):
+    """Creates a read-only mock database with some packages installed note
+    that the ref count for dyninst here will be 3, as it's recycled
     across each install.
     """
-    # save the real store
     real_store = spack.store.store
+    store_path, store_cache = _store_dir_and_cache
 
-    # Make a fake install directory
-    install_path = tmpdir_factory.mktemp('install_for_database')
+    mock_store = spack.store.Store(str(store_path))
+    spack.store.store = mock_store
 
-    # Make fake store (database and install layout)
-    tmp_store = spack.store.Store(str(install_path))
-    spack.store.store = tmp_store
+    # If the cache does not exist populate the store and create it
+    if not os.path.exists(str(store_cache.join('.spack-db'))):
+        _populate(mock_store.db)
+        store_path.copy(store_cache, mode=True, stat=True)
 
-    _populate(tmp_store.db)
+    # Make the database read-only to ensure we can't modify entries
+    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
-    yield tmp_store.db
+    yield mock_store.db
 
-    with tmp_store.db.write_transaction():
-        for spec in tmp_store.db.query():
-            if spec.package.installed:
-                PackageBase.uninstall_by_spec(spec, force=True)
-            else:
-                tmp_store.db.remove(spec)
-
-    install_path.remove(rec=1)
+    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
     spack.store.store = real_store
 
 
 @pytest.fixture(scope='function')
-def mutable_database(database):
-    """For tests that need to modify the database instance."""
+def mutable_database(database, _store_dir_and_cache):
+    """Writeable version of the fixture, restored to its initial state
+    after each test.
+    """
+    # Make the database writeable, as we are going to modify it
+    store_path, store_cache = _store_dir_and_cache
+    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
+
     yield database
-    with database.write_transaction():
-        for spec in spack.store.db.query():
-            PackageBase.uninstall_by_spec(spec, force=True)
-    _populate(database)
+
+    # Restore the initial state by copying the content of the cache back into
+    # the store and making the database read-only
+    store_path.remove(rec=1)
+    store_cache.copy(store_path, mode=True, stat=True)
+    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
 
 @pytest.fixture(scope='function')
@@ -634,22 +687,28 @@ def mock_git_repository(tmpdir_factory):
 
     checks = {
         'master': Bunch(
-            revision='master', file=r0_file, args={'git': str(repodir)}
+            revision='master', file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
-                'git': str(repodir), 'branch': branch
+                'git': url, 'branch': branch
+            }
+        ),
+        'tag-branch': Bunch(
+            revision=tag_branch, file=tag_file, args={
+                'git': url, 'branch': tag_branch
             }
         ),
         'tag': Bunch(
-            revision=tag, file=tag_file, args={'git': str(repodir), 'tag': tag}
+            revision=tag, file=tag_file, args={'git': url, 'tag': tag}
         ),
         'commit': Bunch(
-            revision=r1, file=r1_file, args={'git': str(repodir), 'commit': r1}
+            revision=r1, file=r1_file, args={'git': url, 'commit': r1}
         )
     }
 
-    t = Bunch(checks=checks, url=url, hash=rev_hash, path=str(repodir))
+    t = Bunch(checks=checks, url=url, hash=rev_hash,
+              path=str(repodir), git_exe=git)
     yield t
 
 
@@ -885,3 +944,53 @@ def invalid_spec(request):
     """Specs that do not parse cleanly due to invalid formatting.
     """
     return request.param
+
+
+@pytest.fixture("module")
+def mock_test_repo(tmpdir_factory):
+    """Create an empty repository."""
+    repo_namespace = 'mock_test_repo'
+    repodir = tmpdir_factory.mktemp(repo_namespace)
+    repodir.ensure(spack.repo.packages_dir_name, dir=True)
+    yaml = repodir.join('repo.yaml')
+    yaml.write("""
+repo:
+    namespace: mock_test_repo
+""")
+
+    repo = spack.repo.RepoPath(str(repodir))
+    with spack.repo.swap(repo):
+        yield repo, repodir
+
+    shutil.rmtree(str(repodir))
+
+
+##########
+# Class and fixture to work around problems raising exceptions in directives,
+# which cause tests like test_from_list_url to hang for Python 2.x metaclass
+# processing.
+#
+# At this point only version and patch directive handling has been addressed.
+##########
+
+class MockBundle(object):
+    has_code = False
+    name = 'mock-bundle'
+    versions = {}
+
+
+@pytest.fixture
+def mock_directive_bundle():
+    """Return a mock bundle package for directive tests."""
+    return MockBundle()
+
+
+@pytest.fixture
+def clear_directive_functions():
+    """Clear all overidden directive functions for subsequent tests."""
+    yield
+
+    # Make sure any directive functions overidden by tests are cleared before
+    # proceeding with subsequent tests that may depend on the original
+    # functions.
+    spack.directives.DirectiveMeta._directives_to_be_executed = []

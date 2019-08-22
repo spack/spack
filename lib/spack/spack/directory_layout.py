@@ -12,7 +12,7 @@ from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import mkdirp, chgrp
+from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.spec
@@ -193,9 +193,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'build.txt'  # build log.
-        self.build_env_name      = 'build.env'  # build environment
-        self.packages_dir        = 'repos'      # archive of package.py files
+        self.packages_dir        = 'repos'  # archive of package.py files
 
     @property
     def hidden_file_paths(self):
@@ -242,12 +240,6 @@ class YamlDirectoryLayout(DirectoryLayout):
     def metadata_path(self, spec):
         return os.path.join(spec.prefix, self.metadata_dir)
 
-    def build_log_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.build_log_name)
-
-    def build_env_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.build_env_name)
-
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
 
@@ -262,15 +254,16 @@ class YamlDirectoryLayout(DirectoryLayout):
         # Cannot import at top of file
         from spack.package_prefs import get_package_dir_permissions
         from spack.package_prefs import get_package_group
+
+        # Each package folder can have its own specific permissions, while
+        # intermediate folders (arch/compiler) are set with access permissions
+        # equivalent to the root permissions of the layout.
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
-        mkdirp(spec.prefix, mode=perms)
-        if group:
-            chgrp(spec.prefix, group)
-            # Need to reset the sticky group bit after chgrp
-            os.chmod(spec.prefix, perms)
 
-        mkdirp(self.metadata_path(spec), mode=perms)
+        mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
+        mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
+
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):

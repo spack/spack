@@ -13,6 +13,7 @@ class PyKerasApplications(PythonPackage):
     homepage = "http://keras.io"
     url      = "https://github.com/keras-team/keras-applications/archive/1.0.4.tar.gz"
 
+    version('1.0.8', sha256='7c37f9e9ef93efac9b4956301cb21ce46c474ce9da41fac9a46753bab6823dfc')
     version('1.0.7', sha256='8580a885c8abe4bf8429cb0e551f23e79b14eda73d99138cfa1d355968dd4b0a')
     version('1.0.6', sha256='2cb412c97153160ec267b238e958d281ac3532b139cab42045c2d7086a157c21')
     version('1.0.4', sha256='37bd2f3ba9c0e0105c193999b1162fd99562cf43e5ef06c73932950ecc46d085')

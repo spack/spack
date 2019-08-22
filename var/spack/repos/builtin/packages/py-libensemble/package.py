@@ -11,10 +11,11 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    url      = "https://pypi.io/packages/source/l/libensemble/libensemble-0.5.0.tar.gz"
+    url      = "https://pypi.io/packages/source/l/libensemble/libensemble-0.5.1.tar.gz"
     git      = "https://github.com/Libensemble/libensemble.git"
 
     version('develop', branch='develop')
+    version('0.5.1', sha256='522e0cc086a3ed75a101b704c0fe01eae07f2684bd8d6da7bdfe9371d3187362')
     version('0.5.0', sha256='c4623171dee049bfaa38a9c433609299a56b1afb774db8b71321247bc7556b8f')    
     version('0.4.1', sha256='282c32ffb79d84cc80b5cc7043c202d5f0b8ebff10f63924752f092e3938db5e')
     version('0.4.0', sha256='9384aa3a58cbc20bbd1c6fddfadb5e6a943d593a3a81c8665f030dbc6d76e76e')
