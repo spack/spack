@@ -7,10 +7,9 @@ from spack import *
 
 
 class PyFilemagic(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """A Python API for libmagic, the library behind the Unix file command"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://filemagic.readthedocs.io/en/latest/"
     url      = "https://pypi.io/packages/source/f/filemagic/filemagic-1.6.tar.gz"
 
     version('1.6', sha256='e684359ef40820fe406f0ebc5bf8a78f89717bdb7fed688af68082d991d6dbf3')
