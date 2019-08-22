@@ -35,4 +35,8 @@ class Libglvnd(AutotoolsPackage):
         autogen()
 
     def configure_args(self):
-        return []
+        return [
+            '--enable-egl',
+            '--enable-gles',
+            '--enable-glx'
+        ]
