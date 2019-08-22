@@ -24,7 +24,6 @@ class Libglvnd(AutotoolsPackage):
     version('master', branch='master')
 
     version('1.1.1', sha256='71918ed1261e4eece18c0b74b50dc62c0237b8d526e83277ef078554544720b9')
-    version('1.1.0', sha256='f5a74598e769d55d652c464cb6507437dac5c2d513f16c6ddf3a1bec655a1824')
 
     depends_on('libxext')
     depends_on('libx11')
