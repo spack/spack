@@ -339,7 +339,8 @@ class Concretizer(object):
                         other_compiler
                     )
                     self.concretize_version(cpkg_spec)
-                    spec.compiler.versions = cpkg_spec.versions
+                    spec.compiler = spack.spec.CompilerSpec(
+                        other_compiler.name, cpkg_spec.versions)
                     return True
                 else:
                     # No compiler with a satisfactory spec was found
