@@ -52,8 +52,8 @@ config:
   # temporary space.
   #
   # In any case, if the username is not already in the path, Spack will append
-  # the value of `$user` to avoid potential conflicts between users in shared
-  # temporary spaces.
+  # the value of `$user` in an attempt to avoid potential conflicts between
+  # users in shared temporary spaces.
   #
   # The build stage can be purged with `spack clean --stage` and
   # `spack clean -a`, so it is important that the specified directory uniquely

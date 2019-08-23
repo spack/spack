@@ -88,7 +88,7 @@ systems the home directory is a (slow) network file system.  On most systems,
 building in a temporary file system is faster.  Usually, there is also more
 space available in the temporary location than in the home directory.  If the
 username is not already in the path, Spack will append the value of ``$user`` to
-the path provided in ``build_stage``.
+the selected ``build_stage`` path.
 
 .. warning:: We highly recommend ensuring the ``build_stage`` path
    distinguishes between staging and other activities to ensure 

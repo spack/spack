@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 import stat
 import sys
 import errno
@@ -36,6 +37,35 @@ _source_path_subdir = 'spack-src'
 _stage_prefix = 'spack-stage-'
 
 
+def _create_stage_root(path):
+    """Create the stage root directory and ensure appropriate access perms."""
+    assert path.startswith(os.path.sep) and len(path.strip()) > 1
+
+    curr_dir = os.path.sep
+    parts = path.strip(os.path.sep).split(os.path.sep)
+    for i, part in enumerate(parts):
+        curr_dir = os.path.join(curr_dir, part)
+        if not os.path.exists(curr_dir):
+            rest = os.path.join(os.path.sep, *parts[i + 1:])
+            user_parts = rest.partition(os.path.sep + getpass.getuser())
+            if len(user_parts[0]) > 0:
+                # Ensure access controls of subdirs created above `$user`
+                # inherit from the parent and share the group.
+                stats = os.stat(os.path.dirname(curr_dir))
+                curr_dir = ''.join([curr_dir, user_parts[0]])
+                mkdirp(curr_dir, group=stats.st_gid, mode=stats.st_mode)
+
+            user_subdirs = ''.join(user_parts[1:])
+            if len(user_subdirs) > 0:
+                # Ensure access controls of subdirs from `$user` on down are
+                # restricted to the user.
+                curr_dir = ''.join([curr_dir, user_subdirs])
+                mkdirp(curr_dir, mode=stat.S_IRWXU)
+
+            assert os.getuid() == os.stat(curr_dir).st_uid
+            break
+
+
 def _first_accessible_path(paths):
     """Find the first path that is accessible, creating it if necessary."""
     for path in paths:
@@ -45,33 +75,16 @@ def _first_accessible_path(paths):
                 if can_access(path):
                     return path
             else:
-                # The path doesn't exist so create it and adjust permissions
-                # and group as needed (e.g., shared ``$tempdir``).
+                # Remove adjacent occurance of `$user` (e.g., `$tempdir/$user`
+                # where `$tempdir` includes `$user`).
                 user = getpass.getuser()
-                prefix = os.path.sep
-                parts = path.strip(os.path.sep).split(os.path.sep)
+                user_node = '{0}{1}'.format(os.path.sep, user)
+                double_user = '{0}{0}'.format(user_node)
+                if double_user in path:
+                    path = path.replace(double_user, user_node, 1)
 
-                # Permissions for ancestors of `$user` should be inherited
-                # from the parent directory while those from `$user` down
-                # should be private a la tempfile.mkdtemp.
-                kwargs = {'default_perms': 'parents'}
-                first = True
-                for part in parts:
-                    if part == user:
-                        kwargs['default_perms'] = 'args'
-                        kwargs['mode'] = stat.S_IRWXU
-                        kwargs['group'] = None
-                    prefix = os.path.join(prefix, part)
-                    if not os.path.exists(prefix):
-                        if part != user and first:
-                            parent = os.path.dirname(prefix)
-                            kwargs['group'] = os.stat(parent).st_gid
-                            kwargs['mode'] = os.stat(parent).st_mode
-                        mkdirp(path, **kwargs)
-                        if first:
-                            assert os.getuid() == os.stat(prefix).st_uid
-                            first = False
-
+                # Now create the stage root with the proper group/perms.
+                _create_stage_root(path)
                 if can_access(path):
                     return path
 
@@ -101,8 +114,8 @@ def get_stage_root():
                              ' '.join(resolved_candidates))
 
         # Ensure that any temp path is unique per user, so users don't
-        # fight over shared temporary space.  Emulate file permissions
-        # tempfile.mkdtemp.
+        # fight over shared temporary space.  Emulate permissions from
+        # `tempfile.mkdtemp`.
         user = getpass.getuser()
         if user not in path:
             path = os.path.join(path, user)
@@ -652,10 +665,13 @@ def purge():
     """Remove all build directories in the top-level stage path."""
     root = get_stage_root()
     if os.path.isdir(root):
+        # TODO: Figure out a "standard" way to identify the hash length
+        # TODO: Should this support alternate base represenations?
+        dir_expr = re.compile(r'.*-[0-9a-f]{32}$')
         for stage_dir in os.listdir(root):
-            # TODO/TLD: Only remove hashed directories
-            stage_path = os.path.join(root, stage_dir)
-            remove_linked_tree(stage_path)
+            if re.match(dir_expr, stage_dir) or stage_dir == '.lock':
+                stage_path = os.path.join(root, stage_dir)
+                remove_linked_tree(stage_path)
 
 
 class StageError(spack.error.SpackError):
