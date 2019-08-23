@@ -14,4 +14,5 @@ class PyCovCore(PythonPackage):
 
     version('1.15.0', sha256='4a14c67d520fda9d42b0da6134638578caae1d374b9bb462d8de00587dba764c')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-coverage@3.6:', type=('build', 'run'))
