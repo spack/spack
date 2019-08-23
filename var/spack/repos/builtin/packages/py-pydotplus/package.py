@@ -18,14 +18,7 @@ class PyPydotplus(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pyparsing@2.0.1:', type=('build', 'run'))
-
-    depends_on('py-tox', type='test')
-    depends_on('py-flake8', type='test')
     depends_on('py-pytest', type='test')
-    depends_on('py-pytest-cov', type='test')
-    depends_on('py-coverage', type='test')
-    depends_on('py-coveralls', type='test')
     depends_on('py-sphinx', type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
-
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
