@@ -3,8 +3,25 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# ----------------------------------------------------------------------------
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install flecsph-git
+#
+# You can edit this file again by typing:
+#
+#     spack edit flecsph-git
+#
+# See the Spack documentation for more information on packaging.
+# ----------------------------------------------------------------------------
 
 from spack import *
+
 
 class Flecsph(CMakePackage):
     """FleCSPH is a multi-physics compact application that exercises FleCSI 
@@ -20,7 +37,7 @@ class Flecsph(CMakePackage):
     version('develop',branch='master',submodules=True)
     
     depends_on('cmake@3.1:', type='build')
-    depends_on('boost@1.59.0 cxxstd=11 +program_options')
+    depends_on('boost@1.59.0: cxxstd=11 +program_options')
     depends_on('mpi')
     depends_on('hdf5@1.10.5 +mpi')
     depends_on('flecsi@flecsph backend=mpi')
