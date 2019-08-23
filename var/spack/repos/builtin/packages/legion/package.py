@@ -52,7 +52,6 @@ class Legion(CMakePackage):
 
     def cmake_args(self):
         options = [
-            '-DCMAKE_BUILD_TYPE=Debug',
             '-DLegion_USE_GASNet=ON',
             '-DLEGION_USE_CUDA=OFF',
             '-DLEGION_USE_OPENMP=OFF',
