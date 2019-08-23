@@ -333,7 +333,7 @@ class OctavePackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     # depends_on('octave-foo', type=('build', 'run'))"""
 
-    def __init__(self, name, *arg, **kwargss):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name octave-splines`, don't rename it
         # octave-octave-splines
         if not name.startswith('octave-'):
@@ -341,7 +341,7 @@ class OctavePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to octave-{0}".format(name))  # noqa
             name = 'octave-{0}'.format(name)
 
-        super(OctavePackageTemplate, self).__init__(name, *arg, **kwargss)
+        super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class MakefilePackageTemplate(PackageTemplate):
