@@ -1,0 +1,22 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyPyjwt(PythonPackage):
+    """JSON Web Token implementation in Python"""
+
+    homepage = "https://github.com/jpadilla/pyjwt"
+    url      = "https://files.pythonhosted.org/packages/source/P/PyJWT/PyJWT-1.7.1.tar.gz"
+
+    version('1.7.1', sha256='8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pytest', type='test')
+    depends_on('py-pytest-cov', type='test')
+    depends_on('py-pytest-runner', type='test')
+
+    conflicts('python@3.0:3.3')
