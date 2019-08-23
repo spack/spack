@@ -129,7 +129,7 @@ def hello_world_sub_no_cmd(subcommand_root):
     hello.write(_hello_world_cmd_text)
     sys.path.insert(0, str(subcommand_root))
     yield
-    sys.path.pop()
+    sys.path.remove(str(subcommand_root))
 
 
 @pytest.fixture()
@@ -139,7 +139,7 @@ def hello_world_sub_cmd(subcommand_root):
     hello.write(_hello_world_cmd_text)
     sys.path.insert(0, str(subcommand_root))
     yield
-    sys.path.pop()
+    sys.path.remove(str(subcommand_root))
 
 
 def test_simple_command_extension(hello_world_cmd):

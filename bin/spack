@@ -10,13 +10,6 @@ from __future__ import print_function
 import os
 import sys
 
-# Early import to avoid threading issues with datetime.datetime.strptime().
-import _strptime  # noqa: F401
-
-# Early import to avoid threading issues with import of gzip.
-import gzip  # noqa: F401
-
-
 if sys.version_info[:2] < (2, 6):
     v_info = sys.version_info[:3]
     sys.exit("Spack requires Python 2.6 or higher."
