@@ -16,5 +16,3 @@ class PyPydot2(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pyparsing', type=('build', 'run'))
-
-    conflicts('python@3.5.0:')
