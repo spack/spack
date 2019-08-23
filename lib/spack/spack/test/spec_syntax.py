@@ -3,9 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pytest
 import shlex
 
+import llnl.util.filesystem as fs
+
+import spack.hash_types as ht
 import spack.store
 import spack.spec as sp
 from spack.parse import Token
@@ -14,6 +18,7 @@ from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
 from spack.spec import DuplicateArchitectureError, DuplicateVariantError
 from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
+from spack.spec import InvalidYamlPathError
 
 
 # Sample output for a complex lexing.
@@ -432,6 +437,132 @@ class TestSpecSyntax(object):
             "x target=be platform=test os=be os=fe"
         ]
         self._check_raises(DuplicateArchitectureError, duplicates)
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_simple(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.join('libdwarf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        # Check an absolute path spec.yaml by itself:
+        #     "spack spec /path/to/libdwarf.yaml"
+        specs = sp.parse(specfile.strpath)
+        assert len(specs) == 1
+
+        # Check absolute path spec.yaml mixed with a clispec, e.g.:
+        #     "spack spec mvapich_foo /path/to/libdwarf.yaml"
+        specs = sp.parse('mvapich_foo {0}'.format(specfile.strpath))
+        assert len(specs) == 2
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_dependency(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.join('libelf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s['libelf'].to_yaml(hash=ht.build_hash))
+
+        # Make sure we can use yaml path as dependency, e.g.:
+        #     "spack spec libdwarf ^ /path/to/libelf.yaml"
+        specs = sp.parse('libdwarf ^ {0}'.format(specfile.strpath))
+        assert len(specs) == 1
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_relative_paths(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.join('libdwarf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        file_name = specfile.basename
+        parent_dir = os.path.basename(specfile.dirname)
+
+        # Relative path to specfile
+        with fs.working_dir(specfile.dirname):
+            # Test for command like: "spack spec libelf.yaml"
+            specs = sp.parse('{0}'.format(file_name))
+            assert len(specs) == 1
+
+            # Make sure this also works: "spack spec ./libelf.yaml"
+            specs = sp.parse('./{0}'.format(file_name))
+            assert len(specs) == 1
+
+            # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
+            specs = sp.parse('../{0}/{1}'.format(parent_dir, file_name))
+            assert len(specs) == 1
+
+            # Should also handle mixed clispecs and relative paths, e.g.:
+            #     "spack spec mvapich_foo ../<cur-dir>/libelf.yaml"
+            specs = sp.parse('mvapich_foo ../{0}/{1}'.format(
+                parent_dir, file_name))
+            assert len(specs) == 2
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_dependency_relative_paths(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.join('libelf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s['libelf'].to_yaml(hash=ht.build_hash))
+
+        file_name = specfile.basename
+        parent_dir = os.path.basename(specfile.dirname)
+
+        # Relative path to specfile
+        with fs.working_dir(specfile.dirname):
+            # Test for command like: "spack spec libelf.yaml"
+            specs = sp.parse('libdwarf^{0}'.format(file_name))
+            assert len(specs) == 1
+
+            # Make sure this also works: "spack spec ./libelf.yaml"
+            specs = sp.parse('libdwarf^./{0}'.format(file_name))
+            assert len(specs) == 1
+
+            # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
+            specs = sp.parse('libdwarf^../{0}/{1}'.format(
+                parent_dir, file_name))
+            assert len(specs) == 1
+
+    def test_parse_yaml_error_handling(self):
+        self._check_raises(InvalidYamlPathError, [
+            # Single spec that looks like a yaml path
+            '/bogus/path/libdwarf.yaml',
+            '../../libdwarf.yaml',
+            './libdwarf.yaml',
+            # Dependency spec that looks like a yaml path
+            'libdwarf^/bogus/path/libelf.yaml'
+            'libdwarf ^../../libelf.yaml',
+            'libdwarf^ ./libelf.yaml',
+            # Multiple specs, one looks like a yaml path
+            'mvapich_foo /bogus/path/libelf.yaml',
+            'mvapich_foo ../../libelf.yaml',
+            'mvapich_foo ./libelf.yaml',
+        ])
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_variant_error(self, mock_packages, tmpdir):
+        s = Spec('a')
+        s.concretize()
+
+        specfile = tmpdir.join('a.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        with pytest.raises(RedundantSpecError):
+            # Trying to change a variant on a concrete spec is an error
+            sp.parse('{0} ~bvv'.format(specfile.strpath))
 
     # ========================================================================
     # Lex checks

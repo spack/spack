@@ -111,7 +111,7 @@ import spack.util.spack_yaml as syaml
 
 from spack.util.module_cmd import get_path_from_module, load_module
 from spack.error import NoLibrariesError, NoHeadersError
-from spack.error import SpecError, UnsatisfiableSpecError
+from spack.error import SpackError, SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
@@ -3807,7 +3807,7 @@ class LazySpecCache(collections.defaultdict):
 #
 # These are possible token types in the spec grammar.
 #
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL = range(11)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, DOTS = range(12)
 
 
 class SpecLexer(spack.parse.Lexer):
@@ -3829,6 +3829,7 @@ class SpecLexer(spack.parse.Lexer):
             # This is more liberal than identifier_re (see above).
             # Checked by check_identifier() for better error messages.
             (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
+            (r'\.{1,2}', lambda scanner, val: self.token(DOTS,    val)),
             (r'\s+', lambda scanner, val: None)],
             [EQ],
             [(r'[\S].*', lambda scanner, val: self.token(VAL,    val)),
@@ -3887,9 +3888,33 @@ class SpecParser(spack.parse.Parser):
                         # We're parsing a new spec by name
                         self.previous = None
                         specs.append(self.spec(self.token.value))
+
                 elif self.accept(HASH):
+                    previous_token = self.token
                     # We're finding a spec by hash
-                    specs.append(self.spec_by_hash())
+                    try:
+                        specs.append(self.spec_by_hash())
+                    except NoSuchHashError as no_such_hash_error:
+                        self.push_tokens([previous_token, self.token])
+                        try:
+                            specs.append(self.try_spec_from_yaml())
+                        except YamlPathNotFoundError:
+                            # It was worth a try to see if maybe there was
+                            # something that looked like a yaml path, but
+                            # it didn't pan out.  Just raise the original
+                            # error.
+                            raise no_such_hash_error
+                        except (syaml.SpackYAMLError, EnvironmentError,
+                                SpackError) as e:
+                            # Did find something that looked like a
+                            # yaml path, but there was some kind of
+                            # problem opening, reading, or parsing
+                            # it.
+                            raise e
+
+                elif self.accept(DOTS):
+                    self.push_tokens([self.token])
+                    specs.append(self.try_spec_from_yaml())
 
                 elif self.accept(DEP):
                     if not specs:
@@ -3902,8 +3927,34 @@ class SpecParser(spack.parse.Parser):
                         if self.accept(HASH):
                             # We're finding a dependency by hash for an
                             # anonymous spec
-                            dep = self.spec_by_hash()
-                            dep = dep.copy(deps=('link', 'run'))
+                            previous_token = self.token
+                            try:
+                                dep = self.spec_by_hash()
+                                dep = dep.copy(deps=('link', 'run'))
+                            except NoSuchHashError as no_such_hash_error:
+                                self.push_tokens([previous_token, self.token])
+                                try:
+                                    dep = self.try_spec_from_yaml()
+                                except YamlPathNotFoundError:
+                                    # Found nothing that looked like a yaml
+                                    # path in the input ahead, so the user
+                                    # likely intended the spec to depend on
+                                    # another spec by hash, but got it wrong,
+                                    # so the NoSuchHashError is what we want
+                                    # to communicate
+                                    raise no_such_hash_error
+                                except (syaml.SpackYAMLError, EnvironmentError,
+                                        SpackError) as e:
+                                    # Did find something that looked like a
+                                    # yaml path, but there was some kind of
+                                    # problem opening, reading, or parsing
+                                    # it.
+                                    raise e
+
+                        elif self.accept(DOTS):
+                            self.push_tokens([self.token])
+                            dep = self.try_spec_from_yaml()
+
                         else:
                             # We're adding a dependency to the last spec
                             self.expect(ID)
@@ -3928,6 +3979,7 @@ class SpecParser(spack.parse.Parser):
                                                      'compiler, version, '
                                                      'or variant')
                         specs.append(self.spec(None))
+
                     else:
                         self.unexpected_token()
 
@@ -3948,20 +4000,55 @@ class SpecParser(spack.parse.Parser):
         self.setup(text)
         return self.compiler()
 
+    def look_ahead_for_yaml_path(self, replace_tokens=False):
+        popped = []
+        pathname = None
+
+        while self.next:
+            popped.append(self.next)
+            self.gettok()
+            if popped[-1].value.endswith('.yaml'):
+                pathname = ''.join([t.value for t in popped])
+                break
+
+        if replace_tokens:
+            self.push_tokens(popped)
+
+        if not pathname:
+            raise YamlPathNotFoundError()
+
+        if not os.path.exists(pathname):
+            raise InvalidYamlPathError(pathname)
+
+        return pathname
+
+    def try_spec_from_yaml(self, name=None):
+        pathname = name
+
+        if not pathname:
+            pathname = self.look_ahead_for_yaml_path()
+
+        with open(pathname) as fd:
+            return Spec.from_yaml(fd)
+
     def spec_by_hash(self):
-        self.expect(ID)
+        previous_token = self.token.value
+        if self.accept(ID):
+            tok_val = self.token.value
+            specs = spack.store.db.query()
+            matches = spack.store.db.get_by_hash(tok_val)
 
-        dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
-        if not matches:
-            raise NoSuchHashError(dag_hash)
+            if not matches:
+                raise NoSuchHashError(tok_val)
 
-        if len(matches) != 1:
-            raise AmbiguousHashError(
-                "Multiple packages specify hash beginning '%s'."
-                % dag_hash, *matches)
+            if len(matches) != 1:
+                raise AmbiguousHashError(
+                    "Multiple packages specify hash beginning '%s'."
+                    % tok_val, *matches)
 
-        return matches[0]
+            return matches[0]
+
+        raise NoSuchHashError(previous_token)
 
     def spec(self, name):
         """Parse a spec out of the input. If a spec is supplied, initialize
@@ -3980,6 +4067,17 @@ class SpecParser(spack.parse.Parser):
             # this is used by Spec.__init__
             spec = self._initial
             self._initial = None
+
+        # Try to handle the tricky case like 'pkgconf.yaml'
+        if spec_namespace and dot and spec_name:
+            try:
+                return self.try_spec_from_yaml(name)
+            except (syaml.SpackYAMLError, SpackError) as yaml_error:
+                # These errors indicate we actually opened the file
+                raise yaml_error
+            except EnvironmentError:
+                # In this case, we probably guessed wrong, it wasn't a path
+                pass
 
         spec.namespace = spec_namespace
         spec.name = spec_name
@@ -4018,12 +4116,37 @@ class SpecParser(spack.parse.Parser):
 
             elif self.accept(HASH):
                 # Get spec by hash and confirm it matches what we already have
-                hash_spec = self.spec_by_hash()
-                if hash_spec.satisfies(spec):
-                    spec._dup(hash_spec)
+                previous_token = self.token
+                try:
+                    hash_spec = self.spec_by_hash()
+                    if hash_spec.satisfies(spec):
+                        spec._dup(hash_spec)
+                        break
+                    else:
+                        raise InvalidHashError(spec, hash_spec.dag_hash())
+                except NoSuchHashError as no_such_hash_error:
+                    # If the token after the hash didn't match an installed
+                    # spec, we may have found the start of a new spec.  So
+                    # look ahead and see if the next thing is a yaml path.
+                    # If it is not, then the NoSuchHashError is what we want
+                    # to communicate.  Otherwise, we let parsing continue with
+                    # this next yaml path spec. The "True" argument when we
+                    # look ahead tells that method to replace any tokens it
+                    # consumes while looking.
+                    self.push_tokens([previous_token, self.token])
+                    try:
+                        self.look_ahead_for_yaml_path(True)
+                    except YamlPathNotFoundError:
+                        # If we did not find a yaml path in the input stream,
+                        # go ahead and raise the previous error.
+                        raise no_such_hash_error
+                    except InvalidYamlPathError:
+                        # If we found a yaml path, but it was not valid,
+                        # it will get reported when parsing continues.
+                        pass
+
+                    self.previous = None
                     break
-                else:
-                    raise InvalidHashError(spec, hash_spec.dag_hash())
 
             else:
                 break
@@ -4281,11 +4404,24 @@ class NoSuchHashError(SpecError):
             % hash)
 
 
+class InvalidYamlPathError(SpecError):
+    def __init__(self, path):
+        super(InvalidYamlPathError, self).__init__(
+            "Invalid yaml path: '{0}'".format(path))
+
+
+class YamlPathNotFoundError(SpecError):
+    def __init__(self):
+        super(YamlPathNotFoundError, self).__init__(
+            "No yaml path found in input")
+
+
 class RedundantSpecError(SpecError):
     def __init__(self, spec, addition):
         super(RedundantSpecError, self).__init__(
             "Attempting to add %s to spec %s which is already concrete."
-            " This is likely the result of adding to a spec specified by hash."
+            " This is likely the result of adding to a spec specified "
+            "by hash or spec.yaml file."
             % (addition, spec))
 
 
