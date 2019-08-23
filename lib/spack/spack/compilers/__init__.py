@@ -10,7 +10,6 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-
 import platform as py_platform
 import six
 
@@ -31,7 +30,7 @@ _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
-                        'extra_rpaths']
+                        'extra_rpaths', 'implicit_rpaths']
 _cache_config_file = []
 
 # TODO: Caches at module level make it difficult to mock configurations in
@@ -71,9 +70,10 @@ def _to_dict(compiler):
                            if hasattr(compiler, attr)))
     d['operating_system'] = str(compiler.operating_system)
     d['target'] = str(compiler.target)
-    d['modules'] = compiler.modules if compiler.modules else []
-    d['environment'] = compiler.environment if compiler.environment else {}
-    d['extra_rpaths'] = compiler.extra_rpaths if compiler.extra_rpaths else []
+    d['modules'] = compiler.modules or []
+    d['environment'] = compiler.environment or {}
+    d['extra_rpaths'] = compiler.extra_rpaths or []
+    d['implicit_rpaths'] = compiler.implicit_rpaths or []
 
     if compiler.alias:
         d['alias'] = compiler.alias
@@ -350,9 +350,11 @@ def compiler_from_dict(items):
     compiler_flags = items.get('flags', {})
     environment = items.get('environment', {})
     extra_rpaths = items.get('extra_rpaths', [])
+    implicit_rpaths = items.get('implicit_rpaths')
 
     return cls(cspec, os, target, compiler_paths, mods, alias,
-               environment, extra_rpaths, **compiler_flags)
+               environment, extra_rpaths, implicit_rpaths,
+               **compiler_flags)
 
 
 def _compiler_from_config_entry(items):
@@ -635,8 +637,10 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        implicit_rpaths = compiler_cls.determine_implicit_rpaths(paths)
         compiler = compiler_cls(
-            spec, operating_system, py_platform.machine(), paths
+            spec, operating_system, py_platform.machine(), paths,
+            implicit_rpaths=implicit_rpaths
         )
         return [compiler]
 
