@@ -17,8 +17,8 @@ class PyRequestsOauthlib(PythonPackage):
     version('0.3.3', sha256='37557b4de3eef50d2a4c65dc9382148b8331f04b1c637c414b3355feb0f007e9')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-oauthlib@3.0.0', type=('build', 'run'))
-    depends_on('py-requests@3.0.0', type=('build', 'run'))
+    depends_on('py-oauthlib@3.0.0:', type=('build', 'run'))
+    depends_on('py-requests@2.0.0:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-mock', type='test')
     depends_on('py-requests-mock', type='test')
