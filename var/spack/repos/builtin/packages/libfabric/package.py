@@ -48,6 +48,13 @@ class Libfabric(AutotoolsPackage):
        multi=True
     )
 
+    # NOTE: the 'kdreg' variant enables use of the special /dev/kdreg file to
+    #   assist in memory registration caching in the GNI provider.  This
+    #   device file can only be opened once per process, however, and thus it
+    #   frequently conflicts with MPI.
+    variant('kdreg', default=False,
+            description='Enable kdreg on supported Cray platforms')
+
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('psm', when='fabrics=psm')
@@ -98,6 +105,11 @@ class Libfabric(AutotoolsPackage):
 
     def configure_args(self):
         args = []
+
+        if '+kdreg' in self.spec:
+            args.append('--with-kdreg=yes')
+        else:
+            args.append('--with-kdreg=no')
 
         for fabric in self.fabrics:
             if 'fabrics=' + fabric in self.spec:
