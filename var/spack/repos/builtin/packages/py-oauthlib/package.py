@@ -28,4 +28,4 @@ class PyOauthlib(PythonPackage):
     depends_on('py-nose', type='test', when='@2.0.2')
     depends_on('py-unittest2', type='test', when='^python@2 @2.0.2')
 
-    conflicts('python@3.1:3.3')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
