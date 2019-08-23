@@ -21,7 +21,7 @@ class Flecsi(CMakePackage):
     git      = 'https://github.com/laristra/flecsi.git'
 
     version('develop', branch='master', submodules=False)
-    version('flecsph',branch='feature/flecsph', submodules=False)
+    version('flecsph', branch='feature/flecsph', submodules=False)
 
     variant('backend', default='mpi', values=('serial', 'mpi', 'legion'),
             description='Backend to use for distributed memory')
@@ -53,7 +53,7 @@ class Flecsi(CMakePackage):
         options = ['-DCMAKE_BUILD_TYPE=debug']
         options.append('-DCINCH_SOURCE_DIR=' + self.spec['cinch'].prefix)
 
-        # FleCSI for FleCSPH flags 
+        # FleCSI for FleCSPH flags
         if self.spec.satisfies('@flecsph:'):
             options.append('-DENABLE_MPI=ON')
             options.append('-DENABLE_OPENMP=ON')
