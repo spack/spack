@@ -15,5 +15,4 @@ class PySgp4(PythonPackage):
 
     version('1.4', sha256='1fb3cdbc11981a9ff34a032169f83c1f4a2877d1b6c295aed044e1d890b73892')
 
-    depends_on('py-wheel', type='build')
     depends_on('python@2.6:2.8,3.3:',        type=('build', 'run'))
