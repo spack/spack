@@ -15,10 +15,3 @@ class PyRuamelYaml(PythonPackage):
     version('0.16.5', sha256='412a6f5cfdc0525dee6a27c08f5415c7fd832a7afcb7a0ed7319628aed23d408')
 
     depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
