@@ -20,3 +20,4 @@ class PyPytools(PythonPackage):
     depends_on('py-appdirs@1.4.0:', type=('build', 'run'))
     depends_on('py-six@1.8.0:', type=('build', 'run'))
     depends_on('py-numpy@1.6.0:', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
