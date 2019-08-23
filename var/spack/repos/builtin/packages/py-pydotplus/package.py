@@ -28,4 +28,4 @@ class PyPydotplus(PythonPackage):
     depends_on('py-sphinx', type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
-    conflicts('python@2.8:3.3.99')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
