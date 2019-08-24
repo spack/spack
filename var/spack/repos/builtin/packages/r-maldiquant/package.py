@@ -26,5 +26,3 @@ class RMaldiquant(RPackage):
     version('1.16.4', '83200e7496d05c5a99292e45d2b11c67')
 
     depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
