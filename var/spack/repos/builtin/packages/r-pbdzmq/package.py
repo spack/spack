@@ -26,5 +26,5 @@ class RPbdzmq(RPackage):
 
     depends_on('r@3.0.0:', when='@:0.2-5', type=('build', 'run'))
     depends_on('r@3.2.0:', when='@0.2-6:', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-r6', when='@:0.2-6', type=('build', 'run'))
     depends_on('zeromq')
