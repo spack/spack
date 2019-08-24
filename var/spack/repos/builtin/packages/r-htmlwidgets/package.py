@@ -11,7 +11,7 @@ class RHtmlwidgets(RPackage):
     including the R console, 'R Markdown' documents, and 'Shiny' web
     applications."""
 
-    homepage = "https://cloud.r-project.org/package=htmlTable"
+    homepage = "https://cloud.r-project.org/package=htmlwidgets"
     url      = "https://cloud.r-project.org/src/contrib/htmlwidgets_0.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/htmlwidgets"
 
