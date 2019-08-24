@@ -28,3 +28,4 @@ class RRcurl(RPackage):
     depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-bitops', type=('build', 'run'))
     depends_on('curl')
+    depends_on('gmake', type='build')
