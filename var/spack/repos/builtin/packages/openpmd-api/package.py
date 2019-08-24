@@ -44,7 +44,7 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios2@2.4.0:', when='+adios2')
     depends_on('adios2@2.4.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.4.0: +mpi', when='+mpi +adios2')
-    depends_on('nlohmann-json@3.5.0:', when='+json')
+    depends_on('nlohmann-json@3.7.0:', when='+json')
     depends_on('py-pybind11@2.3.0:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
