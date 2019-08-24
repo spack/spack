@@ -18,7 +18,3 @@ class RHoardr(RPackage):
     depends_on('r-r6@2.2.0:', type=('build', 'run'))
     depends_on('r-rappdirs@0.3.1:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-roxygen2@6.0.1:', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-rmarkdown', type=('build', 'run'))
