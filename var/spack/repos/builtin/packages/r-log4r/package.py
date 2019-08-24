@@ -16,5 +16,3 @@ class RLog4r(RPackage):
 
     version('0.3.0', sha256='8e5d0221298410e48bee9d9a983a23e1834ce88592f9d931471bfdb05f37a691')
     version('0.2', 'f3fcb7b1f48526c6543b2e00e278ff65')
-
-    depends_on('r-testthat', type=('build', 'run'))
