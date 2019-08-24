@@ -16,6 +16,3 @@ class RRematch(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rematch"
 
     version('1.0.1', '5271666295e232931f21499522489dd3')
-
-    depends_on('r-covr', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
