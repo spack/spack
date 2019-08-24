@@ -15,11 +15,13 @@ class PyOauthlib(PythonPackage):
     version('3.1.0', sha256='bee41cc35fcca6e988463cacc3bcb8a96224f470ca547e697b604cc697b2f889')
     version('2.0.2', sha256='b3b9b47f2a263fe249b5b48c4e25a5bce882ff20a0ac34d553ce43cff55b53ac')
 
+    variant('extras', default=True, description='Build with pyjwt, blinker, cryptography')
+
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-pyjwt@1.0.0:', type=('build', 'run'))
-    depends_on('py-blinker', type=('build', 'run'))
-    depends_on('py-cryptography', type=('build', 'run'))
+    depends_on('py-pyjwt@1.0.0:', type=('build', 'run'), when='+extras')
+    depends_on('py-blinker',      type=('build', 'run'), when='+extras')
+    depends_on('py-cryptography', type=('build', 'run'), when='+extras')
 
     depends_on('py-mock@2.0:', type='test')
     depends_on('py-pytest@4.0:', type='test')
