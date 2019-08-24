@@ -28,3 +28,4 @@ class RReadr(RPackage):
     depends_on('r-bh', type=('build', 'run'))
     depends_on('r-clipr', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-crayon', when='@1.3.1:', type=('build', 'run'))
+    depends_on('gmake', type='build')
