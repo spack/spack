@@ -318,6 +318,9 @@ class Qt(Package):
                 '-system-freetype',
                 '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include)
             ])
+            if not MACOS_VERSION:
+                config_args.append('-fontconfig')
+
         elif self.spec.variants['freetype'].value == 'qt':
             config_args.append('-qt-freetype')
         else:
@@ -346,9 +349,6 @@ class Qt(Package):
 
         if self.spec.satisfies('@5.7:'):
             config_args.append('-system-doubleconversion')
-
-        if not MACOS_VERSION:
-            config_args.append('-fontconfig')
 
         if '@:5.7.1' in self.spec:
             config_args.append('-no-openvg')
