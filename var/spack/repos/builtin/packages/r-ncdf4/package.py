@@ -30,4 +30,4 @@ class RNcdf4(RPackage):
     version('1.16', sha256='edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253')
     version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
 
-    depends_on('netcdf')
+    depends_on('netcdf@4.1:')

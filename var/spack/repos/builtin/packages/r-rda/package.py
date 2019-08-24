@@ -10,7 +10,7 @@ class RRda(RPackage):
     """Shrunken Centroids Regularized Discriminant Analysis for the
     classification purpose in high dimensional data."""
 
-    homepage = "https://cloud.r-project.org/web/packages/rda/index.html"
+    homepage = "https://cloud.r-project.org/package=rda"
     url      = "https://cloud.r-project.org/src/contrib/rda_1.0.2-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rda"
 

@@ -11,7 +11,7 @@ class RRaster(RPackage):
     spatial data. The package implements basic and high-level functions.
     Processing of very large files is supported."""
 
-    homepage = "http://cloud.r-project.org/package=raster"
+    homepage = "https://cloud.r-project.org/package=raster"
     url      = "https://cloud.r-project.org/src/contrib/raster_2.5-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/raster"
 
