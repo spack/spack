@@ -17,5 +17,3 @@ class RPlogr(RPackage):
 
     version('0.2.0', sha256='0e63ba2e1f624005fe25c67cdd403636a912e063d682eca07f2f1d65e9870d29')
     version('0.1-1', '5ee46ed21b5c571d02900219098517c0')
-
-    depends_on('r-rcpp', when='@0.2.0:', type=('build', 'run'))
