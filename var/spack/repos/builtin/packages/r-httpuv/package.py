@@ -28,3 +28,4 @@ class RHttpuv(RPackage):
     depends_on('r-r6', when='@1.5.0:', type=('build', 'run'))
     depends_on('r-promises', when='@1.5.0:', type=('build', 'run'))
     depends_on('r-later@0.8.0:', when='@1.5.0:', type=('build', 'run'))
+    depends_on('gmake', type='build')
