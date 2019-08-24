@@ -426,6 +426,12 @@ case "$mode" in
             rpaths+=("${extra_rpaths[@]}")
         fi
 
+        # Set implicit RPATHs
+        IFS=':' read -ra implicit_rpaths <<< "$SPACK_COMPILER_IMPLICIT_RPATHS"
+        if [[ "$add_rpaths" != "false" ]] ; then
+            rpaths+=("${implicit_rpaths[@]}")
+        fi
+
         # Add SPACK_LDLIBS to args
         for lib in "${SPACK_LDLIBS[@]}"; do
             libs+=("${lib#-l}")
