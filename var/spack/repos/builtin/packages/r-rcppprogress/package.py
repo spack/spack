@@ -22,4 +22,4 @@ class RRcppprogress(RPackage):
     version('0.2',   '9522c962ecddd4895b5636e7a499bda5')
     version('0.1',   '34afefe0580ca42b6353533fe758d5bf')
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.9.4:', when='@:0.4', type=('build', 'run'))
