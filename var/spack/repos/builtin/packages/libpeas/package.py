@@ -14,7 +14,7 @@ class Libpeas(AutotoolsPackage):
     extensibility."""
 
     homepage = "http://developer.gnome.org/libpeas/stable"
-    url = 'https://download.gnome.org/sources/libpeas/1.22/libpeas-1.22.0.tar.xz',
+    url = 'https://download.gnome.org/sources/libpeas/1.22/libpeas-1.22.0.tar.xz'
 
     version('1.22.0', sha256='5b2fc0f53962b25bca131a5ec0139e6fef8e254481b6e777975f7a1d2702a962')
 
@@ -26,9 +26,9 @@ class Libpeas(AutotoolsPackage):
     depends_on('pkg-config', type='build')
     depends_on('atk')
     depends_on('intltool@0.40.0:')
-    depends_on('xmlto')
-    depends_on('perl')
-    depends_on('perl-xml-parser')
+    depends_on('xmlto', type='build')
+    depends_on('perl', type='build')
+    depends_on('perl-xml-parser', type='build')
     depends_on('glib@2.10:')
     depends_on('gobject-introspection')
     depends_on('libffi')
@@ -36,8 +36,8 @@ class Libpeas(AutotoolsPackage):
     depends_on('gdk-pixbuf')
     depends_on('pango')
     depends_on('gnome-common')
-    depends_on('py-pygobject@3:')
-    depends_on('python@3:')
+    depends_on('py-pygobject@3:', type='build')
+    depends_on('python@3:', type='build')
 
     def url_for_version(self, version):
         url  = 'https://download.gnome.org/sources/libpeas/'
