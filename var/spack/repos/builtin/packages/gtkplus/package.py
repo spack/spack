@@ -33,7 +33,8 @@ class Gtkplus(AutotoolsPackage):
     depends_on('fixesproto', when='@3:')
     depends_on('at-spi2-atk', when='@3:')
     depends_on('gettext', when='@3:')
-
+    depends_on('cups')
+    
     patch('no-demos.patch', when='@2:2.99')
 
     def url_for_version(self, version):
