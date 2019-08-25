@@ -23,8 +23,5 @@ class RSelectr(RPackage):
     version('0.3-1', '7190fcdea1823ad7ef429cab6938e960')
 
     depends_on('r@3.0:', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-xml', type=('build', 'run'))
-    depends_on('r-xml2', type=('build', 'run'))
     depends_on('r-r6', when='@0.4-0:', type=('build', 'run'))
