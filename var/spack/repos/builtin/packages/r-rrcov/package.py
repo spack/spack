@@ -21,5 +21,3 @@ class RRrcov(RPackage):
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))
     depends_on('r-pcapp', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-ellipse', type=('build', 'run'))
