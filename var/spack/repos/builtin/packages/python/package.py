@@ -853,7 +853,15 @@ class Python(AutotoolsPackage):
                         backup=False
                     )
             else:
-                orig_link_target = os.path.realpath(src)
+                # orig_link_target = os.path.realpath(src) is insufficient when
+                # the spack install tree is located at a symlink or a
+                # descendent of a symlink. What we need here is the real
+                # relative path from the python prefix to src
+                realpath_src = os.path.realpath(src)
+                realpath_prefix = os.path.realpath(self.spec.prefix)
+                realpath_rel = os.path.relpath(realpath_src, realpath_prefix)
+                orig_link_target = os.path.join(self.spec.prefix, realpath_rel)
+
                 new_link_target = os.path.abspath(merge_map[orig_link_target])
                 view.link(new_link_target, dst)
 
