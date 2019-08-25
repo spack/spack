@@ -28,6 +28,5 @@ class RSf(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('gdal@2.0.1:')
     depends_on('geos@3.4.0:')
-    # Since PROJ.4 and PROJ.6 have incompatible APIs, I'm assuming
-    # that since r-sf supports PROJ.4, it doesn't support PROJ.6
-    depends_on('proj@4.8.0:5')
+    depends_on('proj@4.8.0:5', when='@:0.7-3')
+    depends_on('proj@4.8.0:', when='@0.7-4:')
