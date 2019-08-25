@@ -33,3 +33,4 @@ class RReprex(RPackage):
     depends_on('r-rlang', when='@0.2.0:', type=('build', 'run'))
     depends_on('r-withr', when='@0.2.0:', type=('build', 'run'))
     depends_on('r-fs', when='@0.2.1:', type=('build', 'run'))
+    depends_on('pandoc@1.12.3:')
