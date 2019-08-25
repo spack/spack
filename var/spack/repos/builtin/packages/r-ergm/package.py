@@ -31,3 +31,7 @@ class RErgm(RPackage):
     depends_on('r-rlang@0.3.4:', when='@3.10.0:', type=('build', 'run'))
     depends_on('r-tibble@2.1.1:', when='@3.10.0:', type=('build', 'run'))
     depends_on('r-dplyr@0.8.0.1:', when='@3.10.0:', type=('build', 'run'))
+    # The CRAN page list OpenMPI as a dependency but this is not a dependency
+    # for using the package. If one wishes to use MPI, simply load an MPI
+    # package, along with r-dosnow and r-rmpi when using r-ergm, and set the
+    # appropriate options in the R script.
