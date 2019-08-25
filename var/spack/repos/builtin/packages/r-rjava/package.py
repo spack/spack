@@ -18,4 +18,5 @@ class RRjava(RPackage):
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 
     depends_on('r@2.5:', type=('build', 'run'))
-    depends_on('java')
+    depends_on('java@1.2:')
+    depends_on('gmake', type='build')
