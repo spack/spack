@@ -22,4 +22,4 @@ class RRgooglemaps(RPackage):
 
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))
-    depends_on('r-rjsonio@:1.3.9', type=('build', 'run'))
+    depends_on('r-rjsonio@:1.2.0.7', type=('build', 'run'))
