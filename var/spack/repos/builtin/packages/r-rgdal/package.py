@@ -28,4 +28,5 @@ class RRgdal(RPackage):
     depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-sp@1.1-0:', type=('build', 'run'))
     depends_on('gdal')
-    depends_on('proj@:5')
+    depends_on('proj@4.8.0:5', when='@:1.3-9')
+    depends_on('proj@4.8.0:', when='@1.4-2:')
