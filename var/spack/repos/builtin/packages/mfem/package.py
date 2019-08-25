@@ -94,6 +94,7 @@ class Mfem(Package):
     variant('openmp', default=False,
         description='Enable OpenMP parallelism')
     variant('occa', default=False, description='Enable OCCA backend')
+    variant('raja', default=False, description='Enable RAJA backend')
     variant('threadsafe', default=False,
         description=('Enable thread safe features.'
             ' Required for OpenMP.'
@@ -199,6 +200,10 @@ class Mfem(Package):
     depends_on('occa', when='mfem@4.0.0:+occa')
     conflicts('+occa', when='mfem@:3.99.999')
 
+    # The RAJA backend is first available in MFEM 4.0.0
+    depends_on('raja', when='mfem@4.0.0:+raja')
+    conflicts('+raja', when='mfem@:3.99.999')
+
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
     patch('mfem-3.3-3.4-petsc-3.9.patch',
@@ -281,7 +286,8 @@ class Mfem(Package):
             'MFEM_USE_CONDUIT=%s' % yes_no('+conduit')]
 
         if spec.satisfies('@4.0.0:'):
-            options += ['MFEM_USE_OCCA=%s' % yes_no('+occa')]
+            options += ['MFEM_USE_OCCA=%s' % yes_no('+occa'),
+                        'MFEM_USE_RAJA=%s' % yes_no('+raja')]
 
         cxxflags = spec.compiler_flags['cxxflags']
         if cxxflags:
@@ -399,6 +405,13 @@ class Mfem(Package):
                         'OCCA_LIB=%s' %
                         ld_flags_from_dirs([spec['occa'].prefix.lib],
                                            ['occa'])]
+
+        if '+raja' in spec:
+            options += ['RAJA_DIR=%s' % spec['raja'].prefix,
+                        'RAJA_OPT=-I%s' % spec['raja'].prefix.include,
+                        'RAJA_LIB=%s' %
+                        ld_flags_from_dirs([spec['raja'].prefix.lib],
+                                           ['RAJA'])]
 
         timer_ids = {'std': '0', 'posix': '2', 'mac': '4', 'mpi': '6'}
         timer = spec.variants['timer'].value
