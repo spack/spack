@@ -93,6 +93,7 @@ class Mfem(Package):
         description='Required for MPI parallelism')
     variant('openmp', default=False,
         description='Enable OpenMP parallelism')
+    variant('occa', default=False, description='Enable OCCA backend')
     variant('threadsafe', default=False,
         description=('Enable thread safe features.'
             ' Required for OpenMP.'
@@ -194,11 +195,20 @@ class Mfem(Package):
     conflicts('+hypre+superlu-dist',
               when='mfem@4.0.0 ^hypre@2.16.0 ^superlu-dist@6.1.1')
 
+    # The OCCA backend is first available in MFEM 4.0.0
+    depends_on('occa', when='mfem@4.0.0:+occa')
+    conflicts('+occa', when='mfem@:3.99.999')
+
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
     patch('mfem-3.3-3.4-petsc-3.9.patch',
           when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
 
+    # Patch to fix MFEM makefile syntax error. See
+    # https://github.com/mfem/mfem/issues/1042 for the bug report and
+    # https://github.com/mfem/mfem/pull/1043 for the bugfix contributed
+    # upstream.
+    patch('mfem-4.0.0-makefile-syntax-fix.patch', when='@4.0.0')
     phases = ['configure', 'build', 'install']
 
     def setup_environment(self, spack_env, run_env):
@@ -269,6 +279,9 @@ class Mfem(Package):
             'MFEM_USE_GNUTLS=%s' % yes_no('+gnutls'),
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp'),
             'MFEM_USE_CONDUIT=%s' % yes_no('+conduit')]
+
+        if spec.satisfies('@4.0.0:'):
+            options += ['MFEM_USE_OCCA=%s' % yes_no('+occa')]
 
         cxxflags = spec.compiler_flags['cxxflags']
         if cxxflags:
@@ -379,6 +392,13 @@ class Mfem(Package):
 
         if '+openmp' in spec:
             options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
+
+        if '+occa' in spec:
+            options += ['OCCA_DIR=%s' % spec['occa'].prefix,
+                        'OCCA_OPT=-I%s' % spec['occa'].prefix.include,
+                        'OCCA_LIB=%s' %
+                        ld_flags_from_dirs([spec['occa'].prefix.lib],
+                                           ['occa'])]
 
         timer_ids = {'std': '0', 'posix': '2', 'mac': '4', 'mpi': '6'}
         timer = spec.variants['timer'].value
