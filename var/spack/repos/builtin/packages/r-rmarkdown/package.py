@@ -32,3 +32,4 @@ class RRmarkdown(RPackage):
     depends_on('r-catools', when='@:1.7', type=('build', 'run'))
     depends_on('r-tinytex@0.11:', when='@1.10:', type=('build', 'run'))
     depends_on('r-xfun', when='@1.13:', type=('build', 'run'))
+    depends_on('pandoc@1.12.3:')
