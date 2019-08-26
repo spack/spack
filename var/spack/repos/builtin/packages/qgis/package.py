@@ -23,7 +23,7 @@ class Qgis(CMakePackage):
 
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
-    depends_on('qt@5.9.0:+dbus')
+    depends_on('qt+dbus')
     depends_on('proj@4.4.0:')
     depends_on('geos@3.4.0:')
     depends_on('sqlite@3.0.0:')
@@ -34,7 +34,8 @@ class Qgis(CMakePackage):
     depends_on('qwtpolar')
     depends_on('expat@1.95:')
     depends_on('qca@2.2.1') # need to pass CMAKE_CXX_STANDARD=11 option
-    depends_on('py-pyqt5@5.3:') # must match Qt version
+    depends_on('py-pyqt4', when='@2')
+    depends_on('py-pyqt5@5.3:', when='@3')
     depends_on('qscintilla')
     depends_on('qjson')
     depends_on('py-requests')
@@ -42,6 +43,8 @@ class Qgis(CMakePackage):
     depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('libzip')
     depends_on('exiv2')
+    depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
+    depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
 
     # optionals
     depends_on('postgresql@8:') # for PostGIS support
@@ -52,9 +55,16 @@ class Qgis(CMakePackage):
     depends_on('cmake@3.0.0:', type='build')
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
-    depends_on('python@3.0.0:', type=('build', 'run'))
 
+    # Conflicts for newer versions
     conflicts('proj@:4.9.2', when='@3.8.2:')
+
+    # v3.8.1, Qt >= 5.9.0 is required
+    conflicts('qt@:5.8.99', when='@3.8.1:')
+    conflicts('qt@5:', when='@2')
+
+    # conflicts for @2, qt@4, python@2
+    conflicts('qtkeychain@0.6.0:', when='^qt@4')
 
     def cmake_args(self):
         args = []
