@@ -23,10 +23,9 @@ class Openfdtd(MakefilePackage):
     depends_on('mpi', when='+mpi')
 
     def edit(self, spec, prefix):
-        if '%gcc' or '%fj' in self.spec:
-            filter_file('gcc', spack_cc, './src/Makefile_gcc')
-            if '+mpi' in self.spec:
-                filter_file('mpicc', spec['mpi'].mpicc, './mpi/Makefile_gcc')
+        filter_file('gcc', spack_cc, './src/Makefile_gcc')
+        if '+mpi' in self.spec:
+            filter_file('mpicc', spec['mpi'].mpicc, './mpi/Makefile_gcc')
 
     # Openfdtd has "Makefile" and "Makefile_gcc".
     # "Makefile" is used only in Windows development environment.
