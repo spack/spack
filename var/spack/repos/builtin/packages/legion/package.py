@@ -52,13 +52,13 @@ class Legion(CMakePackage):
 
     def cmake_args(self):
         cmake_cxx_flags = [
-            '-DPRIVILEGE_CHECKS', 
-            '-DDEBUG_REALM', 
+            '-DPRIVILEGE_CHECKS',
+            '-DDEBUG_REALM',
             '-DDEBUG_LEGION',
             '-DBOUNDS_CHECKS',
             '-DENABLE_LEGION_TLS',
             '-ggdb']
-        
+
         options = [
             '-DLegion_USE_GASNet=ON',
             '-DLEGION_USE_CUDA=OFF',
