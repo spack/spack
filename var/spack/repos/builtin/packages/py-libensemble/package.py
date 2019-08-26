@@ -42,3 +42,4 @@ class PyLibensemble(PythonPackage):
     depends_on('py-petsc4py', type=('build', 'run'), when='+petsc4py')
     depends_on('py-petsc4py@develop', type=('build', 'run'), when='@develop+petsc4py')
     depends_on('nlopt', type=('build', 'run'), when='+nlopt')
+    conflicts('~mpi', when='@:0.4.1')
