@@ -30,4 +30,4 @@ class Swftools(AutotoolsPackage):
     depends_on('poppler')
     depends_on('freetype')
     depends_on('jpeg')
-    depends_on('fftw~mpi')
+    depends_on('fftw')
