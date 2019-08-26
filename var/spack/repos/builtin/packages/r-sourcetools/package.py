@@ -18,4 +18,3 @@ class RSourcetools(RPackage):
     version('0.1.5', 'b4d7902ffafd9802e8fbff5ce824bb28')
 
     depends_on('r@3.0.2:', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
