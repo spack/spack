@@ -25,7 +25,7 @@ class Qca(CMakePackage):
 
     depends_on('qt@4.2:')
 
-    conflicts('qt@5.11.3:', when='@2.1.3')
+    depends_on('qt@:5.10.0', when='@2.1.3')
 
     def cmake_args(self):
         args = []
