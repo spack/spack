@@ -78,7 +78,7 @@ class Reportinglib(CMakePackage):
         """Export the reportinglib library.
         Sample usage: spec['reportinglib'].libs.ld_flags
         """
-        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False]]
+        search_paths = [[self.prefix.lib64, False], [self.prefix.lib, False]]
         is_shared = '+shared' in self.spec
         for path, recursive in search_paths:
             libs = find_libraries('libreportinglib', root=path,
