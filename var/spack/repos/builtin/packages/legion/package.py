@@ -44,19 +44,27 @@ class Legion(CMakePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('hdf5', default=True, description='Enable HDF5 support')
 
-    depends_on("cmake@3.12.4", type='build')
+    depends_on("cmake@3.1:", type='build')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB'", when='~mpi')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +mpi", when='+mpi')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +ibv", when='+ibv')
     depends_on("hdf5~mpi", when='+hdf5')
 
     def cmake_args(self):
+        cmake_cxx_flags = [
+            '-DPRIVILEGE_CHECKS', 
+            '-DDEBUG_REALM', 
+            '-DDEBUG_LEGION',
+            '-DBOUNDS_CHECKS',
+            '-DENABLE_LEGION_TLS',
+            '-ggdb']
+        
         options = [
             '-DLegion_USE_GASNet=ON',
             '-DLEGION_USE_CUDA=OFF',
             '-DLEGION_USE_OPENMP=OFF',
             '-DLegion_BUILD_EXAMPLES=ON',
-            '-DCMAKE_CXX_FLAGS=-DPRIVILEGE_CHECKS -DDEBUG_REALM -DDEBUG_LEGION -DBOUNDS_CHECKS -DENABLE_LEGION_TLS -ggdb',
+            '-DCMAKE_CXX_FLAGS=%s' % " ".join(cmake_cxx_flags),
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
 
         if '+mpi' in self.spec:
