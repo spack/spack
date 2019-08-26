@@ -64,7 +64,7 @@ class Legion(CMakePackage):
             '-DLEGION_USE_CUDA=OFF',
             '-DLEGION_USE_OPENMP=OFF',
             '-DLegion_BUILD_EXAMPLES=ON',
-            '-DCMAKE_CXX_FLAGS=%s' % " ".join(cmake_cxx_flags),
+            '-DCMAKE_CXX_FLAGS=%s' % (" ".join(cmake_cxx_flags)),
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
 
         if '+mpi' in self.spec:
