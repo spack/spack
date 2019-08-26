@@ -427,7 +427,7 @@ def check_stage_dir_perms(prefix, path):
             assert status.st_mode == prefix_status.st_mode
         else:
             assert uid == status.st_uid
-            assert status.st_mode == stat.S_IRWXU | stat.S_IFDIR
+            assert status.st_mode & stat.S_IRWXU == stat.S_IRWXU
 
 
 @pytest.mark.usefixtures('mock_packages')
