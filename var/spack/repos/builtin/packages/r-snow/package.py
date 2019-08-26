@@ -17,4 +17,3 @@ class RSnow(RPackage):
     version('0.4-2', 'afc7b0dfd4518aedb6fc81712fd2ac70')
 
     depends_on('r@2.13.1:', type=('build', 'run'))
-    depends_on('r-rmpi', type='run')
