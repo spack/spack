@@ -14,6 +14,7 @@ class RSeurat(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/Seurat_2.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Seurat"
 
+    version('3.1.0', sha256='d8d3fad2950a8f791376e3d20c72ea07c68bf8d82d800661cab5ce696db39d45')
     version('3.0.2', sha256='16df5dec6b41d49320c5bf5ce30eb3b7dedeea69b054b55b77528f2f2b7bce04')
     version('3.0.1', sha256='8c467bdbfdb9aff51bde6a897ff98a7389941f688639d8f1d36c71dde076a257')
     version('2.1.0', '46427837bb739883f9b7addd08fccee5')
@@ -82,4 +83,7 @@ class RSeurat(RPackage):
     depends_on('r-rsvd', when='@3.0.0:', type=('build', 'run'))
     depends_on('r-scales', when='@3.0.0:', type=('build', 'run'))
     depends_on('r-sctransform@0.2.0:', when='@3.0.0:', type=('build', 'run'))
-    depends_on('java', when='@:2.3.0', )
+    depends_on('r-leiden@0.3.1:', when='@3.1.0:', type=('build', 'run'))
+    depends_on('r-rcppannoy', when='@3.1.0:', type=('build', 'run'))
+    depends_on('r-uwot', when='@3.1.0:', type=('build', 'run'))
+    depends_on('java', when='@:2.3.0')
