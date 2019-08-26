@@ -25,5 +25,3 @@ class RVgam(RPackage):
     depends_on('r@3.0.0:', when='@:1.0-1', type=('build', 'run'))
     depends_on('r@3.1.0:', when='@1.0-2:1.0-3', type=('build', 'run'))
     depends_on('r@3.4.0:', when='@1.0-4:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-mgcv', type=('build', 'run'))
