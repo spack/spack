@@ -18,6 +18,3 @@ class RVfs(RPackage):
     depends_on('r@3.4.0:', type=('build', 'run'))
     depends_on('r-e1071', type=('build', 'run'))
     depends_on('r-nleqslv@3.3.0:', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-rmarkdown', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
