@@ -24,4 +24,4 @@ class RZoo(RPackage):
 
     depends_on('r@2.10.0:', when='@:1.8-1', type=('build', 'run'))
     depends_on('r@3.1.0:', when='@1.8-2:', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-lattice@0.20-27:', type=('build', 'run'))

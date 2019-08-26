@@ -18,5 +18,5 @@ class RSandwich(RPackage):
     version('2.5-0', sha256='6cc144af20739eb23e5539010d3833d7c7fc53cbca2addb583ab933167c11399')
     version('2.3-4', 'a621dbd8a57b6e1e036496642aadc2e5')
 
-    depends_on('r@2.0.0:', type=('build', 'run'))
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))

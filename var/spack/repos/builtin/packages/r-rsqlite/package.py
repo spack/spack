@@ -25,6 +25,6 @@ class RRsqlite(RPackage):
     depends_on('r-blob@1.2.0:', type=('build', 'run'))
     depends_on('r-memoise', type=('build', 'run'))
     depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-rcpp@1.12.7:', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.7:', type=('build', 'run'))
     depends_on('r-bh', type=('build', 'run'))
     depends_on('r-plogr@0.2.0:', type=('build', 'run'))

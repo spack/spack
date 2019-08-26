@@ -23,7 +23,7 @@ class RSf(RPackage):
     depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.18:', type=('build', 'run'))
     depends_on('r-dbi@0.8:', type=('build', 'run'))
-    depends_on('r-units@0.4-6:', type=('build', 'run'))
+    depends_on('r-units@0.6-0:', type=('build', 'run'))
     depends_on('r-classint@0.2-1:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('gdal@2.0.1:')

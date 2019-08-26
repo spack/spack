@@ -24,6 +24,6 @@ class RStringr(RPackage):
     version('1.0.0', '5ca977c90351f78b1b888b379114a7b4')
 
     depends_on('r@3.1:', type=('build', 'run'))
-    depends_on('r-stringi', type=('build', 'run'))
+    depends_on('r-stringi@1.1.7:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-glue@1.2.0:', when='@1.3.0:', type=('build', 'run'))

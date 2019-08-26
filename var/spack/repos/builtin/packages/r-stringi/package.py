@@ -29,4 +29,4 @@ class RStringi(RPackage):
     version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')
 
     depends_on('r@2.14:', type=('build', 'run'))
-    depends_on('icu4c')
+    depends_on('icu4c@52:')

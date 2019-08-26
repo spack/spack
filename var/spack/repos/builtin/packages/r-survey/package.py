@@ -31,4 +31,4 @@ class RSurvey(RPackage):
     depends_on('r-lattice', when='@3.31:', type=('build', 'run'))
     depends_on('r-minqa', when='@3.34:', type=('build', 'run'))
     depends_on('r-numderiv', when='@3.34:', type=('build', 'run'))
-    depends_on('r-mitools', when='@3.36:', type=('build', 'run'))
+    depends_on('r-mitools@2.4:', when='@3.36:', type=('build', 'run'))

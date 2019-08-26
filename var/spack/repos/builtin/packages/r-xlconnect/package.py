@@ -20,6 +20,6 @@ class RXlconnect(RPackage):
     version('0.2-11', '9d1769a103cda05665df399cc335017d')
 
     depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r-xlconnectjars@0.2-15:', type=('build', 'run'))
+    depends_on('r-xlconnectjars@0.2-15', type=('build', 'run'))
     depends_on('r-rjava', type=('build', 'run'))
     depends_on('java@6:')
