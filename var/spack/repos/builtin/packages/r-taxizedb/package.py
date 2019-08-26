@@ -24,5 +24,3 @@ class RTaxizedb(RPackage):
     depends_on('r-dbplyr@1.0.0:', type=('build', 'run'))
     depends_on('r-magrittr@1.5:', type=('build', 'run'))
     depends_on('r-hoardr@0.1.0:', type=('build', 'run'))
-    depends_on('r-roxygen2@6.0.1:', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
