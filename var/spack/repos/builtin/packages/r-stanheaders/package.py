@@ -33,3 +33,4 @@ class RStanheaders(RPackage):
     version('2.10.0-2', '9d09b1e9278f08768f7a988ad9082d57')
 
     depends_on('r@3.4.0:', when='@2.18.0:', type=('build', 'run'))
+    depends_on('pandoc', type='build')
