@@ -17,4 +17,3 @@ class RXlsxjars(RPackage):
     version('0.6.1', '5a1721d5733cb42f3a29e3f353e39166')
 
     depends_on('r-rjava', type=('build', 'run'))
-    depends_on('java@1.6:')
