@@ -37,7 +37,7 @@ class Coreneuron(CMakePackage):
     url      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', git=url, submodules=True)
-    version('0.14', git=url, submodules=True, preferred=True)
+    version('0.14.1', git=url, submodules=True, preferred=True)
 
     variant('debug', default=False, description='Build debug with O0')
     variant('gpu', default=False, description="Enable GPU build")
@@ -120,7 +120,8 @@ class Coreneuron(CMakePackage):
                    '-DCORENEURON_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
                    '-DUNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
                    '-DFUNCTIONAL_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
-                   '-DENABLE_HEADER_INSTALL=ON'  # for compiling mods to corenrn-special
+                   '-DENABLE_HEADER_INSTALL=ON',  # for compiling mods to corenrn-special
+                   '-DDISABLE_NRN_TIMEOUT=ON'
                    ]
 
         if spec.satisfies('~shared') or spec.satisfies('+gpu'):
