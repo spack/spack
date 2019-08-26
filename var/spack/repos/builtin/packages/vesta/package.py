@@ -5,7 +5,8 @@ import shutil
 
 
 class Vesta(Package):
-    """VESTA is a 3D visualization program for structural models, volumetric data such as electron/nuclear densities, and crystal morphologies."""
+    """VESTA is a 3D visualization program for structural models, volumetric data
+       such as electron/nuclear densities, and crystal morphologies."""
 
     homepage = "http://jp-minerals.org/vesta"
     url      = "https://jp-minerals.org/vesta/archives/3.4.6/VESTA-x86_64.tar.bz2"
