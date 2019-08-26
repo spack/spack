@@ -9,9 +9,7 @@ from spack import *
 class RListenv(RPackage):
     """List environments are environments that have list-like properties. For
     instance, the elements of a list environment are ordered and can be
-    accessed and iterated over using index subsetting, e.g. 'x <- listenv(a =
-    1, b = 2); for (i in seq_along(x)) x[[i]] <- x[[i]] ^ 2; y <-
-    as.list(x)'."""
+    accessed and iterated over using index subsetting."""
 
     homepage = "https://github.com/HenrikBengtsson/listenv"
     url      = "https://cloud.r-project.org/src/contrib/listenv_0.7.0.tar.gz"
