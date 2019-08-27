@@ -7,19 +7,9 @@ from spack import *
 
 
 class PyPlanar(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """2D planar geometry library for Python."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://bitbucket.org/caseman/planar/src/default/"
     url      = "https://pypi.io/packages/source/p/planar/planar-0.4.zip"
 
     version('0.4', sha256='cbfb9cbae8b0e296e6e7e3552b7d685c7ed5cae295b7a61f2b2b096b231dad76')
-
-    # FIXME: Add dependencies if required.
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
-
-#    def install(self, spec, prefix):
-#        # FIXME: Unknown build system
-#        make()
-#        make('install')
