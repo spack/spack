@@ -60,6 +60,7 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
+    - ~/.spack/stage
 
 
   # Cache directory for already downloaded source tarballs and archived
