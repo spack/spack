@@ -13,6 +13,7 @@ class Bowtie(MakefilePackage):
     homepage = "https://sourceforge.net/projects/bowtie-bio/"
     url      = "https://github.com/BenLangmead/bowtie/archive/v1.2.0.tar.gz"
 
+    version('1.2.3', sha256='86402114caeacbb3a3030509cb59f0b7e96361c7b3ee2dd50e2cd68200898823')
     # The bowtie project git tagged and GitHub released a v1.2.2,
     # discovered/fixed a bug, git tagged a v1.2.2_p1 and moved the
     # 1.2.2 release to use it rather than making a new `1.2.2_p1`
@@ -33,7 +34,7 @@ class Bowtie(MakefilePackage):
     # builds with %gcc@5.5.5 and fails to build with %gcc@8.2.0.  I'm
     # not sure whether or not it works with other versions in the
     # interval.
-    conflicts('%gcc@8:', when='@1.2.2:')
+    conflicts('%gcc@8:', when='@1.2.2')
 
     variant('tbb', default=False, description='Use Intel thread building block')
 
@@ -43,7 +44,7 @@ class Bowtie(MakefilePackage):
     # See: https://github.com/BenLangmead/bowtie/issues/87, a
     # different fix is in the FreeBSD ports/package tree
     # https://svnweb.freebsd.org/ports?view=revision&revision=483954
-    patch('issue-87.patch', when='%gcc@8.0.0:')
+    patch('issue-87.patch', when='@:1.2.2 %gcc@8.0.0:')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
