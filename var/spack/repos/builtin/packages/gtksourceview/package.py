@@ -42,6 +42,14 @@ class Gtksourceview(AutotoolsPackage):
         url += '{0}/gtksourceview-{1}.tar.xz'
         return url.format(version.up_to(2), version)
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
     # TODO: If https://github.com/spack/spack/pull/12344 is merged, this
     # method is unnecessary.
     def autoreconf(self, spec, prefix):
