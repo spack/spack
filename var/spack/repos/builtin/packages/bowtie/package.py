@@ -34,7 +34,7 @@ class Bowtie(MakefilePackage):
     # builds with %gcc@5.5.5 and fails to build with %gcc@8.2.0.  I'm
     # not sure whether or not it works with other versions in the
     # interval.
-    conflicts('%gcc@8:', when='@1.2.2')
+    # conflicts('%gcc@8:', when='@1.2.2')
 
     variant('tbb', default=False, description='Use Intel thread building block')
 
