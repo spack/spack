@@ -32,6 +32,7 @@ class Raja(CMakePackage):
     
     depends_on('cuda', when='+cuda')
     depends_on('chai', when='+chai')
+    depends_on('chai+cuda', when='+chai+cuda')
     
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
