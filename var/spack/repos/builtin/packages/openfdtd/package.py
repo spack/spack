@@ -29,13 +29,10 @@ class Openfdtd(MakefilePackage):
 
     # Openfdtd has "Makefile" and "Makefile_gcc".
     # "Makefile" is used only in Windows development environment.
-    # The build in Windows development environment is not confirmed.
+    # The build in Windows development environment is currently unsupported.
     def build(self, spec, prefix):
         with working_dir('src'):
-            if '%gcc' or '%fj' in self.spec:
-                make('-f', 'Makefile_gcc')
-            else:
-                make()
+            make('-f', 'Makefile_gcc')
 
         # To make an executable file for mpi needs object files
         # which are made for an executable file not for mpi.
@@ -43,10 +40,7 @@ class Openfdtd(MakefilePackage):
         # for to make an executable file for mpi.
         if '+mpi' in self.spec:
             with working_dir('mpi'):
-                if '%gcc' or '%fj' in self.spec:
-                    make('-f', 'Makefile_gcc')
-                else:
-                    make()
+                make('-f', 'Makefile_gcc')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
