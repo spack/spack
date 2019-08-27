@@ -7,7 +7,9 @@ from spack import *
 
 
 class PyPycuda(PythonPackage):
-    """"""
+    """PyCUDA gives you easy, Pythonic access to Nvidia's CUDA parallel
+    computation API
+    """
 
     homepage = "https://mathema.tician.de/software/pycuda/"
     url      = "https://pypi.io/packages/source/p/pycuda/pycuda-2019.1.2.tar.gz"
