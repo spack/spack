@@ -12,9 +12,10 @@ class PyPythonLdap(PythonPackage):
     """
 
     homepage = "https://www.python-ldap.org/en/python-ldap-3.2.0/"
-    url      = "https://files.pythonhosted.org/packages/source/p/python-ldap/python-ldap-3.2.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-ldap/python-ldap-3.2.0.tar.gz"
 
     version('3.2.0', sha256='7d1c4b15375a533564aad3d3deade789221e450052b21ebb9720fb822eccdb8e')
+    version('3.0.0', sha256='86746b912a2cd37a54b06c694f021b0c8556d4caeab75ef50435ada152e2fbe1')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
