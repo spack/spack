@@ -56,6 +56,16 @@ class Papi(Package):
             run_env.prepend_path('LD_LIBRARY_PATH',
                                  self.spec['cuda'].prefix.extras.CUPTI.lib64)
 
+            for path in self.spec['cuda'].libs.directories + self.rpath:
+                if path.find("/stubs") > -1:
+                    spack_env.remove_path("SPACK_RPATH_DIRS", path)
+                    run_env.remove_path("SPACK_RPATH_DIRS", path)
+
+            for path in self.spec['cuda'].libs.directories + [self.spec['cuda'].prefix.extras.CUPTI.lib64]:
+                spack_env.append_path("SPACK_LINK_DIRS", path)
+
+            spack_env.append_path("SPACK_RPATH_DIRS", self.spec['cuda'].prefix.extras.CUPTI.lib64)
+
     def install(self, spec, prefix):
         if '+nvml' in spec:
             with working_dir("src/components/nvml"):
