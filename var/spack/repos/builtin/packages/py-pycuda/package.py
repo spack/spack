@@ -20,8 +20,12 @@ class PyPycuda(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('cuda')
     depends_on('boost')
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy@1.6:', type=('build', 'run'))
     depends_on('py-six', type='run')
-    depends_on('py-decorator', type='run')
+    depends_on('py-decorator@3.2.0:', type='run')
+    depends_on('py-appdirs@1.4.0:', type='run')
+    depends_on('py-mako', type='run')
 
     depends_on('cuda@:8.0.61', when='@2016.1.2')
+
+    depends_on('py-pytest@2:', type='test')
