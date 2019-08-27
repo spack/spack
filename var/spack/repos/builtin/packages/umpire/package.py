@@ -16,6 +16,9 @@ class Umpire(CMakePackage):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('1.0.0', tag='v1.0.0', submodules='True')
+    version('0.3.5', tag='v0.3.5', submodules='True')
+    version('0.3.4', tag='v0.3.4', submodules='True')
     version('0.3.3', tag='v0.3.3', submodules='True')
     version('0.3.2', tag='v0.3.2', submodules='True')
     version('0.3.1', tag='v0.3.1', submodules='True')
@@ -56,4 +59,7 @@ class Umpire(CMakePackage):
         if '+numa' in spec:
             options.append('-DENABLE_NUMA=On')
 
+        options.append('-DENABLE_TESTS=Off')
+        options.append('-DENABLE_BENCHMARKS=Off')
+            
         return options
