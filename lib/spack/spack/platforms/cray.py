@@ -66,7 +66,10 @@ class Cray(Platform):
             self.default = self.back_end
             self.add_target('default', self.targets[self.back_end])
         else:
-            raise NoPlatformError()
+            # avoid issue with cray os update nightmare on cori
+            # default to haswell
+            self.back_end = "haswell"
+            #raise NoPlatformError()
 
         front_distro = CrayFrontend()
         back_distro = Cnl()
