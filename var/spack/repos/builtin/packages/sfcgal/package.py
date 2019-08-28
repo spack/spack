@@ -27,3 +27,9 @@ class Sfcgal(CMakePackage):
     depends_on('gmp')
 
     depends_on('openscenegraph@3.1:', when='+viewer')
+
+    def cmake_args(self):
+        args = []
+        if '+viewer' in self.spec:
+            args.append('-DSFCGAL_BUILD_VIEWER=ON')
+        return args
