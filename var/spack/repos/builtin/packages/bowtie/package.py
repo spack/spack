@@ -30,7 +30,7 @@ class Bowtie(MakefilePackage):
     # clearly identical to 1.2.0.
     version('1.2', md5='6d97f0ea1a65af11d17cc270cfac4af9', url='https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.2.0/bowtie-1.2-source.zip')
 
-    # 1.2.2 and 1.2.2_p1 fail to build with %gcc@8.3.0 
+    # 1.2.2 and 1.2.2_p1 fail to build with %gcc@8.3.0
     # with and without issue-87 patch
     conflicts('%gcc@8:', when='@1.2.2')
     conflicts('%gcc@8:', when='@1.2.2_p1')
