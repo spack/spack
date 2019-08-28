@@ -44,7 +44,7 @@ class Emacs(AutotoolsPackage):
     depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
     depends_on('jpeg')
-    
+
     def configure_args(self):
         spec = self.spec
 
