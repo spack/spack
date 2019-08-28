@@ -13,7 +13,3 @@ class PyIniparse(PythonPackage):
     url      = "https://pypi.io/packages/source/i/iniparse/iniparse-0.4.tar.gz"
 
     version('0.4', sha256='abc1ee12d2cfb2506109072d6c21e40b6c75a3fe90a9c924327d80bc0d99c054')
-
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-six',        type=('build', 'run'))
