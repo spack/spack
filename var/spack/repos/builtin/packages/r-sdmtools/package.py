@@ -24,4 +24,4 @@ class RSdmtools(RPackage):
     version('1.1-12', 'a13d75e4024d908a57ea462112d8a437')
     version('1.1-11', 'cb890ee06eb862f97141b73c7390a0a9')
 
-    depends_on('r-utils', type=('build', 'run'))
+    depends_on('r-r-utils', type=('build', 'run'))

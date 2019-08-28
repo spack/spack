@@ -6,7 +6,7 @@
 from spack import *
 
 
-class RMethodss3(RPackage):
+class RRMethodss3(RPackage):
     """Methods that simplify the setup of S3 generic functions and
     S3 methods. Major effort has been made in making definition of
     methods as simple as possible with a minimum of maintenance for

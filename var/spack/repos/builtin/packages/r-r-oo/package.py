@@ -6,7 +6,7 @@
 from spack import *
 
 
-class ROo(RPackage):
+class RROo(RPackage):
     """Methods and classes for object-oriented programming in R with
     or without references. Large effort has been made on making
     definition of methods as simple as possible with a minimum of
@@ -23,4 +23,4 @@ class ROo(RPackage):
     version('1.21.0', 'f0062095c763faaeba30558303f68bc3')
 
     depends_on('r@2.13.0:', type=('build', 'run'))
-    depends_on('r-methodss3@1.7.1:', type=('build', 'run'))
+    depends_on('r-r-methodss3@1.7.1:', type=('build', 'run'))

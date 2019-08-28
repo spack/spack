@@ -18,7 +18,7 @@ class RGdalutils(RPackage):
     depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-utils', type=('build', 'run'))
+    depends_on('r-r-utils', type=('build', 'run'))
     depends_on('r-raster', type=('build', 'run'))
     depends_on('r-rgdal', type=('build', 'run'))
     depends_on('gdal')

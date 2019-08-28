@@ -6,7 +6,7 @@
 from spack import *
 
 
-class RUtils(RPackage):
+class RRUtils(RPackage):
     """Utility functions useful when programming and
     developing R packages."""
 
@@ -18,4 +18,5 @@ class RUtils(RPackage):
     version('2.5.0', 'a728ef3ceb35cafc4c39ea577cecc38b')
 
     depends_on('r@2.14.0:', type=('build', 'run'))
-    depends_on('r-oo@1.22.0:', type=('build', 'run'))
+    depends_on('r-r-oo@1.22.0:', type=('build', 'run'))
+    depends_on('r-r-methodss3@1.7.1:', type=('build', 'run'))
