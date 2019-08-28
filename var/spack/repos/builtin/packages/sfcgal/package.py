@@ -7,10 +7,14 @@ from spack import *
 
 
 class Sfcgal(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """
+    SFCGAL is a C++ wrapper library around CGAL with the aim of supporting
+    ISO 19107:2013 and OGC Simple Features Access 1.2 for 3D operations. SFCGAL
+    provides standard compliant geometry types and operations, that can be
+    accessed from its C or C++ APIs.
+    """
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "http://www.sfcgal.org/"
     url      = "https://github.com/Oslandia/SFCGAL/archive/v1.3.7.tar.gz"
 
     version('1.3.7', sha256='30ea1af26cb2f572c628aae08dd1953d80a69d15e1cac225390904d91fce031b')
