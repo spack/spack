@@ -21,6 +21,10 @@ class Postgis(AutotoolsPackage):
 
     variant('gui', default=False, description='Build with GUI support, creating shp2pgsql-gui graphical interface to shp2pgsql')
 
+    # Refs:
+    # https://postgis.net/docs/postgis_installation.html
+    # https://postgis.net/source/
+
     depends_on('postgresql')
     depends_on('geos')
     depends_on('proj')
@@ -34,6 +38,9 @@ class Postgis(AutotoolsPackage):
     depends_on('protobuf-c')
 
     depends_on('gtkplus@:2.24.32', when='+gui')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('POSTGIS_GDAL_ENABLED_DRIVERS', 'ENABLE_ALL')
 
     def configure_args(self):
         args = []
