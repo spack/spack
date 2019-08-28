@@ -33,6 +33,10 @@ class Pktools(CMakePackage):
         args.append('-DPKTOOLS_WITH_UTILITIES=ON')
         if '+fann' in self.spec:
             args.append('-DBUILD_WITH_FANN=ON')
+        else:
+            args.append('-DBUILD_WITH_FANN=OFF')
         if '+liblas' in self.spec:
             args.append('-DBUILD_WITH_LIBLAS=ON')
+        else:
+            args.append('-DBUILD_WITH_LIBLAS=OFF')
         return args
