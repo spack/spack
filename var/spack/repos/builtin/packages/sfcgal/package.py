@@ -26,7 +26,7 @@ class Sfcgal(CMakePackage):
     depends_on('mpfr')
     depends_on('gmp')
 
-    depends_on('openscenegraph@3.1:', when='+viewer')
+    depends_on('openscenegraph@3.1:', type=('build', 'link', 'run'), when='+viewer')
 
     def cmake_args(self):
         args = []
