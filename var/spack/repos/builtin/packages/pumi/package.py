@@ -69,7 +69,7 @@ class Pumi(CMakePackage):
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DPUMI_FORTRAN_INTERFACE=%s' %
             ('ON' if '+fortran' in spec else 'OFF'),
-            '-DMDS_ID_TYPE=%s' % ('long' if '+64bitIds' in spec else 'int')
+            '-DMDS_ID_TYPE=%s' % ('long' if '+int64' in spec else 'int')
         ]
         if self.spec.satisfies('simmodsuite=base'):
             args.append('-DENABLE_SIMMETRIX=ON')
