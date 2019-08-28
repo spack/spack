@@ -251,14 +251,14 @@ class PythonPackageTemplate(PackageTemplate):
         args = []
         return args"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
         if not name.startswith('py-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
-        super(PythonPackageTemplate, self).__init__(name, *args)
+        super(PythonPackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
@@ -276,14 +276,14 @@ class RPackageTemplate(PackageTemplate):
         args = []
         return args"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
         if not name.startswith('r-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to r-{0}".format(name))
             name = 'r-{0}'.format(name)
 
-        super(RPackageTemplate, self).__init__(name, *args)
+        super(RPackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class PerlmakePackageTemplate(PackageTemplate):
@@ -302,14 +302,14 @@ class PerlmakePackageTemplate(PackageTemplate):
         args = []
         return args"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
         if not name.startswith('perl-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to perl-{0}".format(name))
             name = 'perl-{0}'.format(name)
 
-        super(PerlmakePackageTemplate, self).__init__(name, *args)
+        super(PerlmakePackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class PerlbuildPackageTemplate(PerlmakePackageTemplate):
@@ -333,7 +333,7 @@ class OctavePackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     # depends_on('octave-foo', type=('build', 'run'))"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name octave-splines`, don't rename it
         # octave-octave-splines
         if not name.startswith('octave-'):
@@ -341,7 +341,7 @@ class OctavePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to octave-{0}".format(name))  # noqa
             name = 'octave-{0}'.format(name)
 
-        super(OctavePackageTemplate, self).__init__(name, *args)
+        super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class MakefilePackageTemplate(PackageTemplate):
@@ -378,14 +378,14 @@ class SIPPackageTemplate(PackageTemplate):
         args = []
         return args"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name py-pyqt4`, don't rename it py-py-pyqt4
         if not name.startswith('py-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
-        super(SIPPackageTemplate, self).__init__(name, *args)
+        super(SIPPackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 templates = {

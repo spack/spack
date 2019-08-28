@@ -32,6 +32,10 @@ class Pgi(Compiler):
     version_argument = '-V'
     version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
     @property
     def openmp_flag(self):
         return "-mp"
