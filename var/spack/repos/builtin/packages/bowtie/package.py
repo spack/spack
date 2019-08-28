@@ -30,11 +30,9 @@ class Bowtie(MakefilePackage):
     # clearly identical to 1.2.0.
     version('1.2', md5='6d97f0ea1a65af11d17cc270cfac4af9', url='https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.2.0/bowtie-1.2-source.zip')
 
-    # Feel free to tighten this.  I know that v1.2.2 (aka v1.2.2_p1)
-    # builds with %gcc@5.5.5 and fails to build with %gcc@8.2.0.  I'm
-    # not sure whether or not it works with other versions in the
-    # interval.
-    # conflicts('%gcc@8:', when='@1.2.2')
+    # 1.2.2 and 1.2.2_p1 fail to build with %gcc@8.3.0 with and without issue-87 patch
+    conflicts('%gcc@8:', when='@1.2.2')
+    conflicts('%gcc@8:', when='@1.2.2_p1')
 
     variant('tbb', default=False, description='Use Intel thread building block')
 
