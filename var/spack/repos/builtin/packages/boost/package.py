@@ -387,7 +387,7 @@ class Boost(Package):
             return
 
         # Remove libraries that the release version does not support
-        if spec.satisfies('@1.69.0:'):
+        if spec.satisfies('@1.69.0:') and 'signals' in with_libs:
             with_libs.remove('signals')
         if not spec.satisfies('@1.54.0:'):
             with_libs.remove('log')
