@@ -21,7 +21,7 @@ class Pktools(CMakePackage):
     depends_on('armadillo')
     depends_on('nlopt')
     depends_on('boost')
-    #depends_on('openblas')
+    depends_on('fann')
 
     def cmake_args(self):
         args = []
@@ -30,4 +30,5 @@ class Pktools(CMakePackage):
         args.append('-DBUILD_WITH_LIBLAS=OFF')
         args.append('-DCMAKE_CXX_STANDARD=11')
         args.append('-DPKTOOLS_WITH_UTILITIES=ON')
+        args.append('-DBUILD_WITH_FANN=ON')
         return args
