@@ -19,7 +19,11 @@ class Sfcgal(CMakePackage):
 
     version('1.3.7', sha256='30ea1af26cb2f572c628aae08dd1953d80a69d15e1cac225390904d91fce031b')
 
+    variant('viewer', default=False, description='Build viewer and support for 3D format export')
+
     depends_on('cgal+core')
     depends_on('boost@:1.69.0')
     depends_on('mpfr')
     depends_on('gmp')
+
+    depends_on('openscenegraph@3.1:', when='+viewer')
