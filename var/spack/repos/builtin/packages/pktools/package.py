@@ -21,11 +21,13 @@ class Pktools(CMakePackage):
     depends_on('armadillo')
     depends_on('nlopt')
     depends_on('boost')
-    depends_on('openblas')
+    #depends_on('openblas')
 
     def cmake_args(self):
         args = []
-#        args.append('-DBUILD_WITH_LIBLAS=ON')
+        # liblas is not avaialable in spack yet
+        # On Centos7, build fails with system liblas
+        args.append('-DBUILD_WITH_LIBLAS=OFF')
         args.append('-DCMAKE_CXX_STANDARD=11')
-        args.append('-DPKTOOLS_WITH_UTILITIES=OFF')
+        args.append('-DPKTOOLS_WITH_UTILITIES=ON')
         return args
