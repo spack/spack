@@ -17,7 +17,6 @@ from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
 
 import spack.concretize
 import spack.error
@@ -146,18 +145,20 @@ def activate(
             cmds += 'set prompt="%s ${prompt}";\n' % prompt
     else:
         if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
-            prompt = colorize('@G{%s} ' % prompt, color=True)
+            prompt = r"\[\033[0;92m\]{0}\[\033[0m\]".format(prompt)
 
         cmds += 'export SPACK_ENV=%s;\n' % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
             cmds += 'if [ -z ${SPACK_OLD_PS1+x} ]; then\n'
             cmds += '    if [ -z ${PS1+x} ]; then\n'
-            cmds += "        PS1='$$$$';\n"
+            cmds += "        PS1=' $> ';\n"
             cmds += '    fi;\n'
             cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
+            cmds += 'else\n'
+            cmds += '    export PS1="${SPACK_OLD_PS1}";\n'
             cmds += 'fi;\n'
-            cmds += 'export PS1="%s ${PS1}";\n' % prompt
+            cmds += ' export PS1="{0} $PS1";\n'.format(prompt)
 
     if add_view and default_view_name in env.views:
         cmds += env.add_default_view_to_shell(shell)
