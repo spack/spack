@@ -108,4 +108,3 @@ class Extrae(AutotoolsPackage):
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set EXTRAE_HOME for everyone using the Extrae package
         spack_env.set('EXTRAE_HOME', self.prefix)
-
