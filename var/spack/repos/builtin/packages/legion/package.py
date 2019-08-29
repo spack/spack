@@ -43,9 +43,8 @@ class Legion(CMakePackage):
             description='Build on top of ibv conduit for InfiniBand support')
     variant('shared', default=True, description='Build shared libraries')
     variant('hdf5', default=True, description='Enable HDF5 support')
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
+    variant('build_type', default='Release', values=('Debug', 'Release'),
+            description='The build type to build')
 
     depends_on("cmake@3.1:", type='build')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB'", when='~mpi')
@@ -66,14 +65,12 @@ class Legion(CMakePackage):
             '-DLegion_BUILD_EXAMPLES=ON',
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
 
-        if 'build_type=Debug' in self.spec:
+        if self.spec.variants['build_type'].value == 'Debug':
             options.append('-DCMAKE_BUILD_TYPE=Debug')
-            cmake_cxx_flags.append(
-                '-DDEBUG_REALM',
-                '-DDEBUG_LEGION',
-                '-ggdb')
-        else:
+            cmake_cxx_flags.append('-DDEBUG_REALM', '-DDEBUG_LEGION', '-ggdb')
+        elif self.spec.variants['build_type'].value == 'Release':
             options.append('-DCMAKE_BUILD_TYPE=Release')
+
         options.append('-DCMAKE_CXX_FLAGS=%s' % (" ".join(cmake_cxx_flags)))
 
         if '+mpi' in self.spec:
