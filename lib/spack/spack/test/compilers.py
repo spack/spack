@@ -303,6 +303,8 @@ def test_fj_flags():
     supported_flag_test("cxx98_flag", "-std=c++98", "fj@4.0.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "fj@4.0.0")
     supported_flag_test("cxx14_flag", "-std=c++14", "fj@4.0.0")
+    supported_flag_test("c99_flag", "-std=c99", "fj@4.0.0")
+    supported_flag_test("c11_flag", "-std=c11", "fj@4.0.0")
     supported_flag_test("pic_flag", "-KPIC", "fj@4.0.0")
 
 
