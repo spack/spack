@@ -923,7 +923,7 @@ class Repo(object):
         # Install patch files needed by the package.
         mkdirp(path)
         for patch in itertools.chain.from_iterable(
-            spec.package.patches.values()):
+                spec.package.patches.values()):
 
             if patch.path:
                 if os.path.exists(patch.path):
