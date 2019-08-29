@@ -199,6 +199,7 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
             '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
+            '-DVTK_USE_SYSTEM_PNG:BOOL=ON',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY'
         ]
 
