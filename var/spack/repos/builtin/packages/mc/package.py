@@ -12,6 +12,7 @@ class Mc(AutotoolsPackage):
     homepage = "https://midnight-commander.org"
     url      = "http://ftp.midnight-commander.org/mc-4.8.20.tar.bz2"
 
+    version('4.8.23', sha256='238c4552545dcf3065359bd50753abbb150c1b22ec5a36eaa02c82808293267d')
     version('4.8.21', '251d9f0ef9309ef3eea0fdc4c12b8b61149e5056bef1b2de2ccc7f015d973444')
     version('4.8.20', 'dcfc7aa613c62291a0f71f6b698d8267')
 
