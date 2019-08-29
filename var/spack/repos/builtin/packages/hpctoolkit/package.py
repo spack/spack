@@ -57,19 +57,19 @@ class Hpctoolkit(AutotoolsPackage):
     boost_libs = '+atomic +chrono +date_time +filesystem +system +thread' \
                  '+timer +graph +regex +shared +multithreaded'
 
-    depends_on('binutils+libiberty~nls')
+    depends_on('binutils+libiberty~nls', type='link')
     depends_on('boost' + boost_libs)
     depends_on('boost' + ' visibility=global', when='@gpu')
-    depends_on('bzip2')
+    depends_on('bzip2', type='link')
     depends_on('dyninst')
-    depends_on('elfutils~nls')
+    depends_on('elfutils~nls', type='link')
     depends_on('intel-tbb')
     depends_on('libdwarf')
     depends_on('libmonitor+hpctoolkit', when='~bgq')
     depends_on('libmonitor+hpctoolkit+bgq', when='+bgq')
     depends_on('libunwind@2018.10.0:')
     depends_on('xerces-c transcoder=iconv')
-    depends_on('xz')
+    depends_on('xz', type='link')
     depends_on('zlib')
 
     depends_on('cuda', when='+cuda')
