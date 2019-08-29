@@ -1,0 +1,26 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class Attr(AutotoolsPackage):
+    """Commands for Manipulating Filesystem Extended Attributes"""
+
+    homepage = "https://savannah.nongnu.org/projects/attr"
+    url      = "http://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz"
+
+    version('2.4.47', sha256='25772f653ac5b2e3ceeb89df50e4688891e21f723c460636548971652af0a859')
+    version('2.4.46', sha256='dcd69bdca7ff166bc45141eddbcf21967999a6b66b0544be12a1cc2fd6340e1f')
+
+    def configure_args(self):
+        args = []
+        args.append('--disable-static')
+        return args
+
+    # Ref. http://www.linuxfromscratch.org/blfs/view/7.5/postlfs/attr.html
+    def install(self, spec, prefix):
+        make()
+        make('install', 'install-dev', 'install-lib')
