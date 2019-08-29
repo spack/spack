@@ -7,7 +7,10 @@ from spack import *
 
 
 class PyOauthlib(PythonPackage):
-    """A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"""
+    """
+    A generic, spec-compliant, thorough implementation of the OAuth
+    request-signing logic
+    """
 
     homepage = "https://github.com/oauthlib/oauthlib"
     url      = "https://pypi.io/packages/source/o/oauthlib/oauthlib-3.1.0.tar.gz"
