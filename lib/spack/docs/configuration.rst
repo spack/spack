@@ -37,7 +37,7 @@ Here is an example ``config.yaml`` file:
        lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
-       - /nfs/tmp2/$user/spack
+       - ~/.spack/stage
 
 Each Spack configuration file is nested under a top-level section
 corresponding to its name. So, ``config.yaml`` starts with ``config:``,
@@ -245,7 +245,7 @@ your configurations look like this:
        lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
-       - /nfs/tmp2/$user/spack
+       - ~/.spack/stage
 
 
 .. code-block:: yaml
@@ -270,7 +270,7 @@ command:
        lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
-       - /nfs/tmp2/$user/spack
+       - ~/.spack/stage
 
 
 .. _config-overrides:
@@ -313,7 +313,7 @@ Let's revisit the ``config.yaml`` example one more time. The
 
    build_stage:
      - $tempdir/$user/spack-stage
-     - /nfs/tmp2/$user/spack
+     - ~/.spack/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage``
@@ -344,7 +344,7 @@ get config`` shows the result:
        - /lustre-scratch/$user/spack
        - ~/mystage
        - $tempdir/$user/spack-stage
-       - /nfs/tmp2/$user/spack
+       - ~/.spack/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can
@@ -466,7 +466,7 @@ account all scopes. For example, to see the fully merged
        dotkit: $spack/share/spack/dotkit
      build_stage:
      - $tempdir/$user/spack-stage
-     - /nfs/tmp2/$user/spack
+     - ~/.spack/stage
      - $spack/var/spack/stage
      source_cache: $spack/var/spack/cache
      misc_cache: ~/.spack/cache
@@ -517,7 +517,7 @@ down the problem:
    /home/myuser/spack/etc/spack/defaults/config.yaml:35      dotkit: $spack/share/spack/dotkit
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - /nfs/tmp2/$user/spack
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache
