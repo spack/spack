@@ -3856,13 +3856,18 @@ variant names are:
   Name    Default   Description
   ======= ======== ========================
   shared   True     Build shared libraries
-  static   True     Build static libraries
   mpi      True     Use MPI
   python   False    Build Python extension
   ======= ======== ========================
 
 If specified in this table, the corresponding default should be used
 when declaring a variant.
+
+The semantics of the `shared` variant are important. When a package is
+built `~shared`, the package guarantees that no shared libraries are
+built. When a package is built `+shared`, the package guarantees that
+shared libraries are built, but it makes no guarantee about whether
+static libraries are built.
 
 ^^^^^^^^^^^^^
 Version Lists
