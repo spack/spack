@@ -856,8 +856,10 @@ from this file system with the following ``config.yaml``:
 
    It is important to distinguish the build stage directory from other
    directories in your scratch space to ensure ``spack clean`` does not
-   inadvertently remove unrelated files.  See :ref:`config-yaml` for 
-   details.
+   inadvertently remove unrelated files.  This can be accomplished by
+   including a combination of ``spack`` and or ``stage`` in each path
+   as shown in the default settings and documented examples.  See
+   :ref:`config-yaml` for details.
 
 
 On systems with compilers that absolutely *require* environment variables

@@ -49,7 +49,9 @@ config:
   #
   # A more traditional path uses the value of `$spack/var/spack/stage`, which
   # builds directly inside Spack's instance without staging them in a
-  # temporary space.
+  # temporary space.  Problems with specifying a path inside a Spack instance
+  # are that it precludes its use as a system package and its ability to be
+  # pip installable.
   #
   # In any case, if the username is not already in the path, Spack will append
   # the value of `$user` in an attempt to avoid potential conflicts between
@@ -61,6 +63,7 @@ config:
   build_stage:
     - $tempdir/$user/spack-stage
     - ~/.spack/stage
+  # - $spack/var/spack/stage
 
 
   # Cache directory for already downloaded source tarballs and archived
