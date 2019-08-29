@@ -12,10 +12,11 @@ class Openscenegraph(CMakePackage):
        that's used in a variety of visual simulation applications."""
 
     homepage = "http://www.openscenegraph.org"
-    url      = "http://trac.openscenegraph.org/downloads/developer_releases/OpenSceneGraph-3.2.3.zip"
+    url      = "https://github.com/openscenegraph/OpenSceneGraph/archive/OpenSceneGraph-3.6.4.tar.gz"
 
-    version('3.2.3', '02ffdad7744c747d8fad0d7babb58427')
-    version('3.1.5', '1c90b851b109849c985006486ef59822')
+    version('3.6.4', sha256='81394d1b484c631028b85d21c5535280c21bbd911cb058e8746c87e93e7b9d33')
+    version('3.2.3', sha256='a1ecc6524197024834e1277916922b32f30246cb583e27ed19bf3bf889534362')
+    version('3.1.5', sha256='dddecf2b33302076712100af59b880e7647bc595a9a7cc99186e98d6e0eaeb5c')
 
     variant('shared', default=True, description='Builds a shared version of the library')
 
