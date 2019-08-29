@@ -246,7 +246,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
 {help}:
   spack help --all       list all commands and options
   spack help <command>   help on a specific command
-  spack help --spec      help on the spec syntax
+  spack help --spec      help on the package specification syntax
   spack docs             open http://spack.rtfd.io/ in a browser"""
 .format(help=section_descriptions['help']))
 

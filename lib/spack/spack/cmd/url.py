@@ -258,6 +258,12 @@ def url_stats(args):
     for pkg in spack.repo.path.all_packages():
         npkgs += 1
 
+        if not pkg.has_code:
+            for _ in pkg.versions:
+                inc('No code', 'total')
+                nvers += 1
+            continue
+
         # look at each version
         for v, args in pkg.versions.items():
             # figure out what type of fetcher it is

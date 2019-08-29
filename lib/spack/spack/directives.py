@@ -17,13 +17,14 @@ definition to modify the package, for example:
 
 The available directives are:
 
-  * ``version``
+  * ``conflicts``
   * ``depends_on``
-  * ``provides``
   * ``extends``
   * ``patch``
-  * ``variant``
+  * ``provides``
   * ``resource``
+  * ``variant``
+  * ``version``
 
 """
 
@@ -44,7 +45,7 @@ import spack.variant
 from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import Version
+from spack.version import Version, VersionChecksumError
 
 __all__ = []
 
@@ -138,8 +139,8 @@ class DirectiveMeta(type):
             cls, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
-        # The class is being created: if it is a package we must ensure
-        # that the directives are called on the class to set it up
+        # The instance is being initialized: if it is a package we must ensure
+        # that the directives are called to set it up.
 
         if 'spack.pkg' in cls.__module__:
             # Ensure the presence of the dictionaries associated
@@ -260,16 +261,22 @@ directive = DirectiveMeta.directive
 
 @directive('versions')
 def version(ver, checksum=None, **kwargs):
-    """Adds a version and metadata describing how to fetch its source code.
+    """Adds a version and, if appropriate, metadata for fetching its code.
 
-    Metadata is stored as a dict of ``kwargs`` in the package class's
-    ``versions`` dictionary.
+    The ``version`` directives are aggregated into a ``versions`` dictionary
+    attribute with ``Version`` keys and metadata values, where the metadata
+    is stored as a dictionary of ``kwargs``.
 
-    The ``dict`` of arguments is turned into a valid fetch strategy
-    later. See ``spack.fetch_strategy.for_package_version()``.
+    The ``dict`` of arguments is turned into a valid fetch strategy for
+    code packages later. See ``spack.fetch_strategy.for_package_version()``.
     """
     def _execute_version(pkg):
-        if checksum:
+        if checksum is not None:
+            if hasattr(pkg, 'has_code') and not pkg.has_code:
+                raise VersionChecksumError(
+                    "{0}: Checksums not allowed in no-code packages"
+                    "(see '{1}' version).".format(pkg.name, ver))
+
             kwargs['checksum'] = checksum
 
         # Store kwargs for the package to later with a fetch_strategy.
@@ -451,17 +458,22 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
 
     """
     def _execute_patch(pkg_or_dep):
+        pkg = pkg_or_dep
+        if isinstance(pkg, Dependency):
+            pkg = pkg.pkg
+
+        if hasattr(pkg, 'has_code') and not pkg.has_code:
+            raise UnsupportedPackageDirective(
+                'Patches are not allowed in {0}: package has no code.'.
+                format(pkg.name))
+
         when_spec = make_when_spec(when)
         if not when_spec:
             return
 
-        # if this spec is identical to some other, then append this
+        # If this spec is identical to some other, then append this
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
-
-        pkg = pkg_or_dep
-        if isinstance(pkg, Dependency):
-            pkg = pkg.pkg
 
         global _patch_order_index
         ordering_key = (pkg.name, _patch_order_index)
@@ -639,3 +651,7 @@ class CircularReferenceError(DirectiveError):
 
 class DependencyPatchError(DirectiveError):
     """Raised for errors with patching dependencies."""
+
+
+class UnsupportedPackageDirective(DirectiveError):
+    """Raised when an invalid or unsupported package directive is specified."""

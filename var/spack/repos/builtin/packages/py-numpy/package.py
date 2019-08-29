@@ -15,7 +15,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.0.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.1.zip"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -27,7 +27,9 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('1.17.1', sha256='f11331530f0eff69a758d62c2461cd98cdc2eae0147279d8fc86e0464eb7e8ca')
     version('1.17.0', sha256='951fefe2fb73f84c620bec4e001e80a80ddaa1b84dce244ded7f1e0cbe0ed34a')
+    version('1.16.5', sha256='8bb452d94e964b312205b0de1238dd7209da452343653ab214b5d681780e7a0c')
     version('1.16.4', sha256='7242be12a58fec245ee9734e625964b97cf7e3f2f7d016603f9e56660ce479c7')
     version('1.16.3', sha256='78a6f89da87eeb48014ec652a65c4ffde370c036d780a995edaeb121d3625621')
     version('1.16.2', sha256='6c692e3879dde0b67a9dc78f9bfb6f61c666b4562fd8619632d7043fb5b691b0')

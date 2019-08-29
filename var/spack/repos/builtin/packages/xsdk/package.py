@@ -4,25 +4,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
 from spack import *
 
 
-class Xsdk(Package):
+class Xsdk(BundlePackage):
     """Xsdk is a suite of Department of Energy (DOE) packages for numerical
        simulation. This is a Spack bundle package that installs the xSDK
        packages
     """
 
     homepage = "http://xsdk.info"
-    url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
 
     maintainers = ['balay', 'luszczek']
 
-    version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('0.4.0', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('0.3.0', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
+    version('develop')
+    version('0.4.0')
+    version('0.3.0')
+    version('xsdk-0.2.0')
 
     variant('debug', default=False, description='Compile in debug mode')
     variant('cuda', default=False, description='Enable CUDA dependent packages')
@@ -123,12 +121,3 @@ class Xsdk(Package):
 
     # How do we propagate debug flag to all depends on packages ?
     # If I just do spack install xsdk+debug will that propogate it down?
-
-    # Dummy install for now,  will be removed when metapackage is available
-    def install(self, spec, prefix):
-        # Prevent the error message
-        #      ==> Error: Install failed for xsdk.  Nothing was installed!
-        #      ==> Error: Installation process had nonzero exit code : 256
-        with open(os.path.join(spec.prefix, 'bundle-package.txt'), 'w') as out:
-            out.write('This is a bundle\n')
-            out.close()

@@ -61,6 +61,10 @@ properties = {
                         'modules': {'anyOf': [{'type': 'string'},
                                               {'type': 'null'},
                                               {'type': 'array'}]},
+                        'implicit_rpaths': {
+                            'type': 'array',
+                            'items': {'type': 'string'}
+                        },
                         'environment': {
                             'type': 'object',
                             'default': {},

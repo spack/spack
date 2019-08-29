@@ -687,22 +687,28 @@ def mock_git_repository(tmpdir_factory):
 
     checks = {
         'master': Bunch(
-            revision='master', file=r0_file, args={'git': str(repodir)}
+            revision='master', file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
-                'git': str(repodir), 'branch': branch
+                'git': url, 'branch': branch
+            }
+        ),
+        'tag-branch': Bunch(
+            revision=tag_branch, file=tag_file, args={
+                'git': url, 'branch': tag_branch
             }
         ),
         'tag': Bunch(
-            revision=tag, file=tag_file, args={'git': str(repodir), 'tag': tag}
+            revision=tag, file=tag_file, args={'git': url, 'tag': tag}
         ),
         'commit': Bunch(
-            revision=r1, file=r1_file, args={'git': str(repodir), 'commit': r1}
+            revision=r1, file=r1_file, args={'git': url, 'commit': r1}
         )
     }
 
-    t = Bunch(checks=checks, url=url, hash=rev_hash, path=str(repodir))
+    t = Bunch(checks=checks, url=url, hash=rev_hash,
+              path=str(repodir), git_exe=git)
     yield t
 
 
@@ -938,3 +944,53 @@ def invalid_spec(request):
     """Specs that do not parse cleanly due to invalid formatting.
     """
     return request.param
+
+
+@pytest.fixture("module")
+def mock_test_repo(tmpdir_factory):
+    """Create an empty repository."""
+    repo_namespace = 'mock_test_repo'
+    repodir = tmpdir_factory.mktemp(repo_namespace)
+    repodir.ensure(spack.repo.packages_dir_name, dir=True)
+    yaml = repodir.join('repo.yaml')
+    yaml.write("""
+repo:
+    namespace: mock_test_repo
+""")
+
+    repo = spack.repo.RepoPath(str(repodir))
+    with spack.repo.swap(repo):
+        yield repo, repodir
+
+    shutil.rmtree(str(repodir))
+
+
+##########
+# Class and fixture to work around problems raising exceptions in directives,
+# which cause tests like test_from_list_url to hang for Python 2.x metaclass
+# processing.
+#
+# At this point only version and patch directive handling has been addressed.
+##########
+
+class MockBundle(object):
+    has_code = False
+    name = 'mock-bundle'
+    versions = {}
+
+
+@pytest.fixture
+def mock_directive_bundle():
+    """Return a mock bundle package for directive tests."""
+    return MockBundle()
+
+
+@pytest.fixture
+def clear_directive_functions():
+    """Clear all overidden directive functions for subsequent tests."""
+    yield
+
+    # Make sure any directive functions overidden by tests are cleared before
+    # proceeding with subsequent tests that may depend on the original
+    # functions.
+    spack.directives.DirectiveMeta._directives_to_be_executed = []

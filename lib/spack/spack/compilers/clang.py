@@ -81,6 +81,10 @@ class Clang(Compiler):
         ver_string = str(self.version)
         return ver_string.endswith('-apple')
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
     @property
     def openmp_flag(self):
         if self.is_apple:
