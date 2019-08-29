@@ -716,37 +716,30 @@ class TestStage(object):
         path = spack.stage._first_accessible_path([subdir])
         assert path == subdir
 
-        # Ensure a path with adjacent `$user` nodes removes one
+        # Ensure a path with a `$user` node has the right permissions
+        # for its subdirectories.
         user = getpass.getuser()
-        spack_subdir = spack_dir.join(user)
-        spack_doubled = spack_subdir.join(user)
-        subdir = str(spack_doubled)
-        path = spack.stage._first_accessible_path([subdir])
-        assert path == spack_subdir
+        user_dir = spack_dir.join(user, 'has', 'paths')
+        user_path = str(user_dir)
+        path = spack.stage._first_accessible_path([user_path])
+        assert path == user_path
         check_stage_dir_perms(str(tmpdir), path)
 
         # Cleanup
         shutil.rmtree(str(name))
 
-    def test_first_accessible_perms(self, tmpdir):
-        """Test _first_accessible_path permissions."""
-        final_node = 'exists'
-        user = getpass.getuser()
-        base_dir = tmpdir.join('first')
-        first_dir = base_dir.join('path', user)
-        double_dir = first_dir.join(user, final_node)
-        final_dir = first_dir.join(final_node)
+    def test_resolve_paths(self):
+        """Test _resolve_paths."""
 
-        # Ensure a non-existent path is created
-        name = str(double_dir)
-        path = spack.stage._first_accessible_path([name])
-        final_path = str(final_dir)
-        assert path == final_path
-        assert os.path.isdir(final_path)
-        check_stage_dir_perms(str(tmpdir), path)
+        assert spack.stage._resolve_paths([]) == []
 
-        # Cleanup
-        shutil.rmtree(str(first_dir))
+        paths = [os.path.join(os.path.sep, 'a', 'b', 'c')]
+        assert spack.stage._resolve_paths(paths) == paths
+
+        tmp = '$tempdir'
+        paths = [os.path.join(tmp, 'stage'), os.path.join(tmp, '$user')]
+        can_paths = [canonicalize_path(paths[0]), canonicalize_path(tmp)]
+        assert spack.stage._resolve_paths(paths) == can_paths
 
     def test_get_stage_root_bad_path(self, clear_stage_root, bad_stage_path):
         """Ensure an invalid stage path root raises a StageError."""

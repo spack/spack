@@ -75,14 +75,6 @@ def _first_accessible_path(paths):
                 if can_access(path):
                     return path
             else:
-                # Remove adjacent occurance of `$user` (e.g., `$tempdir/$user`
-                # where `$tempdir` includes `$user`).
-                user = getpass.getuser()
-                user_node = '{0}{1}'.format(os.path.sep, user)
-                double_user = '{0}{0}'.format(user_node)
-                if double_user in path:
-                    path = path.replace(double_user, user_node, 1)
-
                 # Now create the stage root with the proper group/perms.
                 _create_stage_root(path)
                 if can_access(path):
@@ -93,6 +85,23 @@ def _first_accessible_path(paths):
                       path, str(e)))
 
     return None
+
+
+def _resolve_paths(candidates):
+    """Resolve paths, removing extra $user from $tempdir if needed."""
+    temp_path = sup.canonicalize_path('$tempdir')
+    tmp_has_usr = getpass.getuser() in temp_path.split(os.path.sep)
+
+    paths = []
+    for path in candidates:
+        # First remove the extra `$user` node from a `$tempdir/$user` entry
+        # for hosts that automatically append `$user` to `$tempdir`.
+        if path.startswith(os.path.join('$tempdir', '$user')) and tmp_has_usr:
+            path = os.path.join('$tempdir', path[15:])
+
+        paths.append(sup.canonicalize_path(path))
+
+    return paths
 
 
 # Cached stage path root
@@ -107,14 +116,14 @@ def get_stage_root():
         if isinstance(candidates, string_types):
             candidates = [candidates]
 
-        resolved_candidates = [sup.canonicalize_path(x) for x in candidates]
+        resolved_candidates = _resolve_paths(candidates)
         path = _first_accessible_path(resolved_candidates)
         if not path:
             raise StageError("No accessible stage paths in:",
                              ' '.join(resolved_candidates))
 
-        # Ensure that any temp path is unique per user, so users don't
-        # fight over shared temporary space.  Emulate permissions from
+        # Ensure that path is unique per user in an attempt to avoid
+        # conflicts in shared temporary spaces.  Emulate permissions from
         # `tempfile.mkdtemp`.
         user = getpass.getuser()
         if user not in path:
