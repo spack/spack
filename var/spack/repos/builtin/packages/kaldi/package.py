@@ -76,16 +76,22 @@ class Kaldi(Package):    # Does not use Autotools
             mkdirp(prefix.bin)
             for root, dirs, files in os.walk('.'):
                 for name in files:
-                    if name.endswith(".so") or name.endswith(".cc") \
+                    if name.endswith("." + dso_suffix) \
+                            or name.endswith(".cc") \
                             or name.endswith(".pptx"):
                         continue
-                    if "configure" is name:
+                    if "configure" == name:
                         continue
                     if os.access(join(root, name), os.X_OK):
                         install(join(root, name), prefix.bin)
 
             mkdir(prefix.lib)
-            install_tree('lib', prefix.lib)
+            for root, dirs, files in os.walk('lib'):
+                for name in files:
+                    if name.endswith("." + dso_suffix):
+                        fpath = join(root, name)
+                        src = os.readlink(fpath)
+                        install(src, prefix.lib)
 
             for root, dirs, files in os.walk('.'):
                 for name in files:
