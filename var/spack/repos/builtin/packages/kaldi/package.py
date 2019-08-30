@@ -89,8 +89,7 @@ class Kaldi(Package):    # Does not use Autotools
             for root, dirs, files in os.walk('lib'):
                 for name in files:
                     if name.endswith("." + dso_suffix):
-                        fname, _ = os.path.splitext(name)
-                        fpath = join(root, "{0}.{1}".format(fname, dso_suffix))
+                        fpath = join(root, name)
                         src = os.readlink(fpath)
                         install(src, prefix.lib)
 
