@@ -12,13 +12,13 @@ class RSeqinr(RPackage):
     data management under the ACNUC system."""
 
     homepage = "http://seqinr.r-forge.r-project.org"
-    url      = "https://cran.r-project.org/src/contrib/seqinr_3.3-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/seginr"
+    url      = "https://cloud.r-project.org/src/contrib/seqinr_3.3-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/seqinr"
 
     version('3.4-5', 'd550525dcea754bbd5b83cb46b4124cc')
     version('3.3-6', '73023d627e72021b723245665e1ad055')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-ade4', type=('build', 'run'))
     depends_on('r-segmented', type=('build', 'run'))
     depends_on('zlib')

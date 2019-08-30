@@ -15,8 +15,10 @@ class RVarselrf(RPackage):
     and other genomics and proteomics applications)."""
 
     homepage = "http://ligarto.org/rdiaz/Software/Software.html"
-    url      = "https://cran.rstudio.com/src/contrib/varSelRF_0.7-8.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/varSelRF_0.7-8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/varSelRF"
 
     version('0.7-8', '103c460d0734bd38ae13496c839d3435')
 
+    depends_on('r@2.0.0:', type=('build', 'run'))
     depends_on('r-randomforest', type=('build', 'run'))

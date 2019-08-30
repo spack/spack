@@ -14,10 +14,14 @@ class RParamhelpers(RPackage):
        function evaluations is also provided."""
 
     homepage = "https://github.com/berndbischl/ParamHelpers"
-    url      = "https://cran.r-project.org/src/contrib/ParamHelpers_1.10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ParamHelpers"
+    url      = "https://cloud.r-project.org/src/contrib/ParamHelpers_1.10.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ParamHelpers"
 
+    version('1.12', sha256='b54db9e6608ba530345c380c757a60cb2b78ab08992a890b1a41914ce7abcc14')
+    version('1.11', sha256='1614f4c0842cf822befc01228ab7263417f3423dd6a1dc24347b14f8491637a0')
     version('1.10', '36e9060488ebd484d62cd991a4693332')
 
     depends_on('r-bbmisc@1.10:', type=('build', 'run'))
-    depends_on('r-checkmate@1.8.1:', type=('build', 'run'))
+    depends_on('r-checkmate@1.8.2:', type=('build', 'run'))
+    depends_on('r-backports', when='@1.11:', type=('build', 'run'))
+    depends_on('r-fastmatch', when='@1.11:', type=('build', 'run'))

@@ -11,15 +11,16 @@ class RRjags(RPackage):
     """Interface to the JAGS MCMC library.
        Usage: $ spack load r-rjags """
 
-    homepage = "https://cran.r-project.org/web/packages/rjags/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rjags_4-8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rjags/"
+    homepage = "https://cloud.r-project.org/package=rjags"
+    url      = "https://cloud.r-project.org/src/contrib/rjags_4-8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rjags/"
 
     version('4-8', sha256='1529827ab11493fb5f05552e239d700ae2f818995d86d3c9e4c92523f594b59f')
     version('4-6', 'c26b7cc8e8ddcdb55e14cba28df39f4c')
 
-    depends_on('jags', type=('link'))
-    depends_on('r-coda', type=('build', 'run'))
+    depends_on('r@2.14.0:', type=('build', 'run'))
+    depends_on('r-coda@0.13:', type=('build', 'run'))
+    depends_on('jags@4.0.0:4.999.999', type=('link'))
 
     def configure_args(self):
         args = ['--with-jags-lib=%s' % self.spec['jags'].prefix.lib,

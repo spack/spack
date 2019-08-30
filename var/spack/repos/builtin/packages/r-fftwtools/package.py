@@ -16,9 +16,10 @@ class RFftwtools(RPackage):
        the redundant complex conjugate when the input is real data."""
 
     homepage = "https://github.com/krahim/fftwtools"
-    url      = "https://cran.r-project.org/src/contrib/fftwtools_0.9-8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/fftwtools"
+    url      = "https://cloud.r-project.org/src/contrib/fftwtools_0.9-8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/fftwtools"
 
     version('0.9-8', '2d1258fbaf0940b57ed61c8d6cd6694d')
 
-    depends_on('fftw')
+    depends_on('r@2.15.2:', type=('build', 'run'))
+    depends_on('fftw@3.1.2:')

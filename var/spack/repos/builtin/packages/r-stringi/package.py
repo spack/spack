@@ -18,12 +18,15 @@ class RStringi(RPackage):
     etc."""
 
     homepage = "http://www.gagolewski.com/software/stringi/"
-    url      = "https://cran.r-project.org/src/contrib/stringi_1.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/stringi"
+    url      = "https://cloud.r-project.org/src/contrib/stringi_1.1.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/stringi"
 
+    version('1.4.3', sha256='13cecb396b700f81af38746e97b550a1d9fda377ca70c78f6cdfc770d33379ed')
+    version('1.3.1', sha256='32df663bb6e9527e1ac265eec2116d26f7b7e62ea5ae7cc5de217cbb8defc362')
     version('1.1.5', '0d5ec30ae368ab1b87a36fee3e228e7b')
     version('1.1.3', '3b89cee3b5ef7c031077cd7707718e07')
     version('1.1.2', '0ec2faa62643e1900734c0eaf5096648')
     version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')
 
-    depends_on('icu4c')
+    depends_on('r@2.14:', type=('build', 'run'))
+    depends_on('icu4c@52:')
