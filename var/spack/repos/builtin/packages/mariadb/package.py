@@ -35,3 +35,5 @@ class Mariadb(CMakePackage):
     depends_on('libevent', when='+nonblocking')
     depends_on('ncurses')
     depends_on('zlib')
+
+    conflicts('%gcc@9.1.0:', when='@:5.5')
