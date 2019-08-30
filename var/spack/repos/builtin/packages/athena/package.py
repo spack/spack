@@ -117,7 +117,6 @@ class Athena(AutotoolsPackage):
             spack_env.set('FFTWLIB', spec['fftw'].libs.ld_flags)
             spack_env.set('FFTWINC', spec['fftw'].headers.include_flags)
 
-
     def configure_args(self):
         spec = self.spec
         args = []
