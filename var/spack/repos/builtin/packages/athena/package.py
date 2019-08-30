@@ -13,7 +13,9 @@ class Athena(AutotoolsPackage):
 
     homepage = "https://princetonuniversity.github.io/Athena-Cversion/"
     url      = "https://github.com/PrincetonUniversity/Athena-Cversion/archive/version-4.2.tar.gz"
+    git      = "https://github.com/PrincetonUniversity/Athena-Cversion.git"
 
+    version('master', branch='master')
     version('4.2', sha256='6334848d7f1325aa44859418feac8ce223b56793ae8907103000af5b27f50e7e')
 
     # PHYSICS "packages":
