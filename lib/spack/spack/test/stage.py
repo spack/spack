@@ -739,6 +739,9 @@ class TestStage(object):
         tmp = '$tempdir'
         paths = [os.path.join(tmp, 'stage'), os.path.join(tmp, '$user')]
         can_paths = [canonicalize_path(paths[0]), canonicalize_path(tmp)]
+        user = getpass.getuser()
+        if user not in can_paths[1].split(os.path.sep):
+            can_paths[1] = os.path.join(can_paths[1], user)
         assert spack.stage._resolve_paths(paths) == can_paths
 
     def test_get_stage_root_bad_path(self, clear_stage_root, bad_stage_path):
