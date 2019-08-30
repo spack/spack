@@ -132,7 +132,12 @@ case unload:
             endif
             breaksw
         case "load":
-            set _sp_full_spec = ( "`\spack $_sp_flags module tcl find $_sp_spec`" )
+            # _sp_module_args may be "-r" for recursive spec retrieval
+            set _sp_full_spec = ( "`\spack $_sp_flags module tcl find $_sp_module_args $_sp_spec`" )
+            if ( "$_sp_module_args" == "-r" ) then
+                # module load can handle the list of modules to load and "-r" is not a valid option
+                set _sp_module_args = ""
+            endif
             if ( $? == 0 ) then
                 module load $_sp_module_args $_sp_full_spec
             endif
