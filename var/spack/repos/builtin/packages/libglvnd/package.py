@@ -28,6 +28,7 @@ class Libglvnd(AutotoolsPackage):
     conflicts('platform=darwin', msg='libglvnd is linux specific')
     conflicts('platform=bgq', msg='libglvnd is linux specific')
 
+    depends_on('pkgconfig')
     depends_on('libxext')
     depends_on('libx11')
     depends_on('glproto')

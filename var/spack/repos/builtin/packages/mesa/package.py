@@ -5,6 +5,7 @@
 
 from spack import *
 
+import os.path
 import sys
 
 
@@ -50,9 +51,7 @@ class Mesa(AutotoolsPackage):
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
-    # TODO: effectively deal with EGL.  The implications of this have not been
-    # worked through yet
-    # variant('egl', default=False, description="Enable the EGL frontend.")
+    variant('glvnd', default=False, description="Expose Graphics APIs through libglvnd")
 
     # TODO: Effectively deal with hardware drivers
     # The implication of this is enabling DRI, among other things, and
@@ -65,27 +64,67 @@ class Mesa(AutotoolsPackage):
     # Provides
     provides('gl@4.5',  when='+opengl')
     provides('glx@1.4', when='+glx')
+
+    provides('gl@4.5',  when='+glvnd')
+    provides('glx@1.4', when='+glvnd')
     # provides('egl@1.5', when='+egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
-    depends_on('libx11',  when='+glx')
-    depends_on('libxcb',  when='+glx')
-    depends_on('libxext', when='+glx')
+
+    # +glx WITHOUT glvnd
+    depends_on('libx11',  when='~glvnd +glx')
+    depends_on('libxcb',  when='~glvnd +glx')
+    depends_on('libxext', when='~glvnd +glx')
+
+    # +glx THROUGH glvnd
+    depends_on('libx11',  when='+glvnd +glx')
+    depends_on('libxcb@1.9.3:', when='+glvnd +glx')
+    depends_on('libxext', when='+glvnd +glx')
+    depends_on('libxshmfence@1.1:', when='+glvnd +glx')
+
+    depends_on('libglvnd', when='+glvnd +glx')
+
+    depends_on('libdrm', when='+glvnd +glx')
+    depends_on('dri2proto', when='+glvnd +glx')
+    depends_on('libx11', when='+glvnd +glx')
+
+    depends_on('libxdamage@1.1:', when='+glvnd +glx')
+    depends_on('damageproto', when='+glvnd +glx')
+    depends_on('libxfixes', when='+glvnd +glx')
+    depends_on('fixesproto', when='+glvnd +glx')
+    depends_on('libxxf86vm', when='+glvnd +glx')
+    depends_on('xf86vidmodeproto', when='+glvnd +glx')
+
+
+    # +egl with or without glvnd
+    depends_on('libdrm', when='+egl')
+
+    # +glx with or without glvnd
     depends_on('glproto@1.4.14:', when='+glx', type='build')
+
+    conflicts('+glvnd~glx~egl',
+              msg='+glvnd requires at least one of either +glx or +egl')
 
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
+    patch('glvnd-install-egl-file-under-prefix.patch', when='+glvnd')
 
     def autoreconf(self, spec, prefix):
         which('autoreconf')('--force',  '--verbose', '--install')
 
     def configure_args(self):
         spec = self.spec
+
+        glvnd_enabled = '+glvnd' in spec
+
+        enable_glvnd = ''.join((
+            '--', 'enable' if glvnd_enabled else 'disable', '-libglvnd'))
+
         args = [
             '--enable-shared',
             '--disable-static',
-            '--disable-libglvnd',
+            enable_glvnd,
             '--disable-nine',
             '--disable-omx-bellagio',
             '--disable-omx-tizonia',
@@ -113,7 +152,7 @@ class Mesa(AutotoolsPackage):
 
         if '+glx' in spec:
             num_frontends += 1
-            if '+egl' in spec:
+            if '+egl' in spec or glvnd_enabled:
                 args.append('--enable-glx=dri')
             else:
                 args.append('--enable-glx=gallium-xlib')
@@ -121,7 +160,7 @@ class Mesa(AutotoolsPackage):
         else:
             args.append('--disable-glx')
 
-        if '+egl' in spec:
+        if '+egl' in spec or glvnd_enabled:
             num_frontends += 1
             args.extend(['--enable-egl', '--enable-gbm', '--enable-dri'])
             args_platforms.append('surfaceless')
@@ -138,7 +177,7 @@ class Mesa(AutotoolsPackage):
         else:
             args.extend(['--disable-gles1', '--disable-gles2'])
 
-        if num_frontends > 1:
+        if num_frontends > 1 or glvnd_enabled:
             args.append('--enable-shared-glapi')
         else:
             args.append('--disable-shared-glapi')
@@ -174,3 +213,43 @@ class Mesa(AutotoolsPackage):
         args.append('--with-dri-drivers=' + ','.join(args_dri_drivers))
 
         return args
+
+    @property
+    def gl_libs(self):
+        if '+glvnd' in self.spec:
+            return find_libraries('libGL',
+                                  root=self.spec['libglvnd'].prefix,
+                                  shared='+shared' in self.spec,
+                                  recursive=True)
+
+        if '+opengl' in self.spec:
+            return find_libraries('libGL',
+                                  root=self.spec.prefix,
+                                  shared='+shared' in self.spec,
+                                  recursive=True)
+
+        return []
+
+    @property
+    def glx_libs(self):
+        if '+glvnd' in self.spec:
+            return find_libraries('libGLX',
+                                  root=self.spec['libglvnd'].prefix,
+                                  shared='+shared' in self.spec,
+                                  recursive=True)
+
+        if '+opengl' in self.spec:
+            return find_libraries('libGLX',
+                                  root=self.spec.prefix,
+                                  shared='+shared' in self.spec,
+                                  recursive=True)
+
+        return []
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('__GLX_VENDOR_LIBRARY_NAME', 'mesa')
+        run_env.set('__EGL_VENDOR_LIBRARY_FILENAMES', ':'.join((
+            '50_mesa.json')))
+        run_env.set('__EGL_VENDOR_LIBRARY_DIRS', ':'.join((
+            os.path.join(self.spec.prefix, 'share', 'glvnd', 'egl_vendor.d'))))
+

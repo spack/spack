@@ -1,0 +1,12 @@
+diff -Naur a/configure.ac b/configure.ac
+--- a/configure.ac	2019-08-26 13:37:22.000000000 -0400
++++ b/configure.ac	2019-08-30 14:13:58.000000000 -0400
+@@ -1519,7 +1519,7 @@
+     esac
+ 
+     PKG_CHECK_MODULES([GLVND], libglvnd >= 0.2.0)
+-    LIBGLVND_DATADIR=`$PKG_CONFIG --variable=datadir libglvnd`
++    LIBGLVND_DATADIR="$prefix/share"
+     AC_SUBST([LIBGLVND_DATADIR])
+ 
+     DEFINES="${DEFINES} -DUSE_LIBGLVND=1"
