@@ -99,6 +99,8 @@ class Athena(AutotoolsPackage):
 
     build_targets = ['all']
 
+    patch('missing-separator.patch')
+
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
 
