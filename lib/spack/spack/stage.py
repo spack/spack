@@ -64,6 +64,9 @@ def _create_stage_root(path):
 
             assert os.getuid() == os.stat(curr_dir).st_uid
             break
+        elif not can_access(curr_dir):
+            raise OSError(errno.EACCES,
+                          'Cannot access %s: Permission denied' % curr_dir)
 
 
 def _first_accessible_path(paths):
@@ -77,8 +80,7 @@ def _first_accessible_path(paths):
             else:
                 # Now create the stage root with the proper group/perms.
                 _create_stage_root(path)
-                if can_access(path):
-                    return path
+                return path
 
         except OSError as e:
             tty.debug('OSError while checking stage path %s: %s' % (
