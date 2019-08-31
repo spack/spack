@@ -64,9 +64,10 @@ def _create_stage_root(path):
 
             assert os.getuid() == os.stat(curr_dir).st_uid
             break
-        elif not can_access(curr_dir):
-            raise OSError(errno.EACCES,
-                          'Cannot access %s: Permission denied' % curr_dir)
+
+    if not can_access(path):
+        raise OSError(errno.EACCES,
+                      'Cannot access %s: Permission denied' % curr_dir)
 
 
 def _first_accessible_path(paths):
