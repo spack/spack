@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyGdcClient(PythonPackage):
-    """The gdc-client provides several convenience functions 
+    """The gdc-client provides several convenience functions
     over the GDC API which provides general download/upload via HTTPS."""
 
     homepage = "https://github.com/NCI-GDC/gdc-client"
