@@ -7,7 +7,8 @@ from spack import *
 
 
 class Fastp(MakefilePackage):
-    """A tool designed to provide fast all-in-one preprocessing for FastQ files."""
+    """A tool designed to provide fast 
+    all-in-one preprocessing for FastQ files."""
 
     homepage = "https://github.com/OpenGene/fastp"
     url      = "https://github.com/OpenGene/fastp/archive/v0.20.0.tar.gz"
