@@ -282,7 +282,7 @@ class RPackageTemplate(PackageTemplate):
     # depends_on('r-foo', type=('build', 'run'))"""
 
     body = """\
-    def configure_args(self, spec, prefix):
+    def configure_args(self):
         # FIXME: Add arguments to pass to install via --configure-args
         # FIXME: If not needed delete this function
         args = []
