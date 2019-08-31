@@ -2470,6 +2470,11 @@ def dump_packages(spec, path):
             except spack.repo.RepoError:
                 tty.warn("Warning: Couldn't copy in provenance for %s" %
                          node.name)
+            # older Spack installations built prior to b4a9e37a9
+            # might not have "self" as a dependency. This happens
+            # at DOE facilities with longer update cycles.
+            if not os.path.isdir(source_pkg_dir):
+                continue
 
         # Create a destination repository
         dest_repo_root = os.path.join(path, node.namespace)
