@@ -24,6 +24,7 @@ packages:
       - archngv@0.0.0
       - asciitoh5@1.0
       - brainbuilder@0.11.3
+      - brainbuilder@0.11.4
       - connectome-tools@0.3.2
       - spatial-index@0.0.1
       - spykfunc@0.14.3
