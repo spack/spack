@@ -275,7 +275,7 @@ class RPackageTemplate(PackageTemplate):
 
     list_url = """\
     # FIXME: Set list_url for R packages from CRAN
-    # list_url = \"https://cran.r-project.org/src/contrib/Archive/\""""
+    # list_url = \"https://cloud.r-project.org/src/contrib/Archive/\""""
 
     dependencies = """\
     # FIXME: Add dependencies if required.
