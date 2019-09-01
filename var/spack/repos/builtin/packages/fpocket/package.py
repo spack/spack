@@ -26,8 +26,8 @@ from spack import *
 
 
 class Fpocket(Package):
-    """fpocket is a very fast open source protein pocket detection algorithm based on
-       Voronoi tessellation."""
+    """fpocket is a very fast open source protein pocket detection algorithm
+       based on Voronoi tessellation."""
 
     homepage = "https://github.com/Discngine/fpocket"
     version('develop', branch='master',
