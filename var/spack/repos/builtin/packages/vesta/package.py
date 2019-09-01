@@ -18,7 +18,7 @@ class Vesta(Package):
     depends_on('gtkplus@2.1.0:')
     depends_on('mesa')
     depends_on('cairo@1.0:')
-    
+
     conflicts('%gcc@:5.3')
 
     def setup_environment(self, spack_env, run_env):
