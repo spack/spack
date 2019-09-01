@@ -10,6 +10,7 @@ import llnl.util.lang
 
 import spack.environment as ev
 import spack.repo
+import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 from spack.util.string import plural
@@ -33,11 +34,18 @@ def setup_parser(subparser):
                               const='paths',
                               help='show paths to package install directories')
     format_group.add_argument(
+        "--format", action="store", default=None,
+        help="output specs with the specified format string")
+
+    # TODO: separate this entirely from the "mode" option -- it's
+    # TODO: orthogonal, but changing it for all commands that use it with
+    # TODO: display_spec is tricky. Also make -pd work together properly.
+    subparser.add_argument(
         '-d', '--deps',
         action='store_const',
         dest='mode',
         const='deps',
-        help='show full dependency DAG of installed packages')
+        help='output dependencies along with found specs')
 
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'tags'])
@@ -143,6 +151,26 @@ def setup_env(env):
     return decorator, added, roots, removed
 
 
+def display_env(env, args, decorator):
+    tty.msg('In environment %s' % env.name)
+
+    if not env.user_specs:
+        tty.msg('No root specs')
+    else:
+        tty.msg('Root specs')
+        # TODO: Change this to not print extraneous deps and variants
+        display_specs(
+            env.user_specs, args,
+            decorator=lambda s, f: color.colorize('@*{%s}' % f))
+        print()
+
+    if args.show_concretized:
+        tty.msg('Concretized roots')
+        display_specs(
+            env.specs_by_hash.values(), args, decorator=decorator)
+        print()
+
+
 def find(parser, args):
     q_args = query_arguments(args)
     results = args.specs(**q_args)
@@ -168,25 +196,13 @@ def find(parser, args):
         results = [x for x in results if x.name in packages_with_tags]
 
     # Display the result
-    if env:
-        tty.msg('In environment %s' % env.name)
-
-        if not env.user_specs:
-            tty.msg('No root specs')
-        else:
-            tty.msg('Root specs')
-            # TODO: Change this to not print extraneous deps and variants
-            display_specs(
-                env.user_specs, args,
-                decorator=lambda s, f: color.colorize('@*{%s}' % f))
-        print()
-
-        if args.show_concretized:
-            tty.msg('Concretized roots')
-            display_specs(
-                env.specs_by_hash.values(), args, decorator=decorator)
-            print()
-
-    tty.msg("%s" % plural(len(results), 'installed package'))
-
-    display_specs(results, args, decorator=decorator, all_headers=True)
+    if args.format:
+        cmd.display_formatted_specs(
+            results, args.format, deps=(args.mode == "deps"))
+    elif args.json:
+        cmd.display_specs_as_json(results, deps=(args.mode == "deps"))
+    else:
+        if env:
+            display_env(env, args, decorator)
+        tty.msg("%s" % plural(len(results), 'installed package'))
+        display_specs(results, args, decorator=decorator, all_headers=True)
