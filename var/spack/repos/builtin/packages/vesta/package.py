@@ -1,7 +1,9 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import os
-import fnmatch
-import shutil
 
 
 class Vesta(Package):
@@ -16,15 +18,12 @@ class Vesta(Package):
     depends_on('gtkplus@2.1.0:')
     depends_on('mesa')
     depends_on('cairo@1.0:')
-    depends_on('gcc@5.4.0:')
+    
+    conflicts('%gcc@:5.3')
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix)
         run_env.prepend_path('LD_LIBRARY_PATH', self.prefix)
 
     def install(self, spec, prefix):
-        for filename in os.listdir(self.stage.source_path):
-            if os.path.isdir(filename):
-                shutil.copytree(filename, join_path(self.prefix, filename))
-            elif not fnmatch.fnmatch(filename, "spack-build.*"):
-                shutil.copy(filename, self.prefix)
+        install_tree('.', prefix)
