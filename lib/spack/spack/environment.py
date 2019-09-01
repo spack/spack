@@ -952,6 +952,7 @@ class Environment(object):
             ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig']),
             ('CMAKE_PREFIX_PATH', ['']),
         ]
+
         path_updates = list()
         if default_view_name in self.views:
             for var, subdirs in updates:
