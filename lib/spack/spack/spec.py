@@ -1540,6 +1540,31 @@ class Spec(object):
 
         return syaml_dict([('spec', node_list)])
 
+    def to_record_dict(self):
+        """Return a "flat" dictionary with name and hash as top-level keys.
+
+        This is similar to ``to_node_dict()``, but the name and the hash
+        are "flattened" into the dictionary for easiler parsing by tools
+        like ``jq``.  Instead of being keyed by name or hash, the
+        dictionary "name" and "hash" fields, e.g.::
+
+            {
+              "name": "openssl"
+              "hash": "3ws7bsihwbn44ghf6ep4s6h4y2o6eznv"
+              "version": "3.28.0",
+              "arch": {
+              ...
+            }
+
+        But is otherwise the same as ``to_node_dict()``.
+
+        """
+        dictionary = syaml_dict()
+        dictionary["name"] = self.name
+        dictionary["hash"] = self.dag_hash()
+        dictionary.update(self.to_node_dict()[self.name])
+        return dictionary
+
     def to_yaml(self, stream=None, hash=ht.dag_hash):
         return syaml.dump(
             self.to_dict(hash), stream=stream, default_flow_style=False)

@@ -21,6 +21,7 @@ import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.spack_json as sjson
 from spack.error import SpackError
 
 
@@ -212,6 +213,24 @@ def display_formatted_specs(specs, format_string, deps=False):
         if deps:
             for depth, dep in spec.traverse(depth=True, root=False):
                 print("   " * depth, dep.format(format_string))
+
+
+def display_specs_as_json(specs, deps=False):
+    """Convert specs to a list of json records."""
+    seen = set()
+    records = []
+    for spec in specs:
+        if spec.dag_hash() not in seen:
+            seen.add(spec.dag_hash())
+            records.append(spec.to_record_dict())
+
+        if deps:
+            for dep in spec.traverse():
+                if dep.dag_hash() not in seen:
+                    seen.add(spec.dag_hash())
+                    records.append(dep.to_record_dict())
+
+    sjson.dump(records, sys.stdout)
 
 
 def display_specs(specs, args=None, **kwargs):

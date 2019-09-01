@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import llnl.util.tty as tty
@@ -12,7 +13,6 @@ import spack.environment as ev
 import spack.repo
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
-from spack.cmd import display_specs
 from spack.util.string import plural
 
 description = "list and search installed packages"
@@ -36,6 +36,9 @@ def setup_parser(subparser):
     format_group.add_argument(
         "--format", action="store", default=None,
         help="output specs with the specified format string")
+    format_group.add_argument(
+        "--json", action="store_true", default=False,
+        help="output specs as machine-readable json records")
 
     # TODO: separate this entirely from the "mode" option -- it's
     # TODO: orthogonal, but changing it for all commands that use it with
@@ -159,14 +162,14 @@ def display_env(env, args, decorator):
     else:
         tty.msg('Root specs')
         # TODO: Change this to not print extraneous deps and variants
-        display_specs(
+        cmd.display_specs(
             env.user_specs, args,
             decorator=lambda s, f: color.colorize('@*{%s}' % f))
         print()
 
     if args.show_concretized:
         tty.msg('Concretized roots')
-        display_specs(
+        cmd.display_specs(
             env.specs_by_hash.values(), args, decorator=decorator)
         print()
 
@@ -205,4 +208,4 @@ def find(parser, args):
         if env:
             display_env(env, args, decorator)
         tty.msg("%s" % plural(len(results), 'installed package'))
-        display_specs(results, args, decorator=decorator, all_headers=True)
+        cmd.display_specs(results, args, decorator=decorator, all_headers=True)
