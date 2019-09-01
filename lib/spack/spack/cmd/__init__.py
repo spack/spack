@@ -200,6 +200,20 @@ def gray_hash(spec, length):
     return colorize('@K{%s}' % h)
 
 
+def display_formatted_specs(specs, format_string, deps=False):
+    """Print a list of specs formatted with the provided string.
+
+    Arguments:
+        specs (list): list of specs to display.
+        deps (bool): whether to also print dependencies of specs.
+    """
+    for spec in specs:
+        print(spec.format(format_string))
+        if deps:
+            for depth, dep in spec.traverse(depth=True, root=False):
+                print("   " * depth, dep.format(format_string))
+
+
 def display_specs(specs, args=None, **kwargs):
     """Display human readable specs with customizable formatting.
 
