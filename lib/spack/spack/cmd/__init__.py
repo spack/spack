@@ -221,8 +221,8 @@ def display_specs_as_json(specs, deps=False):
     sjson.dump(records, sys.stdout)
 
 
-def iter_sections(specs, indent, all_headers):
-    """Break a list of specs into sections indexed by arch/compiler."""
+def iter_groups(specs, indent, all_headers):
+    """Break a list of specs into groups indexed by arch/compiler."""
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
     ispace = indent * ' '
@@ -278,9 +278,9 @@ def display_specs(specs, args=None, **kwargs):
         show_flags (bool): Show compiler flags with specs
         variants (bool): Show variants with specs
         indent (int): indent each line this much
-        sections (bool): display specs grouped by arch/compiler (default True)
+        groups (bool): display specs grouped by arch/compiler (default True)
         decorators (dict): dictionary mappng specs to decorators
-        header_callback (function): called at start of arch/compiler sections
+        header_callback (function): called at start of arch/compiler groups
         all_headers (bool): show headers even when arch/compiler aren't defined
 
     """
@@ -300,7 +300,7 @@ def display_specs(specs, args=None, **kwargs):
     flags         = get_arg('show_flags', False)
     full_compiler = get_arg('show_full_compiler', False)
     variants      = get_arg('variants', False)
-    sections      = get_arg('sections', True)
+    groups        = get_arg('groups', True)
     all_headers   = get_arg('all_headers', False)
 
     decorator     = get_arg('decorator', None)
@@ -338,7 +338,7 @@ def display_specs(specs, args=None, **kwargs):
         return string
 
     def format_list(specs):
-        """Display a single list of specs, with no sections"""
+        """Display a single list of specs, with no groups"""
         # create the final, formatted versions of all specs
         formatted = []
         for spec in specs:
@@ -367,8 +367,8 @@ def display_specs(specs, args=None, **kwargs):
             else:
                 print(string)
 
-    if sections:
-        for specs in iter_sections(specs, indent, all_headers):
+    if groups:
+        for specs in iter_groups(specs, indent, all_headers):
             format_list(specs)
     else:
         format_list(sorted(specs))

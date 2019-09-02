@@ -35,10 +35,10 @@ def setup_parser(subparser):
     subparser.add_argument('-p', '--paths', action='store_true',
                            help='show paths to package install directories')
     subparser.add_argument(
-        '--sections', action='store_true', default=None, dest='sections',
-        help='group specs in arch/compiler sections (default on)')
+        '--groups', action='store_true', default=None, dest='groups',
+        help='display specs in arch/compiler groups (default on)')
     subparser.add_argument(
-        '--no-sections', action='store_false', default=None, dest='sections',
+        '--no-groups', action='store_false', default=None, dest='groups',
         help='do not group specs by arch/compiler')
 
     arguments.add_common_arguments(
@@ -177,16 +177,16 @@ def find(parser, args):
     if env:
         decorator, added, roots, removed = setup_env(env)
 
-    # use sections by default except with format.
-    if args.sections is None:
-        args.sections = not args.format
+    # use groups by default except with format.
+    if args.groups is None:
+        args.groups = not args.format
 
-    # Exit early if no package matches the constraint
+    # Exit early with an error code if no package matches the constraint
     if not results and args.constraint:
         msg = "No package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
-        return
+        return 1
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:
@@ -199,7 +199,7 @@ def find(parser, args):
     else:
         if env:
             display_env(env, args, decorator)
-        if args.sections:
+        if args.groups:
             tty.msg("%s" % plural(len(results), 'installed package'))
         cmd.display_specs(
             results, args, decorator=decorator, all_headers=True)
