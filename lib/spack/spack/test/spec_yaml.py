@@ -98,10 +98,6 @@ def test_using_ordered_dict(mock_packages):
     for spec in specs:
         dag = Spec(spec)
         dag.normalize()
-        from pprint import pprint
-        pprint(dag.to_node_dict())
-        break
-
         level = descend_and_check(dag.to_node_dict())
 
         # level just makes sure we are doing something here
