@@ -290,6 +290,7 @@ class Compiler(object):
                     'int main(int argc, char* argv[]) { '
                     '(void)argc; (void)argv; return 0; }\n')
             compiler_exe = spack.util.executable.Executable(first_compiler)
+            compiler_exe.add_default_env('LC_ALL', 'C')
             output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
                                       output=str, error=str))  # str for py2
 
