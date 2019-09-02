@@ -19,49 +19,69 @@ class Pmlib(CMakePackage):
     version('master', branch='master')
     version('6.4.1', commit='0a35f5bec8c12e532e5a1bdac8c32c659fd3ee11')
 
-    variant('mpi', default=False, description='Activate MPI support')
+    variant('mpi', default=True, description='Activate MPI support')
+    variant('example', default=False,
+            description='This option turns on compiling sample codes.')
+    variant('fortran', default=False,
+            description='This option tells a compiler to use a Fortran.')
+    variant('openmp', default=False, description='Enable OpenMP directives')
+    variant('papi', default=False, description='Use PAPI library')
+    variant('otf', default=False, description='Use OTF library')
+    variant('precisetimer', default=True,
+            description='This option provides -DUSE_PRECISE_TIMER to C++' +
+                        ' compiler option CMAKE_CXX_FLAGS when building' +
+                        ' the PMlib library.')
 
-    phases = ['edit', 'cmake', 'build', 'install']
+    patch('fix_compiler_options.patch')
 
     depends_on('mpi', when='+mpi')
-
-    def edit(self, spec, prefix):
-        if '%fj' in self.spec:
-            toolchain = FileFilter('./cmake/Toolchain_fx100.cmake')
-            toolchain.filter('mpifccpx', spec['mpi'].mpicc)
-            toolchain.filter('mpiFCCpx', spec['mpi'].mpicxx)
-            toolchain.filter('mpifrtpx', spec['mpi'].mpifc)
-            toolchain.filter('/opt/FJSVmxlang/GM-2.0.0-05',
-                             spec['mpi'].prefix, string=True)
-            toolchain.filter('lib64', 'lib')
-
-            selector = FileFilter('./cmake/CompileOptionSelector.cmake')
-            selector.filter('-Nrt_notune', '')
-            selector.filter('-Xg', '-Nclang')
 
     def cmake_args(self):
         spec = self.spec
         args = []
         args.append('-DINSTALL_DIR={0}'.format(self.prefix))
 
+        if '+mpi' in spec:
+            args.append('-Dwith_MPI=yes')
+        else:
+            args.append('-Dwith_MPI=no')
+
+        if '+example' in spec:
+            args.append('-Dwith_example=yes')
+        else:
+            args.append('-Dwith_example=no')
+
+        if '+fortran' in spec:
+            args.append('-Denable_Fortran=yes')
+        else:
+            args.append('-Denable_Fortran=no')
+
+        if '+openmp' in spec:
+            args.append('-Denable_OPENMP=yes')
+        else:
+            args.append('-Denable_OPENMP=no')
+
+        if '+papi' in spec:
+            args.append('-Dwith_PAPI=yes')
+        else:
+            args.append('-Dwith_PAPI=no')
+
+        if '+otf' in spec:
+            args.append('-Dwith_OTF=yes')
+        else:
+            args.append('-Dwith_OTF=no')
+
+        if '+precisetimer' in spec:
+            args.append('-Denable_PreciseTimer=yes')
+        else:
+            args.append('-Denable_PreciseTimer=no')
+
         if '%gcc' in spec:
-            gcc_args = [
-                '-DCMAKE_CXX_FLAGS=-fopenmp',
-                '-DCMAKE_Fortran_FLAGS=-fopenmp -cpp',
-            ]
-            args = args + gcc_args
+            args.append('-DCMAKE_CXX_FLAGS=-fopenmp')
+            args.append('-DCMAKE_Fortran_FLAGS=-fopenmp -cpp')
 
         if '%fj' in spec:
-            fj_args = [
-                '-DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_fx100.cmake',
-                '-Denable_OPENMP=no',
-                '-Dwith_MPI=yes',
-                '-Denable_Fortran=no',
-                '-Dwith_example=no',
-                '-Dwith_PAPI=no',
-                '-Dwith_OTF=no',
-                '-Denable_PreciseTimer=yes ..',
-            ]
-            args = args + fj_args
+            args.append(
+                '-DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_fx100.cmake')
 
         return args
