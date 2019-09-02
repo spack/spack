@@ -6,19 +6,19 @@
 from spack import *
 
 
-class PyMorphio(PythonPackage):
+class PyMorphoKit(PythonPackage):
     """Python library for reading / writing morphology files"""
 
-    homepage = "https://github.com/BlueBrain/MorphIO/"
-    git      = "https://github.com/BlueBrain/MorphIO.git"
+    homepage = "https://bbpcode.epfl.ch/code/#/projects/nse/morpho-kit,dashboards/default"
+    url      = "https://bbpcode.epfl.ch/code/a/nse/morpho-kit"
+    git      = "ssh://bbpcode.epfl.ch/nse/morpho-kit"
 
     version('develop', branch='master', submodules=True, clean=False)
-    version('2.2.1', tag='v2.2.1', submodules=True, clean=False)
-    version('2.1.2', tag='v2.1.2', submodules=True, clean=False)
-    version('2.0.8', tag='v2.0.8', submodules=True, clean=False)
+    version('0.1.0', tag='v0.1.0', submodules=True, clean=False)
 
     depends_on('py-setuptools', type='build')
 
+    depends_on('morphio~mpi', type=('build', 'link'))
+
     depends_on('cmake@3.2:', type='build')
     depends_on('py-numpy', type='run')
-    depends_on('hdf5~mpi', type=('build', 'run'))

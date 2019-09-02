@@ -11,13 +11,18 @@ class Morphio(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/MorphIO"
     url      = "https://github.com/BlueBrain/MorphIO.git"
+    git      = "https://github.com/BlueBrain/MorphIO.git"
 
     version('develop', git=url, submodules=True)
-    version('2.1.2', tag='v2.1.2', git=url, submodules=True)
-    version('2.0.8', tag='v2.0.8', git=url, submodules=True)
+    version('2.2.1', tag='v2.2.1', submodules=True)
+    version('2.1.2', tag='v2.1.2', submodules=True)
+    version('2.0.8', tag='v2.0.8', submodules=True)
+
+    variant('mpi', default=True, description="Build with MPI support")
 
     depends_on('cmake@3.2:', type='build')
-    depends_on('hdf5')
+    depends_on('hdf5~mpi', when='~mpi')
+    depends_on('hdf5+mpi', when='+mpi')
 
     def cmake_args(self):
         args = ['-DBUILD_BINDINGS:BOOL=OFF']
