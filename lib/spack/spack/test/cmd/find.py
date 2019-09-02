@@ -35,7 +35,7 @@ def mock_display(monkeypatch, specs):
     def display(x, *args, **kwargs):
         specs.extend(x)
 
-    monkeypatch.setattr(spack.cmd.find, 'display_specs', display)
+    monkeypatch.setattr(spack.cmd, 'display_specs', display)
 
 
 def test_query_arguments():
