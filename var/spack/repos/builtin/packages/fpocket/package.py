@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Fpocket(Package):
+class Fpocket(MakefilePackage):
     """fpocket is a very fast open source protein pocket detection algorithm
        based on Voronoi tessellation."""
 
     homepage = "https://github.com/Discngine/fpocket"
-    version('develop', branch='master',
+    version('master', branch='master',
             git='https://github.com/Discngine/fpocket.git')
 
     depends_on("netcdf")
@@ -20,11 +20,7 @@ class Fpocket(Package):
         if self.compiler.name == 'gcc':
             spack_env.set('CXX', 'g++')
 
-    def patch(self):
-        makefile = FileFilter(join_path(self.stage.source_path, 'makefile'))
+    def edit(self):
+        makefile = FileFilter('makefile')
         makefile.filter('BINDIR .*', 'BINDIR = %s/bin' % self.prefix)
         makefile.filter('MANDIR .*', 'MANDIR = %s/man/man8' % self.prefix)
-
-    def install(self, spec, prefix):
-        make()
-        make('install')
