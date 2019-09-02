@@ -36,14 +36,13 @@ to help with that. Firstly, the ``install_hash_length`` parameter can
 set the length of the hash in the installation path from 1 to 32. The
 default path uses the full 32 characters.
 
-Secondly, it is
-also possible to modify the entire installation scheme. By default
-Spack uses
+Secondly, it is also possible to modify the entire installation
+scheme. By default Spack uses
 ``{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}``
 where the tokens that are available for use in this directive are the
-same as those understood by the ``Spec.format`` method. Using this parameter it
-is possible to use a different package layout or reduce the depth of
-the installation paths. For example
+same as those understood by the :meth:`~spack.spec.Spec.format`
+method. Using this parameter it is possible to use a different package
+layout or reduce the depth of the installation paths. For example
 
      .. code-block:: yaml
 

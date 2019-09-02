@@ -334,6 +334,10 @@ Packages are divided into groups according to their architecture and
 compiler.  Within each group, Spack tries to keep the view simple, and
 only shows the version of installed packages.
 
+""""""""""""""""""""""""""""""""
+Viewing more metadata
+""""""""""""""""""""""""""""""""
+
 ``spack find`` can filter the package list based on the package name, spec, or
 a number of properties of their installation status.  For example, missing
 dependencies of a spec can be shown with ``--missing``, packages which were
@@ -391,8 +395,8 @@ use ``spack find --paths``:
        callpath@1.0.2        ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318
    ...
 
-And, finally, you can restrict your search to a particular package
-by supplying its name:
+You can restrict your search to a particular package by supplying its
+name:
 
 .. code-block:: console
 
@@ -401,6 +405,10 @@ by supplying its name:
        libelf@0.8.11  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.11
        libelf@0.8.12  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.12
        libelf@0.8.13  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.13
+
+""""""""""""""""""""""""""""""""
+Spec queries
+""""""""""""""""""""""""""""""""
 
 ``spack find`` actually does a lot more than this.  You can use
 *specs* to query for specific configurations and builds of each
@@ -428,6 +436,109 @@ We can also search for packages that have a certain attribute. For example,
 with the 'debug' compile-time option enabled.
 
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
+
+
+""""""""""""""""""""""""""""""""
+Machine-readable output
+""""""""""""""""""""""""""""""""
+
+If you only want to see very specific things about installed packages,
+Spack has some options for you.  ``spack find --format`` can be used to
+output only specific fields:
+
+.. code-block:: console
+
+   $ spack find --format "{name}-{version}-{hash}"
+   autoconf-2.69-icynozk7ti6h4ezzgonqe6jgw5f3ulx4
+   automake-1.16.1-o5v3tc77kesgonxjbmeqlwfmb5qzj7zy
+   bzip2-1.0.6-syohzw57v2jfag5du2x4bowziw3m5p67
+   bzip2-1.0.8-zjny4jwfyvzbx6vii3uuekoxmtu6eyuj
+   cmake-3.15.1-7cf6onn52gywnddbmgp7qkil4hdoxpcb
+   ...
+
+or:
+
+.. code-block:: console
+
+   $ spack find --format "{hash:7}"
+   icynozk
+   o5v3tc7
+   syohzw5
+   zjny4jw
+   7cf6onn
+   ...
+
+This uses the same syntax as described in documentation for
+:meth:`~spack.spec.Spec.format` -- you can use any of the options there.
+This is useful for passing metadata about packages to other command-line
+tools.
+
+Alternately, if you want something even more machine readable, you can
+output each spec as JSON records using ``spack find --json``.  This will
+output metadata on specs and all dependencies as json:
+
+.. code-block:: console
+
+    $ spack find --json sqlite@3.28.0
+    [
+     {
+      "name": "sqlite",
+      "hash": "3ws7bsihwbn44ghf6ep4s6h4y2o6eznv",
+      "version": "3.28.0",
+      "arch": {
+       "platform": "darwin",
+       "platform_os": "mojave",
+       "target": "x86_64"
+      },
+      "compiler": {
+       "name": "clang",
+       "version": "10.0.0-apple"
+      },
+      "namespace": "builtin",
+      "parameters": {
+       "fts": true,
+       "functions": false,
+       "cflags": [],
+       "cppflags": [],
+       "cxxflags": [],
+       "fflags": [],
+       "ldflags": [],
+       "ldlibs": []
+      },
+      "dependencies": {
+       "readline": {
+        "hash": "722dzmgymxyxd6ovjvh4742kcetkqtfs",
+        "type": [
+         "build",
+         "link"
+        ]
+       }
+      }
+     },
+     ...
+    ]
+
+You can use this with tools like `jq <https://stedolan.github.io/jq/>`_ to quickly create JSON records
+structured the way you want:
+
+.. code-block:: console
+
+    $ spack find --json sqlite@3.28.0 | jq -C '.[] | { name, version, hash }'
+    {
+      "name": "sqlite",
+      "version": "3.28.0",
+      "hash": "3ws7bsihwbn44ghf6ep4s6h4y2o6eznv"
+    }
+    {
+      "name": "readline",
+      "version": "7.0",
+      "hash": "722dzmgymxyxd6ovjvh4742kcetkqtfs"
+    }
+    {
+      "name": "ncurses",
+      "version": "6.1",
+      "hash": "zvaa4lhlhilypw5quj3akyd3apbq5gap"
+    }
 
 .. _sec-specs:
 
