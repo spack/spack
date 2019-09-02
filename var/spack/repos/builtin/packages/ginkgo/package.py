@@ -21,7 +21,7 @@ class Ginkgo(CMakePackage):
     version('master', branch='master')
     version('1.0.0', commit='4524464')  # v1.0.0
 
-    variant('cuda', default=False, description='Build with Ginkgo')
+    variant('cuda', default=False, description='Build with CUDA')
     variant('shared', default=True, description='Build shared libraries')
     variant('full_optimizations', default=False, description='Compile with all optimizations')
     variant('openmp', default=sys.platform != 'darwin',  description='Build with OpenMP')
