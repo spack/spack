@@ -22,17 +22,6 @@ level = "short"
 
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
-    format_group.add_argument('-s', '--short',
-                              action='store_const',
-                              dest='mode',
-                              const='short',
-                              default='short',
-                              help='show only specs (default)')
-    format_group.add_argument('-p', '--paths',
-                              action='store_const',
-                              dest='mode',
-                              const='paths',
-                              help='show paths to package install directories')
     format_group.add_argument(
         "--format", action="store", default=None,
         help="output specs with the specified format string")
@@ -40,15 +29,17 @@ def setup_parser(subparser):
         "--json", action="store_true", default=False,
         help="output specs as machine-readable json records")
 
-    # TODO: separate this entirely from the "mode" option -- it's
-    # TODO: orthogonal, but changing it for all commands that use it with
-    # TODO: display_spec is tricky. Also make -pd work together properly.
+    subparser.add_argument('-d', '--deps', action='store_true',
+                           help='output dependencies along with found specs')
+
+    subparser.add_argument('-p', '--paths', action='store_true',
+                           help='show paths to package install directories')
     subparser.add_argument(
-        '-d', '--deps',
-        action='store_const',
-        dest='mode',
-        const='deps',
-        help='output dependencies along with found specs')
+        '--sections', action='store_true', default=None, dest='sections',
+        help='group specs in arch/compiler sections (default on)')
+    subparser.add_argument(
+        '--no-sections', action='store_false', default=None, dest='sections',
+        help='do not group specs by arch/compiler')
 
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'tags'])
@@ -186,6 +177,10 @@ def find(parser, args):
     if env:
         decorator, added, roots, removed = setup_env(env)
 
+    # use sections by default except with format.
+    if args.sections is None:
+        args.sections = not args.format
+
     # Exit early if no package matches the constraint
     if not results and args.constraint:
         msg = "No package matches the query: {0}"
@@ -199,13 +194,12 @@ def find(parser, args):
         results = [x for x in results if x.name in packages_with_tags]
 
     # Display the result
-    if args.format:
-        cmd.display_formatted_specs(
-            results, args.format, deps=(args.mode == "deps"))
-    elif args.json:
-        cmd.display_specs_as_json(results, deps=(args.mode == "deps"))
+    if args.json:
+        cmd.display_specs_as_json(results, deps=args.deps)
     else:
         if env:
             display_env(env, args, decorator)
-        tty.msg("%s" % plural(len(results), 'installed package'))
-        cmd.display_specs(results, args, decorator=decorator, all_headers=True)
+        if args.sections:
+            tty.msg("%s" % plural(len(results), 'installed package'))
+        cmd.display_specs(
+            results, args, decorator=decorator, all_headers=True)

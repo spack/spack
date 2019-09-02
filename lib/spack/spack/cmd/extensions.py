@@ -9,8 +9,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.environment as ev
-import spack.cmd
-import spack.cmd.find
+import spack.cmd as cmd
 import spack.repo
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
@@ -21,16 +20,16 @@ level = "long"
 
 
 def setup_parser(subparser):
-    format_group = subparser.add_mutually_exclusive_group()
-    format_group.add_argument(
+    subparser.add_argument(
         '-l', '--long', action='store_true', dest='long',
         help='show dependency hashes as well as versions')
-    format_group.add_argument(
-        '-p', '--paths', action='store_const', dest='mode', const='paths',
-        help='show paths to extension install directories')
-    format_group.add_argument(
-        '-d', '--deps', action='store_const', dest='mode', const='deps',
-        help='show full dependency DAG of extensions')
+
+    subparser.add_argument('-d', '--deps', action='store_true',
+                           help='output dependencies along with found specs')
+
+    subparser.add_argument('-p', '--paths', action='store_true',
+                           help='show paths to package install directories')
+
     subparser.add_argument(
         '-s', '--show', dest='show', metavar='TYPE', type=str,
         default='all',
@@ -69,7 +68,7 @@ def extensions(parser, args):
     #
     # Checks
     #
-    spec = spack.cmd.parse_specs(args.spec)
+    spec = cmd.parse_specs(args.spec)
     if len(spec) > 1:
         tty.die("Can only list extensions for one package.")
 
@@ -77,13 +76,10 @@ def extensions(parser, args):
         tty.die("%s is not an extendable package." % spec[0].name)
 
     env = ev.get_env(args, 'extensions')
-    spec = spack.cmd.disambiguate_spec(spec[0], env)
+    spec = cmd.disambiguate_spec(spec[0], env)
 
     if not spec.package.extendable:
         tty.die("%s does not have extensions." % spec.short_spec)
-
-    if not args.mode:
-        args.mode = 'short'
 
     if show_packages:
         #
@@ -116,7 +112,7 @@ def extensions(parser, args):
             tty.msg("None installed.")
         else:
             tty.msg("%d installed:" % len(installed))
-            spack.cmd.find.display_specs(installed, mode=args.mode)
+            cmd.display_specs(installed, args)
 
     if show_activated:
         #
@@ -129,5 +125,4 @@ def extensions(parser, args):
             tty.msg("None activated.")
         else:
             tty.msg("%d currently activated:" % len(activated))
-            spack.cmd.find.display_specs(
-                activated.values(), mode=args.mode, long=args.long)
+            cmd.display_specs(activated.values(), args)
