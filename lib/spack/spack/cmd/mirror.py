@@ -21,7 +21,6 @@ import spack.environment as ev
 import spack.util.path
 from spack.spec import Spec
 from spack.error import SpackError
-from spack.util.config import lookup_mirror
 from spack.util.spack_yaml import syaml_dict
 from spack.util.url import format as url_format
 from spack.util.web import url_exists
@@ -198,34 +197,15 @@ def mirror_set_url(args):
         tty.msg("Url already set for mirror %s." % args.name)
 
 
-def _display_mirror_entry(size, name, url, type_=None):
-    if type_:
-        type_ = "".join((" (", type_, ")"))
-    else:
-        type_ = ""
-
-    print("%-*s%s%s" % (size + 4, name, url, type_))
-
-
 def mirror_list(args):
     """Print out available mirrors to the console."""
 
-    mirrors = spack.config.get('mirrors', scope=args.scope)
+    mirrors = spack.mirror.MirrorCollection(scope=args.scope)
     if not mirrors:
         tty.msg("No mirrors configured.")
         return
 
-    max_len = max(len(n) for n in mirrors.keys())
-
-    for name, url in mirrors.items():
-        try:
-            fetch_url = url['fetch']
-            push_url = url['push']
-
-            _display_mirror_entry(max_len, name, fetch_url, "fetch")
-            _display_mirror_entry(max_len, name, push_url, "push")
-        except TypeError:
-            _display_mirror_entry(max_len, name, url)
+    mirrors.display()
 
 
 def _read_specs_from_file(filename):
@@ -283,10 +263,10 @@ def mirror_create(args):
             tty.msg(msg.format(spec.cshort_spec))
 
         # Default name for directory is spack-mirror-<DATESTAMP>
-        _, directory = lookup_mirror(
+        mirror = spack.mirror.MirrorCollection(
                 args.directory or spack.config.get('config:source_cache'))
 
-        directory = url_format(directory)
+        directory = url_format(mirror.push_url)
 
         # Make sure nothing is in the way.
         existed = url_exists(directory)

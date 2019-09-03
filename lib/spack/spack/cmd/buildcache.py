@@ -14,6 +14,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.hash_types as ht
+import spack.mirror
 import spack.relocate
 import spack.repo
 import spack.spec
@@ -24,7 +25,6 @@ import spack.store
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
 
-from spack.util.config import lookup_mirror
 from spack.util.url import format as url_format
 
 from spack.cmd import display_specs
@@ -320,8 +320,8 @@ def createtarball(args):
     if args.directory:
         outdir = args.directory
 
-    _, outdir = lookup_mirror(outdir)
-    outdir = url_format(outdir)
+    mirror = spack.mirror.MirrorCollection().lookup(outdir)
+    outdir = url_format(mirror.push_url)
 
     signkey = None
     if args.key:

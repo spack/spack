@@ -15,6 +15,14 @@ import re
 import sys
 import os
 import os.path
+import operator
+
+import six
+
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -23,10 +31,204 @@ import spack.config
 import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
+import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 from spack.spec import Spec
 from spack.version import VersionList
 from spack.util.compression import allowed_archive
 from spack.util.url import parse as url_parse
+from spack.util.spack_yaml import syaml_dict
+
+
+def _display_mirror_entry(size, name, url, type_=None):
+    if type_:
+        type_ = "".join((" (", type_, ")"))
+    else:
+        type_ = ""
+
+    print("%-*s%s%s" % (size + 4, name, url, type_))
+
+class Mirror(object):
+    """Represents a named location for storing source tarballs and binary
+    packages.
+
+    Mirrors have a fetch_url that indicate where and how artifacts are fetched
+    from them, and a push_url that indicate where and how artifacts are pushed
+    to them.  These two URLs are usually the same.
+    """
+
+    def __init__(self, fetch_url, push_url=None, name=None):
+        self._fetch_url = fetch_url
+        self._push_url = push_url
+        self._name = name
+
+    def to_json(self, stream=None):
+        return sjson.dump(self.to_dict(), stream)
+
+    def to_yaml(self, stream=None):
+        return syaml.dump(self.to_dict(), stream)
+
+    @staticmethod
+    def from_yaml(stream, name=None):
+        try:
+            data = syaml.load(stream)
+            return Mirror.from_dict(data, name)
+        except MarkedYAMLError as e:
+            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+
+    @staticmethod
+    def from_json(stream, name=None):
+        d = sjson.load(stream)
+        return Mirror.from_dict(d, name)
+
+    def to_dict(self):
+        if self._push_url is None:
+            return self._fetch_url
+        else:
+            return syaml_dict([
+                ('fetch', self._fetch_url),
+                ('push', self._push_url)])
+
+    @staticmethod
+    def from_dict(d, name=None):
+        if isinstance(d, six.string_types):
+            return Mirror(d, name=name)
+        else:
+            return Mirror(d['fetch'], d['push'], name)
+
+    def display(self, max_len=0):
+        if self._push_url is None:
+            _display_mirror_entry(max_len, self._name, self._fetch_url)
+        else:
+            _display_mirror_entry(
+                    max_len, self._name, self._fetch_url, "fetch")
+            _display_mirror_entry(
+                    max_len, self._name, self._push_url, "push")
+
+    def __str__(self):
+        name = self._name
+        if name is None:
+            name = ''
+        else:
+            name = ' "%s"' % name
+
+        if self._push_url is None:
+            return "[Mirror%s (%s)]" % (name, self._fetch_url)
+
+        return "[Mirror%s (fetch: %s, push: %s)]" % (
+                name, self._fetch_url, self._push_url)
+
+    def __repr__(self):
+        return ''.join((
+            'Mirror(',
+            ', '.join(
+                '%s=%s' % (k, repr(v))
+                for k, v in (
+                    ('fetch_url', self._fetch_url),
+                    ('push_url', self._push_url),
+                    ('name', self._name))
+                if k == 'fetch_url' or v),
+            ')'
+        ))
+
+    @property
+    def name(self):
+        return self._name or "<unnamed>"
+
+    @property
+    def fetch_url(self):
+        return self._fetch_url
+
+    @fetch_url.setter
+    def fetch_url(self, url):
+        self._fetch_url = url
+        self._normalize()
+
+    @property
+    def push_url(self):
+        if self._push_url is None:
+            return self._fetch_url
+        return self._push_url
+
+    @push_url.setter
+    def push_url(self, url):
+        self._push_url = url
+        self._normalize()
+
+    def _normalize(self):
+        if self._push_url is not None and self._push_url == self._fetch_url:
+            self._push_url = None
+
+
+class MirrorCollection(Mapping):
+    """A mapping of mirror names to mirrors."""
+
+    def __init__(self, mirrors=None, scope=None):
+        self._mirrors = dict(
+            (name, Mirror.from_dict(mirror, name))
+            for name, mirror in (
+                mirrors.items() if mirrors is not None else
+                spack.config.get('mirrors', scope=scope).items()))
+
+    def to_json(self, stream=None):
+        return sjson.dump(self.to_dict(True), stream)
+
+    def to_yaml(self, stream=None):
+        return syaml.dump(self.to_dict(True), stream)
+
+    @staticmethod
+    def from_yaml(stream, name=None):
+        try:
+            data = syaml.load(stream)
+            return MirrorCollection(data)
+        except MarkedYAMLError as e:
+            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+
+    @staticmethod
+    def from_json(stream, name=None):
+        d = sjson.load(stream)
+        return MirrorCollection(d)
+
+    def to_dict(self, recursive=False):
+        return syaml_dict(sorted(
+            (
+                (k, (v.to_dict() if recursive else v))
+                for (k, v) in self._mirrors.items()
+            ), key=operator.itemgetter(0)
+        ))
+
+    @staticmethod
+    def from_dict(d):
+        return MirrorCollection(d)
+
+    def __getitem__(self, item):
+        return self._mirrors[item]
+
+    def display(self):
+        max_len = max(len(mirror.name) for mirror in self._mirrors.values())
+        for mirror in self._mirrors.values():
+            mirror.display(max_len)
+
+    def lookup(self, name_or_url):
+        """Looks up and returns a Mirror.
+
+        If this MirrorCollection contains a named Mirror under the name
+        [name_or_url], then that mirror is returned.  Otherwise, [name_or_url]
+        is assumed to be a mirror URL, and an anonymous mirror with the given
+        URL is returned.
+        """
+        result = self.get(name_or_url)
+
+        if result is None:
+            result = Mirror(fetch_url=name_or_url)
+
+        return result
+
+    def __iter__(self):
+        return iter(self._mirrors)
+
+    def __len__(self):
+        return len(self._mirrors)
 
 
 def mirror_archive_filename(spec, fetcher, resource_id=None):
