@@ -357,15 +357,18 @@ def display_specs(specs, args=None, **kwargs):
         max_width = max(len(f[0]) for f in formatted)
         path_fmt = "%%-%ds%%s" % (max_width + 2)
 
-        for string, spec in formatted:
-            if not string:
-                print()  # print newline from above
-                continue
+        # getting lots of prefixes requires DB lookups. Ensure
+        # all spec.prefix calls are in one transaction.
+        with spack.store.db.read_transaction():
+            for string, spec in formatted:
+                if not string:
+                    print()  # print newline from above
+                    continue
 
-            if paths:
-                print(path_fmt % (string, spec.prefix))
-            else:
-                print(string)
+                if paths:
+                    print(path_fmt % (string, spec.prefix))
+                else:
+                    print(string)
 
     if groups:
         for specs in iter_groups(specs, indent, all_headers):
