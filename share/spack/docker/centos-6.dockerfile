@@ -1,14 +1,10 @@
 FROM centos:6
 MAINTAINER Spack Maintainers <maintainers@spack.io>
 
-ENV DOCKERFILE_BASE=centos            \
-    DOCKERFILE_DISTRO=centos          \
-    DOCKERFILE_DISTRO_VERSION=6       \
-    SPACK_ROOT=/opt/spack             \
-    FORCE_UNSAFE_CONFIGURE=1          \
-    DEBIAN_FRONTEND=noninteractive    \
-    CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
-    container=docker
+ENV DOCKERFILE_DISTRO=centos    \
+    DOCKERFILE_DISTRO_VERSION=6 \
+    SPACK_ROOT=/opt/spack       \
+    FORCE_UNSAFE_CONFIGURE=1
 
 COPY bin   $SPACK_ROOT/bin
 COPY etc   $SPACK_ROOT/etc
@@ -31,28 +27,13 @@ RUN yum update -y                                             \
  && rm -rf /var/cache/yum                                     \
  && yum clean all
 
-RUN ( echo ". /usr/share/lmod/lmod/init/bash"                       \
- &&   echo ". \$SPACK_ROOT/share/spack/setup-env.sh"                \
- &&   echo "if [ \"\$CURRENTLY_BUILDING_DOCKER_IMAGE\" '!=' '1' ]"  \
- &&   echo "then"                                                   \
- &&   echo "  . \$SPACK_ROOT/share/spack/spack-completion.bash"     \
- &&   echo "fi"                                                   ) \
+RUN ( echo ". \$SPACK_ROOT/share/spack/docker/shell-helpers.bash"   \
+ &&   echo "setup_spack --with-completion"                        ) \
        >> /etc/profile.d/spack.sh                                   \
- && ( echo "f=\"\$SPACK_ROOT/share/spack/docker/handle-ssh.sh\""    \
- &&   echo "if [ -f \"\$f\" ]"                                      \
- &&   echo "then"                                                   \
- &&   echo "  .  \"\$f\""                                           \
- &&   echo "else"                                                   \
- &&   cat  $SPACK_ROOT/share/spack/docker/handle-ssh.sh             \
- &&   echo "fi"                                                   ) \
+ && ( echo ". \$SPACK_ROOT/share/spack/docker/shell-helpers.bash"   \
+ &&   echo "ssh_init"                                             ) \
        >> /etc/profile.d/handle-ssh.sh                              \
- && ( echo "f=\"\$SPACK_ROOT/share/spack/docker/handle-prompt.sh\"" \
- &&   echo "if [ -f \"\$f\" ]"                                      \
- &&   echo "then"                                                   \
- &&   echo "  .  \"\$f\""                                           \
- &&   echo "else"                                                   \
- &&   cat  $SPACK_ROOT/share/spack/docker/handle-prompt.sh          \
- &&   echo "fi"                                                   ) \
+ && ( echo ". \$SPACK_ROOT/share/spack/docker/handle-prompt.sh"   ) \
        >> /etc/profile.d/handle-prompt.sh                           \
  && mkdir -p /root/.spack                                           \
  && cp $SPACK_ROOT/share/spack/docker/modules.yaml                  \
@@ -62,12 +43,12 @@ RUN ( echo ". /usr/share/lmod/lmod/init/bash"                       \
 # [WORKAROUND]
 # https://superuser.com/questions/1241548/
 #     xubuntu-16-04-ttyname-failed-inappropriate-ioctl-for-device#1253889
-RUN [ -f ~/.profile ]                                               \
- && sed -i 's/mesg n/( tty -s \\&\\& mesg n || true )/g' ~/.profile \
+RUN [ -f ~/.profile ]                                             \
+ && sed -i 's/mesg n/( tty -s \&\& mesg n || true )/g' ~/.profile \
  || true
 
 WORKDIR /root
-SHELL ["/bin/bash", "-l", "-c"]
+SHELL ["/bin/bash", "/opt/spack/share/spack/docker/custom-shell.bash"]
 
 # TODO: add a command to Spack that (re)creates the package cache
 RUN spack spec hdf5+mpi

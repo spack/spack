@@ -27,28 +27,13 @@ RUN apt-get -yqq update                                   \
  && pip install boto3                                     \
  && rm -rf /var/lib/apt/lists/*
 
-RUN ( echo ". /usr/share/lmod/lmod/init/bash"                       \
- &&   echo ". \$SPACK_ROOT/share/spack/setup-env.sh"                \
- &&   echo "if [ \"\$CURRENTLY_BUILDING_DOCKER_IMAGE\" '!=' '1' ]"  \
- &&   echo "then"                                                   \
- &&   echo "  . \$SPACK_ROOT/share/spack/spack-completion.bash"     \
- &&   echo "fi"                                                   ) \
+RUN ( echo ". \$SPACK_ROOT/share/spack/docker/shell-helpers.bash"   \
+ &&   echo "setup_spack --with-completion"                        ) \
        >> /etc/profile.d/spack.sh                                   \
- && ( echo "f=\"\$SPACK_ROOT/share/spack/docker/handle-ssh.sh\""    \
- &&   echo "if [ -f \"\$f\" ]"                                      \
- &&   echo "then"                                                   \
- &&   echo "  .  \"\$f\""                                           \
- &&   echo "else"                                                   \
- &&   cat  $SPACK_ROOT/share/spack/docker/handle-ssh.sh             \
- &&   echo "fi"                                                   ) \
+ && ( echo ". \$SPACK_ROOT/share/spack/docker/shell-helpers.bash"   \
+ &&   echo "ssh_init"                                             ) \
        >> /etc/profile.d/handle-ssh.sh                              \
- && ( echo "f=\"\$SPACK_ROOT/share/spack/docker/handle-prompt.sh\"" \
- &&   echo "if [ -f \"\$f\" ]"                                      \
- &&   echo "then"                                                   \
- &&   echo "  .  \"\$f\""                                           \
- &&   echo "else"                                                   \
- &&   cat  $SPACK_ROOT/share/spack/docker/handle-prompt.sh          \
- &&   echo "fi"                                                   ) \
+ && ( echo ". \$SPACK_ROOT/share/spack/docker/handle-prompt.sh"   ) \
        >> /etc/profile.d/handle-prompt.sh                           \
  && mkdir -p /root/.spack                                           \
  && cp $SPACK_ROOT/share/spack/docker/modules.yaml                  \
@@ -66,8 +51,9 @@ RUN [ -f ~/.profile ]                                               \
 # https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
 RUN ln -s posix_c.so /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so
 
+
 WORKDIR /root
-SHELL ["/bin/bash", "-l", "-c"]
+SHELL ["/bin/bash", "/opt/spack/share/spack/docker/custom-shell.bash"]
 
 # TODO: add a command to Spack that (re)creates the package cache
 RUN spack spec hdf5+mpi
