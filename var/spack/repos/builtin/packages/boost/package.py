@@ -186,6 +186,9 @@ class Boost(Package):
     patch('system-non-virtual-dtor-test.patch', when='@1.69.0',
           working_dir='libs/system', level=1)
 
+    # Change the method for version analysis when using Fujitsu compiler.
+    patch('fujitsu_version_analysis.patch', when='@1.67.0:%fj')
+
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
             url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
