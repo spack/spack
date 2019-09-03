@@ -32,23 +32,23 @@ class Liblas(CMakePackage):
     def cmake_args(self):
         args = []
         if '+endian' in self.spec:
-           args.append('-DWITH_ENDIANAWARE=ON')
+            args.append('-DWITH_ENDIANAWARE=ON')
         else:
-           args.append('-DWITH_ENDIANAWARE=OFF')
+            args.append('-DWITH_ENDIANAWARE=OFF')
 
         if '+gdal' in self.spec:
-           args.append('-DWITH_GDAL=ON')
+            args.append('-DWITH_GDAL=ON')
         else:
-           args.append('-DWITH_GDAL=OFF')
+            args.append('-DWITH_GDAL=OFF')
 
         if '+geotiff' in self.spec:
-           args.append('-DWITH_GEOTIFF=ON')
+            args.append('-DWITH_GEOTIFF=ON')
         else:
-           args.append('-DWITH_GEOTIFF=OFF')
+            args.append('-DWITH_GEOTIFF=OFF')
 
         if '+laszip' in self.spec:
-           args.append('-DWITH_LASZIP=ON')
+            args.append('-DWITH_LASZIP=ON')
         else:
-           args.append('-DWITH_LASZIP=OFF')
+            args.append('-DWITH_LASZIP=OFF')
 
         return args
