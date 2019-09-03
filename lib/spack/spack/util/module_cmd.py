@@ -77,7 +77,7 @@ def load_module(mod):
     module('load', mod)
 
 
-def get_path_arg_from_module_line(line):
+def get_path_args_from_module_line(line):
     if '(' in line and ')' in line:
         # Determine which lua quote symbol is being used for the argument
         comma_index = line.index(',')
@@ -92,7 +92,9 @@ def get_path_arg_from_module_line(line):
         path_arg = words_and_symbols[-2]
     else:
         path_arg = line.split()[2]
-    return path_arg
+
+    paths = path_arg.split(':')
+    return paths
 
 
 def get_path_from_module(mod):
@@ -119,37 +121,80 @@ def get_path_from_module_contents(text, module_name):
         pkg_var_prefix = components[-2]
     tty.debug("Package directory variable prefix: " + pkg_var_prefix)
 
-    # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
+    path_occurrences = {}
+
+    def strip_path(path, endings):
+        for ending in endings:
+            if path.endswith(ending):
+                return path[:-len(ending)]
+            if path.endswith(ending + '/'):
+                return path[:-(len(ending) + 1)]
+        return path
+
     for line in text:
+        # Check entries of LD_LIBRARY_PATH and CRAY_LD_LIBRARY_PATH
         pattern = r'\W(CRAY_)?LD_LIBRARY_PATH'
         if re.search(pattern, line):
-            path = get_path_arg_from_module_line(line)
-            return path[:path.find('/lib')]
+            paths = get_path_args_from_module_line(line)
+            for path in paths:
+                path = strip_path(path, ['/lib64', '/lib'])
+                path_occurrences[path] = path_occurrences.get(path, 0) + 1
 
-    # If it lists its package directory, return that
-    for line in text:
+        # Check {name}_DIR entries
         pattern = r'\W{0}_DIR'.format(pkg_var_prefix)
         if re.search(pattern, line):
-            return get_path_arg_from_module_line(line)
+            paths = get_path_args_from_module_line(line)
+            for path in paths:
+                path_occurrences[path] = path_occurrences.get(path, 0) + 1
 
-    # If it lists a -rpath instruction, use that
-    for line in text:
+        # Check {name}_ROOT entries
+        pattern = r'\W{0}_ROOT'.format(pkg_var_prefix)
+        if re.search(pattern, line):
+            paths = get_path_args_from_module_line(line)
+            for path in paths:
+                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+
+        # Check entries that add a `-rpath` flag to a variable
         rpath = line.find('-rpath/')
         if rpath >= 0:
-            return line[rpath + 6:line.find('/lib')]
+            end = line.find(' ', rpath)
+            if end >= 0:
+                path = line[rpath + 6:end]
+            else:
+                path = line[rpath + 6:]
+            path = strip_path(path, ['/lib64', '/lib'])
+            path_occurrences[path] = path_occurrences.get(path, 0) + 1
 
-    # If it lists a -L instruction, use that
-    for line in text:
+        # Check entries that add a `-L` flag to a variable
         lib_paths = line.find('-L/')
         if lib_paths >= 0:
-            return line[lib_paths + 2:line.find('/lib')]
+            end = line.find(' ', lib_paths)
+            if end >= 0:
+                path = line[lib_paths + 2:end]
+            else:
+                path = line[lib_paths + 2:]
+            path = strip_path(path, ['/lib64', '/lib'])
+            path_occurrences[path] = path_occurrences.get(path, 0) + 1
 
-    # If it sets the PATH, use it
-    for line in text:
+        # Check entries that update the PATH variable
         pattern = r'\WPATH'
         if re.search(pattern, line):
-            path = get_path_arg_from_module_line(line)
-            return path[:path.find('/bin')]
+            paths = get_path_args_from_module_line(line)
+            for path in paths:
+                path = strip_path(path, ['/bin'])
+                path_occurrences[path] = path_occurrences.get(path, 0) + 1
 
-    # Unable to find module path
+        # Check entries that update the MANPATH variable
+        pattern = r'MANPATH'
+        if re.search(pattern, line):
+            paths = get_path_args_from_module_line(line)
+            for path in paths:
+                path = strip_path(path, ['/share/man', '/man'])
+                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+
+    # Whichever path appeared most in the module, we assume is the correct path
+    if len(path_occurrences) > 0:
+        return max(path_occurrences.items(), key=lambda x: x[1])[0]
+
+    # Unable to find path in module
     return None
