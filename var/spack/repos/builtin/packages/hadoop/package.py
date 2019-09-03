@@ -13,7 +13,7 @@ class Hadoop(Package):
     """
 
     homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz"
+    url      = "http://mirror.easyname.ch/apache/hadoop/common/hadoop-3.1.2/hadoop-3.1.2.tar.gz"
 
     version('3.1.2', '4394af12a81424dc225fe4f2dd02f274')
     version('2.9.2', '82db6a62febd8c2976d75b8bd5513315')
