@@ -1,11 +1,8 @@
 generate ci jobs:
-  variables:
-    git_strategy: clone
   script:
     - "./bin/generate-gitlab-ci-yml.sh"
   tags:
-    - "spack-k8s"
-  image: "scottwittenburg/spack_ci_generator_alpine"
+    - "spack-pre-ci"
   artifacts:
     paths:
       - ci-generation
