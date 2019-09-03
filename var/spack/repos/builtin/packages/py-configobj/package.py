@@ -18,7 +18,7 @@ class PyConfigobj(PythonPackage):
 
     # The version on PyPi seems to be outdated (2014) although confusingly
     # enough version number is the same latest release on github.
-    depends_on('py-six', type='run')
+    depends_on('py-six', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:')
 
     def url_for_version(self, version):
