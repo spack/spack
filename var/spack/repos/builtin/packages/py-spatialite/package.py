@@ -7,7 +7,9 @@ from spack import *
 
 
 class PySpatialite(PythonPackage):
-    """Wrapper for standard Python module "sqlite3" which adds SpatiaLite support."""
+    """Wrapper for standard Python module "sqlite3" which adds SpatiaLite
+    support.
+    """
 
     homepage = "https://github.com/malexer/spatialite"
     url      = "https://pypi.io/packages/source/s/spatialite/spatialite-0.0.3.tar.gz"
