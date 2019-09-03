@@ -7,10 +7,10 @@ from spack import *
 
 
 class Tecplot(Package):
-    """Tecplot 360 is a Computational Fluid Dynamics (CFD) and numerical simulation
-    software package used in post-processing simulation results. It is also used in
-    chemistry applications to visualize molecule structure by post-processing charge
-    density data."""
+    """Tecplot 360 is a Computational Fluid Dynamics (CFD) and numerical
+    simulation software package used in post-processing simulation results.
+    It is also used in chemistry applications to visualize molecule structure
+    by post-processing charge density data."""
 
     homepage = "https://www.tecplot.com/"
     version('2017r1', '06a8057d33a519607720d4c621cd3f50', expand=False)
