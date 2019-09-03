@@ -17,4 +17,4 @@ class ProtobufC(AutotoolsPackage):
     version('1.3.2', sha256='53f251f14c597bdb087aecf0b63630f434d73f5a10fc1ac545073597535b9e74')
 
     depends_on('protobuf')
-    depends_on('pkg-config')
+    depends_on('pkgconfig', type='build')
