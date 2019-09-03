@@ -1,4 +1,4 @@
-diff -urN PMlib-org/cmake/CompileOptionSelector.cmake PMlib-fix/cmake/CompileOptionSelector.cmake
+diff -ruN PMlib-org/cmake/CompileOptionSelector.cmake PMlib-fix/cmake/CompileOptionSelector.cmake
 --- PMlib-org/cmake/CompileOptionSelector.cmake	2019-06-09 15:15:08.000000000 +0900
 +++ PMlib-fix/cmake/CompileOptionSelector.cmake	2019-09-02 10:53:45.124905538 +0900
 @@ -36,8 +36,8 @@
@@ -12,9 +12,9 @@ diff -urN PMlib-org/cmake/CompileOptionSelector.cmake PMlib-fix/cmake/CompileOpt
      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Cpp -Kfast -Nrt_notune -Knooptmsg")
      if(enable_PreciseTimer)
        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Nfjcex")
-diff -urN PMlib-org/cmake/Toolchain_fx100.cmake PMlib-fix/cmake/Toolchain_fx100.cmake
+diff -ruN PMlib-org/cmake/Toolchain_fx100.cmake PMlib-fix/cmake/Toolchain_fx100.cmake
 --- PMlib-org/cmake/Toolchain_fx100.cmake	2019-06-09 15:15:08.000000000 +0900
-+++ PMlib-fix/cmake/Toolchain_fx100.cmake	2019-09-02 10:51:45.342387280 +0900
++++ PMlib-fix/cmake/Toolchain_fx100.cmake	2019-09-03 17:37:51.504857455 +0900
 @@ -18,18 +18,18 @@
  include(CMakeForceCompiler)
  
@@ -23,7 +23,7 @@ diff -urN PMlib-org/cmake/Toolchain_fx100.cmake PMlib-fix/cmake/Toolchain_fx100.
 -  CMAKE_FORCE_CXX_COMPILER(mpiFCCpx GNU)
 -  CMAKE_FORCE_Fortran_COMPILER(mpifrtpx GNU)
 +  CMAKE_FORCE_C_COMPILER(mpicc GNU)
-+  CMAKE_FORCE_CXX_COMPILER(mpicc GNU)
++  CMAKE_FORCE_CXX_COMPILER(mpicxx GNU)
 +  CMAKE_FORCE_Fortran_COMPILER(mpifort GNU)
  else()
 -  CMAKE_FORCE_C_COMPILER(fccpx GNU)
