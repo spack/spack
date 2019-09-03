@@ -410,41 +410,6 @@ def _spider_wrapper(args):
     return _spider(*args)
 
 
-# TODO(opadron): There's gotta be a better place for stuff like this.
-CODE_THAT_DOES_NOTHING = (lambda: None).func_code.co_code
-
-def noopify(func):
-    return FunctionType(
-            CodeType(*(
-                [func.func_code.co_argcount] +
-
-                ([
-                    func.func_code.co_kwonlyargcount
-                ] if PY3 else []) +
-
-                [
-                    func.func_code.co_nlocals,
-                    func.func_code.co_stacksize,
-                    func.func_code.co_flags,
-                    CODE_THAT_DOES_NOTHING,
-                    func.func_code.co_consts,
-                    func.func_code.co_names,
-                    func.func_code.co_varnames,
-                    func.func_code.co_filename,
-                    func.func_code.co_name,
-                    func.func_code.co_firstlineno,
-                    func.func_code.co_lnotab,
-                    func.func_code.co_freevars,
-                    func.func_code.co_cellvars
-                ]
-            )),
-
-            func.func_globals,
-            func.func_name,
-            func.func_defaults,
-            func.func_closure)
-
-
 def _urlopen(req, *args, **kwargs):
     """Wrapper for compatibility with old versions of Python."""
     url = req
@@ -453,20 +418,14 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    open_func = (
-            s3_open if urlparse(url).scheme == 's3'
-            else urlopen)
-
-    try:
-        # does nothing (e.g.: only throws if the passed arguments don't match
-        # the original function's signature)
-        noopify(open_func)(req, *args, **kwargs)
-    except TypeError:
-        # We don't pass 'context' parameter because it was only introduced
-        # starting with versions 2.7.9 and 3.4.3 of Python.
+    # We don't pass 'context' parameter because it was only introduced starting
+    # with versions 2.7.9 and 3.4.3 of Python.
+    if kwargs.get('context') is None:
         kwargs.pop('context', None)
 
-    return open_func(req, *args, **kwargs)
+    return (
+            s3_open if urlparse(url).scheme == 's3'
+            else urlopen)(req, *args, **kwargs)
 
 
 def spider(root_url, depth=0):
