@@ -646,9 +646,8 @@ def release_jobs(parser, args):
         'variables': {
             'MIRROR_URL': mirror_urls[0],
         },
-        'image': 'scottwittenburg/spack_ci_generator_alpine',
         'script': './bin/rebuild-index.sh',
-        'tags': ['spack-k8s']    # may want a runner to handle this
+        'tags': ['spack-post-ci']    # may want a runner to handle this
     }
     output_object['rebuild-index'] = final_job
     stage_names.append(final_stage)

@@ -67,33 +67,25 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
+cd "$original_directory"
+mv .git "$temp_dir/original-git-dir"
+git init .
+
+git config user.email "robot@spack.io"
+git config user.name "Spack Build Bot"
+
 cp ${gen_ci_file} "${original_directory}/.gitlab-ci.yml"
+git add .
 
-# Remove global from here, it's clobbering people git identity config
-git config --global user.email "robot@spack.io"
-git config --global user.name "Build Robot"
-
-commit_msg="Auto-generated commit testing ${current_branch} (${CI_COMMIT_SHA})"
-
-cd ${original_directory}
-echo "git status"
-git status
-echo "git branch"
-git branch -D ___multi_ci___ 2> /dev/null || true
-echo "git checkout"
-git checkout -b ___multi_ci___
-echo "git add"
-git add .gitlab-ci.yml
 echo "git commit"
-git commit -m "$commit_msg"
-echo "git commit-tree/reset"
-# Prepare to send the whole working copy.  Doing this instead should be faster
-# until we decide to come up with a way of automatically keeping the downstream
-# repo in sync with the main one, at which point just pushing a single, new
-# commit with the change would be faster.
-git reset "$( git commit-tree HEAD^{tree} -m ${commit_msg} )"
-echo "git status"
-git status
+commit_message="Auto-generated commit testing"
+commit_message="${commit_message} ${current_branch} (${CI_COMMIT_SHA})"
+git commit --message="${commit_message}"
+
 echo "git push"
-git push --force "$DOWNSTREAM_CI_REPO" \
-    "___multi_ci___:multi-ci-${current_branch}"
+git remote add origin "$DOWNSTREAM_CI_REPO"
+git push --force origin "master:multi-ci-${current_branch}"
+
+rm -rf .git
+mv "$temp_dir/original-git-dir" .git
+git reset --hard HEAD
