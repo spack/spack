@@ -28,6 +28,7 @@ class Butterflypack(CMakePackage):
     version('master', branch='master')
     version('1.0.0', sha256='86c5eb09a18522367d63ce2bacf67ca1c9813ef351a1443baaab3c53f0d77232')
     version('1.0.1', sha256='e8ada37466a19f49e13456b150700d4c3afaad2ddbe3678f4e933f9d556a24a5')
+    version('1.0.2', sha256='536c0ce1f63f794fd7b8e78206ad73604dccc4ed04511537468a81a279b3d2d9')
 
     variant('shared', default=True, description='Build shared libraries')
 
