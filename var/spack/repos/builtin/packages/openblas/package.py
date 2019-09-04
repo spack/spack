@@ -110,6 +110,9 @@ class Openblas(MakefilePackage):
           sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
           when='@0.3.0:0.3.3')
 
+    # Add conditions to f_check to determine the Fujitsu compiler
+    patch('openblas_fujitsu.patch', when='%fj')
+
     conflicts('%intel@16', when='@0.2.15:0.2.19')
 
     @property
