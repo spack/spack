@@ -23,8 +23,8 @@ class PyConfigobj(PythonPackage):
 
     def url_for_version(self, version):
         if self.version <= Version('5.0.0'):
-            url = "https://pypi.io/packages/source/c/configobj/configobj-{0}.tar.gz".format(self.version)
+            url = "https://pypi.io/packages/source/c/configobj/configobj-{0}.tar.gz"
         else:
-            url = "https://github.com/DiffSK/configobj/archive/v{0}.tar.gz".format(self.version)
+            url = "https://github.com/DiffSK/configobj/archive/v{0}.tar.gz"
 
-        return url
+        return url.format(version)
