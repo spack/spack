@@ -10,8 +10,8 @@ class RGgbeeswarm(RPackage):
     """ggbeeswarm: Categorical Scatter (Violin Point) Plots"""
 
     homepage = "https://github.com/eclarke/ggbeeswarm"
-    url      = "https://cran.r-project.org/src/contrib/ggbeeswarm_0.6.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggbeeswarm"
+    url      = "https://cloud.r-project.org/src/contrib/ggbeeswarm_0.6.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggbeeswarm"
 
     version('0.6.0', sha256='bbac8552f67ff1945180fbcda83f7f1c47908f27ba4e84921a39c45d6e123333')
 

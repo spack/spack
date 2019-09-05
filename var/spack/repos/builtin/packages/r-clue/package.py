@@ -9,9 +9,9 @@ from spack import *
 class RClue(RPackage):
     """clue: Cluster Ensembles"""
 
-    homepage = "https://cran.r-project.org/package=clue"
-    url      = "https://cran.r-project.org/src/contrib/clue_0.3-57.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/clue"
+    homepage = "https://cloud.r-project.org/package=clue"
+    url      = "https://cloud.r-project.org/src/contrib/clue_0.3-57.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/clue"
 
     version('0.3-57', sha256='6e369d07b464a9624209a06b5078bf988f01f7963076e946649d76aea0622d17')
 

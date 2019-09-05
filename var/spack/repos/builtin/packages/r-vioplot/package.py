@@ -9,9 +9,9 @@ from spack import *
 class RVioplot(RPackage):
     """vioplot: Violin Plot"""
 
-    homepage = "https://cran.r-project.org/package=vioplot"
-    url      = "https://cran.r-project.org/src/contrib/vioplot_0.3.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/vioplot"
+    homepage = "https://cloud.r-project.org/package=vioplot"
+    url      = "https://cloud.r-project.org/src/contrib/vioplot_0.3.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/vioplot"
 
     version('0.3.2', sha256='7b51d0876903a3c315744cb051ac61920eeaa1f0694814959edfae43ce956e8e')
 

@@ -11,8 +11,8 @@ class REuropepmc(RPackage):
        Service"""
 
     homepage = "http://github.com/ropensci/europepmc/"
-    url      = "https://cran.r-project.org/src/contrib/europepmc_0.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/europepmc"
+    url      = "https://cloud.r-project.org/src/contrib/europepmc_0.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/europepmc"
 
     version('0.3', sha256='5044a253d223e2bb8502063cd03c0fe4db856467e497d650da7ccd8f75d0f8d9')
 

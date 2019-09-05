@@ -11,8 +11,8 @@ class RUpsetr(RPackage):
        forVisualizing Intersecting Sets"""
 
     homepage = "http://github.com/hms-dbmi/UpSetR"
-    url      = "https://cran.r-project.org/src/contrib/UpSetR_1.4.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/UpSetR"
+    url      = "https://cloud.r-project.org/src/contrib/UpSetR_1.4.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/UpSetR"
 
     version('1.4.0', sha256='351e5fee64204cf77fd378cf2a2c0456cc19d4d98a2fd5f3dac74b69a505f100')
 

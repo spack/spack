@@ -10,8 +10,8 @@ class RGgplotify(RPackage):
     """ggplotify: Convert Plot to 'grob' or 'ggplot' Object"""
 
     homepage = "https://github.com/GuangchuangYu/ggplotify"
-    url      = "https://cran.r-project.org/src/contrib/ggplotify_0.0.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggplotify"
+    url      = "https://cloud.r-project.org/src/contrib/ggplotify_0.0.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggplotify"
 
     version('0.0.3', sha256='7e7953a2933aa7127a0bac54375e3e0219a0744cfc3249c3d7b76065f7a51892')
 

@@ -9,9 +9,9 @@ from spack import *
 class RMapplots(RPackage):
     """mapplots: Data Visualisation on Maps"""
 
-    homepage = "https://cran.r-project.org/package=mapplots"
-    url      = "https://cran.r-project.org/src/contrib/mapplots_1.5.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mapplots"
+    homepage = "https://cloud.r-project.org/package=mapplots"
+    url      = "https://cloud.r-project.org/src/contrib/mapplots_1.5.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mapplots"
 
     version('1.5.1', sha256='37e96d34f37922180e07bb63b4514e07d42eee5bbf0885b278286ee48cf142a3')
 

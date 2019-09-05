@@ -10,9 +10,9 @@ class RGgraph(RPackage):
     """ggraph: An Implementation of Grammar of Graphics for Graphs and
        Networks"""
 
-    homepage = "https://cran.r-project.org/package=ggraph"
-    url      = "https://cran.r-project.org/src/contrib/ggraph_1.0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggraph"
+    homepage = "https://cloud.r-project.org/package=ggraph"
+    url      = "https://cloud.r-project.org/src/contrib/ggraph_1.0.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggraph"
 
     version('1.0.2', sha256='4c24739ecabfc65c290a11980491a20bdaac675392a98dc30ccde76ac4b8f53a')
 

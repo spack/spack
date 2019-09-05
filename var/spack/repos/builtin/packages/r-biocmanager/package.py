@@ -9,9 +9,9 @@ from spack import *
 class RBiocmanager(RPackage):
     """BiocManager: Access the Bioconductor Project Package Repository"""
 
-    homepage = "https://cran.r-project.org/package=BiocManager"
-    url      = "https://cran.r-project.org/src/contrib/BiocManager_1.30.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/BiocManager"
+    homepage = "https://cloud.r-project.org/package=BiocManager"
+    url      = "https://cloud.r-project.org/src/contrib/BiocManager_1.30.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/BiocManager"
 
     version('1.30.4', sha256='50093f5c8ed8fba6e68bc715784b713887bdad3538fbb92f152dcc1eaf39ba4f')
 

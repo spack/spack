@@ -10,9 +10,9 @@ class REcp(RPackage):
     """ecp: Non-Parametric Multiple Change-Point Analysis of
        MultivariateData"""
 
-    homepage = "https://cran.r-project.org/package=ecp"
-    url      = "https://cran.r-project.org/src/contrib/ecp_3.1.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ecp"
+    homepage = "https://cloud.r-project.org/package=ecp"
+    url      = "https://cloud.r-project.org/src/contrib/ecp_3.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ecp"
 
     version('3.1.1', sha256='d2ab194e22e6ab0168222fbccfcf2e25c6cd51a73edc959086b0c6e0a7410268')
 
