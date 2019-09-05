@@ -27,6 +27,8 @@ class Textparser(CMakePackage):
 
     depends_on('mpi', when='+mpi')
 
+    parallel = False
+
     def cmake_args(self):
         spec = self.spec
         args = []
@@ -53,19 +55,3 @@ class Textparser(CMakePackage):
                 '-DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_fx100.cmake')
 
         return args
-
-    def build(self, spec, prefix):
-        make_args = []
-
-        # Explicit target is specified due to the dependency problem of
-        # "makefile" when running `make` in parallel.
-        if '+mpi' in spec:
-            make_args.append('TPmpi')
-        else:
-            make_args.append('TP')
-            if '+fapi' in spec:
-                make_args.append('TP_fapi')
-
-        with working_dir(self.build_directory):
-            make(*make_args)
-            make()
