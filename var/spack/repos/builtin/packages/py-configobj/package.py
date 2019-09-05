@@ -22,7 +22,7 @@ class PyConfigobj(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     def url_for_version(self, version):
-        if self.version <= Version('5.0.0'):
+        if version <= Version('5.0.0'):
             url = "https://pypi.io/packages/source/c/configobj/configobj-{0}.tar.gz"
         else:
             url = "https://github.com/DiffSK/configobj/archive/v{0}.tar.gz"
