@@ -21,7 +21,7 @@ class RVgam(RPackage):
     version('1.0-2', '813b303d5d956914cf8910db3fa1ba14')
     version('1.0-1', '778182585c774036ac3d10240cf63b40')
     version('1.0-0', '81da7b3a797b5e26b9e859dc2f373b7b')
-    
+
     depends_on('r@3.0.0:', when='@:1.0-1', type=('build', 'run'))
     depends_on('r@3.1.0:', when='@1.0-2:1.0-3', type=('build', 'run'))
     depends_on('r@3.4.0:', when='@1.0-4:', type=('build', 'run'))
