@@ -11,6 +11,7 @@ class FontUtil(AutotoolsPackage):
 
     homepage = "http://cgit.freedesktop.org/xorg/font/util"
     url      = "https://www.x.org/archive/individual/font/font-util-1.3.1.tar.gz"
+    version('1.3.2', sha256='f115a3735604de1e852a4bf669be0269d8ce8f21f8e0e74ec5934b31dadc1e76')
     version('1.3.1', 'd153a9af216e4498fa171faea2c82514')
 
     depends_on('autoconf', type='build')
