@@ -57,9 +57,9 @@ class Esmf(MakefilePackage):
     # installation of dynamic libraries on OSX:
     patch('darwin_dylib_install_name.patch', when='platform=darwin @:7.0.99')
 
-    # Missing include file for gcc compilers on mac
+    # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
-    patch('gcc_darwin.patch', when='platform=darwin @7.1.0r %gcc')
+    patch('cstddef.patch', when='@7.1.0r %gcc@8:')
 
     # Make script from mvapich2.patch executable
     @when('@:7.0.99')

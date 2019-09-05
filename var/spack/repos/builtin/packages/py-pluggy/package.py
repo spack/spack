@@ -10,10 +10,11 @@ class PyPluggy(PythonPackage):
     """Plugin and hook calling mechanisms for python."""
 
     homepage = "https://github.com/pytest-dev/pluggy"
-    url      = "https://pypi.io/packages/source/p/pluggy/pluggy-0.7.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pluggy/pluggy-0.12.0.tar.gz"
 
     import_modules = ['pluggy']
 
+    version('0.12.0', sha256='0825a152ac059776623854c1543d65a4ad408eb3d33ee114dff91e57ec6ae6fc')
     version('0.7.1', 'cd5cc1003143f86dd6e2a865a20f8837')
     version('0.6.0', 'ffdde7c3a5ba9a440404570366ffb6d5')
 
@@ -21,3 +22,4 @@ class PyPluggy(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
+    depends_on('py-importlib-metadata@0.12:', type=('build', 'run'))

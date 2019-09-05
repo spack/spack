@@ -37,6 +37,17 @@ class Cuda(Package):
     version('6.5.14', '90b1b8f77313600cc294d9271741f4da', expand=False,
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
+    # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
+    # drivers do not exist for Mojave. See
+    # https://devtalk.nvidia.com/default/topic/1043070/announcements/faq-about-macos-10-14-mojave-nvidia-drivers/
+    # Note that a CUDA Toolkit installer does exist for macOS Mojave at
+    # https://developer.nvidia.com/compute/cuda/10.1/Prod1/local_installers/cuda_10.1.168_mac.dmg,
+    # but support for Mojave is dropped in later versions, and none of the
+    # macOS NVIDIA drivers at
+    # https://www.nvidia.com/en-us/drivers/cuda/mac-driver-archive/ mention
+    # Mojave support -- only macOS High Sierra 10.13 is supported.
+    conflicts('arch=darwin-mojave-x86_64')
+
     def setup_environment(self, spack_env, run_env):
         run_env.set('CUDA_HOME', self.prefix)
 

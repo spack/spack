@@ -11,10 +11,12 @@ class RCheckmate(RPackage):
     A substantial part of the package was written in C to
     minimize any worries about execution time overhead."""
 
-    homepage = "https://cran.r-project.org/package=checkmate"
-    url      = "https://cran.rstudio.com/src/contrib/checkmate_1.8.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/checkmate"
+    homepage = "https://cloud.r-project.org/package=checkmate"
+    url      = "https://cloud.r-project.org/src/contrib/checkmate_1.8.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/checkmate"
 
+    version('1.9.4', sha256='faa25754b757fe483b876f5d07b73f76f69a1baa971420892fadec4af4bbad21')
     version('1.8.4', '00bd2c464386614da208f82c4b21910b')
 
-    depends_on('r-backports', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('r-backports@1.1.0:', type=('build', 'run'))

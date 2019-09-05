@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
-import grp
 import os
 import collections
 import shutil
+import stat
 import tempfile
 import getpass
 
@@ -406,6 +406,30 @@ def search_fn():
     return _Mock()
 
 
+def check_stage_dir_perms(prefix, path):
+    """Check the stage directory perms to ensure match expectations."""
+    # Ensure the path's subdirectories -- to `$user` -- have their parent's
+    # perms while those from `$user` on are owned and restricted to the
+    # user.
+    status = os.stat(prefix)
+    gid = status.st_gid
+    uid = os.getuid()
+    user = getpass.getuser()
+    parts = path[len(prefix) + 1:].split(os.path.sep)
+    have_user = False
+    for part in parts:
+        if part == user:
+            have_user = True
+        prefix = os.path.join(prefix, part)
+        prefix_status = os.stat(prefix)
+        if not have_user:
+            assert gid == prefix_status.st_gid
+            assert status.st_mode == prefix_status.st_mode
+        else:
+            assert uid == status.st_uid
+            assert status.st_mode & stat.S_IRWXU == stat.S_IRWXU
+
+
 @pytest.mark.usefixtures('mock_packages')
 class TestStage(object):
 
@@ -684,6 +708,7 @@ class TestStage(object):
         path = spack.stage._first_accessible_path(files)
         assert path == name
         assert os.path.isdir(path)
+        check_stage_dir_perms(str(tmpdir), path)
 
         # Ensure an existing path is returned
         spack_subdir = spack_dir.join('existing').ensure(dir=True)
@@ -691,31 +716,33 @@ class TestStage(object):
         path = spack.stage._first_accessible_path([subdir])
         assert path == subdir
 
+        # Ensure a path with a `$user` node has the right permissions
+        # for its subdirectories.
+        user = getpass.getuser()
+        user_dir = spack_dir.join(user, 'has', 'paths')
+        user_path = str(user_dir)
+        path = spack.stage._first_accessible_path([user_path])
+        assert path == user_path
+        check_stage_dir_perms(str(tmpdir), path)
+
         # Cleanup
         shutil.rmtree(str(name))
 
-    def test_first_accessible_perms(self, tmpdir):
-        """Test _first_accessible_path permissions."""
-        name = str(tmpdir.join('first', 'path'))
-        path = spack.stage._first_accessible_path([name])
+    def test_resolve_paths(self):
+        """Test _resolve_paths."""
 
-        # Ensure the non-existent path was created
-        assert path == name
-        assert os.path.isdir(path)
+        assert spack.stage._resolve_paths([]) == []
 
-        # Ensure the non-existent subdirectories have their parent's perms
-        prefix = str(tmpdir)
-        status = os.stat(prefix)
-        group = grp.getgrgid(status.st_gid)[0]
-        parts = path[len(prefix):].split(os.path.sep)
-        for part in parts:
-            prefix = os.path.join(prefix, part)
-            prefix_status = os.stat(prefix)
-            assert group == grp.getgrgid(os.stat(prefix).st_gid)[0]
-            assert status.st_mode == prefix_status.st_mode
+        paths = [os.path.join(os.path.sep, 'a', 'b', 'c')]
+        assert spack.stage._resolve_paths(paths) == paths
 
-        # Cleanup
-        shutil.rmtree(os.path.dirname(name))
+        tmp = '$tempdir'
+        paths = [os.path.join(tmp, 'stage'), os.path.join(tmp, '$user')]
+        can_paths = [canonicalize_path(paths[0]), canonicalize_path(tmp)]
+        user = getpass.getuser()
+        if user not in can_paths[1].split(os.path.sep):
+            can_paths[1] = os.path.join(can_paths[1], user)
+        assert spack.stage._resolve_paths(paths) == can_paths
 
     def test_get_stage_root_bad_path(self, clear_stage_root, bad_stage_path):
         """Ensure an invalid stage path root raises a StageError."""
@@ -756,15 +783,21 @@ class TestStage(object):
         # Make sure the cached stage path values are changed appropriately.
         assert spack.stage._stage_root == path
 
-        # Add then purge a couple of directories
-        dir1 = tmpdir.join('dir1')
+        # Add then purge a few directories
+        dir1 = tmpdir.join('stage-1234567890abcdef1234567890abcdef')
         dir1.ensure(dir=True)
-        dir2 = tmpdir.join('dir2')
+        dir2 = tmpdir.join('stage-abcdef12345678900987654321fedcba')
         dir2.ensure(dir=True)
+        dir3 = tmpdir.join('stage-a1b2c3')
+        dir3.ensure(dir=True)
 
         spack.stage.purge()
         assert not os.path.exists(str(dir1))
         assert not os.path.exists(str(dir2))
+        assert os.path.exists(str(dir3))
+
+        # Cleanup
+        shutil.rmtree(str(dir3))
 
     def test_get_stage_root_in_spack(self, clear_stage_root,
                                      instance_path_for_stage):

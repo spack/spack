@@ -545,7 +545,7 @@ most likely via the ``+blas`` variant specification.
      base directory of the same module, effectively preventing the possibility to
      load two or more versions of the same software at the same time. The tokens
      that are available for use in this directive are the same understood by
-     the ``Spec.format`` method.
+     the :meth:`~spack.spec.Spec.format` method.
 
 
 .. note::

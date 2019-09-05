@@ -1,0 +1,14 @@
+--- OpenBLAS-0.3.6/f_check	2019-04-30 02:22:19.000000000 +0900
++++ OpenBLAS-0.3.6/f_check_fix	2019-08-05 10:31:56.066962193 +0900
+@@ -69,7 +69,10 @@
+ 	    $bu       = "_";
+ 	}
+ 
+-	if ($data =~ /GNU/) {
++        if ($data =~ /Fujitsu/) {
++            $vendor = FUJITSU;
++            $openmp = "-Kopenmp";
++        } elsif ($data =~ /GNU/) {
+ 
+ 	    $data =~ /(\d)\.(\d).(\d)/;
+ 	    $major = $1;

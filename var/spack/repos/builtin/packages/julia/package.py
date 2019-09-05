@@ -39,6 +39,7 @@ class Julia(Package):
     variant("python", default=False,
             description="Install Julia Python package")
     variant("simd", default=False, description="Install Julia SIMD package")
+    variant("mkl", default=False, description="Use Intel MKL")
 
     patch('gc.patch', when='@0.4:0.4.5')
     patch('openblas.patch', when='@0.4:0.4.5')
@@ -61,6 +62,7 @@ class Julia(Package):
     depends_on("git", when='@release-0.4')
     depends_on("openssl")
     depends_on("python@2.7:2.8")
+    depends_on("mkl", when='+mkl')
 
     # Run-time dependencies:
     # depends_on("arpack")
@@ -135,6 +137,9 @@ class Julia(Package):
             options += [
                 'JULIA_CPU_TARGET=generic',
                 'MARCH=armv8-a+crc']
+        if '+mkl' in spec:
+            options += [
+                'USE_INTEL_MKL=1']
         with open('Make.user', 'w') as f:
             f.write('\n'.join(options) + '\n')
         make()

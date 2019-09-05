@@ -9,9 +9,9 @@ from spack import *
 class RTaxizedb(RPackage):
     """taxizedb: Tools for Working with 'Taxonomic' Databases"""
 
-    homepage = "https://cran.r-project.org/package=taxizedb"
-    url      = "https://cran.r-project.org/src/contrib/taxizedb_0.1.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/taxizedb/"
+    homepage = "https://cloud.r-project.org/package=taxizedb"
+    url      = "https://cloud.r-project.org/src/contrib/taxizedb_0.1.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/taxizedb/"
 
     version('0.1.4', sha256='5a40569a2b5abe56201f112a10220150353412df39b7e8d21ea8698f424cf295')
 
@@ -24,5 +24,3 @@ class RTaxizedb(RPackage):
     depends_on('r-dbplyr@1.0.0:', type=('build', 'run'))
     depends_on('r-magrittr@1.5:', type=('build', 'run'))
     depends_on('r-hoardr@0.1.0:', type=('build', 'run'))
-    depends_on('r-roxygen2@6.0.1:', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))

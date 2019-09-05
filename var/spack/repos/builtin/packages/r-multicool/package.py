@@ -9,8 +9,9 @@ from spack import *
 class RMulticool(RPackage):
     """Permutations of multisets in cool-lex order."""
 
-    homepage = "https://cran.r-project.org/package=multicool"
-    url      = "https://cran.r-project.org/src/contrib/Archive/multicool/multicool_0.1-9.tar.gz"
+    homepage = "https://cloud.r-project.org/package=multicool"
+    url      = "https://cloud.r-project.org/src/contrib/Archive/multicool/multicool_0.1-9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/multicool/Archive/multicool"
 
     version('0.1-9', sha256='bdf92571cef1b649952d155395a92b8683099ee13114f73a9d41fc5d7d49d329')
 

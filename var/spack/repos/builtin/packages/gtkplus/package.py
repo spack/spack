@@ -16,6 +16,8 @@ class Gtkplus(AutotoolsPackage):
     version('2.24.31', '68c1922732c7efc08df4656a5366dcc3afdc8791513400dac276009b40954658')
     version('2.24.25', '38af1020cb8ff3d10dda2c8807f11e92af9d2fa4045de61c62eedb7fbc7ea5b3')
 
+    variant('cups', default='False', description='enable cups support')
+
     depends_on('pkgconfig', type='build')
 
     depends_on('atk')
@@ -25,7 +27,7 @@ class Gtkplus(AutotoolsPackage):
     # Hardcode X11 support (former +X variant),
     # see #6940 for rationale:
     depends_on('pango+X')
-    depends_on('cairo+X+pdf')
+    depends_on('cairo+X+pdf+gobject')
     depends_on('gobject-introspection')
     depends_on('libepoxy', when='@3:')
     depends_on('libxi', when='@3:')
@@ -33,6 +35,7 @@ class Gtkplus(AutotoolsPackage):
     depends_on('fixesproto', when='@3:')
     depends_on('at-spi2-atk', when='@3:')
     depends_on('gettext', when='@3:')
+    depends_on('cups', when='+cups')
 
     patch('no-demos.patch', when='@2:2.99')
 
@@ -60,4 +63,6 @@ class Gtkplus(AutotoolsPackage):
         args.append('GTKDOC_CHECK_PATH={0}'.format(true))
         args.append('GTKDOC_MKPDF={0}'.format(true))
         args.append('GTKDOC_REBASE={0}'.format(true))
+        if '~cups' in self.spec:
+            args.append('--disable-cups')
         return args

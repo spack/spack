@@ -27,6 +27,8 @@ class Icu4c(AutotoolsPackage):
             multi=False,
             description='Use the specified C++ standard when building')
 
+    depends_on('python', type='build', when='@64.1:')
+
     configure_directory = 'source'
 
     def url_for_version(self, version):
@@ -44,6 +46,11 @@ class Icu4c(AutotoolsPackage):
 
     def configure_args(self):
         args = []
+
+        if 'python' in self.spec:
+            # Make sure configure uses Spack's python package
+            # Without this, configure could pick a broken global installation
+            args.append('PYTHON={0}'.format(self.spec['python'].command))
 
         # The --enable-rpath option is only needed on MacOS, and it
         # breaks the build for xerces-c on Linux.

@@ -111,6 +111,11 @@ class Hdf5(AutotoolsPackage):
           sha256='57cee5ff1992b4098eda079815c36fc2da9b10e00a9056df054f2384c4fc7523',
           when='@1.10.2%gcc@8:')
 
+    # Disable MPI C++ interface when C++ is disabled, otherwise downstream
+    # libraries fail to link; see https://github.com/spack/spack/issues/12586
+    patch('h5public-skip-mpicxx.patch', when='+mpi~cxx',
+          sha256='b61e2f058964ad85be6ee5ecea10080bf79e73f83ff88d1fa4b602d00209da9c')
+
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
     def url_for_version(self, version):

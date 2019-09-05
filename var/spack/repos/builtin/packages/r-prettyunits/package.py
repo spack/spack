@@ -11,9 +11,9 @@ class RPrettyunits(RPackage):
        1337000 -> 15d 11h 23m 20s. Vague time intervals: 2674000 -> about
        a month ago. Bytes: 1337 -> 1.34 kB."""
 
-    homepage = "https://cran.r-project.org/package=prettyunits"
-    url      = "https://cran.r-project.org/src/contrib/prettyunits_1.0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/prettyunits"
+    homepage = "https://cloud.r-project.org/package=prettyunits"
+    url      = "https://cloud.r-project.org/src/contrib/prettyunits_1.0.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/prettyunits"
 
     version('1.0.2', '0a091a297e8b37df54e7fcf28697ee50')
 

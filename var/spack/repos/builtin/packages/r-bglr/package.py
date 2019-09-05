@@ -9,9 +9,9 @@ from spack import *
 class RBglr(RPackage):
     """BGLR: Bayesian Generalized Linear Regression"""
 
-    homepage = "https://cran.r-project.org/package=BGLR"
-    url      = "https://cran.r-project.org/src/contrib/BGLR_1.0.8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/BGLR"
+    homepage = "https://cloud.r-project.org/package=BGLR"
+    url      = "https://cloud.r-project.org/src/contrib/BGLR_1.0.8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/BGLR"
 
     version('1.0.8', sha256='5e969590d80b2f272c02a43b487ab1ffa13af386e0342993e6ac484fc82c9b95')
 

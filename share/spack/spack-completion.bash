@@ -521,7 +521,8 @@ function _spack_fetch {
 function _spack_find {
     if $list_options
     then
-        compgen -W "-h --help -s --short -p --paths -d --deps -l --long
+        compgen -W "-h --help -s --short -d --deps -p --paths
+                    --format --json --groups --no-groups -l --long
                     -L --very-long -t --tags -c --show-concretized
                     -f --show-flags --show-full-compiler -x --explicit
                     -X --implicit -u --unknown -m --missing -v --variants
@@ -1282,7 +1283,7 @@ function _all_resource_hashes {
 }
 
 function _installed_packages {
-    spack --color=never find | grep -v "^--"
+    spack --color=never find --no-groups
 }
 
 function _installed_compilers {

@@ -15,9 +15,14 @@ class RUnits(RPackage):
        conversion."""
 
     homepage = "https://github.com/edzer/units/"
-    url      = "https://cran.r-project.org/src/contrib/units_0.4-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/units"
+    url      = "https://cloud.r-project.org/src/contrib/units_0.4-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/units"
 
+    version('0.6-3', sha256='03de88d9dcfe80d22dd3813413f33657c576aed24a8091dbfc7f68602020a64f')
+    version('0.6-2', sha256='5e286775d0712c8e15b6ae3a533d4c4349b0f6410c2d9d897ca519c3d0e5f170')
     version('0.4-6', '0bb90dde5dad7608fa6feb1599381bf2')
 
-    depends_on('r-udunits2', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r-udunits2@0.13:', when='@:0.5-1', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.10:', type=('build', 'run'))
+    depends_on('udunits2', when='@0.6-0:')
