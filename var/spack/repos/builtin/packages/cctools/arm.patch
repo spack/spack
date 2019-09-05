@@ -1,0 +1,28 @@
+diff --git a/resource_monitor/src/rmonitor_helper.c b/resource_monitor/src/rmonitor_helper.c
+index 3953da7..3a2a616 100644
+--- a/resource_monitor/src/rmonitor_helper.c
++++ b/resource_monitor/src/rmonitor_helper.c
+@@ -294,7 +294,11 @@ int open(const char *path, int flags, ...)
+ 	va_end(ap);
+ 
+ 	if(!original_open) {
++#ifdef SYS_open
+ 		return syscall(SYS_open, path, flags, mode);
++#else
++		return syscall(SYS_openat, AT_FDCWD, path, flags, mode);
++#endif
+ 	}
+ 
+ 	debug(D_RMON, "open %s from %d.\n", path, getpid());
+@@ -337,7 +341,11 @@ int open64(const char *path, int flags, ...)
+ 	va_end(ap);
+ 
+ 	if(!original_open64) {
++#ifdef SYS_open
+ 		return syscall(SYS_open, path, flags | O_LARGEFILE, mode);
++#else
++		return syscall(SYS_openat, AT_FDCWD, path, flags | O_LARGEFILE, mode);
++#endif
+ 	}
+ 
+ 	debug(D_RMON, "open64 %s from %d.\n", path, getpid());

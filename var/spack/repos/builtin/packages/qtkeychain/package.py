@@ -16,3 +16,9 @@ class Qtkeychain(CMakePackage):
 
     depends_on('qt+dbus')
     depends_on('libsecret')
+
+    def cmake_args(self):
+        args = []
+        if self.spec['qt'].version.up_to(1) == Version(4):
+            args.append('-DBUILD_WITH_QT4=ON')
+        return args

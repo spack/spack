@@ -24,3 +24,4 @@ class Motif(AutotoolsPackage):
     depends_on("libxcomposite")
     depends_on("libxfixes")
     depends_on("xbitmaps")
+    depends_on("jpeg")

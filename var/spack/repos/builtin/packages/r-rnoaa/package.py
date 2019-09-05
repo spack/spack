@@ -10,8 +10,8 @@ class RRnoaa(RPackage):
     """rnoaa: 'NOAA' Weather Data from R"""
 
     homepage = "https://github.com/ropensci/rnoaa"
-    url      = "https://cran.r-project.org/src/contrib/rnoaa_0.8.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rnoaa"
+    url      = "https://cloud.r-project.org/src/contrib/rnoaa_0.8.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rnoaa"
 
     version('0.8.4', sha256='fb9ae771111dd5f638c1eff3290abad2ff9cc7e68a6678bf2414433ebed2dbbf')
 

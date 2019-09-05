@@ -3856,13 +3856,18 @@ variant names are:
   Name    Default   Description
   ======= ======== ========================
   shared   True     Build shared libraries
-  static   True     Build static libraries
   mpi      True     Use MPI
   python   False    Build Python extension
   ======= ======== ========================
 
 If specified in this table, the corresponding default should be used
 when declaring a variant.
+
+The semantics of the `shared` variant are important. When a package is
+built `~shared`, the package guarantees that no shared libraries are
+built. When a package is built `+shared`, the package guarantees that
+shared libraries are built, but it makes no guarantee about whether
+static libraries are built.
 
 ^^^^^^^^^^^^^
 Version Lists
@@ -3910,7 +3915,8 @@ The first step of ``spack install``.  Takes a spec and determines the
 correct download URL to use for the requested package version, then
 downloads the archive, checks it against an MD5 checksum, and stores
 it in a staging directory if the check was successful.  The staging
-directory will be located under ``$SPACK_HOME/var/spack``.
+directory will be located under the first writable directory in the
+``build_stage`` configuration setting.
 
 When run after the archive has already been downloaded, ``spack
 fetch`` is idempotent and will not download the archive again.

@@ -10,9 +10,9 @@ class RConstruct(RPackage):
     """conStruct: Models Spatially Continuous and Discrete Population
        GeneticStructure"""
 
-    homepage = "https://cran.r-project.org/package=conStruct"
-    url      = "https://cran.r-project.org/src/contrib/conStruct_1.0.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/conStruct"
+    homepage = "https://cloud.r-project.org/package=conStruct"
+    url      = "https://cloud.r-project.org/src/contrib/conStruct_1.0.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/conStruct"
 
     version('1.0.3', sha256='b449c133a944ad05a28f84f312ed4ccbc1574c4659aa09c678618d2ae9008310')
 
@@ -27,3 +27,4 @@ class RConstruct(RPackage):
     depends_on('r-rstan@2.18.1:', type=('build', 'run'))
     depends_on('r-rstantools@1.5.0:', type=('build', 'run'))
     depends_on('r-stanheaders@2.18.0:', type=('build', 'run'))
+    depends_on('gmake', type='build')

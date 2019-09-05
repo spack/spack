@@ -55,3 +55,4 @@ class RReportingtools(RPackage):
     depends_on('r-pfam-db', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-utils', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-xml', when='@2.16.0:', type=('build', 'run'))
+    

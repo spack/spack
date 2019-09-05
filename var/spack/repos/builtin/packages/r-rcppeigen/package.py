@@ -22,12 +22,15 @@ class RRcppeigen(RPackage):
     GNU GPL version 2 or later, as is the rest of 'Rcpp'."""
 
     homepage = "http://eigen.tuxfamily.org/"
-    url      = "https://cran.r-project.org/src/contrib/RcppEigen_0.3.2.9.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RcppEigen"
+    url      = "https://cloud.r-project.org/src/contrib/RcppEigen_0.3.2.9.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppEigen"
 
+    version('0.3.3.5.0', sha256='e5c6af17770c5f57b7cf2fba04ad1a519901b446e8138bfff221952458207f05')
+    version('0.3.3.4.0', sha256='11020c567b299b1eac95e8a4d57abf0315931286907823dc7b66c44d0dd6dad4')
     version('0.3.3.3.1', '1a5ae17828813e40e6b3e7400e408a2b')
     version('0.3.2.9.0', '14a7786882a5d9862d53c4b2217df318')
     version('0.3.2.8.1', '4146e06e4fdf7f4d08db7839069d479f')
 
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r@2.15.1:', type=('build', 'run'))
+    depends_on('r-matrix@1.1-0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

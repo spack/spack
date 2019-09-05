@@ -1,0 +1,159 @@
+From 7980f9c7c5ca8cfe88f684c962d4d02b23734ba7 Mon Sep 17 00:00:00 2001
+From: Walter Spector <walter.spector@hpe.com>
+Date: Wed, 2 May 2018 13:36:17 -0700
+Subject: [PATCH] Include <cstddef> for size_t where needed with gfortran and
+ PGI - especially on darwin.
+
+---
+ build_config/Cygwin.gfortran.default/ESMC_Conf.h      | 1 +
+ build_config/Darwin.gfortran.default/ESMC_Conf.h      | 1 +
+ build_config/Darwin.gfortranclang.default/ESMC_Conf.h | 1 +
+ build_config/Darwin.pgi.default/ESMC_Conf.h           | 2 +-
+ build_config/Linux.gfortran.default/ESMC_Conf.h       | 1 +
+ build_config/Linux.gfortranclang.default/ESMC_Conf.h  | 1 +
+ build_config/Linux.pgi.default/ESMC_Conf.h            | 2 +-
+ build_config/Linux.pgigcc.default/ESMC_Conf.h         | 2 +-
+ build_config/MinGW.gfortran.default/ESMC_Conf.h       | 1 +
+ build_config/Unicos.gfortran.default/ESMC_Conf.h      | 1 +
+ build_config/Unicos.pgi.default/ESMC_Conf.h           | 2 +-
+ 11 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/build_config/Cygwin.gfortran.default/ESMC_Conf.h b/build_config/Cygwin.gfortran.default/ESMC_Conf.h
+index 59938a9c34..bd30b3adb6 100644
+--- a/build_config/Cygwin.gfortran.default/ESMC_Conf.h
++++ b/build_config/Cygwin.gfortran.default/ESMC_Conf.h
+@@ -31,6 +31,7 @@ Licensed under the University of Illinois-NCSA License.
+ // Typedef to match the data type of the 'hidden' string length
+ // argument that Fortran uses when passing CHARACTER strings.
+ #if (__GNUC__ > 7)
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #else
+ typedef int ESMCI_FortranStrLenArg;
+diff --git a/build_config/Darwin.gfortran.default/ESMC_Conf.h b/build_config/Darwin.gfortran.default/ESMC_Conf.h
+index a5e44c2bbc..7efb245743 100644
+--- a/build_config/Darwin.gfortran.default/ESMC_Conf.h
++++ b/build_config/Darwin.gfortran.default/ESMC_Conf.h
+@@ -31,6 +31,7 @@ Licensed under the University of Illinois-NCSA License.
+ // Typedef to match the data type of the 'hidden' string length
+ // argument that Fortran uses when passing CHARACTER strings.
+ #if (__GNUC__ > 7)
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #else
+ typedef int ESMCI_FortranStrLenArg;
+diff --git a/build_config/Darwin.gfortranclang.default/ESMC_Conf.h b/build_config/Darwin.gfortranclang.default/ESMC_Conf.h
+index a5e44c2bbc..7efb245743 100644
+--- a/build_config/Darwin.gfortranclang.default/ESMC_Conf.h
++++ b/build_config/Darwin.gfortranclang.default/ESMC_Conf.h
+@@ -31,6 +31,7 @@ Licensed under the University of Illinois-NCSA License.
+ // Typedef to match the data type of the 'hidden' string length
+ // argument that Fortran uses when passing CHARACTER strings.
+ #if (__GNUC__ > 7)
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #else
+ typedef int ESMCI_FortranStrLenArg;
+diff --git a/build_config/Darwin.pgi.default/ESMC_Conf.h b/build_config/Darwin.pgi.default/ESMC_Conf.h
+index 717f6d8825..4ce0178f48 100644
+--- a/build_config/Darwin.pgi.default/ESMC_Conf.h
++++ b/build_config/Darwin.pgi.default/ESMC_Conf.h
+@@ -27,7 +27,7 @@ Licensed under the University of Illinois-NCSA License.
+ #if (ESMF_PGIVERSION_MAJOR < 12)
+ typedef int ESMCI_FortranStrLenArg;
+ #else
+-#include <stdlib.h>
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #endif
+ #endif
+diff --git a/build_config/Linux.gfortran.default/ESMC_Conf.h b/build_config/Linux.gfortran.default/ESMC_Conf.h
+index cbde731331..e8edf9364d 100644
+--- a/build_config/Linux.gfortran.default/ESMC_Conf.h
++++ b/build_config/Linux.gfortran.default/ESMC_Conf.h
+@@ -31,6 +31,7 @@ Licensed under the University of Illinois-NCSA License.
+ // Typedef to match the data type of the 'hidden' string length
+ // argument that Fortran uses when passing CHARACTER strings.
+ #if (__GNUC__ > 7)
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #else
+ typedef int ESMCI_FortranStrLenArg;
+diff --git a/build_config/Linux.gfortranclang.default/ESMC_Conf.h b/build_config/Linux.gfortranclang.default/ESMC_Conf.h
+index cbde731331..e8edf9364d 100644
+--- a/build_config/Linux.gfortranclang.default/ESMC_Conf.h
++++ b/build_config/Linux.gfortranclang.default/ESMC_Conf.h
+@@ -31,6 +31,7 @@ Licensed under the University of Illinois-NCSA License.
+ // Typedef to match the data type of the 'hidden' string length
+ // argument that Fortran uses when passing CHARACTER strings.
+ #if (__GNUC__ > 7)
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #else
+ typedef int ESMCI_FortranStrLenArg;
+diff --git a/build_config/Linux.pgi.default/ESMC_Conf.h b/build_config/Linux.pgi.default/ESMC_Conf.h
+index 1c2ccaa9b2..618b3edd09 100644
+--- a/build_config/Linux.pgi.default/ESMC_Conf.h
++++ b/build_config/Linux.pgi.default/ESMC_Conf.h
+@@ -35,7 +35,7 @@ is a c++-11 feature.
+ #if (ESMF_PGIVERSION_MAJOR < 12)
+ typedef int ESMCI_FortranStrLenArg;
+ #else
+-#include <stdlib.h>
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #endif
+ #endif
+diff --git a/build_config/Linux.pgigcc.default/ESMC_Conf.h b/build_config/Linux.pgigcc.default/ESMC_Conf.h
+index a374e8230c..cd8fb278b7 100644
+--- a/build_config/Linux.pgigcc.default/ESMC_Conf.h
++++ b/build_config/Linux.pgigcc.default/ESMC_Conf.h
+@@ -27,7 +27,7 @@ Licensed under the University of Illinois-NCSA License.
+ #if (ESMF_PGIVERSION_MAJOR < 12)
+ typedef int ESMCI_FortranStrLenArg;
+ #else
+-#include <stdlib.h>
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #endif
+ #endif
+diff --git a/build_config/MinGW.gfortran.default/ESMC_Conf.h b/build_config/MinGW.gfortran.default/ESMC_Conf.h
+index b0c26fcb18..6fe050d7c6 100644
+--- a/build_config/MinGW.gfortran.default/ESMC_Conf.h
++++ b/build_config/MinGW.gfortran.default/ESMC_Conf.h
+@@ -31,6 +31,7 @@ Licensed under the University of Illinois-NCSA License.
+ // Typedef to match the data type of the 'hidden' string length
+ // argument that Fortran uses when passing CHARACTER strings.
+ #if (__GNUC__ > 7)
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #else
+ typedef int ESMCI_FortranStrLenArg;
+diff --git a/build_config/Unicos.gfortran.default/ESMC_Conf.h b/build_config/Unicos.gfortran.default/ESMC_Conf.h
+index c536a57351..2e84350051 100644
+--- a/build_config/Unicos.gfortran.default/ESMC_Conf.h
++++ b/build_config/Unicos.gfortran.default/ESMC_Conf.h
+@@ -31,6 +31,7 @@ Licensed under the University of Illinois-NCSA License.
+ // Typedef to match the data type of the 'hidden' string length
+ // argument that Fortran uses when passing CHARACTER strings.
+ #if (__GNUC__ > 7)
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #else
+ typedef int ESMCI_FortranStrLenArg;
+diff --git a/build_config/Unicos.pgi.default/ESMC_Conf.h b/build_config/Unicos.pgi.default/ESMC_Conf.h
+index 0be960389a..8da044868c 100644
+--- a/build_config/Unicos.pgi.default/ESMC_Conf.h
++++ b/build_config/Unicos.pgi.default/ESMC_Conf.h
+@@ -27,7 +27,7 @@ Licensed under the University of Illinois-NCSA License.
+ #if (ESMF_PGIVERSION_MAJOR < 12)
+ typedef int ESMCI_FortranStrLenArg;
+ #else
+-#include <stdlib.h>
++#include <cstddef>
+ typedef size_t ESMCI_FortranStrLenArg;
+ #endif
+ #endif
+-- 
+2.17.1
+

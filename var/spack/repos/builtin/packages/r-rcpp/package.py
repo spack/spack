@@ -18,9 +18,10 @@ class RRcpp(RPackage):
     last two."""
 
     homepage = "http://dirk.eddelbuettel.com/code/rcpp.html"
-    url      = "https://cran.rstudio.com/src/contrib/Rcpp_0.12.13.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/Rcpp"
+    url      = "https://cloud.r-project.org/src/contrib/Rcpp_0.12.13.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/Rcpp"
 
+    version('1.0.2', sha256='ad9338d6fc89dd116a3e2c5ecef1956e4be63b6c6aa1b21b2e5f249d65a5129c')
     version('1.0.0',   sha256='b7378bf0dda17ef72aa3f2a318a9cb5667bef50b601dc1096431e17426e18bc2')
     version('0.12.19', sha256='63aeb6d4b58cd2899ded26f38a77d461397d5b0dc5936f187d3ca6cd958ab582')
     version('0.12.18', sha256='fcecd01e53cfcbcf58dec19842b7235a917b8d98988e4003cc090478c5bbd300')

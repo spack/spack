@@ -11,8 +11,13 @@ class RMvtnorm(RPackage):
     deviates and densities."""
 
     homepage = "http://mvtnorm.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mvtnorm"
+    url      = "https://cloud.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mvtnorm"
 
+    version('1.0-11', sha256='0321612de99aa9bc75a45c7e029d3372736014223cbdefb80d8cae600cbc7252')
+    version('1.0-10', sha256='31df19cd8b4cab9d9a70dba00442b7684e625d4ca143a2c023c2c5872b07ad12')
     version('1.0-6', 'cb69426868fd3e330412b8491901d9d4')
     version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')
+
+    depends_on('r@1.9.0:', when='@:1.0-8', type=('build', 'run'))
+    depends_on('r@3.5.0:', when='@1.0-9:', type=('build', 'run'))

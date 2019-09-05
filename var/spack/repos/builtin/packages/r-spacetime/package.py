@@ -10,8 +10,8 @@ class RSpacetime(RPackage):
     """spacetime: Classes and Methods for Spatio-Temporal Data"""
 
     homepage = "http://github.com/edzer/spacetime"
-    url      = "https://cran.r-project.org/src/contrib/spacetime_1.2-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/spacetime"
+    url      = "https://cloud.r-project.org/src/contrib/spacetime_1.2-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/spacetime"
 
     version('1.2-2', sha256='1e9d3f92e5c4614a69c82a58bf0b5c829b4ed262bf1250bef943ae286056ea2d')
 

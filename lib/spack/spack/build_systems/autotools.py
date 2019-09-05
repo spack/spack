@@ -191,10 +191,6 @@ class AutotoolsPackage(PackageBase):
         tty.warn('*********************************************************')
         with working_dir(self.configure_directory):
             m = inspect.getmodule(self)
-            # This part should be redundant in principle, but
-            # won't hurt
-            m.libtoolize()
-            m.aclocal()
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']

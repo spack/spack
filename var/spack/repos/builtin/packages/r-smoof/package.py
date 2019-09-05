@@ -14,8 +14,8 @@ class RSmoof(RPackage):
        functions."""
 
     homepage = "http://github.com/jakobbossek/smoof"
-    url      = "https://cran.r-project.org/src/contrib/smoof_1.5.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/smoof"
+    url      = "https://cloud.r-project.org/src/contrib/smoof_1.5.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/smoof"
 
     version('1.5.1', 'c3e3b5dafed34608f933ae255cf49054')
     version('1.5', 'b371bde2724eade5a6d4d808fa3ad269')

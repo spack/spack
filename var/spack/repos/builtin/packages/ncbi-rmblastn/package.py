@@ -9,9 +9,19 @@ from spack import *
 class NcbiRmblastn(AutotoolsPackage):
     """RMBlast search engine for NCBI"""
 
-    homepage = "https://www.ncbi.nlm.nih.gov/"
-    url      = "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/rmblast/LATEST/ncbi-rmblastn-2.2.28-src.tar.gz"
+    homepage = "http://www.repeatmasker.org/RMBlast.html"
+    url      = "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.9.0/ncbi-blast-2.9.0+-src.tar.gz"
 
-    version('2.2.28', 'fb5f4e2e02ffcb1b17af2e9f206c5c22')
+    version('2.9.0', 'e6a44564e6278c445826ec2720f104b4')
+    patch('isb-2.9.0+-rmblast-p1.patch', when="@2.9.0")
 
     configure_directory = 'c++'
+
+    def configure_args(self):
+        args = [
+            "--with-mt",
+            "--without-debug",
+            "--without-krb5",
+            "--without-openssl",
+            "--with-projects=scripts/projects/rmblastn/project.lst"]
+        return args

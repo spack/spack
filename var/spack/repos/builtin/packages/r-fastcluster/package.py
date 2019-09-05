@@ -19,8 +19,8 @@ class RFastcluster(RPackage):
        the 'Python' files, see the file INSTALL in the source distribution."""
 
     homepage = "http://danifold.net/fastcluster.html"
-    url      = "https://cran.r-project.org/src/contrib/fastcluster_1.1.25.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/fastcluster/"
+    url      = "https://cloud.r-project.org/src/contrib/fastcluster_1.1.25.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/fastcluster/"
 
     version('1.1.25', sha256='f3661def975802f3dd3cec5b2a1379f3707eacff945cf448e33aec0da1ed4205')
 

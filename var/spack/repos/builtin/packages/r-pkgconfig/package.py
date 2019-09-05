@@ -11,9 +11,9 @@ class RPkgconfig(RPackage):
      given package only apply to that package,
      other packages are unaffected."""
 
-    homepage = "https://cran.rstudio.com/web/packages/pkgconfig/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/pkgconfig_2.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pkgconfig"
+    homepage = "https://cloud.r-project.org/package=pkgconfig"
+    url      = "https://cloud.r-project.org/src/contrib/pkgconfig_2.0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pkgconfig"
 
     version('2.0.2', sha256='25997754d1adbe7a251e3bf9879bb52dced27dd8b84767d558f0f644ca8d69ca')
     version('2.0.1', 'a20fd9588e37995995fa62dc4828002e')

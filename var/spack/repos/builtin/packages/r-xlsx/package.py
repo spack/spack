@@ -11,9 +11,12 @@ class RXlsx(RPackage):
     97/2000/XP/2003 file formats."""
 
     homepage = "http://code.google.com/p/rexcel/"
-    url      = "https://cran.rstudio.com/src/contrib/xlsx_0.5.7.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/xlsx_0.5.7.tar.gz"
+    listurl  = "https://cloud.r-project.org/src/contrib/Archive/xlsx"
 
+    version('0.6.1', sha256='a580bd16b5477c1c185bf681c12c1ffff4088089f97b6a37997913d93ec5a8b4')
     version('0.5.7', '36b1b16f29c54b6089b1dae923180dd5')
 
     depends_on('r-rjava', type=('build', 'run'))
     depends_on('r-xlsxjars', type=('build', 'run'))
+    depends_on('java@1.6:')
