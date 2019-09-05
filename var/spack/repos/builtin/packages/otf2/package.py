@@ -27,10 +27,10 @@ class Otf2(AutotoolsPackage):
     def configure_args(self):
         return [
             '--enable-shared',
-            'CC={0}'.format(self.compiler.cc),
-            'CXX={0}'.format(self.compiler.cxx),
-            'F77={0}'.format(self.compiler.f77),
-            'FC={0}'.format(self.compiler.fc),
+            'CC={0}'.format(spack_cc),
+            'CXX={0}'.format(spack_cxx),
+            'F77={0}'.format(spack_f77),
+            'FC={0}'.format(spack_fc),
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag)
         ]
