@@ -26,10 +26,9 @@ class Qscintilla(QMakePackage):
     # Without private sip module, python bindings will not compile
     # Ref: https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html
     # TODO implement private sip module for py-pyqt4
-    depends_on('py-pyqt4', type='build', when='^qt@4')
-    depends_on('py-pyqt5', type='build', when='^qt@5')
-    depends_on('python', type=('build', 'run'))
-    depends_on('py-sip', type='build')
+    depends_on('py-pyqt4', type=('build', 'run'), when='^qt@4 +python')
+    depends_on('py-pyqt5', type=('build', 'run'), when='^qt@5 +python')
+    depends_on('python', type=('build', 'run'), when='+python')
 
     # with qt@4.8.6, didn't have much luck in compiling newer versions
     conflicts('qt@4', when='@2.10.3:')
