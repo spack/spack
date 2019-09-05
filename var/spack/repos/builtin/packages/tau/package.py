@@ -58,6 +58,8 @@ class Tau(Package):
     variant('shmem', default=False, description='Activates SHMEM support')
     variant('gasnet', default=False, description='Activates GASNET support')
     variant('cuda', default=False, description='Activates CUDA support')
+    variant('fortran', default=True, description='Activates Fortran support')
+    variant('io', default=True, description='Activates POSIX I/O support')
 
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
@@ -88,7 +90,7 @@ class Tau(Package):
 
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
-    def set_compiler_options(self):
+    def set_compiler_options(self, spec):
 
         useropt = ["-O2 -g", self.rpath_args]
 
@@ -108,10 +110,10 @@ class Tau(Package):
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
-        compiler_options = ['-c++=%s' % self.compiler.cxx,
-                            '-cc=%s' % self.compiler.cc]
+        compiler_options = ['-c++=%s' % os.path.basename(self.compiler.cxx),
+                            '-cc=%s' % os.path.basename(self.compiler.cc)]
 
-        if self.compiler.fc:
+        if '+fortran' in spec and self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
 
         ##########
@@ -170,6 +172,12 @@ class Tau(Package):
 
         if '+opari' in spec:
             options.append('-opari')
+
+        if '+ompt' in spec:
+            options.append('-ompt')
+
+        if '+io' in spec:
+            options.append('-iowrapper')
 
         if '+binutils' in spec:
             options.append("-bfd=%s" % spec['binutils'].prefix)
@@ -231,7 +239,7 @@ class Tau(Package):
                     break
             options.append("-pythonlib=%s" % lib_path)
 
-        compiler_specific_options = self.set_compiler_options()
+        compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
         configure(*options)
         make("install")
