@@ -23,4 +23,3 @@ class RRcppannoy(RPackage):
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.3:', type=('build', 'run'))
-    

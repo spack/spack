@@ -30,4 +30,3 @@ class RRsvd(RPackage):
 
     depends_on('r@3.2.2:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
-    

@@ -48,4 +48,3 @@ class RCner(RPackage):
     depends_on('r-xvector@0.5.4:', when='@1.12.1:', type=('build', 'run'))
 
     depends_on('r-dbi@0.7:', when='@1.14.0:', type=('build', 'run'))
-    
