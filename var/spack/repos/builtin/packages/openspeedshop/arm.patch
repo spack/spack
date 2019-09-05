@@ -2,7 +2,7 @@ diff --git a/plugins/views/iot/iot_view.cxx b/plugins/views/iot/iot_view.cxx
 index f4cdf48..ef1b81f 100644
 --- a/plugins/views/iot/iot_view.cxx
 +++ b/plugins/views/iot/iot_view.cxx
-@@ -45,6 +45,20 @@ int64_t application_elapsed_time = 0.0;
+@@ -45,6 +45,20 @@
  # endif
  #endif
  /* End part 2 of 2 for Hack to get around inconsistent syscall definitions */
