@@ -36,10 +36,10 @@ class Qgis(CMakePackage):
     depends_on('qca@2.2.1') # need to pass CMAKE_CXX_STANDARD=11 option
     depends_on('py-pyqt4', when='@2')
     depends_on('py-pyqt5@5.3:', when='@3')
-    depends_on('qscintilla')
+    depends_on('qscintilla+python')
     depends_on('qjson')
-    depends_on('py-requests')
-    depends_on('py-psycopg2')
+    depends_on('py-requests', type=('build', 'run'))
+    depends_on('py-psycopg2', type=('build', 'run'))
     depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('libzip')
     depends_on('exiv2')
@@ -71,10 +71,12 @@ class Qgis(CMakePackage):
         # qtwebkit module was removed from qt as of version 5.6
         # needs to be compiled as a separate package
         args.append('-DWITH_QTWEBKIT=OFF')
+        args.append('-DUSE_OPENCL=OFF')
         # cmake couldn't determine the following paths
         args.append("-DEXPAT_LIBRARY={0}".format(self.spec['expat'].libs))
         args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].libs)+'/pkgconfig')
         args.append('-DPOSTGRES_PREFIX={0}'.format(self.spec['postgresql'].prefix))
         args.append('-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix)+'/include')
         args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib')
+        args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/lib/pkgconfig')
         return args
