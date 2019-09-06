@@ -131,66 +131,54 @@ def get_path_from_module_contents(text, module_name):
                 return path[:-(len(ending) + 1)]
         return path
 
+    def match_pattern_and_strip(line, pattern, strip=[]):
+        if re.search(pattern, line):
+            paths = get_path_args_from_module_line(line)
+            for path in paths:
+                path = strip_path(path, strip)
+                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+
+    def match_flag_and_strip(line, flag, strip=[]):
+        flag_idx = line.find(flag)
+        if flag_idx >= 0:
+            end = line.find(' ', flag_idx)
+            if end >= 0:
+                path = line[flag_idx + len(flag):end]
+            else:
+                path = line[flag_idx + len(flag):]
+            path = strip_path(path, strip)
+            path_occurrences[path] = path_occurrences.get(path, 0) + 1
+
+    lib_endings = ['/lib64', '/lib']
+    bin_endings = ['/bin']
+    man_endings = ['/share/man', '/man']
+
     for line in text:
         # Check entries of LD_LIBRARY_PATH and CRAY_LD_LIBRARY_PATH
         pattern = r'\W(CRAY_)?LD_LIBRARY_PATH'
-        if re.search(pattern, line):
-            paths = get_path_args_from_module_line(line)
-            for path in paths:
-                path = strip_path(path, ['/lib64', '/lib'])
-                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+        match_pattern_and_strip(line, pattern, lib_endings)
 
         # Check {name}_DIR entries
         pattern = r'\W{0}_DIR'.format(pkg_var_prefix)
-        if re.search(pattern, line):
-            paths = get_path_args_from_module_line(line)
-            for path in paths:
-                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+        match_pattern_and_strip(line, pattern)
 
         # Check {name}_ROOT entries
         pattern = r'\W{0}_ROOT'.format(pkg_var_prefix)
-        if re.search(pattern, line):
-            paths = get_path_args_from_module_line(line)
-            for path in paths:
-                path_occurrences[path] = path_occurrences.get(path, 0) + 1
-
-        # Check entries that add a `-rpath` flag to a variable
-        rpath = line.find('-rpath/')
-        if rpath >= 0:
-            end = line.find(' ', rpath)
-            if end >= 0:
-                path = line[rpath + 6:end]
-            else:
-                path = line[rpath + 6:]
-            path = strip_path(path, ['/lib64', '/lib'])
-            path_occurrences[path] = path_occurrences.get(path, 0) + 1
-
-        # Check entries that add a `-L` flag to a variable
-        lib_paths = line.find('-L/')
-        if lib_paths >= 0:
-            end = line.find(' ', lib_paths)
-            if end >= 0:
-                path = line[lib_paths + 2:end]
-            else:
-                path = line[lib_paths + 2:]
-            path = strip_path(path, ['/lib64', '/lib'])
-            path_occurrences[path] = path_occurrences.get(path, 0) + 1
+        match_pattern_and_strip(line, pattern)
 
         # Check entries that update the PATH variable
         pattern = r'\WPATH'
-        if re.search(pattern, line):
-            paths = get_path_args_from_module_line(line)
-            for path in paths:
-                path = strip_path(path, ['/bin'])
-                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+        match_pattern_and_strip(line, pattern, bin_endings)
 
         # Check entries that update the MANPATH variable
         pattern = r'MANPATH'
-        if re.search(pattern, line):
-            paths = get_path_args_from_module_line(line)
-            for path in paths:
-                path = strip_path(path, ['/share/man', '/man'])
-                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+        match_pattern_and_strip(line, pattern, man_endings)
+
+        # Check entries that add a `-rpath` flag to a variable
+        match_flag_and_strip(line, '-rpath', lib_endings)
+
+        # Check entries that add a `-L` flag to a variable
+        match_flag_and_strip(line, '-L', lib_endings)
 
     # Whichever path appeared most in the module, we assume is the correct path
     if len(path_occurrences) > 0:
