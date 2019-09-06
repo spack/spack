@@ -31,6 +31,8 @@ modules:
       - asciitoh5
       - brainbuilder
       - brayns
+      - brayns-brainatlas
+      - brayns-topologyviewer
       - brion
       - connectome-tools
       - functionalizer
