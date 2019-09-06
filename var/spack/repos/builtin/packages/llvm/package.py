@@ -334,8 +334,10 @@ class Llvm(CMakePackage):
             gcc_prefix = ancestor(self.compiler.cc, 2)
             cmake_args.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
 
-        if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
-            cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
+        if spec.satisfies('@4.0.0:'):
+            if spec.satisfies('platform=cray') or \
+               spec.satisfies('platform=linux'):
+                cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
 
         if '+flang' not in spec:
             # Semicolon seperated list of projects to enable
