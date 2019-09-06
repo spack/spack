@@ -129,21 +129,22 @@ def mirror_remove(args):
     old_value = mirrors.pop(name)
     spack.config.set('mirrors', mirrors, scope=args.scope)
 
-    msg_url = "url %s"
-    msg = ["Removed mirror %s with"]
+    debug_msg_url = "url %s"
+    debug_msg = ["Removed mirror %s with"]
     values = [name]
 
     try:
         fetch_value = old_value['fetch']
         push_value = old_value['push']
 
-        msg.extend(("fetch", msg_url, "and push", msg_url))
+        debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
         values.extend((fetch_value, push_value))
     except TypeError:
-        msg.append(msg_url)
+        debug_msg.append(debug_msg_url)
         values.append(old_value)
 
-    tty.msg(" ".join(msg) % tuple(values))
+    tty.debug(" ".join(debug_msg) % tuple(values))
+    tty.msg("Removed mirror %s." % name)
 
 
 def mirror_set_url(args):
