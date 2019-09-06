@@ -3,14 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from six.moves.urllib.parse import urlparse as _urlparse
+import six.moves.urllib.parse as urllib_parse
 
 import spack
-from spack.util.url import parse as urlparse
+import spack.util.url as url_util
 
 
 def create_s3_session(url):
-    parsed_url = urlparse(url)
+    parsed_url = url_util.parse(url)
     if parsed_url.scheme != 's3':
         raise ValueError(
                 'Can not create S3 session from URL with scheme: {}'.format(
@@ -36,7 +36,7 @@ def create_s3_session(url):
 
     endpoint_url = parsed_url.netloc
     if endpoint_url:
-        if _urlparse(endpoint_url, scheme=None).scheme is None:
+        if urllib_parse.urlparse(endpoint_url, scheme=None).scheme is None:
             endpoint_url = '://'.join(('https', endpoint_url))
 
         s3_client_args['endpoint_url'] = endpoint_url

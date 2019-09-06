@@ -7,17 +7,16 @@
 Utility functions for parsing, formatting, and manipulating URLs.
 """
 
-import itertools as it
-
-from os.path import join as pathjoin, split as pathsplit
+import itertools
+import os.path
 
 from six import string_types
-from six.moves.urllib.parse import urlparse, ParseResult
+import six.moves.urllib.parse as urllib_parse
 
-from spack.util.path import canonicalize_path
+import spack.util.path
 
 
-class ParseResultWrapper(ParseResult):
+class ParseResultWrapper(urllib_parse.ParseResult):
     def __setattr__(self, key, val):
         object.__setattr__(self, key, val)
 
@@ -41,7 +40,7 @@ def _split_all(path):
     a = path
     old_a = None
     while a != old_a:
-        (old_a, (a, b)) = a, pathsplit(a)
+        (old_a, (a, b)) = a, os.path.split(a)
 
         if a or b:
             result.insert(0, b or '/')
@@ -51,7 +50,7 @@ def _split_all(path):
 
 def parse(url, scheme='file'):
     """Parse a mirror url."""
-    url_obj = (urlparse(url, scheme=scheme, allow_fragments=False)
+    url_obj = (urllib_parse.urlparse(url, scheme=scheme, allow_fragments=False)
             if isinstance(url, string_types) else url)
 
     original_s3_attrs = {}
@@ -66,7 +65,7 @@ def parse(url, scheme='file'):
     extra_attrs = {}
 
     if scheme == 'file':
-        path = canonicalize_path(netloc + path)
+        path = spack.util.path.canonicalize_path(netloc + path)
         while path.startswith('//'):
             path = path[1:]
         netloc = ''
@@ -101,7 +100,7 @@ def parse(url, scheme='file'):
 
             extra_attrs["s3_bucket"] = (
                     path_tokens.pop(0) if path_tokens else None)
-            path = pathjoin('', *path_tokens)
+            path = os.path.join('', *path_tokens)
 
             credentials, netloc = (netloc.split('@', 1) + [None])[:2]
             if netloc is None:
@@ -138,7 +137,7 @@ def format(parsed_url):
     scheme = scheme.lower()
 
     if scheme == 's3':
-        path = pathjoin(
+        path = os.path.join(
                 *[x for x in ('/', parsed_url.s3_bucket, path) if x])
 
         credentials = None
@@ -179,8 +178,8 @@ def format(parsed_url):
             path = '//'
         else:
             path_tokens = _split_all(path)
-            netloc = pathjoin(*path_tokens[:2])
-            path = pathjoin('/', *path_tokens[2:])
+            netloc = os.path.join(*path_tokens[:2])
+            path = os.path.join('/', *path_tokens[2:])
             if path == '/':
                 path = ''
 
@@ -201,9 +200,9 @@ def join(base_url, path, *extra):
     extra_attrs = {}
 
     path_tokens = [
-            part for part in it.chain(
+            part for part in itertools.chain(
                 _split_all(path),
-                it.chain.from_iterable(
+                itertools.chain.from_iterable(
                     _split_all(extra_path) for extra_path in extra))
 
                 if part and part != '/']
@@ -223,7 +222,7 @@ def join(base_url, path, *extra):
                 base_url.s3_bucket if base_url.s3_bucket
                 else path_tokens.pop(0) if path_tokens else None)
 
-    base_path = pathjoin('', base_path, *path_tokens)
+    base_path = os.path.join('', base_path, *path_tokens)
 
     result = ParseResultWrapper(scheme=scheme,
                                 netloc=netloc,

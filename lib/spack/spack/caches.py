@@ -13,9 +13,9 @@ import spack.paths
 import spack.config
 import spack.fetch_strategy
 import spack.util.file_cache
-from spack.util.path import canonicalize_path
-from spack.util.url import join as url_join, parse as url_parse
-from spack.util.web import url_exists
+import spack.util.path
+import spack.util.url as url_util
+import spack.util.web as web_util
 
 
 def _misc_cache():
@@ -27,7 +27,7 @@ def _misc_cache():
     path = spack.config.get('config:misc_cache')
     if not path:
         path = os.path.join(spack.paths.user_config_path, 'cache')
-    path = canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path)
 
     return spack.util.file_cache.FileCache(path)
 
@@ -45,14 +45,14 @@ def _fetch_cache():
     path = spack.config.get('config:source_cache')
     if not path:
         path = os.path.join(spack.paths.var_path, "cache")
-    path = canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path)
 
     return spack.fetch_strategy.FsCache(path)
 
 
 class MirrorCache(object):
     def __init__(self, root):
-        self.root = url_parse(root)
+        self.root = url_util.parse(root)
         self.new_resources = set()
         self.existing_resources = set()
 
@@ -60,9 +60,9 @@ class MirrorCache(object):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
 
-        dst = url_parse(url_join(self.root, relative_dest))
+        dst = url_util.parse(url_util.join(self.root, relative_dest))
 
-        if url_exists(dst):
+        if web_util.url_exists(dst):
             self.existing_resources.add(relative_dest)
         else:
             self.new_resources.add(relative_dest)

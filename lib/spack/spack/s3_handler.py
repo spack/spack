@@ -8,16 +8,13 @@ except ImportError:
 
 from io import BufferedReader
 
-from six.moves.urllib.parse import urlparse as _urlparse
-from six.moves.urllib.response import addinfourl
-from six.moves.urllib.request import build_opener, install_opener, HTTPSHandler
-
-from llnl.util.lang import memoized
+import six.moves.urllib.response as urllib_response
+import six.moves.urllib.request as urllib_request
 
 import spack
-from spack.util.url import parse as urlparse, join as urljoin
 
-from spack.util.s3 import create_s3_session
+import spack.util.url as url_util
+import spack.util.s3 as s3_util
 
 
 # NOTE(opadron): Workaround issue in boto where its StreamingBody implementation
@@ -127,8 +124,8 @@ HTTP_HEADERS_KEY_ALIASES = (
 
 
 def _s3_open(url):
-    parsed = urlparse(url)
-    s3 = create_s3_session(parsed)
+    parsed = url_util.parse(url)
+    s3 = s3_util.create_s3_session(parsed)
     obj = s3.get_object(
             Bucket=parsed.s3_bucket,
             Key=parsed.path)
@@ -142,21 +139,21 @@ def _s3_open(url):
     return url, headers, stream
 
 
-class UrllibS3Handler(HTTPSHandler):
+class UrllibS3Handler(urllib_request.HTTPSHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
         from botocore.exceptions import ClientError
         try:
             url, headers, stream = _s3_open(orig_url)
-            return addinfourl(stream, headers, url)
+            return urllib_response.addinfourl(stream, headers, url)
         except ClientError as err:
             # if no such [KEY], but [KEY]/index.html exists,
             # return that, instead.
             if err.response['Error']['Code'] == 'NoSuchKey':
                 try:
                     _, headers, stream = _s3_open(
-                            urljoin(orig_url, 'index.html'))
-                    return addinfourl(stream, headers, orig_url)
+                            url_util.join(orig_url, 'index.html'))
+                    return urllib_response.addinfourl(stream, headers, orig_url)
 
                 except ClientError as err2:
                     if err.response['Error']['Code'] == 'NoSuchKey':
@@ -167,7 +164,7 @@ class UrllibS3Handler(HTTPSHandler):
             raise err
 
 
-S3OpenerDirector = build_opener(UrllibS3Handler())
+S3OpenerDirector = urllib_request.build_opener(UrllibS3Handler())
 
 open = S3OpenerDirector.open
 

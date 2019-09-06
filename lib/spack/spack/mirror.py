@@ -33,10 +33,10 @@ import spack.url as url
 import spack.fetch_strategy as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.url as url_util
 import spack.spec
 from spack.version import VersionList
 from spack.util.compression import allowed_archive
-from spack.util.url import parse as url_parse
 from spack.util.spack_yaml import syaml_dict
 
 
@@ -372,7 +372,7 @@ def create(path, specs, **kwargs):
     it creates specs for those versions.  If the version satisfies any spec
     in the specs list, it is downloaded and added to the mirror.
     """
-    parsed = url_parse(path)
+    parsed = url_util.parse(path)
     is_file_scheme = (parsed.scheme == 'file')
 
     # Make sure nothing is in the way.

@@ -16,9 +16,6 @@ import sys
 import traceback
 import hashlib
 
-from types import CodeType, FunctionType
-
-from six import PY3
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
 import multiprocessing.pool
@@ -37,18 +34,17 @@ except ImportError:
 from llnl.util.filesystem import mkdirp
 import llnl.util.tty as tty
 
-import spack.config
 import spack.cmd
-import spack.url
-import spack.stage
+import spack.config
 import spack.error
+import spack.stage
+import spack.s3_handler
+import spack.url
 import spack.util.crypto
+import spack.util.s3 as s3_util
+import spack.util.url as url_util
 
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
-from spack.util.s3 import create_s3_session
-from spack.util.url import join as urljoin, parse as urlparse
-
-from spack.s3_handler import open as s3_open
 
 
 # Timeout in seconds for web requests
@@ -105,7 +101,7 @@ __UNABLE_TO_VERIFY_SSL = (
         ))(sys.version_info)
 
 def read_from_url(url, accept_content_type=None):
-    parsed_url = urlparse(url)
+    parsed_url = url_util.parse(url)
     context = None
 
     verify_ssl = spack.config.get('config:verify_ssl')
@@ -114,7 +110,7 @@ def read_from_url(url, accept_content_type=None):
             verify_ssl and (
                 parsed_url.scheme == 'https' or (
                     parsed_url.scheme == 's3' and
-                    urlparse(
+                    url_util.parse(
                         parsed_url.netloc, scheme='https').scheme == 'https')))
 
     if __UNABLE_TO_VERIFY_SSL and user_expects_verify_ssl():
@@ -167,11 +163,11 @@ def read_from_url(url, accept_content_type=None):
 def push_to_url(local_path, remote_path, **kwargs):
     keep_original = kwargs.get('keep_original', True)
 
-    local_url = urlparse(local_path)
+    local_url = url_util.parse(local_path)
     if local_url.scheme != 'file':
         raise ValueError('local path must be a file:// url')
 
-    remote_url = urlparse(remote_path)
+    remote_url = url_util.parse(remote_path)
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
@@ -179,7 +175,7 @@ def push_to_url(local_path, remote_path, **kwargs):
             verify_ssl and (
                 remote_url.scheme == 'https' or (
                     remote_url.scheme == 's3' and
-                    urlparse(
+                    url_util.parse(
                         remote_url.netloc, scheme='https').scheme == 'https')))
 
     if __UNABLE_TO_VERIFY_SSL and user_expects_verify_ssl():
@@ -205,7 +201,7 @@ def push_to_url(local_path, remote_path, **kwargs):
     elif remote_url.scheme == 's3':
         extra_args = kwargs.get('extra_args', {})
 
-        s3 = create_s3_session(remote_url)
+        s3 = s3_util.create_s3_session(remote_url)
         s3.upload_file(local_url.path, remote_url.s3_bucket,
                        remote_url.path, ExtraArgs=extra_args)
 
@@ -218,13 +214,13 @@ def push_to_url(local_path, remote_path, **kwargs):
 
 
 def url_exists(path):
-    url = urlparse(path)
+    url = url_util.parse(path)
 
     if url.scheme == 'file':
         return os.path.exists(url.path)
 
     if url.scheme == 's3':
-        s3 = create_s3_session(url)
+        s3 = s3_util.create_s3_session(url)
         from botocore.exceptions import ClientError
         try:
             s3.get_object(Bucket=url.s3_bucket, Key=url.path)
@@ -244,14 +240,14 @@ def url_exists(path):
 
 
 def remove_url(path):
-    url = urlparse(path)
+    url = url_util.parse(path)
 
     if url.scheme == 'file':
         os.remove(url.path)
         return
 
     if url.scheme == 's3':
-        s3 = create_s3_session(url)
+        s3 = s3_util.create_s3_session(url)
         s3.delete_object(Bucket=url.s3_bucket, Key=url.path)
         return
 
@@ -294,15 +290,16 @@ def _iter_s3_prefix(client, url, num_entries=1024):
 
 
 def list_url(path):
-    url = urlparse(path)
+    url = url_util.parse(path)
 
     if url.scheme == 'file':
         return os.listdir(url.path)
 
     if url.scheme == 's3':
-        s3 = create_s3_session(url)
+        s3 = s3_util.create_s3_session(url)
         return list(set(key.split('/', 1)[0]
-                for key in _iter_s3_prefix(create_s3_session(url), url)))
+                for key in _iter_s3_prefix(
+                    s3_util.create_s3_session(url), url)))
 
 
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
@@ -340,7 +337,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
         while link_parser.links:
             raw_link = link_parser.links.pop()
-            abs_link = urljoin(response_url, raw_link.strip())
+            abs_link = url_util.join(response_url, raw_link.strip())
 
             links.add(abs_link)
 
@@ -424,7 +421,7 @@ def _urlopen(req, *args, **kwargs):
         kwargs.pop('context', None)
 
     return (
-            s3_open if urlparse(url).scheme == 's3'
+            spack.s3_handler.open if url_util.parse(url).scheme == 's3'
             else urlopen)(req, *args, **kwargs)
 
 

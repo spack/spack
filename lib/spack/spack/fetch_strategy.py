@@ -30,7 +30,7 @@ import copy
 import xml.etree.ElementTree
 from functools import wraps
 from six import string_types, with_metaclass
-from six.moves.urllib.parse import urlparse
+import six.moves.urllib.parse as urllib_parse
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -40,6 +40,8 @@ import spack.config
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
+import spack.util.web as web_util
+
 from spack.util.executable import which
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
@@ -450,9 +452,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        # delay import to avoid circular imports
-        from spack.util.web import push_to_url
-        push_to_url(self.archive_file, destination)
+        web_util.push_to_url(self.archive_file, destination)
 
     @_needs_stage
     def check(self):
@@ -1214,7 +1214,7 @@ def from_url_scheme(url, *args, **kwargs):
        in the given url."""
 
     url = kwargs.get('url', url)
-    parsed_url = urlparse(url)
+    parsed_url = urllib_parse.urlparse(url)
 
     scheme_mapping = (
             kwargs.get('scheme_mapping') or

@@ -25,14 +25,12 @@ import spack.util.gpg as gpg_util
 import spack.relocate as relocate
 import spack.util.spack_yaml as syaml
 import spack.mirror
+import spack.util.url as url_util
+import spack.util.web as web_util
+
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-from spack.util.web import spider
-from spack.util.web import list_url, url_exists
-from spack.util.web import read_from_url, push_to_url, remove_url
-from spack.util.url import join as urljoin, format as urlformat
-from spack.util.url import parse as urlparse
 from spack.util.executable import ProcessError
 
 _build_cache_relative_path = 'build_cache'
@@ -276,15 +274,15 @@ def generate_package_index(build_cache_dir):
         index_html_path = os.path.join(tmpdir, 'index.html')
         file_list = (
                 entry
-                for entry in list_url(build_cache_dir)
+                for entry in web_util.list_url(build_cache_dir)
                 if (entry.endswith('.yaml')
                     or entry.endswith('.key')))
 
         _generate_html_index(file_list, index_html_path)
 
-        push_to_url(
+        web_util.push_to_url(
                 index_html_path,
-                urljoin(build_cache_dir, 'index.html'),
+                url_util.join(build_cache_dir, 'index.html'),
                 keep_original=False,
                 extra_args={'ContentType': 'text/html'})
     finally:
@@ -310,15 +308,15 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spackfile_path = os.path.join(
         build_cache_dir, tarball_path_name(spec, '.spack'))
 
-    remote_spackfile_path = urljoin(
+    remote_spackfile_path = url_util.join(
             outdir, os.path.relpath(spackfile_path, tmpdir))
 
     mkdirp(tarfile_dir)
-    if url_exists(remote_spackfile_path):
+    if web_util.url_exists(remote_spackfile_path):
         if force:
-            remove_url(remote_spackfile_path)
+            web_util.remove_url(remote_spackfile_path)
         else:
-            raise NoOverwriteException(urlformat(remote_spackfile_path))
+            raise NoOverwriteException(url_util.format(remote_spackfile_path))
 
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
@@ -328,14 +326,14 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     specfile_path = os.path.realpath(
         os.path.join(build_cache_dir, specfile_name))
 
-    remote_specfile_path = urljoin(
+    remote_specfile_path = url_util.join(
             outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
 
-    if url_exists(remote_specfile_path):
+    if web_util.url_exists(remote_specfile_path):
         if force:
-            remove_url(remote_specfile_path)
+            web_util.remove_url(remote_specfile_path)
         else:
-            raise NoOverwriteException(urlformat(remote_specfile_path))
+            raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
@@ -391,7 +389,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spec_dict['full_hash'] = spec.full_hash()
 
     tty.debug('The full_hash ({0}) of {1} will be written into {2}'.format(
-        spec_dict['full_hash'], spec.name, urlformat(remote_specfile_path)))
+        spec_dict['full_hash'],
+        spec.name,
+        url_util.format(remote_specfile_path)))
     tty.debug(spec.tree())
 
     with open(specfile_path, 'w') as outfile:
@@ -413,14 +413,16 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     if not unsigned:
         os.remove('%s.asc' % specfile_path)
 
-    push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
-    push_to_url(specfile_path, remote_specfile_path, keep_original=False)
+    web_util.push_to_url(
+            spackfile_path, remote_spackfile_path, keep_original=False)
+    web_util.push_to_url(
+            specfile_path, remote_specfile_path, keep_original=False)
 
     try:
         # create an index.html for the build_cache directory so specs can be
         # found
         if regenerate_index:
-            generate_package_index(urljoin(
+            generate_package_index(url_util.join(
                 outdir, os.path.relpath(build_cache_dir, tmpdir)))
     finally:
         shutil.rmtree(tmpdir)
@@ -440,7 +442,8 @@ def download_tarball(spec):
     tarball = tarball_path_name(spec, '.spack')
 
     for mirror in spack.mirror.MirrorCollection().values():
-        url = urljoin(mirror.fetch_url, _build_cache_relative_path, tarball)
+        url = url_util.join(
+                mirror.fetch_url, _build_cache_relative_path, tarball)
 
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
@@ -658,7 +661,7 @@ def get_specs(force=False):
 
     urls = set()
     for mirror in spack.mirror.MirrorCollection().values():
-        fetch_url_build_cache = urljoin(
+        fetch_url_build_cache = url_util.join(
                 mirror.fetch_url, _build_cache_relative_path)
 
         mirror_dir = fetch_url_build_cache.local_file_path
@@ -668,12 +671,12 @@ def get_specs(force=False):
                 files = os.listdir(mirror_dir)
                 for file in files:
                     if re.search('spec.yaml', file):
-                        link = urljoin(fetch_url_build_cache, file)
+                        link = url_util.join(fetch_url_build_cache, file)
                         urls.add(link)
         else:
             tty.msg("Finding buildcaches at %s" %
-                    urlformat(fetch_url_build_cache))
-            p, links = spider(fetch_url_build_cache)
+                    url_util.format(fetch_url_build_cache))
+            p, links = web_util.spider(fetch_url_build_cache)
             for link in links:
                 if re.search("spec.yaml", link):
                     urls.add(link)
@@ -710,7 +713,7 @@ def get_keys(install=False, trust=False, force=False):
     keys = set()
 
     for mirror in spack.mirror.MirrorCollection().values():
-        fetch_url_build_cache = urljoin(
+        fetch_url_build_cache = url_util.join(
                 mirror.fetch_url, _build_cache_relative_path)
 
         mirror_dir = fetch_url_build_cache.local_file_path
@@ -719,12 +722,12 @@ def get_keys(install=False, trust=False, force=False):
             files = os.listdir(mirror_dir)
             for file in files:
                 if re.search(r'\.key', file):
-                    link = urljoin(fetch_url_build_cache, file)
+                    link = url_util.join(fetch_url_build_cache, file)
                     keys.add(link)
         else:
             tty.msg("Finding public keys at %s" %
-                    urlformat(fetch_url_build_cache))
-            p, links = spider(fetch_url_build_cache, depth=1)
+                    url_util.format(fetch_url_build_cache))
+            p, links = web_util.spider(fetch_url_build_cache, depth=1)
 
             for link in links:
                 if re.search(r'\.key', link):
@@ -774,7 +777,7 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
         spec.short_spec, '' if rebuild_on_errors else 'not ')
 
     try:
-        _, _, yaml_file = read_from_url(file_path)
+        _, _, yaml_file = web_util.read_from_url(file_path)
         yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
     except URLError as url_err:
         err_msg = [
@@ -860,20 +863,22 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
 
 def _download_buildcache_entry(mirror_root, descriptions):
     for description in descriptions:
-        url = os.path.join(mirror_root, description['url'])
+        description_url = os.path.join(mirror_root, description['url'])
         path = description['path']
         fail_if_missing = description['required']
 
         mkdirp(path)
 
-        stage = Stage(url, name="build_cache", path=path, keep=True)
+        stage = Stage(
+                description_url, name="build_cache", path=path, keep=True)
 
         try:
             stage.fetch()
         except fs.FetchError as e:
             tty.debug(e)
             if fail_if_missing:
-                tty.error('Failed to download required url {0}'.format(url))
+                tty.error('Failed to download required url {0}'.format(
+                    description_url))
                 return False
 
     return True

@@ -12,18 +12,18 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.concretize
 import spack.config
+import spack.environment as ev
 import spack.mirror
 import spack.repo
-import spack.cmd.common.arguments as arguments
-import spack.environment as ev
-import spack.util.path
+import spack.util.url as url_util
+import spack.util.web as web_util
+
 from spack.spec import Spec
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
-from spack.util.url import format as url_format
-from spack.util.web import url_exists
 
 description = "manage mirrors (source and binary)"
 section = "config"
@@ -100,7 +100,7 @@ def setup_parser(subparser):
 
 def mirror_add(args):
     """Add a mirror to Spack."""
-    url = urlformat(args.url)
+    url = url_util.format(args.url)
 
     mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
@@ -149,7 +149,7 @@ def mirror_remove(args):
 
 def mirror_set_url(args):
     """Change the URL of a mirror."""
-    url = urlformat(args.url)
+    url = url_util.format(args.url)
 
     mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
@@ -267,10 +267,10 @@ def mirror_create(args):
         mirror = spack.mirror.MirrorCollection(
                 args.directory or spack.config.get('config:source_cache'))
 
-        directory = url_format(mirror.push_url)
+        directory = url_util.format(mirror.push_url)
 
         # Make sure nothing is in the way.
-        existed = url_exists(directory)
+        existed = web_util.url_exists(directory)
 
         # Actually do the work to create the mirror
         present, mirrored, error = spack.mirror.create(

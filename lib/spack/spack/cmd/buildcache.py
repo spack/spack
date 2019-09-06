@@ -22,10 +22,10 @@ import spack.store
 import spack.config
 import spack.repo
 import spack.store
+import spack.util.url as url_util
+
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
-
-from spack.util.url import format as url_format
 
 from spack.cmd import display_specs
 
@@ -321,7 +321,7 @@ def createtarball(args):
         outdir = args.directory
 
     mirror = spack.mirror.MirrorCollection().lookup(outdir)
-    outdir = url_format(mirror.push_url)
+    outdir = url_util.format(mirror.push_url)
 
     signkey = None
     if args.key:

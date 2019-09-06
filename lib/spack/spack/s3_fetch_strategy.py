@@ -17,8 +17,12 @@ from llnl.util.filesystem import working_dir
 from llnl.util import tty
 
 import spack
+import spack.util.url as url_util
+import spack.util.web as web_util
+
+
+# TODO(opadron): remove import when merging
 from spack.fetch_strategy import URLFetchStrategy
-from spack.util.url import parse as urlparse
 
 
 def _needs_stage(fun):
@@ -44,19 +48,16 @@ class S3FetchStrategy(URLFetchStrategy):
         try:
             super(S3FetchStrategy, self).__init__(*args, **kwargs)
         except ValueError:
-            if not kwargs.get('url', url):
+            if not kwargs.get('url'):
                 raise ValueError("S3FetchStrategy requires a url for fetching.")
 
     @_needs_stage
     def fetch(self):
-        # delay import to avoid circular imports
-        from spack.util.web import read_from_url
-
         if self.archive_file:
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
-        parsed_url = urlparse(self.url)
+        parsed_url = url_util.parse(self.url)
         if parsed_url.scheme != 's3':
             raise ValueError('S3FetchStrategy can only fetch from s3:// urls.')
 
@@ -66,7 +67,7 @@ class S3FetchStrategy(URLFetchStrategy):
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
-            _, headers, stream = read_from_url(self.url)
+            _, headers, stream = web_util.read_from_url(self.url)
 
             with open(basename, 'wb') as f:
                 copyfileobj(stream, f)
