@@ -33,7 +33,7 @@ import spack.url as url
 import spack.fetch_strategy as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.spec import Spec
+import spack.spec
 from spack.version import VersionList
 from spack.util.compression import allowed_archive
 from spack.util.url import parse as url_parse
@@ -320,7 +320,7 @@ def get_matching_versions(specs, **kwargs):
 
             # Generate only versions that satisfy the spec.
             if spec.concrete or v.satisfies(spec.versions):
-                s = Spec(pkg.name)
+                s = spack.spec.Spec(pkg.name)
                 s.versions = VersionList([v])
                 s.variants = spec.variants.copy()
                 # This is needed to avoid hanging references during the
@@ -380,7 +380,8 @@ def create(path, specs, **kwargs):
         raise MirrorError("%s already exists and is a file." % parsed.path)
 
     # automatically spec-ify anything in the specs array.
-    specs = [s if isinstance(s, Spec) else Spec(s) for s in specs]
+    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s)
+                for s in specs]
 
     # Get concrete specs for each matching version of these specs.
     version_specs = get_matching_versions(

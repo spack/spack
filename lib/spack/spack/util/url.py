@@ -21,6 +21,15 @@ class ParseResultWrapper(ParseResult):
     def __setattr__(self, key, val):
         object.__setattr__(self, key, val)
 
+    @property
+    def local_file_path(self):
+        """If [self] is a file:// URL, return the absolute path to the local
+        file or directory referenced by [self].  Otherwise, return None.
+        """
+        if self.scheme == 'file':
+            return self.path
+        return None
+
     def __str__(self):
         return ''.join((
             super(ParseResultWrapper, self).__str__(),

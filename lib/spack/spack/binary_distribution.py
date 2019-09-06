@@ -661,8 +661,8 @@ def get_specs(force=False):
         fetch_url_build_cache = urljoin(
                 mirror.fetch_url, _build_cache_relative_path)
 
-        if fetch_url_build_cache.startswith('file://'):
-            mirror_dir = fetch_url_build_cache.replace('file://', '')
+        mirror_dir = fetch_url_build_cache.local_file_path
+        if mirror_dir:
             tty.msg("Finding buildcaches in %s" % mirror_dir)
             if os.path.exists(mirror_dir):
                 files = os.listdir(mirror_dir)
@@ -671,7 +671,8 @@ def get_specs(force=False):
                         link = urljoin(fetch_url_build_cache, file)
                         urls.add(link)
         else:
-            tty.msg("Finding buildcaches on %s" % fetch_url)
+            tty.msg("Finding buildcaches at %s" %
+                    urlformat(fetch_url_build_cache))
             p, links = spider(fetch_url_build_cache)
             for link in links:
                 if re.search("spec.yaml", link):
@@ -712,8 +713,8 @@ def get_keys(install=False, trust=False, force=False):
         fetch_url_build_cache = urljoin(
                 mirror.fetch_url, _build_cache_relative_path)
 
-        if fetch_url_build_cache.startswith('file://'):
-            mirror_dir = fetch_url_build_cache.replace('file://', '')
+        mirror_dir = fetch_url_build_cache.local_file_path
+        if mirror_dir:
             tty.msg("Finding public keys in %s" % mirror_dir)
             files = os.listdir(mirror_dir)
             for file in files:
@@ -721,7 +722,8 @@ def get_keys(install=False, trust=False, force=False):
                     link = urljoin(fetch_url_build_cache, file)
                     keys.add(link)
         else:
-            tty.msg("Finding public keys on %s" % fetch_url)
+            tty.msg("Finding public keys at %s" %
+                    urlformat(fetch_url_build_cache))
             p, links = spider(fetch_url_build_cache, depth=1)
 
             for link in links:
