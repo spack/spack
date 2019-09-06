@@ -13,7 +13,7 @@ import getpass
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, working_dir
+from llnl.util.filesystem import mkdirp, prefixes, working_dir
 
 import spack.paths
 import spack.stage
@@ -411,23 +411,30 @@ def check_stage_dir_perms(prefix, path):
     # Ensure the path's subdirectories -- to `$user` -- have their parent's
     # perms while those from `$user` on are owned and restricted to the
     # user.
-    status = os.stat(prefix)
-    gid = status.st_gid
+    assert path.startswith(prefix)
+
+    prefix_status = os.stat(prefix)
     uid = os.getuid()
-    user = getpass.getuser()
-    parts = path[len(prefix) + 1:].split(os.path.sep)
-    have_user = False
-    for part in parts:
-        if part == user:
-            have_user = True
-        prefix = os.path.join(prefix, part)
-        prefix_status = os.stat(prefix)
-        if not have_user:
-            assert gid == prefix_status.st_gid
-            assert status.st_mode == prefix_status.st_mode
-        else:
-            assert uid == status.st_uid
-            assert status.st_mode & stat.S_IRWXU == stat.S_IRWXU
+
+    paths = prefixes(path)
+    i = paths.index(prefix)
+
+    parts = path.strip(os.path.sep).split(os.path.sep)
+    try:
+        j = max(parts.index(getpass.getuser()), i)
+    except ValueError:
+        j = None
+
+    for p in paths[i:j]:
+        par_status = os.stat(os.path.dirname(p))
+        assert prefix_status.st_gid == par_status.st_gid
+        assert prefix_status.st_mode == par_status.st_mode
+
+    if j is not None:
+        for p in paths[j:]:
+            p_status = os.stat(p)
+            assert uid == p_status.st_uid
+            assert p_status.st_mode & stat.S_IRWXU == stat.S_IRWXU
 
 
 @pytest.mark.usefixtures('mock_packages')

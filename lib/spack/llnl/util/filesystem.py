@@ -49,6 +49,7 @@ __all__ = [
     'is_exe',
     'join_path',
     'mkdirp',
+    'prefixes',
     'remove_dead_links',
     'remove_if_dead_link',
     'remove_linked_tree',
@@ -1548,3 +1549,10 @@ def search_paths_for_executables(*path_hints):
             executable_paths.append(bin_dir)
 
     return executable_paths
+
+
+def prefixes(path):
+    """Returns a list containing the path and its ancestors, top-to-bottom."""
+    parts = [p or os.sep for p in path.rstrip(os.sep).split(os.sep)]
+    paths = [os.path.join(*parts[:i]) for i, _ in enumerate(parts, 1)]
+    return paths
