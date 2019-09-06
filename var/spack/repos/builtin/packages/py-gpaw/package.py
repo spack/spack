@@ -23,8 +23,10 @@ class PyGpaw(PythonPackage):
     variant('fftw', default=True, description='Build with FFTW support')
 
     depends_on('mpi', when='+mpi', type=('build', 'link', 'run'))
-    depends_on('python@2.6:')
-    depends_on('py-ase@3.13.0:', type=('build', 'run'))
+    depends_on('python@2.6:', type=('build', 'run'), when='@:1.3.0')
+    depends_on('python@3.5:', type=('build', 'run'), when='@19.8.1:')
+    depends_on('py-ase@3.13.0:', type=('build', 'run'), when='@1.3.0')
+    depends_on('py-ase@3.18.0:', type=('build', 'run'), when='@19.8.1')
     depends_on('py-numpy +blas +lapack', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('libxc')
