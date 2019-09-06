@@ -7,6 +7,7 @@ import pytest
 
 import sys
 
+from spack.command_loading import get_command_module_from
 import spack.config
 import spack.main
 import spack.extensions
@@ -115,6 +116,8 @@ def subcommand_root(tmpdir):
 
 
 def _ensure_package(base, *parts):
+    """Ensure that all the components of a module directory path exist, and
+    contain a file __init__.py."""
     bits = []
     for bit in parts[:-1]:
         bits.append(bit)
@@ -156,14 +159,16 @@ def test_command_with_import(hello_world_with_module_in_root):
     assert 'bar' in output
 
 
-def test_sub_missing_cmd(hello_world_sub_no_cmd):
+def test_cmd_module(hello_world_sub_cmd):
+    get_command_module_from('hello', 'good')
+
+
+def test_missing_cmd_module(hello_world_sub_no_cmd):
+    """Ensure that we raise an exception in get_command_module_from() if we
+    cannot load the specified module."""
     expected_message\
         = 'No module named {0}'.\
         format('cmd.hello' if sys.version_info[0] < 3 else "'bad.cmd'")
     with pytest.raises(ImportError) as e:
-        spack.cmd.get_module_from('hello', 'bad')
+        get_command_module_from('hello', 'bad')
     assert str(e.value) == expected_message
-
-
-def test_sub_cmd(hello_world_sub_cmd):
-    spack.cmd.get_module_from('hello', 'good')

@@ -64,10 +64,8 @@ def extension_name(path):
 
 
 def load_command_extension(command):
-    """Loads a command extension from the path passed as argument.
-
-    Args:
-        command (str): name of the command
+    """Loads a command extension from the path previously cached in
+    _extension_command_map.
 
     Returns:
         A valid module object; an exception is raised if the command is

@@ -8,7 +8,7 @@ import pytest
 
 from llnl.util.argparsewriter import ArgparseWriter
 
-import spack.all_commands
+from spack.command_loading import all_commands
 import spack.main
 
 commands = spack.main.SpackCommand('commands')
@@ -20,7 +20,7 @@ spack.main.add_all_commands(parser)
 def test_commands_by_name():
     """Test default output of spack commands."""
     out = commands()
-    assert out.strip().split('\n') == sorted(spack.all_commands.all_commands())
+    assert out.strip().split('\n') == sorted(all_commands())
 
 
 def test_subcommands():

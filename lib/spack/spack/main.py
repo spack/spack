@@ -24,7 +24,7 @@ import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
 import spack
-import spack.all_commands
+from spack.command_loading import all_commands, get_command_module, get_command
 import spack.architecture
 import spack.config
 import spack.environment as ev
@@ -102,15 +102,15 @@ def set_working_dir():
 
 def add_all_commands(parser):
     """Add all spack subcommands to the parser."""
-    for cmd in spack.all_commands.all_commands():
+    for cmd in all_commands():
         parser.add_command(cmd)
 
 
 def index_commands():
     """create an index of commands by section for this help level"""
     index = {}
-    for command in spack.all_commands.all_commands():
-        cmd_module = spack.all_commands.get_module(command)
+    for command in all_commands():
+        cmd_module = get_command_module(command)
 
         # make sure command modules have required properties
         for p in required_command_properties:
@@ -168,7 +168,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             self.actions = self._subparsers._actions[-1]._get_subactions()
 
         # make a set of commands not yet added.
-        remaining = set(spack.all_commands.all_commands())
+        remaining = set(all_commands())
 
         def add_group(group):
             formatter.start_section(group.title)
@@ -277,7 +277,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
         # each command module implements a parser() function, to which we
         # pass its subparser for setup.
-        module = spack.all_commands.get_module(cmd_name)
+        module = get_command_module(cmd_name)
 
         # build a list of aliases
         alias_list = [k for k, v in aliases.items() if v == cmd_name]
@@ -288,7 +288,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         module.setup_parser(subparser)
 
         # return the callable function for the command
-        return spack.all_commands.get_command(cmd_name)
+        return get_command(cmd_name)
 
     def format_help(self, level='short'):
         if self.prog == 'spack':

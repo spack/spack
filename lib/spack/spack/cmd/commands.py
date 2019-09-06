@@ -14,7 +14,7 @@ import llnl.util.tty as tty
 from llnl.util.argparsewriter import ArgparseWriter, ArgparseRstWriter
 from llnl.util.tty.colify import colify
 
-import spack.all_commands
+from spack.command_loading import all_commands, get_command_module
 import spack.main
 from spack.main import section_descriptions
 
@@ -129,7 +129,7 @@ def rst(args, out):
 
 @formatter
 def names(args, out):
-    colify(spack.all_commands.all_commands(), output=out)
+    colify(all_commands(), output=out)
 
 
 def prepend_header(args, out):
@@ -152,8 +152,9 @@ def commands(parser, args):
     if args.update:
         if os.path.exists(args.update):
             files = [
-                spack.all_commands.get_module(command).__file__.rstrip('c')
-                for command in spack.all_commands.all_commands()]   # pyc -> py
+                # pyc -> py
+                get_command_module(command).__file__.rstrip('c')
+                for command in all_commands()]
             last_update = os.path.getmtime(args.update)
             if not any(os.path.getmtime(f) > last_update for f in files):
                 tty.msg('File is up to date: %s' % args.update)

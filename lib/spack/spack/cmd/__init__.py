@@ -11,7 +11,7 @@ import sys
 import argparse
 
 import llnl.util.tty as tty
-from llnl.util.lang import attr_setdefault, index_by
+from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
@@ -30,9 +30,6 @@ python_list = list
 # Patterns to ignore in the commands directory when looking for commands.
 ignore_files = r'^\.|^__init__.py$|^#'
 
-SETUP_PARSER = "setup_parser"
-DESCRIPTION = "description"
-
 
 def python_name(cmd_name):
     """Convert ``-`` to ``_`` in command name, to make a valid identifier."""
@@ -40,7 +37,8 @@ def python_name(cmd_name):
 
 
 def require_python_name(pname):
-    """Require that the provided name is a valid python name"""
+    """Require that the provided name is a valid python name (per
+    python_name())."""
     if python_name(pname) != pname:
         raise PythonNameError(pname)
 
@@ -51,7 +49,8 @@ def cmd_name(python_name):
 
 
 def require_cmd_name(cname):
-    """Require that the provided name is a valid command name"""
+    """Require that the provided name is a valid command name (per
+    cmd_name())."""
     if cmd_name(cname) != cname:
         raise CommandNameError(cname)
 
@@ -81,33 +80,6 @@ def remove_options(parser, *options):
             if vars(action)['option_strings'][0] == option:
                 parser._handle_conflict_resolve(None, [(option, action)])
                 break
-
-
-def get_module_from(cmd_name, namespace):
-    """Imports the module for a particular command from the specified namespace.
-
-    Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
-        namespace (str): namespace for command.
-
-    Invoke this from command implementations in order to find sub-commands.
-    """
-    require_cmd_name(cmd_name)
-    pname = python_name(cmd_name)
-    module_name = '{0}.cmd.{1}'.format(namespace, pname)
-    module = __import__(module_name,
-                        fromlist=[pname, SETUP_PARSER, DESCRIPTION],
-                        level=0)
-    tty.debug('Imported command {0} as {1}'.format(cmd_name, module_name))
-
-    attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
-    attr_setdefault(module, DESCRIPTION, "")
-
-    if not hasattr(module, pname):
-        tty.die("Command module %s (%s) must define function '%s'." %
-                (module.__name__, module.__file__, pname))
-    return module
 
 
 def parse_specs(args, **kwargs):
