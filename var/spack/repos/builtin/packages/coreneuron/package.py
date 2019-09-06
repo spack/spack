@@ -150,6 +150,21 @@ class Coreneuron(CMakePackage):
 
         return options
 
+    @run_after('install')
+    def filter_compilers(self):
+        """run after install to avoid spack compiler wrappers
+        getting embded into nrnivmodl script"""
+
+        nrnmakefile = join_path(self.prefix, 'share/coreneuron/nrnivmodl_core_makefile')
+
+        kwargs = {
+            'backup': False,
+            'string': True
+        }
+
+        filter_file(env['CC'],  self.compiler.cc, nrnmakefile, **kwargs)
+        filter_file(env['CXX'], self.compiler.cxx, nrnmakefile, **kwargs)
+
     @property
     def libs(self):
         """Export the coreneuron library.

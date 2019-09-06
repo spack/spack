@@ -28,7 +28,7 @@ class SimModel(Package):
     variant('coreneuron',  default=False, description="Enable CoreNEURON Support")
     variant('profile',     default=False, description="Enable profiling using Tau")
 
-    depends_on('neuron~binary+mpi', type=('build', 'link', 'run'))
+    depends_on('neuron+mpi', type=('build', 'link', 'run'))
     depends_on('coreneuron', when='+coreneuron', type=('build', 'link', 'run'))
     depends_on('coreneuron+profile', when='+coreneuron+profile')
     depends_on('neuron+profile', when='+profile')
@@ -116,23 +116,24 @@ class SimModel(Package):
         arch = os.path.basename(self.neuron_archdir)
         prefix = self.prefix
         shutil.copy(join_path(arch, 'special'), prefix.bin)
+        
+        if self.spec.satisfies('^neuron~binary'):
+            # Install libnrnmech - might have several links.
+            for f in find(arch + "/.libs", 'libnrnmech*.so*', recursive=False):
+                if not os.path.islink(f):
+                    bname = os.path.basename(f)
+                    lib_dst = prefix.lib.join(bname[:bname.find(".")] + lib_suffix + ".so")
+                    shutil.move(f, lib_dst)
+                    break
+            else:
+                raise Exception("No libnrnmech found")
 
-        # Install libnrnmech - might have several links.
-        for f in find(arch + "/.libs", 'libnrnmech*.so*', recursive=False):
-            if not os.path.islink(f):
-                bname = os.path.basename(f)
-                lib_dst = prefix.lib.join(bname[:bname.find(".")] + lib_suffix + ".so")
-                shutil.move(f, lib_dst)
-                break
-        else:
-            raise Exception("No libnrnmech found")
-
-        # Patch special for the new libname
-        which('sed')('-i.bak',
-                     's#-dll .*#-dll %s "$@"#' % lib_dst,
-                     prefix.bin.special)
-        os.remove(prefix.bin.join('special.bak'))
-
+            # Patch special for the new libname
+            which('sed')('-i.bak',
+                         's#-dll .*#-dll %s "$@"#' % lib_dst,
+                         prefix.bin.special)
+            os.remove(prefix.bin.join('special.bak'))
+        
     def _install_src(self, prefix):
         """Copy original and translated c mods
         """
