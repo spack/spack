@@ -18,7 +18,7 @@ class PyGpaw(PythonPackage):
     version('1.3.0', '82e8c80e637696248db00b5713cdffd1')
 
     variant('mpi', default=True, description='Build with MPI support')
-    variant('scalapack', default=False,
+    variant('scalapack', default=True,
             description='Build with ScaLAPACK support')
     variant('fftw', default=True, description='Build with FFTW support')
 
