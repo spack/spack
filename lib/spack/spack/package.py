@@ -1789,7 +1789,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if restage and self.stage.managed_by_spack:
             self.stage.destroy()
-            self.stage.create()
 
         return partial
 
