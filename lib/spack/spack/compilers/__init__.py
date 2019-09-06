@@ -10,7 +10,6 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-
 import platform as py_platform
 import six
 
@@ -31,7 +30,7 @@ _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
-                        'extra_rpaths']
+                        'extra_rpaths', 'implicit_rpaths']
 _cache_config_file = []
 
 # TODO: Caches at module level make it difficult to mock configurations in
@@ -71,9 +70,10 @@ def _to_dict(compiler):
                            if hasattr(compiler, attr)))
     d['operating_system'] = str(compiler.operating_system)
     d['target'] = str(compiler.target)
-    d['modules'] = compiler.modules if compiler.modules else []
-    d['environment'] = compiler.environment if compiler.environment else {}
-    d['extra_rpaths'] = compiler.extra_rpaths if compiler.extra_rpaths else []
+    d['modules'] = compiler.modules or []
+    d['environment'] = compiler.environment or {}
+    d['extra_rpaths'] = compiler.extra_rpaths or []
+    d['implicit_rpaths'] = compiler.implicit_rpaths or []
 
     if compiler.alias:
         d['alias'] = compiler.alias
@@ -278,7 +278,7 @@ def all_compilers(scope=None):
     compilers = list()
     for items in config:
         items = items['compiler']
-        compilers.append(compiler_from_config_entry(items))
+        compilers.append(_compiler_from_config_entry(items))
     return compilers
 
 
@@ -305,41 +305,71 @@ def compilers_for_arch(arch_spec, scope=None):
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
-def compiler_from_config_entry(items):
-    config_id = id(items)
+class CacheReference(object):
+    """This acts as a hashable reference to any object (regardless of whether
+       the object itself is hashable) and also prevents the object from being
+       garbage-collected (so if two CacheReference objects are equal, they
+       will refer to the same object, since it will not have been gc'ed since
+       the creation of the first CacheReference).
+    """
+    def __init__(self, val):
+        self.val = val
+        self.id = id(val)
+
+    def __hash__(self):
+        return self.id
+
+    def __eq__(self, other):
+        return isinstance(other, CacheReference) and self.id == other.id
+
+
+def compiler_from_dict(items):
+    cspec = spack.spec.CompilerSpec(items['spec'])
+    os = items.get('operating_system', None)
+    target = items.get('target', None)
+
+    if not ('paths' in items and
+            all(n in items['paths'] for n in _path_instance_vars)):
+        raise InvalidCompilerConfigurationError(cspec)
+
+    cls  = class_for_compiler_name(cspec.name)
+
+    compiler_paths = []
+    for c in _path_instance_vars:
+        compiler_path = items['paths'][c]
+        if compiler_path != 'None':
+            compiler_paths.append(compiler_path)
+        else:
+            compiler_paths.append(None)
+
+    mods = items.get('modules')
+    if mods == 'None':
+        mods = []
+
+    alias = items.get('alias', None)
+    compiler_flags = items.get('flags', {})
+    environment = items.get('environment', {})
+    extra_rpaths = items.get('extra_rpaths', [])
+    implicit_rpaths = items.get('implicit_rpaths')
+
+    return cls(cspec, os, target, compiler_paths, mods, alias,
+               environment, extra_rpaths, implicit_rpaths,
+               **compiler_flags)
+
+
+def _compiler_from_config_entry(items):
+    """Note this is intended for internal use only. To avoid re-parsing
+       the same config dictionary this keeps track of its location in
+       memory. If you provide the same dictionary twice it will return
+       the same Compiler object (regardless of whether the dictionary
+       entries have changed).
+    """
+    config_id = CacheReference(items)
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
-        cspec = spack.spec.CompilerSpec(items['spec'])
-        os = items.get('operating_system', None)
-        target = items.get('target', None)
-
-        if not ('paths' in items and
-                all(n in items['paths'] for n in _path_instance_vars)):
-            raise InvalidCompilerConfigurationError(cspec)
-
-        cls  = class_for_compiler_name(cspec.name)
-
-        compiler_paths = []
-        for c in _path_instance_vars:
-            compiler_path = items['paths'][c]
-            if compiler_path != 'None':
-                compiler_paths.append(compiler_path)
-            else:
-                compiler_paths.append(None)
-
-        mods = items.get('modules')
-        if mods == 'None':
-            mods = []
-
-        alias = items.get('alias', None)
-        compiler_flags = items.get('flags', {})
-        environment = items.get('environment', {})
-        extra_rpaths = items.get('extra_rpaths', [])
-
-        compiler = cls(cspec, os, target, compiler_paths, mods, alias,
-                       environment, extra_rpaths, **compiler_flags)
-        _compiler_cache[id(items)] = compiler
+        compiler = compiler_from_dict(items)
+        _compiler_cache[config_id] = compiler
 
     return compiler
 
@@ -367,7 +397,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
                                      target != 'any'):
             continue
 
-        compilers.append(compiler_from_config_entry(items))
+        compilers.append(_compiler_from_config_entry(items))
 
     return compilers
 
@@ -607,8 +637,10 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        implicit_rpaths = compiler_cls.determine_implicit_rpaths(paths)
         compiler = compiler_cls(
-            spec, operating_system, py_platform.machine(), paths
+            spec, operating_system, py_platform.machine(), paths,
+            implicit_rpaths=implicit_rpaths
         )
         return [compiler]
 

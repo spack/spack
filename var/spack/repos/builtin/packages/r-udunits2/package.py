@@ -10,9 +10,10 @@ class RUdunits2(RPackage):
     """Provides simple bindings to Unidata's udunits library."""
 
     homepage = "https://github.com/pacificclimate/Rudunits2"
-    url      = "https://cran.r-project.org/src/contrib/udunits2_0.13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/udunits2"
+    url      = "https://cloud.r-project.org/src/contrib/udunits2_0.13.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/udunits2"
 
     version('0.13', 'c8717808c740ef70eed7aea93c7c4c7d')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('udunits2')

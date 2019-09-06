@@ -221,6 +221,12 @@ class CDash(Reporter):
         # do not explicitly include the package's name in the CDash build name.
         num_packages = 0
         for spec in input_data['specs']:
+            # Do not generate reports for packages that were installed
+            # from the binary cache.
+            spec['packages'] = [
+                x for x in spec['packages']
+                if not x['installed_from_binary_cache']
+            ]
             for package in spec['packages']:
                 if 'stdout' in package:
                     num_packages += 1

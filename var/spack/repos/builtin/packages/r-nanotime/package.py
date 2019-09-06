@@ -11,12 +11,14 @@ class RNanotime(RPackage):
        nanosecond granularity is provided, with easy transition to and from
        the standard 'POSIXct' type."""
 
-    homepage = "https://cran.r-project.org/package=nanotime"
-    url      = "https://cran.r-project.org/src/contrib/nanotime_0.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nanotime"
+    homepage = "https://cloud.r-project.org/package=nanotime"
+    url      = "https://cloud.r-project.org/src/contrib/nanotime_0.2.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/nanotime"
 
+    version('0.2.4', sha256='2dfb7e7435fec59634b87563a215467e7793e2711e302749c0533901c74eb184')
+    version('0.2.3', sha256='7d6df69a4223ae154f610b650e24ece38ce4aa706edfa38bec27d15473229f5d')
     version('0.2.0', '796b1f7d0bb43e2f3d98e3cc6f4b0657')
 
     depends_on('r-bit64', type=('build', 'run'))
-    depends_on('r-rcppcctz', type=('build', 'run'))
+    depends_on('r-rcppcctz@0.2.3:', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))

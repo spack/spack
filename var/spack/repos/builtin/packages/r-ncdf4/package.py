@@ -23,9 +23,11 @@ class RNcdf4(RPackage):
     package does not provide an interface for netcdf version 4 files."""
 
     homepage = "http://cirrus.ucsd.edu/~pierce/ncdf"
-    url      = "https://cran.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ncdf4"
+    url      = "https://cloud.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ncdf4"
 
+    version('1.16.1', sha256='0dde2d6d1e8474f4abd15a61af8a2f7de564f13da00f1a01d7a479ab88587a20')
+    version('1.16', sha256='edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253')
     version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
 
-    depends_on('netcdf')
+    depends_on('netcdf@4.1:')

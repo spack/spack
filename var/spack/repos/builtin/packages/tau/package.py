@@ -22,6 +22,7 @@ class Tau(Package):
     git      = "https://github.com/UO-OACISS/tau2"
 
     version('develop', branch='master')
+    version('2.28.2', '64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
     version('2.28.1', '4e48fb477250f201ab00381cb43afea6')
     version('2.28', '68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
     version('2.27.2p1', 'b9cc42ee8afdcfefe5104ab0a8f23a23')

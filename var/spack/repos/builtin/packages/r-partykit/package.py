@@ -18,10 +18,17 @@ class RPartykit(RPackage):
     provided based on the new infrastructure."""
 
     homepage = "http://partykit.r-forge.r-project.org/partykit"
-    url      = "https://cran.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/partykit"
+    url      = "https://cloud.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/partykit"
 
+    version('1.2-5', sha256='f48e30790f93fa5d03e68e8ce71ce33d009d107d46d45d85da2016b38b27629c')
+    version('1.2-3', sha256='56749b246e283f94ac2ad2cdcfc0a477e05cd44b5e8f6e462c26f4dff818da35')
     version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-formula', type=('build', 'run'))
+    depends_on('r-formula@1.2-1:', type=('build', 'run'))
+    depends_on('r-libcoin@1.0-0:', when='@1.2-0:', type=('build', 'run'))
+    depends_on('r-mvtnorm', when='@1.2-0:', type=('build', 'run'))
+    depends_on('r-inum@1.0-0:', when='@1.2-0:', type=('build', 'run'))
+    depends_on('r-rpart@4.1-11:', when='@1.2-0:', type=('build', 'run'))

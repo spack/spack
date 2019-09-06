@@ -33,27 +33,25 @@ class Precice(CMakePackage):
     variant('python', default=False, description='Enable Python support')
     variant('shared', default=True, description='Build shared libraries')
 
-    # Not yet
-#    variant(
-#        'float', default=False,
-#        description='Use single precision for field data exchange')
-#    variant(
-#        'int64',
-#        default=False, description='Use 64-bit integers for indices')
-
     depends_on('cmake@3.5:', type='build')
-    depends_on('cmake@3.9.6:', type='build', when='@1.4:')
+    depends_on('cmake@3.10.2:', type='build', when='@1.4:')
     depends_on('boost@1.60.0:')
     depends_on('boost@1.65.1:', when='@1.4:')
     depends_on('eigen@3.2:')
+    depends_on('eigen@:3.3.7', type='build', when='@:1.5')  # bug in prettyprint
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
     depends_on('petsc@3.6:', when='+petsc')
-    depends_on('python@2.7', when='+python', type=('build', 'run'))
+    depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
+    # numpy 1.17+ requires Python 3
+    depends_on('py-numpy@:1.16', when='+python', type=('build', 'run'))
 
     def cmake_args(self):
         """Populate cmake arguments for precice."""
         spec = self.spec
+
+        # The xSDK installation policies were implemented after 1.5.2
+        xsdk_mode = spec.satisfies("@1.6:")
 
         def variant_bool(feature, on='ON', off='OFF'):
             """Ternary for spec variant to ON/OFF string"""
@@ -62,9 +60,55 @@ class Precice(CMakePackage):
             return off
 
         cmake_args = [
-            '-DMPI:BOOL=%s' % variant_bool('+mpi'),
-            '-DPETSC:BOOL=%s' % variant_bool('+petsc'),
-            '-DPYTHON:BOOL=%s' % variant_bool('+python'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' % variant_bool('+shared'),
+            '-DMPI:BOOL=%s' % variant_bool('+mpi'),
         ]
+
+        # Boost
+        if xsdk_mode:
+            cmake_args.append('-DTPL_ENABLE_BOOST=ON')
+        cmake_args.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
+
+        # Eigen3
+        if xsdk_mode:
+            cmake_args.append('-DTPL_ENABLE_EIGEN3=ON')
+        cmake_args.append(
+            '-DEIGEN3_INCLUDE_DIR=%s' % spec['eigen'].headers.directories[0])
+
+        # LibXML2
+        if xsdk_mode:
+            cmake_args.append('-DTPL_ENABLE_LIBXML2=ON')
+        libxml2_includes = spec['libxml2'].headers.directories[0]
+        cmake_args.extend([
+            '-DLIBXML2_INCLUDE_DIRS=%s' % libxml2_includes,
+            '-DLIBXML2_LIBRARIES=%s' % spec['libxml2'].libs[0],
+        ])
+
+        # PETSc
+        if '+petsc' in spec:
+            cmake_args.extend([
+                '-DTPL_ENABLE_PETSC:BOOL=ON' if xsdk_mode else '-DPETSC=ON',
+                '-DPETSC_DIR=%s' % spec['petsc'].prefix,
+                '-DPETSC_ARCH=.'
+            ])
+        else:
+            cmake_args.append('-DPETSC:BOOL=OFF')
+
+        # Python
+        if '+python' in spec:
+            python_library = spec['python'].libs[0]
+            python_include = spec['python'].headers.directories[0]
+            numpy_include = join_path(
+                spec['py-numpy'].prefix,
+                spec['python'].package.site_packages_dir,
+                'numpy', 'core', 'include')
+            cmake_args.extend([
+                '-DTPL_ENABLE_PYTHON:BOOL=ON' if xsdk_mode else '-DPYTHON=ON',
+                '-DPYTHON_INCLUDE_DIR=%s' % python_include,
+                '-DNumPy_INCLUDE_DIR=%s' % numpy_include,
+                '-DPYTHON_LIBRARY=%s' % python_library
+            ])
+        else:
+            cmake_args.append('-DPYTHON:BOOL=OFF')
+
         return cmake_args

@@ -174,16 +174,19 @@ def print_text_info(pkg):
                             not v.isdevelop(),
                             v)
         preferred = sorted(pkg.versions, key=key_fn).pop()
+        url = ''
+        if pkg.has_code:
+            url = fs.for_package_version(pkg, preferred)
 
-        f = fs.for_package_version(pkg, preferred)
-        line = version('    {0}'.format(pad(preferred))) + color.cescape(f)
+        line = version('    {0}'.format(pad(preferred))) + color.cescape(url)
         color.cprint(line)
         color.cprint('')
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
-            f = fs.for_package_version(pkg, v)
-            line = version('    {0}'.format(pad(v))) + color.cescape(f)
+            if pkg.has_code:
+                url = fs.for_package_version(pkg, v)
+            line = version('    {0}'.format(pad(v))) + color.cescape(url)
             color.cprint(line)
 
     color.cprint('')
@@ -193,12 +196,13 @@ def print_text_info(pkg):
     for line in formatter.lines:
         color.cprint(line)
 
-    color.cprint('')
-    color.cprint(section_title('Installation Phases:'))
-    phase_str = ''
-    for phase in pkg.phases:
-        phase_str += "    {0}".format(phase)
-    color.cprint(phase_str)
+    if hasattr(pkg, 'phases') and pkg.phases:
+        color.cprint('')
+        color.cprint(section_title('Installation Phases:'))
+        phase_str = ''
+        for phase in pkg.phases:
+            phase_str += "    {0}".format(phase)
+        color.cprint(phase_str)
 
     for deptype in ('build', 'link', 'run'):
         color.cprint('')

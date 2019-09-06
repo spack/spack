@@ -10,9 +10,9 @@ class RChemometrics(RPackage):
     """R companion to the book "Introduction to Multivariate Statistical Analysis
     in Chemometrics" written by K. Varmuza and P. Filzmoser (2009)."""
 
-    homepage = "https://cran.r-project.org/web/packages/chemometrics/index.html"
-    url      = "https://cran.r-project.org/src/contrib/chemometrics_1.4.2.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/chemometrics"
+    homepage = "https://cloud.r-project.org/package=chemometrics"
+    url      = "https://cloud.r-project.org/src/contrib/chemometrics_1.4.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/chemometrics"
 
     version('1.4.2', '8137b0ca4004add9cc2ea81d2c54427f')
     version('1.4.1', '1e5a89442bb4a61db0da884eedd74fc2')
@@ -29,3 +29,6 @@ class RChemometrics(RPackage):
     depends_on('r-pls', type=('build', 'run'))
     depends_on('r-som', type=('build', 'run'))
     depends_on('r-pcapp', type=('build', 'run'))
+    depends_on('r-class', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-nnet', type=('build', 'run'))

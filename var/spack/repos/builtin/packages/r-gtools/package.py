@@ -40,8 +40,9 @@ class RGtools(RPackage):
 
     """
 
-    homepage = "https://cran.r-project.org/package=gtools"
-    url      = "https://cran.r-project.org/src/contrib/gtools_3.5.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gtools"
+    homepage = "https://cloud.r-project.org/package=gtools"
+    url      = "https://cloud.r-project.org/src/contrib/gtools_3.5.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gtools"
 
+    version('3.8.1', sha256='051484459bd8ad1b03425b8843d24f6828fea18f7357cfa1c192198cc3f4ba38')
     version('3.5.0', '45f8800c0336d35046641fbacc56bdbb')

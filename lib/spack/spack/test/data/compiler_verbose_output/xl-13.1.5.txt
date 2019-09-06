@@ -1,0 +1,5 @@
+export XL_CONFIG=/opt/ibm/xlC/13.1.5/etc/xlc.cfg.centos.7.gcc.4.8.5:xlc 
+/usr/bin/ld --eh-frame-hdr -Qy -melf64lppc /usr/lib/gcc/ppc64le-redhat-linux/4.8.5/../../../../lib64/crt1.o /usr/lib/gcc/ppc64le-redhat-linux/4.8.5/../../../../lib64/crti.o /usr/lib/gcc/ppc64le-redhat-linux/4.8.5/crtbegin.o -L/opt/ibm/xlsmp/4.1.5/lib -L/opt/ibm/xlmass/8.1.5/lib -L/opt/ibm/xlC/13.1.5/lib -R/opt/ibm/lib -L/usr/lib/gcc/ppc64le-redhat-linux/4.8.5 -L/usr/lib/gcc/ppc64le-redhat-linux/4.8.5/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/ppc64le-redhat-linux/4.8.5/../../.. --no-toc-optimize -o foo foo.o -dynamic-linker /lib64/ld64.so.2 --enable-new-dtags -lxlopt -lxl --as-needed -ldl --no-as-needed -lgcc_s --as-needed -lpthread --no-as-needed -lgcc -lm -lc -lgcc_s -lgcc /usr/lib/gcc/ppc64le-redhat-linux/4.8.5/crtend.o /usr/lib/gcc/ppc64le-redhat-linux/4.8.5/../../../../lib64/crtn.o 
+rm /tmp/xlcW0iQ4uI8
+rm /tmp/xlcW1aPLBFY
+rm /tmp/xlcW2ALFICO

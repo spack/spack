@@ -12,12 +12,12 @@ class RRbokeh(RPackage):
     Analytics."""
 
     homepage = "https://hafen.github.io/rbokeh"
-    url      = "https://cran.r-project.org/src/contrib/rbokeh_0.5.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rbokeh"
+    url      = "https://cloud.r-project.org/src/contrib/rbokeh_0.5.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rbokeh"
 
     version('0.5.0', '4e14778c3fbd9286460ca28c68f57d10')
 
-    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmlwidgets@0.5:', type=('build', 'run'))
     depends_on('r-maps', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))

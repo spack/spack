@@ -18,12 +18,15 @@ class ROpenssl(RPackage):
     generator, and 'bignum' math methods for manually performing crypto
     calculations on large multibyte integers."""
 
-    homepage = "https://CRAN.R-project.org/package=openssl"
-    url      = "https://cran.r-project.org/src/contrib/openssl_0.9.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/openssl"
+    homepage = "https://cloud.r-project.org/package=openssl"
+    url      = "https://cloud.r-project.org/src/contrib/openssl_0.9.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/openssl"
 
+    version('1.4.1', sha256='f7fbecc75254fc43297a95a4338c674ab9ba2ec056b59e027d16d23122161fc6')
+    version('1.3', sha256='1c83f4d529adc1f5ec40e477c690a8d5b0a42422f3e542f1fc39062dcfaca4bf')
     version('0.9.7', '86773824dce7d3d79abfef574ce2531a')
     version('0.9.6', '7ef137929d9dd07db690d35db242ba4b')
     version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')
 
+    depends_on('r-askpass', when='@1.2:', type=('build', 'run'))
     depends_on('openssl@1.0.1:')

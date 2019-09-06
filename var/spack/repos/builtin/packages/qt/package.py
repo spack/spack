@@ -426,6 +426,10 @@ class Qt(Package):
             '-arch', str(spec.architecture.target),
         ])
 
+        # Disable phonon backend until gstreamer is setup as dependency
+        if '+phonon' in self.spec:
+            config_args.append('-no-phonon-backend')
+
         if '~examples' in self.spec:
             config_args.extend(['-nomake', 'demos'])
 

@@ -574,7 +574,11 @@ Download caching
 Spack maintains a cache (described :ref:`here <caching>`) which saves files
 retrieved during package installations to avoid re-downloading in the case that
 a package is installed with a different specification (but the same version) or
-reinstalled on account of a change in the hashing scheme.
+reinstalled on account of a change in the hashing scheme. It may (rarely) be
+necessary to avoid caching for a particular version by adding ``no_cache=True``
+as an option to the ``version()`` directive. Example situations would be a
+"snapshot"-like Version Control System (VCS) tag, a VCS branch such as
+``v6-16-00-patches``, or a URL specifying a regularly updated snapshot tarball.
 
 ^^^^^^^^^^^^^^^^^^
 Version comparison
@@ -880,6 +884,11 @@ Git fetching supports the following parameters to ``version``:
 * ``tag``: Name of a tag to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
 * ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``get_full_repo``: Ensure the full git history is checked out with all remote
+  branch information. Normally (``get_full_repo=False``, the default), the git
+  option ``--depth 1`` will be used if the version of git and the specified
+  transport protocol support it, and ``--single-branch`` will be used if the
+  version of git supports it.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 
@@ -3847,13 +3856,18 @@ variant names are:
   Name    Default   Description
   ======= ======== ========================
   shared   True     Build shared libraries
-  static   True     Build static libraries
   mpi      True     Use MPI
   python   False    Build Python extension
   ======= ======== ========================
 
 If specified in this table, the corresponding default should be used
 when declaring a variant.
+
+The semantics of the `shared` variant are important. When a package is
+built `~shared`, the package guarantees that no shared libraries are
+built. When a package is built `+shared`, the package guarantees that
+shared libraries are built, but it makes no guarantee about whether
+static libraries are built.
 
 ^^^^^^^^^^^^^
 Version Lists
@@ -3901,7 +3915,8 @@ The first step of ``spack install``.  Takes a spec and determines the
 correct download URL to use for the requested package version, then
 downloads the archive, checks it against an MD5 checksum, and stores
 it in a staging directory if the check was successful.  The staging
-directory will be located under ``$SPACK_HOME/var/spack``.
+directory will be located under the first writable directory in the
+``build_stage`` configuration setting.
 
 When run after the archive has already been downloaded, ``spack
 fetch`` is idempotent and will not download the archive again.
@@ -4280,3 +4295,8 @@ Autotools-based packages would be easy (and should be done by a
 developer who actively uses Autotools).  Packages that use
 non-standard build systems can gain ``setup`` functionality by
 subclassing ``StagedPackage`` directly.
+
+.. Emacs local variables
+   Local Variables:
+   fill-column: 79
+   End:

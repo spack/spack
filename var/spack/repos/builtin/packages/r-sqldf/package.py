@@ -18,13 +18,14 @@ class RSqldf(RPackage):
     files are larger than R itself can handle. 'RSQLite', 'RH2',
     'RMySQL' and 'RPostgreSQL' backends are supported."""
 
-    homepage = "https://cran.r-project.org/package=sqldf"
-    url      = "https://cran.r-project.org/src/contrib/sqldf_0.4-11.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/sqldf"
+    homepage = "https://cloud.r-project.org/package=sqldf"
+    url      = "https://cloud.r-project.org/src/contrib/sqldf_0.4-11.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/sqldf"
 
     version('0.4-11', '85def6fe2418569370c24e53522d2c2d')
 
-    depends_on('r-gsubfn', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'))
+    depends_on('r-gsubfn@0.6:', type=('build', 'run'))
     depends_on('r-proto', type=('build', 'run'))
     depends_on('r-rsqlite', type=('build', 'run'))
     depends_on('r-dbi', type=('build', 'run'))

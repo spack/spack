@@ -583,6 +583,10 @@ class Llvm(CMakePackage):
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
+    # Backport from llvm master + additional fix
+    # see  https://bugs.llvm.org/show_bug.cgi?id=39696
+    # for a bug report about this problem in llvm master.
+    patch('constexpr_longdouble.patch', when='@7:8+libcxx')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
@@ -696,6 +700,10 @@ class Llvm(CMakePackage):
 
         if '+omp_tsan' in spec:
             cmake_args.append('-DLIBOMP_TSAN_SUPPORT=ON')
+
+        if self.compiler.name == 'gcc':
+            gcc_prefix = ancestor(self.compiler.cc, 2)
+            cmake_args.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
 
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')

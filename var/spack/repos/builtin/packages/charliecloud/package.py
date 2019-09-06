@@ -13,6 +13,7 @@ class Charliecloud(MakefilePackage):
     url      = "https://github.com/hpc/charliecloud/releases/download/v0.9.10/charliecloud-0.9.10.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
 
+    version('master', branch='master')
     version('0.10',   sha256='5cf00b170e7568750ca0b828c43c0857c39674860b480d757057450d69f1a21e')
     version('0.9.10', sha256='44e821b62f9c447749d3ed0d2b2e44d374153058814704a5543e83f42db2a45a')
     version('0.9.9',  sha256='2624c5a0b19a01c9bca0acf873ceeaec401b9185a23e9108fadbcee0b9d74736')
@@ -24,6 +25,20 @@ class Charliecloud(MakefilePackage):
     version('0.9.1',  sha256='8e69150a271285da71ece7a09b48251ef6593f72207c5126741d9976aa737d95')
     version('0.9.0',  sha256='7e74cb16e31fd9d502198f7509bab14d1049ec68ba90b15e277e76f805db9458')
     version('0.2.4',  'b112de661c2c360174b42c99022c1967')
+
+    depends_on('python@3.4:', type=('build', 'run'))
+
+    # experimental builder (ch-grow)
+    variant('builder', default=False, description='Bundle dependencies for unprivileged builder (ch-grow)')
+    depends_on('py-lark-parser', type='run', when='+builder')
+    depends_on('skopeo', type='run', when='+builder')
+    depends_on('umoci', type='run', when='+builder')
+
+    # man pages and html docs
+    variant('docs', default=False, description='Build man pages and html docs')
+    depends_on('rsync',               type='build', when='+docs')
+    depends_on('py-sphinx',           type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
     def url_for_version(self, version):
         if version >= Version('0.9.8'):

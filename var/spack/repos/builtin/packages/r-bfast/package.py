@@ -9,9 +9,9 @@ from spack import *
 class RBfast(RPackage):
     """bfast: Breaks For Additive Season and Trend (BFAST)"""
 
-    homepage = "https://cran.r-project.org/package=bfast"
-    url      = "https://cran.r-project.org/src/contrib/bfast_1.5.7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/bfast"
+    homepage = "https://cloud.r-project.org/package=bfast"
+    url      = "https://cloud.r-project.org/src/contrib/bfast_1.5.7.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/bfast"
 
     version('1.5.7', sha256='01585fe8944d05ebdb13795214077bc1365f0c0372e2a1f7edb914356dace558')
 

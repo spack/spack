@@ -20,7 +20,9 @@ class Flecsi(CMakePackage):
     homepage = 'http://flecsi.lanl.gov/'
     git      = 'https://github.com/laristra/flecsi.git'
 
-    version('develop', branch='master', submodules=False)
+    version('develop', branch='master', submodules=False, preferred=True)
+    version('flecsph', branch='feature/flecsph', submodules=False)
+
     variant('backend', default='mpi', values=('serial', 'mpi', 'legion'),
             description='Backend to use for distributed memory')
     variant('caliper', default=False,
@@ -50,6 +52,16 @@ class Flecsi(CMakePackage):
     def cmake_args(self):
         options = ['-DCMAKE_BUILD_TYPE=debug']
         options.append('-DCINCH_SOURCE_DIR=' + self.spec['cinch'].prefix)
+
+        # FleCSI for FleCSPH flags
+        if self.spec.satisfies('@flecsph:'):
+            options.append('-DENABLE_MPI=ON')
+            options.append('-DENABLE_OPENMP=ON')
+            options.append('-DCXX_CONFORMANCE_STANDARD=c++17')
+            options.append('-DFLECSI_RUNTIME_MODEL=mpi')
+            options.append('-DENABLE_FLECSIT=OFF')
+            options.append('-DENABLE_FLECSI_TUTORIAL=OFF')
+            return options
 
         if self.spec.variants['backend'].value == 'legion':
             options.append('-DFLECSI_RUNTIME_MODEL=legion')

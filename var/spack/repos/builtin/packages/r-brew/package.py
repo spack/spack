@@ -11,8 +11,8 @@ class RBrew(RPackage):
     report generation. brew template syntax is similar to PHP, Ruby's erb
     module, Java Server Pages, and Python's psp module."""
 
-    homepage = "https://cran.r-project.org/package=brew"
-    url      = "https://cran.r-project.org/src/contrib/brew_1.0-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/brew"
+    homepage = "https://cloud.r-project.org/package=brew"
+    url      = "https://cloud.r-project.org/src/contrib/brew_1.0-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/brew"
 
     version('1.0-6', '4aaca5e6ec145e0fc0fe6375ce1f3806')

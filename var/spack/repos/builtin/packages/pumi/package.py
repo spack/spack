@@ -28,9 +28,11 @@ class Pumi(CMakePackage):
     # it compares greater than a numbered version (e.g., 2.1.0). The spack
     # version string 'master' compares less than a numbered version.
     version('develop', branch='master')
+    version('2.2.1', commit='cd826205db21b8439026db1f6af61a8ed4a18564')  # tag 2.2.1
     version('2.2.0', commit='8c7e6f13943893b2bc1ece15003e4869a0e9634f')  # tag 2.2.0
     version('2.1.0', commit='840fbf6ec49a63aeaa3945f11ddb224f6055ac9f')
 
+    variant('int64', default=False, description='Enable 64bit mesh entity ids')
     variant('shared', default=False, description='Build shared libraries')
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
@@ -43,6 +45,7 @@ class Pumi(CMakePackage):
     depends_on('mpi')
     depends_on('cmake@3:', type='build')
     depends_on('zoltan', when='+zoltan')
+    depends_on('zoltan+int64', when='+zoltan+int64')
     simbase = "+base"
     simkernels = simbase + "+parasolid+acis+discrete"
     simfull = simkernels + "+abstract+adv+advmodel\
@@ -65,7 +68,8 @@ class Pumi(CMakePackage):
             '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DPUMI_FORTRAN_INTERFACE=%s' %
-            ('ON' if '+fortran' in spec else 'OFF')
+            ('ON' if '+fortran' in spec else 'OFF'),
+            '-DMDS_ID_TYPE=%s' % ('long' if '+int64' in spec else 'int')
         ]
         if self.spec.satisfies('simmodsuite=base'):
             args.append('-DENABLE_SIMMETRIX=ON')

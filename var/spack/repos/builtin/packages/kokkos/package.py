@@ -15,6 +15,7 @@ class Kokkos(Package):
     git      = "https://github.com/kokkos/kokkos.git"
 
     version('develop', branch='develop')
+    version('2.9.00', sha256='e0621197791ed3a381b4f02c78fa529f3cff3abb74d52157b4add17e8aa04bc4')
     version('2.8.00', sha256='1c72661f2d770517bff98837001b42b9c677d1df29f7493a1d7c008549aff630')
     version('2.7.24', sha256='a308a80ea1488f4c18884b828ce7ae9f5210b9a6b2f61b208d875084d8da8cb0')
     version('2.7.00',  'b357f9374c1008754babb4495f95e392')

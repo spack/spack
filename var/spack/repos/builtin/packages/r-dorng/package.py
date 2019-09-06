@@ -15,13 +15,15 @@ class RDorng(RPackage):
        independently of the number of workers, the task scheduling strategy,
        or the chosen parallel environment and associated foreach backend."""
 
-    homepage = "https://cran.rstudio.com/web/packages/doRNG/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/doRNG_1.6.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/doRNG"
+    homepage = "https://cloud.r-project.org/package=doRNG"
+    url      = "https://cloud.r-project.org/src/contrib/doRNG_1.6.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/doRNG"
 
+    version('1.7.1', sha256='27533d54464889d1c21301594137fc0f536574e3a413d61d7df9463ab12a67e9')
     version('1.6.6', 'ffb26024c58c8c99229470293fbf35cf')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-rngtools', type=('build', 'run'))
+    depends_on('r-rngtools@1.3:', type=('build', 'run'))
     depends_on('r-iterators', type=('build', 'run'))
-    depends_on('r-pkgmaker', type=('build', 'run'))
+    depends_on('r-pkgmaker@0.20:', type=('build', 'run'))

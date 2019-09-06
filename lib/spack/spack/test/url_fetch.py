@@ -45,6 +45,11 @@ def test_urlfetchstrategy_bad_url(tmpdir):
 
 
 @pytest.mark.parametrize('secure', [True, False])
+@pytest.mark.parametrize('mock_archive',
+                         [('.tar.gz', 'z'), ('.tgz', 'z'),
+                          ('.tar.bz2', 'j'), ('.tbz2', 'j'),
+                          ('.tar.xz', 'J'), ('.txz', 'J')],
+                         indirect=True)
 def test_fetch(
         mock_archive,
         secure,
@@ -85,67 +90,46 @@ def test_fetch(
             assert 'echo Building...' in contents
 
 
-def test_from_list_url(mock_packages, config):
+@pytest.mark.parametrize('spec,url,digest', [
+    ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', 'abc000'),
+    ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', 'abc100'),
+    ('url-list-test @3.0', 'foo-3.0.tar.gz', 'abc30'),
+    ('url-list-test @4.5', 'foo-4.5.tar.gz', 'abc45'),
+    ('url-list-test @2.0.0b2', 'foo-2.0.0b2.tar.gz', 'abc200b2'),
+    ('url-list-test @3.0a1', 'foo-3.0a1.tar.gz', 'abc30a1'),
+    ('url-list-test @4.5-rc5', 'foo-4.5-rc5.tar.gz', 'abc45rc5'),
+])
+def test_from_list_url(mock_packages, config, spec, url, digest):
+    """
+    Test URLs in the url-list-test package, which means they should
+    have checksums in the package.
+    """
+    specification = Spec(spec).concretized()
+    pkg = spack.repo.get(specification)
+    fetch_strategy = from_list_url(pkg)
+    assert isinstance(fetch_strategy, URLFetchStrategy)
+    assert os.path.basename(fetch_strategy.url) == url
+    assert fetch_strategy.digest == digest
+
+
+def test_from_list_url_unspecified(mock_packages, config):
+    """Test non-specific URLs from the url-list-test package."""
     pkg = spack.repo.get('url-list-test')
 
-    # These URLs are all in the url-list-test package and should have
-    # checksums taken from the package.
-    spec = Spec('url-list-test @0.0.0').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-0.0.0.tar.gz'
-    assert fetch_strategy.digest == 'abc000'
-
-    spec = Spec('url-list-test @1.0.0').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-1.0.0.tar.gz'
-    assert fetch_strategy.digest == 'abc100'
-
-    spec = Spec('url-list-test @3.0').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-3.0.tar.gz'
-    assert fetch_strategy.digest == 'abc30'
-
-    spec = Spec('url-list-test @4.5').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-4.5.tar.gz'
-    assert fetch_strategy.digest == 'abc45'
-
-    spec = Spec('url-list-test @2.0.0b2').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0b2.tar.gz'
-    assert fetch_strategy.digest == 'abc200b2'
-
-    spec = Spec('url-list-test @3.0a1').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-3.0a1.tar.gz'
-    assert fetch_strategy.digest == 'abc30a1'
-
-    spec = Spec('url-list-test @4.5-rc5').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-4.5-rc5.tar.gz'
-    assert fetch_strategy.digest == 'abc45rc5'
-
-    # this one is not in the url-list-test package.
     spec = Spec('url-list-test @2.0.0').concretized()
     pkg = spack.repo.get(spec)
     fetch_strategy = from_list_url(pkg)
     assert isinstance(fetch_strategy, URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
     assert fetch_strategy.digest is None
+
+
+def test_nosource_from_list_url(mock_packages, config):
+    """This test confirms BundlePackages do not have list url."""
+    pkg = spack.repo.get('nosource')
+
+    fetch_strategy = from_list_url(pkg)
+    assert fetch_strategy is None
 
 
 def test_hash_detection(checksum_type):

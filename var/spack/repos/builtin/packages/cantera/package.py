@@ -14,6 +14,7 @@ class Cantera(SConsPackage):
     homepage = "http://www.cantera.org/docs/sphinx/html/index.html"
     url      = "https://github.com/Cantera/cantera/archive/v2.3.0.tar.gz"
 
+    version('2.4.0', sha256='0dc771693b657d8f4ba835dd229939e5b9cfd8348d2f5ba82775451a524365a5')
     version('2.3.0', 'aebbd8d891cb1623604245398502b72e')
     version('2.2.1', '9d1919bdef39ddec54485fc8a741a3aa')
 

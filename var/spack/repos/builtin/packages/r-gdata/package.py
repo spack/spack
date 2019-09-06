@@ -25,11 +25,13 @@ class RGdata(RPackage):
     ('ans'), and - wrapper for 'sample' that ensures consistent behavior for
     both scalar and vector arguments ('resample')."""
 
-    homepage = "https://cran.r-project.org/package=gdata"
-    url      = "https://cran.r-project.org/src/contrib/gdata_2.18.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gdata"
+    homepage = "https://cloud.r-project.org/package=gdata"
+    url      = "https://cloud.r-project.org/src/contrib/gdata_2.18.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gdata"
 
     version('2.18.0', 'f831019aa743fe11dcf0a051e4280921')
     version('2.17.0', 'c716b663b9dc16ad8cafe6acc781a75f')
 
+    depends_on('r@2.3.0:', type=('build', 'run'))
     depends_on('r-gtools', type=('build', 'run'))
+    depends_on('perl@5.10.0:')

@@ -148,7 +148,7 @@ Here's an example ``packages.yaml`` file that sets preferred packages:
      gperftools:
        version: [2.2, 2.4, 2.3]
      all:
-       compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
+       compiler: [gcc@4.4.7, 'gcc@4.6:', intel, clang, pgi]
        providers:
          mpi: [mvapich2, mpich, openmpi]
 

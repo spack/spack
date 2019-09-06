@@ -15,14 +15,9 @@ class PerlExtension(PerlPackage):
     version('1.0', 'hash-extension-1.0')
     version('2.0', 'hash-extension-2.0')
 
+    extends("perl")
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         with open(os.path.join(prefix.bin, 'perl-extension'), 'w+') as fout:
             fout.write(str(spec.version))
-
-    # Give the package a hook to set the extendee spec
-    extends_spec = 'perl'
-
-    @property
-    def extendee_spec(self):
-        return self.extends_spec

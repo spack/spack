@@ -9,7 +9,8 @@ import shutil
 
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
-from spack.package import InstallError, PackageBase, PackageStillNeededError
+from spack.package import \
+    InstallError, InvalidPackageOpError, PackageBase, PackageStillNeededError
 import spack.patch
 import spack.repo
 import spack.store
@@ -138,6 +139,41 @@ def test_installed_dependency_request_conflicts(
         'conflicting-dependent ^/' + dependency_hash)
     with pytest.raises(spack.spec.UnsatisfiableSpecError):
         dependent.concretize()
+
+
+def test_install_dependency_symlinks_pkg(
+        install_mockery, mock_fetch, mutable_mock_packages):
+    """Test dependency flattening/symlinks mock package."""
+    spec = Spec('flatten-deps')
+    spec.concretize()
+    pkg = spec.package
+    pkg.do_install()
+
+    # Ensure dependency directory exists after the installation.
+    dependency_dir = os.path.join(pkg.prefix, 'dependency-install')
+    assert os.path.isdir(dependency_dir)
+
+
+def test_flatten_deps(
+        install_mockery, mock_fetch, mutable_mock_packages):
+    """Explicitly test the flattening code for coverage purposes."""
+    # Unfortunately, executing the 'flatten-deps' spec's installation does
+    # not affect code coverage results, so be explicit here.
+    spec = Spec('dependent-install')
+    spec.concretize()
+    pkg = spec.package
+    pkg.do_install()
+
+    # Demonstrate that the directory does not appear under the spec
+    # prior to the flatten operation.
+    dependency_name = 'dependency-install'
+    assert dependency_name not in os.listdir(pkg.prefix)
+
+    # Flatten the dependencies and ensure the dependency directory is there.
+    spack.package.flatten_dependencies(spec, pkg.prefix)
+
+    dependency_dir = os.path.join(pkg.prefix, dependency_name)
+    assert os.path.isdir(dependency_dir)
 
 
 def test_installed_upstream_external(
@@ -289,6 +325,38 @@ def test_uninstall_by_spec_errors(mutable_database):
 
     with pytest.raises(PackageStillNeededError, matches="cannot uninstall"):
         PackageBase.uninstall_by_spec(rec.spec)
+
+
+def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages):
+    """Test install phases with the nosource package."""
+    spec = Spec('nosource').concretized()
+    pkg = spec.package
+
+    # Make sure install works even though there is no associated code.
+    pkg.do_install()
+
+    # Also make sure an error is raised if `do_fetch` is called.
+    with pytest.raises(InvalidPackageOpError,
+                       match="fetch a package with a URL"):
+        pkg.do_fetch()
+
+
+def test_nosource_pkg_install_post_install(
+        install_mockery, mock_fetch, mock_packages):
+    """Test install phases with the nosource package with post-install."""
+    spec = Spec('nosource-install').concretized()
+    pkg = spec.package
+
+    # Make sure both the install and post-install package methods work.
+    pkg.do_install()
+
+    # Ensure the file created in the package's `install` method exists.
+    install_txt = os.path.join(spec.prefix, 'install.txt')
+    assert os.path.isfile(install_txt)
+
+    # Ensure the file created in the package's `post-install` method exists.
+    post_install_txt = os.path.join(spec.prefix, 'post-install.txt')
+    assert os.path.isfile(post_install_txt)
 
 
 def test_pkg_build_paths(install_mockery):

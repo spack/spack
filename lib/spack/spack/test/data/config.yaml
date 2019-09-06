@@ -5,9 +5,8 @@ config:
   - $spack/lib/spack/spack/test/data/templates
   - $spack/lib/spack/spack/test/data/templates_again
   build_stage:
-  - $tempdir
-  - /nfs/tmp2/$user
-  - $spack/var/spack/stage
+  - $tempdir/$user/spack-stage
+  - ~/.spack/stage
   source_cache: $spack/var/spack/cache
   misc_cache: ~/.spack/cache
   verify_ssl: true

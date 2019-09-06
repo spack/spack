@@ -10,8 +10,9 @@ class RXlsxjars(RPackage):
     """The xlsxjars package collects all the external jars required for the
     xlxs package. This release corresponds to POI 3.10.1."""
 
-    homepage = "https://cran.rstudio.com/web/packages/xlsxjars/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/xlsxjars_0.6.1.tar.gz"
+    homepage = "https://cloud.r-project.org/package=xlsxjars"
+    url      = "https://cloud.r-project.org/src/contrib/xlsxjars_0.6.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/xlsxjars"
 
     version('0.6.1', '5a1721d5733cb42f3a29e3f353e39166')
 

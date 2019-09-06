@@ -963,8 +963,7 @@ class Spec(object):
         dep = self._dependencies.get(name)
         if dep is not None:
             return dep
-        raise InvalidDependencyError(
-            self.name + " does not depend on " + comma_or(name))
+        raise InvalidDependencyError(self.name, name)
 
     def _find_deps(self, where, deptype):
         deptype = dp.canonical_deptype(deptype)
@@ -1541,6 +1540,31 @@ class Spec(object):
 
         return syaml_dict([('spec', node_list)])
 
+    def to_record_dict(self):
+        """Return a "flat" dictionary with name and hash as top-level keys.
+
+        This is similar to ``to_node_dict()``, but the name and the hash
+        are "flattened" into the dictionary for easiler parsing by tools
+        like ``jq``.  Instead of being keyed by name or hash, the
+        dictionary "name" and "hash" fields, e.g.::
+
+            {
+              "name": "openssl"
+              "hash": "3ws7bsihwbn44ghf6ep4s6h4y2o6eznv"
+              "version": "3.28.0",
+              "arch": {
+              ...
+            }
+
+        But is otherwise the same as ``to_node_dict()``.
+
+        """
+        dictionary = syaml_dict()
+        dictionary["name"] = self.name
+        dictionary["hash"] = self.dag_hash()
+        dictionary.update(self.to_node_dict()[self.name])
+        return dictionary
+
     def to_yaml(self, stream=None, hash=ht.dag_hash):
         return syaml.dump(
             self.to_dict(hash), stream=stream, default_flow_style=False)
@@ -2067,8 +2091,7 @@ class Spec(object):
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
         if extra:
-            raise InvalidDependencyError(
-                self.name + " does not depend on " + comma_or(extra))
+            raise InvalidDependencyError(self.name, extra)
 
         # This dictionary will store object IDs rather than Specs as keys
         # since the Spec __hash__ will change as patches are added to them
@@ -3928,17 +3951,15 @@ class SpecParser(spack.parse.Parser):
     def spec_by_hash(self):
         self.expect(ID)
 
-        specs = spack.store.db.query()
-        matches = [spec for spec in specs if
-                   spec.dag_hash()[:len(self.token.value)] == self.token.value]
-
+        dag_hash = self.token.value
+        matches = spack.store.db.get_by_hash(dag_hash)
         if not matches:
-            raise NoSuchHashError(self.token.value)
+            raise NoSuchHashError(dag_hash)
 
         if len(matches) != 1:
             raise AmbiguousHashError(
                 "Multiple packages specify hash beginning '%s'."
-                % self.token.value, *matches)
+                % dag_hash, *matches)
 
         return matches[0]
 
@@ -4156,6 +4177,10 @@ class InconsistentSpecError(SpecError):
 class InvalidDependencyError(SpecError):
     """Raised when a dependency in a spec is not actually a dependency
        of the package."""
+    def __init__(self, pkg, deps):
+        self.invalid_deps = deps
+        super(InvalidDependencyError, self).__init__(
+            'Package {0} does not depend on {1}'.format(pkg, comma_or(deps)))
 
 
 class NoProviderError(SpecError):
