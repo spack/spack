@@ -38,7 +38,8 @@ def update_kwargs_from_args(args, kwargs):
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty,
-        'use_cache': args.use_cache
+        'use_cache': args.use_cache,
+        'cache_only': args.cache_only
     })
     if hasattr(args, 'setup'):
         setups = set()
@@ -81,6 +82,9 @@ the dependencies"""
     cache_group.add_argument(
         '--no-cache', action='store_false', dest='use_cache', default=True,
         help="do not check for pre-built Spack packages in mirrors")
+    cache_group.add_argument(
+        '--cache-only', action='store_true', dest='cache_only', default=False,
+        help="only install package from binary mirrors")
 
     subparser.add_argument(
         '--show-log-on-error', action='store_true',

@@ -1493,6 +1493,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             restage (bool): Force spack to restage the package source.
             force (bool): Install again, even if already installed.
             use_cache (bool): Install from binary package, if available.
+            cache_only (bool): Fail if binary package unavailable.
             stop_at (InstallPhase): last installation phase to be executed
                 (or None)
         """
@@ -1571,6 +1572,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 print_pkg(self.prefix)
                 spack.hooks.post_install(self.spec)
                 return
+            elif kwargs.get('cache_only', False):
+                tty.die('No binary for %s found and cache-only specified')
 
             tty.msg('No binary for %s found: installing from source'
                     % self.name)
