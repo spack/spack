@@ -66,6 +66,8 @@ class Plasma(CMakePackage):
     conflicts("%xl_r")
 
     patch("remove_absolute_mkl_include.patch", when="@17.1")
+    patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
+    patch("fix_cmake_include.patch", when="@19.8.0:19.8.9")
 
     @when("@18.9.0:")
     def cmake_args(self):
