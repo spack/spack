@@ -1,0 +1,12 @@
+diff -Naur gpaw-1.3.0.orig/c/xc/libxc.c gpaw-1.3.0/c/xc/libxc.c
+--- gpaw-1.3.0.orig/c/xc/libxc.c	2019-09-06 14:59:35.151442058 +0300
++++ gpaw-1.3.0/c/xc/libxc.c	2019-09-06 15:00:46.211440365 +0300
+@@ -801,7 +801,7 @@
+     if (!PyArg_ParseTuple(args, "dOOOOOO",
+                           &c, &n_g, &sigma_g, &lapl_g, &tau_g, &v_g, &vx_g))
+         return NULL;
+-    xc_mgga_x_tb09_set_params(self->functional[0], c);
++    xc_func_set_ext_params(self->functional[0], &c);
+     xc_mgga_vxc(self->functional[0], PyArray_DIM(n_g, 0),
+                 PyArray_DATA(n_g),
+                 PyArray_DATA(sigma_g),
