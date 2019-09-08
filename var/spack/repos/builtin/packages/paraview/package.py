@@ -13,9 +13,6 @@ class Paraview(CMakePackage):
 
     homepage = 'http://www.paraview.org'
     url      = "http://www.paraview.org/files/v5.6/ParaView-v5.6.2.tar.xz"
-    list_url = "http://www.paraview.org/files"
-    list_depth = 1
-    _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
 
     maintainers = ['chuckatkins', 'danlipsa']
@@ -113,11 +110,14 @@ class Paraview(CMakePackage):
     patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
 
     def url_for_version(self, version):
+        _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
         """Handle ParaView version-based custom URLs."""
         if version < Version('5.1.0'):
-            return self._urlfmt.format(version.up_to(2), version, '-source')
+            return _urlfmt.format(version.up_to(2), version, '-source', 'gz')
+        elif version < Version('5.6.1'):
+            return _urlfmt.format(version.up_to(2), version, '', 'gz')
         else:
-            return self._urlfmt.format(version.up_to(2), version, '')
+            return _urlfmt.format(version.up_to(2), version, '', 'xz')
 
     @property
     def paraview_subdir(self):
