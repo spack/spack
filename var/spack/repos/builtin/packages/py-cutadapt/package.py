@@ -13,7 +13,7 @@ class PyCutadapt(PythonPackage):
 
     homepage = "https://cutadapt.readthedocs.io"
     url      = "https://pypi.io/packages/source/c/cutadapt/cutadapt-1.13.tar.gz"
-    git      = "git@github.com:marcelm/cutadapt.git"
+    git      = "https://github.com/marcelm/cutadapt.git"
 
     version('2.5', sha256='ced79e49b93e922e579d0bb9d21298dcb2d7b7b1ea721feed484277e08b1660b')
     version('1.13', '2d2d14e0c20ad53d7d84b57bc3e63b4c')
