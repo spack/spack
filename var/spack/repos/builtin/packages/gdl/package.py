@@ -19,11 +19,10 @@ class Gdl(CMakePackage):
     version('0.9.9', sha256='ad5de3fec095a5c58b46338dcc7367d2565c093794ab1bbcf180bba1a712cf14')
     version('0.9.8', '447b0362e1df5ea8af814a969e89d3ec')
 
-    variant(
-            'graphicsmagick',
+    variant('graphicsmagick',
             default=False,
-            description='Enable GraphicsMagick'
-           )
+            description='Enable GraphicsMagick')
+
     variant('hdf4', default=False, description='Enable HDF4')
     variant('hdf5', default=True, description='Enable HDF5')
     variant('openmp', default=True, description='Enable OpenMP')

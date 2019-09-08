@@ -32,7 +32,7 @@ class CBlosc2(CMakePackage):
             description='support for ZSTD')
 
     depends_on('cmake@2.8.10:', type='build')
-    # TODO https://github.com/inikep/lizard/issues/21 
+    # TODO https://github.com/inikep/lizard/issues/21
     # depends_on('lizard')
     depends_on('lz4')
     depends_on('snappy')

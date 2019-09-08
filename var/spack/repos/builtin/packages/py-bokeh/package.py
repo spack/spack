@@ -23,4 +23,4 @@ class PyBokeh(PythonPackage):
     depends_on('py-numpy@1.7.1:',     type=('build', 'run'))
     depends_on('py-tornado@4.3:',     type=('build', 'run'))
     depends_on('py-futures@3.0.3:',   type=('build', 'run'),
-        when='^python@2.7:2.8')
+               when='^python@2.7:2.8')

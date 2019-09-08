@@ -20,16 +20,12 @@ class IntelXed(Package):
     # the mbuild resource.  Xed doesn't have official releases, only
     # git commits.
 
-    version_list = [
-        ('2019.03.01',
-         'b7231de4c808db821d64f4018d15412640c34113',
-         '176544e1fb54b6bfb40f596111368981d287e951',
-        ),
-        ('2018.02.14',
-         '44d06033b69aef2c20ab01bfb518c52cd71bb537',
-         'bb9123152a330c7fa1ff1a502950dc199c83e177',
-        )
-    ]
+    version_list = [('2019.03.01',
+                     'b7231de4c808db821d64f4018d15412640c34113',
+                     '176544e1fb54b6bfb40f596111368981d287e951'),
+                    ('2018.02.14',
+                     '44d06033b69aef2c20ab01bfb518c52cd71bb537',
+                     'bb9123152a330c7fa1ff1a502950dc199c83e177')]
 
     version('develop', branch='master')
     resource(name='mbuild',

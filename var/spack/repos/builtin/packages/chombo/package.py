@@ -24,12 +24,8 @@ class Chombo(MakefilePackage):
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('hdf5', default=True, description='Enable HDF5 support')
-    variant('dims',
-        default='3',
-        values=('1', '2', '3', '4', '5', '6'),
-        multi=False,
-        description='Number of PDE dimensions [1-6]'
-    )
+    variant('dims', default='3', values=('1', '2', '3', '4', '5', '6'),
+            multi=False, description='Number of PDE dimensions [1-6]')
 
     patch('hdf5-16api.patch', when='@3.2', level=0)
     patch('Make.defs.local.template.patch', when='@3.2', level=0)

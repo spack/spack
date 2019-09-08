@@ -105,18 +105,18 @@ class Kokkos(Package):
     # without specifying CUDA
     for p in gpu_values:
         conflicts('gpu_arch={0}'.format(p), when='~cuda',
-            msg='Must specify CUDA backend to use a GPU architecture.')
+                  msg='Must specify CUDA backend to use a GPU architecture.')
 
     # Check that we haven't specified a Kokkos CUDA option
     # without specifying CUDA
     conflicts('+force_uvm', when='~cuda',
-        msg='Must enable CUDA to use force_uvm.')
+              msg='Must enable CUDA to use force_uvm.')
     conflicts('+use_ldg', when='~cuda',
-        msg='Must enable CUDA to use use_ldg.')
+              msg='Must enable CUDA to use use_ldg.')
     conflicts('+rdc', when='~cuda',
-        msg='Must enable CUDA to use rdc.')
+              msg='Must enable CUDA to use rdc.')
     conflicts('+enable_lambda', when='~cuda',
-        msg='Must enable CUDA to use enable_lambda.')
+              msg='Must enable CUDA to use enable_lambda.')
 
     # Check that we haven't asked for a GPU architecture that
     # the revision of kokkos does not support
@@ -127,8 +127,8 @@ class Kokkos(Package):
     # see kokkos issue #1296
     # https://github.com/kokkos/kokkos/issues/1296
     conflicts('+cuda', when='@2.5.00:2.7.00',
-        msg='Kokkos build system has issue (#1296) when CUDA enabled'
-        ' in version 2.5.00 through 2.7.00.')
+              msg='Kokkos build system has issue (#1296) when CUDA enabled'
+              ' in version 2.5.00 through 2.7.00.')
 
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')

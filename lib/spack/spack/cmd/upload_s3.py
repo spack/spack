@@ -57,7 +57,7 @@ def setup_parser(subparser):
     index = subparsers.add_parser('index', help=update_index.__doc__)
 
     index.add_argument('-e', '--endpoint-url',
-        default='https://s3.spack.io', help='URL of mirror')
+                       default='https://s3.spack.io', help='URL of mirror')
 
     index.set_defaults(func=update_index)
 
