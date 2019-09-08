@@ -22,9 +22,9 @@ class Liggghts(MakefilePackage):
     variant('jpeg', default=True, description='Enable JPEG support')
     variant('gzip', default=True,
             description='Enable GZIP for some input and output files')
-    variant('debug', default=False, 
+    variant('debug', default=False,
             description='Builds a debug version of the executable')
-    variant('profile', default=False, 
+    variant('profile', default=False,
             description='Generate profiling code')
 
     depends_on('vtk')

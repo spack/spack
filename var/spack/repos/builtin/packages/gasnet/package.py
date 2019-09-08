@@ -27,7 +27,7 @@ class Gasnet(AutotoolsPackage):
     variant('mpi', default=True, description="Support MPI")
     variant('aligned-segments', default=False,
             description="Requirement to achieve aligned VM segments")
-    variant('pshm', default=True, 
+    variant('pshm', default=True,
             description="Support inter-process shared memory support")
     variant('segment-mmap-max', default='16GB',
             description="Upper bound for mmap-based GASNet segments")

@@ -108,17 +108,14 @@ class Pythia6(CMakePackage):
                  sha256=checksum,
                  expand=False,
                  destination='example',
-                 placement={example: example}
-             )
+                 placement={example: example})
 
     # Docs.
-    docs \
-        = {'http://www.hepforge.org/archive/pythiasix/update_notes-6.4.28.txt':
-            'a229be4ba9a4eb65a9d53600a5f388b620038d56694c6cb4671c2be224b67751',
-           'http://home.thep.lu.se/~torbjorn/pythia6/lutp0613man2.pdf':
-           '03d637310ea80f0d7aea761492bd38452c602890d8cf913a1ec9edacd79fa43d',
-           'https://pythiasix.hepforge.org/pythia6-announcement.txt':
-           '2a52def41f0c93e32e0db58dbcf072b987ebfbd32e42ccfc1f9382fcf65f1271'}
+    docs = {
+        'http://www.hepforge.org/archive/pythiasix/update_notes-6.4.28.txt': 'a229be4ba9a4eb65a9d53600a5f388b620038d56694c6cb4671c2be224b67751',
+        'http://home.thep.lu.se/~torbjorn/pythia6/lutp0613man2.pdf': '03d637310ea80f0d7aea761492bd38452c602890d8cf913a1ec9edacd79fa43d',
+        'https://pythiasix.hepforge.org/pythia6-announcement.txt': '2a52def41f0c93e32e0db58dbcf072b987ebfbd32e42ccfc1f9382fcf65f1271'
+    }
 
     for docurl, checksum in iteritems(docs):
         doc = os.path.basename(urlparse(docurl).path)
@@ -127,8 +124,7 @@ class Pythia6(CMakePackage):
                  sha256=checksum,
                  expand=False,
                  destination='doc',
-                 placement={doc: doc}
-             )
+                 placement={doc: doc})
 
     # The included patch customizes some routines provided in dummy form
     # by the original source to be useful out of the box in the vast

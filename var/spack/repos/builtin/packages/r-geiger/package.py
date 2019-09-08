@@ -25,6 +25,6 @@ class RGeiger(RPackage):
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
     depends_on('r-coda', type=('build', 'run'))
-    depends_on('r-ncbit', type=('build', 'run')) 
+    depends_on('r-ncbit', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

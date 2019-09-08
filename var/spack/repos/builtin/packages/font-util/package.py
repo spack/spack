@@ -74,16 +74,14 @@ class FontUtil(AutotoolsPackage):
     for f_r in fonts_resource:
         f = f_r[0]
         resource(name=f, url=font_baseurl + f + '-' + f_r[1] + '.tar.gz',
-             md5=f_r[2], destination=f, when='fonts=' + f)
+                 md5=f_r[2], destination=f, when='fonts=' + f)
         fonts.append(f)
 
-    variant(
-       'fonts',
-       description='Installs fonts',
-       values=fonts,
-       default=','.join(fonts),
-       multi=True
-    )
+    variant('fonts',
+            description='Installs fonts',
+            values=fonts,
+            default=','.join(fonts),
+            multi=True)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.prepend_path('PATH', self.prefix.bin)

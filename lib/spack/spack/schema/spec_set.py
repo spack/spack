@@ -83,8 +83,9 @@ schema = {
                 'cdash': {
                     'oneOf': [
                         {'type': 'string'},
-                        {'type': 'array',
-                         'items': {'type': 'string'}
+                        {
+                            'type': 'array',
+                            'items': {'type': 'string'}
                         },
                     ],
                 },

@@ -42,13 +42,13 @@ class Upcxx(Package):
 
     version('2019.3.2', '844722cb0e8c0bc649017fce86469457')
 
-    variant('cuda', default=False, 
+    variant('cuda', default=False,
             description='Builds a CUDA-enabled version of UPC++')
 
-    variant('scheduler', values=('slurm', 'alps', 'user', 'none'), 
+    variant('scheduler', values=('slurm', 'alps', 'user', 'none'),
             default=detect_scheduler(),
             description="Resource manager to use")
-    conflicts('scheduler=none', when='platform=cray', 
+    conflicts('scheduler=none', when='platform=cray',
               msg='None is unacceptable on Cray.')
 
     depends_on('cuda', when='+cuda')

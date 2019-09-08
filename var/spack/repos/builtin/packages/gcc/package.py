@@ -115,12 +115,10 @@ class Gcc(AutotoolsPackage):
     # nvptx-tools does not seem to work as a dependency,
     # but does fine when the source is inside the gcc build directory
     # nvptx-tools doesn't have any releases, so grabbing the last commit
-    resource(
-             name='nvptx-tools',
+    resource(name='nvptx-tools',
              git='https://github.com/MentorEmbedded/nvptx-tools',
              commit='5f6f343a302d620b0868edab376c00b15741e39e',
-             when='+nvptx'
-    )
+             when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')

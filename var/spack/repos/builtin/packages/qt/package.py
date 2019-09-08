@@ -158,7 +158,7 @@ class Qt(Package):
                   msg="QT cannot be built as a framework except on macOS.")
     else:
         conflicts('platform=darwin', when='@4.8.6',
-                msg="QT 4 for macOS is only patched for 4.8.7")
+                  msg="QT 4 for macOS is only patched for 4.8.7")
 
     use_xcode = True
 
