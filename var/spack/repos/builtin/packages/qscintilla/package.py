@@ -61,9 +61,11 @@ class Qscintilla(QMakePackage):
             if 'py-pyqt4' in self.spec:
                 pydir = self.prefix.lib+'python'+str(self.spec['python'].version)+'/site-packages/PyQt4'
                 pyqtsipdir = '--pyqt-sipdir='+self.spec['py-pyqt5'].prefix+'/share/sip/PyQt4'
+                carg_sipinc = '--sip-incdir='+self.spec['py-pyqt5'].prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
             elif 'py-pyqt5' in self.spec:
                 pydir = self.prefix.lib+'python'+str(self.spec['python'].version)+'/site-packages/PyQt5'
                 pyqtsipdir = '--pyqt-sipdir='+self.spec['py-pyqt5'].prefix+'/share/sip/PyQt5'
+                carg_sipinc = '--sip-incdir='+self.spec['py-pyqt5'].prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
 
             carg_inc = '--qsci-incdir='+self.prefix.include
             carg_lib = '--qsci-libdir='+self.prefix.lib
@@ -71,7 +73,6 @@ class Qscintilla(QMakePackage):
             carg_sip = '--qsci-sipdir='+self.prefix+'/share/sip'
             carg_api = '--apidir='+self.prefix+'/qsci'
             carg_dest = '--destdir='+pydir
-            carg_sipinc = '--sip-incdir='+self.spec['py-sip'].prefix+'/include'
 
             if self.spec['qt'].version < Version('5'):
                 python('configure.py', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc)
