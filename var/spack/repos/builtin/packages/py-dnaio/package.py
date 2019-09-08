@@ -11,7 +11,7 @@ class PyDnaio(PythonPackage):
 
     homepage = "https://github.com/marcelm/dnaio"
     url      = "https://pypi.io/packages/source/d/dnaio/dnaio-0.3.tar.gz"
-    git      = "git@github.com:marcelm/dnaio.git"
+    git      = "https://github.com/marcelm/dnaio.git"
 
     version('0.3', sha256='47e4449affad0981978fe986684fc0d9c39736f05a157f6cf80e54dae0a92638')
 
