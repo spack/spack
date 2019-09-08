@@ -157,7 +157,7 @@ def add_pattern_exemptions(line, codes):
 
     # don't add E501 unless the line is actually too long, as it can mask
     # other errors like trailing whitespace
-    if orig_len <= 79 and "E501" in codes:
+    if orig_len <= max_line_length and "E501" in codes:
         codes.remove("E501")
         if not codes:
             return line + "\n"
