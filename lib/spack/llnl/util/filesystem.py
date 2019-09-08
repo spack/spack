@@ -6,7 +6,6 @@
 import collections
 import errno
 import hashlib
-import fileinput
 import glob
 import grp
 import itertools
@@ -159,8 +158,16 @@ def filter_file(regex, repl, *filenames, **kwargs):
             shutil.copy(filename, backup_filename)
 
         try:
-            for line in fileinput.input(filename, inplace=True):
-                print(re.sub(regex, repl, line.rstrip('\n')))
+            extra_kwargs = {}
+            if sys.version_info > (3, 0):
+                extra_kwargs = {'errors': 'surrogateescape'}
+
+            with open(backup_filename, mode='r', **extra_kwargs) as input_file:
+                with open(filename, mode='w', **extra_kwargs) as output_file:
+                    for line in input_file:
+                        filtered_line = re.sub(regex, repl, line)
+                        output_file.write(filtered_line)
+
         except BaseException:
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)

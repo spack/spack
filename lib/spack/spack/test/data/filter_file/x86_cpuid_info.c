@@ -11,6 +11,7 @@
 *          Now also supports multiple TLB descriptors
 */
 
+#include <malloc.h>
 #include <string.h>
 #include <stdio.h>
 #include "papi.h"

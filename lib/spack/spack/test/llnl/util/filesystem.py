@@ -9,6 +9,7 @@ import pytest
 import os
 import shutil
 import stat
+import sys
 
 import llnl.util.filesystem as fs
 import spack.paths
@@ -315,7 +316,12 @@ def test_headers_directory_setter():
 @pytest.mark.parametrize('regex,replacement,filename', [
     (r"\<malloc\.h\>", "<stdlib.h>", 'x86_cpuid_info.c')
 ])
-def test_filter_files_non_utf8_encoding(regex, replacement, filename, tmpdir):
+def test_filter_files_with_different_encodings(
+        regex, replacement, filename, tmpdir
+):
+    # All files given as input to this test must satisfy the pre-requisite
+    # that the 'replacement' string is not present in the file initially and
+    # that there's at least one match for the regex
     original_file = os.path.join(
         spack.paths.test_path, 'data', 'filter_file', filename
     )
@@ -323,3 +329,10 @@ def test_filter_files_non_utf8_encoding(regex, replacement, filename, tmpdir):
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(regex, replacement, target_file)
+    # Check the strings have been replaced
+    extra_kwargs = {}
+    if sys.version_info > (3, 0):
+        extra_kwargs = {'errors': 'surrogateescape'}
+
+    with open(target_file, mode='r', **extra_kwargs) as f:
+        assert replacement in f.read()
