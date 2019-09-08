@@ -5,10 +5,13 @@
 
 """Tests for ``llnl/util/filesystem.py``"""
 
-import llnl.util.filesystem as fs
-import os
-import stat
 import pytest
+import os
+import shutil
+import stat
+
+import llnl.util.filesystem as fs
+import spack.paths
 
 
 @pytest.fixture()
@@ -306,3 +309,17 @@ def test_headers_directory_setter():
     # Setting directories to None also returns an empty list
     hl.directories = None
     assert hl.directories == []
+
+
+@pytest.mark.regression('7358')
+@pytest.mark.parametrize('regex,replacement,filename', [
+    (r"\<malloc\.h\>", "<stdlib.h>", 'x86_cpuid_info.c')
+])
+def test_filter_files_non_utf8_encoding(regex, replacement, filename, tmpdir):
+    original_file = os.path.join(
+        spack.paths.test_path, 'data', 'filter_file', filename
+    )
+    target_file = os.path.join(str(tmpdir), filename)
+    shutil.copy(original_file, target_file)
+    # This should not raise exceptions
+    fs.filter_file(regex, replacement, target_file)
