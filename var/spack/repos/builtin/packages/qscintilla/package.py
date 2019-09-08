@@ -73,11 +73,12 @@ class Qscintilla(QMakePackage):
             carg_sip = '--qsci-sipdir='+self.prefix+'/share/sip'
             carg_api = '--apidir='+self.prefix+'/qsci'
             carg_dest = '--destdir='+pydir
+            carg_stub = '--stubsdir='+pydir
 
             if self.spec['qt'].version < Version('5'):
-                python('configure.py', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc)
+                python('configure.py', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
             else:
-                python('configure.py', '--pyqt=PyQt5', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc)
+                python('configure.py', '--pyqt=PyQt5', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
         if '+designer' in self.spec:
             pass # not implemented yet TODO
 
