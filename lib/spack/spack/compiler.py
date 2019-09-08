@@ -295,7 +295,7 @@ class Compiler(object):
 
             return cls.parse_implicit_rpaths(output)
         except spack.util.executable.ProcessError:
-            pass
+            tty.debug('ProcessError: Command exited with non-zero status')
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
