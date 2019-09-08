@@ -51,6 +51,9 @@ class Qscintilla(QMakePackage):
     # giving 'Nothing Installed Error'
     def setup_environment(self, spack_env, run_env):
         spack_env.set('INSTALL_ROOT', self.prefix)
+        if '+python' in self.spec:
+            module_dir = self.prefix.lib+'/python'+str(self.spec['python'].version)+'/site-packages'
+            run_env.prepend_path('PYTHONPATH', module_dir)
 
 
     @run_after('install')
