@@ -19,7 +19,7 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('popt', type=('build', 'link'))
     depends_on('json-c', type=('build', 'link'))
     depends_on('util-linux', type=('build', 'link'))
-    depends_on('gettext', type=('build', 'link'))
+    depends_on('gettext@0.18.3', type=('build', 'link'))
 
     def install(self, spec, prefix):
         make()
