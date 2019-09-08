@@ -11,8 +11,10 @@ class Paraview(CMakePackage):
     """ParaView is an open-source, multi-platform data analysis and
     visualization application."""
 
-    homepage = 'http://www.paraview.org'
-    url      = "http://www.paraview.org/files/v5.6/ParaView-v5.6.2.tar.xz"
+    homepage = 'https://www.paraview.org'
+    url      = "https://www.paraview.org/files/v5.6/ParaView-v5.6.2.tar.xz"
+    list_url = "https://www.paraview.org/files"
+    list_depth = 1
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
 
     maintainers = ['chuckatkins', 'danlipsa']
