@@ -294,6 +294,8 @@ class Compiler(object):
                                       output=str, error=str))  # str for py2
 
             return cls.parse_implicit_rpaths(output)
+        except spack.util.executable.ProcessError:
+            pass
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
