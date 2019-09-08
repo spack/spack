@@ -20,6 +20,6 @@ class PyXopen(PythonPackage):
     version('0.1.1', '4e0e955546ee6bee4ea736b54623a671')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-bz2file', type=('build','run'), when='@0.5: ^python@:2.8')
+    depends_on('py-bz2file', type=('build', 'run'), when='@0.5: ^python@:2.8')
     depends_on('python@2.7,3.4:', type=('build', 'run'), when='@0.5:')
     depends_on('python@2.6:2.99,3.3:', type=('build', 'run'), when='@0.1.1')
