@@ -40,13 +40,11 @@ class Libfabric(AutotoolsPackage):
                'tcp',
                'efa')
 
-    variant(
-       'fabrics',
-       default='sockets',
-       description='A list of enabled fabrics',
-       values=fabrics,
-       multi=True
-    )
+    variant('fabrics',
+            default='sockets',
+            description='A list of enabled fabrics',
+            values=fabrics,
+            multi=True)
 
     # NOTE: the 'kdreg' variant enables use of the special /dev/kdreg file to
     #   assist in memory registration caching in the GNI provider.  This

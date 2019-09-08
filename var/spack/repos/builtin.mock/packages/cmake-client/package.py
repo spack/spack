@@ -25,7 +25,7 @@ class CmakeClient(CMakePackage):
 
     flipped = False
     run_this = True
-    check_this_is_None = None
+    check_this_is_none = None
     did_something = False
 
     @run_after('cmake')
@@ -34,7 +34,7 @@ class CmakeClient(CMakePackage):
         self.callback_counter += 1
 
     @run_after('cmake')
-    @on_package_attributes(run_this=True, check_this_is_None=None)
+    @on_package_attributes(run_this=True, check_this_is_none=None)
     def flip(self):
         self.flipped = True
 

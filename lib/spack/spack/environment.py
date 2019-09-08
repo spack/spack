@@ -955,10 +955,8 @@ class Environment(object):
 
         path_updates = list()
         if default_view_name in self.views:
-            for var, subdirs in updates:
-                paths = filter(lambda x: os.path.exists(x),
-                               list(os.path.join(self.default_view.root, x)
-                                    for x in subdirs))
+            for var, dirs in updates:
+                paths = [os.path.join(self.default_view.root, x) for x in dirs]
                 path_updates.append((var, paths))
         return path_updates
 

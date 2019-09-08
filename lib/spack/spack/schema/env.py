@@ -78,7 +78,7 @@ schema = {
                                 }
                             },
                             'patternProperties': {
-                               r'^(?!when$)\w*': spec_list_schema
+                                r'^(?!when$)\w*': spec_list_schema
                             }
                         }
                     },
@@ -87,35 +87,36 @@ schema = {
                         'anyOf': [
                             {'type': 'boolean'},
                             {'type': 'string'},
-                            {'type': 'object',
-                             'patternProperties': {
-                                  r'\w+': {
-                                      'required': ['root'],
-                                      'additionalProperties': False,
-                                      'properties': {
-                                          'root': {
-                                              'type': 'string'
-                                          },
-                                          'link': {
-                                              'type': 'string',
-                                              'pattern': '(roots|all)',
-                                          },
-                                          'select': {
-                                              'type': 'array',
-                                              'items': {
-                                                  'type': 'string'
-                                              }
-                                          },
-                                          'exclude': {
-                                              'type': 'array',
-                                              'items': {
-                                                  'type': 'string'
-                                              }
-                                        },
-                                          'projections': projections_scheme
-                                      }
-                                  }
-                             }
+                            {
+                                'type': 'object',
+                                'patternProperties': {
+                                    r'\w+': {
+                                        'required': ['root'],
+                                        'additionalProperties': False,
+                                        'properties': {
+                                            'root': {
+                                                'type': 'string'
+                                            },
+                                            'link': {
+                                                'type': 'string',
+                                                'pattern': '(roots|all)',
+                                            },
+                                            'select': {
+                                                'type': 'array',
+                                                'items': {
+                                                    'type': 'string'
+                                                }
+                                            },
+                                            'exclude': {
+                                                'type': 'array',
+                                                'items': {
+                                                    'type': 'string'
+                                                }
+                                            },
+                                            'projections': projections_scheme
+                                        }
+                                    }
+                                }
                             }
                         ]
                     }
