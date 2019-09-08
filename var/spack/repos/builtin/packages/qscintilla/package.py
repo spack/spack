@@ -80,15 +80,23 @@ class Qscintilla(QMakePackage):
                 python('configure.py', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
             else:
                 python('configure.py', '--pyqt=PyQt5', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
+
+                # Add config options to avoid build errors
+                # "QAbstractScrollArea: No such file or directory"
+                # "qprinter.h: No such file or directory"
                 qscipro=FileFilter('Qsci/Qsci.pro')
                 qscipro.filter('TEMPLATE = lib',
                                'TEMPLATE = lib\nQT += widgets\nQT += printsupport')
+
                 make()
+
                 makefile = FileFilter('Makefile')
                 makefile.filter(r'\$\(INSTALL_ROOT\)','')
                 makefile = FileFilter('Qsci/Makefile')
                 makefile.filter(r'\$\(INSTALL_ROOT\)','')
+
                 make('install')
+
         if '+designer' in self.spec:
             pass # not implemented yet TODO
 
