@@ -9,26 +9,12 @@ import os
 
 
 def detect_scheduler():
-    if (os.environ.get('CROSS') is None):
-        srunbin = which('srun')
-        if srunbin is None:
-            aprunbin = which('aprun')
-            if aprunbin is None:
-                tty.warn("CROSS has not been set, however "
-                         "cannot detect scheduler.")
-                return 'none'
-            else:
-                tty.warn("CROSS has not been set, however "
-                         "aprun has been found, assuming alps scheduler.")
-                return 'alps'
-        else:
-            tty.warn("CROSS has not been set, however "
-                     "srun has been found, assuming slurm scheduler.")
-            return 'slurm'
+    if which('srun'):
+        return 'slurm'
+    elif which('aprun'):
+        return 'alps'
     else:
-        tty.warn("CROSS has been set to %s by the user."
-                 % os.environ.get('CROSS'))
-        return 'user'
+        return 'none'
 
 
 class Upcxx(Package):
@@ -42,13 +28,13 @@ class Upcxx(Package):
 
     version('2019.3.2', '844722cb0e8c0bc649017fce86469457')
 
-    variant('cuda', default=False, 
+    variant('cuda', default=False,
             description='Builds a CUDA-enabled version of UPC++')
 
-    variant('scheduler', values=('slurm', 'alps', 'user', 'none'), 
+    variant('scheduler', values=('slurm', 'alps', 'none'),
             default=detect_scheduler(),
             description="Resource manager to use")
-    conflicts('scheduler=none', when='platform=cray', 
+    conflicts('scheduler=none', when='platform=cray',
               msg='None is unacceptable on Cray.')
 
     depends_on('cuda', when='+cuda')
@@ -64,12 +50,8 @@ class Upcxx(Package):
         if 'platform=cray' in self.spec:
             spack_env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
             if "scheduler=slurm" in self.spec:
-                tty.warn("CROSS has been automatically set to %s."
-                         % 'cray-aries-slurm')
                 spack_env.set('CROSS', 'cray-aries-slurm')
             elif "scheduler=alps" in self.spec:
-                tty.warn("CROSS has been automatically set to %s."
-                         % 'cray-aries-alps')
                 spack_env.set('CROSS', 'cray-aries-alps')
         if '+cuda' in self.spec:
             spack_env.set('UPCXX_CUDA', '1')
