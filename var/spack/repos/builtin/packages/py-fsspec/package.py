@@ -14,5 +14,5 @@ class PyFsspec(PythonPackage):
 
     version('0.4.4', '27dfc3dab37d5c037683c7a3eaf7acd8b24ee56e4ce3edb14af54bdb43973d43')
 
-    depends_on('python@3.5:')
+    depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
