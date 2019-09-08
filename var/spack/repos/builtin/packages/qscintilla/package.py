@@ -60,12 +60,13 @@ class Qscintilla(QMakePackage):
             python = which('python')
             if 'py-pyqt4' in self.spec:
                 pydir = self.prefix.lib+'/python'+str(self.spec['python'].version)+'/site-packages/PyQt4'
-                pyqtsipdir = '--pyqt-sipdir='+self.spec['py-pyqt5'].prefix+'/share/sip/PyQt4'
-                carg_sipinc = '--sip-incdir='+self.spec['py-pyqt5'].prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
+                pyqtsipdir = '--pyqt-sipdir='+self.spec['py-pyqt4'].prefix+'/share/sip/PyQt4'
+                carg_sipinc = '--sip-incdir='+self.spec['py-pyqt4'].prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
+
             elif 'py-pyqt5' in self.spec:
                 pydir = self.prefix.lib+'/python'+str(self.spec['python'].version)+'/site-packages/PyQt5'
                 pyqtsipdir = '--pyqt-sipdir='+self.spec['py-pyqt5'].prefix+'/share/sip/PyQt5'
-                carg_sipinc = '--sip-incdir='+self.spec['py-pyqt5'].prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
+                carg_sipinc = '--sip-incdir='+self.spec['py-pyqt4'].prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
 
             carg_inc = '--qsci-incdir='+self.prefix.include
             carg_lib = '--qsci-libdir='+self.prefix.lib
@@ -79,6 +80,15 @@ class Qscintilla(QMakePackage):
                 python('configure.py', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
             else:
                 python('configure.py', '--pyqt=PyQt5', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
+                qscipro=FileFilter('Qsci/Qsci.pro')
+                qscipro.filter('TEMPLATE = lib',
+                               'TEMPLATE = lib\nQT += widgets\nQT += printsupport')
+                make()
+                makefile = FileFilter('Makefile')
+                makefile.filter(r'\$\(INSTALL_ROOT\)','')
+                makefile = FileFilter('Qsci/Makefile')
+                makefile.filter(r'\$\(INSTALL_ROOT\)','')
+                make('install')
         if '+designer' in self.spec:
             pass # not implemented yet TODO
 
