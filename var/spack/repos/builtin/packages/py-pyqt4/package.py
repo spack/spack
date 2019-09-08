@@ -15,6 +15,7 @@ class PyPyqt4(SIPPackage):
     homepage = "https://www.riverbankcomputing.com/software/pyqt/intro"
     url      = "http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.12.3/PyQt4_gpl_x11-4.12.3.tar.gz"
 
+    sip_module = 'PyQt4.sip'
     import_modules = [
         'PyQt4', 'PyQt4.Qt', 'PyQt4.QtCore', 'PyQt4.QtDeclarative',
         'PyQt4.QtDesigner', 'PyQt4.QtGui', 'PyQt4.QtHelp',
@@ -27,10 +28,6 @@ class PyPyqt4(SIPPackage):
     version('4.11.3', '997c3e443165a89a559e0d96b061bf70',
             url='http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.3/PyQt-x11-gpl-4.11.3.tar.gz')
 
-    # Concretizer is broken...
-    # depends_on('py-sip module=PyQt4.sip', when='@4.12.2:', type=('build', 'run'))  # noqa: E501
-    depends_on('py-sip module=PyQt4.sip', type=('build', 'run'))
-
     # Supposedly can also be built with Qt 5 compatibility layer
     depends_on('qt@:4+phonon+dbus')
 
@@ -39,4 +36,8 @@ class PyPyqt4(SIPPackage):
         return 'configure-ng.py'
 
     def configure_args(self):
-        return ['--pyuic4-interpreter', self.spec['python'].command.path]
+        return [
+            '--pyuic4-interpreter', self.spec['python'].command.path,
+            '--sipdir', self.prefix.share.sip.PyQt4,
+            '--stubsdir', join_path(site_packages_dir, 'PyQt4'),
+        ]

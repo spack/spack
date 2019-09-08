@@ -39,11 +39,12 @@ class PySip(Package):
 
     def configure(self, spec, prefix):
         args = [
+            '--sip-module={0}'.format(spec.variants['module'].value),
             '--bindir={0}'.format(prefix.bin),
             '--destdir={0}'.format(site_packages_dir),
             '--incdir={0}'.format(python_include_dir),
             '--sipdir={0}'.format(prefix.share.sip),
-            '--sip-module={0}'.format(spec.variants['module'].value),
+            '--stubsdir={0}'.format(site_packages_dir),
         ]
 
         python('configure.py', *args)
