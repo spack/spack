@@ -7,5 +7,6 @@ RUN /build/split.sh
 
 FROM nginx:mainline-alpine
 COPY --from=build-env --chown=nginx:nginx /build/packages /build/packages.json /usr/share/nginx/html/api/
+COPY cors-header.conf /etc/nginx/conf.d/
 
 CMD ["nginx", "-g", "daemon off;"]
