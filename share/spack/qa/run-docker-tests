@@ -72,7 +72,17 @@ push_docker_image() {
     return $result
 }
 
-SPACK_VERSION="$( ../../../bin/spack --version )"
+# packages.spack.io service
+spack list --format version_json > packages.json
+./share/spack/packages/build-image.sh
+if [ "$TEST_SUITE" '=' "docker" -a \
+     "$TRAVIS_EVENT_TYPE" != "pull_request" ] && ensure_docker_login ; then
+    ./share/spack/packages/push-image.sh
+fi
+
+# spack images for users
+this_dir=$(cd $(dirname $0) && pwd)
+SPACK_VERSION="$( ${this_dir}/../../../bin/spack --version )"
 
 build_docker_image centos-6.dockerfile ../../.. spack/spack \
     "${SPACK_VERSION}-centos-6"                             \
@@ -96,9 +106,6 @@ build_docker_image ubuntu-1804.dockerfile ../../.. spack/spack \
     "ubuntu-18.04"                                             \
     "ubuntu-bionic"
 
-spack list --format version_json > packages.json
-./share/spack/packages/build-image.sh
-
 if [ "$TEST_SUITE" '=' "docker" -a \
      "$TRAVIS_EVENT_TYPE" != "pull_request" ] && ensure_docker_login ; then
     push_docker_image "spack/spack"      \
@@ -116,6 +123,4 @@ if [ "$TEST_SUITE" '=' "docker" -a \
         "ubuntu-xenial"                  \
         "ubuntu-bionic"                  \
         "latest"
-
-    ./share/spack/packages/push-image.sh
 fi
