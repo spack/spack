@@ -16,6 +16,5 @@ class PyIniparse(PythonPackage):
     version('master', branch='master')
     version('0.4', sha256='abc1ee12d2cfb2506109072d6c21e40b6c75a3fe90a9c924327d80bc0d99c054')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    conflicts('python@3', when='@0.4')
+    depends_on('python@2.4:2.8', when='@:0.4', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.3:', when='@master:', type=('build', 'run'))
