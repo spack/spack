@@ -29,7 +29,7 @@ class PyPyqt4(SIPPackage):
             url='http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.3/PyQt-x11-gpl-4.11.3.tar.gz')
 
     # Supposedly can also be built with Qt 5 compatibility layer
-    depends_on('qt@:4+phonon+dbus')
+    depends_on('qt@:4')
 
     # https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html
     def configure_file(self):
