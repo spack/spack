@@ -59,11 +59,11 @@ class Qscintilla(QMakePackage):
             os.chdir(str(self.stage.source_path)+'/Python')
             python = which('python')
             if 'py-pyqt4' in self.spec:
-                pydir = self.prefix.lib+'python'+str(self.spec['python'].version)+'/site-packages/PyQt4'
+                pydir = self.prefix.lib+'/python'+str(self.spec['python'].version)+'/site-packages/PyQt4'
                 pyqtsipdir = '--pyqt-sipdir='+self.spec['py-pyqt5'].prefix+'/share/sip/PyQt4'
                 carg_sipinc = '--sip-incdir='+self.spec['py-pyqt5'].prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
             elif 'py-pyqt5' in self.spec:
-                pydir = self.prefix.lib+'python'+str(self.spec['python'].version)+'/site-packages/PyQt5'
+                pydir = self.prefix.lib+'/python'+str(self.spec['python'].version)+'/site-packages/PyQt5'
                 pyqtsipdir = '--pyqt-sipdir='+self.spec['py-pyqt5'].prefix+'/share/sip/PyQt5'
                 carg_sipinc = '--sip-incdir='+self.spec['py-pyqt5'].prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
 
