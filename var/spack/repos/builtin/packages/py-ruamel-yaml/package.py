@@ -15,3 +15,11 @@ class PyRuamelYaml(PythonPackage):
     version('0.16.5', sha256='412a6f5cfdc0525dee6a27c08f5415c7fd832a7afcb7a0ed7319628aed23d408')
 
     depends_on('py-setuptools', type='build')
+
+    @run_after('install')
+    def fix_import_error(self):
+        if str(self.spec['python'].version.up_to(1)) == '2':
+            touch = which('touch')
+            touch(self.prefix+'/lib/python'+
+                str(self.spec['python'].version.up_to(2))+
+                '/site-packages'+'/ruamel/__init__.py')
