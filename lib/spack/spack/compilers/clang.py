@@ -206,6 +206,7 @@ class Clang(Compiler):
             r'^Apple LLVM version ([^ )]+)|'
             # Normal clang compiler versions are left as-is
             r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+            r'clang version ([^ )]+)-[~.\w\d-]*|'
             r'clang version ([^ )]+)',
             output
         )
