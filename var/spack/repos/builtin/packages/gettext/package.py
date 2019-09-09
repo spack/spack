@@ -10,12 +10,10 @@ class Gettext(AutotoolsPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
     homepage = "https://www.gnu.org/software/gettext/"
-    url      = "https://ftpmirror.gnu.org/gettext/gettext-0.18.3.tar.gz"
+    url      = "https://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
 
-    version('0.20.1', sha256='66415634c6e8c3fa8b71362879ec7575e27da43da562c798a8a2f223e6e47f5c')
-    version('0.19.8.1', sha256='ff942af0e438ced4a8b0ea4b0b6e0d6d657157c5e2364de57baa279c1c125c43')
-    version('0.19.7', sha256='5386d2a40500295783c6a52121adcf42a25519e2d23675950619c9e69558c23f')
-    version('0.18.3', sha256='36f3c1043df803565d4977c1efbd41e1ec0f0301acf5f057984406c34cb9f948')
+    version('0.19.8.1', 'df3f5690eaa30fd228537b00cb7b7590')
+    version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
 
     # Recommended variants
     variant('curses',   default=True, description='Use libncurses')
