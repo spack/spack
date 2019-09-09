@@ -28,6 +28,7 @@ class Mvdtool(CMakePackage):
     depends_on('boost')
     depends_on('cmake', type='build')
     depends_on('py-setuptools-scm', type='build', when='@2:')
+    depends_on('py-setuptools', type='build', when='@2:')
 
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('hdf5~mpi', when='~mpi')
