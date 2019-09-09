@@ -69,9 +69,11 @@ class PyPyqt5(SIPPackage):
                 # Add config options to avoid build errors
                 # "QAbstractScrollArea: No such file or directory"
                 # "qprinter.h: No such file or directory"
+                # ".../Qsci.so: undefined symbol: _ZTI10Qsci...."
                 qscipro=FileFilter('Qsci/Qsci.pro')
+                link_qscilibs = 'LIBS += -L'+self.prefix.lib+' -lqscintilla2_qt5'
                 qscipro.filter('TEMPLATE = lib',
-                               'TEMPLATE = lib\nQT += widgets\nQT += printsupport')
+                               'TEMPLATE = lib\nQT += widgets\nQT += printsupport\n'+link_qscilibs)
 
                 make()
 
