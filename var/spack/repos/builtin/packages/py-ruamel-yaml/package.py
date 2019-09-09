@@ -7,7 +7,10 @@ from spack import *
 
 
 class PyRuamelYaml(PythonPackage):
-    """"""
+    """
+    a YAML parser/emitter that supports roundtrip preservation of comments,
+    seq/map flow style, and map key order
+    """
 
     homepage = "https://bitbucket.org/ruamel/yaml/src/default/"
     url      = "https://pypi.io/packages/source/r/ruamel.yaml/ruamel.yaml-0.16.5.tar.gz"
