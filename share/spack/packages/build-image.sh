@@ -13,5 +13,5 @@ export IMAGE="spack/packages.spack.io:latest"
 if [ "$script" '=' 'push-image.sh' ] ; then
     docker push "${IMAGE}"
 else
-    docker build -f -t "${IMAGE}" .
+    docker build --no-cache --force-rm -t "${IMAGE}" .
 fi
