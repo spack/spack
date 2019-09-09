@@ -51,6 +51,7 @@ class PyPyqt5(SIPPackage):
         if '+qsci' in self.spec:
             with working_dir(str(self.spec['qscintilla'].prefix)+'/share/qscintilla/src/Python'):
                 pydir = join_path(site_packages_dir, 'PyQt5')
+                carg_sip = '--sip='+self.prefix.bin
                 pyqtsipdir = '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5
                 carg_sipinc = '--sip-incdir=' + self.prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
 
