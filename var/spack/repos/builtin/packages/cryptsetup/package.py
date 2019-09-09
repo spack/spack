@@ -19,7 +19,10 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('popt', type=('build', 'link'))
     depends_on('json-c', type=('build', 'link'))
     depends_on('util-linux', type=('build', 'link'))
-    depends_on('gettext@0.18.3', type=('build', 'link'))
+    depends_on('gettext', type=('build', 'link'))
+
+    def configure_args(self):
+        return ['LIBS=-lintl']
 
     def install(self, spec, prefix):
         make()
