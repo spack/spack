@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# https://downloads.sourceforge.net/project/bbmap/BBMap_38.63.tar.gz
 from spack import *
 
 
@@ -13,8 +12,7 @@ class Bbmap(Package):
     homepage = "http://sourceforge.net/projects/bbmap/"
     url      = "https://downloads.sourceforge.net/project/bbmap/BBMap_38.63.tar.gz"
 
-    version('38.63', 
-           sha256='089064104526c8d696164aefa067f935b888bc71ef95527c72a98c17ee90a01f')
+    version('38.63', sha256='089064104526c8d696164aefa067f935b888bc71ef95527c72a98c17ee90a01f')
     version('37.36', '1e1086e1fae490a7d03c5a065b1c262f')
 
     depends_on('java')
@@ -23,6 +21,5 @@ class Bbmap(Package):
         install_tree('.', prefix.bin)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('BBMAP_CONFIG', join_path(self.prefix, 'bin', 'config'))
-        run_env.set('BBMAP_RESOURCES',
-                    join_path(self.prefix, 'bin', 'resources'))
+        run_env.set('BBMAP_CONFIG', self.prefix.bin.config)
+        run_env.set('BBMAP_RESOURCES', self.prefix.bin.resources)
