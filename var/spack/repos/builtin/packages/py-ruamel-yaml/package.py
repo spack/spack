@@ -22,5 +22,5 @@ class PyRuamelYaml(PythonPackage):
         if str(self.spec['python'].version.up_to(1)) == '2':
             touch = which('touch')
             touch(self.prefix + '/lib/python' +
-                str(self.spec['python'].version.up_to(2)) +
-                '/site-packages' + '/ruamel/__init__.py')
+                  str(self.spec['python'].version.up_to(2)) +
+                  '/site-packages' + '/ruamel/__init__.py')
