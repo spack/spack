@@ -77,6 +77,6 @@ class Qgis(CMakePackage):
         args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].libs)+'/pkgconfig')
         args.append('-DPOSTGRES_PREFIX={0}'.format(self.spec['postgresql'].prefix))
         args.append('-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix)+'/include')
-        args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib')
+        args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib/libqscintilla2_qt5.so') # TODO libqsci.. for Qt@4?
         args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/lib/pkgconfig')
         return args
