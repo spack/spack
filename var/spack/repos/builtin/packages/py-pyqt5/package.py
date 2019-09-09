@@ -51,7 +51,7 @@ class PyPyqt5(SIPPackage):
         if '+qsci' in self.spec:
             with working_dir(str(self.spec['qscintilla'].prefix)+'/share/qscintilla/src/Python'):
                 pydir = join_path(site_packages_dir, 'PyQt5')
-                carg_sip = '--sip='+self.prefix.bin
+                sip = '--sip='+self.prefix.bin
                 pyqtsipdir = '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5
                 carg_sipinc = '--sip-incdir=' + self.prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
 
@@ -65,7 +65,7 @@ class PyPyqt5(SIPPackage):
 
                 python = which('python')
 
-                python('configure.py', '--pyqt=PyQt5', carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
+                python('configure.py', '--pyqt=PyQt5', sip, carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
 
                 # Add config options to avoid build errors
                 # "QAbstractScrollArea: No such file or directory"
