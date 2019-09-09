@@ -22,7 +22,11 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('gettext', type=('build', 'link'))
 
     def configure_args(self):
-        return ['LIBS=-lintl']
+        args = [
+            'LIBS=-lintl',
+            'systemd_tmpfilesdir={0}/tmp'.format(self.prefix)
+        ]
+        return args
 
     def install(self, spec, prefix):
         make()
