@@ -13,6 +13,7 @@ class PyRuamelYaml(PythonPackage):
     url      = "https://pypi.io/packages/source/r/ruamel.yaml/ruamel.yaml-0.16.5.tar.gz"
 
     version('0.16.5', sha256='412a6f5cfdc0525dee6a27c08f5415c7fd832a7afcb7a0ed7319628aed23d408')
+    version('0.11.7', sha256='c89363e16c9eafb9354e55d757723efeff8682d05e56b0881450002ffb00a344')
 
     depends_on('py-setuptools', type='build')
 
