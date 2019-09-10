@@ -142,16 +142,27 @@ def _parse_implicit_rpaths(string):
         if normalized_path not in visited:
             implicit_link_dirs.append(normalized_path)
             visited.add(normalized_path)
-    implicit_link_dirs = filter_system_paths(implicit_link_dirs)
-
-    # Additional filtering: we also want to exclude paths that are
-    # subdirectories of /usr/lib/ and /lib/
-    implicit_link_dirs = list(
-        path for path in implicit_link_dirs
-        if not any(is_subdirectory(path, d) for d in ['/lib/', '/usr/lib/']))
 
     tty.debug('found link dirs: %s' % ', '.join(implicit_link_dirs))
     return implicit_link_dirs
+
+
+def _which_installed_by_spack(paths):
+    """Create a list of all the paths that are a subdirectory of an installed
+    Spack package.
+    """
+    filtered_paths = list()
+    metadata_dir = spack.store.layout.metadata_dir
+    for link_dir in paths:
+        path_components = link_dir.split(os.path.sep)
+        test_dirs = list()
+        for i in range(1, len(path_components) + 1):
+            test_dirs.append(
+                os.path.sep.join(path_components[:i] + [metadata_dir]))
+        if any(os.path.isdir(i) for i in test_dirs):
+            filtered_paths.append(link_dir)
+
+    return filtered_paths
 
 
 class Compiler(object):
@@ -272,7 +283,8 @@ class Compiler(object):
 
         Subclasses can override this to customize.
         """
-        return _parse_implicit_rpaths(string)
+        unfiltered_link_dirs = _parse_implicit_rpaths(string)
+        return _which_installed_by_spack(unfiltered_link_dirs)
 
     @classmethod
     def determine_implicit_rpaths(cls, paths):
