@@ -24,7 +24,8 @@ class Cryptsetup(AutotoolsPackage):
     def configure_args(self):
         args = [
             'LIBS=-lintl',
-            'systemd_tmpfilesdir={0}/tmp'.format(self.prefix)
+            'systemd_tmpfilesdir={0}/tmp'.format(self.prefix),
+            'sbindir={0}/bin'.format(self.prefix)
         ]
         return args
 
