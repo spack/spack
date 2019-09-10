@@ -296,7 +296,12 @@ class Compiler(object):
             _universal_rpaths_to_include_for_compiler(unfiltered_link_dirs))
         rpath_dirs.extend(
             cls.rpaths_to_include_for_compiler(unfiltered_link_dirs))
-        return rpath_dirs
+        sys_prefixes = ['/usr/lib/', '/lib/', '/lib64/', '/usr/lib64/']
+        # Return set of directories containing needed compiler libs, minus
+        # system paths and with duplicate entries removed
+        return list(
+            rpath_dir for rpath_dir in llnl.util.lang.dedupe(rpath_dirs)
+            if not any(is_subdirectory(rpath_dir, y) for y in sys_prefixes))
 
     @classmethod
     def rpaths_to_include_for_compiler(cls, paths):
