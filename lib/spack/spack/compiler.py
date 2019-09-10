@@ -147,30 +147,20 @@ def _parse_implicit_rpaths(string):
     return implicit_link_dirs
 
 
-def _which_installed_by_spack(paths):
-    """Create a list of all the paths that are a subdirectory of an installed
-    Spack package.
-    """
-    filtered_paths = list()
-    metadata_dir = spack.store.layout.metadata_dir
-    for link_dir in paths:
-        path_components = link_dir.split(os.path.sep)
-        test_dirs = list()
-        for i in range(1, len(path_components) + 1):
-            test_dirs.append(
-                os.path.sep.join(path_components[:i] + [metadata_dir]))
-        if any(os.path.isdir(i) for i in test_dirs):
-            filtered_paths.append(link_dir)
+def _universal_rpaths_to_include_for_compiler(paths):
+    universal_libs = ['libc', 'libc++' 'libstdc++', 'libgfortran', 'libgcc']
+    lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+    required_lib_fnames = set(
+        '.'.join((lib, extension)) for lib, extension in
+        itertools.product(universal_libs, lib_extensions))
 
-    return filtered_paths
+    rpaths_to_include = []
+    for path in paths:
+        fnames = set(os.listdir(path))
+        if fnames & required_lib_fnames:
+            rpaths_to_include.append(path)
 
-
-def filter_unnecessary_rpaths(paths):
-    ld_lib_path_env = os.environ.get('LD_LIBRARY_PATH', '')
-    ld_lib_paths = set()
-    if ld_lib_path_env:
-        ld_lib_paths = set(ld_lib_path_env.split(os.pathsep))
-    return list(x for x in paths if x not in ld_lib_paths)
+    return rpaths_to_include
 
 
 class Compiler(object):
@@ -294,7 +284,8 @@ class Compiler(object):
         """
         unfiltered_link_dirs = _parse_implicit_rpaths(string)
         rpath_dirs = list()
-        rpath_dirs.extend(_which_installed_by_spack(unfiltered_link_dirs))
+        rpath_dirs.extend(
+            _universal_rpaths_to_include_for_compiler(unfiltered_link_dirs))
         rpath_dirs.extend(
             cls.rpaths_to_include_for_compiler(unfiltered_link_dirs))
         return rpath_dirs
