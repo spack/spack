@@ -24,7 +24,11 @@ class Cryptsetup(AutotoolsPackage):
     def configure_args(self):
         args = [
             'LIBS=-lintl',
-            'systemd_tmpfilesdir={0}/tmpfiles.d'.format(self.prefix),
-            'sbindir={0}/bin'.format(self.prefix)
+            'systemd_tmpfilesdir={0}/tmpfiles.d'.format(self.prefix)
         ]
         return args
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Prepend the sbin directory to PATH."""
+        spack_env.prepend_path('PATH', join_path(self.prefix, 'sbin'))
+        run_env.prepend_path('PATH', join_path(self.prefix, 'sbin'))
