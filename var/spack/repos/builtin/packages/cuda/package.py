@@ -69,21 +69,18 @@ class Cuda(Package):
         # for details.
 
         # CUDA 10.1+ has different cmdline options for the installer
+        arguments = [
+            '--silent',         # disable interactive prompts
+            '--override',       # override compiler version checks
+            '--toolkit',        # install CUDA Toolkit
+        ]
         if spec.satisfies('@10.1:'):
-            runfile(
-                '--silent',         # disable interactive prompts
-                '--override',       # override compiler version checks
-                '--toolkit',        # install CUDA Toolkit
-                '--installpath=%s' % prefix
-            )
+            arguments.append('--installpath=%s' % prefix)   # Where to install
         else:
-            runfile(
-                '--silent',         # disable interactive prompts
-                '--verbose',        # create verbose log file
-                '--override',       # override compiler version checks
-                '--toolkit',        # install CUDA Toolkit
-                '--toolkitpath=%s' % prefix
-            )
+            arguments.append('--verbose')                   # Create verbose log file
+            arguments.append('--toolkitpath=%s' % prefix)   # Where to install
+
+        runfile(*arguments)
 
     @property
     def libs(self):
