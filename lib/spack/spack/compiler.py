@@ -272,7 +272,7 @@ class Compiler(object):
         """
 
     @classmethod
-    def parse_implicit_rpaths(cls, string):
+    def _parse_implicit_rpaths(cls, string):
         """Parses link paths out of compiler debug output.
 
         Args:
@@ -280,11 +280,21 @@ class Compiler(object):
 
         Returns:
             (list of str): implicit link paths parsed from the compiler output
-
-        Subclasses can override this to customize.
         """
         unfiltered_link_dirs = _parse_implicit_rpaths(string)
-        return _which_installed_by_spack(unfiltered_link_dirs)
+        rpath_dirs = list()
+        rpath_dirs.extend(_which_installed_by_spack(unfiltered_link_dirs))
+        rpath_dirs.extend(
+            cls.rpaths_to_include_for_compiler(unfiltered_link_dirs))
+        return rpath_dirs
+
+    @classmethod
+    def rpaths_to_include_for_compiler(cls, paths):
+        """Given a set of link directories reported by a compiler, a Compiler
+        subclass may determine that some should be RPATH'ed.
+        """
+        # By default every compiler returns the empty list
+        return []
 
     @classmethod
     def determine_implicit_rpaths(cls, paths):
@@ -305,7 +315,7 @@ class Compiler(object):
             output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
                                       output=str, error=str))  # str for py2
 
-            return cls.parse_implicit_rpaths(output)
+            return cls._parse_implicit_rpaths(output)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
