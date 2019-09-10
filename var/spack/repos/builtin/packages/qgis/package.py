@@ -71,12 +71,19 @@ class Qgis(CMakePackage):
         # qtwebkit module was removed from qt as of version 5.6
         # needs to be compiled as a separate package
         args.append('-DWITH_QTWEBKIT=OFF')
+        args.append('-DWITH_QSPATIALITE=OFF')
         args.append('-DUSE_OPENCL=OFF')
         # cmake couldn't determine the following paths
         args.append("-DEXPAT_LIBRARY={0}".format(self.spec['expat'].libs))
         args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].libs)+'/pkgconfig')
-        args.append('-DPOSTGRES_PREFIX={0}'.format(self.spec['postgresql'].prefix))
+        args.append('-DPOSTGRESQL_PREFIX={0}'.format(self.spec['postgresql'].prefix))
         args.append('-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix)+'/include')
-        args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib/libqscintilla2_qt5.so') # TODO libqsci.. for Qt@4?
+        args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib/libqscintilla2_qt5.so')
         args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/lib/pkgconfig')
+        if '+grass' in self.spec:
+            args.append('-DWITH_GRASS=ON')
+            args.append('-DGRASS_PREFIX7={0}'.format(self.spec['grass'].prefix))
+            args.append('-DGRASS_INCLUDE_DIR7={0}'.format(self.spec['grass'].prefix.include))
+        else:
+            args.append('-DWITH_GRASS=OFF')
         return args
