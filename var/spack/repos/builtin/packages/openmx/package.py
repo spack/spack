@@ -38,9 +38,8 @@ class Openmx(MakefilePackage):
         # http://www.openmx-square.org/bugfixed/18June12/README.txt
         patch_files = []
         patch_files = glob.glob('./patch/*')
-        mv = which('mv')
         for f in patch_files:
-            mv(f, './source/')
+            copy(f, './source')
 
         makefile = FileFilter('./source/makefile')
         makefile.filter('^DESTDIR.*$', 'DESTDIR = {0}/bin'.format(prefix))
