@@ -111,8 +111,7 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
-    depends_on('hdf5+hl+mpi', when='+xdmf')
-    depends_on('boost+mpi', when='+xdmf')
+    depends_on('xdmf3', when='+xdmf')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libogg')
@@ -288,7 +287,10 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DVTK_USE_SYSTEM_NETCDFCPP:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_UTF8:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_XDMF2:BOOL=OFF',
-                '-DVTK_USE_SYSTEM_XDMF3:BOOL=OFF'])
+                '-DVTK_USE_SYSTEM_XDMF3:BOOL=OFF',
+                '-DPARAVIEW_ENABLE_XDMF3:BOOL=%s' % variant_bool('+xdmf'),
+                '-DVTK_USE_SYSTEM_XDMF3:BOOL=%s' % variant_bool('+xdmf'),
+                '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'))]
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used
