@@ -33,6 +33,7 @@ modules:
       - highfive~mpi
       - neuron
       - python-dev
+      - snakemake
       - 'tensorflow@1.12.0'
     blacklist:
       - '%gcc'

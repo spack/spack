@@ -46,6 +46,7 @@ packages:
       - qhull@2015.2
       - qt@5.11.2
       - readline@7.0
+      - snakemake
       - spark@2.4.0+hadoop
       - sqlite@3.23.1
       - symengine@0.3.0
