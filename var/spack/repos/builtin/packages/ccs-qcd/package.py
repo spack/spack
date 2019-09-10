@@ -42,6 +42,8 @@ class CcsQcd(MakefilePackage):
 
     depends_on('mpi')
 
+    parallel = False
+
     def edit(self, spec, prefix):
         if '%fj' in spec:
             filter_file('mpifrtpx', spec['mpi'].mpifc, './src/make.fx10.inc')
@@ -53,8 +55,6 @@ class CcsQcd(MakefilePackage):
     def build(self, spec, prefix):
         ccs_class = 'CLASS=' + spec.variants['class'].value
         with working_dir('src'):
-            make('CONFIG_GEN', ccs_class)
-
             if '%fj' in spec:
                 make('MAKE_INC=make.fx10.inc', ccs_class)
             else:
