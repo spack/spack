@@ -19,7 +19,7 @@ class Qgis(CMakePackage):
 
     version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
 
-    variant('grass', default=False, description='Build with GRASS providers and plugin')
+    variant('grass7', default=False, description='Build with GRASS providers and plugin')
 
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
@@ -80,10 +80,10 @@ class Qgis(CMakePackage):
         args.append('-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix)+'/include')
         args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib/libqscintilla2_qt5.so')
         args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/lib/pkgconfig')
-        if '+grass' in self.spec:
-            args.append('-DWITH_GRASS=ON')
+        if '+grass7' in self.spec:
+            args.append('-DWITH_GRASS7=ON')
             args.append('-DGRASS_PREFIX7={0}'.format(self.spec['grass'].prefix))
             args.append('-DGRASS_INCLUDE_DIR7={0}'.format(self.spec['grass'].prefix.include))
         else:
-            args.append('-DWITH_GRASS=OFF')
+            args.append('-DWITH_GRASS7=OFF')
         return args
