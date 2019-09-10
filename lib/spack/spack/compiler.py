@@ -165,6 +165,14 @@ def _which_installed_by_spack(paths):
     return filtered_paths
 
 
+def filter_unnecessary_rpaths(paths):
+    ld_lib_path_env = os.environ.get('LD_LIBRARY_PATH', '')
+    ld_lib_paths = set()
+    if ld_lib_path_env:
+        ld_lib_paths = set(ld_lib_path_env.split(os.pathsep))
+    return list(x for x in paths if x not in ld_lib_paths)
+
+
 class Compiler(object):
     """This class encapsulates a Spack "compiler", which includes C,
        C++, and Fortran compilers.  Subclasses should implement
