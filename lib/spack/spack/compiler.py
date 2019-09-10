@@ -149,7 +149,11 @@ def _parse_implicit_rpaths(string):
 
 def _universal_rpaths_to_include_for_compiler(paths):
     universal_libs = ['libc', 'libc++' 'libstdc++', 'libgfortran', 'libgcc']
-    required_lib_fnames = possible_library_filenames(universal_libs)
+    return paths_containing_libs(paths, universal_libs)
+
+
+def paths_containing_libs(paths, library_names):
+    required_lib_fnames = possible_library_filenames(library_names)
 
     rpaths_to_include = []
     for path in paths:
