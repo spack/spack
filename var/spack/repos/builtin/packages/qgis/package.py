@@ -55,6 +55,7 @@ class Qgis(CMakePackage):
     depends_on('cmake@3.0.0:', type='build')
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
+    depends_on('pkg-config', type='build')
 
     # Conflicts for newer versions
     conflicts('proj@:4.9.2', when='@3.8.2:')
@@ -80,6 +81,11 @@ class Qgis(CMakePackage):
         args.append('-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix)+'/include')
         args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib/libqscintilla2_qt5.so')
         args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/lib/pkgconfig')
+        args.append('-DGDAL_CONFIG_PREFER_PATH='+str(self.spec['gdal'].prefix.bin))
+        args.append('-DGEOS_CONFIG_PREFER_PATH='+str(self.spec['geos'].prefix.bin))
+        args.append('-DGSL_CONFIG_PREFER_PATH='+str(self.spec['gsl'].prefix.bin))
+        args.append('-DPOSTGRES_CONFIG_PREFER_PATH='+str(self.spec['postgresql'].prefix.bin))
+
         if '+grass7' in self.spec:
             args.append('-DWITH_GRASS7=ON')
             args.append('-DGRASS_PREFIX7={0}'.format(self.spec['grass'].prefix))
