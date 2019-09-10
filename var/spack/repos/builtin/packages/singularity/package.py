@@ -75,7 +75,7 @@ class Singularity(MakefilePackage):
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
-            configure = Executable('./mconfig --prefix=%s' % prefix)
+            configure = Executable('./mconfig --without-suid --prefix=%s' % prefix)
             configure()
 
     # Set these for use by MakefilePackage's default build/install methods.
