@@ -57,7 +57,7 @@ packages:
     specs:
       - functionalizer@3.12.2
       - parquet-converters@0.4.1
-      - synapsetool@0.5.0
+      - synapsetool@0.5.1
       - touchdetector@4.4.2
       - touchdetector@5.1.0
       - touchdetector@5.2.0
