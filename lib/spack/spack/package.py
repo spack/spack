@@ -784,8 +784,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         doesn't have one yet, but it does not create the Stage directory
         on the filesystem.
         """
-        if not self.spec.concrete:
-            raise ValueError("Can only get a stage for a concrete package.")
+        #if not self.spec.concrete:
+        #    raise ValueError("Can only get a stage for a concrete package.")
         if self._stage is None:
             self._stage = self._make_stage()
         return self._stage
@@ -1354,8 +1354,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def _get_needed_resources(self):
         resources = []
         # Select the resources that are needed for this build
-        for when_spec, resource_list in self.resources.items():
-            if when_spec in self.spec:
+        if self.spec.concrete:
+            for when_spec, resource_list in self.resources.items():
+                if when_spec in self.spec:
+                    resources.extend(resource_list)
+        else:
+            for _, resource_list in self.resources.items():
                 resources.extend(resource_list)
         # Sorts the resources by the length of the string representing their
         # destination. Since any nested resource must contain another
