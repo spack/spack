@@ -7,15 +7,16 @@ from spack import *
 
 
 class Mapnik(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """
+    mapnik combines pixel-perfect image output with lightning-fast
+    cartographic algorithms, and exposes interfaces in C++, Python, and Node
+    """
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://mapnik.org/"
     url      = "https://github.com/mapnik/mapnik/releases/download/v3.0.22/mapnik-v3.0.22.tar.bz2"
 
     version('3.0.22', sha256='930612ad9e604b6a29b9cea1bc1de85cf7cf2b2b8211f57ec8b6b94463128ab9')
 
-    # FIXME: Add dependencies if required.
     depends_on('python', type=('build', 'run'))
     # Build fails with boost@1.70
     depends_on('boost@:1.69.0+regex+filesystem+system+icu+program_options+python cxxstd=11')
