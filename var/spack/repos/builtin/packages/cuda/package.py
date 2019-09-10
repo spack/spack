@@ -20,6 +20,10 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
+    version('10.1.243',
+            sha256='e7c22dc21278eb1b82f34a60ad7640b41ad3943d929bebda3008b72536855d31',
+            expand=False,
+            url="https://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_418.87.00_linux.run")
     version('10.0.130', sha256='92351f0e4346694d0fcb4ea1539856c9eb82060c25654463bfd8574ec35ee39a', expand=False,
             url="https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux")
     version('9.2.88', 'dd6e33e10d32a29914b7700c7b3d1ca0', expand=False,
@@ -64,13 +68,22 @@ class Cuda(Package):
         # https://gist.github.com/ax3l/9489132
         # for details.
 
-        runfile(
-            '--silent',         # disable interactive prompts
-            '--verbose',        # create verbose log file
-            '--override',       # override compiler version checks
-            '--toolkit',        # install CUDA Toolkit
-            '--toolkitpath=%s' % prefix
-        )
+        # CUDA 10.1+ has different cmdline options for the installer
+        if spec.satisfies('@10.1:'):
+            runfile(
+                '--silent',         # disable interactive prompts
+                '--override',       # override compiler version checks
+                '--toolkit',        # install CUDA Toolkit
+                '--installpath=%s' % prefix
+            )
+        else:
+            runfile(
+                '--silent',         # disable interactive prompts
+                '--verbose',        # create verbose log file
+                '--override',       # override compiler version checks
+                '--toolkit',        # install CUDA Toolkit
+                '--toolkitpath=%s' % prefix
+            )
 
     @property
     def libs(self):
