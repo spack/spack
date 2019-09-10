@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, UnsupportedCompilerFlag
+from spack.compiler import (
+    Compiler, UnsupportedCompilerFlag, paths_containing_libs)
 from spack.version import ver
 
 
@@ -35,6 +36,11 @@ class Intel(Compiler):
     @classmethod
     def verbose_flag(cls):
         return "-v"
+
+    @classmethod
+    def rpaths_to_include_for_compiler(cls, paths):
+        required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
+        return paths_containing_libs(paths, required_libs)
 
     @property
     def openmp_flag(self):
