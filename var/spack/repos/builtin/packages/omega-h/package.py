@@ -18,14 +18,16 @@ class OmegaH(CMakePackage):
     git      = "https://github.com/SNLComputation/omega_h.git"
 
     version('develop', branch='master')
-    version('9.26.3', sha256='91c0e585afe52007e78ce018f791fbc3e73b53ba77b68521446405dfd8e21b69')
+    version('9.29.0', sha256='b41964b018909ffe9cea91c23a0509b259bfbcf56874fcdf6bd9f6a179938014')
+    version('9.28.0', sha256='681588974116025c6c1c535972386c23fe354502319fcbbbdc5b9d373429c08e')
+    version('9.27.3', sha256='7c0b0c9c00cda97763be1287d3bf8b931bcdd07bf4971fc7258a3892d628cf20')
+    version('9.26.6', sha256='5022bf3f9be1a27668fd2ec396d66f6b0124dc4a3adeedb20a580a701d37d893')
     version('9.25.4', sha256='9a9b26d5c4fc352776c1da02d787e653b5878c0cca3890eefebd3df202c75aed')
     version('9.24.2', sha256='af084e56204262c2a7edcc9c88e997623fc1280ae59427b9bf2b57d11568b496')
     version('9.22.2', sha256='ab5636be9dc171a514a7015df472bd85ab86fa257806b41696170842eabea37d')
     version('9.21.1', sha256='750415614747681c0094d3103e7683c74edcd95819ef9477f2179c805c416cfa')
     version('9.20.2', sha256='e1491969ccb170a92018a8b7d02f34b6177deffcbba74bc7c2ee862793a846c8')
     version('9.19.1', sha256='60ef65c2957ce03ef9d1b995d842fb65c32c5659d064de002c071effe66b1b1f')
-    version('9.18.1', sha256='333c93e28c56173afd2815274fa2bde25d361edc4a8a9a28f90c3a3e144512c3')
 
     variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
