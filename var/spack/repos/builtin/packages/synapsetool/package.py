@@ -42,7 +42,6 @@ class Synapsetool(CMakePackage):
     variant('mpi', default=True, description="Enable MPI backend")
     variant('shared', default=True, description="Build shared library")
     variant('python', default=False, description="Enable syntool Python package")
-    variant('sonata', default=False, description="Enable SONATA support")
 
     depends_on('boost@1.55:')
     depends_on('cmake@3.0:', type='build')
@@ -52,7 +51,8 @@ class Synapsetool(CMakePackage):
     depends_on('highfive~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('python', when='+python')
-    depends_on('libsonata', when='+sonata')
+    depends_on('libsonata+mpi', when='+mpi')
+    depends_on('libsonata~mpi', when='~mpi')
 
     @property
     def libs(self):
@@ -72,9 +72,10 @@ class Synapsetool(CMakePackage):
         if spec['boost'].satisfies('+multithreaded'):
             boost_libs = [l + '-mt' for l in boost_libs]
 
-        libraries = find_libraries(boost_libs, spec['boost'].prefix, is_shared, True)
-        if '+sonata' in spec:
-            libraries += find_libraries("libsonata", spec['libsonata'].prefix, is_shared, True)
+        libraries = (
+            find_libraries(boost_libs, spec['boost'].prefix, is_shared, True)
+            + find_libraries("libsonata", spec['libsonata'].prefix, is_shared, True)
+        )
         return libraries
 
     def cmake_args(self):
@@ -85,13 +86,10 @@ class Synapsetool(CMakePackage):
                 '-DCMAKE_C_COMPILER:STRING={}'.format(spec['mpi'].mpicc),
                 '-DCMAKE_CXX_COMPILER:STRING={}'.format(spec['mpi'].mpicxx),
                 '-DSYNTOOL_WITH_MPI:BOOL=ON',
-                '-DSYNTOOL_UNIT_TESTS=OFF'
+                '-DSYNTOOL_UNIT_TESTS=OFF',
             ])
 
         if spec.satisfies('~shared'):
             args.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
-
-        if spec.satisfies('+sonata'):
-            args.append('-DSYNTOOL_WITH_SONATA:BOOL=ON')
 
         return args
