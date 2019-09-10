@@ -62,6 +62,7 @@ packages:
       - touchdetector@5.1.0
       - touchdetector@5.2.0
       - brayns@0.8.0 +opendeck +brion ^ospray@1.7.3
+      - brayns@immersive +opendeck +brion +optix
       - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3
       - brayns-brainatlas@0.1.0  ^brayns@0.8.0 ^ospray@1.7.3
       - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3

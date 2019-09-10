@@ -14,6 +14,7 @@ class Brayns(CMakePackage):
 
     version('develop', submodules=True)
     version('0.8.0', tag='0.8.0', submodules=True, preferred=True)
+    version('immersive', branch='videostreaming', submodules=True)
 
     variant('assimp', default=True, description='Build with assimp support')
     variant('ospray', default=True, description='Enable OSPRray engine')
@@ -34,6 +35,7 @@ class Brayns(CMakePackage):
     depends_on('brion', when='+brion')
     depends_on('deflect ~deflect-qt', when='+deflect')
     depends_on('freeimage')
+    depends_on('ffmpeg@4.2', when='+net')
     depends_on('glew', when='+viewer')
     depends_on('libarchive')
     depends_on('libjpeg-turbo', when='+net')
