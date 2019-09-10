@@ -77,7 +77,7 @@ class Cuda(Package):
         if spec.satisfies('@10.1:'):
             arguments.append('--installpath=%s' % prefix)   # Where to install
         else:
-            arguments.append('--verbose')                   # Create verbose log file
+            arguments.append('--verbose')                   # Verbose log file
             arguments.append('--toolkitpath=%s' % prefix)   # Where to install
 
         runfile(*arguments)
