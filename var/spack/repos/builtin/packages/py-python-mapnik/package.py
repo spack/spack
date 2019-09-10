@@ -7,10 +7,11 @@ from spack import *
 
 
 class PyPythonMapnik(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """
+    Python bindings for mapnik
+    """
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/mapnik/python-mapnik"
     url      = "https://github.com/mapnik/python-mapnik/archive/v3.0.16.tar.gz"
 
     version('3.0.16', sha256='643117752fa09668a1e26a360d13cd137329ae2013eb14ad92ab72fbc479fc70')
@@ -19,7 +20,7 @@ class PyPythonMapnik(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('mapnik', type=('build', 'link', 'run'))
 
-#    def install(self, spec, prefix):
-#        # FIXME: Unknown build system
-#        make()
-#        make('install')
+    # Package can't find boost_python without the following
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        spack_env.set('BOOST_PYTHON_LIB', 'boost_python27')
