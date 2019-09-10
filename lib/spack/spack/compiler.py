@@ -236,7 +236,6 @@ class Compiler(object):
         self.modules = modules
         self.alias = alias
         self.extra_rpaths = extra_rpaths
-        self._implicit_rpaths = None  # lazily-initialized
 
         def check(exe):
             if exe is None:
@@ -265,13 +264,10 @@ class Compiler(object):
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
 
-    @property
     def implicit_rpaths(self):
-        if not self._implicit_rpaths:
-            exe_paths = [
-                x for x in [self.cc, self.cxx, self.fc, self.f77] if x]
-            self._implicit_rpaths = self.determine_implicit_rpaths(exe_paths)
-        return self._implicit_rpaths
+        exe_paths = [
+            x for x in [self.cc, self.cxx, self.fc, self.f77] if x]
+        return self.determine_implicit_rpaths(exe_paths)
 
     @property
     def version(self):
