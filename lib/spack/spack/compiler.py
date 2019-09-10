@@ -221,15 +221,14 @@ class Compiler(object):
 
     def __init__(self, cspec, operating_system, target,
                  paths, modules=[], alias=None, environment=None,
-                 extra_rpaths=None, implicit_rpaths=None,
-                 **kwargs):
+                 extra_rpaths=None, **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
         self.target = target
         self.modules = modules
         self.alias = alias
         self.extra_rpaths = extra_rpaths
-        self.implicit_rpaths = implicit_rpaths
+        self._implicit_rpaths = None  # lazily-initialized
 
         def check(exe):
             if exe is None:
@@ -257,6 +256,14 @@ class Compiler(object):
             value = kwargs.get(flag, None)
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
+
+    @property
+    def implicit_rpaths(self):
+        if not self._implicit_rpaths:
+            exe_paths = [
+                x for x in [self.cc, self.cxx, self.fc, self.f77] if x]
+            self._implicit_rpaths = self.determine_implicit_rpaths(exe_paths)
+        return self._implicit_rpaths
 
     @property
     def version(self):

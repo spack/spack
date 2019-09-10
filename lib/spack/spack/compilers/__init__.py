@@ -353,8 +353,7 @@ def compiler_from_dict(items):
     implicit_rpaths = items.get('implicit_rpaths')
 
     return cls(cspec, os, target, compiler_paths, mods, alias,
-               environment, extra_rpaths, implicit_rpaths,
-               **compiler_flags)
+               environment, extra_rpaths, **compiler_flags)
 
 
 def _compiler_from_config_entry(items):
@@ -639,8 +638,7 @@ def make_compiler_list(detected_versions):
         paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
         implicit_rpaths = compiler_cls.determine_implicit_rpaths(paths)
         compiler = compiler_cls(
-            spec, operating_system, py_platform.machine(), paths,
-            implicit_rpaths=implicit_rpaths
+            spec, operating_system, py_platform.machine(), paths
         )
         return [compiler]
 
