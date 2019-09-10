@@ -7,7 +7,8 @@ import re
 
 import spack.compilers.clang
 
-from spack.compiler import Compiler, UnsupportedCompilerFlag
+from spack.compiler import (
+    Compiler, UnsupportedCompilerFlag, paths_containing_libs)
 from spack.version import ver
 
 
@@ -112,6 +113,11 @@ class Gcc(Compiler):
     @property
     def pic_flag(self):
         return "-fPIC"
+
+    @classmethod
+    def rpaths_to_include_for_compiler(cls, paths):
+        required_libs = ['libgcc', 'libgfortran']
+        return paths_containing_libs(paths, required_libs)
 
     @classmethod
     def default_version(cls, cc):
