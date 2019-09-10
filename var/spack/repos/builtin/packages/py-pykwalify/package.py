@@ -7,10 +7,11 @@ from spack import *
 
 
 class PyPykwalify(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """
+    Python lib/cli for JSON/YAML schema validation
+    """
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/grokzen/pykwalify"
     url      = "https://pypi.io/packages/source/p/pykwalify/pykwalify-1.7.0.tar.gz"
 
     version('1.7.0', sha256='7e8b39c5a3a10bc176682b3bd9a7422c39ca247482df198b402e8015defcceb2')
