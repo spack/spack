@@ -109,7 +109,8 @@ class InstallRecord(object):
             installed,
             ref_count=0,
             explicit=False,
-            installation_time=None
+            installation_time=None,
+            deprecated_for=None
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -117,16 +118,20 @@ class InstallRecord(object):
         self.ref_count = ref_count
         self.explicit = explicit
         self.installation_time = installation_time or _now()
+        self.deprecated_for = deprecated_for
 
     def to_dict(self):
-        return {
+        rec_dict = {
             'spec': self.spec.to_node_dict(),
             'path': self.path,
             'installed': self.installed,
             'ref_count': self.ref_count,
             'explicit': self.explicit,
-            'installation_time': self.installation_time
+            'installation_time': self.installation_time,
         }
+        if self.deprecated_for:
+            rec_dict.update({'deprecated_for': self.deprecated_for})
+        return rec_dict
 
     @classmethod
     def from_dict(cls, spec, dictionary):
@@ -136,6 +141,7 @@ class InstallRecord(object):
         # Old databases may have "None" for path for externals
         if d['path'] == 'None':
             d['path'] = None
+
         return InstallRecord(spec, **d)
 
 
@@ -840,6 +846,15 @@ class Database(object):
             for dep in spec.dependencies(_tracked_deps):
                 self._decrement_ref_count(dep)
 
+    def _increment_ref_count(self, spec):
+        key = spec.dag_hash()
+
+        if key not in self._data:
+            return
+
+        rec = self._data[key]
+        rec.ref_count += 1
+
     def _remove(self, spec):
         """Non-locking version of remove(); does real work.
         """
@@ -873,6 +888,23 @@ class Database(object):
         # Take a lock around the entire removal.
         with self.write_transaction():
             return self._remove(spec)
+
+    def _deprecate(self, spec, replacement):
+        spec_key = self._get_matching_spec_key(spec)
+        spec_rec = self._data[spec_key]
+
+        replacement_key = self._get_matching_spec_key(replacement)
+
+        self._increment_ref_count(replacement)
+
+        spec_rec.deprecated_for = replacement_key
+        self._data[spec_key] = spec_rec
+
+    @_autospec
+    def deprecate(self, spec, replacement):
+        """Marks a spec as deprecated in favor of its replacement"""
+        with self.write_transaction():
+            return self._deprecate(spec, replacement)
 
     @_autospec
     def installed_relatives(self, spec, direction='children', transitive=True,

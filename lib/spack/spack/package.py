@@ -2112,14 +2112,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise NotImplementedError(msg)
 
     @staticmethod
-    def uninstall_by_spec(spec, force=False):
+    def uninstall_by_spec(spec, force=False, replace=False):
         if not os.path.isdir(spec.prefix):
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
             specs = spack.store.db.query(spec, installed=True)
             if specs:
-                spack.store.db.remove(specs[0])
-                tty.msg("Removed stale DB entry for %s" % spec.short_spec)
+                if replace:
+                    spack.store.db.deprecate(specs[0], replace)
+                    tty.msg("Deprecating stale DB entry for %s")
+                else:
+                    spack.store.db.remove(specs[0])
+                    tty.msg("Removed stale DB entry for %s" % spec.short_spec)
                 return
             else:
                 raise InstallError(str(spec) + " is not installed.")
@@ -2139,7 +2143,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Pre-uninstall hook runs first.
         with spack.store.db.prefix_write_lock(spec):
 
-            if pkg is not None:
+            if pkg is not None and not replace:
                 spack.hooks.pre_uninstall(spec)
 
             # Uninstalling in Spack only requires removing the prefix.
@@ -2148,9 +2152,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 tty.debug(msg.format(spec.short_spec))
                 spack.store.layout.remove_install_directory(spec)
             # Delete DB entry
-            msg = 'Deleting DB entry [{0}]'
-            tty.debug(msg.format(spec.short_spec))
-            spack.store.db.remove(spec)
+            if replace:
+                msg = 'deprecating DB entry [{0}] in favor of [{1}]'
+                tty.debug(msg.format(spec.short_spec, replace.short_spec))
+                spack.store.db.deprecate(spec, replace)
+            else:
+                msg = 'Deleting DB entry [{0}]'
+                tty.debug(msg.format(spec.short_spec))
+                spack.store.db.remove(spec)
 
         if pkg is not None:
             spack.hooks.post_uninstall(spec)
@@ -2161,6 +2170,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Uninstall this package by spec."""
         # delegate to instance-less method.
         Package.uninstall_by_spec(self.spec, force)
+
+    def do_deprecate(self, replacement, link_fn):
+        """Deprecate this package in favor of spec"""
+        Package.uninstall_by_spec(self.spec, force=True, replace=replacement)
+        view = YamlFilesystemView(self.spec.prefix, spack.store.layout,
+                                  projections={}, ignore_conflicts=False,
+                                  link=link_fn, verbose=False)
+        view.add_specs(replacement, with_dependencies=False)
 
     def _check_extendable(self):
         if not self.extendable:
