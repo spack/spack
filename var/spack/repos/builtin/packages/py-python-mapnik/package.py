@@ -22,4 +22,9 @@ class PyPythonMapnik(PythonPackage):
 
     # Package can't find boost_python without the following
     def setup_environment(self, spack_env, run_env):
-        spack_env.set('BOOST_PYTHON_LIB', 'boost_python27')
+        # Since spack installed boost lib is like libboost_python27..
+        # Communicate this to package via BOOST_PYTHON_LIB='boost_python27'
+        # Package expects 'boost_python2.7' by default
+        py_ver = str(self.spec['python'].version.up_to(2))
+        py_ver.replace('.','')
+        spack_env.set('BOOST_PYTHON_LIB', 'boost_python' + py_ver)
