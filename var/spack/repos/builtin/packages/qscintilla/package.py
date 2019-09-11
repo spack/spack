@@ -51,11 +51,10 @@ class Qscintilla(QMakePackage):
         makefile.filter(r'\$\(INSTALL_ROOT\)' + self.spec['qt'].prefix, '$(INSTALL_ROOT)')
 
 
-    # Install source under prefix so that
-    # Python bindings can be built by PyQt5 later on.
     @run_after('install')
     def postinstall(self):
-        # Keep source
+        # Install source under prefix so that
+        # Python bindings can be built by PyQt5 later on.
         install_tree(self.stage.source_path, prefix.share+'/qscintilla/src')
 
         # Make designer plugin
