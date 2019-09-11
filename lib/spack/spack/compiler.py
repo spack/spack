@@ -79,7 +79,7 @@ _LINK_DIR_ARG = re.compile(r'^-L(.:)?(?P<dir>[/\\].*)')
 _LIBPATH_ARG = re.compile(r'^[-/](LIBPATH|libpath):(?P<dir>.*)')
 
 
-def _parse_implicit_rpaths(string):
+def _parse_link_paths(string):
     """Parse implicit link paths from compiler debug output.
 
     This gives the compiler runtime library paths that we need to add to
@@ -171,6 +171,18 @@ def possible_library_filenames(library_names):
     return set(
         '.'.join((lib, extension)) for lib, extension in
         itertools.product(library_names, lib_extensions))
+
+
+def is_subdirectory(path, prefix):
+    path = os.path.abspath(path)
+    prefix = os.path.abspath(prefix) + os.path.sep
+    return path.startswith(prefix)
+
+
+def in_system_subdirectory(path):
+    system_dirs = ['/lib/', '/lib64/', '/usr/lib/', '/usr/lib64/',
+                   '/usr/local/lib/', '/usr/local/lib64/']
+    return any(is_subdirectory(path, x) for x in system_dirs)
 
 
 class Compiler(object):
@@ -272,7 +284,13 @@ class Compiler(object):
 
         exe_paths = [
             x for x in [self.cc, self.cxx, self.fc, self.f77] if x]
-        return self.determine_implicit_rpaths(exe_paths)
+        link_dirs = self._get_compiler_link_paths(exe_paths)
+        rpath_dirs = list()
+        rpath_dirs.extend(
+            _universal_rpaths_to_include_for_compiler(link_dirs))
+        rpath_dirs.extend(
+            self.rpaths_to_include_for_compiler(link_dirs))
+        return list(llnl.util.lang.dedupe(rpath_dirs))
 
     @property
     def version(self):
@@ -288,28 +306,6 @@ class Compiler(object):
         """
 
     @classmethod
-    def _parse_implicit_rpaths(cls, string):
-        """Parses link paths out of compiler debug output.
-
-        Args:
-            string (str): compiler debug output as a string
-
-        Returns:
-            (list of str): implicit link paths parsed from the compiler output
-        """
-        unfiltered_link_dirs = _parse_implicit_rpaths(string)
-        rpath_dirs = list()
-        rpath_dirs.extend(
-            _universal_rpaths_to_include_for_compiler(unfiltered_link_dirs))
-        rpath_dirs.extend(
-            cls.rpaths_to_include_for_compiler(unfiltered_link_dirs))
-
-        # Return set of directories containing needed compiler libs, minus
-        # system paths and with duplicate entries removed
-        return list(
-            filter_system_paths(llnl.util.lang.dedupe(rpath_dirs)))
-
-    @classmethod
     def rpaths_to_include_for_compiler(cls, paths):
         """Given a set of link directories reported by a compiler, a Compiler
         subclass may determine that some should be RPATH'ed.
@@ -318,7 +314,7 @@ class Compiler(object):
         return []
 
     @classmethod
-    def determine_implicit_rpaths(cls, paths):
+    def _get_compiler_link_paths(cls, paths):
         first_compiler = next((c for c in paths if c), None)
         if not first_compiler:
             return []
@@ -336,9 +332,28 @@ class Compiler(object):
             output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
                                       output=str, error=str))  # str for py2
 
-            return cls._parse_implicit_rpaths(output)
+            return cls._parse_non_system_link_dirs(output)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+    @classmethod
+    def _parse_non_system_link_dirs(cls, string):
+        """Parses link paths out of compiler debug output.
+
+        Args:
+            string (str): compiler debug output as a string
+
+        Returns:
+            (list of str): implicit link paths parsed from the compiler output
+        """
+        link_dirs = _parse_link_paths(string)
+
+        # Return set of directories containing needed compiler libs, minus
+        # system paths. Note that 'filter_system_paths' only checks for an
+        # exact match, while 'in_system_subdirectory' checks if a path contains
+        # a system directory as a subdirectory
+        link_dirs = filter_system_paths(link_dirs)
+        return list(p for p in link_dirs if not in_system_subdirectory(p))
 
     # This property should be overridden in the compiler subclass if
     # OpenMP is supported by that compiler

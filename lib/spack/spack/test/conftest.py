@@ -502,7 +502,7 @@ def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     # RPATHs
     monkeypatch.setattr(
         spack.compiler.Compiler,
-        'determine_implicit_rpaths',
+        '_get_compiler_link_paths',
         noop
     )
 
