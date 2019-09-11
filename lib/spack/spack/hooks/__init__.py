@@ -12,7 +12,6 @@
 
    Currently the following hooks are supported:
 
-      * pre_run()
       * pre_install(spec)
       * post_install(spec)
       * pre_uninstall(spec)
@@ -59,11 +58,6 @@ class HookRunner(object):
                 if hasattr(hook, '__call__'):
                     hook(*args, **kwargs)
 
-
-#
-# Define some functions that can be called to fire off hooks.
-#
-pre_run = HookRunner('pre_run')
 
 pre_install = HookRunner('pre_install')
 post_install = HookRunner('post_install')
