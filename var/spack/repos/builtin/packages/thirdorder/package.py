@@ -28,7 +28,7 @@ class PyThirdorder(Package):
             'python{0}'.format(python_version), 'site-packages'))
         run_env.prepend_path('LIBRARY_PATH', self.spec['python'].prefix.lib)
         run_env.prepend_path('LD_LIBRARY_PATH', self.spec['python'].prefix.lib)
-        
+
         run_env.prepend_path('PYTHONPATH', join_path(
             prefix.lib, 'python{0}'.format(python_version), 'site-packages'))
         run_env.prepend_path('LIBRARY_PATH', prefix.lib)
