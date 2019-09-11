@@ -356,7 +356,7 @@ def compiler_from_dict(items):
     # Starting with c22a145, 'implicit_rpaths' was a list. Now it is a
     # boolean which can be set by the user to disable all automatic
     # RPATH insertion of compiler libraries
-    if implicit_rpaths is not None and type(implicit_rpaths) != type(bool()):
+    if implicit_rpaths is not None and not isinstance(implicit_rpaths, bool):
         implicit_rpaths = None
 
     return cls(cspec, os, target, compiler_paths, mods, alias,

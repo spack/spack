@@ -267,7 +267,7 @@ class Compiler(object):
                 self.flags[flag] = tokenize_flags(value)
 
     def implicit_rpaths(self):
-        if self.enable_implicit_rpaths == False:
+        if self.enable_implicit_rpaths is False:
             return []
 
         exe_paths = [
