@@ -489,10 +489,22 @@ def mutable_database(database, _store_dir_and_cache):
 
 
 @pytest.fixture(scope='function')
-def install_mockery(tmpdir, config, mock_packages):
+def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     real_store = spack.store.store
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
+
+    def noop(*args):
+        return []
+
+    # Compiler.determine_implicit_rpaths actually runs the compiler. So this
+    # replaces that function with a noop that simulates finding no implicit
+    # RPATHs
+    monkeypatch.setattr(
+        spack.compiler.Compiler,
+        'determine_implicit_rpaths',
+        noop
+    )
 
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
