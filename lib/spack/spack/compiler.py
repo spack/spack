@@ -142,11 +142,15 @@ def _parse_implicit_rpaths(string):
 
 
 def _universal_rpaths_to_include_for_compiler(paths):
+    # These libraries are anticipated to be required by all compilers
     universal_libs = ['libc', 'libc++' 'libstdc++']
     return paths_containing_libs(paths, universal_libs)
 
 
 def paths_containing_libs(paths, library_names):
+    """Given a collection of filesystem paths, return the list of paths that
+    which include one or more of the specified libraries.
+    """
     required_lib_fnames = possible_library_filenames(library_names)
 
     rpaths_to_include = []
@@ -159,6 +163,10 @@ def paths_containing_libs(paths, library_names):
 
 
 def possible_library_filenames(library_names):
+    """Given a collection of library names like 'libfoo', generate the set of
+    library filenames that may be found on the system (e.g. libfoo.so). This
+    generates the library filenames that may appear on any OS.
+    """
     lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
     return set(
         '.'.join((lib, extension)) for lib, extension in
