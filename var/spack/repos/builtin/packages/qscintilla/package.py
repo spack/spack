@@ -42,7 +42,7 @@ class Qscintilla(QMakePackage):
     # giving 'Nothing Installed Error'
     def setup_environment(self, spack_env, run_env):
         spack_env.set('INSTALL_ROOT', self.prefix)
-
+        run_env.prepend_path('QT_PLUGIN_PATH', self.prefix+'/plugins')
 
     # Fix install prefix
     @run_after('qmake')
@@ -55,17 +55,20 @@ class Qscintilla(QMakePackage):
     # Python bindings can be built by PyQt5 later on.
     @run_after('install')
     def postinstall(self):
-        keep_src()
-        make_designer()
-
-
-    def keep_src(self):
+        # Keep source
         install_tree(self.stage.source_path, prefix.share+'/qscintilla/src')
 
-
-    def make_designer(self):
+        # Make designer plugin
         if '+designer' in self.spec:
             os.chdir(str(self.stage.source_path)+'/designer-Qt4Qt5')
+            qscipro=FileFilter('designer.pro')
+            #link_qscilibs = 'LIBS += -L'+self.prefix.lib+' -lqscintilla2_qt5'
+            qscipro.filter('TEMPLATE = lib',
+                           'TEMPLATE = lib\nINCLUDEPATH += ../Qt4Qt5\n')
+
             qmake()
             make()
+            makefile = FileFilter('Makefile')
+            makefile.filter(r'\$\(INSTALL_ROOT\)' + self.spec['qt'].prefix, '$(INSTALL_ROOT)')
+            make('install')
             make('install')
