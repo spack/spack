@@ -79,12 +79,6 @@ _LINK_DIR_ARG = re.compile(r'^-L(.:)?(?P<dir>[/\\].*)')
 _LIBPATH_ARG = re.compile(r'^[-/](LIBPATH|libpath):(?P<dir>.*)')
 
 
-def is_subdirectory(path, prefix):
-    path = os.path.abspath(path)
-    prefix = os.path.abspath(prefix) + os.path.sep
-    return path.startswith(prefix)
-
-
 def _parse_implicit_rpaths(string):
     """Parse implicit link paths from compiler debug output.
 
@@ -296,12 +290,12 @@ class Compiler(object):
             _universal_rpaths_to_include_for_compiler(unfiltered_link_dirs))
         rpath_dirs.extend(
             cls.rpaths_to_include_for_compiler(unfiltered_link_dirs))
-        sys_prefixes = ['/usr/lib/', '/lib/', '/lib64/', '/usr/lib64/']
+
         # Return set of directories containing needed compiler libs, minus
         # system paths and with duplicate entries removed
         return list(
-            rpath_dir for rpath_dir in llnl.util.lang.dedupe(rpath_dirs)
-            if not any(is_subdirectory(rpath_dir, y) for y in sys_prefixes))
+            spack.util.environment.filter_system_paths(
+                llnl.util.lang.dedupe(rpath_dirs)))
 
     @classmethod
     def rpaths_to_include_for_compiler(cls, paths):
