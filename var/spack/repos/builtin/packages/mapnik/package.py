@@ -40,16 +40,16 @@ class Mapnik(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
-        spack_env.set('GDAL_DATA', spec['gdal'].prefix+'/share/gdal')
+        spack_env.set('GDAL_DATA', spec['gdal'].prefix + '/share/gdal')
 
     def configure_args(self):
         args = []
         args.append('CXXFLAGS="-std=c++11"')
         args.append('PREFIX=' + self.prefix)
-        args.append('BOOST_INCLUDES=' + self.spec['boost'].prefix.include )
-        args.append('BOOST_LIBS=' + self.spec['boost'].prefix.lib )
-        args.append('PROJ_INCLUDES=' + self.spec['proj'].prefix.include )
-        args.append('PROJ_LIBS=' + self.spec['proj'].prefix.lib )
-        args.append('CAIRO_INCLUDES=' + self.spec['cairo'].prefix.include )
-        args.append('CAIRO_LIBS=' + self.spec['cairo'].prefix.lib )
+        args.append('BOOST_INCLUDES=' + self.spec['boost'].prefix.include)
+        args.append('BOOST_LIBS=' + self.spec['boost'].prefix.lib)
+        args.append('PROJ_INCLUDES=' + self.spec['proj'].prefix.include)
+        args.append('PROJ_LIBS=' + self.spec['proj'].prefix.lib)
+        args.append('CAIRO_INCLUDES=' + self.spec['cairo'].prefix.include)
+        args.append('CAIRO_LIBS=' + self.spec['cairo'].prefix.lib)
         return args
