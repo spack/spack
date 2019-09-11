@@ -34,7 +34,6 @@ class Mapnik(AutotoolsPackage):
     depends_on('gdal', type=('build', 'link', 'run'))
     depends_on('sqlite+rtree', type=('build', 'link', 'run'))
     depends_on('libwebp')
-    depends_on('python', type='build')
 
     conflicts('%gcc@9.0.0:')
 
