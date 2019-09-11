@@ -23,7 +23,7 @@ class Qscintilla(QMakePackage):
     # No 'python' variant, since Python bindings will be
     # built by PyQt5+qsci instead
 
-    depends_on('qt') # qt@4 is not compiling with +phonon +dbus variants enabled
+    depends_on('qt')
 
 
     @run_before('qmake')
