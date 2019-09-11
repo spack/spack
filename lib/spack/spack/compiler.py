@@ -302,8 +302,7 @@ class Compiler(object):
         # Return set of directories containing needed compiler libs, minus
         # system paths and with duplicate entries removed
         return list(
-            spack.util.environment.filter_system_paths(
-                llnl.util.lang.dedupe(rpath_dirs)))
+            filter_system_paths(llnl.util.lang.dedupe(rpath_dirs)))
 
     @classmethod
     def rpaths_to_include_for_compiler(cls, paths):
