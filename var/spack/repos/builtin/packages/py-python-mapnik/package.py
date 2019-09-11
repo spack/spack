@@ -18,7 +18,7 @@ class PyPythonMapnik(PythonPackage):
     version('3.0.13', sha256='ced684745e778c0cac0edba89c09c6f9b9f1db18fc12744ed4710a88b78a3389')
 
     depends_on('py-setuptools', type='build')
-    depends_on('mapnik', type=('build', 'link', 'run'))
+    depends_on('mapnik ^boost+python+thread', type=('build', 'link', 'run'))
 
     # Package can't find boost_python without the following
     def setup_environment(self, spack_env, run_env):
