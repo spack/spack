@@ -51,23 +51,19 @@ class PyPyqt5(SIPPackage):
         if '+qsci' in self.spec:
             with working_dir(str(self.spec['qscintilla'].prefix)+'/share/qscintilla/src/Python'):
                 pydir = join_path(site_packages_dir, 'PyQt5')
-                sip = '--sip='+self.prefix.bin+'/sip'
-                pyqtsipdir = '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5
-                carg_sipinc = '--sip-incdir=' + self.prefix+'/include/python'+str(self.spec['python'].version.up_to(2))
-
-                carg_inc = '--qsci-incdir='+self.spec['qscintilla'].prefix.include
-                carg_lib = '--qsci-libdir='+self.spec['qscintilla'].prefix.lib
-#                carg_sip = '--qsci-sipdir='+self.spec['qscintilla'].prefix+'/share/sip'
-                carg_sip = '--qsci-sipdir='+self.prefix.share.sip.PyQt5
-                carg_api = '--apidir='+self.prefix+'/share/qsci'
-                carg_dest = '--destdir='+pydir
-                carg_stub = '--stubsdir='+pydir
-
                 python = which('python')
+                python('configure.py', '--pyqt=PyQt5',
+                       '--sip=' + self.prefix.bin + '/sip',
+                       '--qsci-incdir=' + self.spec['qscintilla'].prefix.include,
+                       '--qsci-libdir=' + self.spec['qscintilla'].prefix.lib,
+                       '--qsci-sipdir=' + self.prefix.share.sip.PyQt5,
+                       '--apidir=' + self.prefix + '/share/qsci',
+                       '--destdir=' + pydir,
+                       '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5,
+                       '--sip-incdir=' + self.prefix + '/include/python'+str(self.spec['python'].version.up_to(2)),
+                       '--stubsdir='+pydir)
 
-                python('configure.py', '--pyqt=PyQt5', sip, carg_inc, carg_lib, carg_sip, carg_api, carg_dest, pyqtsipdir, carg_sipinc, carg_stub)
-
-                # Add config options to avoid build errors
+                # Fix build errors
                 # "QAbstractScrollArea: No such file or directory"
                 # "qprinter.h: No such file or directory"
                 # ".../Qsci.so: undefined symbol: _ZTI10Qsci...."
