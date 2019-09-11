@@ -40,7 +40,7 @@ class Mapnik(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
-        spack_env.set('GDAL_DATA', spec['gdal'].prefix + '/share/gdal')
+        spack_env.set('GDAL_DATA', spec['gdal'].prefix.share.gdal)
 
     def configure_args(self):
         args = []
