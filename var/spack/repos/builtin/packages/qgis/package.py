@@ -76,11 +76,11 @@ class Qgis(CMakePackage):
         args.append('-DUSE_OPENCL=OFF')
         # cmake couldn't determine the following paths
         args.append("-DEXPAT_LIBRARY={0}".format(self.spec['expat'].libs))
-        args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].libs)+'/pkgconfig')
         args.append('-DPOSTGRESQL_PREFIX={0}'.format(self.spec['postgresql'].prefix))
         args.append('-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix)+'/include')
         args.append('-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib/libqscintilla2_qt5.so')
-        args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/lib/pkgconfig')
+        args.append('-DLIBZIP_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/include')
+        args.append('-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/lib/libzip/include')
         args.append('-DGDAL_CONFIG_PREFER_PATH='+str(self.spec['gdal'].prefix.bin))
         args.append('-DGEOS_CONFIG_PREFER_PATH='+str(self.spec['geos'].prefix.bin))
         args.append('-DGSL_CONFIG_PREFER_PATH='+str(self.spec['gsl'].prefix.bin))
