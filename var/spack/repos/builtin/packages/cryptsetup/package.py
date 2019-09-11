@@ -23,13 +23,21 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('util-linux', type=('build', 'link'))
     depends_on('gettext', type=('build', 'link'))
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+
+    # Upstream includes support for discovering the location of the libintl library
+    # but is missing the bit in the Makefile.ac that includes it in the LDFLAGS.
+    patch('autotools-libintl.patch')
+
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/cryptsetup/v{0}/cryptsetup-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
     def configure_args(self):
         args = [
-            'LIBS=-lintl',
             'systemd_tmpfilesdir={0}/tmpfiles.d'.format(self.prefix)
         ]
         return args
