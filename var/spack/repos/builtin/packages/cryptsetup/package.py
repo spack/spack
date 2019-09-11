@@ -11,6 +11,8 @@ class Cryptsetup(AutotoolsPackage):
 
     homepage = "https://gitlab.com/cryptsetup/cryptsetup"
     url      = "https://www.kernel.org/pub/linux/utils/cryptsetup/v2.2/cryptsetup-2.2.1.tar.xz"
+    list_url = "https://www.kernel.org/pub/linux/utils/cryptsetup/"
+    list_depth = 1
 
     version('2.2.1', sha256='94e79a31ed38bdb0acd9af7ccca1605a2ac62ca850ed640202876b1ee11c1c61')
 
