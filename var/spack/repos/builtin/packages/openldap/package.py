@@ -75,7 +75,6 @@ class Openldap(AutotoolsPackage):
 
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
         make('depend')
         make()
         make('install')
