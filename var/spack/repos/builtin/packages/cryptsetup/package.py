@@ -30,6 +30,7 @@ class Cryptsetup(AutotoolsPackage):
 
     # Upstream includes support for discovering the location of the libintl library
     # but is missing the bit in the Makefile.ac that includes it in the LDFLAGS.
+    # See https://gitlab.com/cryptsetup/cryptsetup/issues/479
     patch('autotools-libintl.patch')
 
     def url_for_version(self, version):
