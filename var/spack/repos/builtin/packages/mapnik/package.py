@@ -19,7 +19,7 @@ class Mapnik(AutotoolsPackage):
 
     depends_on('python', type=('build', 'run'))
     # Build fails with boost@1.70
-    depends_on('boost@:1.69.0+regex+filesystem+system+icu+program_options+python cxxstd=11')
+    depends_on('boost@:1.69.0+regex+filesystem+system+icu+program_options cxxstd=11')
     depends_on('icu4c')
     depends_on('zlib')
     depends_on('freetype')
