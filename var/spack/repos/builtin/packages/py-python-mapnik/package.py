@@ -25,6 +25,5 @@ class PyPythonMapnik(PythonPackage):
     def setup_environment(self, spack_env, run_env):
         # Inform the package that boost python library is of form
         # 'libboost_python27.so' as opposed to 'libboost_python.so'
-        py_ver = str(self.spec['python'].version.up_to(2))
-        py_ver.replace('.','')
+        py_ver = str(self.spec['python'].version.up_to(2).joined)
         spack_env.set('BOOST_PYTHON_LIB', 'boost_python' + py_ver)
