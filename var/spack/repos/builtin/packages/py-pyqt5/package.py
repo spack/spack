@@ -43,7 +43,8 @@ class PyPyqt5(SIPPackage):
             '--pyuic5-interpreter', self.spec['python'].command.path,
             '--sipdir', self.prefix.share.sip.PyQt5,
             '--stubsdir', join_path(site_packages_dir, 'PyQt5'),
-            '--qsci-api-destdir', self.prefix.share+'/qsci'
+            if '+qsci' in self.spec:
+                '--qsci-api-destdir', self.prefix.share+'/qsci'
         ]
 
     @run_after('install')
