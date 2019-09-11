@@ -74,9 +74,7 @@ class PyPyqt5(SIPPackage):
 
                 make()
 
-
-                # TODO does INSTALL_ROOT already exist?
-
+                # Fix installation prefixes
                 makefile = FileFilter('Makefile')
                 makefile.filter(r'\$\(INSTALL_ROOT\)','')
                 makefile = FileFilter('Qsci/Makefile')
