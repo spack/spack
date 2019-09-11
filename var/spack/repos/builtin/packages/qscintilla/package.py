@@ -61,7 +61,6 @@ class Qscintilla(QMakePackage):
         if '+designer' in self.spec:
             os.chdir(str(self.stage.source_path)+'/designer-Qt4Qt5')
             qscipro=FileFilter('designer.pro')
-            #link_qscilibs = 'LIBS += -L'+self.prefix.lib+' -lqscintilla2_qt5'
             qscipro.filter('TEMPLATE = lib',
                            'TEMPLATE = lib\nINCLUDEPATH += ../Qt4Qt5\n')
 
