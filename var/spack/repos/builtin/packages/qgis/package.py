@@ -26,7 +26,7 @@ class Qgis(CMakePackage):
     depends_on('qt+dbus')
     depends_on('proj@4.4.0:')
     depends_on('geos@3.4.0:')
-    depends_on('sqlite@3.0.0: +column_meta')
+    depends_on('sqlite@3.0.0: +column_metadata')
     depends_on('libspatialite@4.2.0:')
     depends_on('libspatialindex')
     depends_on('gdal@2.1.0: +python', type=('build', 'link', 'run'))
