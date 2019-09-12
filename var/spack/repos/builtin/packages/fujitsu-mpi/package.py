@@ -9,6 +9,8 @@ from spack import *
 class FujitsuMpi(Package):
     """Fujitsu MPI implementation only for Fujitsu compiler."""
 
+    homepage = "https://www.fujitsu.com/us/"
+
     version('3.0')
 
     provides('mpi@3.1:')
