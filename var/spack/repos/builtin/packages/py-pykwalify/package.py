@@ -15,7 +15,7 @@ class PyPykwalify(PythonPackage):
     url      = "https://pypi.io/packages/source/p/pykwalify/pykwalify-1.7.0.tar.gz"
 
     version('1.7.0', sha256='7e8b39c5a3a10bc176682b3bd9a7422c39ca247482df198b402e8015defcceb2')
-    version('1.6.1', sha256='')
+    version('1.6.1', sha256='191fd3f457f23c0aa8538c3a5c0249f70eeb1046e88d0eaaef928e09c44dff8d')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-docopt@0.6.2:', type=('build', 'run'))
