@@ -33,6 +33,7 @@ class ActsCore(CMakePackage):
     git      = "https://gitlab.cern.ch/acts/acts-core.git"
 
     version('develop', branch='master')
+    version('0.10.4', commit='42cbc359c209f5cf386e620b5a497192c024655e')
     version('0.10.3', commit='a3bb86b79a65b3d2ceb962b60411fd0df4cf274c')
     version('0.10.2', commit='64cbf28c862d8b0f95232b00c0e8c38949d5015d')
     version('0.10.1', commit='0692dcf7824efbc504fb16f7aa00a50df395adbc')
