@@ -2155,7 +2155,8 @@ class Spec(object):
             full_order_keys = list(tuple(p.ordering_key) + (p.sha256,) for p
                                    in patches)
             ordered_hashes = sorted(full_order_keys)
-            tty.debug("Ordered hashes [{0}]: ".format(spec.name) +
+            tty.debug("[12667 Spec.concretize] Ordered hashes [{0}]: "
+                      .format(spec.name) +
                       ', '.join('/'.join(str(e) for e in t)
                                 for t in ordered_hashes))
             mvar._patches_in_order_of_appearance = list(
@@ -2890,6 +2891,8 @@ class Spec(object):
         for sha256 in self.variants['patches']._patches_in_order_of_appearance:
             index = spack.repo.path.patch_index
             patch = index.patch_for_package(sha256, self.package)
+            tty.debug("[12667 Spec.patches] {0} - {1}"
+                      .format(sha256, patch.path_or_url))
             patches.append(patch)
 
         return patches

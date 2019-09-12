@@ -1130,6 +1130,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.msg("No patches needed for %s" % self.name)
             return
 
+        tty.debug("Number of patches: " + str(len(patches)))
+        for patch in patches:
+            tty.debug("[12667 Package.do_patch] {0} - {1}"
+                      .format(patch.owner, patch.path_or_url))
+
         # Apply all the patches for specs that match this one
         patched = False
         for patch in patches:
