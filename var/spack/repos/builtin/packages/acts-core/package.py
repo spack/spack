@@ -59,7 +59,6 @@ class ActsCore(CMakePackage):
     variant('dd4hep', default=False, description='Build the DD4hep plugin')
     variant('identification', default=False, description='Build the Identification plugin')
     variant('json', default=False, description='Build the Json plugin')
-    variant('material', default=False, description='Build the material plugin', when='@:0.9.99')
     variant('tgeo', default=False, description='Build the TGeo plugin')
 
     depends_on('cmake @3.9:', type='build')
@@ -86,7 +85,6 @@ class ActsCore(CMakePackage):
             cmake_variant("DD4HEP_PLUGIN", "dd4hep"),
             cmake_variant("IDENTIFICATION", "identification"),
             cmake_variant("JSON_PLUGIN", "json"),
-            cmake_variant("MATERIAL_PLUGIN", "material"),
             cmake_variant("TGEO_PLUGIN", "tgeo")
         ]
 
