@@ -34,7 +34,7 @@ class Sqlite(AutotoolsPackage):
             '(unsafe for <3.26.0.0 due to Magellan).')
 
     variant('rtree', default=False, description='Build with Rtree module')
-    variant('colmeta', default=False, description="Build with COLUMN_METADATA")
+    variant('column_meta', default=False, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts('+fts', when='@:3.25.99.99')
