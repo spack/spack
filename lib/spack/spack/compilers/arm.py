@@ -72,7 +72,7 @@ class Arm(spack.compiler.Compiler):
     @classmethod
     def rpaths_to_include_for_compiler(cls, paths):
         required_libs = ['libclang', 'libflang']
-        return paths_containing_libs(paths, required_libs)
+        return spack.compiler.paths_containing_libs(paths, required_libs)
 
     @classmethod
     def fc_version(cls, fc):

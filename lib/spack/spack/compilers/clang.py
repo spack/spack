@@ -13,7 +13,8 @@ import llnl.util.tty as tty
 
 import spack.paths
 import spack.stage
-from spack.compiler import Compiler, UnsupportedCompilerFlag
+from spack.compiler import (
+    Compiler, UnsupportedCompilerFlag, paths_containing_libs)
 from spack.util.executable import Executable
 from spack.version import ver
 
