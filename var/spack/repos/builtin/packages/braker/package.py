@@ -34,6 +34,7 @@ class Braker(Package):
     depends_on('genemark-et')
     depends_on('bamtools')
     depends_on('samtools')
+    depends_on('diamond')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
