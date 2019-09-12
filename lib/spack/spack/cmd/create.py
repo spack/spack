@@ -63,7 +63,7 @@ class {class_name}({base_class_name}):
 
 {dependencies}
 
-{body_def}
+{body}
 '''
 
 
@@ -79,7 +79,7 @@ class BundlePackageTemplate(object):
     # depends_on('foo')"""
 
     url_def = "    # There is no URL since there is no code to download."
-    body_def = "    # There is no need for install() since there is no code."
+    body = "    # There is no need for install() since there is no code."
 
     def __init__(self, name, versions):
         self.name       = name
@@ -98,7 +98,7 @@ class BundlePackageTemplate(object):
                 url_def=self.url_def,
                 versions=self.versions,
                 dependencies=self.dependencies,
-                body_def=self.body_def))
+                body=self.body))
 
 
 class PackageTemplate(BundlePackageTemplate):
@@ -106,7 +106,7 @@ class PackageTemplate(BundlePackageTemplate):
 
     base_class_name = 'Package'
 
-    body_def = """\
+    body = """\
     def install(self, spec, prefix):
         # FIXME: Unknown build system
         make()
