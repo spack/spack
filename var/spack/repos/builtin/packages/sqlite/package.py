@@ -34,6 +34,7 @@ class Sqlite(AutotoolsPackage):
             '(unsafe for <3.26.0.0 due to Magellan).')
 
     variant('rtree', default=False, description='Build with Rtree module')
+    variant('column_metadata', default=False, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts('+fts', when='@:3.25.99.99')
@@ -105,6 +106,10 @@ class Sqlite(AutotoolsPackage):
         # Ref: https://sqlite.org/rtree.html
         if '+rtree' in self.spec:
             args.append('CPPFLAGS=-DSQLITE_ENABLE_RTREE=1')
+
+        # Ref: https://sqlite.org/compile.html
+        if '+column_metadata' in self.spec:
+            args.append('CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1')
 
         return args
 
