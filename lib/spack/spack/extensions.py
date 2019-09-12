@@ -158,7 +158,7 @@ class CommandNotFoundError(SpackError):
     def __init__(self, cmd_name):
         super(CommandNotFoundError, self).__init__(
             '{0} is not a recognized Spack command or extension command;'
-            ' check with `spack commands`.')
+            ' check with `spack commands`.'.format(cmd_name))
 
 
 class ExtensionNamingError(SpackError):
