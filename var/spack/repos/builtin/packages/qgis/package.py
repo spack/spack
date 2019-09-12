@@ -45,8 +45,12 @@ class Qgis(CMakePackage):
     depends_on('exiv2')
     depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
+    # Runtime python dependencies, not mentioned in install instructions
     depends_on('py-pyyaml', type='run')
     depends_on('py-owslib', type='run')
+    depends_on('py-jinja2', type='run')
+    depends_on('py-pygments', type='run')
+
 
     # optionals
     depends_on('postgresql@8:') # for PostGIS support
