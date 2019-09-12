@@ -87,3 +87,4 @@ packages:
       - python
     specs:
       - neuron@7.6.6
+      - neuron+debug@7.6.6

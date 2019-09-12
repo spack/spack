@@ -44,7 +44,7 @@ modules:
       - neurodamus-thalamus
       - neurodamus-mousify
       #- 'neuron+mpi%intel'
-      - neuron@7.6.6
+      - neuron~debug
       - parquet-converters
       - placement-algorithm
       - psp-validation
