@@ -178,6 +178,11 @@ class Clang(Compiler):
         return "-fPIC"
 
     @classmethod
+    def rpaths_to_include_for_compiler(cls, paths):
+        required_libs = ['libclang']
+        return paths_containing_libs(paths, required_libs)
+
+    @classmethod
     @llnl.util.lang.memoized
     def default_version(cls, comp):
         """The ``--version`` option works for clang compilers.
