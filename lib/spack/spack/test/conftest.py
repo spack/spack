@@ -488,12 +488,8 @@ def mutable_database(database, _store_dir_and_cache):
     store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
 
-@pytest.fixture(scope='function')
-def install_mockery(tmpdir, config, mock_packages, monkeypatch):
-    """Hooks a fake install directory, DB, and stage directory into Spack."""
-    real_store = spack.store.store
-    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
-
+@pytest.fixture(scope='function', autouse=True)
+def disable_compiler_execution(monkeypatch):
     def noop(*args):
         return []
 
@@ -505,6 +501,13 @@ def install_mockery(tmpdir, config, mock_packages, monkeypatch):
         '_get_compiler_link_paths',
         noop
     )
+
+
+@pytest.fixture(scope='function')
+def install_mockery(tmpdir, config, mock_packages, monkeypatch):
+    """Hooks a fake install directory, DB, and stage directory into Spack."""
+    real_store = spack.store.store
+    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
 
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
