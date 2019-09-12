@@ -26,10 +26,10 @@ class Qgis(CMakePackage):
     depends_on('qt+dbus')
     depends_on('proj@4.4.0:')
     depends_on('geos@3.4.0:')
-    depends_on('sqlite@3.0.0:')
+    depends_on('sqlite@3.0.0: +column_meta')
     depends_on('libspatialite@4.2.0:')
     depends_on('libspatialindex')
-    depends_on('gdal@2.1.0:')
+    depends_on('gdal@2.1.0: +python', type=('build', 'link', 'run'))
     depends_on('qwt@5:')
     depends_on('qwtpolar')
     depends_on('expat@1.95:')
@@ -45,11 +45,16 @@ class Qgis(CMakePackage):
     depends_on('exiv2')
     depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
+    depends_on('py-pyyaml', type='run')
+    depends_on('py-owslib', type='run')
 
     # optionals
     depends_on('postgresql@8:') # for PostGIS support
     depends_on('gsl') # for georeferencer
     depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass') # for georeferencer
+
+    depends_on('hdf5')
+    depends_on('netcdf')
 
     # build
     depends_on('cmake@3.0.0:', type='build')
