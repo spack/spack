@@ -278,6 +278,10 @@ class Compiler(object):
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
 
+    @property
+    def version(self):
+        return self.spec.version
+
     def implicit_rpaths(self):
         if self.enable_implicit_rpaths is False:
             return []
@@ -291,19 +295,6 @@ class Compiler(object):
         rpath_dirs.extend(
             self.rpaths_to_include_for_compiler(link_dirs))
         return list(llnl.util.lang.dedupe(rpath_dirs))
-
-    @property
-    def version(self):
-        return self.spec.version
-
-    @classmethod
-    def verbose_flag(cls):
-        """
-        This property should be overridden in the compiler subclass if a
-        verbose flag is available.
-
-        If it is not overridden, it is assumed to not be supported.
-        """
 
     @classmethod
     def rpaths_to_include_for_compiler(cls, paths):
@@ -335,6 +326,15 @@ class Compiler(object):
             return cls._parse_non_system_link_dirs(output)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+    @classmethod
+    def verbose_flag(cls):
+        """
+        This property should be overridden in the compiler subclass if a
+        verbose flag is available.
+
+        If it is not overridden, it is assumed to not be supported.
+        """
 
     @classmethod
     def _parse_non_system_link_dirs(cls, string):
