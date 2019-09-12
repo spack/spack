@@ -108,7 +108,7 @@ class Sqlite(AutotoolsPackage):
             args.append('CPPFLAGS=-DSQLITE_ENABLE_RTREE=1')
 
         # Ref: https://sqlite.org/compile.html
-        if '+colmeta' in self.spec:
+        if '+column_meta' in self.spec:
             args.append('CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1')
 
         return args
