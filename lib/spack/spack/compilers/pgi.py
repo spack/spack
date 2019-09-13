@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import (
-    Compiler, UnsupportedCompilerFlag, paths_containing_libs)
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
 

@@ -7,8 +7,7 @@ import re
 
 import spack.compilers.clang
 
-from spack.compiler import (
-    Compiler, UnsupportedCompilerFlag, paths_containing_libs)
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
 
