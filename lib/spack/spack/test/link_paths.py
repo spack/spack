@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import itertools
 import pytest
 
 import spack.paths
@@ -31,45 +30,6 @@ def check_link_paths(filename, paths):
     assert not extra_paths
 
     assert actual == expected
-
-
-@pytest.fixture()
-def dirs_with_compiler_libs(tmpdir_factory):
-    lib_to_libfiles = {
-        'libstdc++': ['libstdc++.so', 'libstdc++.tbd'],
-        'libgfortran': ['libgfortran.a', 'libgfortran.dylib'],
-        'libirc': ['libirc.a', 'libirc.so']
-    }
-
-    root = tmpdir_factory.mktemp('root')
-    lib_to_dirs = {}
-    i = 0
-    for lib, libfiles in lib_to_libfiles.items():
-        dirs = []
-        for libfile in libfiles:
-            root.ensure(str(i), dir=True)
-            root.join(str(i)).ensure(libfile)
-            dirs.append(str(root.join(str(i))))
-            i += 1
-        lib_to_dirs[lib] = dirs
-
-    all_dirs = list(itertools.chain.from_iterable(lib_to_dirs.values()))
-
-    yield lib_to_dirs, all_dirs
-
-
-def test_lib_detection(dirs_with_compiler_libs):
-    lib_to_dirs, all_dirs = dirs_with_compiler_libs
-
-    gcc_rpaths = (
-        paths_containing_libs(
-            all_dirs, spack.compilers.gcc.Gcc.required_libs))
-    assert set(gcc_rpaths) == set(lib_to_dirs['libgfortran'])
-
-    intel_rpaths = (
-        paths_containing_libs(
-            all_dirs, spack.compilers.intel.Intel.required_libs))
-    assert set(intel_rpaths) == set(lib_to_dirs['libirc'])
 
 
 def test_icc16_link_paths():

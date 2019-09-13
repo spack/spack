@@ -9,6 +9,7 @@ import llnl.util.filesystem as fs
 import os
 import stat
 import pytest
+import itertools
 
 
 @pytest.fixture()
@@ -195,6 +196,41 @@ class TestInstallTree:
 
             assert os.path.exists('dest/2')
             assert not os.path.islink('dest/2')
+
+
+@pytest.fixture()
+def dirs_with_libfiles(tmpdir_factory):
+    lib_to_libfiles = {
+        'libstdc++': ['libstdc++.so', 'libstdc++.tbd'],
+        'libgfortran': ['libgfortran.a', 'libgfortran.dylib'],
+        'libirc': ['libirc.a', 'libirc.so']
+    }
+
+    root = tmpdir_factory.mktemp('root')
+    lib_to_dirs = {}
+    i = 0
+    for lib, libfiles in lib_to_libfiles.items():
+        dirs = []
+        for libfile in libfiles:
+            root.ensure(str(i), dir=True)
+            root.join(str(i)).ensure(libfile)
+            dirs.append(str(root.join(str(i))))
+            i += 1
+        lib_to_dirs[lib] = dirs
+
+    all_dirs = list(itertools.chain.from_iterable(lib_to_dirs.values()))
+
+    yield lib_to_dirs, all_dirs
+
+
+def test_paths_containing_libs(dirs_with_libfiles):
+    lib_to_dirs, all_dirs = dirs_with_libfiles
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libgfortran'])) ==
+            set(lib_to_dirs['libgfortran']))
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libirc'])) ==
+            set(lib_to_dirs['libirc']))
 
 
 def test_move_transaction_commit(tmpdir):
