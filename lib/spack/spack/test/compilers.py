@@ -26,7 +26,6 @@ import spack.compilers.xl_r
 import spack.compilers.fj
 
 from spack.compiler import Compiler
-from spack.test.conftest import dirs_with_libfiles
 
 
 @pytest.fixture()

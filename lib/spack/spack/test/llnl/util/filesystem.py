@@ -10,8 +10,6 @@ import os
 import stat
 import pytest
 
-from spack.test.conftest import dirs_with_libfiles
-
 
 @pytest.fixture()
 def stage(tmpdir_factory):
