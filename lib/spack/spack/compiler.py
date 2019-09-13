@@ -184,7 +184,7 @@ class Compiler(object):
 
     # These libraries are anticipated to be required by all executables built
     # by any compiler
-    _all_compiler_rpath_libraries = ['libc', 'libc++' 'libstdc++']
+    _all_compiler_rpath_libraries = ['libc', 'libc++', 'libstdc++']
 
     # Default flags used by a compiler to set an rpath
     @property
