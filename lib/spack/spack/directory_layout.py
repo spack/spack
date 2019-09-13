@@ -431,6 +431,11 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
     def _write_extensions(self, spec, extensions):
         path = self.extension_file_path(spec)
 
+        if not extensions:
+            # Remove the empty extensions file
+            os.remove(path)
+            return
+
         # Create a temp file in the same directory as the actual file.
         dirname, basename = os.path.split(path)
         mkdirp(dirname)
