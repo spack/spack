@@ -19,10 +19,13 @@ class Snakemake(PythonPackage):
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
 
+    depends_on('py-appdirs', type='run')
     depends_on('py-configargparse', type='run')
     depends_on('py-datrie', type='run')
+    depends_on('py-docutils', type='run')
     depends_on('py-gitpython', type='run')
     depends_on('py-jsonschema', type='run')
     depends_on('py-pyyaml', type='run')
     depends_on('py-ratelimiter', type='run')
+    depends_on('py-requests', type='run')
     depends_on('py-wrapt', type='run')
