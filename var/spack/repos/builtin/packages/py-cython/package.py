@@ -43,4 +43,4 @@ class PyCython(PythonPackage):
 
     def test(self):
         # Warning: full suite of unit tests takes a very long time
-        python('runtests.py', '-j', make_jobs)
+        python('runtests.py', '-j', str(make_jobs))
