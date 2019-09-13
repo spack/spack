@@ -37,6 +37,10 @@ def all_hook_modules():
         path = os.path.join(spack.paths.hooks_path, name) + ".py"
         mod = simp.load_source(mod_name, path)
         modules.append(mod)
+        if name == 'write_install_manifest':
+            last_mod = mod
+
+    modules.sort(key=lambda x: x is last_mod)
 
     return modules
 

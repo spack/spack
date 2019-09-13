@@ -194,6 +194,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
         self.packages_dir        = 'repos'  # archive of package.py files
+        self.manifest_file_name  = 'install_manifest.json'
 
     @property
     def hidden_file_paths(self):
