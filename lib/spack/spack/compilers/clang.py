@@ -178,10 +178,7 @@ class Clang(Compiler):
     def pic_flag(self):
         return "-fPIC"
 
-    @classmethod
-    def rpaths_to_include_for_compiler(cls, paths):
-        required_libs = ['libclang']
-        return paths_containing_libs(paths, required_libs)
+    required_libs = ['libclang']
 
     @classmethod
     @llnl.util.lang.memoized

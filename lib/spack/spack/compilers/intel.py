@@ -37,10 +37,7 @@ class Intel(Compiler):
     def verbose_flag(cls):
         return "-v"
 
-    @classmethod
-    def rpaths_to_include_for_compiler(cls, paths):
-        required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
-        return paths_containing_libs(paths, required_libs)
+    required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
 
     @property
     def openmp_flag(self):

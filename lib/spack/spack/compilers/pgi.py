@@ -49,10 +49,7 @@ class Pgi(Compiler):
     def pic_flag(self):
         return "-fpic"
 
-    @classmethod
-    def rpaths_to_include_for_compiler(cls, paths):
-        required_libs = ['libpgc', 'libpgf90']
-        return paths_containing_libs(paths, required_libs)
+    required_libs = ['libpgc', 'libpgf90']
 
     @property
     def c99_flag(self):

@@ -114,10 +114,7 @@ class Gcc(Compiler):
     def pic_flag(self):
         return "-fPIC"
 
-    @classmethod
-    def rpaths_to_include_for_compiler(cls, paths):
-        required_libs = ['libgcc', 'libgfortran']
-        return paths_containing_libs(paths, required_libs)
+    required_libs = ['libgcc', 'libgfortran']
 
     @classmethod
     def default_version(cls, cc):

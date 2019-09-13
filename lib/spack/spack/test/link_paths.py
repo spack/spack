@@ -9,6 +9,7 @@ import pytest
 
 import spack.paths
 from spack.compiler import Compiler
+from llnl.util.filesystem import paths_containing_libs
 
 #: directory with sample compiler data
 datadir = os.path.join(spack.paths.test_path, 'data',
@@ -61,11 +62,13 @@ def test_lib_detection(dirs_with_compiler_libs):
     lib_to_dirs, all_dirs = dirs_with_compiler_libs
 
     gcc_rpaths = (
-        spack.compilers.gcc.Gcc.rpaths_to_include_for_compiler(all_dirs))
+        paths_containing_libs(
+            all_dirs, spack.compilers.gcc.Gcc.required_libs))
     assert set(gcc_rpaths) == set(lib_to_dirs['libgfortran'])
 
     intel_rpaths = (
-        spack.compilers.intel.Intel.rpaths_to_include_for_compiler(all_dirs))
+        paths_containing_libs(
+            all_dirs, spack.compilers.intel.Intel.required_libs))
     assert set(intel_rpaths) == set(lib_to_dirs['libirc'])
 
 

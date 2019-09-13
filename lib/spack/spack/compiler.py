@@ -143,12 +143,6 @@ def _parse_link_paths(string):
     return implicit_link_dirs
 
 
-def _universal_rpaths_to_include_for_compiler(paths):
-    # These libraries are anticipated to be required by all compilers
-    universal_libs = ['libc', 'libc++' 'libstdc++']
-    return paths_containing_libs(paths, universal_libs)
-
-
 def in_system_subdirectory(path):
     system_dirs = ['/lib/', '/lib64/', '/usr/lib/', '/usr/lib64/',
                    '/usr/local/lib/', '/usr/local/lib64/']
@@ -187,6 +181,10 @@ class Compiler(object):
 
     #: Regex used to extract version from compiler's output
     version_regex = '(.*)'
+
+    # These libraries are anticipated to be required by all executables built
+    # by any compiler
+    _all_compiler_rpath_libraries = ['libc', 'libc++' 'libstdc++']
 
     # Default flags used by a compiler to set an rpath
     @property
@@ -259,17 +257,15 @@ class Compiler(object):
         exe_paths = [
             x for x in [self.cc, self.cxx, self.fc, self.f77] if x]
         link_dirs = self._get_compiler_link_paths(exe_paths)
-        rpath_dirs = list()
-        rpath_dirs.extend(
-            _universal_rpaths_to_include_for_compiler(link_dirs))
-        rpath_dirs.extend(
-            self.rpaths_to_include_for_compiler(link_dirs))
-        return list(llnl.util.lang.dedupe(rpath_dirs))
 
-    @classmethod
-    def rpaths_to_include_for_compiler(cls, paths):
-        """Given a set of link directories reported by a compiler, a Compiler
-        subclass may determine that some should be RPATH'ed.
+        all_required_libs = (
+            list(self.required_libs) + Compiler._all_compiler_rpath_libraries)
+        return list(paths_containing_libs(link_dirs, all_required_libs))
+
+    @property
+    def required_libs(self):
+        """For executables created with this compiler, the compiler libraries
+        that would be generally required to run it.
         """
         # By default every compiler returns the empty list
         return []
