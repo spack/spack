@@ -37,6 +37,10 @@ def verify(parser, args):
             specs = spack.store.db.query(installed=True)
 
     for spec in specs:
-        tty.msg("Verifying package %s" % spec.format('{name}/{hash:7}'))
-        results = spack.verify.check_prefix(spec.prefix)
-        print(results)
+        tty.debug("Verifying package %s")
+        results = spack.verify.check(spec)
+        if results:
+            tty.msg("In package %s" % spec.format('{name}/{hash:7}'))
+            print(results)
+        else:
+            tty.debug(results)
