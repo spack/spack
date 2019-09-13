@@ -7,7 +7,6 @@ import os
 
 import spack.paths
 from spack.compiler import Compiler
-from llnl.util.filesystem import paths_containing_libs
 
 #: directory with sample compiler data
 datadir = os.path.join(spack.paths.test_path, 'data',
