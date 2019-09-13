@@ -9,7 +9,9 @@ import itertools
 import shutil
 import tempfile
 
-import llnl.util.filesystem
+import llnl.util.lang
+from llnl.util.filesystem import (
+    path_contains_subdirectory, paths_containing_libs)
 import llnl.util.tty as tty
 
 import spack.error
@@ -147,42 +149,10 @@ def _universal_rpaths_to_include_for_compiler(paths):
     return paths_containing_libs(paths, universal_libs)
 
 
-def paths_containing_libs(paths, library_names):
-    """Given a collection of filesystem paths, return the list of paths that
-    which include one or more of the specified libraries.
-    """
-    required_lib_fnames = possible_library_filenames(library_names)
-
-    rpaths_to_include = []
-    for path in paths:
-        fnames = set(os.listdir(path))
-        if fnames & required_lib_fnames:
-            rpaths_to_include.append(path)
-
-    return rpaths_to_include
-
-
-def possible_library_filenames(library_names):
-    """Given a collection of library names like 'libfoo', generate the set of
-    library filenames that may be found on the system (e.g. libfoo.so). This
-    generates the library filenames that may appear on any OS.
-    """
-    lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
-    return set(
-        '.'.join((lib, extension)) for lib, extension in
-        itertools.product(library_names, lib_extensions))
-
-
-def is_subdirectory(path, prefix):
-    path = os.path.abspath(path)
-    prefix = os.path.abspath(prefix) + os.path.sep
-    return path.startswith(prefix)
-
-
 def in_system_subdirectory(path):
     system_dirs = ['/lib/', '/lib64/', '/usr/lib/', '/usr/lib64/',
                    '/usr/local/lib/', '/usr/local/lib64/']
-    return any(is_subdirectory(path, x) for x in system_dirs)
+    return any(path_contains_subdirectory(path, x) for x in system_dirs)
 
 
 class Compiler(object):
