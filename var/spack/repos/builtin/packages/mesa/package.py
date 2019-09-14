@@ -9,6 +9,15 @@ import os.path
 import sys
 
 
+def multi_depends(*args, **kwargs):
+    when = kwargs.pop('when', None)
+    if when is None:
+        depends_on(*args, **kwargs)
+
+    for w in when:
+        depends_on(*args, when=w, **kwargs)
+
+
 class Mesa(AutotoolsPackage):
     """Mesa is an open-source implementation of the OpenGL specification
      - a system for rendering interactive 3D graphics."""
@@ -64,43 +73,30 @@ class Mesa(AutotoolsPackage):
     # Provides
     provides('gl@4.5',  when='+opengl')
     provides('glx@1.4', when='+glx')
-
-    provides('gl@4.5',  when='+glvnd')
-    provides('glx@1.4', when='+glvnd')
     # provides('egl@1.5', when='+egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
 
-    # +glx WITHOUT glvnd
-    depends_on('libx11',  when='~glvnd +glx')
-    depends_on('libxcb',  when='~glvnd +glx')
-    depends_on('libxext', when='~glvnd +glx')
+    depends_on('libx11',  when='+glx')
+    depends_on('libxcb@1.9.3:', when='+glx')
+    depends_on('libxext', when='+glx')
 
-    # +glx THROUGH glvnd
-    depends_on('libx11',  when='+glvnd +glx')
-    depends_on('libxcb@1.9.3:', when='+glvnd +glx')
-    depends_on('libxext', when='+glvnd +glx')
-    depends_on('libxshmfence@1.1:', when='+glvnd +glx')
+    depends_on('libglvnd', when='+glvnd')
 
-    depends_on('libglvnd', when='+glvnd +glx')
+    depends_on('libxshmfence@1.1:', when='+glvnd')
 
-    depends_on('libdrm', when='+glvnd +glx')
-    depends_on('dri2proto', when='+glvnd +glx')
-    depends_on('libx11', when='+glvnd +glx')
+    plus_dri = ('+egl', '+glvnd')
+    multi_depends('libdrm', when=plus_dri)
+    multi_depends('dri2proto', when=plus_dri)
 
-    depends_on('libxdamage@1.1:', when='+glvnd +glx')
-    depends_on('damageproto', when='+glvnd +glx')
-    depends_on('libxfixes', when='+glvnd +glx')
-    depends_on('fixesproto', when='+glvnd +glx')
-    depends_on('libxxf86vm', when='+glvnd +glx')
-    depends_on('xf86vidmodeproto', when='+glvnd +glx')
+    depends_on('libxdamage@1.1:', when='+glvnd')
+    depends_on('damageproto', when='+glvnd')
+    depends_on('libxfixes', when='+glvnd')
+    depends_on('fixesproto', when='+glvnd')
+    depends_on('libxxf86vm', when='+glvnd')
+    depends_on('xf86vidmodeproto', when='+glvnd')
 
-
-    # +egl with or without glvnd
-    depends_on('libdrm', when='+egl')
-
-    # +glx with or without glvnd
     depends_on('glproto@1.4.14:', when='+glx', type='build')
 
     conflicts('+glvnd~glx~egl',
@@ -117,6 +113,9 @@ class Mesa(AutotoolsPackage):
         spec = self.spec
 
         glvnd_enabled = '+glvnd' in spec
+        egl_enabled = '+egl' in spec
+        glx_enabled = '+glx' in spec
+        dri_enabled = egl_enabled or glvnd_enabled
 
         enable_glvnd = ''.join((
             '--', 'enable' if glvnd_enabled else 'disable', '-libglvnd'))
@@ -150,9 +149,9 @@ class Mesa(AutotoolsPackage):
         else:
             args.append('--disable-gallium-osmesa')
 
-        if '+glx' in spec:
+        if glx_enabled:
             num_frontends += 1
-            if '+egl' in spec or glvnd_enabled:
+            if dri_enabled:
                 args.append('--enable-glx=dri')
             else:
                 args.append('--enable-glx=gallium-xlib')
@@ -160,12 +159,17 @@ class Mesa(AutotoolsPackage):
         else:
             args.append('--disable-glx')
 
-        if '+egl' in spec or glvnd_enabled:
+        if dri_enabled:
             num_frontends += 1
-            args.extend(['--enable-egl', '--enable-gbm', '--enable-dri'])
+            if egl_enabled:
+                args.extend(['--enable-egl', '--enable-gbm'])
+            else:
+                args.extend(['--disable-egl', '--disable-gbm'])
+
+            args.append('--enable-dri')
             args_platforms.append('surfaceless')
         else:
-            args.extend(['--disable-egl', '--disable-gbm', '--disable-dri'])
+            args.append('--disable-dri')
 
         if '+opengl' in spec:
             args.append('--enable-opengl')
@@ -217,34 +221,28 @@ class Mesa(AutotoolsPackage):
     @property
     def gl_libs(self):
         if '+glvnd' in self.spec:
-            return find_libraries('libGL',
+            return find_libraries('libOpenGL',
                                   root=self.spec['libglvnd'].prefix,
-                                  shared='+shared' in self.spec,
+                                  shared=True,
                                   recursive=True)
 
-        if '+opengl' in self.spec:
-            return find_libraries('libGL',
-                                  root=self.spec.prefix,
-                                  shared='+shared' in self.spec,
-                                  recursive=True)
-
-        return []
+        return find_libraries('libGL',
+                              root=self.spec.prefix,
+                              shared='+shared' in self.spec,
+                              recursive=True)
 
     @property
     def glx_libs(self):
         if '+glvnd' in self.spec:
             return find_libraries('libGLX',
                                   root=self.spec['libglvnd'].prefix,
-                                  shared='+shared' in self.spec,
+                                  shared=True,
                                   recursive=True)
 
-        if '+opengl' in self.spec:
-            return find_libraries('libGLX',
-                                  root=self.spec.prefix,
-                                  shared='+shared' in self.spec,
-                                  recursive=True)
-
-        return []
+        return find_libraries('libGL',
+                              root=self.spec.prefix,
+                              shared='+shared' in self.spec,
+                              recursive=True)
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('__GLX_VENDOR_LIBRARY_NAME', 'mesa')
