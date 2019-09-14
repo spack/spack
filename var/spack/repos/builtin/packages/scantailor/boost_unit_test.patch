@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 891302a..9ae5636 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -288,7 +288,7 @@ IF(WIN32)
+ 	)
+ 	SET(Boost_USE_STATIC_LIBS ON)
+ ELSE(WIN32)
+-	ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
++    # ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
+ ENDIF(WIN32)
+ 
+ SET(Boost_USE_MULTITHREADED ON)
