@@ -107,7 +107,7 @@ class Qt(Package):
 
     # Fix build of QT4 with GCC 9
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=925811
-    patch("qt4-gcc9-qforeach.patch", when="@4: %gcc@9")
+    patch("qt4-gcc9-qforeach.patch", when="@4:4.999 %gcc@9")
 
     # https://bugreports.qt.io/browse/QTBUG-74196
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89585
