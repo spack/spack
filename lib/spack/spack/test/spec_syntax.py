@@ -10,6 +10,7 @@ import shlex
 import llnl.util.filesystem as fs
 
 import spack.hash_types as ht
+import spack.repo
 import spack.store
 import spack.spec as sp
 from spack.parse import Token
@@ -18,7 +19,7 @@ from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
 from spack.spec import DuplicateArchitectureError, DuplicateVariantError
 from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
-from spack.spec import InvalidYamlPathError
+from spack.spec import SpecFilenameError, NoSuchSpecFileError
 
 
 # Sample output for a complex lexing.
@@ -114,6 +115,7 @@ class TestSpecSyntax(object):
     def _check_raises(self, exc_type, items):
         for item in items:
             with pytest.raises(exc_type):
+                print("CHECKING: ", item, "=======================")
                 Spec(item)
 
     # ========================================================================
@@ -448,12 +450,12 @@ class TestSpecSyntax(object):
         with specfile.open('w') as f:
             f.write(s.to_yaml(hash=ht.build_hash))
 
-        # Check an absolute path spec.yaml by itself:
+        # Check an absolute path to spec.yaml by itself:
         #     "spack spec /path/to/libdwarf.yaml"
         specs = sp.parse(specfile.strpath)
         assert len(specs) == 1
 
-        # Check absolute path spec.yaml mixed with a clispec, e.g.:
+        # Check absolute path to spec.yaml mixed with a clispec, e.g.:
         #     "spack spec mvapich_foo /path/to/libdwarf.yaml"
         specs = sp.parse('mvapich_foo {0}'.format(specfile.strpath))
         assert len(specs) == 2
@@ -467,6 +469,10 @@ class TestSpecSyntax(object):
 
         with specfile.open('w') as f:
             f.write(s['libelf'].to_yaml(hash=ht.build_hash))
+
+        print("")
+        print("")
+        print("PARSING HERE")
 
         # Make sure we can use yaml path as dependency, e.g.:
         #     "spack spec libdwarf ^ /path/to/libelf.yaml"
@@ -507,6 +513,26 @@ class TestSpecSyntax(object):
             assert len(specs) == 2
 
     @pytest.mark.usefixtures('config')
+    def test_parse_yaml_relative_subdir_path(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.mkdir('subdir').join('libdwarf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        file_name = specfile.basename
+
+        # Relative path to specfile
+        with tmpdir.as_cwd():
+            assert os.path.exists('subdir/{0}'.format(file_name))
+
+            # Test for command like: "spack spec libelf.yaml"
+            specs = sp.parse('subdir/{0}'.format(file_name))
+            assert len(specs) == 1
+
+    @pytest.mark.usefixtures('config')
     def test_parse_yaml_dependency_relative_paths(self, mock_packages, tmpdir):
         s = Spec('libdwarf')
         s.concretize()
@@ -535,13 +561,13 @@ class TestSpecSyntax(object):
             assert len(specs) == 1
 
     def test_parse_yaml_error_handling(self):
-        self._check_raises(InvalidYamlPathError, [
+        self._check_raises(NoSuchSpecFileError, [
             # Single spec that looks like a yaml path
             '/bogus/path/libdwarf.yaml',
             '../../libdwarf.yaml',
             './libdwarf.yaml',
             # Dependency spec that looks like a yaml path
-            'libdwarf^/bogus/path/libelf.yaml'
+            'libdwarf^/bogus/path/libelf.yaml',
             'libdwarf ^../../libelf.yaml',
             'libdwarf^ ./libelf.yaml',
             # Multiple specs, one looks like a yaml path
@@ -549,6 +575,21 @@ class TestSpecSyntax(object):
             'mvapich_foo ../../libelf.yaml',
             'mvapich_foo ./libelf.yaml',
         ])
+
+    def test_nice_error_for_no_space_after_spec_filename(self):
+        """Ensure that omitted spaces don't give weird errors about hashes."""
+        self._check_raises(SpecFilenameError, [
+            '/bogus/path/libdwarf.yamlfoobar',
+            'libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml',
+        ])
+
+    @pytest.mark.usefixtures('config')
+    def test_yaml_spec_not_filename(self, mock_packages, tmpdir):
+        with pytest.raises(spack.repo.UnknownPackageError):
+            Spec('builtin.mock.yaml').concretize()
+
+        with pytest.raises(spack.repo.UnknownPackageError):
+            Spec('builtin.mock.yamlfoobar').concretize()
 
     @pytest.mark.usefixtures('config')
     def test_parse_yaml_variant_error(self, mock_packages, tmpdir):
