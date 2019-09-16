@@ -119,7 +119,7 @@ def build_cache_relative_path():
     return _build_cache_relative_path
 
 
-def build_cache_directory(prefix):
+def build_cache_prefix(prefix):
     return os.path.join(prefix, build_cache_relative_path())
 
 
@@ -264,13 +264,19 @@ def sign_tarball(key, force, specfile_path):
     Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
-def generate_package_index(build_cache_dir):
+def generate_package_index(cache_prefix):
+    """Create the build cache index page.
+
+    Creates (or replaces) the "index.html" page at the location given in
+    cache_prefix.  This page contains a link for each binary package (*.yaml)
+    and signing key (*.key) under cache_prefix.
+    """
     tmpdir = tempfile.mkdtemp()
     try:
         index_html_path = os.path.join(tmpdir, 'index.html')
         file_list = (
                 entry
-                for entry in web_util.list_url(build_cache_dir)
+                for entry in web_util.list_url(cache_prefix)
                 if (entry.endswith('.yaml')
                     or entry.endswith('.key')))
 
@@ -283,7 +289,7 @@ def generate_package_index(build_cache_dir):
 
         web_util.push_to_url(
                 index_html_path,
-                url_util.join(build_cache_dir, 'index.html'),
+                url_util.join(cache_prefix, 'index.html'),
                 keep_original=False,
                 extra_args={'ContentType': 'text/html'})
     finally:
@@ -301,13 +307,13 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
 
     # set up some paths
     tmpdir = tempfile.mkdtemp()
-    build_cache_dir = build_cache_directory(tmpdir)
+    cache_prefix = build_cache_prefix(tmpdir)
 
     tarfile_name = tarball_name(spec, '.tar.gz')
-    tarfile_dir = os.path.join(build_cache_dir, tarball_directory_name(spec))
+    tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(
-        build_cache_dir, tarball_path_name(spec, '.spack'))
+        cache_prefix, tarball_path_name(spec, '.spack'))
 
     remote_spackfile_path = url_util.join(
             outdir, os.path.relpath(spackfile_path, tmpdir))
@@ -325,7 +331,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spec_file = os.path.join(spec.prefix, ".spack", "spec.yaml")
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.realpath(
-        os.path.join(build_cache_dir, specfile_name))
+        os.path.join(cache_prefix, specfile_name))
 
     remote_specfile_path = url_util.join(
             outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
@@ -424,7 +430,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         # found
         if regenerate_index:
             generate_package_index(url_util.join(
-                outdir, os.path.relpath(build_cache_dir, tmpdir)))
+                outdir, os.path.relpath(cache_prefix, tmpdir)))
     finally:
         shutil.rmtree(tmpdir)
 
@@ -770,9 +776,9 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     # Try to retrieve the .spec.yaml directly, based on the known
     # format of the name, in order to determine if the package
     # needs to be rebuilt.
-    build_cache_dir = build_cache_directory(mirror_url)
+    cache_prefix = build_cache_prefix(mirror_url)
     spec_yaml_file_name = tarball_name(spec, '.spec.yaml')
-    file_path = os.path.join(build_cache_dir, spec_yaml_file_name)
+    file_path = os.path.join(cache_prefix, spec_yaml_file_name)
 
     result_of_error = 'Package ({0}) will {1}be rebuilt'.format(
         spec.short_spec, '' if rebuild_on_errors else 'not ')
