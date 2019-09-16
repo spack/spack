@@ -234,6 +234,9 @@ class VerificationResults(object):
         # Backwards compatibility for python 2.x
         return self.__bool__()
 
+    def json_string(self):
+        return json.dumps(self.errors)
+
     def __str__(self):
         res = ''
         for path, fields in self.errors.items():

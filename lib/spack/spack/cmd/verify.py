@@ -21,6 +21,8 @@ def setup_parser(subparser):
 
     subparser.add_argument('-l', '--local', action='store_true',
                            help="Verify only locally installed packages")
+    subparser.add_argument('-j', '--json', action='store_true',
+                           help="Ouptut json-formatted errors")
     subparser.add_argument('-a', '--all', action='store_true',
                            help="Verify all packages")
     subparser.add_argument('files_or_specs', nargs=argparse.REMAINDER,
@@ -45,7 +47,10 @@ def verify(parser, args):
         for file in args.files_or_specs:
             results = spack.verify.check_file_manifest(file)
             if results:
-                print(results)
+                if args.json:
+                    print(results.json_string())
+                else:
+                    print(results)
 
         return 0
     else:
@@ -78,7 +83,10 @@ def verify(parser, args):
         tty.debug("Verifying package %s")
         results = spack.verify.check_spec_manifest(spec)
         if results:
-            tty.msg("In package %s" % spec.format('{name}/{hash:7}'))
-            print(results)
+            if args.json:
+                print(results.json_string())
+            else:
+                tty.msg("In package %s" % spec.format('{name}/{hash:7}'))
+                print(results)
         else:
             tty.debug(results)
