@@ -31,8 +31,7 @@ class UtilLinux(AutotoolsPackage):
 
     def configure_args(self):
         config_args = [
-            '--disable-use-tty-group'
+            '--disable-use-tty-group',
         ]
-        if '~libuuid' in self.spec:
-            config_args.append('--disable-libuuid')
+        config_args.extend(self.enable_or_disable('libuuid'))
         return config_args
