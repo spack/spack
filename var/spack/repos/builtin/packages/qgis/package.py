@@ -15,7 +15,7 @@ class Qgis(CMakePackage):
     homepage = "https://qgis.org"
     url      = "https://qgis.org/downloads/qgis-3.8.1.tar.bz2"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'Sinan81']
 
     version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
 
@@ -55,7 +55,7 @@ class Qgis(CMakePackage):
     # optionals
     depends_on('postgresql@8:') # for PostGIS support
     depends_on('gsl') # for georeferencer
-    depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass') # for georeferencer
+    depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass7') # for georeferencer
 
     depends_on('hdf5')
     depends_on('netcdf')
