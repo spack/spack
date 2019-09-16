@@ -35,6 +35,20 @@ from spack.util.executable import ProcessError
 
 _build_cache_relative_path = 'build_cache'
 
+BUILD_CACHE_INDEX_TEMPLATE = '''
+<html>
+<head>
+  <title>{title}</title>
+</head>
+<body>
+<ul>
+{path_list}
+</ul>
+</body>
+</html>
+'''
+
+BUILD_CACHE_INDEX_ENTRY_TEMPLATE = '  <li><a href="{path}">{path}</a>'
 
 class NoOverwriteException(Exception):
     """
@@ -250,24 +264,6 @@ def sign_tarball(key, force, specfile_path):
     Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
-def _generate_html_index(path_list, output_path):
-    with open(output_path, 'w') as f:
-        f.write('\n'.join((
-            '<html>',
-            '<head></head>',
-            '<body>',
-            '<ul>',
-            '\n'.join(
-                '  <li><a href="{0}">{0}</a>'.format(path)
-                for path in path_list
-            ),
-            '</ul>',
-            '</body>',
-            '</html>',
-            ''
-        )))
-
-
 def generate_package_index(build_cache_dir):
     tmpdir = tempfile.mkdtemp()
     try:
@@ -278,7 +274,12 @@ def generate_package_index(build_cache_dir):
                 if (entry.endswith('.yaml')
                     or entry.endswith('.key')))
 
-        _generate_html_index(file_list, index_html_path)
+        with open(index_html_path, 'w') as f:
+            f.write(BUILD_CACHE_INDEX_TEMPLATE.format(
+                title='Spack Package Index',
+                path_list='\n'.join(
+                    BUILD_CACHE_INDEX_ENTRY_TEMPLATE.format(path)
+                    for path in file_list)))
 
         web_util.push_to_url(
                 index_html_path,
