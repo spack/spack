@@ -21,7 +21,8 @@ class UtilLinux(AutotoolsPackage):
     depends_on('python@2.7:')
     depends_on('pkgconfig')
 
-    # make it possible to use the libuuid package instead...
+    # Make it possible to disable util-linux's libuuid so that you may
+    # reliably depend_on(`libuuid`).
     variant('libuuid', default=True, description='Build libuuid')
 
     def url_for_version(self, version):
