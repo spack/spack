@@ -5,6 +5,8 @@
 
 """Tests for the `spack.verify` module"""
 import os
+import json
+import sys
 import llnl.util.filesystem as fs
 import spack.verify
 import spack.spec
@@ -153,3 +155,38 @@ def test_check_prefix_manifest(tmpdir, monkeypatch):
 
     assert results.errors[link] == ['deleted']
     assert results.errors[malware] == ['added']
+
+
+def test_single_file_verification(tmpdir):
+    filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
+    filepath = os.path.join(filedir, 'file')
+    metadir = os.path.join(str(tmpdir), spack.store.layout.metadata_dir)
+
+    fs.mkdirp(filedir)
+    fs.mkdirp(metadir)
+
+    with open(filepath, 'w') as f:
+        f.write("I'm a file")
+
+    data = spack.verify.create_manifest_entry(filepath)
+
+    manifest_file = os.path.join(metadir,
+                                 spack.store.layout.manifest_file_name)
+
+    with open(manifest_file, 'wb') as f:
+        js = json.dumps({filepath: data}, f)
+        if sys.version_info[0] >= 3:
+            js = js.encode()
+        f.write(js)
+
+    results = spack.verify.check_file_manifest(filepath)
+    assert not results
+
+    with open(filepath, 'w') as f:
+        f.write("I changed.")
+
+    results = spack.verify.check_file_manifest(filepath)
+    assert results
+    assert filepath in results.errors
+    assert len(results.errors[filepath]) == 2
+    assert all(x in results.errors[filepath] for x in ('mtime', 'hash'))

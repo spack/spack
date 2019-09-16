@@ -116,6 +116,38 @@ def check_entry(path, data):
     return res
 
 
+def check_file_manifest(file):
+    dirname = os.path.dirname(file)
+
+    results = VerificationResults()
+    while spack.store.layout.metadata_dir not in os.listdir(dirname):
+        if dirname == os.path.sep:
+            results.add_error(file, 'not owned by any package')
+            return results
+        dirname = os.path.dirname(dirname)
+
+    manifest_file = os.path.join(dirname,
+                                 spack.store.layout.metadata_dir,
+                                 spack.store.layout.manifest_file_name)
+
+    if not os.path.exists(manifest_file):
+        results.add_error(file, "manifest missing")
+        return results
+
+    try:
+        with open(manifest_file, 'r') as f:
+            manifest = json.load(f)
+    except:
+        results.add_error(file, "manifest corrupted")
+        return results
+
+    if file in manifest:
+        results += check_entry(file, manifest[file])
+    else:
+        results.add_error(file, 'not owned by any package')
+    return results
+
+
 def check_spec_manifest(spec):
     prefix = spec.prefix
 
