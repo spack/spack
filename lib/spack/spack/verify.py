@@ -8,6 +8,9 @@ import hashlib
 import base64
 import sys
 
+import llnl.util.tty as tty
+
+import spack.util.file_permissions as fp
 import spack.store
 import spack.filesystem_view
 
@@ -19,6 +22,54 @@ def compute_hash(path):
             b32 = b32.decode()
 
         return b32
+
+
+def create_manifest_entry(path):
+    data = {}
+    stat = os.stat(path)
+
+    data['mode'] = stat.st_mode
+    data['owner'] = stat.st_uid
+    data['group'] = stat.st_gid
+
+    if os.path.islink(path):
+        data['type'] = 'link'
+        data['dest'] = os.readlink(path)
+
+    elif os.path.isdir(path):
+        data['type'] = 'dir'
+
+    else:
+        data['type'] = 'file'
+        data['hash'] = compute_hash(path)
+        data['time'] = stat.st_mtime
+        data['size'] = stat.st_size
+
+    return data
+
+
+def write_manifest(spec):
+    manifest_file = os.path.join(spec.prefix,
+                                 spack.store.layout.metadata_dir,
+                                 spack.store.layout.manifest_file_name)
+
+    if not os.path.exists(manifest_file):
+        tty.debug("Writing manifest file: No manifest from binary")
+
+        manifest = {}
+        for root, dirs, files in os.walk(spec.prefix):
+            for entry in list(dirs + files):
+                path = os.path.join(root, entry)
+                manifest[path] = create_manifest_entry(path)
+        manifest[spec.prefix] = create_manifest_entry(spec.prefix)
+
+        with open(manifest_file, 'wb') as f:
+            js = json.dumps(manifest, f)
+            if sys.version_info[0] >= 3:
+                js = js.encode()
+            f.write(js)
+
+        fp.set_permissions_by_spec(manifest_file, spec)
 
 
 def check_entry(path, data):
@@ -49,7 +100,6 @@ def check_entry(path, data):
     elif os.path.isdir(path):
         if data['type'] != 'dir':
             res.add_error(path, 'type')
-        contents = sorted(os.listdir(path))
 
     else:
         # Check file contents against hash and listed as file
@@ -66,7 +116,7 @@ def check_entry(path, data):
     return res
 
 
-def check(spec):
+def check_spec_manifest(spec):
     prefix = spec.prefix
 
     results = VerificationResults()
