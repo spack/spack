@@ -19,6 +19,7 @@ from llnl.util.filesystem import partition_path, remove_linked_tree
 
 import spack.paths
 import spack.caches
+import spack.cmd
 import spack.config
 import spack.error
 import spack.mirror
@@ -709,6 +710,91 @@ def purge():
                 remove_linked_tree(stage_path)
 
 
+def get_checksums_for_versions(
+        url_dict, name, first_stage_function=None, keep_stage=False):
+    """Fetches and checksums archives from URLs.
+
+    This function is called by both ``spack checksum`` and ``spack
+    create``.  The ``first_stage_function`` argument allows the caller to
+    inspect the first downloaded archive, e.g., to determine the build
+    system.
+
+    Args:
+        url_dict (dict): A dictionary of the form: version -> URL
+        name (str): The name of the package
+        first_stage_function (callable): function that takes a Stage and a URL;
+            this is run on the stage of the first URL downloaded
+        keep_stage (bool): whether to keep staging area when command completes
+
+    Returns:
+        (str): A multi-line string containing versions and corresponding hashes
+
+    """
+    sorted_versions = sorted(url_dict.keys(), reverse=True)
+
+    # Find length of longest string in the list for padding
+    max_len = max(len(str(v)) for v in sorted_versions)
+    num_ver = len(sorted_versions)
+
+    tty.msg("Found {0} version{1} of {2}:".format(
+            num_ver, '' if num_ver == 1 else 's', name),
+            "",
+            *spack.cmd.elide_list(
+                ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
+                 for v in sorted_versions]))
+    tty.msg('')
+
+    archives_to_fetch = tty.get_number(
+        "How many would you like to checksum?", default=1, abort='q')
+
+    if not archives_to_fetch:
+        tty.die("Aborted.")
+
+    versions = sorted_versions[:archives_to_fetch]
+    urls = [url_dict[v] for v in versions]
+
+    tty.msg("Downloading...")
+    version_hashes = []
+    i = 0
+    for url, version in zip(urls, versions):
+        try:
+            with Stage(url, keep=keep_stage) as stage:
+                # Fetch the archive
+                stage.fetch()
+                if i == 0 and first_stage_function:
+                    # Only run first_stage_function the first time,
+                    # no need to run it every time
+                    first_stage_function(stage, url)
+
+                # Checksum the archive and add it to the list
+                version_hashes.append((version, spack.util.crypto.checksum(
+                    hashlib.sha256, stage.archive_file)))
+                i += 1
+        except FailedDownloadError:
+            tty.msg("Failed to fetch {0}".format(url))
+        except Exception as e:
+            tty.msg("Something failed on {0}, skipping.".format(url),
+                    "  ({0})".format(e))
+
+    if not version_hashes:
+        tty.die("Could not fetch any versions for {0}".format(name))
+
+    # Find length of longest string in the list for padding
+    max_len = max(len(str(v)) for v, h in version_hashes)
+
+    # Generate the version directives to put in a package.py
+    version_lines = "\n".join([
+        "    version('{0}', {1}sha256='{2}')".format(
+            v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
+    ])
+
+    num_hash = len(version_hashes)
+    tty.msg("Checksummed {0} version{1} of {2}".format(
+        num_hash, '' if num_hash == 1 else 's', name))
+
+    return version_lines
+
+
 class StageError(spack.error.SpackError):
     """"Superclass for all errors encountered during staging."""
 
@@ -719,6 +805,10 @@ class StagePathError(StageError):
 
 class RestageError(StageError):
     """"Error encountered during restaging."""
+
+
+class VersionFetchError(StageError):
+    """Raised when we can't determine a URL to fetch a package."""
 
 
 # Keep this in namespace for convenience
