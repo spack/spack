@@ -21,7 +21,7 @@ class Scantailor(CMakePackage):
     url = "https://github.com/scantailor/scantailor/archive/RELEASE_0_9_12_1.tar.gz"
 
     version(
-        "0_9_12_2",
+        "0.9.12.2",
         sha256="1f7b96bbe5179d46e332aea8d51ba50545fe7c510811e51588b6a4919e4feeab",
     )
 
