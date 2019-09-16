@@ -15,25 +15,17 @@ class Scantailor(CMakePackage):
     project."""
 
     homepage = "http://www.scantailor.org"
-    _url_fmt = (
-        "https://github.com/scantailor/scantailor/archive/RELEASE_{}.tar.gz"
-    )
-    url = "https://github.com/scantailor/scantailor/archive/RELEASE_0_9_12_1.tar.gz"
+    url = "https://github.com/trufanov-nok/scantailor/archive/0.2.7.tar.gz"
 
     version(
-        "0.9.12.2",
-        sha256="1f7b96bbe5179d46e332aea8d51ba50545fe7c510811e51588b6a4919e4feeab",
+        "0.2.7",
+        sha256="3e27647621d43638888a268902f8fa098b06a70a5da5d0623b1c11220a367910",
     )
 
-    depends_on("qt@4.4:4.8")
+    depends_on("qt@5:")
     depends_on("libjpeg")
     depends_on("zlib")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("boost@1.35:")
     depends_on("libxrender")
-
-    patch("boost_unit_test.patch")
-
-    def url_for_version(self, version):
-        return self._url_fmt.format(version.underscored)
