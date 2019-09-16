@@ -14,7 +14,7 @@ class Asciitoh5(Package):
     version('develop', git=git, branch='master')
     version('1.0', git=git, tag='1.0')
 
-    depends_on('neuron~mpi')
+    depends_on('neuron')
     depends_on('hdf5~mpi')
 
     def install(self, spec, prefix):
@@ -32,3 +32,5 @@ class Asciitoh5(Package):
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
+        run_env.set('NEURON_INIT_MPI', "0")
+        run_env.unset('PMI_RANK')

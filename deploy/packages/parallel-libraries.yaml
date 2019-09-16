@@ -86,5 +86,5 @@ packages:
       - mpi
       - python
     specs:
-      - neuron@7.6.6
-      - neuron+debug@7.6.6
+      - neuron@7.6.8
+      - neuron+debug@7.6.8

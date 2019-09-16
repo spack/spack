@@ -57,7 +57,7 @@ packages:
     specs:
       - functionalizer@3.12.2
       - parquet-converters@0.4.1
-      - synapsetool@0.5.1
+      - synapsetool@0.5.2
       - touchdetector@4.4.2
       - touchdetector@5.1.0
       - touchdetector@5.2.0
@@ -114,10 +114,10 @@ packages:
       - python
     specs:
       - py-bluepy
-      - py-bluepymm@0.6.38 ^neuron~mpi
-      - py-bluepyopt@1.6.56 ^neuron~mpi
+      - py-bluepymm@0.6.38
+      - py-bluepyopt@1.6.56
       - py-efel@3.0.22
-      - py-bglibpy@4.1.4 ^neuron~mpi
+      - py-bglibpy@4.1.4
 
 
   #### cellular ####
@@ -129,7 +129,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - neurodamus-core+common@2.5.0
+      - neurodamus-core+common@2.7.0
 
   intel-stable-parallel:
     target_matrix:
@@ -150,10 +150,10 @@ packages:
       - mpi
       - python
     specs:
-      - neurodamus-neocortex+coreneuron@0.2
-      - neurodamus-hippocampus+coreneuron@0.3
-      - neurodamus-thalamus+coreneuron@0.2
-      - neurodamus-mousify+coreneuron@0.2
-      - neurodamus-neocortex+coreneuron@0.2^coreneuron+knl
-      - neurodamus-thalamus+coreneuron@0.2^coreneuron+knl
-      - neurodamus-hippocampus+coreneuron@0.3^coreneuron+knl
+      - neurodamus-neocortex+coreneuron@0.3
+      - neurodamus-hippocampus+coreneuron@0.4
+      - neurodamus-thalamus+coreneuron@0.3
+      - neurodamus-mousify+coreneuron@0.3
+      - neurodamus-neocortex+coreneuron@0.3^coreneuron+knl
+      - neurodamus-hippocampus+coreneuron@0.4^coreneuron+knl
+      - neurodamus-thalamus+coreneuron@0.3^coreneuron+knl

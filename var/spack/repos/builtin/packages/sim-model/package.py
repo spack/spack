@@ -116,7 +116,7 @@ class SimModel(Package):
         arch = os.path.basename(self.neuron_archdir)
         prefix = self.prefix
         shutil.copy(join_path(arch, 'special'), prefix.bin)
-        
+
         if self.spec.satisfies('^neuron~binary'):
             # Install libnrnmech - might have several links.
             for f in find(arch + "/.libs", 'libnrnmech*.so*', recursive=False):
@@ -133,7 +133,7 @@ class SimModel(Package):
                          's#-dll .*#-dll %s "$@"#' % lib_dst,
                          prefix.bin.special)
             os.remove(prefix.bin.join('special.bak'))
-        
+
     def _install_src(self, prefix):
         """Copy original and translated c mods
         """

@@ -13,6 +13,8 @@ class NeurodamusCore(Package):
     git      = "ssh://bbpcode.epfl.ch/sim/neurodamus-core"
 
     version('develop', git=git, branch='master', clean=False)
+    version('2.7.0', git=git, tag='2.7.0', clean=False)
+    version('2.6.0', git=git, tag='2.6.0', clean=False)
     version('2.5.0', git=git, tag='2.5.0', clean=False)
     version('2.4.3', git=git, tag='2.4.3', clean=False)
     version('2.4.1', git=git, tag='2.4.1', clean=False)
@@ -24,7 +26,7 @@ class NeurodamusCore(Package):
     variant('common', default=False, description="Merge in synapse mechanisms hoc & mods")
 
     # Attempt to support building
-    depends_on('neuron~binary+python~mpi', when='+common')
+    depends_on('neuron~binary+python', when='+common')
 
     # Neurodamus py is currently an extension to core
     resource(name='pydamus',
@@ -92,5 +94,6 @@ class NeurodamusCore(Package):
                 bindir = open(bindir_info, 'r').readline()
                 mechlib = find_libraries('libnrnmech', join_path(self.prefix, bindir, '.libs'))[0]
                 run_env.set('NRNMECH_LIB_PATH', mechlib)
+                run_env.set('BGLIBPY_MOD_LIBRARY_PATH', mechlib)
             else:
                 tty.warn("No .bindir info file found. NRNMECH_LIB_PATH env var wont be set")
