@@ -184,9 +184,9 @@ def disambiguate_spec(spec, env, local=False):
     """
     hashes = env.all_hashes() if env else None
     if local:
-        matching_specs = spack.store.db.query(spec, hashes=hashes)
-    else:
         matching_specs = spack.store.db.query_local(spec, hashes=hashes)
+    else:
+        matching_specs = spack.store.db.query(spec, hashes=hashes)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 

@@ -7,9 +7,11 @@
 import os
 import json
 import sys
+import time
 import llnl.util.filesystem as fs
 import spack.verify
 import spack.spec
+
 
 def test_link_manifest(tmpdir):
     file = str(tmpdir.join('file'))
@@ -91,10 +93,15 @@ def test_file_manifest(tmpdir):
         f.write('The file has changed')
 
     results = spack.verify.check_entry(file, data)
+
+    expected = ['size', 'hash']
+    mtime = os.stat(file).st_mtime
+    if mtime != data['time']:
+        expected.append('mtime')
+
     assert results
     assert file in results.errors
-    assert all(x in results.errors[file] for x in ('size', 'hash', 'mtime'))
-    assert len(results.errors[file]) == 3
+    assert sorted(results.errors[file]) == sorted(expected)
 
 
 def test_check_chmod_manifest(tmpdir):
@@ -174,7 +181,7 @@ def test_single_file_verification(tmpdir):
                                  spack.store.layout.manifest_file_name)
 
     with open(manifest_file, 'wb') as f:
-        js = json.dumps({filepath: data}, f)
+        js = json.dumps({filepath: data})
         if sys.version_info[0] >= 3:
             js = js.encode()
         f.write(js)
@@ -182,11 +189,17 @@ def test_single_file_verification(tmpdir):
     results = spack.verify.check_file_manifest(filepath)
     assert not results
 
+    time.sleep(1)
     with open(filepath, 'w') as f:
         f.write("I changed.")
 
     results = spack.verify.check_file_manifest(filepath)
+
+    expected = ['hash']
+    mtime = os.stat(filepath).st_mtime
+    if mtime != data['time']:
+        expected.append('mtime')
+
     assert results
     assert filepath in results.errors
-    assert len(results.errors[filepath]) == 2
-    assert all(x in results.errors[filepath] for x in ('mtime', 'hash'))
+    assert sorted(results.errors[filepath]) == sorted(expected)

@@ -36,6 +36,7 @@ def setup_parser(subparser):
                       dest='type', default='specs',
                       help="Treat entries as files. Cannot be used with '-a'")
 
+
 def verify(parser, args):
     local = args.local
 
@@ -67,7 +68,7 @@ def verify(parser, args):
             for spec in spec_list:
                 specs += query(spec, installed=True)
         else:
-            specs = query(installed=true)
+            specs = query(installed=True)
 
     elif args.files_or_specs:
         # construct disambiguated spec list

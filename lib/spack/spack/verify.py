@@ -14,6 +14,7 @@ import spack.util.file_permissions as fp
 import spack.store
 import spack.filesystem_view
 
+
 def compute_hash(path):
     with open(path, 'rb') as f:
         sha1 = hashlib.sha1(f.read()).digest()
@@ -64,7 +65,7 @@ def write_manifest(spec):
         manifest[spec.prefix] = create_manifest_entry(spec.prefix)
 
         with open(manifest_file, 'wb') as f:
-            js = json.dumps(manifest, f)
+            js = json.dumps(manifest)
             if sys.version_info[0] >= 3:
                 js = js.encode()
             f.write(js)
@@ -137,7 +138,7 @@ def check_file_manifest(file):
     try:
         with open(manifest_file, 'r') as f:
             manifest = json.load(f)
-    except:
+    except Exception:
         results.add_error(file, "manifest corrupted")
         return results
 
@@ -163,7 +164,7 @@ def check_spec_manifest(spec):
     try:
         with open(manifest_file, 'r') as f:
             manifest = json.load(f)
-    except:
+    except Exception:
         results.add_error(prefix, "manifest corrupted")
         return results
 
@@ -197,7 +198,7 @@ def check_spec_manifest(spec):
             # permissions
             # Do not check directories that only exist for extensions
             if is_extension_artifact(path):
-                    continue
+                continue
 
             # Do not check manifest file. Can't store your own hash, etc
             # Nothing to check for ext_file

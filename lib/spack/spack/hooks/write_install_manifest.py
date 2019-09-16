@@ -5,6 +5,7 @@
 
 import spack.verify
 
+
 def post_install(spec):
     if not spec.external:
         spack.verify.write_manifest(spec)
