@@ -30,7 +30,7 @@ class Libkml(CMakePackage):
     depends_on('minizip@1.2.8:')
     depends_on('uriparser')
     depends_on('zlib@1.2.8:')
-    depends_on('googletest@1.7.0:', type='test')
+    depends_on('googletest@1.7.0:', type='link')
     depends_on('swig', when='+java', type='build')
     depends_on('swig', when='+python', type='build')
 
