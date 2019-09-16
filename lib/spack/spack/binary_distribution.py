@@ -671,7 +671,7 @@ def get_specs(force=False):
         fetch_url_build_cache = url_util.join(
                 mirror.fetch_url, _build_cache_relative_path)
 
-        mirror_dir = fetch_url_build_cache.local_file_path
+        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
             tty.msg("Finding buildcaches in %s" % mirror_dir)
             if os.path.exists(mirror_dir):
@@ -723,7 +723,7 @@ def get_keys(install=False, trust=False, force=False):
         fetch_url_build_cache = url_util.join(
                 mirror.fetch_url, _build_cache_relative_path)
 
-        mirror_dir = fetch_url_build_cache.local_file_path
+        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
             tty.msg("Finding public keys in %s" % mirror_dir)
             files = os.listdir(mirror_dir)

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 import six.moves.urllib.parse as urllib_parse
 
 import spack
@@ -20,21 +22,12 @@ def create_s3_session(url):
     # want to require boto as a dependency unless the user actually wants to
     # access S3 mirrors.
     from boto3 import Session
-    kwargs = {}
 
-    if hasattr(parsed_url, 's3_profile'):
-        kwargs['profile_name'] = parsed_url.s3_profile
-
-    elif (hasattr(parsed_url, 's3_access_key_id') and
-            hasattr(parsed_url, 's3_secret_access_key')):
-        kwargs['aws_access_key_id'] = parsed_url.s3_access_key_id
-        kwargs['aws_secret_access_key'] = parsed_url.s3_secret_access_key
-
-    session = Session(**kwargs)
+    session = Session()
 
     s3_client_args = {"use_ssl": spack.config.get('config:verify_ssl')}
 
-    endpoint_url = parsed_url.netloc
+    endpoint_url = os.environ.get('AWS_ENDPOINT_URL')
     if endpoint_url:
         if urllib_parse.urlparse(endpoint_url, scheme=None).scheme is None:
             endpoint_url = '://'.join(('https', endpoint_url))

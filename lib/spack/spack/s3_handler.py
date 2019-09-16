@@ -127,7 +127,7 @@ def _s3_open(url):
     parsed = url_util.parse(url)
     s3 = s3_util.create_s3_session(parsed)
     obj = s3.get_object(
-            Bucket=parsed.s3_bucket,
+            Bucket=parsed.netloc,
             Key=parsed.path)
 
     # NOTE(opadron): Apply workaround here (see above)
