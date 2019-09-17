@@ -21,4 +21,4 @@ class Rapidjson(CMakePackage):
     # branch-fall-through warnings
     patch('0001-turn-off-Werror.patch')
 
-    patch('arm.patch', when='@1.1.0 target=aarch64 %gcc@:5.9')
+    patch('arm.patch', when='@1.1.0 target=aarch64: %gcc@:5.9')

@@ -88,7 +88,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # Makefile, leading to build errors.
         env.pop('APPS', None)
 
-        if spec.satisfies('target=x86_64') or spec.satisfies('target=ppc64'):
+        if str(spec.target.family) in ('x86_64', 'ppc64'):
             # This needs to be done for all 64-bit architectures (except Linux,
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'

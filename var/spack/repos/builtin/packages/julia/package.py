@@ -43,7 +43,7 @@ class Julia(Package):
 
     patch('gc.patch', when='@0.4:0.4.5')
     patch('openblas.patch', when='@0.4:0.4.5')
-    patch('armgcc.patch', when='@1.0.0:1.1.1 %gcc@:5.9 target=aarch64')
+    patch('armgcc.patch', when='@1.0.0:1.1.1 %gcc@:5.9 target=aarch64:')
 
     variant('binutils', default=sys.platform != 'darwin',
             description="Build via binutils")
@@ -102,7 +102,7 @@ class Julia(Package):
     depends_on("mpi", when="+mpi", type="run")
     depends_on("py-matplotlib", when="+plot", type="run")
 
-    conflicts("@:0.7.0", when="target=aarch64")
+    conflicts("@:0.7.0", when="target=aarch64:")
 
     def install(self, spec, prefix):
         # Julia needs git tags
@@ -133,7 +133,7 @@ class Julia(Package):
                 "BUILD_LLVM_CLANG=1",
                 "LLVM_ASSERTIONS=1",
                 "USE_LLVM_SHLIB=1"]
-        if spec.satisfies('target=aarch64'):
+        if spec.target.family == 'aarch64':
             options += [
                 'JULIA_CPU_TARGET=generic',
                 'MARCH=armv8-a+crc']

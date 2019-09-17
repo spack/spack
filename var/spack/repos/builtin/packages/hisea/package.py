@@ -20,7 +20,7 @@ class Hisea(MakefilePackage):
     depends_on('boost')
 
     def patch(self):
-        if self.spec.satisfies("target=aarch64"):
+        if self.spec.target.family == 'aarch64':
             filter_file('-mpopcnt', '', 'Makefile')
 
     def install(self, spec, prefix):

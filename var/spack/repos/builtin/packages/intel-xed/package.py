@@ -44,8 +44,8 @@ class IntelXed(Package):
 
     depends_on('python@2.7:', type='build')
 
-    conflicts('target=ppc64', msg='intel-xed only runs on x86')
-    conflicts('target=ppc64le', msg='intel-xed only runs on x86')
+    conflicts('target=ppc64:', msg='intel-xed only runs on x86')
+    conflicts('target=ppc64le:', msg='intel-xed only runs on x86')
 
     mycflags = []
 

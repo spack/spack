@@ -18,6 +18,6 @@ class PyFlye(PythonPackage):
     depends_on('python@2.7:2.8', type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
-        if self.spec.satisfies('target=aarch64'):
+        if self.spec.target.family == 'aarch64':
             spack_env.set('arm_neon', '1')
             spack_env.set('aarch64', '1')
