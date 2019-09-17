@@ -801,7 +801,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
     for description in descriptions:
         url = os.path.join(mirror_root, description['url'])
         path = description['path']
-        fail_if_missing = not description['required']
+        fail_if_missing = description['required']
 
         mkdirp(path)
 

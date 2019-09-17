@@ -50,17 +50,17 @@ class P4est(AutotoolsPackage):
             '--disable-vtk-binary',
             '--without-blas',
             'CPPFLAGS=-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL',
-            'CFLAGS=-O2',
-            'CC=%s'  % self.spec['mpi'].mpicc,
-            'CXX=%s' % self.spec['mpi'].mpicxx,
-            'FC=%s'  % self.spec['mpi'].mpifc,
-            'F77=%s' % self.spec['mpi'].mpif77
+            'CFLAGS=-O2'
         ]
 
         if '~mpi' in self.spec:
             args.append('--disable-mpi')
         else:
             args.append('--enable-mpi')
+            args.append('CC=%s'  % self.spec['mpi'].mpicc)
+            args.append('CXX=%s' % self.spec['mpi'].mpicxx)
+            args.append('FC=%s'  % self.spec['mpi'].mpifc)
+            args.append('F77=%s' % self.spec['mpi'].mpif77)
 
         if '+openmp' in self.spec:
             try:

@@ -10,7 +10,7 @@ import spack
 from spack.util.module_cmd import (
     module,
     get_path_from_module,
-    get_path_arg_from_module_line,
+    get_path_args_from_module_line,
     get_path_from_module_contents
 )
 
@@ -89,12 +89,21 @@ whatis("Name: CMake")
 whatis("Version: 3.9.2")
 whatis("Category: Tools")
 whatis("URL: https://cmake.org/")
-prepend_path("PATH","/path/to/cmake-3.9.2/bin")
+prepend_path("LD_LIBRARY_PATH","/bad/path")
+prepend_path("PATH","/path/to/cmake-3.9.2/bin:/other/bad/path")
 prepend_path("MANPATH","/path/to/cmake/cmake-3.9.2/share/man")
+prepend_path("LD_LIBRARY_PATH","/path/to/cmake-3.9.2/lib64")
 """
     module_show_lines = module_show_output.split('\n')
+
+    # PATH and LD_LIBRARY_PATH outvote MANPATH and the other PATH and
+    # LD_LIBRARY_PATH entries
     assert (get_path_from_module_contents(module_show_lines, 'cmake-3.9.2') ==
             '/path/to/cmake-3.9.2')
+
+
+def test_get_path_from_empty_module():
+    assert get_path_from_module_contents('', 'test') is None
 
 
 def test_pkg_dir_from_module_name():
@@ -108,16 +117,25 @@ def test_pkg_dir_from_module_name():
 
 
 def test_get_argument_from_module_line():
-    lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
-             'prepend-path  LD_LIBRARY_PATH  /lib/path',
-             "prepend_path('PATH' , '/lib/path')",
-             'prepend_path( "PATH" , "/lib/path" )',
-             'prepend_path("PATH",' + "'/lib/path')"]
+    simple_lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
+                    'prepend-path  LD_LIBRARY_PATH  /lib/path',
+                    "prepend_path('PATH' , '/lib/path')",
+                    'prepend_path( "PATH" , "/lib/path" )',
+                    'prepend_path("PATH",' + "'/lib/path')"]
+
+    complex_lines = ['prepend-path LD_LIBRARY_PATH /lib/path:/pkg/path',
+                     'prepend-path  LD_LIBRARY_PATH  /lib/path:/pkg/path',
+                     "prepend_path('PATH' , '/lib/path:/pkg/path')",
+                     'prepend_path( "PATH" , "/lib/path:/pkg/path" )',
+                     'prepend_path("PATH",' + "'/lib/path:/pkg/path')"]
 
     bad_lines = ['prepend_path(PATH,/lib/path)',
                  'prepend-path (LD_LIBRARY_PATH) /lib/path']
 
-    assert all(get_path_arg_from_module_line(l) == '/lib/path' for l in lines)
+    assert all(get_path_args_from_module_line(l) == ['/lib/path']
+               for l in simple_lines)
+    assert all(get_path_args_from_module_line(l) == ['/lib/path', '/pkg/path']
+               for l in complex_lines)
     for bl in bad_lines:
         with pytest.raises(ValueError):
-            get_path_arg_from_module_line(bl)
+            get_path_args_from_module_line(bl)

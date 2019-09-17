@@ -99,3 +99,5 @@ class PyGpaw(PythonPackage):
             if '+scalapack' in spec:
                 f.write("scalapack = True\n")
                 f.write("define_macros += {0}\n".format(scalapack_macros))
+            if '+fftw' in spec:
+                f.write("fftw = True\n")

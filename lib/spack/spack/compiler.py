@@ -290,6 +290,10 @@ class Compiler(object):
                                       output=str, error=str))  # str for py2
 
             return cls._parse_non_system_link_dirs(output)
+        except spack.util.executable.ProcessError as pe:
+            tty.debug('ProcessError: Command exited with non-zero status: ' +
+                      pe.long_message)
+            return []
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
