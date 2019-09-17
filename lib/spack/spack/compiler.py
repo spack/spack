@@ -143,6 +143,25 @@ def _parse_link_paths(string):
     return implicit_link_dirs
 
 
+def _parse_non_system_link_dirs(string):
+    """Parses link paths out of compiler debug output.
+
+    Args:
+        string (str): compiler debug output as a string
+
+    Returns:
+        (list of str): implicit link paths parsed from the compiler output
+    """
+    link_dirs = _parse_link_paths(string)
+
+    # Return set of directories containing needed compiler libs, minus
+    # system paths. Note that 'filter_system_paths' only checks for an
+    # exact match, while 'in_system_subdirectory' checks if a path contains
+    # a system directory as a subdirectory
+    link_dirs = filter_system_paths(link_dirs)
+    return list(p for p in link_dirs if not in_system_subdirectory(p))
+
+
 def in_system_subdirectory(path):
     system_dirs = ['/lib/', '/lib64/', '/usr/lib/', '/usr/lib64/',
                    '/usr/local/lib/', '/usr/local/lib64/']
@@ -289,7 +308,7 @@ class Compiler(object):
             output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
                                       output=str, error=str))  # str for py2
 
-            return cls._parse_non_system_link_dirs(output)
+            return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
             tty.debug('ProcessError: Command exited with non-zero status: ' +
                       pe.long_message)
@@ -305,25 +324,6 @@ class Compiler(object):
 
         If it is not overridden, it is assumed to not be supported.
         """
-
-    @classmethod
-    def _parse_non_system_link_dirs(cls, string):
-        """Parses link paths out of compiler debug output.
-
-        Args:
-            string (str): compiler debug output as a string
-
-        Returns:
-            (list of str): implicit link paths parsed from the compiler output
-        """
-        link_dirs = _parse_link_paths(string)
-
-        # Return set of directories containing needed compiler libs, minus
-        # system paths. Note that 'filter_system_paths' only checks for an
-        # exact match, while 'in_system_subdirectory' checks if a path contains
-        # a system directory as a subdirectory
-        link_dirs = filter_system_paths(link_dirs)
-        return list(p for p in link_dirs if not in_system_subdirectory(p))
 
     # This property should be overridden in the compiler subclass if
     # OpenMP is supported by that compiler
