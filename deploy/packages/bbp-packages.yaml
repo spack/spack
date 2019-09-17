@@ -27,7 +27,7 @@ packages:
       - brainbuilder@0.11.4
       - connectome-tools@0.3.2
       - spatial-index@0.1.0
-      - spykfunc@0.14.3
+      - spykfunc@0.15.0
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
       - py-basalt@0.2.4
@@ -56,11 +56,11 @@ packages:
       - mpi
     specs:
       - functionalizer@3.12.2
-      - parquet-converters@0.4.1
+      - parquet-converters@0.5.1
       - synapsetool@0.5.2
       - touchdetector@4.4.2
       - touchdetector@5.1.0
-      - touchdetector@5.2.0
+      - touchdetector@5.3.0
       - brayns@0.8.0 +opendeck +brion ^ospray@1.7.3
       - brayns@immersive +opendeck +brion +optix
       - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3

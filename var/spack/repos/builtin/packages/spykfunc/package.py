@@ -33,18 +33,20 @@ class Spykfunc(PythonPackage):
     """
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/Spykfunc"
     url      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
+    git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
-    version('develop', git=url, submodules=True, clean=False)
-    version('0.11.0', git=url, tag='v0.11.0', submodules=True, clean=False)
-    version('0.12.0', git=url, tag='v0.12.0', submodules=True, clean=False)
-    version('0.12.1', git=url, tag='v0.12.1', submodules=True, clean=False)
-    version('0.12.2', git=url, tag='v0.12.2', submodules=True, clean=False)
-    version('0.13.0', git=url, tag='v0.13.0', submodules=True, clean=False)
-    version('0.13.1', git=url, tag='v0.13.1', submodules=True, clean=False)
-    version('0.13.2', git=url, tag='v0.13.2', submodules=True, clean=False)
-    version('0.14.1', git=url, tag='v0.14.1', submodules=True, clean=False)
-    version('0.14.2', git=url, tag='v0.14.2', submodules=True, clean=False)
-    version('0.14.3', git=url, tag='v0.14.3', submodules=True, clean=False)
+    version('develop', submodules=True, clean=False)
+    version('0.11.0', tag='v0.11.0', submodules=True, clean=False)
+    version('0.12.0', tag='v0.12.0', submodules=True, clean=False)
+    version('0.12.1', tag='v0.12.1', submodules=True, clean=False)
+    version('0.12.2', tag='v0.12.2', submodules=True, clean=False)
+    version('0.13.0', tag='v0.13.0', submodules=True, clean=False)
+    version('0.13.1', tag='v0.13.1', submodules=True, clean=False)
+    version('0.13.2', tag='v0.13.2', submodules=True, clean=False)
+    version('0.14.1', tag='v0.14.1', submodules=True, clean=False)
+    version('0.14.2', tag='v0.14.2', submodules=True, clean=False)
+    version('0.14.3', tag='v0.14.3', submodules=True, clean=False)
+    version('0.15.0', tag='v0.15.0', submodules=True, clean=False)
 
     depends_on('hdf5~mpi')
     depends_on('highfive~mpi', type='build')
