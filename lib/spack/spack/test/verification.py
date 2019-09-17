@@ -8,9 +8,17 @@ import os
 import json
 import sys
 import time
+import shutil
+
 import llnl.util.filesystem as fs
+
 import spack.verify
 import spack.spec
+import spack.store
+from spack.main import SpackCommand
+
+verify = SpackCommand('verify')
+install = SpackCommand('install')
 
 
 def test_link_manifest(tmpdir):
@@ -163,6 +171,16 @@ def test_check_prefix_manifest(tmpdir, monkeypatch):
     assert results.errors[link] == ['deleted']
     assert results.errors[malware] == ['added']
 
+    manifest_file = os.path.join(spec.prefix,
+                                 spack.store.layout.metadata_dir,
+                                 spack.store.layout.manifest_file_name)
+    with open(manifest_file, 'w') as f:
+        f.write("{This) string is not proper json")
+
+    results = spack.verify.check_spec_manifest(spec)
+    assert results
+    assert results.errors[spec.prefix] == ['manifest corrupted']
+
 
 def test_single_file_verification(tmpdir):
     filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
@@ -203,3 +221,79 @@ def test_single_file_verification(tmpdir):
     assert results
     assert filepath in results.errors
     assert sorted(results.errors[filepath]) == sorted(expected)
+
+    shutil.rmtree(metadir)
+    results = spack.verify.check_file_manifest(filepath)
+    assert results
+    assert results.errors[filepath] == ['not owned by any package']
+
+
+def test_single_file_verify_cmd(tmpdir):
+    filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
+    filepath = os.path.join(filedir, 'file')
+    metadir = os.path.join(str(tmpdir), spack.store.layout.metadata_dir)
+
+    fs.mkdirp(filedir)
+    fs.mkdirp(metadir)
+
+    with open(filepath, 'w') as f:
+        f.write("I'm a file")
+
+    data = spack.verify.create_manifest_entry(filepath)
+
+    manifest_file = os.path.join(metadir,
+                                 spack.store.layout.manifest_file_name)
+
+    with open(manifest_file, 'wb') as f:
+        js = json.dumps({filepath: data})
+        if sys.version_info[0] >= 3:
+            js = js.encode()
+        f.write(js)
+
+    results = verify('-f', filepath)
+    assert not results
+
+    time.sleep(1)
+    with open(filepath, 'w') as f:
+        f.write("I changed.")
+
+    results = verify('-f', filepath)
+
+    expected = ['hash']
+    mtime = os.stat(filepath).st_mtime
+    if mtime != data['time']:
+        expected.append('mtime')
+
+    assert results
+    assert filepath in results
+    assert all(x in results for x in expected)
+
+    results = verify('-fj', filepath)
+    res = json.loads(results)
+    assert len(res) == 1
+    errors = res.pop(filepath)
+    assert sorted(errors) == sorted(expected)
+
+
+def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive,
+                                mock_fetch, config, install_mockery):
+    install('libelf')
+    s = spack.spec.Spec('libelf').concretized()
+    prefix = s.prefix
+    hash = s.dag_hash()
+
+    results = verify('/%s' % hash)
+    assert not results
+
+    new_file = os.path.join(prefix, 'new_file_for_verify_test')
+    with open(new_file, 'w') as f:
+        f.write('New file')
+
+    results = verify('/%s' % hash)
+    assert new_file in results
+    assert 'added' in results
+
+    results = verify('-j', '/%s' % hash)
+    res = json.loads(results)
+    assert len(res) == 1
+    assert res[new_file] == ['added']
