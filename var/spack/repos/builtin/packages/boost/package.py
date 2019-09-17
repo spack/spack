@@ -102,6 +102,20 @@ class Boost(Package):
         variant(lib, default=(lib not in default_noinstall_libs),
                 description="Compile with {0} library".format(lib))
 
+    @property
+    def libs(self):
+        query = self.spec.last_query.extra_parameters
+        shared = '+shared' in self.spec
+
+        libnames = query if query else [lib for lib in self.all_libs
+                                        if self.spec.satisfies('+%s' % lib)]
+        libnames += ['monitor']
+        libraries = ['libboost_*%s*' % lib for lib in libnames]
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=shared, recursive=True
+        )
+
     variant('cxxstd',
             default='98',
             values=('98', '11', '14', '17'),
