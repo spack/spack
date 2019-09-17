@@ -177,6 +177,8 @@ class Clang(Compiler):
     def pic_flag(self):
         return "-fPIC"
 
+    required_libs = ['libclang']
+
     @classmethod
     @llnl.util.lang.memoized
     def default_version(cls, comp):

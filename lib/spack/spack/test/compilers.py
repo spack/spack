@@ -170,6 +170,24 @@ class MockCompiler(Compiler):
     def version(self):
         return "1.0.0"
 
+    required_libs = ['libgfortran']
+
+
+def test_implicit_rpaths(dirs_with_libfiles, monkeypatch):
+    lib_to_dirs, all_dirs = dirs_with_libfiles
+
+    def try_all_dirs(*args):
+        return all_dirs
+
+    monkeypatch.setattr(MockCompiler, '_get_compiler_link_paths', try_all_dirs)
+
+    expected_rpaths = set(lib_to_dirs['libstdc++'] +
+                          lib_to_dirs['libgfortran'])
+
+    compiler = MockCompiler()
+    retrieved_rpaths = compiler.implicit_rpaths()
+    assert set(retrieved_rpaths) == expected_rpaths
+
 
 # Get the desired flag from the specified compiler spec.
 def flag_value(flag, spec):
