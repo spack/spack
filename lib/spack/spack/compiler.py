@@ -294,6 +294,10 @@ class Compiler(object):
                                       output=str, error=str))  # str for py2
 
             return cls.parse_implicit_rpaths(output)
+        except spack.util.executable.ProcessError as pe:
+            tty.debug('ProcessError: Command exited with non-zero status: ' +
+                      pe.long_message)
+            return []
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
