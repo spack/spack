@@ -96,8 +96,7 @@ class Fftw(AutotoolsPackage):
         for targets, simds in target_simds.items():
             if (
                 (arch not in targets)
-                and not any(
-                    spec.satisfies('target={0}'.format(t)) for t in targets)
+                and str(spec.target.family) not in targets
             ):
                 if any(spec.satisfies('simd={0}'.format(x)) for x in simds):
                     raise ConflictsInSpecError(

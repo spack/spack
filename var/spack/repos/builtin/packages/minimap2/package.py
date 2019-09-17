@@ -18,14 +18,14 @@ class Minimap2(PythonPackage):
     version('2.10', '52b36f726ec00bfca4a2ffc23036d1a2b5f96f0aae5a92fd826be6680c481c20') 
     version('2.2', '5b68e094f4fa3dfbd9b37d5b654b7715')
 
-    conflicts('target=aarch64', when='@:2.10')
+    conflicts('target=aarch64:', when='@:2.10')
     depends_on('zlib', type='link')
     depends_on('py-cython', type='build')
 
     @run_after('install')
     def install_minimap2(self):
         make_arg = []
-        if self.spec.satisfies("target=aarch64"):
+        if self.spec.target.family == 'aarch64':
             make_arg.extend([
                 'arm_neon=1',
                 'aarch64~1'

@@ -30,8 +30,7 @@ class Fasta(MakefilePackage):
     def makefile_name(self):
         if self.spec.satisfies('platform=darwin'):
             name = 'Makefile.os_x86_64'
-        elif (self.spec.satisfies('platform=linux') and
-              self.spec.satisfies('target=x86_64')):
+        elif self.spec.satisfies('platform=linux target=x86_64:'):
             name = 'Makefile.linux64_sse2'
         else:
             tty.die('''Unsupported platform/target, must be

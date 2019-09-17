@@ -410,6 +410,8 @@ For tarball downloads, Spack can currently support checksums using the
 MD5, SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512 algorithms.  It
 determines the algorithm to use based on the hash length.
 
+.. _versions-and-fetching:
+
 ---------------------
 Versions and fetching
 ---------------------
@@ -3290,7 +3292,17 @@ Within directives each of the names above can be used to match a particular targ
        # This patch is only applied on icelake microarchitectures
        patch("icelake.patch", when="target=icelake")
 
-in a similar way to what we have seen before for ``platform`` and ``os``.
+It's also possible to select all the architectures belonging to the same family
+using an open range:
+
+.. code-block:: python
+
+   class Julia(Package):
+       # This patch is applied on all x86_64 microarchitectures.
+       # The trailing colon that denotes an open range of targets
+       patch("generic_x86_64.patch", when="target=x86_64:")
+
+in a way that resembles what was shown in :ref:`versions-and-fetching` for versions.
 Where ``target`` objects really shine though is when they are used in methods
 called at configure, build or install time. In that case we can test targets
 for supported features, for instance:

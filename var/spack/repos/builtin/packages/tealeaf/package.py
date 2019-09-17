@@ -25,7 +25,7 @@ class Tealeaf(MakefilePackage):
     depends_on('mpi')
 
     def edit(self, spec, prefix):
-        if (spec.satisfies('target=aarch64 %gcc@:5.9')):
+        if spec.target.family == 'aarch64' and spec.satisfies('%gcc@:5.9'):
             filter_file(
                 '-march=native', '', join_path('TeaLeaf_ref', 'Makefile')
             )

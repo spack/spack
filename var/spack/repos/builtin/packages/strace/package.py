@@ -24,7 +24,7 @@ class Strace(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if self.spec.satisfies('target=aarch64'):
+        if self.spec.target.family == 'aarch64':
             args.append('--enable-mpers=no')
         else:
             args.append('--enable-mpers=yes')

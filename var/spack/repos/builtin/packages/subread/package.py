@@ -30,7 +30,7 @@ class Subread(MakefilePackage):
                     'CC_EXEC = {0}'.format(spack_cc),
                     'Makefile.Linux'
                 )
-                if spec.satisfies('target=aarch64'):
+                if spec.target.family == 'aarch64':
                     filter_file('-mtune=core2', '', 'Makefile.Linux')
                     if spec.satisfies('@1.6.2:1.6.4'):
                         filter_file(
