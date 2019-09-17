@@ -461,6 +461,49 @@ class TestSpecSyntax(object):
         assert len(specs) == 2
 
     @pytest.mark.usefixtures('config')
+    def test_parse_filename_missing_slash_as_spec(self, mock_packages, tmpdir):
+        """Ensure that libelf.yaml parses as a spec, NOT a file."""
+        s = Spec('libelf')
+        s.concretize()
+
+        specfile = tmpdir.join('libelf.yaml')
+
+        # write the file to the current directory to make sure it exists,
+        # and that we still do not parse the spec as a file.
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        # Check the spec `libelf.yaml` in the working directory, which
+        # should evaluate to a spec called `yaml` in the `libelf`
+        # namespace, NOT a spec for `libelf`.
+        with tmpdir.as_cwd():
+            specs = sp.parse("libelf.yaml")
+        assert len(specs) == 1
+
+        spec = specs[0]
+        assert spec.name == "yaml"
+        assert spec.namespace == "libelf"
+        assert spec.fullname == "libelf.yaml"
+
+        # check that if we concretize this spec, we get a good error
+        # message that mentions we might've meant a file.
+        with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+            spec.concretize()
+        assert exc_info.value.long_message
+        assert ("Did you mean to specify a filename with './libelf.yaml'?"
+                in exc_info.value.long_message)
+
+        # make sure that only happens when the spec ends in yaml
+        with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+            Spec('builtin.mock.doesnotexist').concretize()
+        assert (
+            not exc_info.value.long_message or (
+                "Did you mean to specify a filename with" not in
+                exc_info.value.long_message
+            )
+        )
+
+    @pytest.mark.usefixtures('config')
     def test_parse_yaml_dependency(self, mock_packages, tmpdir):
         s = Spec('libdwarf')
         s.concretize()
@@ -495,6 +538,8 @@ class TestSpecSyntax(object):
         # Relative path to specfile
         with fs.working_dir(specfile.dirname):
             # Test for command like: "spack spec libelf.yaml"
+            # This should parse a single spec, but should not concretize.
+            # See test_parse_filename_missing_slash_as_spec()
             specs = sp.parse('{0}'.format(file_name))
             assert len(specs) == 1
 

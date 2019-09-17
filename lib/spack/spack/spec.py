@@ -3828,7 +3828,7 @@ class SpecLexer(spack.parse.Lexer):
             (r'\=', lambda scanner, val: self.token(EQ,    val)),
 
             # Filenames match before identifiers, so no initial filename
-            # ccomponent is parsed as a spec (e.g., in subdir/spec.yaml)
+            # component is parsed as a spec (e.g., in subdir/spec.yaml)
             (r'[/\w.-]+\.yaml[^\b]*', lambda scanner, v: self.token(FILE, v)),
 
             # Hash match after filename. No valid filename can be a hash
