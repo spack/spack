@@ -23,7 +23,7 @@ class Flecsph(CMakePackage):
     depends_on('boost@1.59.0: cxxstd=11 +program_options')
     depends_on('mpi')
     depends_on('hdf5@1.10.5 +mpi')
-    depends_on('flecsi@flecsph backend=mpi')
+    depends_on('flecsi backend=mpi')
     depends_on('gsl')
 
     def cmake_args(self):
