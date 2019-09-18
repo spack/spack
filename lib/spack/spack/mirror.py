@@ -221,14 +221,20 @@ def add_single_spec(spec, mirror_root, categories):
     tty.msg("Adding package {pkg} to mirror".format(
         pkg=spec.format("{name}{@version}")
     ))
-    try:
-        spec.package.do_fetch()
-        spec.package.do_clean()
+    num_retries = 3
+    while num_retries > 0:
+        try:
+            spec.package.do_fetch()
+            exception = None
+            break
+        except Exception as e:
+            exception = e
+        finally:
+            spec.package.do_clean()
 
-    except Exception as e:
-        tty.debug(e)
+    if exception:
         if spack.config.get('config:debug'):
-            sys.excepthook(*sys.exc_info())
+            traceback.print_last(file=sys.stderr)
         else:
             tty.warn(
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
