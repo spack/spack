@@ -771,10 +771,16 @@ class TestStage(object):
 
         user_dir = tmpdir.join(getpass.getuser())
         user_dir.ensure(dir=True)
+        user_path = str(user_dir)
 
-        # TBD: Would be nice to ensure the warning is as expected.
         monkeypatch.setattr(os, 'stat', _stat)
-        spack.stage._create_stage_root(str(user_dir))
+        spack.stage._create_stage_root(user_path)
+
+        assert os.stat(user_path).st_uid != os.getuid()
+
+        # Restore the original os.stat function to ensure Python 3 works
+        # during test stage directory cleanup.
+        monkeypatch.setattr(os, 'stat', orig_stat)
 
     def test_resolve_paths(self):
         """Test _resolve_paths."""
