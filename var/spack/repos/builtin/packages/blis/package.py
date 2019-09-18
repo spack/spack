@@ -50,7 +50,7 @@ class Blis(Package):
     )
 
     variant(
-        'cblas', default=False,
+        'cblas', default=True,
         description='CBLAS compatibility',
     )
 
@@ -117,3 +117,9 @@ class Blis(Package):
 
     def install(self, spec, prefix):
         make('install')
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)
