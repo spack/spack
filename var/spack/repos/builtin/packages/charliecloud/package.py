@@ -42,8 +42,7 @@ class Charliecloud(MakefilePackage):
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
     # bash automated testing harness (bats)
-    variant('test', default=False, description='Install test suite dependencies')
-    depends_on('bats@0.4.0', type='run', when='+test')
+    depends_on('bats@0.4.0', type='test')
 
     def url_for_version(self, version):
         if version >= Version('0.9.8'):
