@@ -296,6 +296,43 @@
         }
       }
     },
+    "mic_knl": {
+      "from": "broadwell",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "avx2",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "avx512f",
+        "avx512pf",
+        "avx512er",
+        "avx512cd"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "5.1:",
+          "name": "knl",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
     "skylake_avx512": {
       "from": "skylake",
       "vendor": "GenuineIntel",
