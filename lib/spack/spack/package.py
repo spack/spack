@@ -1032,7 +1032,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Creates a stage directory and downloads the tarball for this package.
         Working directory will be set to the stage directory.
         """
-        if not self.spec.concrete:
+        if not self.spec.versions.concrete:
             raise ValueError("Can only fetch concrete packages.")
 
         if not self.has_code:
@@ -1072,7 +1072,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
-        if not self.spec.concrete:
+        if not self.spec.versions.concrete:
             raise ValueError("Can only stage concrete packages.")
 
         # Always create the stage directory at this point.  Why?  A no-code
@@ -1092,7 +1092,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
-        if not self.spec.concrete:
+        if not self.spec.versions.concrete:
             raise ValueError("Can only patch concrete packages.")
 
         # Kick off the stage first.  This creates the stage.
