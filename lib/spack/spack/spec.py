@@ -3804,10 +3804,11 @@ class LazySpecCache(collections.defaultdict):
         return value
 
 
-#
-# These are possible token types in the spec grammar.
-#
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL = range(11)
+#: These are possible token types in the spec grammar.
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
+
+#: Regex for fully qualified spec names. (e.g., builtin.hdf5)
+spec_id_re = r'\w[\w.-]*'
 
 
 class SpecLexer(spack.parse.Lexer):
@@ -3816,7 +3817,6 @@ class SpecLexer(spack.parse.Lexer):
 
     def __init__(self):
         super(SpecLexer, self).__init__([
-            (r'/', lambda scanner, val: self.token(HASH,  val)),
             (r'\^', lambda scanner, val: self.token(DEP,   val)),
             (r'\@', lambda scanner, val: self.token(AT,    val)),
             (r'\:', lambda scanner, val: self.token(COLON, val)),
@@ -3826,9 +3826,18 @@ class SpecLexer(spack.parse.Lexer):
             (r'\~', lambda scanner, val: self.token(OFF,   val)),
             (r'\%', lambda scanner, val: self.token(PCT,   val)),
             (r'\=', lambda scanner, val: self.token(EQ,    val)),
-            # This is more liberal than identifier_re (see above).
-            # Checked by check_identifier() for better error messages.
-            (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
+
+            # Filenames match before identifiers, so no initial filename
+            # component is parsed as a spec (e.g., in subdir/spec.yaml)
+            (r'[/\w.-]+\.yaml[^\b]*', lambda scanner, v: self.token(FILE, v)),
+
+            # Hash match after filename. No valid filename can be a hash
+            # (files end w/.yaml), but a hash can match a filename prefix.
+            (r'/', lambda scanner, val: self.token(HASH, val)),
+
+            # Identifiers match after filenames and hashes.
+            (spec_id_re, lambda scanner, val: self.token(ID, val)),
+
             (r'\s+', lambda scanner, val: None)],
             [EQ],
             [(r'[\S].*', lambda scanner, val: self.token(VAL,    val)),
@@ -3859,7 +3868,14 @@ class SpecParser(spack.parse.Parser):
 
         try:
             while self.next:
-                # TODO: clean this parsing up a bit
+                # Try a file first, but if it doesn't succeed, keep parsing
+                # as from_file may backtrack and try an id.
+                if self.accept(FILE):
+                    spec = self.spec_from_file()
+                    if spec:
+                        specs.append(spec)
+                        continue
+
                 if self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
@@ -3899,12 +3915,18 @@ class SpecParser(spack.parse.Parser):
                         self.push_tokens([self.token])
                         specs.append(self.spec(None))
                     else:
-                        if self.accept(HASH):
+                        dep = None
+                        if self.accept(FILE):
+                            # this may return None, in which case we backtrack
+                            dep = self.spec_from_file()
+
+                        if not dep and self.accept(HASH):
                             # We're finding a dependency by hash for an
                             # anonymous spec
                             dep = self.spec_by_hash()
                             dep = dep.copy(deps=('link', 'run'))
-                        else:
+
+                        if not dep:
                             # We're adding a dependency to the last spec
                             self.expect(ID)
                             dep = self.spec(self.token.value)
@@ -3943,6 +3965,51 @@ class SpecParser(spack.parse.Parser):
                         (s.architecture.os or s.architecture.target):
                     s._set_architecture(platform=platform_default)
         return specs
+
+    def spec_from_file(self):
+        """Read a spec from a filename parsed on the input stream.
+
+        There is some care taken here to ensure that filenames are a last
+        resort, and that any valid package name is parsed as a name
+        before we consider it as a file. Specs are used in lots of places;
+        we don't want the parser touching the filesystem unnecessarily.
+
+        The parse logic is as follows:
+
+        1. We require that filenames end in .yaml, which means that no valid
+           filename can be interpreted as a hash (hashes can't have '.')
+
+        2. We avoid treating paths like /path/to/spec.yaml as hashes, or paths
+           like subdir/spec.yaml as ids by lexing filenames before hashes.
+
+        3. For spec names that match file and id regexes, like 'builtin.yaml',
+           we backtrack from spec_from_file() and treat them as spec names.
+
+        """
+        path = self.token.value
+
+        # don't treat builtin.yaml, builtin.yaml-cpp, etc. as filenames
+        if re.match(spec_id_re + '$', path):
+            self.push_tokens([spack.parse.Token(ID, self.token.value)])
+            return None
+
+        # Special case where someone omits a space after a filename. Consider:
+        #
+        #     libdwarf^/some/path/to/libelf.yamllibdwarf ^../../libelf.yaml
+        #
+        # The error is clearly an omitted space. To handle this, the FILE
+        # regex admits text *beyond* .yaml, and we raise a nice error for
+        # file names that don't end in .yaml.
+        if not path.endswith(".yaml"):
+            raise SpecFilenameError(
+                "Spec filename must end in .yaml: '{0}'".format(path))
+
+        # if we get here, we're *finally* interpreting path as a filename
+        if not os.path.exists(path):
+            raise NoSuchSpecFileError("No such spec file: '{0}'".format(path))
+
+        with open(path) as f:
+            return Spec.from_yaml(f)
 
     def parse_compiler(self, text):
         self.setup(text)
@@ -4279,6 +4346,14 @@ class NoSuchHashError(SpecError):
         super(NoSuchHashError, self).__init__(
             "No installed spec matches the hash: '%s'"
             % hash)
+
+
+class SpecFilenameError(SpecError):
+    """Raised when a spec file name is invalid."""
+
+
+class NoSuchSpecFileError(SpecFilenameError):
+    """Raised when a spec file doesn't exist."""
 
 
 class RedundantSpecError(SpecError):
