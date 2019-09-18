@@ -13,15 +13,15 @@ class FujitsuMpi(Package):
 
     version('3.0')
 
-    conflict('%arm')
-    conflict('%cce')
-    conflict('%clang')
-    conflict('%gcc')
-    conflict('%intel')
-    conflict('%nag')
-    conflict('%pgi')
-    conflict('%xl')
-    conflict('%xl_r')
+    conflicts('%arm')
+    conflicts('%cce')
+    conflicts('%clang')
+    conflicts('%gcc')
+    conflicts('%intel')
+    conflicts('%nag')
+    conflicts('%pgi')
+    conflicts('%xl')
+    conflicts('%xl_r')
 
     provides('mpi@3.1:')
 
