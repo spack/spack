@@ -11,8 +11,6 @@ class FujitsuMpi(Package):
 
     homepage = "https://www.fujitsu.com/us/"
 
-    version('3.0')
-
     conflicts('%arm')
     conflicts('%cce')
     conflicts('%clang')
