@@ -162,31 +162,37 @@ def mirror_create(args):
                 tty.die("Cannot pass specs on the command line with --file.")
             specs = _read_specs_from_file(args.file)
 
-        # If nothing is passed, use environment or all if no active env
         if not specs:
+            # If nothing is passed, use environment or all if no active env
             env = ev.get_env(args, 'mirror')
             if env:
-                specs = env.specs_by_hash.values()
+                mirror_specs = env.specs_by_hash.values()
             else:
                 specs = [Spec(n) for n in spack.repo.all_package_names()]
                 specs.sort(key=lambda s: s.format("{name}{@version}").lower())
+        else:
+            # If the user asked for dependencies, traverse spec DAG get them.
+            if args.dependencies:
+                new_specs = set()
+                for spec in specs:
+                    spec.concretize()
+                    for s in spec.traverse():
+                        new_specs.add(s)
+                specs = list(new_specs)
 
-        # If the user asked for dependencies, traverse spec DAG get them.
-        if args.dependencies:
-            new_specs = set()
-            for spec in specs:
-                spec.concretize()
-                for s in spec.traverse():
-                    new_specs.add(s)
-            specs = list(new_specs)
+            # Skip external specs, as they are already installed
+            external_specs = [s for s in specs if s.external]
+            specs = [s for s in specs if not s.external]
 
-        # Skip external specs, as they are already installed
-        external_specs = [s for s in specs if s.external]
-        specs = [s for s in specs if not s.external]
+            for spec in external_specs:
+                msg = 'Skipping {0} as it is an external spec.'
+                tty.msg(msg.format(spec.cshort_spec))
 
-        for spec in external_specs:
-            msg = 'Skipping {0} as it is an external spec.'
-            tty.msg(msg.format(spec.cshort_spec))
+            # Get concrete specs for each matching version of these specs.
+            mirror_specs = spack.mirror.get_matching_versions(
+                specs, num_versions=(args.versions_per_spec or 1))
+            for s in mirror_specs:
+                s.concretize()
 
         # Default name for directory is spack-mirror-<DATESTAMP>
         directory = args.directory
@@ -198,8 +204,7 @@ def mirror_create(args):
         existed = os.path.isdir(directory)
 
         # Actually do the work to create the mirror
-        present, mirrored, error = spack.mirror.create(
-            directory, specs, num_versions=args.versions_per_spec)
+        present, mirrored, error = spack.mirror.create(directory, mirror_specs)
         p, m, e = len(present), len(mirrored), len(error)
 
         verb = "updated" if existed else "created"

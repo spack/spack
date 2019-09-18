@@ -86,7 +86,7 @@ def mirror_archive_path(spec, fetcher, resource_id=None):
         spec.name, mirror_archive_filename(spec, fetcher, resource_id))
 
 
-def get_matching_versions(specs, **kwargs):
+def get_matching_versions(specs, num_versions=1):
     """Get a spec for EACH known version matching any spec in the list.
     For concrete specs, this retrieves the concrete version and, if more
     than one version per spec is requested, retrieves the latest versions
@@ -101,7 +101,7 @@ def get_matching_versions(specs, **kwargs):
             tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
             continue
 
-        pkg_versions = kwargs.get('num_versions', 1)
+        pkg_versions = num_versions
 
         version_order = list(reversed(sorted(pkg.versions)))
         matching_spec = []
@@ -146,7 +146,7 @@ def suggest_archive_basename(resource):
     return basename
 
 
-def create(path, specs, **kwargs):
+def create(path, specs):
     """Create a directory to be used as a spack mirror, and fill it with
     package archives.
 
@@ -154,10 +154,6 @@ def create(path, specs, **kwargs):
         path: Path to create a mirror directory hierarchy in.
         specs: Any package versions matching these specs will be added \
             to the mirror.
-
-    Keyword args:
-        num_versions: Max number of versions to fetch per spec, \
-            (default is 1 each spec)
 
     Return Value:
         Returns a tuple of lists: (present, mirrored, error)
@@ -170,18 +166,8 @@ def create(path, specs, **kwargs):
     it creates specs for those versions.  If the version satisfies any spec
     in the specs list, it is downloaded and added to the mirror.
     """
-    # Make sure nothing is in the way.
-    if os.path.isfile(path):
-        raise MirrorError("%s already exists and is a file." % path)
-
     # automatically spec-ify anything in the specs array.
     specs = [s if isinstance(s, Spec) else Spec(s) for s in specs]
-
-    # Get concrete specs for each matching version of these specs.
-    version_specs = get_matching_versions(
-        specs, num_versions=kwargs.get('num_versions', 1))
-    for s in version_specs:
-        s.concretize()
 
     # Get the absolute path of the root before we start jumping around.
     mirror_root = os.path.abspath(path)
@@ -203,8 +189,8 @@ def create(path, specs, **kwargs):
     try:
         spack.caches.mirror_cache = mirror_cache
         # Iterate through packages and download all safe tarballs for each
-        for spec in version_specs:
-            add_single_spec(spec, mirror_root, categories, **kwargs)
+        for spec in specs:
+            add_single_spec(spec, mirror_root, categories)
     finally:
         spack.caches.mirror_cache = None
 
@@ -214,7 +200,7 @@ def create(path, specs, **kwargs):
     return categories['present'], categories['mirrored'], categories['error']
 
 
-def add_single_spec(spec, mirror_root, categories, **kwargs):
+def add_single_spec(spec, mirror_root, categories):
     tty.msg("Adding package {pkg} to mirror".format(
         pkg=spec.format("{name}{@version}")
     ))
