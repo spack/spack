@@ -38,7 +38,7 @@ class Mstk(CMakePackage):
 
     depends_on("cmake@3.8:")
 
-    # Parallel variant 
+    # Parallel variant
     depends_on("mpi", when='parallel=metis')
     depends_on("mpi", when='parallel=zoltan')
     depends_on("mpi", when='parallel=zoltan_parmetis')
@@ -59,7 +59,7 @@ class Mstk(CMakePackage):
         options.append('-DCMAKE_BUILD_TYPE=Release')
         options.append('-DMSTK_USE_MARKERS=ON')
 
-        # Parallel variant 
+        # Parallel variant
         if self.spec.variants['parallel'].value != "none":
             # Use mpi for compilation
             options.append('-DCMAKE_CXX_COMPILER=mpicxx')
@@ -78,7 +78,7 @@ class Mstk(CMakePackage):
             options.append('-DZOLTAN_NEEDS_PTScotch=ON')
 
         # ExodusII variant
-        if self.spec.variants['exodusii'].value == True:
+        if self.spec.variants['exodusii'].value is True:
             options.append('-DENABLE_ExodusII=ON')
 
         return options
