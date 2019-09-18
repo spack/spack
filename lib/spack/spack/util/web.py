@@ -16,6 +16,9 @@ import sys
 import traceback
 import hashlib
 
+from itertools import product
+
+from six import string_types
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
 import multiprocessing.pool
@@ -37,7 +40,6 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.config
 import spack.error
-import spack.s3_handler
 import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
@@ -49,6 +51,28 @@ from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 # Timeout in seconds for web requests
 _timeout = 10
 
+# See docstring for standardize_header_names()
+_separators = ('', ' ', '_', '-')
+HTTP_HEADER_NAME_ALIASES = {
+        "Accept-ranges": set(
+            ''.join((A, 'ccept', sep, R, 'anges'))
+            for A, sep, R in product('Aa', _separators, 'Rr')),
+
+        "Content-length": set(
+            ''.join((C, 'ontent', sep, L, 'ength'))
+            for C, sep, L in product('Cc', _separators, 'Ll')),
+
+        "Content-type": set(
+            ''.join((C, 'ontent', sep, T, 'ype'))
+            for C, sep, T in product('Cc', _separators, 'Tt')),
+
+        "Date": set(('Date', 'date')),
+
+        "Last-modified": set(''.join((L, 'ast', sep, M, 'odified'))
+            for L, sep, M in product('Ll', _separators, 'Mm')),
+
+        "Server": set(('Server', 'server'))
+}
 
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
@@ -416,12 +440,15 @@ def _urlopen(req, *args, **kwargs):
 
     # We don't pass 'context' parameter because it was only introduced starting
     # with versions 2.7.9 and 3.4.3 of Python.
-    if kwargs.get('context') is None:
+    if kwargs.get('context') is not None:
         kwargs.pop('context', None)
 
-    return (
-            spack.s3_handler.open if url_util.parse(url).scheme == 's3'
-            else urlopen)(req, *args, **kwargs)
+    opener = urlopen
+    if url_util.parse(url).scheme == 's3':
+        import spack.s3_handler
+        opener = spack.s3_handler.open
+
+    return opener(req, *args, **kwargs)
 
 
 def spider(root_url, depth=0):
@@ -526,6 +553,107 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
                 continue
 
     return versions
+
+
+def standardize_header_names(headers):
+    """Replace certain header names with standardized spellings.
+
+    Standardizes the spellings of the following header names:
+        - Accept-ranges
+        - Content-length
+        - Content-type
+        - Date
+        - Last-modified
+        - Server
+
+    Every name considered is translated to one of the above names if the only
+    difference between the two is how the first letters of each word are
+    capitalized; whether words are separated; or, if separated, whether they
+    are so by a dash (-), underscore (_), or space ( ).  Header names that
+    cannot be mapped as described above are returned unaltered.
+
+    For example: The standard spelling of "Content-length" would be substituted
+    for any of the following names:
+        - Content-length
+        - content_length
+        - contentlength
+        - content_Length
+        - contentLength
+        - content Length
+
+    ... and any other header name, such as "Content-encoding", would not be
+    altered, regardless of spelling.
+
+    If headers is a string, then it (or an appropriate substitute) is returned.
+
+    If headers is a non-empty tuple, headers[0] is a string, and there exists a
+    standardized spelling for header[0] that differs from it, then a new tuple
+    is returned.  This tuple has the same elements as headers, except the first
+    element is the standardized spelling for headers[0].
+
+    If headers is a sequence, then a new list is considered, where each element
+    is its corresponding element in headers, but mapped as above if a string or
+    tuple.  This new list is returned if at least one of its elements differ
+    from their corrsponding element in headers.
+
+    If headers is a mapping, then a new dict is considered, where the key in
+    each item is the key of its corresponding item in headers, mapped as above
+    if a string or tuple.  The value is taken from the corresponding item.  If
+    the keys of multiple items in headers map to the same key after being
+    standardized, then the value for the resulting item is undefined.  The new
+    dict is returned if at least one of its items has a key that differs from
+    that of their corresponding item in headers, or if the keys of multiple
+    items in headers map to the same key after being standardized.
+
+    In all other cases headers is returned unaltered.
+    """
+    if isinstance(headers, string_types):
+        for standardized_spelling, other_spellings in (
+                HTTP_HEADER_NAME_ALIASES.items()):
+            if headers in other_spellings:
+                if headers == standardized_spelling:
+                    return headers
+                return standardized_spelling
+        return headers
+
+    if isinstance(headers, tuple):
+        if not headers: return headers
+        old = headers[0]
+        if isinstance(old, string_types):
+            new = standardize_header_names(old)
+            if old is not new:
+                return (new,) + headers[1:]
+        return headers
+
+    try:
+        changed = False
+        new_dict = {}
+        for key, value in headers.items():
+            if isinstance(key, (tuple, string_types)):
+                old_key, key = key, standardize_header_names(key)
+                changed = changed or key is not old_key
+
+            new_dict[key] = value
+
+        return new_dict if changed else headers
+    except (AttributeError, TypeError, ValueError):
+        pass
+
+    try:
+        changed = False
+        new_list = []
+        for item in headers:
+            if isinstance(item, (tuple, string_types)):
+                old_item, item = item, standardize_header_names(item)
+                changed = changed or item is not old_item
+
+            new_list.append(item)
+
+        return new_list if changed else headers
+    except TypeError:
+        pass
+
+    return headers
 
 
 class SpackWebError(spack.error.SpackError):

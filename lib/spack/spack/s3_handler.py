@@ -1,11 +1,6 @@
 
 import itertools as it
 
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
-
 from io import BufferedReader
 
 import six.moves.urllib.response as urllib_response
@@ -13,8 +8,9 @@ import six.moves.urllib.request as urllib_request
 
 import spack
 
-import spack.util.url as url_util
 import spack.util.s3 as s3_util
+import spack.util.url as url_util
+import spack.util.web as web_util
 
 
 # NOTE(opadron): Workaround issue in boto where its StreamingBody implementation
@@ -42,99 +38,22 @@ class WrapStream(BufferedReader):
         return getattr(self.raw, key)
 
 
-class MappingViewWithKeyAliases(Mapping):
-    def __init__(self, sub=None, aliases=None):
-        self._sub = sub or {}
-        self._aliases = []
-        self._alias_table = {}
-
-        aliases = [set(x) for x in (aliases or ())]
-        num_entries = 0
-        while aliases:
-            entry = aliases.pop()
-
-            while True:
-                ioff = 0
-                for i in range(len(aliases)):
-                    index = i - ioff
-                    candidate = aliases[index]
-                    if entry & candidate:
-                        entry |= aliases.pop(index)
-                        ioff += 1
-
-                if not ioff:
-                    break
-
-            self._aliases.append(entry)
-            for key in entry:
-                self._alias_table[key] = num_entries
-            num_entries += 1
-
-    def __getitem__(self, key):
-        try:
-            return self._sub[key]
-        except KeyError as e:
-            index = self._alias_table.get(key)
-            aliases = (
-                    () if index is None else
-                    self._aliases[index])
-
-            for alias in aliases:
-                try:
-                    return self._sub[alias]
-                except KeyError:
-                    pass
-
-            raise e
-
-    def __set(self):
-        return set(self._alias_table.keys()) | set(self._sub.keys())
-
-    def __iter__(self):
-        return iter(self.__set())
-
-    def __len__(self):
-        return len(self.__set())
-
-
-HTTP_HEADERS_KEY_ALIASES = (
-        tuple(''.join((C, 'ontent', sep, L, 'ength'))
-            for C, sep, L in
-            it.product('Cc', [''] + list(' _-'), 'Ll')),
-
-        tuple(''.join((A, 'ccept', sep, R, 'anges'))
-            for A, sep, R in
-            it.product('Aa', [''] + list(' _-'), 'Rr')),
-
-        tuple(''.join((A, 'ccept', sep, R, 'anges'))
-            for A, sep, R in
-            it.product('Aa', [''] + list(' _-'), 'Rr')),
-
-        tuple(''.join((C, 'ontent', sep, T, 'ype'))
-            for C, sep, T in
-            it.product('Cc', [''] + list(' _-'), 'Tt')),
-
-        tuple(''.join((L, 'ast', sep, M, 'odified'))
-            for L, sep, M in
-            it.product('Ll', [''] + list(' _-'), 'Mm')),
-
-        ('Server', 'server'),
-        ('Date', 'date')
-)
-
-
 def _s3_open(url):
     parsed = url_util.parse(url)
     s3 = s3_util.create_s3_session(parsed)
-    obj = s3.get_object(
-            Bucket=parsed.netloc,
-            Key=parsed.path)
+
+    bucket = parsed.netloc
+    key = parsed.path
+
+    if key.startswith('/'):
+        key = key[1:]
+
+    obj = s3.get_object(Bucket=bucket, Key=key)
 
     # NOTE(opadron): Apply workaround here (see above)
     stream = WrapStream(obj['Body'])
-    headers = MappingViewWithKeyAliases(
-            obj['ResponseMetadata']['HTTPHeaders'],
-            HTTP_HEADERS_KEY_ALIASES)
+    headers = web_util.standardize_header_names(
+            obj['ResponseMetadata']['HTTPHeaders'])
 
     return url, headers, stream
 
@@ -153,7 +72,8 @@ class UrllibS3Handler(urllib_request.HTTPSHandler):
                 try:
                     _, headers, stream = _s3_open(
                             url_util.join(orig_url, 'index.html'))
-                    return urllib_response.addinfourl(stream, headers, orig_url)
+                    return urllib_response.addinfourl(
+                            stream, headers, orig_url)
 
                 except ClientError as err2:
                     if err.response['Error']['Code'] == 'NoSuchKey':

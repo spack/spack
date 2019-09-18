@@ -78,7 +78,6 @@ def join(base_url, path, *extra):
         base_url = parse(base_url)
 
     (scheme, netloc, base_path, params, query, _) = base_url
-
     scheme = scheme.lower()
 
     path_tokens = [
@@ -89,13 +88,17 @@ def join(base_url, path, *extra):
 
                 if part and part != '/']
 
+    base_path_args = ['/']
     if scheme == 's3':
         if netloc:
-            path_tokens.insert(0, netloc)
+            base_path_args.append(netloc)
 
-    base_path = os.path.relpath(
-            os.path.join('/', base_path, *path_tokens),
-            '/')
+    if base_path.startswith('/'):
+        base_path = base_path[1:]
+
+    base_path_args.append(base_path)
+    base_path_args.extend(path_tokens)
+    base_path = os.path.relpath(os.path.join(*base_path_args), '/')
 
     if scheme == 's3':
         path_tokens = [
