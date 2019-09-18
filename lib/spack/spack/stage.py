@@ -107,9 +107,10 @@ def _resolve_paths(candidates):
     paths = []
     for path in candidates:
         # First remove the extra `$user` node from a `$tempdir/$user` entry
-        # for hosts that automatically append `$user` to `$tempdir`.
+        # for hosts that automatically append `$user` to `$tempdir`.  As
+        # written, this will remove only the first `$user` in the path.
         if path.startswith(os.path.join('$tempdir', '$user')) and tmp_has_usr:
-            path = path.replace("/$user", "")
+            path = path.replace("/$user", "", 1)
 
         paths.append(sup.canonicalize_path(path))
 

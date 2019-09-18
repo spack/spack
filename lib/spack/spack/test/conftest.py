@@ -40,6 +40,15 @@ from spack.spec import Spec
 from spack.version import Version
 
 
+@pytest.fixture
+def no_path_access(monkeypatch):
+    def _can_access(path, perms):
+        return False
+
+    monkeypatch.setattr(os, 'access', _can_access)
+    yield
+
+
 #
 # Disable any activate Spack environment BEFORE all tests
 #

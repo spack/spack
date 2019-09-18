@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
+import errno
 import os
 import collections
 import shutil
@@ -707,7 +708,7 @@ class TestStage(object):
 
     def test_first_accessible_path(self, tmpdir):
         """Test _first_accessible_path names."""
-        spack_dir = tmpdir.join('spack-test-fap')
+        spack_dir = tmpdir.join('paths')
         name = str(spack_dir)
         files = [os.path.join(os.path.sep, 'no', 'such', 'path'), name]
 
@@ -735,6 +736,46 @@ class TestStage(object):
         # Cleanup
         shutil.rmtree(str(name))
 
+    def test_create_stage_root(self, tmpdir, no_path_access):
+        """Test _create_stage_root permissions."""
+        spack_dir = tmpdir.join('path')
+
+        # Ensure an OS Error is raised on the created, non-user directory
+        with pytest.raises(OSError) as exc_info:
+            spack.stage._create_stage_root(str(spack_dir))
+
+        assert exc_info.value.args[0] == errno.EACCES
+
+        # Ensure an OS Error is raised on a created, user directory
+        spack_dir.ensure(dir=True)
+        user_dir = spack_dir.join(getpass.getuser())
+        with pytest.raises(OSError) as exc_info:
+            spack.stage._create_stage_root(str(user_dir))
+
+        assert exc_info.value.args[0] == errno.EACCES
+
+    def test_create_stage_root_non_uid(self, tmpdir, monkeypatch):
+        """Test _create_stage_root with non-uid user dir."""
+        orig_stat = os.stat
+
+        class MinStat:
+            st_mode = -1
+            st_uid = -1
+
+        def _stat(path):
+            p_stat = orig_stat(path)
+
+            fake_stat = MinStat()
+            fake_stat.st_mode = p_stat.st_mode
+            return fake_stat
+
+        user_dir = tmpdir.join(getpass.getuser())
+        user_dir.ensure(dir=True)
+
+        # TBD: Would be nice to ensure the warning is as expected.
+        monkeypatch.setattr(os, 'stat', _stat)
+        spack.stage._create_stage_root(str(user_dir))
+
     def test_resolve_paths(self):
         """Test _resolve_paths."""
 
@@ -743,13 +784,22 @@ class TestStage(object):
         paths = [os.path.join(os.path.sep, 'a', 'b', 'c')]
         assert spack.stage._resolve_paths(paths) == paths
 
-        tmp = '$tempdir'
-        paths = [os.path.join(tmp, 'stage'), os.path.join(tmp, '$user')]
-        can_paths = [canonicalize_path(paths[0]), canonicalize_path(tmp)]
+        tempdir = '$tempdir'
+        can_tempdir = canonicalize_path(tempdir)
         user = getpass.getuser()
-        if user not in can_paths[1].split(os.path.sep):
-            can_paths[1] = os.path.join(can_paths[1], user)
-        assert spack.stage._resolve_paths(paths) == can_paths
+        temp_has_user = user in can_tempdir.split(os.sep)
+        paths = [os.path.join(tempdir, 'stage'),
+                 os.path.join(tempdir, '$user'),
+                 os.path.join(tempdir, '$user', '$user'),
+                 os.path.join(tempdir, '$user', 'stage', '$user')]
+
+        res_paths = [canonicalize_path(p) for p in paths]
+        if temp_has_user:
+            res_paths[1] = can_tempdir
+            res_paths[2] = os.path.join(can_tempdir, user)
+            res_paths[3] = os.path.join(can_tempdir, 'stage', user)
+
+        assert spack.stage._resolve_paths(paths) == res_paths
 
     def test_get_stage_root_bad_path(self, clear_stage_root, bad_stage_path):
         """Ensure an invalid stage path root raises a StageError."""
