@@ -168,8 +168,9 @@ def mirror_create(args):
             if env:
                 mirror_specs = env.specs_by_hash.values()
             else:
-                specs = [Spec(n) for n in spack.repo.all_package_names()]
-                specs.sort(key=lambda s: s.format("{name}{@version}").lower())
+                mirror_specs = [Spec(n) for n in spack.repo.all_package_names()]
+                mirror_specs.sort(
+                    key=lambda s: s.format("{name}{@version}").lower())
         else:
             # If the user asked for dependencies, traverse spec DAG get them.
             if args.dependencies:
@@ -194,30 +195,30 @@ def mirror_create(args):
             for s in mirror_specs:
                 s.concretize()
 
-        # Default name for directory is spack-mirror-<DATESTAMP>
-        directory = args.directory
-        if not directory:
-            timestamp = datetime.now().strftime("%Y-%m-%d")
-            directory = 'spack-mirror-' + timestamp
+    # Default name for directory is spack-mirror-<DATESTAMP>
+    directory = args.directory
+    if not directory:
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        directory = 'spack-mirror-' + timestamp
 
-        # Make sure nothing is in the way.
-        existed = os.path.isdir(directory)
+    # Make sure nothing is in the way.
+    existed = os.path.isdir(directory)
 
-        # Actually do the work to create the mirror
-        present, mirrored, error = spack.mirror.create(directory, mirror_specs)
-        p, m, e = len(present), len(mirrored), len(error)
+    # Actually do the work to create the mirror
+    present, mirrored, error = spack.mirror.create(directory, mirror_specs)
+    p, m, e = len(present), len(mirrored), len(error)
 
-        verb = "updated" if existed else "created"
-        tty.msg(
-            "Successfully %s mirror in %s" % (verb, directory),
-            "Archive stats:",
-            "  %-4d already present"  % p,
-            "  %-4d added"            % m,
-            "  %-4d failed to fetch." % e)
-        if error:
-            tty.error("Failed downloads:")
-            colify(s.cformat("{name}{@version}") for s in error)
-            sys.exit(1)
+    verb = "updated" if existed else "created"
+    tty.msg(
+        "Successfully %s mirror in %s" % (verb, directory),
+        "Archive stats:",
+        "  %-4d already present"  % p,
+        "  %-4d added"            % m,
+        "  %-4d failed to fetch." % e)
+    if error:
+        tty.error("Failed downloads:")
+        colify(s.cformat("{name}{@version}") for s in error)
+        sys.exit(1)
 
 
 def mirror(parser, args):
