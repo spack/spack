@@ -41,7 +41,9 @@ import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
-from spack.directory_layout import DirectoryLayoutError
+from spack.directory_layout import (
+    DirectoryLayoutError, InconsistentInstallDirectoryError
+)
 from spack.error import SpackError
 from spack.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
@@ -594,11 +596,25 @@ class Database(object):
                     'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
                 try:
                     layout = spack.store.layout
+                    deprecated_for = None
                     if entry.spec.external:
                         layout = None
                         install_check = True
                     else:
-                        install_check = layout.check_installed(entry.spec)
+                        try:
+                            install_check = layout.check_installed(entry.spec)
+                        except InconsistentInstallDirectoryError as e:
+                            prefix = entry.spec.prefix
+                            view = YamlFilesystemView(prefix,
+                                                      spack.store.layout,
+                                                      projections={},
+                                                      ignore_conflicts=False,
+                                                      verbose=False)
+                            specs = view.get_all_specs()
+                            if len(specs) != 1:
+                                raise e
+                            install_check = True
+                            deprecated_for = specs[0]
 
                     if install_check:
                         kwargs = {
@@ -608,6 +624,8 @@ class Database(object):
                             'installation_time': entry.installation_time  # noqa: E501
                         }
                         self._add(**kwargs)
+                        if deprecated_for:
+                            self._deprecate(entry.spec, deprecated_for)
                         processed_specs.add(entry.spec)
                 except Exception as e:
                     # Something went wrong, so the spec was not restored
@@ -630,6 +648,10 @@ class Database(object):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
+
+            if rec.deprecated_for:
+                counts.setdefault(rec.deprecated_for, 0)
+                counts[rec.deprecated_for] += 1
 
         for rec in self._data.values():
             key = rec.spec.dag_hash()
@@ -766,9 +788,10 @@ class Database(object):
                     directory_layout.check_installed(spec)
                     installed = True
                 except DirectoryLayoutError as e:
-                    tty.warn(
-                        'Dependency missing due to corrupt install directory:',
-                        path, str(e))
+                    if not spec.deprecated_for:
+                        tty.warn(
+                            'Dependency missing due to corrupt install directory:',
+                            path, str(e))
             elif spec.external_path:
                 path = spec.external_path
 
@@ -868,6 +891,10 @@ class Database(object):
         del self._data[key]
         for dep in rec.spec.dependencies(_tracked_deps):
             self._decrement_ref_count(dep)
+
+        if rec.deprecated_for:
+            new_spec = self._data[rec.deprecated_for].spec
+            self._decrement_ref_count(new_spec)
 
         # Returns the concrete spec so we know it in the case where a
         # query spec was passed in.
