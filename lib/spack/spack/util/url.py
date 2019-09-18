@@ -17,6 +17,13 @@ import spack.util.path
 
 
 def _split_all(path):
+    """Split path into its atomic components.
+
+    Returns the shortest list, L, of strings such that os.path.join(*L) == path
+    and os.path.split(element) == ('', element) for every element in L except
+    possibly the first.  This first element may possibly have the value of '/',
+    or some other OS-dependent path root.
+    """
     result = []
     a = path
     old_a = None
@@ -30,8 +37,10 @@ def _split_all(path):
 
 
 def local_file_path(url):
-    """If [self] is a file:// URL, return the absolute path to the local
-    file or directory referenced by [self].  Otherwise, return None.
+    """Get a local file path from a url.
+
+    If url is a file:// URL, return the absolute path to the local
+    file or directory referenced by it.  Otherwise, return None.
     """
     if isinstance(url, string_types):
         url = parse(url)
@@ -42,15 +51,20 @@ def local_file_path(url):
 
 
 def parse(url, scheme='file'):
-    """Parse a mirror url."""
+    """Parse a mirror url.
+
+    For file:// URLs, the netloc and path components are concatenated and
+    passed through spack.util.path.canoncalize_path().
+
+    Otherwise, the returned value is the same as urllib's urlparse() with
+    allow_fragments=False.
+    """
 
     url_obj = (urllib_parse.urlparse(url, scheme=scheme, allow_fragments=False)
             if isinstance(url, string_types) else url)
 
     (scheme, netloc, path, params, query, _) = url_obj
     scheme = (scheme or 'file').lower()
-
-    extra_attrs = {}
 
     if scheme == 'file':
         path = spack.util.path.canonicalize_path(netloc + path)
@@ -67,6 +81,10 @@ def parse(url, scheme='file'):
 
 
 def format(parsed_url):
+    """Format a URL string
+
+    Returns a canonicalized format of the given URL as a string.
+    """
     if isinstance(parsed_url, string_types):
         parsed_url = parse(parsed_url)
 
