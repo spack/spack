@@ -110,6 +110,9 @@ config_defaults = {
 #: this is shorter and more readable than listing all choices
 scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
 
+#: Base name for the (internal) overrides scope.
+overrides_base_name = 'overrides-'
+
 
 def first_existing(dictionary, keys):
     """Get the value of the first key in keys that is in the dictionary."""
@@ -549,11 +552,11 @@ def override(path_or_scope, value=None):
     an internal config scope for it and push/pop that scope.
 
     """
-    base_name = 'overrides-'
     if isinstance(path_or_scope, ConfigScope):
         overrides = path_or_scope
         config.push_scope(path_or_scope)
     else:
+        base_name = overrides_base_name
         # Ensure the new override gets a unique scope name
         current_overrides = [s.name for s in
                              config.matching_scopes(r'^{0}'.format(base_name))]

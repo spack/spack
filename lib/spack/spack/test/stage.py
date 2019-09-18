@@ -13,7 +13,7 @@ import getpass
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, working_dir
+from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.paths
 import spack.stage
@@ -40,9 +40,6 @@ _include_readme = 1
 _include_hidden = 2
 _include_extra = 3
 
-# Some standard unix directory that does NOT include the username
-_non_user_root = os.path.join(os.path.sep, 'opt')
-
 
 # Mock fetch directories are expected to appear as follows:
 #
@@ -68,6 +65,13 @@ _non_user_root = os.path.join(os.path.sep, 'opt')
 #         _extra_fn       test_extra file (contains _extra_contents)
 #     _archive_fn         archive_url = file:///path/to/_archive_fn
 #
+
+
+@pytest.fixture
+def clear_stage_root(monkeypatch):
+    """Ensure spack.stage._stage_root is not set at test start."""
+    monkeypatch.setattr(spack.stage, '_stage_root', None)
+    yield
 
 
 def check_expand_archive(stage, stage_name, expected_file_list):
@@ -176,83 +180,22 @@ def get_stage_path(stage, stage_name):
         return stage.path
 
 
+# TODO: Revisit use of the following fixture (and potentially leveraging
+#       the `mock_stage` path in `mock_stage_archive`) per discussions in
+#       #12857.  See also #13065.
 @pytest.fixture
-def bad_stage_path():
-    """Temporarily ensure there is no accessible path for staging."""
-    current = spack.config.get('config:build_stage')
-    spack.config.set('config', {'build_stage': '/no/such/path'}, scope='user')
-    yield
-    spack.config.set('config', {'build_stage': current}, scope='user')
+def tmp_build_stage_dir(tmpdir, clear_stage_root):
+    """Use a temporary test directory for the stage root."""
+    test_path = str(tmpdir.join('stage'))
+    with spack.config.override('config:build_stage', test_path):
+        yield tmpdir, spack.stage.get_stage_root()
 
-
-@pytest.fixture
-def non_user_path_for_stage(monkeypatch):
-    """Temporarily use a Linux-standard non-user path for staging. """
-    def _can_access(path, perms):
-        return True
-
-    current = spack.config.get('config:build_stage')
-    spack.config.set('config', {'build_stage': [_non_user_root]}, scope='user')
-    monkeypatch.setattr(os, 'access', _can_access)
-    yield
-    spack.config.set('config', {'build_stage': current}, scope='user')
+    shutil.rmtree(test_path)
 
 
 @pytest.fixture
-def instance_path_for_stage():
-    """
-    Temporarily use the "traditional" spack instance stage path for staging.
-
-    Note that it can be important for other tests that the previous settings be
-    restored when the test case is over.
-    """
-    current = spack.config.get('config:build_stage')
-    base = canonicalize_path(os.path.join('$spack', 'test-stage'))
-    mkdirp(base)
-    path = tempfile.mkdtemp(dir=base)
-    spack.config.set('config', {'build_stage': path}, scope='user')
-    yield
-    spack.config.set('config', {'build_stage': current}, scope='user')
-    shutil.rmtree(base)
-
-
-@pytest.fixture
-def tmp_path_for_stage(tmpdir):
-    """
-    Use a temporary test directory for staging.
-
-    Note that it can be important for other tests that the previous settings be
-    restored when the test case is over.
-    """
-    current = spack.config.get('config:build_stage')
-    spack.config.set('config', {'build_stage': [str(tmpdir)]}, scope='user')
-    yield tmpdir
-    spack.config.set('config', {'build_stage': current}, scope='user')
-
-
-@pytest.fixture
-def tmp_build_stage_dir(tmpdir):
-    """Establish the temporary build_stage for the mock archive."""
-    test_stage_path = tmpdir.join('stage')
-
-    # Set test_stage_path as the default directory to use for test stages.
-    current = spack.config.get('config:build_stage')
-    spack.config.set('config',
-                     {'build_stage': [str(test_stage_path)]}, scope='user')
-
-    yield (tmpdir, test_stage_path)
-
-    spack.config.set('config', {'build_stage': current}, scope='user')
-
-
-@pytest.fixture
-def mock_stage_archive(clear_stage_root, tmp_build_stage_dir, request):
-    """
-    Create the directories and files for the staged mock archive.
-
-    Note that it can be important for other tests that the previous settings be
-    restored when the test case is over.
-    """
+def mock_stage_archive(tmp_build_stage_dir):
+    """Create the directories and files for the staged mock archive."""
     # Mock up a stage area that looks like this:
     #
     # tmpdir/                test_files_dir
@@ -265,7 +208,7 @@ def mock_stage_archive(clear_stage_root, tmp_build_stage_dir, request):
     #
     def create_stage_archive(expected_file_list=[_include_readme]):
         tmpdir, test_stage_path = tmp_build_stage_dir
-        test_stage_path.ensure(dir=True)
+        mkdirp(test_stage_path)
 
         # Create the archive directory and associated file
         archive_dir = tmpdir.join(_archive_base)
@@ -733,82 +676,87 @@ class TestStage(object):
 
         assert spack.stage._resolve_paths([]) == []
 
+        # resolved path without user appends user
         paths = [os.path.join(os.path.sep, 'a', 'b', 'c')]
-        assert spack.stage._resolve_paths(paths) == paths
-
-        tmp = '$tempdir'
-        paths = [os.path.join(tmp, 'stage'), os.path.join(tmp, '$user')]
-        can_paths = [canonicalize_path(paths[0]), canonicalize_path(tmp)]
         user = getpass.getuser()
-        if user not in can_paths[1].split(os.path.sep):
-            can_paths[1] = os.path.join(can_paths[1], user)
+        can_paths = [os.path.join(paths[0], user)]
         assert spack.stage._resolve_paths(paths) == can_paths
 
-    def test_get_stage_root_bad_path(self, clear_stage_root, bad_stage_path):
+        # resolved path with node including user does not append user
+        paths = [os.path.join(os.path.sep, 'spack-{0}'.format(user), 'stage')]
+        assert spack.stage._resolve_paths(paths) == paths
+
+        # resolve paths where user
+        tmp = '$tempdir'
+        can_tmpdir = canonicalize_path(tmp)
+        temp_has_user = user in can_tmpdir.split(os.sep)
+        paths = [os.path.join(tmp, 'stage'), os.path.join(tmp, '$user')]
+        can_paths = [canonicalize_path(p) for p in paths]
+
+        if temp_has_user:
+            can_paths[1] = can_tmpdir
+        else:
+            can_paths[0] = os.path.join(can_paths[0], user)
+
+        assert spack.stage._resolve_paths(paths) == can_paths
+
+    def test_get_stage_root_bad_path(self, clear_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
-        with pytest.raises(spack.stage.StageError,
-                           match="No accessible stage paths in"):
-            assert spack.stage.get_stage_root() is None
+        with spack.config.override('config:build_stage', '/no/such/path'):
+            with pytest.raises(spack.stage.StageError,
+                               match="No accessible stage paths in"):
+                spack.stage.get_stage_root()
 
         # Make sure the cached stage path values are unchanged.
         assert spack.stage._stage_root is None
 
-    def test_get_stage_root_non_user_path(self, clear_stage_root,
-                                          non_user_path_for_stage):
-        """Ensure a non-user stage root includes the username."""
-        # The challenge here is whether the user has access to the standard
-        # non-user path.  If not, the path should still appear in the error.
+    @pytest.mark.parametrize(
+        'path,purged', [('stage-1234567890abcdef1234567890abcdef', True),
+                        ('stage-abcdef12345678900987654321fedcba', True),
+                        ('stage-a1b2c3', False)])
+    def test_stage_purge(self, tmpdir, clear_stage_root, path, purged):
+        """Test purging of stage directories."""
+        stage_dir = tmpdir.join('stage')
+        stage_path = str(stage_dir)
+
+        test_dir = stage_dir.join(path)
+        test_dir.ensure(dir=True)
+        test_path = str(test_dir)
+
+        with spack.config.override('config:build_stage', stage_path):
+            stage_root = spack.stage.get_stage_root()
+            assert stage_path == stage_root
+
+            spack.stage.purge()
+
+            if purged:
+                assert not os.path.exists(test_path)
+            else:
+                assert os.path.exists(test_path)
+                shutil.rmtree(test_path)
+
+    def test_get_stage_root_in_spack(self, clear_stage_root):
+        """Ensure an instance path is an accessible build stage path."""
+
+        base = canonicalize_path(os.path.join('$spack', '.spack-test-stage'))
+        mkdirp(base)
+        test_path = tempfile.mkdtemp(dir=base)
+
         try:
-            path = spack.stage.get_stage_root()
-            assert getpass.getuser() in path.split(os.path.sep)
+            with spack.config.override('config:build_stage',  test_path):
+                path = spack.stage.get_stage_root()
 
-            # Make sure the cached stage path values are changed appropriately.
-            assert spack.stage._stage_root == path
-        except OSError as e:
-            expected = os.path.join(_non_user_root, getpass.getuser())
-            assert expected in str(e)
+                assert 'spack' in path.split(os.path.sep)
 
-            # Make sure the cached stage path values are unchanged.
-            assert spack.stage._stage_root is None
+                # Make sure cached stage path value was changed appropriately
+                assert spack.stage._stage_root == test_path
 
-    def test_get_stage_root_tmp(self, clear_stage_root, tmp_path_for_stage):
-        """Ensure a temp path stage root is a suitable temp path."""
-        assert spack.stage._stage_root is None
+                # Make sure the directory exists
+                assert os.path.isdir(spack.stage._stage_root)
 
-        tmpdir = tmp_path_for_stage
-        path = spack.stage.get_stage_root()
-        assert path == str(tmpdir)
-        assert 'test_get_stage_root_tmp' in path
-
-        # Make sure the cached stage path values are changed appropriately.
-        assert spack.stage._stage_root == path
-
-        # Add then purge a few directories
-        dir1 = tmpdir.join('stage-1234567890abcdef1234567890abcdef')
-        dir1.ensure(dir=True)
-        dir2 = tmpdir.join('stage-abcdef12345678900987654321fedcba')
-        dir2.ensure(dir=True)
-        dir3 = tmpdir.join('stage-a1b2c3')
-        dir3.ensure(dir=True)
-
-        spack.stage.purge()
-        assert not os.path.exists(str(dir1))
-        assert not os.path.exists(str(dir2))
-        assert os.path.exists(str(dir3))
-
-        # Cleanup
-        shutil.rmtree(str(dir3))
-
-    def test_get_stage_root_in_spack(self, clear_stage_root,
-                                     instance_path_for_stage):
-        """Ensure an instance path stage root is a suitable path."""
-        assert spack.stage._stage_root is None
-
-        path = spack.stage.get_stage_root()
-        assert 'spack' in path.split(os.path.sep)
-
-        # Make sure the cached stage path values are changed appropriately.
-        assert spack.stage._stage_root == path
+        finally:
+            # Clean up regardless of outcome
+            shutil.rmtree(base)
 
     def test_stage_constructor_no_fetcher(self):
         """Ensure Stage constructor with no URL or fetch strategy fails."""
@@ -879,34 +827,19 @@ class TestStage(object):
             _file.read() == _readme_contents
 
 
-@pytest.fixture
-def tmp_build_stage_nondir(tmpdir):
-    """Establish the temporary build_stage pointing to non-directory."""
-    test_stage_path = tmpdir.join('stage', 'afile')
-    test_stage_path.ensure(dir=False)
-
-    # Set test_stage_path as the default directory to use for test stages.
-    current = spack.config.get('config:build_stage')
-    stage_dir = os.path.dirname(str(test_stage_path))
-    spack.config.set('config', {'build_stage': [stage_dir]}, scope='user')
-
-    yield test_stage_path
-
-    spack.config.set('config', {'build_stage': current}, scope='user')
-
-
 def test_stage_create_replace_path(tmp_build_stage_dir):
     """Ensure stage creation replaces a non-directory path."""
     _, test_stage_path = tmp_build_stage_dir
-    test_stage_path.ensure(dir=True)
+    mkdirp(test_stage_path)
 
-    nondir = test_stage_path.join('afile')
-    nondir.ensure(dir=False)
+    nondir = os.path.join(test_stage_path, 'afile')
+    touch(nondir)
     path = str(nondir)
 
     stage = Stage(path, name='')
-    stage.create()  # Should ensure the path is converted to a dir
+    stage.create()
 
+    # Ensure the stage path is "converted" to a directory
     assert os.path.isdir(stage.path)
 
 
