@@ -32,6 +32,7 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 import copy
 import os
+import re
 import sys
 import multiprocessing
 from contextlib import contextmanager
@@ -354,6 +355,15 @@ class Configuration(object):
         """Non-internal scope with highest precedence."""
         return next(reversed(self.file_scopes), None)
 
+    def matching_scopes(self, reg_expr):
+        """
+        List of all scopes whose names match the provided regular expression.
+
+        For example, matching_scopes(r'^command') will return all scopes
+        whose names begin with `command`.
+        """
+        return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
+
     def _validate_scope(self, scope):
         """Ensure that scope is valid in this configuration.
 
@@ -539,13 +549,25 @@ def override(path_or_scope, value=None):
     an internal config scope for it and push/pop that scope.
 
     """
+    base_name = 'overrides-'
     if isinstance(path_or_scope, ConfigScope):
         overrides = path_or_scope
         config.push_scope(path_or_scope)
     else:
-        overrides = InternalConfigScope('overrides')
+        # Ensure the new override gets a unique scope name
+        current_overrides = [s.name for s in
+                             config.matching_scopes(r'^{0}'.format(base_name))]
+        num_overrides = len(current_overrides)
+        while True:
+            scope_name = '{0}{1}'.format(base_name, num_overrides)
+            if scope_name in current_overrides:
+                num_overrides += 1
+            else:
+                break
+
+        overrides = InternalConfigScope(scope_name)
         config.push_scope(overrides)
-        config.set(path_or_scope, value, scope='overrides')
+        config.set(path_or_scope, value, scope=scope_name)
 
     yield config
 

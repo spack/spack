@@ -627,6 +627,54 @@ config:
     spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
 
 
+@pytest.mark.nomockstage
+def test_nested_override():
+    """Ensure proper scope naming of nested overrides."""
+    # WARNING: Base name must match that used in `config.py`s `override()`.
+    base_name = 'overrides-'
+
+    def _check_scopes(num_expected, debug_values):
+        scope_names = [s.name for s in spack.config.config.scopes.values()]
+
+        for i in range(num_expected):
+            name = '{0}{1}'.format(base_name, i)
+            assert name in scope_names
+
+            data = spack.config.config.get_config('config', name)
+            assert data['debug'] == debug_values[i]
+
+    # Check results from single and nested override
+    with spack.config.override('config:debug', True):
+        with spack.config.override('config:debug', False):
+            _check_scopes(2, [True, False])
+
+        _check_scopes(1, [True])
+
+
+@pytest.mark.nomockstage
+def test_alternate_override(monkeypatch):
+    """Ensure proper scope naming of override when conflict present."""
+    # WARNING: Base name must match that used in `config.py`s `override()`.
+    base_name = 'overrides-'
+
+    def _matching_scopes(regexpr):
+        return [spack.config.InternalConfigScope('{0}1'.format(base_name))]
+
+    # Check that the alternate naming works
+    monkeypatch.setattr(spack.config.config, 'matching_scopes',
+                        _matching_scopes)
+
+    with spack.config.override('config:debug', False):
+        name = '{0}2'.format(base_name)
+
+        scope_names = [s.name for s in spack.config.config.scopes.values() if
+                       s.name.startswith(base_name)]
+        assert name in scope_names
+
+        data = spack.config.config.get_config('config', name)
+        assert data['debug'] is False
+
+
 def test_immutable_scope(tmpdir):
     config_yaml = str(tmpdir.join('config.yaml'))
     with open(config_yaml, 'w') as f:
