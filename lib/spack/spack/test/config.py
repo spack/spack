@@ -627,14 +627,13 @@ config:
     spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
 
 
-@pytest.mark.nomockstage
 def test_nested_override():
     """Ensure proper scope naming of nested overrides."""
-    # WARNING: Base name must match that used in `config.py`s `override()`.
-    base_name = 'overrides-'
+    base_name = spack.config.overrides_base_name
 
     def _check_scopes(num_expected, debug_values):
-        scope_names = [s.name for s in spack.config.config.scopes.values()]
+        scope_names = [s.name for s in spack.config.config.scopes.values() if
+                       s.name.startswith(base_name)]
 
         for i in range(num_expected):
             name = '{0}{1}'.format(base_name, i)
@@ -651,11 +650,9 @@ def test_nested_override():
         _check_scopes(1, [True])
 
 
-@pytest.mark.nomockstage
 def test_alternate_override(monkeypatch):
     """Ensure proper scope naming of override when conflict present."""
-    # WARNING: Base name must match that used in `config.py`s `override()`.
-    base_name = 'overrides-'
+    base_name = spack.config.overrides_base_name
 
     def _matching_scopes(regexpr):
         return [spack.config.InternalConfigScope('{0}1'.format(base_name))]

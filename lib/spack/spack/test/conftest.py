@@ -17,7 +17,7 @@ import py
 import pytest
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import remove_linked_tree
+from llnl.util.filesystem import mkdirp, remove_linked_tree
 
 import spack.architecture
 import spack.compilers
@@ -122,33 +122,26 @@ def reset_compiler_cache():
     spack.compilers._compiler_cache = {}
 
 
-@pytest.fixture
-def clear_stage_root(monkeypatch):
-    """Ensure spack.stage._stage_root is not set at test start."""
-    monkeypatch.setattr(spack.stage, '_stage_root', None)
-    yield
-
-
 @pytest.fixture(scope='function', autouse=True)
-def mock_stage(clear_stage_root, tmpdir_factory, request):
+def mock_stage(tmpdir_factory, monkeypatch, request):
     """Establish the temporary build_stage for the mock archive."""
-    # Workaround to skip mock_stage for 'nomockstage' test cases
+    # The approach with this autouse fixture is to set the stage root
+    # instead of using spack.config.override() to avoid configuration
+    # conflicts with dozens of tests that rely on other configuration
+    # fixtures, such as config.
     if 'nomockstage' not in request.keywords:
+        # Set the build stage to the requested path
         new_stage = tmpdir_factory.mktemp('mock-stage')
         new_stage_path = str(new_stage)
 
-        # Set test_stage_path as the default directory to use for test stages.
-        current = spack.config.get('config:build_stage')
-        spack.config.set('config',
-                         {'build_stage': new_stage_path}, scope='user')
+        # Ensure the source directory exists within the new stage path
+        source_path = os.path.join(new_stage_path,
+                                   spack.stage._source_path_subdir)
+        mkdirp(source_path)
 
-        # Ensure the source directory exists
-        source_path = new_stage.join(spack.stage._source_path_subdir)
-        source_path.ensure(dir=True)
+        monkeypatch.setattr(spack.stage, '_stage_root', new_stage_path)
 
         yield new_stage_path
-
-        spack.config.set('config', {'build_stage': current}, scope='user')
 
         # Clean up the test stage directory
         if os.path.isdir(new_stage_path):
