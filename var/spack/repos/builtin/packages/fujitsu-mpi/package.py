@@ -13,6 +13,16 @@ class FujitsuMpi(Package):
 
     version('3.0')
 
+    conflict('%arm')
+    conflict('%cce')
+    conflict('%clang')
+    conflict('%gcc')
+    conflict('%intel')
+    conflict('%nag')
+    conflict('%pgi')
+    conflict('%xl')
+    conflict('%xl_r')
+
     provides('mpi@3.1:')
 
     def install(self, spec, prefix):
