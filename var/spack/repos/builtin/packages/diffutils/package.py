@@ -17,3 +17,5 @@ class Diffutils(AutotoolsPackage):
     version('3.6', sha256='d621e8bdd4b573918c8145f7ae61817d1be9deb4c8d2328a65cea8e11d783bd6')
 
     build_directory = 'spack-build'
+
+    depends_on('libiconv')
