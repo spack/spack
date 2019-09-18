@@ -43,6 +43,8 @@ class Esmf(MakefilePackage):
     # Testing dependencies
     depends_on('perl', type='test')
 
+    # Make esmf build with newer intel versions
+    patch('intel.patch', when='@:7.0.99 %intel@17:')
     # Make esmf build with newer gcc versions
     # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/
     patch('gcc.patch', when='@:7.0.99 %gcc@6:')
@@ -55,9 +57,9 @@ class Esmf(MakefilePackage):
     # installation of dynamic libraries on OSX:
     patch('darwin_dylib_install_name.patch', when='platform=darwin @:7.0.99')
 
-    # Missing include file for gcc compilers on mac
+    # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
-    patch('gcc_darwin.patch', when='platform=darwin @7.1.0r %gcc')
+    patch('cstddef.patch', when='@7.1.0r %gcc@8:')
 
     # Make script from mvapich2.patch executable
     @when('@:7.0.99')
@@ -95,6 +97,19 @@ class Esmf(MakefilePackage):
         os.environ['ESMF_INSTALL_BINDIR'] = 'bin'
         os.environ['ESMF_INSTALL_LIBDIR'] = 'lib'
         os.environ['ESMF_INSTALL_MODDIR'] = 'include'
+
+        # Allow compiler flags to carry through from compiler spec
+        os.environ['ESMF_CXXCOMPILEOPTS'] = \
+            ' '.join(spec.compiler_flags['cxxflags'])
+        os.environ['ESMF_F90COMPILEOPTS'] = \
+            ' '.join(spec.compiler_flags['fflags'])
+        # ESMF will simply not build with Intel using backing GCC 8, in that
+        # case you need to point to something older, below is commented but is
+        # an example
+        # os.environ['ESMF_CXXCOMPILEOPTS'] = \
+        #     '-O2 -std=c++11 -gcc-name=/usr/bin/gcc'
+        # os.environ['ESMF_F90COMPILEOPTS'] = \
+        #     '-O2 -gcc-name=/usr/bin/gcc'
 
         ############
         # Compiler #

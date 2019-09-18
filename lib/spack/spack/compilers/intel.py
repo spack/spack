@@ -32,6 +32,12 @@ class Intel(Compiler):
     version_argument = '--version'
     version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
+    required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
+
     @property
     def openmp_flag(self):
         if self.version < ver('16.0'):

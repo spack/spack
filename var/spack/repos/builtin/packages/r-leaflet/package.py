@@ -12,12 +12,16 @@ class RLeaflet(RPackage):
     the R console, from 'RStudio', in Shiny apps and R Markdown documents."""
 
     homepage = "http://rstudio.github.io/leaflet/"
-    url      = "https://cran.r-project.org/src/contrib/leaflet_1.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/leaflet"
+    url      = "https://cloud.r-project.org/src/contrib/leaflet_1.0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/leaflet"
 
+    version('2.0.2', sha256='fa448d20940e01e953e0706fc5064b0fa347e69fa967792599eb03c52b2e3114')
+    version('2.0.1', sha256='9876d5adf3235ea5683db79ec2435d3997c626774e8c4ec4ef14022e24dfcf06')
     version('1.0.1', '7f3d8b17092604d87d4eeb579f73d5df')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-base64enc', type=('build', 'run'))
+    depends_on('r-crosstalk', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
@@ -25,5 +29,6 @@ class RLeaflet(RPackage):
     depends_on('r-png', type=('build', 'run'))
     depends_on('r-rcolorbrewer', type=('build', 'run'))
     depends_on('r-raster', type=('build', 'run'))
-    depends_on('r-scales', type=('build', 'run'))
+    depends_on('r-scales@1.0.0:', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))
+    depends_on('r-viridis@0.5.1:', when='@2.0.0:', type=('build', 'run'))

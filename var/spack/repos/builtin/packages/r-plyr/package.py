@@ -16,9 +16,10 @@ class RPlyr(RPackage):
     Dickinson'."""
 
     homepage = "http://had.co.nz/plyr"
-    url      = "https://cran.r-project.org/src/contrib/plyr_1.8.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plyr"
+    url      = "https://cloud.r-project.org/src/contrib/plyr_1.8.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/plyr"
 
     version('1.8.4', 'ef455cf7fc06e34837692156b7b2587b')
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

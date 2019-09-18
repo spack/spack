@@ -21,12 +21,8 @@ class EcpIoSdk(CMakePackage):
     variant('pnetcdf', default=True, description="Enable PNetCDF")
     variant('darshan', default=True, description="Enable Darshan")
     variant('mercury', default=True, description="Enable Mercury")
-
-    # Broken dependency: boost
-    # variant('veloc', default=False, description="Enable VeloC")
-
-    # Missing dependency: margo
-    # variant('unifycr', default=False, description="Enable UnifyCR")
+    variant('unifyfs', default=True, description="Enable UnifyFS")
+    variant('veloc', default=True, description="Enable VeloC")
 
     # Currently no spack packages
     # variant('romio', default=False, description="Enable ROMIO")
@@ -36,7 +32,7 @@ class EcpIoSdk(CMakePackage):
     depends_on('adios2', when='+adios2')
     depends_on('parallel-netcdf', when='+pnetcdf')
     depends_on('veloc', when='+veloc')
-    depends_on('unifycr', when='+unifycr')
+    depends_on('unifyfs', when='+unifyfs')
     depends_on('darshan-runtime', when='+darshan')
     depends_on('darshan-util', when='+darshan')
     depends_on('mercury', when='+mercury')

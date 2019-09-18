@@ -14,6 +14,7 @@ class Emacs(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/emacs"
     url      = "https://ftpmirror.gnu.org/emacs/emacs-24.5.tar.gz"
 
+    version('26.2', 'fab39c90a1d825695bbaa164934c3f9b')
     version('26.1', '544d2ab5eb142e9ca69adb023d17bf4b')
     version('25.3', '74ddd373dc52ac05ca7a8c63b1ddbf58')
     version('25.2', '0a36d1cdbba6024d4dbbac027f87995f')
@@ -42,6 +43,7 @@ class Emacs(AutotoolsPackage):
     depends_on('libxaw', when='+X toolkit=athena')
     depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
+    depends_on('jpeg')
 
     def configure_args(self):
         spec = self.spec

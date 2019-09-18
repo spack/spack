@@ -9,6 +9,7 @@ import contextlib
 import errno
 import functools
 import inspect
+import itertools
 import os
 import re
 import shutil
@@ -563,7 +564,7 @@ class RepoPath(object):
     def providers_for(self, vpkg_spec):
         providers = self.provider_index.providers_for(vpkg_spec)
         if not providers:
-            raise UnknownPackageError(vpkg_spec.name)
+            raise UnknownPackageError(vpkg_spec.fullname)
         return providers
 
     @autospec
@@ -921,7 +922,9 @@ class Repo(object):
 
         # Install patch files needed by the package.
         mkdirp(path)
-        for patch in spec.patches:
+        for patch in itertools.chain.from_iterable(
+                spec.package.patches.values()):
+
             if patch.path:
                 if os.path.exists(patch.path):
                     install(patch.path, path)
@@ -964,7 +967,7 @@ class Repo(object):
     def providers_for(self, vpkg_spec):
         providers = self.provider_index.providers_for(vpkg_spec)
         if not providers:
-            raise UnknownPackageError(vpkg_spec.name)
+            raise UnknownPackageError(vpkg_spec.fullname)
         return providers
 
     @autospec
@@ -1280,10 +1283,17 @@ class UnknownPackageError(UnknownEntityError):
     def __init__(self, name, repo=None):
         msg = None
         if repo:
-            msg = "Package %s not found in repository %s" % (name, repo)
+            msg = "Package '%s' not found in repository '%s'" % (name, repo)
         else:
-            msg = "Package %s not found." % name
-        super(UnknownPackageError, self).__init__(msg)
+            msg = "Package '%s' not found." % name
+
+        # special handling for specs that may have been intended as filenames
+        # prompt the user to ask whether they intended to write './<name>'
+        long_msg = None
+        if name.endswith(".yaml"):
+            long_msg = "Did you mean to specify a filename with './%s'?" % name
+
+        super(UnknownPackageError, self).__init__(msg, long_msg)
         self.name = name
 
 

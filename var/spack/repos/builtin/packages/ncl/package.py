@@ -28,6 +28,8 @@ class Ncl(Package):
     patch('hdf5.patch', when="@6.4.0")
     # ymake-filter's buffer may overflow (upstream as of 6.5.0)
     patch('ymake-filter.patch', when="@6.4.0")
+    # ymake additional local library and includes will be filtered improperly
+    patch('ymake.patch', when="@6.4.0:")
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -59,6 +61,9 @@ class Ncl(Package):
     depends_on('libx11')
     depends_on('libxaw')
     depends_on('libxmu')
+    depends_on('pixman')
+    depends_on('bzip2')
+    depends_on('freetype')
 
     # In Spack, we do not have an option to compile netcdf without netcdf-4
     # support, so we will tell the ncl configuration script that we want
@@ -171,9 +176,9 @@ class Ncl(Package):
             # Build NCL?
             'y\n',
             # Parent installation directory :
-            '\'' + self.spec.prefix + '\'\n',
+            self.spec.prefix + '\n',
             # System temp space directory   :
-            '\'' + tempfile.gettempdir() + '\'\n',
+            tempfile.gettempdir() + '\n',
             # Build NetCDF4 feature support (optional)?
             'y\n'
         ]
@@ -219,12 +224,12 @@ class Ncl(Package):
             # Build GRIB2 support (optional) into NCL?
             'n\n',
             # Enter local library search path(s) :
-            # The paths will be passed by the Spack wrapper.
-            ' \n',
+            self.spec['pixman'].prefix.lib + ' ' +
+            self.spec['bzip2'].prefix.lib + '\n',
             # Enter local include search path(s) :
             # All other paths will be passed by the Spack wrapper.
-            '\'' + join_path(self.spec['freetype'].prefix.include,
-                             'freetype2') + '\'\n',
+            join_path(self.spec['freetype'].prefix.include, 'freetype2') +
+            '\n',
             # Go back and make more changes or review?
             'n\n',
             # Save current configuration?

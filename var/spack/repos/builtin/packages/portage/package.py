@@ -48,4 +48,7 @@ class Portage(CMakePackage):
         else:
             options.append('-DENABLE_MPI=OFF')
 
+        options.append("-DLAPACKE_LIBRARIES=" +
+                       self.spec["lapack"].libs.joined(";"))
+
         return options

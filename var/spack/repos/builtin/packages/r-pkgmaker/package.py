@@ -16,8 +16,8 @@ class RPkgmaker(RPackage):
     changes in the interface(s) are more than likely to happen."""
 
     homepage = "https://renozao.github.io/pkgmaker"
-    url      = "https://cran.r-project.org/src/contrib/pkgmaker_0.22.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pkgmaker"
+    url      = "https://cloud.r-project.org/src/contrib/pkgmaker_0.22.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pkgmaker"
 
     version('0.27', sha256='17a289d8f596ba5637b07077b3bff22411a2c2263c0b7de59fe848666555ec6a')
     version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
@@ -32,11 +32,3 @@ class RPkgmaker(RPackage):
     depends_on('r-xtable', type=('build', 'run'))
     depends_on('r-withr', type=('build', 'run'))
     depends_on('r-bibtex@0.4:', type=('build', 'run'))
-    depends_on('r-devtools@0.8:', type=('build', 'run'))
-    depends_on('r-roxygen2', type=('build', 'run'))
-    depends_on('r-runit', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-rmarkdown', type=('build', 'run'))
-    depends_on('r-yaml', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))

@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import inspect
-import os
 
 from llnl.util.filesystem import working_dir
-from spack.directives import depends_on, extends
-from spack.package import PackageBase, run_after
+from spack.directives import depends_on, extends, resource
+from spack.package import PackageBase, run_before, run_after
 
 
 class SIPPackage(PackageBase):
@@ -32,21 +31,45 @@ class SIPPackage(PackageBase):
     # build-system class we are using
     build_system_class = 'SIPPackage'
 
+    #: Name of private sip module to install alongside package
+    sip_module = 'sip'
+
     #: Callback names for install-time test
     install_time_test_callbacks = ['import_module_test']
 
     extends('python')
 
     depends_on('qt')
-    depends_on('py-sip')
 
-    def configure_file(self):
-        """Returns the name of the configure file to use."""
-        return 'configure.py'
+    resource(name='sip',
+             url='https://www.riverbankcomputing.com/static/Downloads/sip/4.19.18/sip-4.19.18.tar.gz',
+             sha256='c0bd863800ed9b15dcad477c4017cdb73fa805c25908b0240564add74d697e1e',
+             destination='.')
 
     def python(self, *args, **kwargs):
         """The python ``Executable``."""
         inspect.getmodule(self).python(*args, **kwargs)
+
+    @run_before('configure')
+    def install_sip(self):
+        args = [
+            '--sip-module={0}'.format(self.sip_module),
+            '--bindir={0}'.format(self.prefix.bin),
+            '--destdir={0}'.format(inspect.getmodule(self).site_packages_dir),
+            '--incdir={0}'.format(inspect.getmodule(self).python_include_dir),
+            '--sipdir={0}'.format(self.prefix.share.sip),
+            '--stubsdir={0}'.format(inspect.getmodule(self).site_packages_dir),
+        ]
+
+        with working_dir('sip-4.19.18'):
+            self.python('configure.py', *args)
+
+            inspect.getmodule(self).make()
+            inspect.getmodule(self).make('install')
+
+    def configure_file(self):
+        """Returns the name of the configure file to use."""
+        return 'configure.py'
 
     def configure(self, spec, prefix):
         """Configure the package."""
@@ -58,11 +81,8 @@ class SIPPackage(PackageBase):
             '--verbose',
             '--confirm-license',
             '--qmake', spec['qt'].prefix.bin.qmake,
-            '--sip', spec['py-sip'].prefix.bin.sip,
-            '--sip-incdir', os.path.join(
-                spec['py-sip'].prefix,
-                spec['python'].package.python_include_dir
-            ),
+            '--sip', prefix.bin.sip,
+            '--sip-incdir', inspect.getmodule(self).python_include_dir,
             '--bindir', prefix.bin,
             '--destdir', inspect.getmodule(self).site_packages_dir,
         ])

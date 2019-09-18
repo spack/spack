@@ -197,6 +197,16 @@ class TestInstallTree:
             assert not os.path.islink('dest/2')
 
 
+def test_paths_containing_libs(dirs_with_libfiles):
+    lib_to_dirs, all_dirs = dirs_with_libfiles
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libgfortran'])) ==
+            set(lib_to_dirs['libgfortran']))
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libirc'])) ==
+            set(lib_to_dirs['libirc']))
+
+
 def test_move_transaction_commit(tmpdir):
 
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')

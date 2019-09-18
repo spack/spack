@@ -11,8 +11,8 @@ class RBindr(RPackage):
        bound function accepts additional arguments."""
 
     homepage = "https://github.com/krlmlr/bindr"
-    url      = "https://cran.r-project.org/src/contrib/bindr_0.1.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/bindr"
+    url      = "https://cloud.r-project.org/src/contrib/bindr_0.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/bindr"
 
     version('0.1.1', 'cfa02c563196a79bf8bb4db2e66585fd')
     version('0.1', 'f3897a70cbad2d2981272772fa30bb59')

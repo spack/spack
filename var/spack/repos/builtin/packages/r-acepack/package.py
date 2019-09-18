@@ -9,8 +9,8 @@ from spack import *
 class RAcepack(RPackage):
     """ACE and AVAS for Selecting Multiple Regression Transformations."""
 
-    homepage = "https://CRAN.R-project.org/package=acepack"
-    url      = "https://cran.rstudio.com/src/contrib/acepack_1.4.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/acepack"
+    homepage = "https://cloud.r-project.org/package=acepack"
+    url      = "https://cloud.r-project.org/src/contrib/acepack_1.4.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/acepack"
 
     version('1.4.1', 'a35354655e5260afa0e1860fcc68d871')

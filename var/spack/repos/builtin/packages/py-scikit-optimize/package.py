@@ -19,7 +19,7 @@ class PyScikitOptimize(PythonPackage):
 
     version('0.5.2', sha256='1d7657a4b8ef9aa6d81e49b369c677c584e83269f11710557741d3b3f8fa0a75')
 
-    variant('plots',   default=True, 
+    variant('plots', default=True,
             description='Build with plot support from py-matplotlib')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))

@@ -126,7 +126,7 @@ class AutotoolsPackageTemplate(PackageTemplate):
 
     base_class_name = 'AutotoolsPackage'
 
-    body = """\
+    body_def = """\
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
@@ -149,7 +149,7 @@ class AutoreconfPackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     # depends_on('foo')"""
 
-    body = """\
+    body_def = """\
     def autoreconf(self, spec, prefix):
         # FIXME: Modify the autoreconf method as necessary
         autoreconf('--install', '--verbose', '--force')
@@ -166,7 +166,7 @@ class CMakePackageTemplate(PackageTemplate):
 
     base_class_name = 'CMakePackage'
 
-    body = """\
+    body_def = """\
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
@@ -180,7 +180,7 @@ class MesonPackageTemplate(PackageTemplate):
 
     base_class_name = 'MesonPackage'
 
-    body = """\
+    body_def = """\
     def meson_args(self):
         # FIXME: If not needed delete this function
         args = []
@@ -192,7 +192,7 @@ class QMakePackageTemplate(PackageTemplate):
 
     base_class_name = 'QMakePackage'
 
-    body = """\
+    body_def = """\
     def qmake_args(self):
         # FIXME: If not needed delete this function
         args = []
@@ -204,7 +204,7 @@ class SconsPackageTemplate(PackageTemplate):
 
     base_class_name = 'SConsPackage'
 
-    body = """\
+    body_def = """\
     def build_args(self, spec, prefix):
         # FIXME: Add arguments to pass to build.
         # FIXME: If not needed delete this function
@@ -217,7 +217,7 @@ class WafPackageTemplate(PackageTemplate):
 
     base_class_name = 'WafPackage'
 
-    body = """\
+    body_def = """\
     # FIXME: Override configure_args(), build_args(),
     # or install_args() if necessary."""
 
@@ -229,7 +229,7 @@ class BazelPackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     depends_on('bazel', type='build')"""
 
-    body = """\
+    body_def = """\
     def install(self, spec, prefix):
         # FIXME: Add logic to build and install here.
         bazel()"""
@@ -244,21 +244,21 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
         args = []
         return args"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
         if not name.startswith('py-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
-        super(PythonPackageTemplate, self).__init__(name, *args)
+        super(PythonPackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
@@ -269,21 +269,21 @@ class RPackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required.
     # depends_on('r-foo', type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def configure_args(self, spec, prefix):
         # FIXME: Add arguments to pass to install via --configure-args
         # FIXME: If not needed delete this function
         args = []
         return args"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
         if not name.startswith('r-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to r-{0}".format(name))
             name = 'r-{0}'.format(name)
 
-        super(RPackageTemplate, self).__init__(name, *args)
+        super(RPackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class PerlmakePackageTemplate(PackageTemplate):
@@ -295,21 +295,21 @@ class PerlmakePackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required:
     # depends_on('perl-foo', type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def configure_args(self):
         # FIXME: Add non-standard arguments
         # FIXME: If not needed delete this function
         args = []
         return args"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
         if not name.startswith('perl-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to perl-{0}".format(name))
             name = 'perl-{0}'.format(name)
 
-        super(PerlmakePackageTemplate, self).__init__(name, *args)
+        super(PerlmakePackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class PerlbuildPackageTemplate(PerlmakePackageTemplate):
@@ -333,7 +333,7 @@ class OctavePackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     # depends_on('octave-foo', type=('build', 'run'))"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name octave-splines`, don't rename it
         # octave-octave-splines
         if not name.startswith('octave-'):
@@ -341,7 +341,7 @@ class OctavePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to octave-{0}".format(name))  # noqa
             name = 'octave-{0}'.format(name)
 
-        super(OctavePackageTemplate, self).__init__(name, *args)
+        super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 class MakefilePackageTemplate(PackageTemplate):
@@ -349,7 +349,7 @@ class MakefilePackageTemplate(PackageTemplate):
 
     base_class_name = 'MakefilePackage'
 
-    body = """\
+    body_def = """\
     def edit(self, spec, prefix):
         # FIXME: Edit the Makefile if necessary
         # FIXME: If not needed delete this function
@@ -362,7 +362,7 @@ class IntelPackageTemplate(PackageTemplate):
 
     base_class_name = 'IntelPackage'
 
-    body = """\
+    body_def = """\
     # FIXME: Override `setup_environment` if necessary."""
 
 
@@ -371,21 +371,21 @@ class SIPPackageTemplate(PackageTemplate):
 
     base_class_name = 'SIPPackage'
 
-    body = """\
+    body_def = """\
     def configure_args(self, spec, prefix):
         # FIXME: Add arguments other than --bindir and --destdir
         # FIXME: If not needed delete this function
         args = []
         return args"""
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         # If the user provided `--name py-pyqt4`, don't rename it py-py-pyqt4
         if not name.startswith('py-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
-        super(SIPPackageTemplate, self).__init__(name, *args)
+        super(SIPPackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 templates = {

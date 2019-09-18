@@ -937,6 +937,73 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
+    def get_by_hash_local(self, dag_hash, default=None, installed=any):
+        """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
+
+        Arguments:
+            dag_hash (str): hash (or hash prefix) to look up
+            default (object, optional): default value to return if dag_hash is
+                not in the DB (default: None)
+            installed (bool or any, optional): if ``True``, includes only
+                installed specs in the search; if ``False`` only missing specs,
+                and if ``any``, either installed or missing (default: any)
+
+        ``installed`` defaults to ``any`` so that we can refer to any
+        known hash.  Note that ``query()`` and ``query_one()`` differ in
+        that they only return installed specs by default.
+
+        Returns:
+            (list): a list of specs matching the hash or hash prefix
+
+        """
+        with self.read_transaction():
+            # hash is a full hash and is in the data somewhere
+            if dag_hash in self._data:
+                rec = self._data[dag_hash]
+                if installed is any or rec.installed == installed:
+                    return [rec.spec]
+                else:
+                    return default
+
+            # check if hash is a prefix of some installed (or previously
+            # installed) spec.
+            matches = [record.spec for h, record in self._data.items()
+                       if h.startswith(dag_hash) and
+                       (installed is any or installed == record.installed)]
+            if matches:
+                return matches
+
+            # nothing found
+            return default
+
+    def get_by_hash(self, dag_hash, default=None, installed=any):
+        """Look up a spec by DAG hash, or by a DAG hash prefix.
+
+        Arguments:
+            dag_hash (str): hash (or hash prefix) to look up
+            default (object, optional): default value to return if dag_hash is
+                not in the DB (default: None)
+            installed (bool or any, optional): if ``True``, includes only
+                installed specs in the search; if ``False`` only missing specs,
+                and if ``any``, either installed or missing (default: any)
+
+        ``installed`` defaults to ``any`` so that we can refer to any
+        known hash.  Note that ``query()`` and ``query_one()`` differ in
+        that they only return installed specs by default.
+
+        Returns:
+            (list): a list of specs matching the hash or hash prefix
+
+        """
+        search_path = [self] + self.upstream_dbs
+        for db in search_path:
+            spec = db.get_by_hash_local(
+                dag_hash, default=default, installed=installed)
+            if spec is not None:
+                return spec
+
+        return default
+
     def _query(
             self,
             query_spec=any,

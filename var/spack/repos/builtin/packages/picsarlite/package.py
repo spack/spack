@@ -26,7 +26,7 @@ class Picsarlite(MakefilePackage):
     variant('vtune', default=False, description='Vtune profiling')
     variant('sde', default=False, description='sde profiling')
     variant('map', default=False, description='Allinea Map profiling')
-    variant('library', default=False, 
+    variant('library', default=False,
             description='Create static and dynamic library')
 
     depends_on('mpi')
@@ -44,9 +44,9 @@ class Picsarlite(MakefilePackage):
             if self.spec.satisfies(key):
                 comp = value
         targets.append('COMP={0}'.format(comp))
-        if comp is 'user':
-            targets.append('FARGS={0}{1}'.format('-g -O3 ',
-                           self.compiler.openmp_flag))
+        if comp == 'user':
+            targets.append(
+                'FARGS={0}{1}'.format('-g -O3 ', self.compiler.openmp_flag))
 
         if '+prod' in self.spec:
             mode = 'prod'

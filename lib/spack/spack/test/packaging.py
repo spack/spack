@@ -25,7 +25,7 @@ from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import strings_contains_installroot
-from spack.relocate import get_patchelf, relocate_text, relocate_links
+from spack.relocate import relocate_text, relocate_links
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -363,8 +363,6 @@ def test_elf_paths():
                     reason="only works with Mach-o objects")
 def test_relocate_macho(tmpdir):
     with tmpdir.as_cwd():
-
-        get_patchelf()  # this does nothing on Darwin
 
         rpaths, deps, idpath = macho_get_paths('/bin/bash')
         nrpaths, ndeps, nid = macho_make_paths_relative('/bin/bash', '/usr',

@@ -16,9 +16,11 @@ class RTfmpvalue(RPackage):
        Algorithms Mol Biol:2, 15."""
 
     homepage = "https://github.com/ge11232002/TFMPvalue"
-    url      = "https://cran.rstudio.com/src/contrib/TFMPvalue_0.0.6.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/TFMPvalue"
+    url      = "https://cloud.r-project.org/src/contrib/TFMPvalue_0.0.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/TFMPvalue"
 
+    version('0.0.8', sha256='6d052529f7b59d0384edc097f724f70468013777b6adf4c63e61a359029d3841')
     version('0.0.6', '69fdf4f9b9a0f408a5cee9ce34bea261')
 
+    depends_on('r@3.0.1:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.1:', type=('build', 'run'))

@@ -20,7 +20,7 @@ class Flecsi(CMakePackage):
     homepage = 'http://flecsi.lanl.gov/'
     git      = 'https://github.com/laristra/flecsi.git'
 
-    version('develop', branch='master', submodules=False)
+    version('develop', branch='master', submodules=False, preferred=True)
     version('flecsph', branch='feature/flecsph', submodules=False)
 
     variant('backend', default='mpi', values=('serial', 'mpi', 'legion'),

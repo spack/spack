@@ -9,6 +9,7 @@ import hashlib
 import fileinput
 import glob
 import grp
+import itertools
 import numbers
 import os
 import pwd
@@ -66,6 +67,32 @@ def path_contains_subdirectory(path, root):
     norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
     norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
     return norm_path.startswith(norm_root)
+
+
+def possible_library_filenames(library_names):
+    """Given a collection of library names like 'libfoo', generate the set of
+    library filenames that may be found on the system (e.g. libfoo.so). This
+    generates the library filenames that may appear on any OS.
+    """
+    lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+    return set(
+        '.'.join((lib, extension)) for lib, extension in
+        itertools.product(library_names, lib_extensions))
+
+
+def paths_containing_libs(paths, library_names):
+    """Given a collection of filesystem paths, return the list of paths that
+    which include one or more of the specified libraries.
+    """
+    required_lib_fnames = possible_library_filenames(library_names)
+
+    rpaths_to_include = []
+    for path in paths:
+        fnames = set(os.listdir(path))
+        if fnames & required_lib_fnames:
+            rpaths_to_include.append(path)
+
+    return rpaths_to_include
 
 
 def same_path(path1, path2):

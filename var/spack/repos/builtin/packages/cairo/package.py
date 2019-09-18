@@ -20,6 +20,7 @@ class Cairo(AutotoolsPackage):
 
     variant('X', default=False, description="Build with X11 support")
     variant('pdf', default=False, description="Enable cairo's PDF surface backend feature")
+    variant('gobject', default=False, description="Enable cairo's gobject functions feature")
 
     depends_on('libx11', when='+X')
     depends_on('libxext', when='+X')
@@ -45,5 +46,6 @@ class Cairo(AutotoolsPackage):
             args.extend(['--disable-xlib', '--disable-xcb'])
 
         args.extend(self.enable_or_disable('pdf'))
+        args.extend(self.enable_or_disable('gobject'))
 
         return args

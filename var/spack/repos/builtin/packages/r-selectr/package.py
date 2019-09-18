@@ -15,12 +15,13 @@ class RSelectr(RPackage):
        (<https://pythonhosted.org/cssselect/>)."""
 
     homepage = "https://sjp.co.nz/projects/selectr"
-    url      = "https://cran.r-project.org/src/contrib/selectr_0.3-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/selectr"
+    url      = "https://cloud.r-project.org/src/contrib/selectr_0.3-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/selectr"
 
+    version('0.4-1', sha256='8bd42f167629344e485e586f9b05fed342746132489079084d82133d7b3ee2ca')
+    version('0.4-0', sha256='40cd51bfe499954b300742c49f92167a68964b974268a7f47ca8864f32020ece')
     version('0.3-1', '7190fcdea1823ad7ef429cab6938e960')
 
-    depends_on('r-testthat', type=('build', 'run'))
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-xml', type=('build', 'run'))
-    depends_on('r-xml2', type=('build', 'run'))
+    depends_on('r-r6', when='@0.4-0:', type=('build', 'run'))

@@ -21,8 +21,11 @@ class RPmcmr(RPackage):
        balanced incomplete block design (BIBD) is also given in this
        package."""
 
-    homepage = "https://cran.r-project.org/package=PMCMR"
-    url      = "https://cran.rstudio.com/src/contrib/PMCMR_4.1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/PMCMR"
+    homepage = "https://cloud.r-project.org/package=PMCMR"
+    url      = "https://cloud.r-project.org/src/contrib/PMCMR_4.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/PMCMR"
 
+    version('4.3', sha256='328a2880dd614dc412e8dca21d29ed9d5eea29ccbe0eff98c8068100856c7b25')
     version('4.1', 'b9c0c4e4cb4f73ae36f45a47abae986a')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))

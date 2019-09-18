@@ -72,7 +72,7 @@ class Eccodes(CMakePackage):
     patch('enable_only_jasper.patch', when='jp2k=jasper')
 
     # CMAKE_INSTALL_RPATH must be a semicolon-separated list.
-    patch('cmake_install_rpath.patch')
+    patch('cmake_install_rpath.patch', when='@:2.10')
 
     @run_before('cmake')
     def check_fortran(self):
