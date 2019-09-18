@@ -69,7 +69,11 @@ Spack not to expand it with the following syntax:
         ext = 'tar.gz'
 
     if resource_id:
-        filename = "%s-%s" % (resource_id, spec.version) + ".%s" % ext
+        if fetcher.source_id():
+            resource_uid = str(fetcher.source_id())
+        else:
+            resource_uid = str(spec.version)
+        filename = "%s-%s" % (resource_id, resource_uid) + ".%s" % ext
     else:
         filename = "%s-%s" % (spec.package.name, spec.version) + ".%s" % ext
 
