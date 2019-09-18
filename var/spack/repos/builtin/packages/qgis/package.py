@@ -38,25 +38,26 @@ class Qgis(CMakePackage):
     depends_on('py-pyqt5@5.3: +qsci', when='@3')
     depends_on('qscintilla')
     depends_on('qjson')
-    depends_on('py-requests', type=('build', 'run'))
-    depends_on('py-psycopg2', type=('build', 'run'))
+    depends_on('py-requests', type=('build', 'run')) # TODO: is build dependency necessary?
+    depends_on('py-psycopg2', type=('build', 'run')) # TODO: is build dependency necessary?
     depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('libzip')
     depends_on('exiv2')
     depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
+
     # Runtime python dependencies, not mentioned in install instructions
     depends_on('py-pyyaml', type='run')
     depends_on('py-owslib', type='run')
     depends_on('py-jinja2', type='run')
     depends_on('py-pygments', type='run')
 
-
     # optionals
     depends_on('postgresql@8:') # for PostGIS support
     depends_on('gsl') # for georeferencer
     depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass7') # for georeferencer
 
+    # the below dependencies are shown in cmake config
     depends_on('hdf5')
     depends_on('netcdf')
 
@@ -76,6 +77,7 @@ class Qgis(CMakePackage):
     conflicts('qtkeychain@0.6.0:', when='^qt@4')
     conflicts('qt@5:', when='@2')
 
+    # TODO: expose all cmake options available
     def cmake_args(self):
         args = []
         # qtwebkit module was removed from qt as of version 5.6
