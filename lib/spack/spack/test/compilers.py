@@ -170,6 +170,24 @@ class MockCompiler(Compiler):
     def version(self):
         return "1.0.0"
 
+    required_libs = ['libgfortran']
+
+
+def test_implicit_rpaths(dirs_with_libfiles, monkeypatch):
+    lib_to_dirs, all_dirs = dirs_with_libfiles
+
+    def try_all_dirs(*args):
+        return all_dirs
+
+    monkeypatch.setattr(MockCompiler, '_get_compiler_link_paths', try_all_dirs)
+
+    expected_rpaths = set(lib_to_dirs['libstdc++'] +
+                          lib_to_dirs['libgfortran'])
+
+    compiler = MockCompiler()
+    retrieved_rpaths = compiler.implicit_rpaths()
+    assert set(retrieved_rpaths) == expected_rpaths
+
 
 # Get the desired flag from the specified compiler spec.
 def flag_value(flag, spec):
@@ -322,6 +340,10 @@ def test_fj_flags():
     ('clang version 3.1 (trunk 149096)\n'
      'Target: x86_64-unknown-linux-gnu\n'
      'Thread model: posix\n', '3.1'),
+    ('clang version 8.0.0-3~ubuntu18.04.1 (tags/RELEASE_800/final)\n'
+     'Target: x86_64-pc-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '8.0.0')
 ])
 def test_clang_version_detection(version_str, expected_version):
     version = compilers.clang.Clang.extract_version_from_output(version_str)

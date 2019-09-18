@@ -11,6 +11,7 @@ class FontUtil(AutotoolsPackage):
 
     homepage = "http://cgit.freedesktop.org/xorg/font/util"
     url      = "https://www.x.org/archive/individual/font/font-util-1.3.1.tar.gz"
+    version('1.3.2', sha256='f115a3735604de1e852a4bf669be0269d8ce8f21f8e0e74ec5934b31dadc1e76')
     version('1.3.1', 'd153a9af216e4498fa171faea2c82514')
 
     depends_on('autoconf', type='build')
@@ -73,16 +74,14 @@ class FontUtil(AutotoolsPackage):
     for f_r in fonts_resource:
         f = f_r[0]
         resource(name=f, url=font_baseurl + f + '-' + f_r[1] + '.tar.gz',
-             md5=f_r[2], destination=f, when='fonts=' + f)
+                 md5=f_r[2], destination=f, when='fonts=' + f)
         fonts.append(f)
 
-    variant(
-       'fonts',
-       description='Installs fonts',
-       values=fonts,
-       default=','.join(fonts),
-       multi=True
-    )
+    variant('fonts',
+            description='Installs fonts',
+            values=fonts,
+            default=','.join(fonts),
+            multi=True)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.prepend_path('PATH', self.prefix.bin)

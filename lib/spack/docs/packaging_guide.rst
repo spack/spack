@@ -3915,7 +3915,8 @@ The first step of ``spack install``.  Takes a spec and determines the
 correct download URL to use for the requested package version, then
 downloads the archive, checks it against an MD5 checksum, and stores
 it in a staging directory if the check was successful.  The staging
-directory will be located under ``$SPACK_HOME/var/spack``.
+directory will be located under the first writable directory in the
+``build_stage`` configuration setting.
 
 When run after the archive has already been downloaded, ``spack
 fetch`` is idempotent and will not download the archive again.

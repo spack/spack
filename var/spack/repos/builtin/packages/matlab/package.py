@@ -22,7 +22,7 @@ class Matlab(Package):
     mirror so that Spack can find it. For instructions on how to set up a
     mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "https://www.mathworks.com/products/matlab.html" 
+    homepage = "https://www.mathworks.com/products/matlab.html"
     version('R2018b', sha256='8cfcddd3878d3a69371c4e838773bcabf12aaf0362cc2e1ae7e8820845635cac')
     version('R2016b', 'b0e0b688894282139fa787b5a86a5cf7')
 

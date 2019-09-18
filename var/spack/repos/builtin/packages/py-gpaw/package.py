@@ -14,16 +14,19 @@ class PyGpaw(PythonPackage):
     homepage = "https://wiki.fysik.dtu.dk/gpaw/index.html"
     url      = "https://pypi.io/packages/source/g/gpaw/gpaw-1.3.0.tar.gz"
 
+    version('19.8.1', sha256='79dee367d695d68409c4d69edcbad5c8679137d6715da403f6c2500cb2178c2a')
     version('1.3.0', '82e8c80e637696248db00b5713cdffd1')
 
     variant('mpi', default=True, description='Build with MPI support')
-    variant('scalapack', default=False,
+    variant('scalapack', default=True,
             description='Build with ScaLAPACK support')
     variant('fftw', default=True, description='Build with FFTW support')
 
     depends_on('mpi', when='+mpi', type=('build', 'link', 'run'))
-    depends_on('python@2.6:')
-    depends_on('py-ase@3.13.0:', type=('build', 'run'))
+    depends_on('python@2.6:', type=('build', 'run'), when='@:1.3.0')
+    depends_on('python@3.5:', type=('build', 'run'), when='@19.8.1:')
+    depends_on('py-ase@3.13.0:', type=('build', 'run'), when='@1.3.0')
+    depends_on('py-ase@3.18.0:', type=('build', 'run'), when='@19.8.1')
     depends_on('py-numpy +blas +lapack', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('libxc')
@@ -33,6 +36,8 @@ class PyGpaw(PythonPackage):
     depends_on('fftw~mpi', when='+fftw ~mpi')
     depends_on('scalapack', when='+scalapack')
 
+    patch('libxc.patch', when='@1.3.0')
+
     def patch(self):
         spec = self.spec
         # For build notes see https://wiki.fysik.dtu.dk/gpaw/install.html
@@ -41,8 +46,16 @@ class PyGpaw(PythonPackage):
         blas = spec['blas']
         lapack = spec['lapack']
 
+        python_include = spec['python'].headers.directories[0]
+        numpy_include = join_path(
+            spec['py-numpy'].prefix,
+            spec['python'].package.site_packages_dir,
+            'numpy', 'core', 'include')
+
         libs = blas.libs + lapack.libs + libxc.libs
         include_dirs = [
+            python_include,
+            numpy_include,
             blas.prefix.include,
             lapack.prefix.include,
             libxc.prefix.include
@@ -86,3 +99,5 @@ class PyGpaw(PythonPackage):
             if '+scalapack' in spec:
                 f.write("scalapack = True\n")
                 f.write("define_macros += {0}\n".format(scalapack_macros))
+            if '+fftw' in spec:
+                f.write("fftw = True\n")

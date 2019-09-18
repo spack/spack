@@ -36,8 +36,8 @@ Here is an example ``config.yaml`` file:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 Each Spack configuration file is nested under a top-level section
 corresponding to its name. So, ``config.yaml`` starts with ``config:``,
@@ -244,8 +244,8 @@ your configurations look like this:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 .. code-block:: yaml
@@ -269,8 +269,8 @@ command:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 .. _config-overrides:
@@ -312,8 +312,8 @@ Let's revisit the ``config.yaml`` example one more time. The
    :caption: $(prefix)/etc/spack/defaults/config.yaml
 
    build_stage:
-     - $tempdir
-     - /nfs/tmp2/$user
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage``
@@ -323,7 +323,7 @@ paths:
    :caption: ~/.spack/config.yaml
 
    build_stage:
-     - /lustre-scratch/$user
+     - /lustre-scratch/$user/spack
      - ~/mystage
 
 
@@ -341,10 +341,10 @@ get config`` shows the result:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - /lustre-scratch/$user
+       - /lustre-scratch/$user/spack
        - ~/mystage
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can
@@ -356,7 +356,7 @@ user config looked like this:
    :caption: ~/.spack/config.yaml
 
    build_stage::
-     - /lustre-scratch/$user
+     - /lustre-scratch/$user/spack
      - ~/mystage
 
 
@@ -371,7 +371,7 @@ The merged configuration would look like this:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - /lustre-scratch/$user
+       - /lustre-scratch/$user/spack
        - ~/mystage
 
 
@@ -465,8 +465,8 @@ account all scopes. For example, to see the fully merged
        lmod: $spack/share/spack/lmod
        dotkit: $spack/share/spack/dotkit
      build_stage:
-     - $tempdir
-     - /nfs/tmp2/$user
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
      - $spack/var/spack/stage
      source_cache: $spack/var/spack/cache
      misc_cache: ~/.spack/cache
@@ -516,8 +516,8 @@ down the problem:
    /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod
    /home/myuser/spack/etc/spack/defaults/config.yaml:35      dotkit: $spack/share/spack/dotkit
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
-   /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir
-   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - /nfs/tmp2/$user
+   /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache

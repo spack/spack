@@ -28,8 +28,8 @@ class Globalarrays(AutotoolsPackage):
     variant('blas', default=False, description='Enable BLAS')
     variant('lapack', default=False, description='Enable LAPACK')
     variant('scalapack', default=False, description='Enable SCALAPACK')
-    variant('armci', values=('mpi-ts', 'mpi-pr', 'mpi3', 'openib', 'ofi'), 
-        default='mpi-ts', description='ARMCI runtime')
+    variant('armci', values=('mpi-ts', 'mpi-pr', 'mpi3', 'openib', 'ofi'),
+            default='mpi-ts', description='ARMCI runtime')
 
     depends_on('mpi')
     depends_on('blas', when='+blas')

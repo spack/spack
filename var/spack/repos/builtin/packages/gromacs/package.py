@@ -61,8 +61,8 @@ class Gromacs(CMakePackage):
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
-            description='Enables the build of a cut-down version' +
-                         ' of libgromacs and/or the mdrun program')
+            description='Enables the build of a cut-down version'
+            ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True, description='Enables OpenMP at configure time')
     variant('double_precision', default=False, description='Enables a double-precision configuration')
 

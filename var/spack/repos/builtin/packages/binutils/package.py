@@ -68,6 +68,7 @@ class Binutils(AutotoolsPackage):
 
         if '+nls' in spec:
             configure_args.append('--enable-nls')
+            configure_args.append('LDFLAGS=-lintl')
         else:
             configure_args.append('--disable-nls')
 

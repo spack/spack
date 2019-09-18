@@ -1,0 +1,9 @@
+generate ci jobs:
+  script:
+    - "./bin/generate-gitlab-ci-yml.sh"
+  tags:
+    - "spack-pre-ci"
+  artifacts:
+    paths:
+      - ci-generation
+    when: always

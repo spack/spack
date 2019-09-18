@@ -62,8 +62,11 @@ properties = {
                                               {'type': 'null'},
                                               {'type': 'array'}]},
                         'implicit_rpaths': {
-                            'type': 'array',
-                            'items': {'type': 'string'}
+                            'anyOf': [
+                                {'type': 'array',
+                                 'items': {'type': 'string'}},
+                                {'type': 'boolean'}
+                            ]
                         },
                         'environment': {
                             'type': 'object',

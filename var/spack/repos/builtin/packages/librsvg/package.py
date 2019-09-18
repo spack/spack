@@ -15,7 +15,7 @@ class Librsvg(AutotoolsPackage):
     version('2.44.14', sha256='6a85a7868639cdd4aa064245cc8e9d864dad8b8e9a4a8031bb09a4796bc4e303')
 
     depends_on("gobject-introspection", type='build')
-    depends_on("pkg-config", type='build')
+    depends_on("pkgconfig", type='build')
     depends_on("rust", type='build')
     depends_on("cairo")
     depends_on("gdk-pixbuf")

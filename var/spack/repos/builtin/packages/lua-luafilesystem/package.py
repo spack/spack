@@ -45,4 +45,4 @@ class LuaLuafilesystem(Package):
         )
 
     def install(self, spec, prefix):
-        luarocks('--tree=' + prefix, 'install', self.rockspec)
+        luarocks('--tree=' + prefix, 'make', self.rockspec)

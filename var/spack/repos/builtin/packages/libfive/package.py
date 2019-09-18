@@ -15,7 +15,7 @@ class Libfive(CMakePackage):
     # https://libfive.com/download/ recommends working from the master branch
     version('master', branch='master')
 
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('cmake@3.3:', type='build')
     depends_on('boost@1.65:')
     depends_on('eigen@3.3.0:')
