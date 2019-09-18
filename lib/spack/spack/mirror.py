@@ -86,6 +86,23 @@ def mirror_archive_path(spec, fetcher, resource_id=None):
         spec.name, mirror_archive_filename(spec, fetcher, resource_id))
 
 
+def get_all_versions(base_specs):
+    version_specs = []
+
+    for spec in base_specs:
+        pkg = spec.package
+
+        # Skip any package that has no known versions.
+        if not pkg.versions:
+            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
+            continue
+
+        for version in pkg.versions:
+            version_spec = Spec(pkg.name)
+            version_spec.versions = VersionList([v])
+            version_specs.append(version_spec)
+
+
 def get_matching_versions(specs, num_versions=1):
     """Get a spec for EACH known version matching any spec in the list.
     For concrete specs, this retrieves the concrete version and, if more
