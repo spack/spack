@@ -12,6 +12,7 @@ class PyMacholib(PythonPackage):
     homepage = "https://pypi.python.org/pypi/macholib"
     url = "https://pypi.io/packages/source/m/macholib/macholib-1.8.tar.gz"
 
-    version('1.8', '65af8f20dada7bdb2a142afbec51330e')
+    version('1.11', 'c4180ffc6f909bf8db6cd81cff4b6f601d575568f4d5dee148c830e9851eb9db')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-altgraph', type=('build', 'run'))
