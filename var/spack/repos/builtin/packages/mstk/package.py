@@ -30,8 +30,7 @@ class Mstk(CMakePackage):
             values=(
                 'none',
                 'metis',
-                'zoltan', 'zoltan_parmetis'),
-                multi=True)
+                'zoltan', 'zoltan_parmetis'), multi=True)
     variant('exodusii', default=False,
             description='Enable ExodusII')
     variant('tests', default=True, description="Enable testing")
@@ -68,14 +67,14 @@ class Mstk(CMakePackage):
 
         if "metis" in self.spec.variants['parallel'].value:
             options.append('-DENABLE_METIS=ON')
-        
+
         if "zoltan" in self.spec.variants['parallel'].value:
             options.append('-DENABLE_ZOLTAN=ON')
-        
+
         if "zoltan_parmetis" in self.spec.variants['parallel'].value:
             options.append('-DENABLE_ZOLTAN=ON')
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
-        
+
         # ExodusII variant
         if self.spec.variants['exodusii'].value is True:
             options.append('-DENABLE_ExodusII=ON')
