@@ -2143,14 +2143,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Pre-uninstall hook runs first.
         with spack.store.db.prefix_write_lock(spec):
 
-            if pkg is not None and not replace:
+            if pkg is not None:
                 spack.hooks.pre_uninstall(spec)
 
             # Uninstalling in Spack only requires removing the prefix.
             if not spec.external:
                 msg = 'Deleting package prefix [{0}]'
                 tty.debug(msg.format(spec.short_spec))
-                spack.store.layout.remove_install_directory(spec)
+                deprecated = spack.store.db.get_record(spec).deprecated_for
+                spack.store.layout.remove_install_directory(spec, deprecated)
             # Delete DB entry
             if replace:
                 msg = 'deprecating DB entry [{0}] in favor of [{1}]'

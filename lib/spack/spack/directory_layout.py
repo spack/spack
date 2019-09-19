@@ -90,12 +90,26 @@ class DirectoryLayout(object):
         assert(not path.startswith(self.root))
         return os.path.join(self.root, path)
 
-    def remove_install_directory(self, spec):
+    def remove_install_directory(self, spec, deprecated=False):
         """Removes a prefix and any empty parent directories from the root.
            Raised RemoveFailedError if something goes wrong.
         """
         path = self.path_for_spec(spec)
         assert(path.startswith(self.root))
+
+        if deprecated:
+            if os.path.exists(path):
+                try:
+                    dep_file_name = spec.dag_hash() + '_' + self.spec_file_name
+                    metapath = os.path.join(os.readlink(path),
+                                            self.metadata_dir,
+                                            self.deprecated_dir,
+                                            dep_file_name)
+                    os.unlink(path)
+
+                    os.remove(metapath)
+                except OSError as e:
+                    raise RemoveFailedError(spec, path, e)
 
         if os.path.exists(path):
             try:
