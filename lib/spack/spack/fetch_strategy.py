@@ -30,6 +30,8 @@ import copy
 import xml.etree.ElementTree
 from functools import wraps
 from six import string_types, with_metaclass
+import base64
+import hashlib
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -67,6 +69,11 @@ def _ensure_one_stage_entry(stage_path):
     stage_entries = os.listdir(stage_path)
     assert len(stage_entries) == 1
     return os.path.join(stage_path, stage_entries[0])
+
+
+def _hash(content):
+    sha = hashlib.sha1(content.encode('utf-8'))
+    return base64.b32encode(sha.digest()).lower()
 
 
 class FSMeta(type):
@@ -150,8 +157,20 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
     def source_id(self):
         """A unique ID for the source.
 
+        It is intended that a human could easily generate this themselves using
+        the information available to them in the Spack package.
+
         The returned value is added to the content which determines the full
         hash for a package using `str()`.
+        """
+        raise NotImplementedError
+
+    def mirror_id(self):
+        """This is a unique ID for a source that is intended to help identify
+        reuse of resources accross packages.
+
+        It is unique like source-id, but it does not include the package name
+        and is not necessarily easy for a human to create themselves.
         """
         raise NotImplementedError
 
@@ -267,6 +286,9 @@ class URLFetchStrategy(FetchStrategy):
         return self._curl
 
     def source_id(self):
+        return self.digest
+
+    def mirror_id(self):
         return self.digest
 
     @_needs_stage
@@ -725,6 +747,13 @@ class GitFetchStrategy(VCSFetchStrategy):
     def source_id(self):
         return self.commit or self.tag
 
+    def mirror_id(self):
+        id = _hash(self.url)
+        repo_ref = self.commit or self.tag or self.branch
+        if repo_ref:
+            return id + "-" + repo_ref
+        return id
+
     def get_source_id(self):
         if not self.branch:
             return
@@ -906,6 +935,12 @@ class SvnFetchStrategy(VCSFetchStrategy):
         info = xml.etree.ElementTree.fromstring(output)
         return info.find('entry/commit').get('revision')
 
+    def mirror_id(self):
+        id = _hash(self.url)
+        if self.revision:
+            return id + "-" + self.revision
+        return id
+
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
@@ -1008,6 +1043,12 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     def source_id(self):
         return self.revision
+
+    def mirror_id(self):
+        id = _hash(self.url)
+        if self.revision:
+            return id + "-" + self.revision
+        return id
 
     def get_source_id(self):
         output = self.hg('id', self.url, output=str)

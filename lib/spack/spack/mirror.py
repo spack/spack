@@ -30,6 +30,20 @@ def mirror_archive_filename(spec, fetcher, resource_name=None):
     if not spec.version.concrete:
         raise ValueError("mirror.path requires spec with concrete version.")
 
+    if resource_name:
+        if fetcher.source_id():
+            resource_id = str(fetcher.source_id())
+        else:
+            resource_id = str(spec.version)
+        filename = "%s-%s" % (resource_name, resource_id)
+    else:
+        filename = "%s-%s" % (spec.package.name, spec.version)
+
+    ext = _determine_extension(fetcher)
+    return (filename + ".%s" % ext) if ext else filename
+
+
+def _determine_extension(fetcher):
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
@@ -68,22 +82,20 @@ Spack not to expand it with the following syntax:
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
 
-    if resource_name:
-        if fetcher.source_id():
-            resource_id = str(fetcher.source_id())
-        else:
-            resource_id = str(spec.version)
-        filename = "%s-%s" % (resource_name, resource_id) + ".%s" % ext
-    else:
-        filename = "%s-%s" % (spec.package.name, spec.version) + ".%s" % ext
-
-    return filename
+    return ext
 
 
-def mirror_archive_path(spec, fetcher, resource_name=None):
+def mirror_archive_paths(spec, fetcher, resource_name=None):
     """Get the relative path to the spec's archive within a mirror."""
-    return os.path.join(
+    per_package_ref = os.path.join(
         spec.name, mirror_archive_filename(spec, fetcher, resource_name))
+
+    global_ref = fetcher.mirror_id()
+    ext = _determine_extension(fetcher)
+    if ext:
+        global_ref += ".%s" % ext
+
+    return [global_ref, per_package_ref]
 
 
 def get_all_versions(base_specs):

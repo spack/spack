@@ -733,19 +733,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
-        resource_mirror = spack.mirror.mirror_archive_path(
+        mirror_paths = spack.mirror.mirror_archive_paths(
             self.spec, fetcher, resource.name)
         stage = ResourceStage(resource.fetcher,
                               root=root_stage,
                               resource=resource,
                               name=resource_stage_folder,
-                              mirror_path=resource_mirror,
+                              mirror_paths=mirror_paths,
                               path=self.path)
         return stage
 
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
-        mp = spack.mirror.mirror_archive_path(self.spec, fetcher)
+        mirror_paths = spack.mirror.mirror_archive_paths(self.spec, fetcher)
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
@@ -754,8 +754,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dynamic_fetcher = fs.from_list_url(self)
             return [dynamic_fetcher] if dynamic_fetcher else []
 
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path,
-                      search_fn=download_search)
+        stage = Stage(fetcher, mirror_paths=mirror_paths, name=stage_name,
+                      path=self.path, search_fn=download_search)
         return stage
 
     def _make_stage(self):

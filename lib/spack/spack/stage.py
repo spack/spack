@@ -188,7 +188,7 @@ class Stage(object):
 
     def __init__(
             self, url_or_fetch_strategy,
-            name=None, mirror_path=None, keep=False, path=None, lock=True,
+            name=None, mirror_paths=None, keep=False, path=None, lock=True,
             search_fn=None):
         """Create a stage object.
            Parameters:
@@ -204,8 +204,8 @@ class Stage(object):
 
              mirror_path
                  If provided, Stage will search Spack's mirrors for
-                 this archive at the mirror_path, before using the
-                 default fetch strategy.
+                 this archive at each of the provided relative mirror paths
+                 before using the default fetch strategy.
 
              keep
                  By default, when used as a context manager, the Stage
@@ -248,7 +248,7 @@ class Stage(object):
         self.name = name
         if name is None:
             self.name = _stage_prefix + next(tempfile._get_candidate_names())
-        self.mirror_path = mirror_path
+        self.mirror_paths = mirror_paths
 
         # Use the provided path or construct an optionally named stage path.
         if path is not None:
@@ -322,8 +322,8 @@ class Stage(object):
             expanded = self.default_fetcher.expand_archive
             fnames.append(os.path.basename(self.default_fetcher.url))
 
-        if self.mirror_path:
-            fnames.append(os.path.basename(self.mirror_path))
+        if self.mirror_paths:
+            fnames.append(os.path.basename(x) for x in self.mirror_paths)
 
         paths.extend(os.path.join(self.path, f) for f in fnames)
         if not expanded:
@@ -371,7 +371,7 @@ class Stage(object):
         # TODO: Or @alalazo may have some ideas about how to use a
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
-        if self.mirror_path:
+        if self.mirror_paths:
             mirrors = spack.config.get('mirrors')
 
             # Join URLs of mirror roots with mirror paths. Because
@@ -381,7 +381,10 @@ class Stage(object):
                 sup.substitute_path_variables(root) if root.endswith(os.sep)
                 else sup.substitute_path_variables(root) + os.sep
                 for root in mirrors.values()]
-            urls = [urljoin(root, self.mirror_path) for root in mir_roots]
+            urls = []
+            for root in mir_roots:
+                for rel_path in self.mirror_paths:
+                    urls.append(urljoin(root, rel_path))
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
