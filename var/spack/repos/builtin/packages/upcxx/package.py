@@ -26,6 +26,7 @@ class Upcxx(Package):
 
     homepage = "https://upcxx.lbl.gov"
 
+    version('2019.9.0', '7642877e05300e38f6fa0afbc6062788', default=True)
     version('2019.3.2', '844722cb0e8c0bc649017fce86469457')
 
     variant('cuda', default=False,
@@ -47,6 +48,8 @@ class Upcxx(Package):
         return url.format(version)
 
     def setup_environment(self, spack_env, run_env):
+        #spack_env.set('CXX', self.compiler.cxx)
+        #spack_env.set('CC', self.compiler.cc)
         if 'platform=cray' in self.spec:
             spack_env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
             if "scheduler=slurm" in self.spec:
@@ -57,15 +60,20 @@ class Upcxx(Package):
             spack_env.set('UPCXX_CUDA', '1')
             spack_env.set('UPCXX_CUDA_NVCC', self.spec['cuda'].prefix.bin.nvcc)
 
+        run_env.set('UPCXX_INSTALL', self.prefix)
+        run_env.set('UPCXX', self.prefix.bin.upcxx)
+        if 'platform=cray' in self.spec:
+            run_env.set('UPCXX_GASNET_CONDUIT', 'aries')
+
     def setup_dependent_package(self, module, dep_spec):
         dep_spec.upcxx = self.prefix.bin.upcxx
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('UPCXX_INSTALL', self.prefix)
-        spack_env.set('UPCXX', self.prefix.bin.upcxx)
         if 'platform=cray' in self.spec:
             spack_env.set('UPCXX_GASNET_CONDUIT', 'aries')
 
     def install(self, spec, prefix):
-        installsh = Executable('./install')
+        env['CC'] = self.compiler.cc
+        env['CXX'] = self.compiler.cxx
+        installsh = Executable("./install")
         installsh(prefix)
