@@ -6,7 +6,7 @@
 from spack import *
 
 
-class LxdeLibfm(AutotoolsPackage):
+class LxdeLibfmExtra(AutotoolsPackage):
     """LXDE PCManFM libfm component"""
 
     homepage = "https://wiki.lxde.org/en/PCManFM"
@@ -24,4 +24,8 @@ class LxdeLibfm(AutotoolsPackage):
     depends_on('cairo')
     depends_on('gtkplus')
     depends_on('glib')
-    depends_on('lxde-menu-cache')
+
+    def configure_args(self):
+        args = []
+        args.append('--with-extra-only')
+        return args

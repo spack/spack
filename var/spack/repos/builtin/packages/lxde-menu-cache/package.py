@@ -17,4 +17,4 @@ class LxdeMenuCache(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('glib')
-    depends_on('lxde-libfm+extraonly')
+    depends_on('lxde-libfm-extra')
