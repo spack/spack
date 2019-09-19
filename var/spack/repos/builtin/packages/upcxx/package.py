@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import llnl.util.tty as tty
-import os
 
 
 def detect_scheduler():
