@@ -202,7 +202,7 @@ class Stage(object):
                  stage object later).  If name is not provided, then this
                  stage will be given a unique name automatically.
 
-             mirror_path
+             mirror_paths
                  If provided, Stage will search Spack's mirrors for
                  this archive at each of the provided relative mirror paths
                  before using the default fetch strategy.
@@ -323,7 +323,7 @@ class Stage(object):
             fnames.append(os.path.basename(self.default_fetcher.url))
 
         if self.mirror_paths:
-            fnames.append(os.path.basename(x) for x in self.mirror_paths)
+            fnames.extend(os.path.basename(x) for x in self.mirror_paths)
 
         paths.extend(os.path.join(self.path, f) for f in fnames)
         if not expanded:
@@ -407,10 +407,11 @@ class Stage(object):
                     0, fs.URLFetchStrategy(
                         url, digest, expand=expand, extension=extension))
             if self.default_fetcher.cachable:
-                fetchers.insert(
-                    0, spack.caches.fetch_cache.fetcher(
-                        self.mirror_path, digest, expand=expand,
-                        extension=extension))
+                for rel_path in reversed(self.mirror_paths):
+                    cache_fetcher = spack.caches.fetch_cache.fetcher(
+                        rel_path, digest, expand=expand,
+                        extension=extension)
+                    fetchers.insert(0, cache_fetcher)
 
         def generate_fetchers():
             for fetcher in fetchers:
@@ -454,11 +455,14 @@ class Stage(object):
         elif spack.config.get('config:checksum'):
             self.fetcher.check()
 
+    # TODO: this refers to self.mirror_paths[0] but should explicitly refer
+    # to the global mirror ID to ensure that we cache resources to the flat
+    # /shared mirror root
     def cache_local(self):
-        spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
+        spack.caches.fetch_cache.store(self.fetcher, self.mirror_paths[0])
 
         if spack.caches.mirror_cache:
-            spack.caches.mirror_cache.store(self.fetcher, self.mirror_path)
+            spack.caches.mirror_cache.store(self.fetcher, self.mirror_paths[0])
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -607,10 +611,6 @@ class StageComposite:
     @property
     def archive_file(self):
         return self[0].archive_file
-
-    @property
-    def mirror_path(self):
-        return self[0].mirror_path
 
 
 class DIYStage(object):

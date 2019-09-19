@@ -13,6 +13,8 @@ to download packages directly from a mirror (e.g., on an intranet).
 """
 import sys
 import os
+import traceback
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
@@ -40,7 +42,10 @@ def mirror_archive_filename(spec, fetcher, resource_name=None):
         filename = "%s-%s" % (spec.package.name, spec.version)
 
     ext = _determine_extension(fetcher)
-    return (filename + ".%s" % ext) if ext else filename
+    if ext:
+        return filename + ".%s" % ext
+    else:
+        return filename
 
 
 def _determine_extension(fetcher):
@@ -228,13 +233,14 @@ def add_single_spec(spec, mirror_root, categories):
             exception = None
             break
         except Exception as e:
-            exception = e
+            exception = sys.exc_info()
         finally:
+            num_retries -= 1
             spec.package.do_clean()
 
     if exception:
         if spack.config.get('config:debug'):
-            traceback.print_last(file=sys.stderr)
+            traceback.print_exception(file=sys.stderr, *exception)
         else:
             tty.warn(
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
