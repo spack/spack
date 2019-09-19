@@ -683,7 +683,7 @@ def setup_package(pkg, dirty):
     pkg.architecture.platform.setup_platform_environment(pkg, build_env)
 
     build_env.extend(
-        environment_modifications_from_dependencies(pkg.spec, context='build')
+        modifications_from_dependencies(pkg.spec, context='build')
     )
 
     if (not dirty) and (not build_env.is_unset('CPATH')):
@@ -722,9 +722,10 @@ def setup_package(pkg, dirty):
     build_env.apply_modifications()
 
 
-def environment_modifications_from_dependencies(spec, context):
+def modifications_from_dependencies(spec, context):
     """Returns the environment modifications that are required by
-    the dependencies of a spec.
+    the dependencies of a spec and also applies modifications
+    to this spec's package at module scope, if need be.
 
     Args:
         spec (Spec): spec for which we want the modifications

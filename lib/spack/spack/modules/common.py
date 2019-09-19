@@ -637,7 +637,7 @@ class BaseContext(tengine.Context):
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
         env.extend(
-            build_environment.environment_modifications_from_dependencies(
+            build_environment.modifications_from_dependencies(
                 self.spec, context='run'
             )
         )
