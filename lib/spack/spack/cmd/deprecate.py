@@ -18,19 +18,30 @@ import os
 
 import spack.cmd
 import spack.store
+import spack.cmd.common.arguments as arguments
 
 description = "Replace one package with another via symlinks"
 section = "admin"
 level = "long"
 
+# Arguments for display_specs when we find ambiguity
+display_args = {
+    'long': True,
+    'show_flags': True,
+    'variants': True,
+    'indent': 4,
+}
+
 
 def setup_parser(sp):
     setup_parser.parser = sp
 
+    arguments.add_common_arguments(sp, ['yes_to_all'])
+
     deps = sp.add_mutually_exclusive_group()
     deps.add_argument('-d', '--dependencies', action='store_true',
                       default=True, dest='dependencies',
-                      help='Deprecate dependencies')
+                      help='Deprecate dependencies (default)')
     deps.add_argument('-D', '--no-dependencies', action='store_false',
                       default=True, dest='dependencies',
                       help='Do not deprecate dependencies')
@@ -41,14 +52,32 @@ def setup_parser(sp):
                          help='Concretize and install replacement spec')
     install.add_argument('-I', '--no-install-replacement',
                          action='store_false', default=False, dest='install',
-                         help='Replacement spec must already be installed')
+                         help='Replacement spec must already be installed (default)')  # noqa 501
 
     sp.add_argument('-l', '--link-type', type=str,
                     default='soft', choices=['soft', 'hard'],
-                    help="Type of filesystem link to use for deprecation")
+                    help="Type of filesystem link to use for deprecation (default soft)")  # noqa 501
 
     sp.add_argument('specs', nargs=argparse.REMAINDER,
                     help="spec to replace and spec to replace with")
+
+
+def find_single_matching_spec(spec):
+    env = ev.get_active_environment()
+    hashes = env.all_hashes() if env else None
+
+    specs = spack.store.db.query_local(spec, hashes=hashes)
+    if len(specs) > 1:
+        tty.error('%s matches multiple packages:' % spec)
+        print()
+        print spack.cmd.display_specs(deprecated, **display_args)
+        print()
+        tty.die("Use a more specific spec to refer to %s" % spec)
+    elif not specs:
+        t = 'package in envrionment %s' % env if env else 'installed package'
+        tty.die('%s does not match any %s.' % (spec, t))
+
+    return specs[0]
 
 
 def deprecate(parser, args):
@@ -58,18 +87,27 @@ def deprecate(parser, args):
     if len(specs) != 2:
         raise SpackError('spack deprecate requires exactly two specs')
 
-    deprecated = spack.store.db.query_one(specs[0])
+    deprecated = find_single_matching_spec(specs[0])
 
     if args.install:
         replacement = specs[1].concretized()
         replacement.package.do_install()
     else:
-        replacement = spack.store.db.query_one(specs[1])
+        replacement = find_single_matching_spec(specs[1])
+
+    if not args.yes_to_all:
+        tty.msg('The following package will be deprecated:\n')
+        spack.cmd.display_specs(deprecated, **display_args)
+        tty.msg("In favor of:\n")
+        spack.cmd.display_specs(replacement, **display_args)
+        answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
+        if not answer:
+            tty.die('Will not deprecate any packages.')
 
     link_fn = os.link if args.link_type == 'hard' else os.symlink
 
     if args.dependencies:
-        for dep in deprecated.traverse(type='link'):
+        for dep in deprecated.traverse(type='link', root=False):
             try:
                 repl = replacement[dep.name]
                 dep.package.do_deprecate(repl, link_fn)

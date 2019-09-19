@@ -2173,11 +2173,28 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def do_deprecate(self, replacement, link_fn):
         """Deprecate this package in favor of spec"""
-        Package.uninstall_by_spec(self.spec, force=True, replace=replacement)
-        view = YamlFilesystemView(self.spec.prefix, spack.store.layout,
-                                  projections={}, ignore_conflicts=False,
-                                  link=link_fn, verbose=False)
-        view.add_specs(replacement, with_dependencies=False)
+        # Copy metadata to deprecated directory of replacement
+        spec = self.spec
+        deprecated = spack.store.db.get_record(spec).deprecated_for
+        if deprecated:
+            if deprecated == replacement.dag_hash():
+                s = spec.format('{name}/{hash:7}')
+                r = replacement.format('{name}/{hash:7}')
+                tty.error("spec %s already deprecated in favor of %s" % (s, r))
+        else:
+            self_meta_path = spack.store.layout.metadata_path(spec)
+            self_yaml = os.path.join(self_meta_path,
+                                     spack.store.layout.spec_file_name)
+            repl_meta_path = spack.store.layout.metadata_path(replacement)
+            repl_deprecated_dir = os.path.join(repl_meta_path,
+                                               spack.store.layout.deprecated_dir)
+            new_name = spec.dag_hash() + '_' + spack.store.layout.spec_file_name
+            new_file = os.path.join(repl_deprecated_dir, new_name)
+            fs.mkdirp(repl_deprecated_dir)
+            shutil.copy2(self_yaml, new_file)
+
+            Package.uninstall_by_spec(self.spec, force=True, replace=replacement)
+            link_fn(replacement.prefix, self.spec.prefix)
 
     def _check_extendable(self):
         if not self.extendable:

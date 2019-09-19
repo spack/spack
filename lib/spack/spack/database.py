@@ -41,9 +41,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
-from spack.directory_layout import (
-    DirectoryLayoutError, InconsistentInstallDirectoryError
-)
+from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
@@ -541,13 +539,37 @@ class Database(object):
                 self._data = old_data
                 raise
 
+    def _construct_entry_from_directory_layout(self, directory_layout, old_data,
+                                               spec, replacement=None):
+        # Try to recover explicit value from old DB, but
+        # default it to True if DB was corrupt. This is
+        # just to be conservative in case a command like
+        # "autoremove" is run by the user after a reindex.
+        tty.debug(
+            'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
+        explicit = True
+        inst_time = os.stat(spec.prefix).st_ctime
+        if old_data is not None:
+            old_info = old_data.get(spec.dag_hash())
+            if old_info is not None:
+                explicit = old_info.explicit
+                inst_time = old_info.installation_time
+
+        extra_args = {
+            'explicit': explicit,
+            'installation_time': inst_time,
+            'deprecated': bool(replacement)
+        }
+        self._add(spec, directory_layout, **extra_args)
+        if replacement:
+            self._deprecate(spec, replacement)
+
     def _construct_from_directory_layout(self, directory_layout, old_data):
         # Read first the `spec.yaml` files in the prefixes. They should be
         # considered authoritative with respect to DB reindexing, as
         # entries in the DB may be corrupted in a way that still makes
         # them readable. If we considered DB entries authoritative
         # instead, we would perpetuate errors over a reindex.
-
         with directory_layout.disable_upstream_check():
             # Initialize data in the reconstructed DB
             self._data = {}
@@ -556,26 +578,14 @@ class Database(object):
             processed_specs = set()
 
             for spec in directory_layout.all_specs():
-                # Try to recover explicit value from old DB, but
-                # default it to True if DB was corrupt. This is
-                # just to be conservative in case a command like
-                # "autoremove" is run by the user after a reindex.
-                tty.debug(
-                    'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
-                explicit = True
-                inst_time = os.stat(spec.prefix).st_ctime
-                if old_data is not None:
-                    old_info = old_data.get(spec.dag_hash())
-                    if old_info is not None:
-                        explicit = old_info.explicit
-                        inst_time = old_info.installation_time
+                self._construct_entry_from_directory_layout(directory_layout,
+                                                            old_data, spec)
+                processed_specs.add(spec)
 
-                extra_args = {
-                    'explicit': explicit,
-                    'installation_time': inst_time
-                }
-                self._add(spec, directory_layout, **extra_args)
-
+            for spec, replacement in directory_layout.all_deprecated_specs():
+                self._construct_entry_from_directory_layout(directory_layout,
+                                                            old_data, spec,
+                                                            replacement)
                 processed_specs.add(spec)
 
             for key, entry in old_data.items():
@@ -596,25 +606,11 @@ class Database(object):
                     'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
                 try:
                     layout = spack.store.layout
-                    deprecated_for = None
                     if entry.spec.external:
                         layout = None
                         install_check = True
                     else:
-                        try:
-                            install_check = layout.check_installed(entry.spec)
-                        except InconsistentInstallDirectoryError as e:
-                            prefix = entry.spec.prefix
-                            view = YamlFilesystemView(prefix,
-                                                      spack.store.layout,
-                                                      projections={},
-                                                      ignore_conflicts=False,
-                                                      verbose=False)
-                            specs = view.get_all_specs()
-                            if len(specs) != 1:
-                                raise e
-                            install_check = True
-                            deprecated_for = specs[0]
+                        install_check = layout.check_installed(entry.spec)
 
                     if install_check:
                         kwargs = {
@@ -624,8 +620,6 @@ class Database(object):
                             'installation_time': entry.installation_time  # noqa: E501
                         }
                         self._add(**kwargs)
-                        if deprecated_for:
-                            self._deprecate(entry.spec, deprecated_for)
                         processed_specs.add(entry.spec)
                 except Exception as e:
                     # Something went wrong, so the spec was not restored
@@ -732,7 +726,8 @@ class Database(object):
             spec,
             directory_layout=None,
             explicit=False,
-            installation_time=None
+            installation_time=None,
+            deprecated=False
     ):
         """Add an install record for this spec to the database.
 
@@ -756,6 +751,9 @@ class Database(object):
 
                 installation_time
                     Date and time of installation
+
+                deprecated
+                    Assume this package is installed if its prefix exists
 
         """
         if not spec.concrete:
@@ -784,11 +782,14 @@ class Database(object):
             path = None
             if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
-                try:
-                    directory_layout.check_installed(spec)
-                    installed = True
-                except DirectoryLayoutError as e:
-                    if not spec.deprecated_for:
+                if deprecated:
+                    if os.path.exists(spec.prefix):
+                        installed=True
+                else:
+                    try:
+                        directory_layout.check_installed(spec)
+                        installed = True
+                    except DirectoryLayoutError as e:
                         tty.warn(
                             'Dependency missing due to corrupt install directory:',
                             path, str(e))

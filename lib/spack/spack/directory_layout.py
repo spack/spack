@@ -191,6 +191,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         # If any of these paths change, downstream databases may not be able to
         # locate files in older upstream databases
         self.metadata_dir        = '.spack'
+        self.deprecated_dir      = 'deprecated'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
         self.packages_dir        = 'repos'  # archive of package.py files
@@ -306,6 +307,20 @@ class YamlDirectoryLayout(DirectoryLayout):
         pattern = os.path.join(self.root, *path_elems)
         spec_files = glob.glob(pattern)
         return [self.read_spec(s) for s in spec_files]
+
+    def all_deprecated_specs(self):
+        if not os.path.isdir(self.root):
+            return []
+
+        path_elems = ["*"] * len(self.path_scheme.split(os.sep))
+        path_elems += [self.metadata_dir, self.deprecated_dir,
+                       '*_' + self.spec_file_name]
+        pattern = os.path.join(self.root, *path_elems)
+        spec_files = glob.glob(pattern)
+        dep_spec_to_spec_file = lambda x: os.path.join(
+            os.path.dirname(os.path.dirname(x)), self.spec_file_name)
+        return set((self.read_spec(s), self.read_spec(dep_spec_to_spec_file(s)))
+                for s in spec_files)
 
     def specs_by_hash(self):
         by_hash = {}
