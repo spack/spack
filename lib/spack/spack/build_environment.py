@@ -348,9 +348,9 @@ def set_build_environment_variables(pkg, env, dirty):
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
-    if compiler.implicit_rpaths:
-        implicit_rpaths = ':'.join(compiler.implicit_rpaths)
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', implicit_rpaths)
+    implicit_rpaths = compiler.implicit_rpaths()
+    if implicit_rpaths:
+        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', ':'.join(implicit_rpaths))
 
     # Add bin directories from dependencies to the PATH for the build.
     for prefix in build_prefixes:

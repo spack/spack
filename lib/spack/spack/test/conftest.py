@@ -6,6 +6,7 @@
 import collections
 import copy
 import inspect
+import itertools
 import os
 import os.path
 import shutil
@@ -488,8 +489,48 @@ def mutable_database(database, _store_dir_and_cache):
     store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
 
+@pytest.fixture()
+def dirs_with_libfiles(tmpdir_factory):
+    lib_to_libfiles = {
+        'libstdc++': ['libstdc++.so', 'libstdc++.tbd'],
+        'libgfortran': ['libgfortran.a', 'libgfortran.dylib'],
+        'libirc': ['libirc.a', 'libirc.so']
+    }
+
+    root = tmpdir_factory.mktemp('root')
+    lib_to_dirs = {}
+    i = 0
+    for lib, libfiles in lib_to_libfiles.items():
+        dirs = []
+        for libfile in libfiles:
+            root.ensure(str(i), dir=True)
+            root.join(str(i)).ensure(libfile)
+            dirs.append(str(root.join(str(i))))
+            i += 1
+        lib_to_dirs[lib] = dirs
+
+    all_dirs = list(itertools.chain.from_iterable(lib_to_dirs.values()))
+
+    yield lib_to_dirs, all_dirs
+
+
+@pytest.fixture(scope='function', autouse=True)
+def disable_compiler_execution(monkeypatch):
+    def noop(*args):
+        return []
+
+    # Compiler.determine_implicit_rpaths actually runs the compiler. So this
+    # replaces that function with a noop that simulates finding no implicit
+    # RPATHs
+    monkeypatch.setattr(
+        spack.compiler.Compiler,
+        '_get_compiler_link_paths',
+        noop
+    )
+
+
 @pytest.fixture(scope='function')
-def install_mockery(tmpdir, config, mock_packages):
+def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     real_store = spack.store.store
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))

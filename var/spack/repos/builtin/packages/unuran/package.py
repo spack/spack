@@ -15,10 +15,11 @@ class Unuran(AutotoolsPackage):
     version('1.8.1', 'a5885baab53a2608c1d85517bf5d06a5')
 
     variant('shared', default=True,
-        description="Enable the build of shared libraries")
+            description="Enable the build of shared libraries")
     variant('rngstreams', default=True,
-        description="Use RNGSTREAM library for uniform random generation")
-    variant('gsl',      default=False,
+            description="Use RNGSTREAM library for uniform random generation")
+    variant(
+        'gsl', default=False,
         description="Use random number generators from GNU Scientific Library")
 
     depends_on('gsl',        when="+gsl")

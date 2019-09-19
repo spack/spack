@@ -105,6 +105,10 @@ class Qt(Package):
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
 
+    # Fix build of QT4 with GCC 9
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=925811
+    patch("qt4-gcc9-qforeach.patch", when="@4:4.999 %gcc@9")
+
     # https://bugreports.qt.io/browse/QTBUG-74196
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89585
     patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
@@ -132,7 +136,7 @@ class Qt(Package):
     depends_on("libpng@1.2.57", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0", when='@:5.9+ssl')
+    depends_on("openssl@:1.0.999", when='@:5.9+ssl')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
@@ -158,7 +162,7 @@ class Qt(Package):
                   msg="QT cannot be built as a framework except on macOS.")
     else:
         conflicts('platform=darwin', when='@4.8.6',
-                msg="QT 4 for macOS is only patched for 4.8.7")
+                  msg="QT 4 for macOS is only patched for 4.8.7")
 
     use_xcode = True
 

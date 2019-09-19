@@ -126,7 +126,7 @@ class AutotoolsPackageTemplate(PackageTemplate):
 
     base_class_name = 'AutotoolsPackage'
 
-    body = """\
+    body_def = """\
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
@@ -149,7 +149,7 @@ class AutoreconfPackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     # depends_on('foo')"""
 
-    body = """\
+    body_def = """\
     def autoreconf(self, spec, prefix):
         # FIXME: Modify the autoreconf method as necessary
         autoreconf('--install', '--verbose', '--force')
@@ -166,7 +166,7 @@ class CMakePackageTemplate(PackageTemplate):
 
     base_class_name = 'CMakePackage'
 
-    body = """\
+    body_def = """\
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
@@ -180,7 +180,7 @@ class MesonPackageTemplate(PackageTemplate):
 
     base_class_name = 'MesonPackage'
 
-    body = """\
+    body_def = """\
     def meson_args(self):
         # FIXME: If not needed delete this function
         args = []
@@ -192,7 +192,7 @@ class QMakePackageTemplate(PackageTemplate):
 
     base_class_name = 'QMakePackage'
 
-    body = """\
+    body_def = """\
     def qmake_args(self):
         # FIXME: If not needed delete this function
         args = []
@@ -204,7 +204,7 @@ class SconsPackageTemplate(PackageTemplate):
 
     base_class_name = 'SConsPackage'
 
-    body = """\
+    body_def = """\
     def build_args(self, spec, prefix):
         # FIXME: Add arguments to pass to build.
         # FIXME: If not needed delete this function
@@ -217,7 +217,7 @@ class WafPackageTemplate(PackageTemplate):
 
     base_class_name = 'WafPackage'
 
-    body = """\
+    body_def = """\
     # FIXME: Override configure_args(), build_args(),
     # or install_args() if necessary."""
 
@@ -229,7 +229,7 @@ class BazelPackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     depends_on('bazel', type='build')"""
 
-    body = """\
+    body_def = """\
     def install(self, spec, prefix):
         # FIXME: Add logic to build and install here.
         bazel()"""
@@ -244,7 +244,7 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
@@ -269,7 +269,7 @@ class RPackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required.
     # depends_on('r-foo', type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def configure_args(self, spec, prefix):
         # FIXME: Add arguments to pass to install via --configure-args
         # FIXME: If not needed delete this function
@@ -295,7 +295,7 @@ class PerlmakePackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required:
     # depends_on('perl-foo', type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def configure_args(self):
         # FIXME: Add non-standard arguments
         # FIXME: If not needed delete this function
@@ -349,7 +349,7 @@ class MakefilePackageTemplate(PackageTemplate):
 
     base_class_name = 'MakefilePackage'
 
-    body = """\
+    body_def = """\
     def edit(self, spec, prefix):
         # FIXME: Edit the Makefile if necessary
         # FIXME: If not needed delete this function
@@ -362,7 +362,7 @@ class IntelPackageTemplate(PackageTemplate):
 
     base_class_name = 'IntelPackage'
 
-    body = """\
+    body_def = """\
     # FIXME: Override `setup_environment` if necessary."""
 
 
@@ -371,7 +371,7 @@ class SIPPackageTemplate(PackageTemplate):
 
     base_class_name = 'SIPPackage'
 
-    body = """\
+    body_def = """\
     def configure_args(self, spec, prefix):
         # FIXME: Add arguments other than --bindir and --destdir
         # FIXME: If not needed delete this function

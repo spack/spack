@@ -33,6 +33,7 @@ class Upcxx(Package):
             description='Builds a CUDA-enabled version of UPC++')
 
     variant('scheduler', values=('slurm', 'alps', 'none'),
+
             default=detect_scheduler(),
             description="Resource manager to use")
     conflicts('scheduler=none', when='platform=cray',
@@ -48,8 +49,6 @@ class Upcxx(Package):
         return url.format(version)
 
     def setup_environment(self, spack_env, run_env):
-        #spack_env.set('CXX', self.compiler.cxx)
-        #spack_env.set('CC', self.compiler.cc)
         if 'platform=cray' in self.spec:
             spack_env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
             if "scheduler=slurm" in self.spec:

@@ -44,8 +44,7 @@ class Openspeedshop(CMakePackage):
             description="build with cuda packages included.")
 
     variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
-            description='Build or not build a GUI of choice'
-    )
+            description='Build or not build a GUI of choice')
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')

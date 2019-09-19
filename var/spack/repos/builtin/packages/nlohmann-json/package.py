@@ -22,7 +22,7 @@ class NlohmannJson(CMakePackage):
     version('3.1.1', sha256='9f3549824af3ca7e9707a2503959886362801fb4926b869789d6929098a79e47')
 
     variant('single_header', default=True,
-        description='Use amalgamated single-header')
+            description='Use amalgamated single-header')
 
     depends_on('cmake@3.8:', type='build')
 

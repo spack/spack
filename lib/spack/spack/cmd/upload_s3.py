@@ -57,7 +57,7 @@ def setup_parser(subparser):
     index = subparsers.add_parser('index', help=update_index.__doc__)
 
     index.add_argument('-e', '--endpoint-url',
-        default='https://s3.spack.io', help='URL of mirror')
+                       default='https://s3.spack.io', help='URL of mirror')
 
     index.set_defaults(func=update_index)
 
@@ -67,7 +67,7 @@ def get_s3_session(endpoint_url):
         raise SpackError('boto3 module not available')
 
     session = boto3.Session()
-    s3 = session.resource('s3')
+    s3 = session.resource('s3', endpoint_url=endpoint_url)
 
     bucket_names = []
     for bucket in s3.buckets.all():

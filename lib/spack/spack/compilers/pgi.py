@@ -48,6 +48,8 @@ class Pgi(Compiler):
     def pic_flag(self):
         return "-fpic"
 
+    required_libs = ['libpgc', 'libpgf90']
+
     @property
     def c99_flag(self):
         if self.version >= ver('12.10'):

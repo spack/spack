@@ -30,7 +30,7 @@ _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
-                        'extra_rpaths', 'implicit_rpaths']
+                        'implicit_rpaths', 'extra_rpaths']
 _cache_config_file = []
 
 # TODO: Caches at module level make it difficult to mock configurations in
@@ -73,7 +73,8 @@ def _to_dict(compiler):
     d['modules'] = compiler.modules or []
     d['environment'] = compiler.environment or {}
     d['extra_rpaths'] = compiler.extra_rpaths or []
-    d['implicit_rpaths'] = compiler.implicit_rpaths or []
+    if compiler.enable_implicit_rpaths is not None:
+        d['implicit_rpaths'] = compiler.enable_implicit_rpaths
 
     if compiler.alias:
         d['alias'] = compiler.alias
@@ -350,10 +351,17 @@ def compiler_from_dict(items):
     compiler_flags = items.get('flags', {})
     environment = items.get('environment', {})
     extra_rpaths = items.get('extra_rpaths', [])
-    implicit_rpaths = items.get('implicit_rpaths')
+    implicit_rpaths = items.get('implicit_rpaths', None)
+
+    # Starting with c22a145, 'implicit_rpaths' was a list. Now it is a
+    # boolean which can be set by the user to disable all automatic
+    # RPATH insertion of compiler libraries
+    if implicit_rpaths is not None and not isinstance(implicit_rpaths, bool):
+        implicit_rpaths = None
 
     return cls(cspec, os, target, compiler_paths, mods, alias,
-               environment, extra_rpaths, implicit_rpaths,
+               environment, extra_rpaths,
+               enable_implicit_rpaths=implicit_rpaths,
                **compiler_flags)
 
 
@@ -637,10 +645,8 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
-        implicit_rpaths = compiler_cls.determine_implicit_rpaths(paths)
         compiler = compiler_cls(
-            spec, operating_system, py_platform.machine(), paths,
-            implicit_rpaths=implicit_rpaths
+            spec, operating_system, py_platform.machine(), paths
         )
         return [compiler]
 

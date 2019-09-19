@@ -69,6 +69,8 @@ class Arm(spack.compiler.Compiler):
     def pic_flag(self):
         return "-fPIC"
 
+    required_libs = ['libclang', 'libflang']
+
     @classmethod
     def fc_version(cls, fc):
         return cls.default_version(fc)

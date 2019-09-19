@@ -56,7 +56,9 @@ class Ncurses(AutotoolsPackage):
                       '--without-manpages',
                       '--without-tests']
 
-        wide_opts = ['--enable-widec']
+        wide_opts = ['--enable-widec',
+                     '--without-manpages',
+                     '--without-tests']
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')

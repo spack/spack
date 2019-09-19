@@ -616,7 +616,7 @@ def test_bad_command_line_scopes(tmpdir, mock_config):
 def test_add_command_line_scopes(tmpdir, mutable_config):
     config_yaml = str(tmpdir.join('config.yaml'))
     with open(config_yaml, 'w') as f:
-            f.write("""\
+        f.write("""\
 config:
     verify_ssl: False
     dirty: False
