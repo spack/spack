@@ -16,9 +16,12 @@ installation and its replacement.
 import argparse
 import os
 
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.store
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 
 description = "Replace one package with another via symlinks"
 section = "admin"
@@ -62,15 +65,14 @@ def setup_parser(sp):
                     help="spec to replace and spec to replace with")
 
 
-def find_single_matching_spec(spec):
-    env = ev.get_active_environment()
+def find_single_matching_spec(spec, env):
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.db.query_local(spec, hashes=hashes)
     if len(specs) > 1:
         tty.error('%s matches multiple packages:' % spec)
         print()
-        print spack.cmd.display_specs(deprecated, **display_args)
+        print spack.cmd.display_specs(spec, **display_args)
         print()
         tty.die("Use a more specific spec to refer to %s" % spec)
     elif not specs:
@@ -82,24 +84,25 @@ def find_single_matching_spec(spec):
 
 def deprecate(parser, args):
     """Deprecate one spec in favor of another"""
+    env = ev.get_env(args, 'deprecate')
     specs = spack.cmd.parse_specs(args.specs)
 
     if len(specs) != 2:
         raise SpackError('spack deprecate requires exactly two specs')
 
-    deprecated = find_single_matching_spec(specs[0])
+    deprecated = find_single_matching_spec(specs[0], env)
 
     if args.install:
         replacement = specs[1].concretized()
         replacement.package.do_install()
     else:
-        replacement = find_single_matching_spec(specs[1])
+        replacement = find_single_matching_spec(specs[1], env)
 
     if not args.yes_to_all:
         tty.msg('The following package will be deprecated:\n')
-        spack.cmd.display_specs(deprecated, **display_args)
+        spack.cmd.display_specs([deprecated], **display_args)
         tty.msg("In favor of:\n")
-        spack.cmd.display_specs(replacement, **display_args)
+        spack.cmd.display_specs([replacement], **display_args)
         answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
         if not answer:
             tty.die('Will not deprecate any packages.')
