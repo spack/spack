@@ -30,24 +30,23 @@ class Mstk(CMakePackage):
             values=(
                 'none',
                 'metis',
-                'zoltan', 'zoltan_parmetis', 'zoltan_ptscotch'),
-            multi=False)
+                'zoltan', 'zoltan_parmetis'),
+                multi=True)
     variant('exodusii', default=False,
             description='Enable ExodusII')
     variant('tests', default=True, description="Enable testing")
+    variant('use_markers', default=True, description="Enable MSTK to use markers")
 
     depends_on("cmake@3.8:")
 
     # Parallel variant
     depends_on("mpi", when='parallel=metis')
+    depends_on("metis", when='parallel=metis')
     depends_on("mpi", when='parallel=zoltan')
     depends_on("mpi", when='parallel=zoltan_parmetis')
 
-    depends_on("metis", when='parallel="metis"')
     depends_on("zoltan -fortran", when='parallel="zoltan"')
     depends_on("zoltan -fortran +parmetis", when='parallel="zoltan_parmetis"')
-    depends_on("zoltan -fortran", when='parallel="zoltan_ptscotch"')
-    depends_on("scotch +mpi", when='parallel="zoltan_ptscotch"')
 
     # Exodusii variant
     # The default exodusii build with mpi support
@@ -55,9 +54,9 @@ class Mstk(CMakePackage):
     depends_on("exodusii", when='+exodusii')
 
     def cmake_args(self):
-        options = ['-DCMAKE_C_FLAGS=-std=c99']
-        options.append('-DCMAKE_BUILD_TYPE=Release')
-        options.append('-DMSTK_USE_MARKERS=ON')
+        options = ['-DCMAKE_BUILD_TYPE=Release']
+        if self.spec.variants['use_markers'].value is True:
+            options.append('-DMSTK_USE_MARKERS=ON')
 
         # Parallel variant
         if self.spec.variants['parallel'].value != "none":
@@ -66,17 +65,17 @@ class Mstk(CMakePackage):
             options.append('-DCMAKE_C_COMPILER=mpicc')
             options.append('-DCMAKE_FORTRAN_COMPILER=mpifort')
             options.append('-DENABLE_PARALLEL=ON')
-        if self.spec.variants['parallel'].value == "metis":
+
+        if "metis" in self.spec.variants['parallel'].value:
             options.append('-DENABLE_METIS=ON')
-        elif self.spec.variants['parallel'].value == "zoltan":
+        
+        if "zoltan" in self.spec.variants['parallel'].value:
             options.append('-DENABLE_ZOLTAN=ON')
-        elif self.spec.variants['parallel'].value == "zoltan_parmetis":
+        
+        if "zoltan_parmetis" in self.spec.variants['parallel'].value:
             options.append('-DENABLE_ZOLTAN=ON')
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
-        elif self.spec.variants['parallel'].value == "zoltan_ptscotch":
-            options.append('-DENABLE_ZOLTAN=ON')
-            options.append('-DZOLTAN_NEEDS_PTScotch=ON')
-
+        
         # ExodusII variant
         if self.spec.variants['exodusii'].value is True:
             options.append('-DENABLE_ExodusII=ON')
