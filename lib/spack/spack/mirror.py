@@ -151,18 +151,6 @@ def get_matching_versions(specs, num_versions=1):
     return matching
 
 
-def suggest_archive_basename(resource):
-    """Return a tentative basename for an archive.
-
-    Raises:
-        RuntimeError: if the name is not an allowed archive type.
-    """
-    basename = os.path.basename(resource.fetcher.url)
-    if not allowed_archive(basename):
-        raise RuntimeError("%s is not an allowed archive tye" % basename)
-    return basename
-
-
 def create(path, specs):
     """Create a directory to be used as a spack mirror, and fill it with
     package archives.
