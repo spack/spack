@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re
 import stat
 import sys
 import errno
@@ -687,11 +686,8 @@ def purge():
     """Remove all build directories in the top-level stage path."""
     root = get_stage_root()
     if os.path.isdir(root):
-        # TODO: Figure out a "standard" way to identify the hash length
-        # TODO: Consider supporting alternate base representations.
-        dir_expr = re.compile(r'.*-[0-9a-f]{32}$')
         for stage_dir in os.listdir(root):
-            if re.match(dir_expr, stage_dir) or stage_dir == '.lock':
+            if stage_dir.startswith(_stage_prefix) or stage_dir == '.lock':
                 stage_path = os.path.join(root, stage_dir)
                 remove_linked_tree(stage_path)
 

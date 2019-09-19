@@ -847,11 +847,11 @@ class TestStage(object):
         assert spack.stage._stage_root == path
 
         # Add then purge a few directories
-        dir1 = tmpdir.join('stage-1234567890abcdef1234567890abcdef')
+        dir1 = tmpdir.join('spack-stage-1234567890abcdef1234567890abcdef')
         dir1.ensure(dir=True)
-        dir2 = tmpdir.join('stage-abcdef12345678900987654321fedcba')
+        dir2 = tmpdir.join('spack-stage-anything-goes-here')
         dir2.ensure(dir=True)
-        dir3 = tmpdir.join('stage-a1b2c3')
+        dir3 = tmpdir.join('stage-spack')
         dir3.ensure(dir=True)
 
         spack.stage.purge()
