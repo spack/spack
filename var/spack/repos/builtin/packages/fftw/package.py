@@ -85,7 +85,7 @@ class Fftw(AutotoolsPackage):
             ('x86_64',): ('sse', 'sse2', 'avx', 'avx2', 'avx512',
                           'avx-128-fma', 'kcvi'),
             ('ppc', 'ppc64le', 'power7'): ('altivec', 'vsx'),
-            ('arm',): ('neon',)
+            ('arm','arm_thunderx2'): ('neon',)
         }
 
         if spec.satisfies("platform=cray"):
