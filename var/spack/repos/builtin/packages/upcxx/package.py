@@ -11,8 +11,7 @@ def detect_scheduler():
         return 'slurm'
     elif which('aprun'):
         return 'alps'
-    else:
-        return 'none'
+    return 'none'
 
 
 class Upcxx(Package):
