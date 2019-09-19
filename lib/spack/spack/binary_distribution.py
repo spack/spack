@@ -29,7 +29,6 @@ from spack.util.gpg import Gpg
 from spack.util.web import spider, read_from_url
 from spack.util.executable import ProcessError
 
-
 _build_cache_relative_path = 'build_cache'
 
 
@@ -155,8 +154,9 @@ def write_buildinfo_file(prefix, workdir, rel=False):
                         tty.warn(msg)
 
             if relocate.needs_binary_relocation(m_type, m_subtype):
-                rel_path_name = os.path.relpath(path_name, prefix)
-                binary_to_relocate.append(rel_path_name)
+                if not filename.endswith('.o'):
+                    rel_path_name = os.path.relpath(path_name, prefix)
+                    binary_to_relocate.append(rel_path_name)
             if relocate.needs_text_relocation(m_type, m_subtype):
                 rel_path_name = os.path.relpath(path_name, prefix)
                 text_to_relocate.append(rel_path_name)
@@ -308,6 +308,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             os.remove(specfile_path)
         else:
             raise NoOverwriteException(str(specfile_path))
+
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
     install_tree(spec.prefix, workdir, symlinks=True)
@@ -424,11 +425,11 @@ def make_package_relative(workdir, spec, allow_root):
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
     if spec.architecture.platform == 'darwin':
-        relocate.make_macho_binary_relative(cur_path_names, orig_path_names,
-                                            old_path, allow_root)
+        relocate.make_macho_binaries_relative(cur_path_names, orig_path_names,
+                                              old_path, allow_root)
     else:
-        relocate.make_elf_binary_relative(cur_path_names, orig_path_names,
-                                          old_path, allow_root)
+        relocate.make_elf_binaries_relative(cur_path_names, orig_path_names,
+                                            old_path, allow_root)
     orig_path_names = list()
     cur_path_names = list()
     for filename in buildinfo.get('relocate_links', []):
@@ -439,8 +440,8 @@ def make_package_relative(workdir, spec, allow_root):
 
 def make_package_placeholder(workdir, spec, allow_root):
     """
-    Check if package binaries are relocatable
-    Change links to placeholder links
+    Check if package binaries are relocatable.
+    Change links to placeholder links.
     """
     prefix = spec.prefix
     buildinfo = read_buildinfo_file(workdir)
@@ -487,11 +488,11 @@ def relocate_package(workdir, spec, allow_root):
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
         if spec.architecture.platform == 'darwin':
-            relocate.relocate_macho_binaries(path_names, old_path, new_path,
-                                             allow_root)
+            relocate.relocate_macho_binaries(path_names, old_path,
+                                             new_path, allow_root)
         else:
-            relocate.relocate_elf_binaries(path_names, old_path, new_path,
-                                           allow_root)
+            relocate.relocate_elf_binaries(path_names, old_path,
+                                           new_path, allow_root)
         path_names = set()
         for filename in buildinfo.get('relocate_links', []):
             path_name = os.path.join(workdir, filename)

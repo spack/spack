@@ -323,34 +323,38 @@ def createtarball(args):
     matches = find_matching_specs(pkgs, env=env)
 
     if matches:
-        tty.msg('Found at least one matching spec')
+        tty.debug('Found at least one matching spec')
 
     for match in matches:
-        tty.msg('examining match {0}'.format(match.format()))
+        tty.debug('examining match {0}'.format(match.format()))
         if match.external or match.virtual:
-            tty.msg('skipping external or virtual spec %s' %
-                    match.format())
+            tty.debug('skipping external or virtual spec %s' %
+                      match.format())
         else:
-            tty.msg('adding matching spec %s' % match.format())
+            tty.debug('adding matching spec %s' % match.format())
             specs.add(match)
-            tty.msg('recursing dependencies')
+            tty.debug('recursing dependencies')
             for d, node in match.traverse(order='post',
                                           depth=True,
                                           deptype=('link', 'run')):
                 if node.external or node.virtual:
-                    tty.msg('skipping external or virtual dependency %s' %
-                            node.format())
+                    tty.debug('skipping external or virtual dependency %s' %
+                              node.format())
                 else:
-                    tty.msg('adding dependency %s' % node.format())
+                    tty.debug('adding dependency %s' % node.format())
                     specs.add(node)
 
-    tty.msg('writing tarballs to %s/build_cache' % outdir)
+    tty.debug('writing tarballs to %s/build_cache' % outdir)
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        bindist.build_tarball(spec, outdir, args.force, args.rel,
-                              args.unsigned, args.allow_root, signkey,
-                              not args.no_rebuild_index)
+        try:
+            bindist.build_tarball(spec, outdir, args.force, args.rel,
+                                  args.unsigned, args.allow_root, signkey,
+                                  not args.no_rebuild_index)
+        except Exception as e:
+            tty.warn('%s' % e)
+            pass
 
 
 def installtarball(args):
