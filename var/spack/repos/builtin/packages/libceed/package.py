@@ -13,6 +13,7 @@ class Libceed(Package):
     git      = "https://github.com/CEED/libCEED.git"
 
     version('develop', branch='master')
+    version('0.5', tag='v0.5')
     version('0.4', tag='v0.4')
     version('0.2', tag='v0.2')
     version('0.1', tag='v0.1')
@@ -55,7 +56,7 @@ class Libceed(Package):
         if '@:0.2' in spec:
             makeopts += ['NDEBUG=%s' % ('' if '+debug' in spec else '1')]
 
-        elif '@0.4:' in spec:
+        elif '@0.4:' in spec or '@0.5' in spec or '@develop' in spec:
             # Determine options based on the compiler:
             if '+debug' in spec:
                 opt = '-g'
