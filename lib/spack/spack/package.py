@@ -654,7 +654,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def version(self):
         if not self.spec.versions.concrete:
-            raise ValueError("Can only get of package with concrete version.")
+            raise ValueError("Version requested for a package which"
+                             " does not have a concrete version.")
         return self.spec.versions[0]
 
     @memoized
@@ -784,8 +785,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         doesn't have one yet, but it does not create the Stage directory
         on the filesystem.
         """
-        #if not self.spec.concrete:
-        #    raise ValueError("Can only get a stage for a concrete package.")
+        if not self.spec.versions.concrete:
+            raise ValueError(
+                "Cannot retrieve stage for package without concrete version.")
         if self._stage is None:
             self._stage = self._make_stage()
         return self._stage
@@ -863,8 +865,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
-            raise ValueError(
-                "Can only get a fetcher for a package with concrete versions.")
+            raise ValueError("Cannot retrieve fetcher for"
+                             " package without concrete version.")
         if not self._fetcher:
             self._fetcher = self._make_fetcher()
         return self._fetcher
@@ -1033,7 +1035,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Working directory will be set to the stage directory.
         """
         if not self.spec.versions.concrete:
-            raise ValueError("Can only fetch concrete packages.")
+            raise ValueError("Cannot fetch package without concrete version.")
 
         if not self.has_code:
             raise InvalidPackageOpError("Can only fetch a package with a URL.")
@@ -1073,7 +1075,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
         if not self.spec.versions.concrete:
-            raise ValueError("Can only stage concrete packages.")
+            raise ValueError("Cannot stage package without concrete version.")
 
         # Always create the stage directory at this point.  Why?  A no-code
         # package may want to use the installation process to install metadata.
@@ -1093,7 +1095,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
         if not self.spec.versions.concrete:
-            raise ValueError("Can only patch concrete packages.")
+            raise ValueError("Cannot patch package without concrete version.")
 
         # Kick off the stage first.  This creates the stage.
         self.do_stage()
