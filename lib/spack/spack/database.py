@@ -120,6 +120,24 @@ class InstallRecord(object):
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
 
+    def install_type_matches(self, installed):
+        if installed == any:
+            return True
+        elif installed is True:
+            return self.installed
+        elif installed is False:
+            return not self.installed and not self.deprecated_for
+        elif isinstance(installed, tuple):
+            if self.installed:
+                return 'installed' in installed
+            elif self.deprecated_for:
+                return 'deprecated' in installed
+            else:
+                return 'missing' in installed
+        else:
+            raise ValueError(
+                'installation query must be `any`, boolean, or tuple')
+
     def to_dict(self):
         rec_dict = {
             'spec': self.spec.to_node_dict(),
@@ -557,8 +575,7 @@ class Database(object):
 
         extra_args = {
             'explicit': explicit,
-            'installation_time': inst_time,
-            'deprecated': bool(replacement)
+            'installation_time': inst_time
         }
         self._add(spec, directory_layout, **extra_args)
         if replacement:
@@ -726,8 +743,7 @@ class Database(object):
             spec,
             directory_layout=None,
             explicit=False,
-            installation_time=None,
-            deprecated=False
+            installation_time=None
     ):
         """Add an install record for this spec to the database.
 
@@ -751,9 +767,6 @@ class Database(object):
 
                 installation_time
                     Date and time of installation
-
-                deprecated
-                    Assume this package is installed if its prefix exists
 
         """
         if not spec.concrete:
@@ -782,17 +795,13 @@ class Database(object):
             path = None
             if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
-                if deprecated:
-                    if os.path.exists(spec.prefix):
-                        installed=True
-                else:
-                    try:
-                        directory_layout.check_installed(spec)
-                        installed = True
-                    except DirectoryLayoutError as e:
-                        tty.warn(
-                            'Dependency missing due to corrupt install directory:',
-                            path, str(e))
+                try:
+                    directory_layout.check_installed(spec)
+                    installed = True
+                except DirectoryLayoutError as e:
+                    tty.warn(
+                        'Dependency missing: may be deprecated or corrupted:',
+                        path, str(e))
             elif spec.external_path:
                 path = spec.external_path
 
@@ -926,6 +935,7 @@ class Database(object):
         self._increment_ref_count(replacement)
 
         spec_rec.deprecated_for = replacement_key
+        spec_rec.installed = False
         self._data[spec_key] = spec_rec
 
     @_autospec
@@ -1004,9 +1014,12 @@ class Database(object):
             dag_hash (str): hash (or hash prefix) to look up
             default (object, optional): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, optional): if ``True``, includes only
-                installed specs in the search; if ``False`` only missing specs,
-                and if ``any``, either installed or missing (default: any)
+            installed (bool or any, or tuple, optional): if ``True``, includes
+                only installed specs in the search; if ``False`` only missing
+                specs, and if ``any``, all specs in database. If a tuple,
+                returns installed specs if 'installed' in tuple, deprecated
+                specs if 'deprecated' in tuple, and missing specs if 'missing'
+                in tuple. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
         known hash.  Note that ``query()`` and ``query_one()`` differ in
@@ -1020,7 +1033,7 @@ class Database(object):
             # hash is a full hash and is in the data somewhere
             if dag_hash in self._data:
                 rec = self._data[dag_hash]
-                if installed is any or rec.installed == installed:
+                if rec.install_type_matches(installed):
                     return [rec.spec]
                 else:
                     return default
@@ -1029,7 +1042,7 @@ class Database(object):
             # installed) spec.
             matches = [record.spec for h, record in self._data.items()
                        if h.startswith(dag_hash) and
-                       (installed is any or installed == record.installed)]
+                       record.install_type_matches(installed)]
             if matches:
                 return matches
 
@@ -1043,9 +1056,12 @@ class Database(object):
             dag_hash (str): hash (or hash prefix) to look up
             default (object, optional): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, optional): if ``True``, includes only
-                installed specs in the search; if ``False`` only missing specs,
-                and if ``any``, either installed or missing (default: any)
+            installed (bool or any, or tuple, optional): if ``True``, includes
+                only installed specs in the search; if ``False`` only missing
+                specs, and if ``any``, all specs in database. If a tuple,
+                returns installed specs if 'installed' in tuple, deprecated
+                specs if 'deprecated' in tuple, and missing specs if 'missing'
+                in tuple. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
         known hash.  Note that ``query()`` and ``query_one()`` differ in
@@ -1090,10 +1106,12 @@ class Database(object):
                 Spack, but have since either changed their name or
                 been removed
 
-            installed (bool or any, optional): Specs for which a prefix exists
-                are "installed". A spec that is NOT installed will be in the
-                database if some other spec depends on it but its installation
-                has gone away since Spack installed it.
+            installed (bool or any, or tuple, optional): if ``True``, includes
+                only installed specs in the search; if ``False`` only missing
+                specs, and if ``any``, all specs in database. If a tuple,
+                returns installed specs if 'installed' in tuple, deprecated
+                specs if 'deprecated' in tuple, and missing specs if 'missing'
+                in tuple. (default: any)
 
             explicit (bool or any, optional): A spec that was installed
                 following a specific user request is marked as explicit. If
@@ -1138,7 +1156,7 @@ class Database(object):
             if hashes is not None and rec.spec.dag_hash() not in hashes:
                 continue
 
-            if installed is not any and rec.installed != installed:
+            if not rec.install_type_matches(installed):
                 continue
 
             if explicit is not any and rec.explicit != explicit:
