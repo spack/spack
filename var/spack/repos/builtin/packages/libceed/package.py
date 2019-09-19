@@ -56,12 +56,12 @@ class Libceed(Package):
         if '@:0.2' in spec:
             makeopts += ['NDEBUG=%s' % ('' if '+debug' in spec else '1')]
 
-        elif '@0.4:' in spec or '@0.5' in spec or '@develop' in spec:
+        elif '@0.4:' in spec:
             # Determine options based on the compiler:
             if '+debug' in spec:
                 opt = '-g'
             elif compiler.name == 'gcc':
-                opt = '-O -g -ffp-contract=fast'
+                opt = '-O3 -g -ffp-contract=fast'
                 if compiler.target in ['x86_64']:
                     opt += ' -march=native'
                 elif compiler.target in ['ppc64le']:
@@ -69,7 +69,7 @@ class Libceed(Package):
                 if compiler.version >= ver(4.9):
                     opt += ' -fopenmp-simd'
             elif compiler.name == 'clang':
-                opt = '-O -g -march=native -ffp-contract=fast'
+                opt = '-O3 -g -march=native -ffp-contract=fast'
                 if compiler.version.string.endswith('-apple'):
                     if compiler.version >= ver(10):
                         opt += ' -fopenmp-simd'
