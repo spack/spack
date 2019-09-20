@@ -27,20 +27,23 @@ class PyTables(PythonPackage):
     variant('bzip2', default=False, description='Support for bzip2 compression')
     variant('lzo', default=False, description='Support for lzo compression')
 
-    depends_on('python@2.7:', type=('build', 'run'))
+    # requirements.txt
+    depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
-    depends_on('hdf5@1.8.4:1.8.999', when='@:3.3.99')
-    depends_on('hdf5@1.8.4:', when='@3.4.0:')
+    depends_on('py-cython', type='build')
     depends_on('py-numpy@1.9.3:', type=('build', 'run'))
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'))
+    depends_on('py-six@1.9.0:', type=('build', 'run'))
+    depends_on('py-mock@2.0:', type='test')
+    # tables/req_versions.py
+    depends_on('hdf5@1.8.4:1.8.999', when='@:3.3.99')
+    depends_on('hdf5@1.8.4:', when='@3.4.0:')
     # Versions prior to 3.3 must build with the internal blosc due to a lock
     # problem in a multithreaded environment.
     depends_on('c-blosc@1.4.1:', when='@3.3.0:')
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('lzo', when='+lzo')
-    depends_on('py-mock@2.0:', type='test')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('HDF5_DIR', self.spec['hdf5'].prefix)

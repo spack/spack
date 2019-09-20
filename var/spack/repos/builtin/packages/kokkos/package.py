@@ -15,6 +15,7 @@ class Kokkos(Package):
     git      = "https://github.com/kokkos/kokkos.git"
 
     version('develop', branch='develop')
+    version('2.9.00', sha256='e0621197791ed3a381b4f02c78fa529f3cff3abb74d52157b4add17e8aa04bc4')
     version('2.8.00', sha256='1c72661f2d770517bff98837001b42b9c677d1df29f7493a1d7c008549aff630')
     version('2.7.24', sha256='a308a80ea1488f4c18884b828ce7ae9f5210b9a6b2f61b208d875084d8da8cb0')
     version('2.7.00',  'b357f9374c1008754babb4495f95e392')
@@ -104,18 +105,18 @@ class Kokkos(Package):
     # without specifying CUDA
     for p in gpu_values:
         conflicts('gpu_arch={0}'.format(p), when='~cuda',
-            msg='Must specify CUDA backend to use a GPU architecture.')
+                  msg='Must specify CUDA backend to use a GPU architecture.')
 
     # Check that we haven't specified a Kokkos CUDA option
     # without specifying CUDA
     conflicts('+force_uvm', when='~cuda',
-        msg='Must enable CUDA to use force_uvm.')
+              msg='Must enable CUDA to use force_uvm.')
     conflicts('+use_ldg', when='~cuda',
-        msg='Must enable CUDA to use use_ldg.')
+              msg='Must enable CUDA to use use_ldg.')
     conflicts('+rdc', when='~cuda',
-        msg='Must enable CUDA to use rdc.')
+              msg='Must enable CUDA to use rdc.')
     conflicts('+enable_lambda', when='~cuda',
-        msg='Must enable CUDA to use enable_lambda.')
+              msg='Must enable CUDA to use enable_lambda.')
 
     # Check that we haven't asked for a GPU architecture that
     # the revision of kokkos does not support
@@ -126,8 +127,8 @@ class Kokkos(Package):
     # see kokkos issue #1296
     # https://github.com/kokkos/kokkos/issues/1296
     conflicts('+cuda', when='@2.5.00:2.7.00',
-        msg='Kokkos build system has issue (#1296) when CUDA enabled'
-        ' in version 2.5.00 through 2.7.00.')
+              msg='Kokkos build system has issue (#1296) when CUDA enabled'
+              ' in version 2.5.00 through 2.7.00.')
 
     # Specify that v1.x is required as v2.x has API changes
     depends_on('hwloc@:1')

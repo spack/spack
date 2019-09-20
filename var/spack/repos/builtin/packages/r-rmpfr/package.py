@@ -14,10 +14,16 @@ class RRmpfr(RPackage):
        is based on the GMP (GNU Multiple Precision) Library."""
 
     homepage = "http://rmpfr.r-forge.r-project.org"
-    url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
+    url      = "https://cloud.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/Rmpfr"
 
+    version('0.7-2', sha256='ec1da6ec5292ea6ac95495c6a299591d367e520ae324719817fb884c865603ff')
+    version('0.7-1', sha256='9b3021617a22b0710b0f1acc279290762317ff123fd9e8fd03f1449f4bbfe204')
     version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
 
+    depends_on('r@3.0.1:', when='@:0.6-1', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@0.7-0', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@0.7-1:', type=('build', 'run'))
     depends_on('r-gmp@0.5-8:', type=('build', 'run'))
     depends_on('mpfr@3.0.0:')
+    depends_on('gmp@4.2.3:')

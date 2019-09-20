@@ -12,16 +12,18 @@ class RAer(RPackage):
     Applied Econometrics with R, Springer-Verlag, New York.
     ISBN 978-0-387-77316-2."""
 
-    homepage = "https://cran.r-project.org/web/packages/AER/index.html"
-    url      = "https://cran.r-project.org/src/contrib/AER_1.2-5.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/AER"
+    homepage = "https://cloud.r-project.org/package=AER"
+    url      = "https://cloud.r-project.org/src/contrib/AER_1.2-5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/AER"
 
+    version('1.2-7', sha256='3aee5c606313710c2dca6c1e9b2c20a145aa33f2a3ecc5cfcec66c8e91838a93')
+    version('1.2-6', sha256='653c3a2d253819e0ce8c2cf12cff2ab222bf3d19dbf382b7c4b4c3d762469474')
     version('1.2-5', '419df9dc8ee6e5edd79678fee06719ae')
 
-    depends_on('r@2.13.0:', type=('build', 'run'))
-    depends_on('r-car@2.10-19:', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('r-car@2.0-19:', type=('build', 'run'))
     depends_on('r-lmtest', type=('build', 'run'))
-    depends_on('r-sandwich', type=('build', 'run'))
+    depends_on('r-sandwich@2.4-0:', type=('build', 'run'))
     depends_on('r-survival@2.37-5:', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))
-    depends_on('r-formula', type=('build', 'run'))
+    depends_on('r-formula@0.2-0:', type=('build', 'run'))

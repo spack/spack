@@ -33,11 +33,11 @@ class Vdt(CMakePackage):
     def flag_handler(self, name, flags):
         arch = ''
         spec = self.spec
-        if (spec.satisfies("platform=cray")):
+        if spec.satisfies("platform=cray"):
             # FIXME; It is assumed that cray is x86_64.
             # If you support arm on cray, you need to fix it.
             arch = 'x86_64'
-        if (arch != 'x86_64' and not spec.satisfies("target=x86_64")):
+        if arch != 'x86_64' and not spec.satisfies("target=x86_64:"):
             for s in self.simd_x86:
                 if (spec.satisfies("simd={0}".format(s))):
                     raise ConflictsInSpecError(
@@ -51,8 +51,8 @@ class Vdt(CMakePackage):
                         )]
                     )
         # FIXME: It is assumed that arm 32 bit target is arm.
-        if (arch != 'arm' and not spec.satisfies("target=arm")):
-            if (spec.satisfies("simd=neon")):
+        if arch != 'arm' and not spec.satisfies("target=arm"):
+            if spec.satisfies("simd=neon"):
                 raise ConflictsInSpecError(
                     spec,
                     [(

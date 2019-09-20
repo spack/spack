@@ -53,7 +53,7 @@ class Intel(IntelPackage):
     # MacOS does not support some of the auto dispatch settings
     conflicts('auto_dispatch=SSE2', 'platform=darwin',
               msg='SSE2 is not supported on MacOS')
-    conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64',
+    conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64:',
               msg='SSE3 is not supported on MacOS x86_64')
 
     # Since the current package is a subset of 'intel-parallel-studio',

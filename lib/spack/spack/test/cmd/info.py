@@ -41,7 +41,8 @@ def mock_print(monkeypatch, info_lines):
     'trilinos',
     'boost',
     'python',
-    'dealii'
+    'dealii',
+    'xsdk'  # a BundlePackage
 ])
 def test_it_just_runs(pkg):
     info(pkg)

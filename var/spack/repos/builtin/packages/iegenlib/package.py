@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Iegenlib(AutotoolsPackage):
+class Iegenlib(CMakePackage):
     """Inspector/Executor Generation Library for manipulating sets
        and relations with uninterpreted function symbols. """
 
@@ -22,5 +22,21 @@ class Iegenlib(AutotoolsPackage):
         sha256='b4c0b368363fcc1e34b388057cc0940bb87fc336cebb0772fd6055f45009b12b')
 
     depends_on('cmake@2.6:', type='build')
+    depends_on('autoconf',   type='build')
+    depends_on('texinfo',    type='build')
     depends_on('isl')
-    depends_on('texinfo', type='build')
+
+    build_directory = 'spack-build'
+
+    @run_before('cmake')
+    def make_dirs(self):
+        autoreconf = which('autoreconf')
+        with working_dir('lib/isl'):
+            autoreconf('-i')
+        mkdirp('spack-build/bin')
+
+    def cmake_args(self):
+        args = []
+        args.append('-DGEN_PARSER=no')
+        args.append('-DBUILD_PYTHON=no')
+        return args

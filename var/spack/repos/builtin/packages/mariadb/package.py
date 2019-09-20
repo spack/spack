@@ -29,9 +29,18 @@ class Mariadb(CMakePackage):
 
     depends_on('boost')
     depends_on('cmake@2.6:', type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('bison', type='build')
     depends_on('jemalloc')
     depends_on('libaio')
     depends_on('libedit')
     depends_on('libevent', when='+nonblocking')
     depends_on('ncurses')
     depends_on('zlib')
+    depends_on('curl')
+    depends_on('libxml2')
+    depends_on('lz4')
+    depends_on('zeromq')
+    depends_on('msgpack-c')
+
+    conflicts('%gcc@9.1.0:', when='@:5.5')

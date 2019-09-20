@@ -22,9 +22,9 @@ class RBh(RPackage):
     'pending' 'phoenix' 'preprocessor' 'random' 'range' 'smart_ptr' 'spirit'
     'tuple' 'type_trains' 'typeof' 'unordered' 'utility' 'uuid'."""
 
-    homepage = "https://cran.r-project.org/web/packages/BH/index.html"
-    url      = "https://cran.r-project.org/src/contrib/BH_1.65.0-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/BH"
+    homepage = "https://cloud.r-project.org/package=BH"
+    url      = "https://cloud.r-project.org/src/contrib/BH_1.65.0-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/BH"
 
     version('1.69.0-1', sha256='a0fd4364b7e368f09c56dec030823f52c16da0787580af7e4615eddeb99baca2')
     version('1.65.0-1', '7d0402188e4af59f4103f36616d6ee55')

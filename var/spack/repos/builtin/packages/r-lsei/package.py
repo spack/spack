@@ -15,8 +15,8 @@ class RLsei(RPackage):
        is public domain and available at
        <http://www.netlib.org/lawson-hanson>."""
 
-    homepage = "https://cran.r-project.org/package=lsei"
-    url      = "https://cran.rstudio.com/src/contrib/lsei_1.2-0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lsei"
+    homepage = "https://cloud.r-project.org/package=lsei"
+    url      = "https://cloud.r-project.org/src/contrib/lsei_1.2-0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/lsei"
 
     version('1.2-0', '18a9322d7a79ecb86b8788645c4b7e3c')

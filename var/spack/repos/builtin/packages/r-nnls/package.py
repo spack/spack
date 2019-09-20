@@ -11,8 +11,8 @@ class RNnls(RPackage):
     algorithm for non-negative least squares (NNLS). Also allows
     the combination of non-negative and non-positive constraints."""
 
-    homepage = "https://cran.r-project.org/package=nnls"
-    url      = "https://cran.rstudio.com/src/contrib/nnls_1.4.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/nnls"
+    homepage = "https://cloud.r-project.org/package=nnls"
+    url      = "https://cloud.r-project.org/src/contrib/nnls_1.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/nnls"
 
     version('1.4', 'cdb3640120f73e0ccb6079108e0ef361')

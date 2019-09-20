@@ -35,10 +35,12 @@ class Zoltan(AutotoolsPackage):
     variant('fortran', default=True, description='Enable Fortran support.')
     variant('mpi', default=True, description='Enable MPI support.')
     variant('parmetis', default=False, description='Enable ParMETIS support.')
+    variant('int64', default=False, description='Enable 64bit indices.')
 
     depends_on('mpi', when='+mpi')
 
     depends_on('parmetis@4:', when='+parmetis')
+    depends_on('metis+int64', when='+parmetis+int64')
     depends_on('metis', when='+parmetis')
 
     depends_on('perl@:5.21', type='build', when='@:3.6')
@@ -98,6 +100,9 @@ class Zoltan(AutotoolsPackage):
                 config_args.append('--with-libs=-lgfortran')
             if spec.satisfies('%intel'):
                 config_args.append('--with-libs=-lifcore')
+
+        if '+int64' in spec:
+            config_args.append('--with-id-type=ulong')
 
         if '+parmetis' in spec:
             parmetis_prefix = spec['parmetis'].prefix

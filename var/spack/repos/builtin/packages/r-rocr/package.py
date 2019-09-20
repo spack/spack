@@ -23,9 +23,9 @@ class RRocr(RPackage):
     mechanism. Despite its flexibility, ROCR is easy to use, with only
     three commands and reasonable default values for all optional
     parameters."""
-    homepage = "https://cran.r-project.org/package=ROCR"
-    url      = "https://cran.rstudio.com/src/contrib/ROCR_1.0-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ROCR"
+    homepage = "https://cloud.r-project.org/package=ROCR"
+    url      = "https://cloud.r-project.org/src/contrib/ROCR_1.0-7.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ROCR"
 
     version('1.0-7', '46cbd43ae87fc4e1eff2109529a4820e')
     depends_on('r-gplots', type=('build', 'run'))

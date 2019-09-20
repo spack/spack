@@ -107,6 +107,21 @@ class TestCopyTree:
 
             assert os.path.exists('dest/sub/directory/a/b/2')
 
+    def test_parent_dir(self, stage):
+        """Test copying to from a parent directory."""
+
+        # Make sure we get the right error if we try to copy a parent into
+        # a descendent directory.
+        with pytest.raises(ValueError, matches="Cannot copy"):
+            with fs.working_dir(str(stage)):
+                fs.copy_tree('source', 'source/sub/directory')
+
+        # Only point with this check is to make sure we don't try to perform
+        # the copy.
+        with pytest.raises(IOError, matches="No such file or directory"):
+            with fs.working_dir(str(stage)):
+                fs.copy_tree('foo/ba', 'foo/bar')
+
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
 
@@ -180,6 +195,16 @@ class TestInstallTree:
 
             assert os.path.exists('dest/2')
             assert not os.path.islink('dest/2')
+
+
+def test_paths_containing_libs(dirs_with_libfiles):
+    lib_to_dirs, all_dirs = dirs_with_libfiles
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libgfortran'])) ==
+            set(lib_to_dirs['libgfortran']))
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libirc'])) ==
+            set(lib_to_dirs['libirc']))
 
 
 def test_move_transaction_commit(tmpdir):

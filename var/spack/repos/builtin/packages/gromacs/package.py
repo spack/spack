@@ -61,8 +61,8 @@ class Gromacs(CMakePackage):
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
-            description='Enables the build of a cut-down version' +
-                         ' of libgromacs and/or the mdrun program')
+            description='Enables the build of a cut-down version'
+            ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True, description='Enables OpenMP at configure time')
     variant('double_precision', default=False, description='Enables a double-precision configuration')
 
@@ -73,6 +73,9 @@ class Gromacs(CMakePackage):
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
+
+    patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:^cmake@3.14.0:')
+    patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
 
     def patch(self):
         if '+plumed' in self.spec:

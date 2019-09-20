@@ -952,12 +952,11 @@ class Environment(object):
             ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig']),
             ('CMAKE_PREFIX_PATH', ['']),
         ]
+
         path_updates = list()
         if default_view_name in self.views:
-            for var, subdirs in updates:
-                paths = filter(lambda x: os.path.exists(x),
-                               list(os.path.join(self.default_view.root, x)
-                                    for x in subdirs))
+            for var, dirs in updates:
+                paths = [os.path.join(self.default_view.root, x) for x in dirs]
                 path_updates.append((var, paths))
         return path_updates
 
@@ -1340,25 +1339,21 @@ def _concretize_from_constraints(spec_constraints):
         try:
             return s.concretized()
         except spack.spec.InvalidDependencyError as e:
-            dep_index = e.message.index('depend on ') + len('depend on ')
-            invalid_msg = e.message[dep_index:]
-            invalid_deps_string = ['^' + d.strip(',')
-                                   for d in invalid_msg.split()
-                                   if d != 'or']
+            invalid_deps_string = ['^' + d for d in e.invalid_deps]
             invalid_deps = [c for c in spec_constraints
-                            if any(c.satisfies(invd)
+                            if any(c.satisfies(invd, strict=True)
                                    for invd in invalid_deps_string)]
             if len(invalid_deps) != len(invalid_deps_string):
                 raise e
             invalid_constraints.extend(invalid_deps)
         except UnknownVariantError as e:
-            invalid_variants = re.findall(r"'(\w+)'", e.message)
-            invalid_deps = [c for c in spec_constraints
-                            if any(name in c.variants
-                                   for name in invalid_variants)]
-            if len(invalid_deps) != len(invalid_variants):
+            invalid_variants = e.unknown_variants
+            inv_variant_constraints = [c for c in spec_constraints
+                                       if any(name in c.variants
+                                              for name in invalid_variants)]
+            if len(inv_variant_constraints) != len(invalid_variants):
                 raise e
-            invalid_constraints.extend(invalid_deps)
+            invalid_constraints.extend(inv_variant_constraints)
 
 
 def make_repo_path(root):

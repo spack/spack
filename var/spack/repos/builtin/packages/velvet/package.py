@@ -18,7 +18,7 @@ class Velvet(MakefilePackage):
     depends_on('zlib')
 
     def edit(self, spec, prefix):
-        if spec.satisfies('target=aarch64'):
+        if spec.target.family == 'aarch64':
             makefile = FileFilter('Makefile')
             makefile.filter('-m64', '')
 

@@ -77,7 +77,7 @@ def load_module(mod):
     module('load', mod)
 
 
-def get_path_arg_from_module_line(line):
+def get_path_args_from_module_line(line):
     if '(' in line and ')' in line:
         # Determine which lua quote symbol is being used for the argument
         comma_index = line.index(',')
@@ -92,7 +92,9 @@ def get_path_arg_from_module_line(line):
         path_arg = words_and_symbols[-2]
     else:
         path_arg = line.split()[2]
-    return path_arg
+
+    paths = path_arg.split(':')
+    return paths
 
 
 def get_path_from_module(mod):
@@ -119,37 +121,68 @@ def get_path_from_module_contents(text, module_name):
         pkg_var_prefix = components[-2]
     tty.debug("Package directory variable prefix: " + pkg_var_prefix)
 
-    # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
+    path_occurrences = {}
+
+    def strip_path(path, endings):
+        for ending in endings:
+            if path.endswith(ending):
+                return path[:-len(ending)]
+            if path.endswith(ending + '/'):
+                return path[:-(len(ending) + 1)]
+        return path
+
+    def match_pattern_and_strip(line, pattern, strip=[]):
+        if re.search(pattern, line):
+            paths = get_path_args_from_module_line(line)
+            for path in paths:
+                path = strip_path(path, strip)
+                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+
+    def match_flag_and_strip(line, flag, strip=[]):
+        flag_idx = line.find(flag)
+        if flag_idx >= 0:
+            end = line.find(' ', flag_idx)
+            if end >= 0:
+                path = line[flag_idx + len(flag):end]
+            else:
+                path = line[flag_idx + len(flag):]
+            path = strip_path(path, strip)
+            path_occurrences[path] = path_occurrences.get(path, 0) + 1
+
+    lib_endings = ['/lib64', '/lib']
+    bin_endings = ['/bin']
+    man_endings = ['/share/man', '/man']
+
     for line in text:
+        # Check entries of LD_LIBRARY_PATH and CRAY_LD_LIBRARY_PATH
         pattern = r'\W(CRAY_)?LD_LIBRARY_PATH'
-        if re.search(pattern, line):
-            path = get_path_arg_from_module_line(line)
-            return path[:path.find('/lib')]
+        match_pattern_and_strip(line, pattern, lib_endings)
 
-    # If it lists its package directory, return that
-    for line in text:
+        # Check {name}_DIR entries
         pattern = r'\W{0}_DIR'.format(pkg_var_prefix)
-        if re.search(pattern, line):
-            return get_path_arg_from_module_line(line)
+        match_pattern_and_strip(line, pattern)
 
-    # If it lists a -rpath instruction, use that
-    for line in text:
-        rpath = line.find('-rpath/')
-        if rpath >= 0:
-            return line[rpath + 6:line.find('/lib')]
+        # Check {name}_ROOT entries
+        pattern = r'\W{0}_ROOT'.format(pkg_var_prefix)
+        match_pattern_and_strip(line, pattern)
 
-    # If it lists a -L instruction, use that
-    for line in text:
-        lib_paths = line.find('-L/')
-        if lib_paths >= 0:
-            return line[lib_paths + 2:line.find('/lib')]
-
-    # If it sets the PATH, use it
-    for line in text:
+        # Check entries that update the PATH variable
         pattern = r'\WPATH'
-        if re.search(pattern, line):
-            path = get_path_arg_from_module_line(line)
-            return path[:path.find('/bin')]
+        match_pattern_and_strip(line, pattern, bin_endings)
 
-    # Unable to find module path
+        # Check entries that update the MANPATH variable
+        pattern = r'MANPATH'
+        match_pattern_and_strip(line, pattern, man_endings)
+
+        # Check entries that add a `-rpath` flag to a variable
+        match_flag_and_strip(line, '-rpath', lib_endings)
+
+        # Check entries that add a `-L` flag to a variable
+        match_flag_and_strip(line, '-L', lib_endings)
+
+    # Whichever path appeared most in the module, we assume is the correct path
+    if len(path_occurrences) > 0:
+        return max(path_occurrences.items(), key=lambda x: x[1])[0]
+
+    # Unable to find path in module
     return None

@@ -31,17 +31,17 @@ class Bowtie2(Package):
     patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
     patch('bowtie2-2.3.0.patch', when='@2.3.0', level=0)
     resource(name='simde', git="https://github.com/nemequ/simde",
-             destination='.', when='target=aarch64')
+             destination='.', when='target=aarch64:')
 
     # seems to have trouble with 6's -std=gnu++14
     conflicts('%gcc@6:', when='@:2.3.1')
-    conflicts('@:2.3.5.0', when='target=aarch64')
+    conflicts('@:2.3.5.0', when='target=aarch64:')
 
     def patch(self):
-        if self.spec.satisfies('target=aarch64'):
+        if self.spec.target.family == 'aarch64':
             copy_tree('simde', 'third_party/simde')
-        if self.spec.satisfies('%gcc@:4.8.9 target=aarch64'):
-            filter_file('-fopenmp-simd', '', 'Makefile')
+            if self.spec.satisfies('%gcc@:4.8.9'):
+                filter_file('-fopenmp-simd', '', 'Makefile')
 
     @run_before('install')
     def filter_sbang(self):
@@ -66,7 +66,7 @@ class Bowtie2(Package):
 
     def install(self, spec, prefix):
         make_arg = []
-        if self.spec.satisfies('target=aarch64'):
+        if self.spec.target.family == 'aarch64':
             make_arg.append('POPCNT_CAPABILITY=0')
         make(*make_arg)
         mkdirp(prefix.bin)

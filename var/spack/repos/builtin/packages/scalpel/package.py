@@ -17,7 +17,6 @@ class Scalpel(MakefilePackage):
 
     version('0.5.3', '682c9f1cd6ab2cb11c6866f303c673f0')
 
-    depends_on('cmake')
     depends_on('perl@5.10.0:')
 
     # bamtools needs to build before the others.

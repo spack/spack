@@ -16,11 +16,11 @@ class RGgdendro(RPackage):
     The package provides implementations for tree, rpart, as well
     as diana and agnes cluster diagrams."""
 
-    homepage = "https://cran.r-project.org/package=ggdendro"
-    url      = "https://cran.rstudio.com/src/contrib/ggdendro_0.1-20.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/ggdendro"
+    homepage = "https://cloud.r-project.org/package=ggdendro"
+    url      = "https://cloud.r-project.org/src/contrib/ggdendro_0.1-20.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggdendro"
 
     version('0.1-20', '787552e346432c758633d8f4b2675eb6')
 
-    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-ggplot2@0.9.2:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

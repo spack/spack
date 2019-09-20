@@ -23,22 +23,29 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
 
-    # Note: Version 1.1.1 is the current long-term support version that will
-    # remain supported until September 2023.
-    version('1.1.1b', '5c557b023230413dfb0756f3137a13e6d726838ccd1430888ad15bfb2b43ea4b')
-    version('1.1.1a', 'fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41')
-    version('1.1.1',  '2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d')
-    version('1.1.0j', '31bec6c203ce1a8e93d5994f4ed304c63ccf07676118b6634edded12ad1b3246')
-    version('1.1.0i', 'ebbfc844a8c8cc0ea5dc10b86c9ce97f401837f3fa08c17b2cdadc118253cf99')
+    # The latest stable version is the 1.1.1 series. This is also our Long Term
+    # Support (LTS) version, supported until 11th September 2023.
+    version('1.1.1c', sha256='f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d0804fdb3f4c90')
+    version('1.1.1b', sha256='5c557b023230413dfb0756f3137a13e6d726838ccd1430888ad15bfb2b43ea4b')
+    version('1.1.1a', sha256='fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41')
+    version('1.1.1',  sha256='2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d')
+
+    # The 1.1.0 series is currently only receiving security fixes and will go
+    # out of support on 11th September 2019.
+    version('1.1.0k', sha256='efa4965f4f773574d6cbda1cf874dbbe455ab1c0d4f906115f867d30444470b1')
+    version('1.1.0j', sha256='31bec6c203ce1a8e93d5994f4ed304c63ccf07676118b6634edded12ad1b3246')
+    version('1.1.0i', sha256='ebbfc844a8c8cc0ea5dc10b86c9ce97f401837f3fa08c17b2cdadc118253cf99')
     version('1.1.0g', 'ba5f1b8b835b88cadbce9b35ed9531a6')
     version('1.1.0e', '51c42d152122e474754aea96f66928c6')
     version('1.1.0d', '711ce3cd5f53a99c0e12a7d5804f0f63')
     version('1.1.0c', '601e8191f72b18192a937ecf1a800f3f')
 
-    # Note: Version 1.0.2 is the previous long-term support version that will
-    # remain supported until December 2019.
-    version('1.0.2r', 'ae51d08bba8a83958e894946f15303ff894d75c2b8bbd44a852b64e3fe11d0d6')
-    version('1.0.2p', '50a98e07b1a89eb8f6a99477f262df71c6fa7bef77df4dc83025a2845c827d00')
+    # Our previous LTS version (1.0.2 series) will continue to be supported
+    # until 31st December 2019 (security fixes only during the last year of
+    # support).
+    version('1.0.2s', sha256='cabd5c9492825ce5bd23f3c3aeed6a97f8142f606d893df216411f07d1abab96')
+    version('1.0.2r', sha256='ae51d08bba8a83958e894946f15303ff894d75c2b8bbd44a852b64e3fe11d0d6')
+    version('1.0.2p', sha256='50a98e07b1a89eb8f6a99477f262df71c6fa7bef77df4dc83025a2845c827d00')
     version('1.0.2o', '44279b8557c3247cbe324e2322ecd114')
     version('1.0.2n', '13bdc1b1d1ff39b6fd42a255e74676a4')
     version('1.0.2m', '10e9e37f492094b9ef296f68f24a7666')
@@ -51,6 +58,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')
     version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')
 
+    # The 1.0.1 version is now out of support and should not be used.
     version('1.0.1u', '130bb19745db2a5a09f22ccbbf7e69d0')
     version('1.0.1t', '9837746fcf8a6727d46d22ca35953da1')
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
@@ -80,7 +88,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # Makefile, leading to build errors.
         env.pop('APPS', None)
 
-        if spec.satisfies('target=x86_64') or spec.satisfies('target=ppc64'):
+        if str(spec.target.family) in ('x86_64', 'ppc64'):
             # This needs to be done for all 64-bit architectures (except Linux,
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'

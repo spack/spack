@@ -10,9 +10,9 @@ class RPopvar(RPackage):
     """PopVar: Genomic Breeding Tools: Genetic Variance Prediction andCross-
        Validation"""
 
-    homepage = "https://cran.r-project.org/package=PopVar"
-    url      = "https://cran.r-project.org/src/contrib/PopVar_1.2.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/PopVar"
+    homepage = "https://cloud.r-project.org/package=PopVar"
+    url      = "https://cloud.r-project.org/src/contrib/PopVar_1.2.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/PopVar"
 
     version('1.2.1', sha256='5e3df79634ab63708a431e4b8e6794675972ac6c58d2bc615726aa0f142f5f25')
 

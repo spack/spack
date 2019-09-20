@@ -30,6 +30,20 @@ class Subread(MakefilePackage):
                     'CC_EXEC = {0}'.format(spack_cc),
                     'Makefile.Linux'
                 )
+                if spec.target.family == 'aarch64':
+                    filter_file('-mtune=core2', '', 'Makefile.Linux')
+                    if spec.satisfies('@1.6.2:1.6.4'):
+                        filter_file(
+                            '-mtune=core2',
+                            '',
+                            'longread-one/Makefile'
+                        )
+                    elif spec.satisfies('@1.6.0'):
+                        filter_file(
+                            '-mtune=core2',
+                            '',
+                            'longread-mapping/Makefile'
+                        )
                 make('-f', 'Makefile.Linux')
             elif plat.startswith('darwin'):
                 make('-f', 'Makefile.MacOS')

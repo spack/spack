@@ -102,7 +102,8 @@ def wrapper_environment():
             SPACK_FC_RPATH_ARG='-Wl,-rpath,',
             SPACK_LINK_DIRS=None,
             SPACK_INCLUDE_DIRS=None,
-            SPACK_RPATH_DIRS=None):
+            SPACK_RPATH_DIRS=None,
+            SPACK_TARGET_ARGS=''):
         yield
 
 

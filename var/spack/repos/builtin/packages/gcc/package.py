@@ -24,6 +24,7 @@ class Gcc(AutotoolsPackage):
 
     version('develop', svn=svn + 'trunk')
 
+    version('9.2.0', 'a12dff52af876aee0fd89a8d09cdc455f35ec46845e154023202392adc164848faf8ee881b59b681b696e27c69fd143a214014db4214db62f9891a1c8365c040')
     version('9.1.0', 'b6134df027e734cee5395afd739fcfa4ea319a6017d662e54e89df927dea19d3fff7a6e35d676685383034e3db01c9d0b653f63574c274eeb15a2cb0bc7a1f28')
 
     version('8.3.0', '1811337ae3add9680cec64968a2509d085b6dc5b6783fc1e8c295e3e47416196fd1a3ad8dfe7e10be2276b4f62c357659ce2902f239f60a8648548231b4b5802')
@@ -114,12 +115,10 @@ class Gcc(AutotoolsPackage):
     # nvptx-tools does not seem to work as a dependency,
     # but does fine when the source is inside the gcc build directory
     # nvptx-tools doesn't have any releases, so grabbing the last commit
-    resource(
-             name='nvptx-tools',
+    resource(name='nvptx-tools',
              git='https://github.com/MentorEmbedded/nvptx-tools',
              commit='5f6f343a302d620b0868edab376c00b15741e39e',
-             when='+nvptx'
-    )
+             when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')

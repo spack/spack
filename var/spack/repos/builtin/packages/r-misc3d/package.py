@@ -9,8 +9,8 @@ from spack import *
 class RMisc3d(RPackage):
     """A collection of miscellaneous 3d plots, including isosurfaces."""
 
-    homepage = "https://cran.r-project.org/web/packages/misc3d/index.html"
-    url      = "https://cran.r-project.org/src/contrib/misc3d_0.8-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/misc3d"
+    homepage = "https://cloud.r-project.org/package=misc3d"
+    url      = "https://cloud.r-project.org/src/contrib/misc3d_0.8-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/misc3d"
 
     version('0.8-4', 'aefa27e67a243c21a1046868540343fe')

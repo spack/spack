@@ -13,10 +13,15 @@ class RForcats(RPackage):
        rare levels into other, 'anonymising', and manually 'recoding')."""
 
     homepage = "http://forcats.tidyverse.org/"
-    url      = "https://cran.r-project.org/src/contrib/forcats_0.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/forcats"
+    url      = "https://cloud.r-project.org/src/contrib/forcats_0.2.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/forcats"
 
+    version('0.4.0', sha256='7c83cb576aa6fe1379d7506dcc332f7560068b2025f9e3ab5cd0a5f28780d2b2')
+    version('0.3.0', sha256='95814610ec18b8a8830eba63751954387f9d21400d6ab40394ed0ff22c0cb657')
     version('0.2.0', 'e4ba2c0a59dcdfcc02274c519bf3dbfc')
 
+    depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-ellipsis', when='@0.4.0:', type=('build', 'run'))
+    depends_on('r-rlang', when='@0.4.0:', type=('build', 'run'))

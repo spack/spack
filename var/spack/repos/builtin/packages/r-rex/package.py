@@ -9,9 +9,9 @@ from spack import *
 class RRex(RPackage):
     """A friendly interface for the construction of regular expressions."""
 
-    homepage = "https://cran.r-project.org/package=rex"
-    url      = "https://cran.r-project.org/src/contrib/rex_1.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rex"
+    homepage = "https://cloud.r-project.org/package=rex"
+    url      = "https://cloud.r-project.org/src/contrib/rex_1.1.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rex"
 
     version('1.1.2', '8820b4d4fe3718f275847b6f2cf83689')
 

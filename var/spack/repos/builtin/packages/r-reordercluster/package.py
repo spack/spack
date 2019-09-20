@@ -11,10 +11,12 @@ class RReordercluster(RPackage):
     that preserves the hierarchical clustering result and at the
     same time tries to group instances from the same class together."""
 
-    homepage = "https://cran.r-project.org/package=ReorderCluster"
-    url      = "https://cran.rstudio.com/src/contrib/ReorderCluster_1.0.tar.gz"
+    homepage = "https://cloud.r-project.org/package=ReorderCluster"
+    url      = "https://cloud.r-project.org/src/contrib/ReorderCluster_1.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ReorderCluster"
 
     version('1.0', '67ba34acb15dda75389a822bd2fdd31a')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-gplots', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

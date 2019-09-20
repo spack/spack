@@ -30,6 +30,7 @@ class Abinit(AutotoolsPackage):
     homepage = 'http://www.abinit.org'
     url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
+    version('8.10.3', '969303cf21526cef2a6a08118a3d30ae')
     version('8.8.2', '72d7046c7ff31b9f17afe050ecdfb3a5')
     version('8.6.3', '6c34d2cec0cf0008dd25b8ec1b6d3ee8')
     version('8.2.2', '5f25250e06fdc0815c224ffd29858860')

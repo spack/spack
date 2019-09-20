@@ -9,9 +9,9 @@ from spack import *
 class RSquash(RPackage):
     """Color-Based Plots for Multivariate Visualization"""
 
-    homepage = "https://cran.r-project.org/package=squash"
-    url      = "https://cran.r-project.org/src/contrib/squash_1.0.8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/squash"
+    homepage = "https://cloud.r-project.org/package=squash"
+    url      = "https://cloud.r-project.org/src/contrib/squash_1.0.8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/squash"
 
     version('1.0.8', '50d5743d306fa11cfa1a3c4daa75e508')
     version('1.0.7', '4ac381b17d4d7b77bdaa6f824fbb03ab')

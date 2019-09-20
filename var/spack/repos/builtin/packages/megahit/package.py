@@ -18,7 +18,7 @@ class Megahit(MakefilePackage):
 
     depends_on('zlib')
 
-    patch('amd.patch', when='target=aarch64')
+    patch('amd.patch', when='target=aarch64:')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

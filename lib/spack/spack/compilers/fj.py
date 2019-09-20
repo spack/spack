@@ -45,5 +45,13 @@ class Fj(spack.compiler.Compiler):
         return "-std=c++14"
 
     @property
+    def c99_flag(self):
+        return "-std=c99"
+
+    @property
+    def c11_flag(self):
+        return "-std=c11"
+
+    @property
     def pic_flag(self):
         return "-KPIC"

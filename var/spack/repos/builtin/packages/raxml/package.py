@@ -45,7 +45,7 @@ class Raxml(Package):
             # FIXME; It is assumed that cray is x86_64.
             # If you support arm on cray, you need to fix it.
             arch = 'x86_64'
-        if (arch != 'x86_64' and not spec.satisfies("target=x86_64")):
+        if arch != 'x86_64' and not spec.target.family == 'x86_64':
             if spec.satisfies("+sse"):
                 raise ConflictsInSpecError(
                     spec,
@@ -77,7 +77,7 @@ class Raxml(Package):
             if spec.satisfies('+mpi'):
                 makefile.filter('mpicc', self.spec['mpi'].mpicc)
 
-        if spec.satisfies('target=x86_64'):
+        if spec.target.family == 'x86_64':
             if spec.satisfies('+mpi +avx +pthreads'):
                 make('-f', 'Makefile.AVX.HYBRID.gcc')
                 install('raxmlHPC-HYBRID-AVX', prefix.bin)

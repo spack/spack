@@ -9,10 +9,10 @@ from spack import *
 class RFlashclust(RPackage):
     """flashClust: Implementation of optimal hierarchical clustering"""
 
-    homepage = "https://CRAN.R-project.org/package=flashClust"
-    url      = "https://cran.r-project.org/src/contrib/flashClust_1.01-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/flashClust"
+    homepage = "https://cloud.r-project.org/package=flashClust"
+    url      = "https://cloud.r-project.org/src/contrib/flashClust_1.01-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/flashClust"
 
     version('1.01-2', '23409aeeef98bf35d0b3d5dd755fdeff')
 
-    depends_on('r@2.3.0:')
+    depends_on('r@2.3.0:', type=('build', 'run'))

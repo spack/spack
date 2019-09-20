@@ -17,9 +17,9 @@ class Gdal(AutotoolsPackage):
     translation and processing.
     """
 
-    homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/3.0.1/gdal-3.0.1.tar.xz"
-    list_url   = "http://download.osgeo.org/gdal/"
+    homepage   = "https://www.gdal.org/"
+    url        = "https://download.osgeo.org/gdal/3.0.1/gdal-3.0.1.tar.xz"
+    list_url   = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
     maintainers = ['adamjstewart']
@@ -61,6 +61,7 @@ class Gdal(AutotoolsPackage):
     variant('openjpeg',  default=False, description='Include JPEG-2000 support via OpenJPEG 2.x library')
     variant('xerces',    default=False, description='Use Xerces-C++ parser')
     variant('expat',     default=False, description='Use Expat XML parser')
+    variant('libkml',    default=False, description='Use Google libkml')
     variant('odbc',      default=False, description='Include ODBC support')
     variant('curl',      default=False, description='Include curl')
     variant('xml2',      default=False, description='Include libxml2')
@@ -118,6 +119,7 @@ class Gdal(AutotoolsPackage):
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
     depends_on('expat', when='+expat')
+    depends_on('libkml@1.3.0:', when='+libkml')
     depends_on('unixodbc', when='+odbc')
     depends_on('curl@7.10.8:', when='+curl')
     depends_on('libxml2', when='+xml2')
@@ -322,6 +324,13 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-expat=no')
 
+        # https://trac.osgeo.org/gdal/wiki/LibKML
+        # https://gdal.org/drivers/vector/libkml.html
+        if '+libkml' in spec:
+            args.append('--with-libkml={0}'.format(spec['libkml'].prefix))
+        else:
+            args.append('--with-libkml=no')
+
         if '+odbc' in spec:
             args.append('--with-odbc={0}'.format(spec['unixodbc'].prefix))
         else:
@@ -430,8 +439,6 @@ class Gdal(AutotoolsPackage):
             '--with-mysql=no',
             # https://trac.osgeo.org/gdal/wiki/Ingres
             '--with-ingres=no',
-            # https://trac.osgeo.org/gdal/wiki/LibKML
-            '--with-libkml=no',
             '--with-dods-root=no',
             '--with-spatialite=no',
             '--with-idb=no',
