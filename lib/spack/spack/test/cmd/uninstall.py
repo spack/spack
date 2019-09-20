@@ -82,7 +82,7 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
 @pytest.mark.db
 @pytest.mark.usefixtures('mutable_database')
 def test_global_recursive_uninstall():
-    """Test recursive uninstall."""
+    """Test recursive uninstall from global upstream"""
     uninstall('-g', '-y', '-a', '--dependents', 'callpath')
 
     all_specs = spack.store.layout.all_specs()
@@ -100,7 +100,7 @@ def test_global_recursive_uninstall():
 @pytest.mark.db
 @pytest.mark.usefixtures('mutable_database')
 def test_upstream_recursive_uninstall():
-    """Test recursive uninstall."""
+    """Test recursive uninstall from specified upstream"""
     uninstall('--upstream=global', '-y', '-a', '--dependents', 'callpath')
 
     all_specs = spack.store.layout.all_specs()
