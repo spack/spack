@@ -96,6 +96,9 @@ def mirror_archive_paths(spec, fetcher, resource_name=None):
         spec.name, mirror_archive_filename(spec, fetcher, resource_name))
 
     global_ref = fetcher.mirror_id()
+    if not global_ref:
+        return [per_package_ref]
+
     ext = _determine_extension(fetcher)
     if ext:
         global_ref += ".%s" % ext
