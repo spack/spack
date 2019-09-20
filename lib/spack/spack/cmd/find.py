@@ -83,6 +83,12 @@ def setup_parser(subparser):
                            action='store_true',
                            dest='only_missing',
                            help='show only missing dependencies')
+    subparser.add_argument(
+        '--deprecated', action='store_true',
+        help='show deprecated packages as well as installed specs')
+    subparser.add_argument(
+        '--only-deprecated', action='store_true',
+        help='show only deprecated packages')
     subparser.add_argument('-N', '--namespace',
                            action='store_true',
                            help='show fully qualified package names')
@@ -100,18 +106,24 @@ def setup_parser(subparser):
 
 def query_arguments(args):
     # Set up query arguments.
-    installed, known = True, any
-    if args.only_missing:
-        installed = False
-    elif args.missing:
-        installed = any
+    installed = []
+    if not (args.only_missing or args.only_deprecated):
+        installed.append('installed')
+    if (args.deprecated or args.only_deprecated) and not args.only_missing:
+        installed.append('deprecated')
+    if (args.missing or args.only_missing) and not args.only_deprecated:
+        installed.append('missing')
+
+    known = any
     if args.unknown:
         known = False
+
     explicit = any
     if args.explicit:
         explicit = True
     if args.implicit:
         explicit = False
+
     q_args = {'installed': installed, 'known': known, "explicit": explicit}
 
     # Time window of installation

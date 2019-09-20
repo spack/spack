@@ -45,7 +45,7 @@ from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
-
+from spack.util.string import comma_and
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -75,6 +75,13 @@ def _autospec(function):
         return function(self, spec_like, *args, **kwargs)
 
     return converter
+
+
+_valid_install_states = [
+    'installed',
+    'deprecated',
+    'missing',
+]
 
 
 class InstallRecord(object):
@@ -123,20 +130,23 @@ class InstallRecord(object):
     def install_type_matches(self, installed):
         if installed == any:
             return True
-        elif installed is True:
-            return self.installed
-        elif installed is False:
-            return not self.installed and not self.deprecated_for
-        elif isinstance(installed, tuple):
-            if self.installed:
-                return 'installed' in installed
-            elif self.deprecated_for:
-                return 'deprecated' in installed
-            else:
-                return 'missing' in installed
+        if isinstance(installed, bool):
+            return self.installed == installed
         else:
-            raise ValueError(
-                'installation query must be `any`, boolean, or tuple')
+            try:
+                if any(x not in _valid_install_states for x in installed):
+                    state_str = comma_and(list(map(lambda x: "'%d'" % x,
+                                                       _valid_install_states)))
+                    raise ValueError('Valid install states are %s' % state_str)
+                if self.installed:
+                    return 'installed' in installed
+                elif self.deprecated_for:
+                    return 'deprecated' in installed
+                else:
+                    return 'missing' in installed
+            except TypeError:
+                raise ValueError(
+                    'installation query must be `any`, boolean, or iterable')
 
     def to_dict(self):
         rec_dict = {
@@ -1014,12 +1024,12 @@ class Database(object):
             dag_hash (str): hash (or hash prefix) to look up
             default (object, optional): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, or tuple, optional): if ``True``, includes
-                only installed specs in the search; if ``False`` only missing
-                specs, and if ``any``, all specs in database. If a tuple,
-                returns installed specs if 'installed' in tuple, deprecated
-                specs if 'deprecated' in tuple, and missing specs if 'missing'
-                in tuple. (default: any)
+            installed (bool or any, or iterable, optional): if ``True``,
+                includes only installed specs in the search; if ``False`` only
+                missing specs, and if ``any``, all specs in database. If an
+                iterable, returns installed specs if 'installed' in iterable,
+                deprecated specs if 'deprecated' in iterable, and missing specs
+                if 'missing' in iterable. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
         known hash.  Note that ``query()`` and ``query_one()`` differ in
@@ -1056,12 +1066,12 @@ class Database(object):
             dag_hash (str): hash (or hash prefix) to look up
             default (object, optional): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, or tuple, optional): if ``True``, includes
-                only installed specs in the search; if ``False`` only missing
-                specs, and if ``any``, all specs in database. If a tuple,
-                returns installed specs if 'installed' in tuple, deprecated
-                specs if 'deprecated' in tuple, and missing specs if 'missing'
-                in tuple. (default: any)
+            installed (bool or any, or iterable, optional): if ``True``,
+                includes only installed specs in the search; if ``False`` only
+                missing specs, and if ``any``, all specs in database. If an
+                iterable, returns installed specs if 'installed' in iterable,
+                deprecated specs if 'deprecated' in iterable, and missing specs
+                if 'missing' in iterable. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
         known hash.  Note that ``query()`` and ``query_one()`` differ in
@@ -1106,12 +1116,12 @@ class Database(object):
                 Spack, but have since either changed their name or
                 been removed
 
-            installed (bool or any, or tuple, optional): if ``True``, includes
-                only installed specs in the search; if ``False`` only missing
-                specs, and if ``any``, all specs in database. If a tuple,
-                returns installed specs if 'installed' in tuple, deprecated
-                specs if 'deprecated' in tuple, and missing specs if 'missing'
-                in tuple. (default: any)
+            installed (bool or any, or iterable, optional): if ``True``,
+                includes only installed specs in the search; if ``False`` only
+                missing specs, and if ``any``, all specs in database. If an
+                iterable, returns installed specs if 'installed' in iterable,
+                deprecated specs if 'deprecated' in iterable, and missing specs
+                if 'missing' in iterable. (default: True)
 
             explicit (bool or any, optional): A spec that was installed
                 following a specific user request is marked as explicit. If
