@@ -20,7 +20,7 @@ class Fftw(AutotoolsPackage):
        library of choice for most applications."""
 
     homepage = "http://www.fftw.org"
-    url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
+    url = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 
     version('3.3.8', '8aac833c943d8e90d51b697b27d4384d')
@@ -35,18 +35,11 @@ class Fftw(AutotoolsPackage):
     patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
 
     variant(
-        'float', default=True,
-        description='Produces a single precision version of the library')
-    variant(
-        'double', default=True,
-        description='Produces a double precision version of the library')
-    variant(
-        'long_double', default=True,
-        description='Produces a long double precision version of the library')
-    variant(
-        'quad', default=False,
-        description='Produces a quad precision version of the library '
-                    '(works only with GCC and libquadmath)')
+        'precision', values=any_combination_of(
+            'float', 'double', 'long_double', 'quad'
+        ).prohibit_empty_set().with_default('float,double'),
+        description='Build the selected floating-point precision libraries'
+    )
     variant('openmp', default=False, description="Enable OpenMP support.")
     variant('mpi', default=True, description='Activate MPI support')
     variant(
@@ -72,8 +65,13 @@ class Fftw(AutotoolsPackage):
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
+
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
     conflicts('%gcc@8:8.9999', when="@3.3.7")
+    conflicts('precision=long_double', when='@2.1.5',
+              msg='Long double precision is not supported in FFTW 2')
+    conflicts('precision=quad', when='@2.1.5',
+              msg='Quad precision is not supported in FFTW 2')
 
     provides('fftw-api@2', when='@2.1.5')
     provides('fftw-api@3', when='@3:')
@@ -157,6 +155,17 @@ class Fftw(AutotoolsPackage):
             autoreconf = which('autoreconf')
             autoreconf('-ifv')
 
+    @property
+    def selected_precisions(self):
+        """Precisions that have been selected in this build"""
+        spec = self.spec
+        return list(filter(None, [
+            'float' if spec.satisfies('precision=float') else None,
+            'double' if spec.satisfies('precision=double') else None,
+            'long_double' if spec.satisfies('precision=long_double') else None,
+            'quad' if spec.satisfies('precision=quad') else None
+        ]))
+
     def configure(self, spec, prefix):
         # Base options
         options = [
@@ -185,67 +194,41 @@ class Fftw(AutotoolsPackage):
             options.append('--enable-mpi')
 
         # SIMD support
-        float_options, double_options = [], []
+        simd_options = []
         if spec.satisfies('@3:', strict=True):
-            for opts in (float_options, double_options):
-                opts += self.enable_or_disable('simd')
-                opts += self.enable_or_disable('fma')
+            simd_options += self.enable_or_disable('simd')
+            simd_options += self.enable_or_disable('fma')
 
         configure = Executable('../configure')
 
-        # Build double/float/long double/quad variants
-        if '+double' in spec:
-            with working_dir('double', create=True):
-                configure(*(options + double_options))
-        if '+float' in spec:
-            with working_dir('float', create=True):
-                configure('--enable-float', *(options + float_options))
-        if spec.satisfies('@3:+long_double'):
-            with working_dir('long-double', create=True):
-                configure('--enable-long-double', *options)
-        if spec.satisfies('@3:+quad'):
-            with working_dir('quad', create=True):
-                configure('--enable-quad-precision', *options)
+        # Double is the default precision, for all the others we need
+        # to enable the corresponding option.
+        enable_precision = {
+            'float': ['--enable-float'],
+            'double': None,
+            'long_double': ['--enable-long-double'],
+            'quad': ['--enable-quad-precision']
+        }
+
+        # Different precisions must be configured and compiled one at a time
+        for precision in self.selected_precisions:
+            opts = (enable_precision[precision] or []) + options[:]
+            # SIMD optimizations are available only for float and double
+            if precision in ('float', 'double'):
+                opts += simd_options
+            with working_dir(precision, create=True):
+                configure(*opts)
+
+    def for_each_precision_make(self, *targets):
+        for precision in self.selected_precisions:
+            with working_dir(precision):
+                make(*targets)
 
     def build(self, spec, prefix):
-        if '+double' in spec:
-            with working_dir('double'):
-                make()
-        if '+float' in spec:
-            with working_dir('float'):
-                make()
-        if spec.satisfies('@3:+long_double'):
-            with working_dir('long-double'):
-                make()
-        if spec.satisfies('@3:+quad'):
-            with working_dir('quad'):
-                make()
+        self.for_each_precision_make()
 
     def check(self):
-        spec = self.spec
-        if '+double' in spec:
-            with working_dir('double'):
-                make("check")
-        if '+float' in spec:
-            with working_dir('float'):
-                make("check")
-        if spec.satisfies('@3:+long_double'):
-            with working_dir('long-double'):
-                make("check")
-        if spec.satisfies('@3:+quad'):
-            with working_dir('quad'):
-                make("check")
+        self.for_each_precision_make('check')
 
     def install(self, spec, prefix):
-        if '+double' in spec:
-            with working_dir('double'):
-                make("install")
-        if '+float' in spec:
-            with working_dir('float'):
-                make("install")
-        if spec.satisfies('@3:+long_double'):
-            with working_dir('long-double'):
-                make("install")
-        if spec.satisfies('@3:+quad'):
-            with working_dir('quad'):
-                make("install")
+        self.for_each_precision_make('install')
