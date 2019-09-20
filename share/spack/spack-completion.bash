@@ -126,7 +126,7 @@ function _spack_add {
 
 function _spack_arch {
     compgen -W "-h --help -p --platform -o --operating-system
-                -t --target" -- "$cur"
+                -t --target --known-targets" -- "$cur"
 }
 
 function _spack_blame {
