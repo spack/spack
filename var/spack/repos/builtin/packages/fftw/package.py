@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.spec import ConflictsInSpecError
+import os
+import os.path
 
 import llnl.util.lang
-# os is used for rename, etc in patch()
-import os
+
+from spack import *
 
 
 class Fftw(AutotoolsPackage):
@@ -46,21 +46,6 @@ class Fftw(AutotoolsPackage):
         'pfft_patches', default=False,
         description='Add extra transpose functions for PFFT compatibility')
 
-    variant(
-        'simd',
-        default='generic-simd128,generic-simd256',
-        values=(
-            'sse', 'sse2', 'avx', 'avx2', 'avx512',  # Intel
-            'avx-128-fma', 'kcvi',  # Intel
-            'altivec', 'vsx',  # IBM
-            'neon',  # ARM
-            'generic-simd128', 'generic-simd256'  # Generic
-        ),
-        description='Optimizations that are enabled in this build',
-        multi=True
-    )
-    variant('fma', default=False, description='Activate support for fma')
-
     depends_on('mpi', when='+mpi')
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
@@ -75,41 +60,6 @@ class Fftw(AutotoolsPackage):
 
     provides('fftw-api@2', when='@2.1.5')
     provides('fftw-api@3', when='@3:')
-
-    def flag_handler(self, name, flags):
-        arch = ""
-        spec = self.spec
-        target_simds = {
-            ('x86_64',): ('sse', 'sse2', 'avx', 'avx2', 'avx512',
-                          'avx-128-fma', 'kcvi'),
-            ('ppc', 'ppc64le', 'power7'): ('altivec', 'vsx'),
-            ('arm',): ('neon',)
-        }
-
-        if spec.satisfies("platform=cray"):
-            # FIXME; It is assumed that cray is x86_64.
-            # If you support arm on cray, you need to fix it.
-            arch  = "x86_64"
-
-        for targets, simds in target_simds.items():
-            if (
-                (arch not in targets)
-                and str(spec.target.family) not in targets
-            ):
-                if any(spec.satisfies('simd={0}'.format(x)) for x in simds):
-                    raise ConflictsInSpecError(
-                        spec,
-                        [(
-                            spec,
-                            spec.architecture.target,
-                            spec.variants['simd'],
-                            'simd={0} are valid only on {1}'.format(
-                                ','.join(target_simds[targets]),
-                                ','.join(targets)
-                            )
-                        )]
-                    )
-        return (flags, None, None)
 
     @property
     def libs(self):
@@ -193,13 +143,27 @@ class Fftw(AutotoolsPackage):
         if '+mpi' in spec:
             options.append('--enable-mpi')
 
-        # SIMD support
+        # Specific SIMD support. Note there's SSE support too for float, but
+        # given that it can be activated only for float and that most machines
+        # are new enough to have SSE2 it has been skipped not to complicate the
+        # recipe further.
+        simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
+                         'kcvi', 'altivec', 'vsx', 'neon']
         simd_options = []
-        if spec.satisfies('@3:', strict=True):
-            simd_options += self.enable_or_disable('simd')
-            simd_options += self.enable_or_disable('fma')
+        for feature in simd_features:
+            msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
+            simd_options.append(msg.format(feature))
 
-        configure = Executable('../configure')
+        # If no features are found, enable the generic ones
+        if not any(f in spec.target for f in simd_features):
+            simd_options += [
+                '--enable-generic-simd128',
+                '--enable-generic-simd256'
+            ]
+
+        simd_options += [
+            '--enable-fma' if 'fma' in spec.target else '--disable-fma'
+        ]
 
         # Double is the default precision, for all the others we need
         # to enable the corresponding option.
@@ -211,11 +175,15 @@ class Fftw(AutotoolsPackage):
         }
 
         # Different precisions must be configured and compiled one at a time
+        configure = Executable('../configure')
         for precision in self.selected_precisions:
             opts = (enable_precision[precision] or []) + options[:]
+
             # SIMD optimizations are available only for float and double
-            if precision in ('float', 'double'):
+            # starting from FFTW 3
+            if precision in ('float', 'double') and spec.satisfies('@3:'):
                 opts += simd_options
+
             with working_dir(precision, create=True):
                 configure(*opts)
 
