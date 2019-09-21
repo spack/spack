@@ -60,6 +60,7 @@ class Upcxx(Package):
         run_env.set('UPCXX', self.prefix.bin.upcxx)
         if 'platform=cray' in self.spec:
             run_env.set('UPCXX_GASNET_CONDUIT', 'aries')
+            run_env.set('UPCXX_NETWORK', 'aries')
 
     def setup_dependent_package(self, module, dep_spec):
         dep_spec.upcxx = self.prefix.bin.upcxx
@@ -67,6 +68,7 @@ class Upcxx(Package):
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if 'platform=cray' in self.spec:
             spack_env.set('UPCXX_GASNET_CONDUIT', 'aries')
+            spack_env.set('UPCXX_NETWORK', 'aries')
 
     def install(self, spec, prefix):
         env['CC'] = self.compiler.cc
