@@ -27,27 +27,6 @@ from spack.version import VersionList
 from spack.util.compression import allowed_archive
 
 
-def mirror_archive_filename(spec, fetcher, resource_name=None):
-    """Get the name of the spec's archive in the mirror."""
-    if not spec.version.concrete:
-        raise ValueError("mirror.path requires spec with concrete version.")
-
-    if resource_name:
-        if fetcher.source_id():
-            resource_id = str(fetcher.source_id())
-        else:
-            resource_id = str(spec.version)
-        filename = "%s-%s" % (resource_name, resource_id)
-    else:
-        filename = "%s-%s" % (spec.package.name, spec.version)
-
-    ext = _determine_extension(fetcher, spec)
-    if ext:
-        return filename + ".%s" % ext
-    else:
-        return filename
-
-
 def _determine_extension(fetcher, spec):
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
@@ -91,15 +70,20 @@ Spack not to expand it with the following syntax:
 
 
 def mirror_archive_paths(spec, fetcher, resource_name=None):
-    """Get the relative path to the spec's archive within a mirror."""
-    per_package_ref = os.path.join(
-        spec.name, mirror_archive_filename(spec, fetcher, resource_name))
+    """Get the relative path to the source archive within a mirror."""
+    ext = _determine_extension(fetcher, spec)
+
+    if resource_name:
+        per_package_ref = "%s-%s" % (resource_name, spec.version)
+    else:
+        per_package_ref = "%s-%s" % (spec.package.name, spec.version)
+    if ext:
+        per_package_ref += ".%s" % ext
+    per_package_ref = os.path.join(spec.name, per_package_ref)
 
     global_ref = fetcher.mirror_id()
     if not global_ref:
         return [per_package_ref]
-
-    ext = _determine_extension(fetcher, spec)
     if ext:
         global_ref += ".%s" % ext
 
