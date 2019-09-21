@@ -14,6 +14,7 @@ class Charliecloud(MakefilePackage):
     git      = "https://github.com/hpc/charliecloud.git"
 
     version('master', branch='master')
+    version('0.11',   sha256='942d3c7a74c978fd7420cb2b255e618f4f0acaafb6025160bc3a4deeb687ef3c')
     version('0.10',   sha256='5cf00b170e7568750ca0b828c43c0857c39674860b480d757057450d69f1a21e')
     version('0.9.10', sha256='44e821b62f9c447749d3ed0d2b2e44d374153058814704a5543e83f42db2a45a')
     version('0.9.9',  sha256='2624c5a0b19a01c9bca0acf873ceeaec401b9185a23e9108fadbcee0b9d74736')
@@ -39,6 +40,9 @@ class Charliecloud(MakefilePackage):
     depends_on('rsync',               type='build', when='+docs')
     depends_on('py-sphinx',           type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
+
+    # bash automated testing harness (bats)
+    depends_on('bats@0.4.0', type='test')
 
     def url_for_version(self, version):
         if version >= Version('0.9.8'):
