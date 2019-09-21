@@ -41,14 +41,14 @@ def mirror_archive_filename(spec, fetcher, resource_name=None):
     else:
         filename = "%s-%s" % (spec.package.name, spec.version)
 
-    ext = _determine_extension(fetcher)
+    ext = _determine_extension(fetcher, spec)
     if ext:
         return filename + ".%s" % ext
     else:
         return filename
 
 
-def _determine_extension(fetcher):
+def _determine_extension(fetcher, spec):
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
@@ -99,7 +99,7 @@ def mirror_archive_paths(spec, fetcher, resource_name=None):
     if not global_ref:
         return [per_package_ref]
 
-    ext = _determine_extension(fetcher)
+    ext = _determine_extension(fetcher, spec)
     if ext:
         global_ref += ".%s" % ext
 
