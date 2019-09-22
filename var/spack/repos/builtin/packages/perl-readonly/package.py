@@ -15,3 +15,10 @@ class PerlReadonly(PerlPackage):
     version('2.05', sha256='4b23542491af010d44a5c7c861244738acc74ababae6b8838d354dfb19462b5e')
 
     depends_on('perl-module-build-tiny', type='build')
+
+    # The following is needed to work around #12852
+    @run_after('configure')
+    def fix_shebang(self):
+        pattern = '#!{0}'.format(self.spec['perl'].command.path)
+        repl = '#!/usr/bin/env perl'
+        filter_file(pattern, repl, 'Build', backup=False)
