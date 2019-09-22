@@ -18,3 +18,10 @@ class PerlModuleBuildTiny(PerlPackage):
     depends_on('perl-extutils-config', type=('build', 'run'))
     depends_on('perl-extutils-helpers', type=('build', 'run'))
     depends_on('perl-extutils-installpaths', type=('build', 'run'))
+
+    # The following is needed to work around #12852
+    @run_after('configure')
+    def fix_shebang(self):
+        pattern = '#!{0}'.format(self.spec['perl'].command.path)
+        repl = '#!/usr/bin/env perl'
+        filter_file(pattern, repl, 'Build', backup=False)
