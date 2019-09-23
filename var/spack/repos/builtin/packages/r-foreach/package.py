@@ -15,11 +15,13 @@ class RForeach(RPackage):
     evaluation of a function. Using foreach without side effects also
     facilitates executing the loop in parallel."""
 
-    homepage = "https://cran.r-project.org/web/packages/foreach/index.html"
-    url      = "https://cran.r-project.org/src/contrib/foreach_1.4.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/foreach"
+    homepage = "https://cloud.r-project.org/package=foreach"
+    url      = "https://cloud.r-project.org/src/contrib/foreach_1.4.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/foreach"
 
+    version('1.4.7', sha256='95632c0b1182fc01490718d82fa3b2bce864f2a011ae53282431c7c2a3f5f160')
     version('1.4.3', 'ef45768126661b259f9b8994462c49a0')
 
+    depends_on('r@2.5.0:', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))
     depends_on('r-iterators', type=('build', 'run'))

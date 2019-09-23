@@ -20,7 +20,8 @@ class Flecsi(CMakePackage):
     homepage = 'http://flecsi.lanl.gov/'
     git      = 'https://github.com/laristra/flecsi.git'
 
-    version('develop', branch='master', submodules=False)
+    version('develop', branch='master', submodules=False, preferred=True)
+
     variant('backend', default='mpi', values=('serial', 'mpi', 'legion'),
             description='Backend to use for distributed memory')
     variant('caliper', default=False,

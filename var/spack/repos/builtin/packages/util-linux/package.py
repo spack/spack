@@ -21,9 +21,17 @@ class UtilLinux(AutotoolsPackage):
     depends_on('python@2.7:')
     depends_on('pkgconfig')
 
+    # Make it possible to disable util-linux's libuuid so that you may
+    # reliably depend_on(`libuuid`).
+    variant('libuuid', default=True, description='Build libuuid')
+
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
     def configure_args(self):
-        return ['--disable-use-tty-group']
+        config_args = [
+            '--disable-use-tty-group',
+        ]
+        config_args.extend(self.enable_or_disable('libuuid'))
+        return config_args

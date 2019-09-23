@@ -85,6 +85,8 @@ class Moab(AutotoolsPackage):
     # FIXME it seems that zoltan needs to be built without fortran
     depends_on('zoltan~fortran', when='+zoltan')
 
+    patch('tools-492.patch', when='@4.9.2')
+
     def configure_args(self):
         spec = self.spec
 

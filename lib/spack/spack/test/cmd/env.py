@@ -736,7 +736,7 @@ def test_indirect_build_dep():
         _env_create('test', with_view=False)
         e = ev.read('test')
         e.add(x_spec)
-        e.concretize(_display=False)
+        e.concretize()
         e.write()
 
         e_read = ev.read('test')
@@ -788,7 +788,7 @@ Dependency:
         e = ev.read('test')
         e.add(y_spec)
         e.add(x_spec)
-        e.concretize(_display=False)
+        e.concretize()
         e.write()
 
         e_read = ev.read('test')
@@ -965,6 +965,29 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.regression('12095')
+def test_stack_yaml_definitions_write_reference(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - indirect: [$packages]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        with ev.read('test'):
+            concretize()
+        test = ev.read('test')
+
+        assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
 def test_stack_yaml_add_to_list(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1114,6 +1137,33 @@ env:
             if user.name  == 'mpileaks':
                 assert (concrete.variants['shared'].value ==
                         user.variants['shared'].value)
+
+
+def test_stack_concretize_extraneous_variants_with_dash(tmpdir, config,
+                                                        mock_packages):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - install:
+        - matrix:
+            - [$packages]
+            - ['shared=False', '+shared-libs']
+  specs:
+    - $install
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            concretize()
+
+        ev.read('test')
+
+        # Regression test for handling of variants with dashes in them
+        # will fail before this point if code regresses
+        assert True
 
 
 def test_stack_definition_extension(tmpdir):

@@ -10,8 +10,8 @@ class RTriebeard(RPackage):
     """triebeard: 'Radix' Trees in 'Rcpp'"""
 
     homepage = "https://github.com/Ironholds/triebeard/"
-    url      = "https://cran.r-project.org/src/contrib/triebeard_0.3.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/triebeard"
+    url      = "https://cloud.r-project.org/src/contrib/triebeard_0.3.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/triebeard"
 
     version('0.3.0', sha256='bf1dd6209cea1aab24e21a85375ca473ad11c2eff400d65c6202c0fb4ef91ec3')
 

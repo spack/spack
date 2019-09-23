@@ -42,7 +42,10 @@ if sys.version_info[0] < 3:
         os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncfilters.py'),
         os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncsupport.py'),
         os.path.join(spack_lib_path, 'external', 'yaml', 'lib3'),
-        os.path.join(spack_lib_path, 'external', 'pyqver3.py')]
+        os.path.join(spack_lib_path, 'external', 'pyqver3.py'),
+        # Uses importlib
+        os.path.join(spack_lib_path, 'spack', 'test', 'schema.py')
+    ]
 
 else:
     import pyqver3 as pyqver
@@ -55,7 +58,10 @@ else:
         os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncfilters.py'),
         os.path.join(spack_lib_path, 'external', 'jinja2', 'asyncsupport.py'),
         os.path.join(spack_lib_path, 'external', 'yaml', 'lib'),
-        os.path.join(spack_lib_path, 'external', 'pyqver2.py')]
+        os.path.join(spack_lib_path, 'external', 'pyqver2.py'),
+        # Uses importlib
+        os.path.join(spack_lib_path, 'spack', 'test', 'schema.py')
+    ]
 
 
 def pyfiles(search_paths, exclude=()):

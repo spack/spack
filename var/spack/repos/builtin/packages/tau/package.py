@@ -22,6 +22,7 @@ class Tau(Package):
     git      = "https://github.com/UO-OACISS/tau2"
 
     version('develop', branch='master')
+    version('2.28.2', '64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
     version('2.28.1', '4e48fb477250f201ab00381cb43afea6')
     version('2.28', '68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
     version('2.27.2p1', 'b9cc42ee8afdcfefe5104ab0a8f23a23')
@@ -57,6 +58,8 @@ class Tau(Package):
     variant('shmem', default=False, description='Activates SHMEM support')
     variant('gasnet', default=False, description='Activates GASNET support')
     variant('cuda', default=False, description='Activates CUDA support')
+    variant('fortran', default=True, description='Activates Fortran support')
+    variant('io', default=True, description='Activates POSIX I/O support')
 
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
@@ -64,6 +67,7 @@ class Tau(Package):
     variant('craycnl', default=False, description='Build for Cray compute nodes')
     variant('bgq', default=False, description='Build for IBM BlueGene/Q compute nodes')
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
+    variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
@@ -86,7 +90,7 @@ class Tau(Package):
 
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
-    def set_compiler_options(self):
+    def set_compiler_options(self, spec):
 
         useropt = ["-O2 -g", self.rpath_args]
 
@@ -106,10 +110,10 @@ class Tau(Package):
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
-        compiler_options = ['-c++=%s' % self.compiler.cxx,
-                            '-cc=%s' % self.compiler.cc]
+        compiler_options = ['-c++=%s' % os.path.basename(self.compiler.cxx),
+                            '-cc=%s' % os.path.basename(self.compiler.cc)]
 
-        if self.compiler.fc:
+        if '+fortran' in spec and self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
 
         ##########
@@ -133,6 +137,21 @@ class Tau(Package):
         options = ["-prefix=%s" % prefix,
                    "-iowrapper"]
 
+        if '+craycnl' in spec:
+            options.append('-arch=craycnl')
+
+        if '+bgq' in spec:
+            options.append('-arch=bgq')
+
+        if '+ppc64le' in spec:
+            options.append('-arch=ibm64linux')
+
+        if '+x86_64' in spec:
+            options.append('-arch=x86_64')
+
+        if ('platform=cray' in self.spec) and ('+x86_64' not in spec):
+            options.append('-arch=craycnl')
+
         if '+pdt' in spec:
             options.append("-pdt=%s" % spec['pdt'].prefix)
 
@@ -153,6 +172,12 @@ class Tau(Package):
 
         if '+opari' in spec:
             options.append('-opari')
+
+        if '+ompt' in spec:
+            options.append('-ompt')
+
+        if '+io' in spec:
+            options.append('-iowrapper')
 
         if '+binutils' in spec:
             options.append("-bfd=%s" % spec['binutils'].prefix)
@@ -214,7 +239,7 @@ class Tau(Package):
                     break
             options.append("-pythonlib=%s" % lib_path)
 
-        compiler_specific_options = self.set_compiler_options()
+        compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
         configure(*options)
         make("install")

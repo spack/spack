@@ -17,7 +17,7 @@ class Petsc(Package):
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url      = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
-    git      = "https://bitbucket.org/petsc/petsc.git"
+    git      = "https://gitlab.com/petsc/petsc.git"
 
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 

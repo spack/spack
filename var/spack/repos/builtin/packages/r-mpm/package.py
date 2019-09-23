@@ -8,12 +8,15 @@ from spack import *
 
 class RMpm(RPackage):
     """Exploratory graphical analysis of multivariate data, specifically
- gene expression data with different projection methods: principal
- component analysis, correspondence analysis, spectral map analysis."""
+    gene expression data with different projection methods: principal
+    component analysis, correspondence analysis, spectral map analysis."""
 
-    homepage = "https://cran.rstudio.com/web/packages/mpm/index.html"
-    url = "https://cran.rstudio.com/src/contrib/mpm_1.0-22.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mpm"
+    homepage = "https://cloud.r-project.org/package=mpm"
+    url      = "https://cloud.r-project.org/src/contrib/mpm_1.0-22.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mpm"
+
     version('1.0-22', '91885c421cafd89ce8893ccf827165a2')
 
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
     depends_on('r-kernsmooth', type=('build', 'run'))

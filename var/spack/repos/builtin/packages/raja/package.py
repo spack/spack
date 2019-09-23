@@ -36,10 +36,8 @@ class Raja(CMakePackage):
         spec = self.spec
 
         options = []
-
-        if '+openmp' in spec:
-            options.extend([
-                '-DENABLE_OPENMP=On'])
+        options.append('-DENABLE_OPENMP={0}'.format(
+            'On' if '+openmp' in spec else 'Off'))
 
         if '+cuda' in spec:
             options.extend([

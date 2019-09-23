@@ -12,12 +12,17 @@ class RGetoptlong(RPackage):
        use in R. It also provides a simple way for variable interpolation in
        R."""
 
-    homepage = "https://cran.rstudio.com/web/packages/GetoptLong/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/GetoptLong_0.1.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/GetoptLong"
+    homepage = "https://cloud.r-project.org/package=GetoptLong"
+    url      = "https://cloud.r-project.org/src/contrib/GetoptLong_0.1.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/GetoptLong"
 
+    version('0.1.7', sha256='b9a98881db407eae9b711c4fa9170168fd5f3be1f8485cd8f28d0a60ace083ba')
     version('0.1.6', 'e4b964d0817cb6c6a707297b21405749')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-rjson', type=('build', 'run'))
-    depends_on('r-globaloptions', type=('build', 'run'))
+    depends_on('r-globaloptions@0.1.0:', type=('build', 'run'))
+
+    # The CRAN site lists SystemRequirments as: Perl, Getopt::Long. The
+    # Getop::Long package will be installed with Perl so just depend on perl.
     depends_on('perl')

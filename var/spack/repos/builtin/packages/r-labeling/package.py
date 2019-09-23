@@ -9,8 +9,8 @@ from spack import *
 class RLabeling(RPackage):
     """Provides a range of axis labeling algorithms."""
 
-    homepage = "https://cran.r-project.org/web/packages/labeling/index.html"
-    url      = "https://cran.r-project.org/src/contrib/labeling_0.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/labeling"
+    homepage = "https://cloud.r-project.org/package=labeling"
+    url      = "https://cloud.r-project.org/src/contrib/labeling_0.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/labeling"
 
     version('0.3', 'ccd7082ec0b211aba8a89d85176bb534')

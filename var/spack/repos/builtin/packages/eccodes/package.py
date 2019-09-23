@@ -17,6 +17,7 @@ class Eccodes(CMakePackage):
 
     maintainers = ['skosukhin']
 
+    version('2.13.0', sha256='c5ce1183b5257929fc1f1c8496239e52650707cfab24f4e0e1f1a471135b8272')
     version('2.5.0', '5a7e92c58418d855082fa573efd352aa')
     version('2.2.0', 'b27e6f0a3eea5b92dac37372e4c45a62')
 
@@ -56,7 +57,9 @@ class Eccodes(CMakePackage):
     # Can be built with Python2 or Python3.
     depends_on('python', when='+memfs', type='build')
     # The interface works only for Python2.
-    depends_on('python@2.6:2.999', when='+python',
+    # Python 3 support was added in 2.13.0:
+    # https://confluence.ecmwf.int/display/ECC/Python+3+interface+for+ecCodes
+    depends_on('python@2.6:2.999', when='@:2.12+python',
                type=('build', 'link', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     extends('python', when='+python')
@@ -69,7 +72,7 @@ class Eccodes(CMakePackage):
     patch('enable_only_jasper.patch', when='jp2k=jasper')
 
     # CMAKE_INSTALL_RPATH must be a semicolon-separated list.
-    patch('cmake_install_rpath.patch')
+    patch('cmake_install_rpath.patch', when='@:2.10')
 
     @run_before('cmake')
     def check_fortran(self):

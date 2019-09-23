@@ -39,6 +39,7 @@ class Gromacs(CMakePackage):
     version('5.1.5',  '831fe741bcd9f1612155dffc919885f2')
     version('5.1.4',  'ba2e34d59b3982603b4935d650c08040')
     version('5.1.2',  '614d0be372f1a6f1f36382b7a6fcab98')
+    version('4.5.5', sha256='e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba')
 
     variant('mpi', default=True, description='Activate MPI support')
     variant('shared', default=True,
@@ -60,8 +61,8 @@ class Gromacs(CMakePackage):
                     'ARM_NEON', 'ARM_NEON_ASIMD'))
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
-            description='Enables the build of a cut-down version' +
-                         ' of libgromacs and/or the mdrun program')
+            description='Enables the build of a cut-down version'
+            ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True, description='Enables OpenMP at configure time')
     variant('double_precision', default=False, description='Enables a double-precision configuration')
 
@@ -72,6 +73,9 @@ class Gromacs(CMakePackage):
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
+
+    patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:^cmake@3.14.0:')
+    patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
 
     def patch(self):
         if '+plumed' in self.spec:

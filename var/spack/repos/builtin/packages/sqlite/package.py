@@ -14,6 +14,7 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.29.0', sha256='8e7c1e2950b5b04c5944a981cb31fffbf9d2ddda939d536838ebc854481afd5b')
     version('3.28.0', sha256='d61b5286f062adfce5125eaf544d495300656908e61fca143517afcc0a89b7c3')
     version('3.27.2', sha256='50c39e85ea28b5ecfdb3f9e860afe9ba606381e21836b2849efca6a0bfe6ef6e')
     version('3.27.1', sha256='54a92b8ff73ff6181f89b9b0c08949119b99e8cccef93dbef90e852a8b10f4f8')
@@ -23,6 +24,7 @@ class Sqlite(AutotoolsPackage):
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
     depends_on('readline')
+    depends_on('zlib')
 
     variant('functions', default=False,
             description='Provide mathematical and string extension functions '
@@ -32,6 +34,9 @@ class Sqlite(AutotoolsPackage):
     variant('fts', default=True,
             description='Enable FTS support '
             '(unsafe for <3.26.0.0 due to Magellan).')
+
+    variant('rtree', default=False, description='Build with Rtree module')
+    variant('column_metadata', default=False, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts('+fts', when='@:3.25.99.99')
@@ -99,6 +104,14 @@ class Sqlite(AutotoolsPackage):
 
         if '+fts' not in self.spec:
             args.extend(['--disable-fts4', '--disable-fts5'])
+
+        # Ref: https://sqlite.org/rtree.html
+        if '+rtree' in self.spec:
+            args.append('CPPFLAGS=-DSQLITE_ENABLE_RTREE=1')
+
+        # Ref: https://sqlite.org/compile.html
+        if '+column_metadata' in self.spec:
+            args.append('CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1')
 
         return args
 

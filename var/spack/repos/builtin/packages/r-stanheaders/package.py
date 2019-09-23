@@ -24,9 +24,13 @@ class RStanheaders(RPackage):
     estimate, and analyze Stan models."""
 
     homepage = "http://mc-stan.org/"
-    url      = "https://cran.r-project.org/src/contrib/StanHeaders_2.10.0-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/StanHeaders"
+    url      = "https://cloud.r-project.org/src/contrib/StanHeaders_2.10.0-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/StanHeaders"
 
+    version('2.18.1-10', sha256='8a9f7e22105428e97d14f44f75395c37cf8c809de148d279c620024452b3565a')
     version('2.18.1', sha256='ce0d609a7cd11725b1203bdeae92acc54da3a48b8266eb9dbdb9d95b14df9209')
     version('2.17.1', '11d8770277dd18e563852852633c6c25')
     version('2.10.0-2', '9d09b1e9278f08768f7a988ad9082d57')
+
+    depends_on('r@3.4.0:', when='@2.18.0:', type=('build', 'run'))
+    depends_on('pandoc', type='build')

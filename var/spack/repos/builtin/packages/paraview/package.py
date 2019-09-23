@@ -11,14 +11,16 @@ class Paraview(CMakePackage):
     """ParaView is an open-source, multi-platform data analysis and
     visualization application."""
 
-    homepage = 'http://www.paraview.org'
-    url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
-    _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
+    homepage = 'https://www.paraview.org'
+    url      = "https://www.paraview.org/files/v5.6/ParaView-v5.6.2.tar.xz"
+    list_url = "https://www.paraview.org/files"
+    list_depth = 1
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
 
     maintainers = ['chuckatkins', 'danlipsa']
 
     version('develop', branch='master', submodules=True)
+    version('5.6.2', sha256='1f3710b77c58a46891808dbe23dc59a1259d9c6b7bb123aaaeaa6ddf2be882ea')
     version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
     version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
     version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
@@ -110,11 +112,14 @@ class Paraview(CMakePackage):
     patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
 
     def url_for_version(self, version):
+        _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
         """Handle ParaView version-based custom URLs."""
         if version < Version('5.1.0'):
-            return self._urlfmt.format(version.up_to(2), version, '-source')
+            return _urlfmt.format(version.up_to(2), version, '-source', 'gz')
+        elif version < Version('5.6.1'):
+            return _urlfmt.format(version.up_to(2), version, '', 'gz')
         else:
-            return self._urlfmt.format(version.up_to(2), version, '')
+            return _urlfmt.format(version.up_to(2), version, '', 'xz')
 
     @property
     def paraview_subdir(self):
@@ -199,6 +204,7 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
             '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
+            '-DVTK_USE_SYSTEM_PNG:BOOL=ON',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY'
         ]
 

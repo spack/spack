@@ -13,8 +13,9 @@ class RNor1mix(RPackage):
        generation and graphics; now fitting to data by ML (Maximum Likelihood)
        or EM estimation."""
 
-    homepage = "https://CRAN.R-project.org/package=nor1mix"
-    url      = "https://cran.rstudio.com/src/contrib/nor1mix_1.2-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nor1mix"
+    homepage = "https://cloud.r-project.org/package=nor1mix"
+    url      = "https://cloud.r-project.org/src/contrib/nor1mix_1.2-3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/nor1mix"
 
+    version('1.3-0', sha256='9ce4ee92f889a4a4041b5ea1ff09396780785a9f12ac46f40647f74a37e327a0')
     version('1.2-3', '60eb5cc1ea6b366f53042087a080b105')

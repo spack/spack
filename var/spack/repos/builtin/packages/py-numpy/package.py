@@ -15,8 +15,9 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.16.4.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.2.zip"
 
+    maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
     import_modules = [
@@ -26,6 +27,10 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('1.17.2', sha256='73615d3edc84dd7c4aeb212fa3748fb83217e00d201875a47327f55363cef2df')
+    version('1.17.1', sha256='f11331530f0eff69a758d62c2461cd98cdc2eae0147279d8fc86e0464eb7e8ca')
+    version('1.17.0', sha256='951fefe2fb73f84c620bec4e001e80a80ddaa1b84dce244ded7f1e0cbe0ed34a')
+    version('1.16.5', sha256='8bb452d94e964b312205b0de1238dd7209da452343653ab214b5d681780e7a0c')
     version('1.16.4', sha256='7242be12a58fec245ee9734e625964b97cf7e3f2f7d016603f9e56660ce479c7')
     version('1.16.3', sha256='78a6f89da87eeb48014ec652a65c4ffde370c036d780a995edaeb121d3625621')
     version('1.16.2', sha256='6c692e3879dde0b67a9dc78f9bfb6f61c666b4562fd8619632d7043fb5b691b0')
@@ -62,6 +67,8 @@ class PyNumpy(PythonPackage):
     variant('lapack', default=True, description='Build with LAPACK support')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
+    depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
@@ -69,129 +76,175 @@ class PyNumpy(PythonPackage):
     depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
     depends_on('py-pytest', when='@1.15:', type='test')
 
-    def setup_dependent_package(self, module, dependent_spec):
-        python_version = self.spec['python'].version.up_to(2)
+    # Allows you to specify order of BLAS/LAPACK preference
+    # https://github.com/numpy/numpy/pull/13132
+    patch('blas-lapack-order.patch', when='@1.15:1.16')
 
-        self.spec.include = join_path(
-            self.prefix.lib,
-            'python{0}'.format(python_version),
-            'site-packages',
-            'numpy/core/include')
+    # GCC 4.8 is the minimum version that works
+    conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
 
-    def patch(self):
+    def flag_handler(self, name, flags):
+        # -std=c99 at least required, old versions of GCC default to -std=c90
+        if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
+            flags.append(self.compiler.c99_flag)
+        return (flags, None, None)
+
+    @run_before('build')
+    def set_blas_lapack(self):
+        # https://numpy.org/devdocs/user/building.html
+        # https://github.com/numpy/numpy/blob/master/site.cfg.example
+
+        # Skip if no BLAS/LAPACK requested
         spec = self.spec
+        if '+blas' not in spec and '+lapack' not in spec:
+            return
 
         def write_library_dirs(f, dirs):
-            f.write('library_dirs=%s\n' % dirs)
-            if not ((platform.system() == "Darwin") and
+            f.write('library_dirs = {0}\n'.format(dirs))
+            if not ((platform.system() == 'Darwin') and
                     (Version(platform.mac_ver()[0]).up_to(2) == Version(
                         '10.12'))):
-                f.write('rpath=%s\n' % dirs)
+                f.write('rpath = {0}\n'.format(dirs))
 
-        # for build notes see http://www.scipy.org/scipylib/building/linux.html
-        blas_info = []
-        lapack_info = []
-        lapackblas_info = []
-
-        if '+lapack' in spec:
-            lapack_info += spec['lapack'].libs
-
+        blas_libs = LibraryList([])
+        blas_headers = HeaderList([])
         if '+blas' in spec:
-            blas_info += spec['blas'].libs
+            blas_libs = spec['blas'].libs
+            blas_headers = spec['blas'].headers
 
-        lapackblas_info = lapack_info + blas_info
+        lapack_libs = LibraryList([])
+        lapack_headers = HeaderList([])
+        if '+lapack' in spec:
+            lapack_libs = spec['lapack'].libs
+            lapack_headers = spec['lapack'].headers
 
-        def write_empty_libs(f, provider):
-            f.write('[{0}]\n'.format(provider))
-            f.write('libraries=\n')
-            write_library_dirs(f, '')
+        lapackblas_libs = lapack_libs + blas_libs
+        lapackblas_headers = lapack_headers + blas_headers
 
-        if '+blas' in spec or '+lapack' in spec:
-            # note that one should not use [blas_opt] and [lapack_opt], see
-            # https://github.com/numpy/numpy/commit/ffd4332262ee0295cb942c94ed124f043d801eb6
-            with open('site.cfg', 'w') as f:
-                # Unfortunately, numpy prefers to provide each BLAS/LAPACK
-                # differently.
-                blas_names  = ','.join(blas_info.names)
-                blas_dirs   = ':'.join(blas_info.directories)
-                lapack_names  = ','.join(lapack_info.names)
-                lapack_dirs   = ':'.join(lapack_info.directories)
-                lapackblas_names  = ','.join(lapackblas_info.names)
-                lapackblas_dirs   = ':'.join(lapackblas_info.directories)
+        blas_lib_names   = ','.join(blas_libs.names)
+        blas_lib_dirs    = ':'.join(blas_libs.directories)
+        blas_header_dirs = ':'.join(blas_headers.directories)
 
-                handled_blas_and_lapack = False
+        lapack_lib_names   = ','.join(lapack_libs.names)
+        lapack_lib_dirs    = ':'.join(lapack_libs.directories)
+        lapack_header_dirs = ':'.join(lapack_headers.directories)
 
-                # Special treatment for some (!) BLAS/LAPACK. Note that
-                # in this case library_dirs can not be specified within [ALL].
-                if '^openblas' in spec:
-                    f.write('[openblas]\n')
-                    f.write('libraries=%s\n' % lapackblas_names)
-                    write_library_dirs(f, lapackblas_dirs)
-                    handled_blas_and_lapack = True
-                else:
-                    write_empty_libs(f, 'openblas')
+        lapackblas_lib_names   = ','.join(lapackblas_libs.names)
+        lapackblas_lib_dirs    = ':'.join(lapackblas_libs.directories)
+        lapackblas_header_dirs = ':'.join(lapackblas_headers.directories)
 
-                if '^mkl' in spec:
-                    # numpy does not expect system libraries needed for MKL
-                    # here.
-                    # names = [x for x in names if x.startswith('mkl')]
-                    # FIXME: as of @1.11.2, numpy does not work with separately
-                    # specified threading and interface layers. A workaround is
-                    # a terribly bad idea to use mkl_rt. In this case Spack
-                    # will no longer be able to guarantee that one and the
-                    # same variant of Blas/Lapack (32/64bit, threaded/serial)
-                    # is used within the DAG. This may lead to a lot of
-                    # hard-to-debug segmentation faults on user's side. Users
-                    # may also break working installation by (unconsciously)
-                    # setting environment variable to switch between different
-                    # interface and threading layers dynamically. From this
-                    # perspective it is no different from throwing away RPATH's
-                    # and using LD_LIBRARY_PATH throughout Spack.
-                    f.write('[mkl]\n')
-                    f.write('mkl_libs=%s\n' % 'mkl_rt')
-                    write_library_dirs(f, lapackblas_dirs)
-                    handled_blas_and_lapack = True
-                else:
-                    # Without explicitly setting the search directories to be
-                    # an empty list, numpy may retrieve and use mkl libs from
-                    # the system.
-                    write_empty_libs(f, 'mkl')
+        # Tell numpy where to find BLAS/LAPACK libraries
+        with open('site.cfg', 'w') as f:
+            if '^intel-mkl' in spec or '^intel-parallel-studio+mkl' in spec:
+                f.write('[mkl]\n')
+                # FIXME: as of @1.11.2, numpy does not work with separately
+                # specified threading and interface layers. A workaround is a
+                # terribly bad idea to use mkl_rt. In this case Spack will no
+                # longer be able to guarantee that one and the same variant of
+                # Blas/Lapack (32/64bit, threaded/serial) is used within the
+                # DAG. This may lead to a lot of hard-to-debug segmentation
+                # faults on user's side. Users may also break working
+                # installation by (unconsciously) setting environment variable
+                # to switch between different interface and threading layers
+                # dynamically. From this perspective it is no different from
+                # throwing away RPATH's and using LD_LIBRARY_PATH throughout
+                # Spack.
+                f.write('libraries = {0}\n'.format('mkl_rt'))
+                write_library_dirs(f, lapackblas_lib_dirs)
+                f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
 
-                if '^atlas' in spec:
-                    f.write('[atlas]\n')
-                    f.write('atlas_libs=%s\n' % lapackblas_names)
-                    write_library_dirs(f, lapackblas_dirs)
-                    handled_blas_and_lapack = True
-                else:
-                    write_empty_libs(f, 'atlas')
+            if '^blis' in spec:
+                f.write('[blis]\n')
+                f.write('libraries = {0}\n'.format(blas_lib_names))
+                write_library_dirs(f, blas_lib_dirs)
+                f.write('include_dirs = {0}\n'.format(blas_header_dirs))
 
-                if '^netlib-lapack' in spec:
-                    # netlib requires blas and lapack listed
-                    # separately so that scipy can find them
-                    if spec.satisfies('+blas'):
-                        f.write('[blas]\n')
-                        f.write('blas_libs=%s\n' % blas_names)
-                        write_library_dirs(f, blas_dirs)
-                    if spec.satisfies('+lapack'):
-                        f.write('[lapack]\n')
-                        f.write('lapack_libs=%s\n' % lapack_names)
-                        write_library_dirs(f, lapack_dirs)
-                    handled_blas_and_lapack = True
+            if '^openblas' in spec:
+                f.write('[openblas]\n')
+                f.write('libraries = {0}\n'.format(lapackblas_lib_names))
+                write_library_dirs(f, lapackblas_lib_dirs)
+                f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
 
-                if not handled_blas_and_lapack:
-                    # The section title for the defaults changed in @1.10, see
-                    # https://github.com/numpy/numpy/blob/master/site.cfg.example
-                    if spec.satisfies('@:1.9.2'):
-                        f.write('[DEFAULT]\n')
-                    else:
-                        f.write('[ALL]\n')
-                    f.write('libraries=%s\n' % lapackblas_names)
-                    write_library_dirs(f, lapackblas_dirs)
+            if '^libflame' in spec:
+                f.write('[flame]\n')
+                f.write('libraries = {0}\n'.format(lapack_lib_names))
+                write_library_dirs(f, lapack_lib_dirs)
+                f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
+
+            if '^atlas' in spec:
+                f.write('[atlas]\n')
+                f.write('libraries = {0}\n'.format(lapackblas_lib_names))
+                write_library_dirs(f, lapackblas_lib_dirs)
+                f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
+
+            if '^veclibfort' in spec:
+                f.write('[accelerate]\n')
+                f.write('libraries = {0}\n'.format(lapackblas_lib_names))
+                write_library_dirs(f, lapackblas_lib_dirs)
+
+            if '^netlib-lapack' in spec:
+                # netlib requires blas and lapack listed
+                # separately so that scipy can find them
+                if spec.satisfies('+blas'):
+                    f.write('[blas]\n')
+                    f.write('libraries = {0}\n'.format(blas_lib_names))
+                    write_library_dirs(f, blas_lib_dirs)
+                    f.write('include_dirs = {0}\n'.format(blas_header_dirs))
+                if spec.satisfies('+lapack'):
+                    f.write('[lapack]\n')
+                    f.write('libraries = {0}\n'.format(lapack_lib_names))
+                    write_library_dirs(f, lapack_lib_dirs)
+                    f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
+
+    def setup_environment(self, spack_env, run_env):
+        # Tell numpy which BLAS/LAPACK libraries we want to use.
+        # https://github.com/numpy/numpy/pull/13132
+        # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
+        spec = self.spec
+
+        # https://numpy.org/devdocs/user/building.html#blas
+        if '~blas' in spec:
+            blas = ''
+        elif spec['blas'].name == 'intel-mkl' or \
+                spec['blas'].name == 'intel-parallel-studio':
+            blas = 'mkl'
+        elif spec['blas'].name == 'blis':
+            blas = 'blis'
+        elif spec['blas'].name == 'openblas':
+            blas = 'openblas'
+        elif spec['blas'].name == 'atlas':
+            blas = 'atlas'
+        elif spec['blas'].name == 'veclibfort':
+            blas = 'accelerate'
+        else:
+            blas = 'blas'
+
+        spack_env.set('NPY_BLAS_ORDER', blas)
+
+        # https://numpy.org/devdocs/user/building.html#lapack
+        if '~lapack' in spec:
+            lapack = ''
+        elif spec['lapack'].name == 'intel-mkl' or \
+                spec['lapack'].name == 'intel-parallel-studio':
+            lapack = 'mkl'
+        elif spec['lapack'].name == 'openblas':
+            lapack = 'openblas'
+        elif spec['lapack'].name == 'libflame':
+            lapack = 'flame'
+        elif spec['lapack'].name == 'atlas':
+            lapack = 'atlas'
+        elif spec['lapack'].name == 'veclibfort':
+            lapack = 'accelerate'
+        else:
+            lapack = 'lapack'
+
+        spack_env.set('NPY_LAPACK_ORDER', lapack)
 
     def build_args(self, spec, prefix):
         args = []
 
         # From NumPy 1.10.0 on it's possible to do a parallel build.
+        # https://numpy.org/devdocs/user/building.html#parallel-builds
         if self.version >= Version('1.10.0'):
             # But Parallel build in Python 3.5+ is broken.  See:
             # https://github.com/spack/spack/issues/7927
@@ -200,20 +253,6 @@ class PyNumpy(PythonPackage):
                 args = ['-j', str(make_jobs)]
 
         return args
-
-    def setup_environment(self, spack_env, run_env):
-        # If py-numpy is installed as an external package, python won't
-        # be available in the spec. See #9149 for details.
-        if 'python' in self.spec:
-            python_version = self.spec['python'].version.up_to(2)
-
-            include_path = join_path(
-                self.prefix.lib,
-                'python{0}'.format(python_version),
-                'site-packages',
-                'numpy/core/include')
-
-            run_env.prepend_path('CPATH', include_path)
 
     def test(self):
         # `setup.py test` is not supported.  Use one of the following

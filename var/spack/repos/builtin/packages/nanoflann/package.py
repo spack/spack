@@ -16,7 +16,8 @@ class Nanoflann(CMakePackage):
     version('1.2.3', '92a0f44a631c41aa06f9716c51dcdb11')
 
     def patch(self):
-        if self.spec.satisfies('target=aarch64 %gcc@:5.9'):
+        if self.spec.target.family == 'aarch64' and \
+                self.spec.satisfies('%gcc@:5.9'):
             filter_file('-mtune=native', '', 'CMakeLists.txt')
 
     def cmake_args(self):

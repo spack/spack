@@ -9,9 +9,9 @@ from spack import *
 class RRrcov(RPackage):
     """rrcov: Scalable Robust Estimators with High Breakdown Point"""
 
-    homepage = "https://cran.r-project.org/package=rrcov"
-    url      = "https://cran.r-project.org/src/contrib/rrcov_1.4-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rrcov"
+    homepage = "https://cloud.r-project.org/package=rrcov"
+    url      = "https://cloud.r-project.org/src/contrib/rrcov_1.4-7.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rrcov"
 
     version('1.4-7', sha256='cbd08ccce8b583a2f88946a3267c8fc494ee2b44ba749b9296a6e3d818f6f293')
 
@@ -21,5 +21,3 @@ class RRrcov(RPackage):
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))
     depends_on('r-pcapp', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-ellipse', type=('build', 'run'))

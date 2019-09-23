@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack import *
-import os
 
 
 class PyMatplotlib(PythonPackage):
@@ -13,8 +14,21 @@ class PyMatplotlib(PythonPackage):
     environments across platforms."""
 
     homepage = "https://pypi.python.org/pypi/matplotlib"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-2.0.2.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.1.1.tar.gz"
 
+    maintainers = ['adamjstewart']
+
+    import_modules = [
+        'mpl_toolkits', 'matplotlib', 'mpl_toolkits.axes_grid1',
+        'mpl_toolkits.axes_grid', 'mpl_toolkits.mplot3d',
+        'mpl_toolkits.axisartist', 'matplotlib.compat', 'matplotlib.tri',
+        'matplotlib.axes', 'matplotlib.sphinxext', 'matplotlib.cbook',
+        'matplotlib.backends', 'matplotlib.style', 'matplotlib.projections',
+        'matplotlib.testing', 'matplotlib.backends.qt_editor',
+        'matplotlib.testing.jpl_units'
+    ]
+
+    version('3.1.1', sha256='1febd22afe1489b13c6749ea059d392c03261b2950d1d45c17e3aed812080c93')
     version('3.0.2', 'd6af3dfae557ea4046fef96cf617fa24')
     version('3.0.0', '39c7f44c8fa0f24cbf684137371ce4ae')
     version('2.2.3', '403b0bddd751d71187416f20d4cff100')
@@ -26,99 +40,107 @@ class PyMatplotlib(PythonPackage):
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')
 
-    # See: http://matplotlib.org/users/installing.html
+    # https://matplotlib.org/tutorials/introductory/usage.html#backends
+    # From `matplotlib.rcsetup`:
+    interactive_bk = [
+        'gtk3agg', 'gtk3cairo', 'macosx', 'nbagg', 'qt4agg', 'qt4cairo',
+        'qt5agg', 'qt5cairo', 'tkagg', 'tkcairo', 'webagg', 'wx', 'wxagg',
+        'wxcairo'
+    ]
+    non_interactive_bk = [
+        'agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg', 'template'
+    ]
+    all_backends = interactive_bk + non_interactive_bk
 
-    # Variants enabled by default for a standard configuration
-    variant('tk', default=True, description='Enable Tk GUI')
-    variant('image', default=True,
-            description='Enable reading/saving JPEG, BMP and TIFF files')
+    default_backend = 'agg'
+    if sys.platform == 'darwin':
+        default_backend = 'macosx'
 
-    # Variants optionally available to user
-    variant('ipython', default=False, description='Enable ipython support')
-    variant('qt', default=False, description='Enable Qt GUI')
-    variant('latex', default=False,
-            description='Enable LaTeX text rendering support')
+    variant('backend', default=default_backend, description='Default backend',
+            values=all_backends, multi=False)
+    variant('movies', default=False,
+            description='Enable support for saving movies')
     variant('animation', default=False,
             description='Enable animation support')
+    variant('image', default=True,
+            description='Enable reading/saving JPEG, BMP and TIFF files')
+    variant('latex', default=False,
+            description='Enable LaTeX text rendering support')
 
-    # Python 2.7, 3.4, or 3.5
+    # https://matplotlib.org/users/installing.html#dependencies
+    # Required dependencies
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
-
-    # ------ Required dependencies
-    # Per Github issue #3813, setuptools is required at runtime in order
-    # to make mpl_toolkits a namespace package that can span multiple
-    # directories (i.e., matplotlib and basemap)
-    depends_on('py-setuptools', type=('build', 'run'))
-
+    depends_on('python@2.7:2.8,3.4:', when='@:2')
     depends_on('python@3.5:', when='@3:')
-    depends_on('libpng@1.2:')
+    depends_on('python@3.6:', when='@3.1:')
     depends_on('freetype@2.3:')
-    patch('freetype-include-path.patch', when='@2.2.2:2.9.9')  # Patch to pick up correct freetype headers
-
-    depends_on('py-numpy@1.6:', type=('build', 'run'))
-    depends_on('py-python-dateutil@1.1:', type=('build', 'run'))
+    depends_on('libpng@1.2:')
+    depends_on('py-numpy@1.11:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))  # See #3813
+    depends_on('py-cycler@0.10:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
+    depends_on('py-kiwisolver@1:', type=('build', 'run'), when='@2.2.0:')
     depends_on('py-pyparsing', type=('build', 'run'))
-    depends_on('py-pytz', type=('build', 'run'))
-    depends_on('py-cycler@0.9:', type=('build', 'run'))
+    depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')
-    depends_on('py-kiwisolver', type=('build', 'run'), when='@2.2.0:')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
                when='@2.1.0:2.999.999')
+    depends_on('py-six@1.9.0:', type=('build', 'run'), when='@:2')
 
-    # ------ Optional GUI frameworks
-    depends_on('tk@8.3:', when='+tk')  # not 8.6.0 or 8.6.1
-    depends_on('qt', when='+qt')
-    depends_on('py-pyside', when='+qt', type=('build', 'run'))
+    # Optional backend dependencies
+    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkagg')
+    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkcairo')
+    depends_on('python+tkinter', when='backend=tkagg')
+    depends_on('python+tkinter', when='backend=tkcairo')
+    depends_on('py-pyqt4@4.6:', when='backend=qt4agg')    # or py-pyside@1.0.3:
+    depends_on('py-pyqt4@4.6:', when='backend=qt4cairo')  # or py-pyside@1.0.3:
+    depends_on('py-pyqt5', when='backend=qt5agg')
+    depends_on('py-pyqt5', when='backend=qt5cairo')
+    depends_on('py-pygobject', when='backend=gtk3agg')
+    depends_on('py-pygobject', when='backend=gtk3cairo')
+    depends_on('py-wxpython@4:', when='backend=wx')
+    depends_on('py-wxpython@4:', when='backend=wxagg')
+    depends_on('py-wxpython@4:', when='backend=wxcairo')
+    depends_on('py-cairocffi@0.8:', when='backend=gtk3cairo')
+    depends_on('py-cairocffi@0.8:', when='backend=qt4cairo')
+    depends_on('py-cairocffi@0.8:', when='backend=qt5cairo')
+    depends_on('py-cairocffi@0.8:', when='backend=tkcairo')
+    depends_on('py-cairocffi@0.8:', when='backend=wxcairo')
+    depends_on('py-cairocffi@0.8:', when='backend=cairo')
+    depends_on('py-tornado', when='backend=webagg')
 
-    # --------- Optional external programs
-    # ffmpeg/avconv or mencoder
+    # Optional dependencies
+    depends_on('ffmpeg', when='+movies')
+    # depends_on('libav', when='+movies')
     depends_on('image-magick', when='+animation')
-
-    # --------- Optional dependencies
-    depends_on('pkgconfig', type='build')    # why not...
-    depends_on('pil', when='+image', type=('build', 'run'))
-    depends_on('py-ipython', when='+ipython', type=('build', 'run'))
-    depends_on('ghostscript', when='+latex', type='run')
+    depends_on('py-pillow@3.4:', when='+image', type=('build', 'run'))
     depends_on('texlive', when='+latex', type='run')
+    depends_on('ghostscript@0.9:', when='+latex', type='run')
+    depends_on('pkgconfig', type='build')
 
     # Testing dependencies
-    depends_on('py-nose', type='test')
-    depends_on('py-mock', type='test')
+    depends_on('py-pytest', type='test')
 
-    # Required libraries that ship with matplotlib
-    # depends_on('agg@2.4:')
-    depends_on('qhull@2012.1:')
-    # depends_on('ttconv')
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
+    msg = 'MacOSX backend requires the Cocoa headers included with XCode'
+    conflicts('platform=linux', when='backend=macosx', msg=msg)
+    conflicts('platform=bgq',   when='backend=macosx', msg=msg)
+    conflicts('platform=cray',  when='backend=macosx', msg=msg)
+
+    # Patch to pick up correct freetype headers
+    patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
     @run_before('build')
-    def set_cc(self):
-        if self.spec.satisfies('%intel'):
-            env['CC'] = spack_cxx
-
-    @run_after('install')
     def set_backend(self):
-        spec = self.spec
-        prefix = self.prefix
+        """Set build options with regards to backend GUI libraries."""
 
-        if '+qt' in spec or '+tk' in spec:
-            # Set backend in matplotlib configuration file
-            config_file = None
-            for p, d, f in os.walk(prefix.lib):
-                for file in f:
-                    if file.find('matplotlibrc') != -1:
-                        config_file = join_path(p, 'matplotlibrc')
-            if not config_file:
-                raise InstallError('Could not find matplotlibrc')
+        backend = self.spec.variants['backend'].value
 
-            kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
-            rc = FileFilter(config_file)
+        with open('setup.cfg', 'w') as setup:
+            # Default backend
+            setup.write('[rc_options]\n')
+            setup.write('backend = ' + backend + '\n')
 
-            # Only make Qt4 be the default backend if Tk is turned off
-            if '+qt' in spec and '+tk' not in spec:
-                rc.filter('^backend.*', 'backend     : Qt4Agg', **kwargs)
-
-            # Additional options in case user is doing Qt4:
-            if '+qt' in spec:
-                rc.filter('^#backend.qt4.*', 'backend.qt4 : PySide', **kwargs)
+    def test(self):
+        pytest = which('pytest')
+        pytest()

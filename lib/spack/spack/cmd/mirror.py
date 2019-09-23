@@ -17,6 +17,7 @@ import spack.config
 import spack.mirror
 import spack.repo
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 from spack.spec import Spec
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
@@ -152,7 +153,7 @@ def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
     # try to parse specs from the command line first.
-    with spack.concretize.concretizer.disable_compiler_existence_check():
+    with spack.concretize.disable_compiler_existence_check():
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
 
         # If there is a file, parse each line as a spec and add it to the list.
@@ -161,10 +162,14 @@ def mirror_create(args):
                 tty.die("Cannot pass specs on the command line with --file.")
             specs = _read_specs_from_file(args.file)
 
-        # If nothing is passed, use all packages.
+        # If nothing is passed, use environment or all if no active env
         if not specs:
-            specs = [Spec(n) for n in spack.repo.all_package_names()]
-            specs.sort(key=lambda s: s.format("{name}{@version}").lower())
+            env = ev.get_env(args, 'mirror')
+            if env:
+                specs = env.specs_by_hash.values()
+            else:
+                specs = [Spec(n) for n in spack.repo.all_package_names()]
+                specs.sort(key=lambda s: s.format("{name}{@version}").lower())
 
         # If the user asked for dependencies, traverse spec DAG get them.
         if args.dependencies:

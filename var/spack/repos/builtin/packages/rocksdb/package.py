@@ -35,7 +35,8 @@ class Rocksdb(MakefilePackage):
     phases = ['install']
 
     def patch(self):
-        if (self.spec.satisfies('target=aarch64 %gcc@:5.9')):
+        if (self.spec.target.family == 'aarch64' and
+            self.spec.satisfies('%gcc@:5.9')):
             filter_file(
                 '-march=native', '',
                 join_path('build_tools', 'build_detect_platform')

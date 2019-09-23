@@ -16,3 +16,4 @@ class PyChardet(PythonPackage):
     version('2.3.0', '25274d664ccb5130adae08047416e1a8')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-pytest-runner', type='build')

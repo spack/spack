@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.spec import ConflictsInSpecError
 
 import llnl.util.lang
 # os is used for rename, etc in patch()
@@ -54,7 +55,7 @@ class Fftw(AutotoolsPackage):
 
     variant(
         'simd',
-        default='sse2,avx,avx2',
+        default='generic-simd128,generic-simd256',
         values=(
             'sse', 'sse2', 'avx', 'avx2', 'avx512',  # Intel
             'avx-128-fma', 'kcvi',  # Intel
@@ -76,6 +77,41 @@ class Fftw(AutotoolsPackage):
 
     provides('fftw-api@2', when='@2.1.5')
     provides('fftw-api@3', when='@3:')
+
+    def flag_handler(self, name, flags):
+        arch = ""
+        spec = self.spec
+        target_simds = {
+            ('x86_64',): ('sse', 'sse2', 'avx', 'avx2', 'avx512',
+                          'avx-128-fma', 'kcvi'),
+            ('ppc', 'ppc64le', 'power7'): ('altivec', 'vsx'),
+            ('arm',): ('neon',)
+        }
+
+        if spec.satisfies("platform=cray"):
+            # FIXME; It is assumed that cray is x86_64.
+            # If you support arm on cray, you need to fix it.
+            arch  = "x86_64"
+
+        for targets, simds in target_simds.items():
+            if (
+                (arch not in targets)
+                and str(spec.target.family) not in targets
+            ):
+                if any(spec.satisfies('simd={0}'.format(x)) for x in simds):
+                    raise ConflictsInSpecError(
+                        spec,
+                        [(
+                            spec,
+                            spec.architecture.target,
+                            spec.variants['simd'],
+                            'simd={0} are valid only on {1}'.format(
+                                ','.join(target_simds[targets]),
+                                ','.join(targets)
+                            )
+                        )]
+                    )
+        return (flags, None, None)
 
     @property
     def libs(self):

@@ -32,90 +32,14 @@ ensure_docker_login() {
     return $__login_success
 }
 
-build_docker_image() {
-    local dockerfile="$1" ; shift
-    local build_ctx="$1" ; shift
-    local image_name="$1" ; shift
-    local first_tag="$1"
-    local tags=""
-    if [ -n "$*" ] ; then
-        tags="$( echo " $*" | sed "s|  *| -t ${image_name}:|g" )"
-        tags="${tags:1}"
-    fi
+this_dir=$(cd $(dirname $0) && pwd)
+SPACK_BIN="${this_dir}/../../../bin/spack"
 
-    if [ -n "$first_tag" ] ; then
-        first_tag=":$first_tag"
-    fi
-
-    local cache=""
-    if docker pull "${image_name}${first_tag}" ; then
-        local cache="--cache-from ${image_name}${first_tag}"
-    fi
-
-    ( set +e
-      docker build -f "$dockerfile" $cache $tags "$build_ctx" )
-    return $?
-}
-
-push_docker_image() {
-    local image_name="$1" ; shift
-    local result=0
-    while [ -n "$*" ] ; do
-        local tag="$1" ; shift
-        (
-            set +e
-            docker push "${image_name}:${tag}"
-        )
-        result="$?"
-        [ "$result" '=' '0' ] || break
-    done
-    return $result
-}
-
-SPACK_VERSION="$( ../../../bin/spack --version )"
-
-build_docker_image centos-6.dockerfile ../../.. spack/spack \
-    "${SPACK_VERSION}-centos-6"                             \
-    "centos-6"
-
-build_docker_image centos-7.dockerfile ../../.. spack/spack \
-    "${SPACK_VERSION}-centos-7"                             \
-    "${SPACK_VERSION}"                                      \
-    "centos-7"                                              \
-    "latest"
-
-build_docker_image ubuntu-1604.dockerfile ../../.. spack/spack \
-    "${SPACK_VERSION}-ubuntu-16.04"                            \
-    "${SPACK_VERSION}-ubuntu-xenial"                           \
-    "ubuntu-16.04"                                             \
-    "ubuntu-xenial"
-
-build_docker_image ubuntu-1804.dockerfile ../../.. spack/spack \
-    "${SPACK_VERSION}-ubuntu-18.04"                            \
-    "${SPACK_VERSION}-ubuntu-bionic"                           \
-    "ubuntu-18.04"                                             \
-    "ubuntu-bionic"
-
-spack list --format version_json > packages.json
+# packages.spack.io service
+${SPACK_BIN} list --format version_json > ${this_dir}/../packages/packages.json
 ./share/spack/packages/build-image.sh
-
 if [ "$TEST_SUITE" '=' "docker" -a \
      "$TRAVIS_EVENT_TYPE" != "pull_request" ] && ensure_docker_login ; then
-    push_docker_image "spack/spack"      \
-        "${SPACK_VERSION}-centos-6"      \
-        "${SPACK_VERSION}-centos-7"      \
-        "${SPACK_VERSION}-ubuntu-16.04"  \
-        "${SPACK_VERSION}-ubuntu-18.04"  \
-        "${SPACK_VERSION}-ubuntu-xenial" \
-        "${SPACK_VERSION}-ubuntu-bionic" \
-        "${SPACK_VERSION}"               \
-        "centos-6"                       \
-        "centos-7"                       \
-        "ubuntu-16.04"                   \
-        "ubuntu-18.04"                   \
-        "ubuntu-xenial"                  \
-        "ubuntu-bionic"                  \
-        "latest"
-
     ./share/spack/packages/push-image.sh
 fi
+

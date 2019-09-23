@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.spec import ConflictsInSpecError
 
 
 class Parsimonator(MakefilePackage):
@@ -15,14 +16,48 @@ class Parsimonator(MakefilePackage):
 
     version('1.0.2', commit='78368c6ab1e9adc7e9c6ec9256dd7ff2a5bb1b0a')
 
-    variant('sse', default=True, description='Enable SSE in order to substantially speed up execution')
+    variant('sse', default=False, description='Enable SSE in order to substantially speed up execution')
     variant('avx', default=False, description='Enable AVX in order to substantially speed up execution')
 
     conflicts('+avx', when='+sse')
 
+    patch('nox86.patch')
+
+    def flag_handler(self, name, flags):
+        arch = ''
+        spec = self.spec
+        if spec.satisfies("platform=cray"):
+            # FIXME; It is assumed that cray is x86_64.
+            # If you support arm on cray, you need to fix it.
+            arch = 'x86_64'
+        if arch != 'x86_64' and spec.target.family != 'x86_64':
+            if spec.satisfies("+sse"):
+                raise ConflictsInSpecError(
+                    spec,
+                    [(
+                        spec,
+                        spec.architecture.target,
+                        spec.variants['sse'],
+                        '+sse is valid only on x86_64'
+                    )]
+                )
+            if spec.satisfies("+avx"):
+                raise ConflictsInSpecError(
+                    spec,
+                    [(
+                        spec,
+                        spec.architecture.target,
+                        spec.variants['avx'],
+                        '+avx is valid only on x86_64'
+                    )]
+                )
+        return (flags, None, None)
+
     @property
     def makefile_file(self):
-        if '+sse' in self.spec:
+        if self.spec.target.family != 'x86_64':
+            return 'Makefile.nosse'
+        elif '+sse' in self.spec:
             return 'Makefile.SSE3.gcc'
         elif '+avx' in self.spec:
             return 'Makefile.AVX.gcc'
@@ -38,7 +73,9 @@ class Parsimonator(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        if '+sse' in spec:
+        if self.spec.target.family != 'x86_64':
+            install('parsimonator', prefix.bin)
+        elif '+sse' in spec:
             install('parsimonator-SSE3', prefix.bin)
         elif '+avx' in spec:
             install('parsimonator-AVX', prefix.bin)

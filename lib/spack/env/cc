@@ -32,6 +32,7 @@ parameters=(
     SPACK_CXX_RPATH_ARG
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
+    SPACK_TARGET_ARGS
     SPACK_SHORT_SPEC
     SPACK_SYSTEM_DIRS
 )
@@ -78,7 +79,7 @@ function system_dir {
 }
 
 for param in "${parameters[@]}"; do
-    if [[ -z ${!param} ]]; then
+    if [[ -z ${!param+x} ]]; then
         die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
 done
@@ -373,6 +374,7 @@ case "$mode" in
             CXX)
                 flags=("${flags[@]}" "${SPACK_CXXFLAGS[@]}") ;;
         esac
+        flags=(${SPACK_TARGET_ARGS[@]} "${flags[@]}")
         ;;
 esac
 
@@ -424,6 +426,12 @@ case "$mode" in
         libdirs+=("${extra_rpaths[@]}")
         if [[ "$add_rpaths" != "false" ]] ; then
             rpaths+=("${extra_rpaths[@]}")
+        fi
+
+        # Set implicit RPATHs
+        IFS=':' read -ra implicit_rpaths <<< "$SPACK_COMPILER_IMPLICIT_RPATHS"
+        if [[ "$add_rpaths" != "false" ]] ; then
+            rpaths+=("${implicit_rpaths[@]}")
         fi
 
         # Add SPACK_LDLIBS to args

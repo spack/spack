@@ -215,8 +215,8 @@ Module Commands for Shell Scripts
 
 Although Spack is flexible, the ``module`` command is much faster.
 This could become an issue when emitting a series of ``spack load``
-commands inside a shell script.  By adding the ``--shell`` flag,
-``spack module tcl find`` may also be used to generate code that can be
+commands inside a shell script.  By adding the ``--dependencies`` flag,
+``spack module tcl loads`` may also be used to generate code that can be
 cut-and-pasted into a shell script.  For example:
 
 .. code-block:: console
@@ -545,7 +545,7 @@ most likely via the ``+blas`` variant specification.
      base directory of the same module, effectively preventing the possibility to
      load two or more versions of the same software at the same time. The tokens
      that are available for use in this directive are the same understood by
-     the ``Spec.format`` method.
+     the :meth:`~spack.spec.Spec.format` method.
 
 
 .. note::

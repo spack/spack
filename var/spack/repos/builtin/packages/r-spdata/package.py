@@ -10,8 +10,8 @@ class RSpdata(RPackage):
     """spData: Datasets for Spatial Analysis"""
 
     homepage = "https://github.com/Nowosad/spData"
-    url      = "https://cran.r-project.org/src/contrib/spData_0.3.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/spData"
+    url      = "https://cloud.r-project.org/src/contrib/spData_0.3.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/spData"
 
     version('0.3.0', sha256='de24ea659541a6c795cd26a1f6a213e15061af9c97a24cba1c24ce30c6c24c98')
 

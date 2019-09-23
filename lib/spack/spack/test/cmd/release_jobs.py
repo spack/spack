@@ -3,47 +3,29 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pytest
 
-import json
-import sys
-
-from jsonschema import validate
-
+import spack
+import spack.environment as ev
 from spack import repo
-from spack.architecture import sys_type
 from spack.cmd.release_jobs import stage_spec_jobs, spec_deps_key_label
 from spack.main import SpackCommand
-from spack.schema.specs_deps import schema as specs_deps_schema
 from spack.spec import Spec
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 
+env = SpackCommand('env')
 release_jobs = SpackCommand('release-jobs')
 
 
-def test_specs_deps(tmpdir, config):
-    """If we ask for the specs dependencies to be written to disk, then make
-    sure we get a file of the correct format."""
-
-    output_path = str(tmpdir.mkdir('json').join('spec_deps.json'))
-    release_jobs('--specs-deps-output', output_path, 'readline')
-
-    deps_object = None
-
-    with open(output_path, 'r') as fd:
-        deps_object = json.loads(fd.read())
-
-    assert (deps_object is not None)
-
-    validate(deps_object, specs_deps_schema)
+@pytest.fixture()
+def env_deactivate():
+    yield
+    spack.environment._active_environment = None
+    os.environ.pop('SPACK_ENV', None)
 
 
-@pytest.mark.skipif(
-    sys.version_info[:2] < (2, 7),
-    reason="For some reason in Python2.6 we get a utf-32 string "
-           "that can't be parsed"
-)
 def test_specs_staging(config):
     """Make sure we achieve the best possible staging for the following
 spec DAG::
@@ -60,25 +42,6 @@ In this case, we would expect 'c', 'e', 'f', and 'g' to be in the first stage,
 and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 """
-    current_system = sys_type()
-
-    config_compilers = config.get_config('compilers')
-    first_compiler = config_compilers[0]
-    compiler_spec = first_compiler['compiler']['spec']
-
-    # Whatever that first compiler in the configuration was, let's make sure
-    # we mock up an entry like we'd find in os-container-mapping.yaml which
-    # has that compiler.
-    mock_containers = {}
-    mock_containers[current_system] = {
-        "image": "dontcare",
-        "compilers": [
-            {
-                "name": compiler_spec,
-            }
-        ],
-    }
-
     default = ('build', 'link')
 
     g = MockPackage('g', [], [])
@@ -92,9 +55,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
     mock_repo = MockPackageMultiRepo([a, b, c, d, e, f, g])
 
     with repo.swap(mock_repo):
-        # Now we'll ask for the root package to be compiled with whatever that
-        # first compiler in the configuration was.
-        spec_a = Spec('a%{0}'.format(compiler_spec))
+        spec_a = Spec('a')
         spec_a.concretize()
 
         spec_a_label = spec_deps_key_label(spec_a)[1]
@@ -105,8 +66,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
         spec_f_label = spec_deps_key_label(spec_a['f'])[1]
         spec_g_label = spec_deps_key_label(spec_a['g'])[1]
 
-        spec_labels, dependencies, stages = stage_spec_jobs(
-            [spec_a], mock_containers, current_system)
+        spec_labels, dependencies, stages = stage_spec_jobs([spec_a])
 
         assert (len(stages) == 4)
 
@@ -124,3 +84,44 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
         assert (len(stages[3]) == 1)
         assert (spec_a_label in stages[3])
+
+
+def test_release_jobs_with_env(tmpdir, mutable_mock_env_path, env_deactivate,
+                               install_mockery, mock_packages):
+    """Make sure we can get a .gitlab-ci.yml from an environment file
+    which has the gitlab-ci, cdash, and mirrors sections."""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  definitions:
+    - packages: [archive-files]
+  specs:
+    - $packages
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+  cdash:
+    build-group: Not important
+    url: https://my.fake.cdash
+    project: Not used
+    site: Nothing
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            release_jobs('--output-file', outputfile)
+
+        with open(outputfile) as f:
+            contents = f.read()
+            assert('archive-files' in contents)
+            assert('stages: [stage-0' in contents)

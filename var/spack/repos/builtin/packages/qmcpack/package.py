@@ -62,22 +62,18 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts(
         '+phdf5',
         when='~mpi',
-        msg='Parallel collective I/O requires MPI-enabled QMCPACK. ' \
-        'Please add "~phdf5" to the Spack install line for serial QMCPACK.'
-    )
-    conflicts(
-        '+soa',
-        when='+cuda',
-        msg='QMCPACK SOA variant does not exist for CUDA'
-    )
-    conflicts(
-        '^openblas+ilp64',
-        msg='QMCPACK does not support OpenBLAS 64-bit integer variant'
-    )
-    conflicts(
-        '^intel-mkl+ilp64',
-        msg='QMCPACK does not support MKL 64-bit integer variant'
-    )
+        msg='Parallel collective I/O requires MPI-enabled QMCPACK. '
+        'Please add "~phdf5" to the Spack install line for serial QMCPACK.')
+
+    conflicts('+soa',
+              when='+cuda',
+              msg='QMCPACK SOA variant does not exist for CUDA')
+
+    conflicts('^openblas+ilp64',
+              msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
+
+    conflicts('^intel-mkl+ilp64',
+              msg='QMCPACK does not support MKL 64-bit integer variant')
 
     # QMCPACK 3.6.0 or later requires support for C++14
     compiler_warning = 'QMCPACK 3.6.0 or later requires a ' \
@@ -140,11 +136,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
     depends_on('quantum-espresso@6.4.1+mpi hdf5=parallel',
                patches=patch(patch_url, sha256=patch_checksum),
-                   when='+qe+mpi', type='run')
+               when='+qe+mpi', type='run')
 
     depends_on('quantum-espresso@6.4.1~scalapack~mpi hdf5=serial',
                patches=patch(patch_url, sha256=patch_checksum),
-                   when='+qe~mpi', type='run')
+               when='+qe~mpi', type='run')
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0

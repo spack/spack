@@ -12,8 +12,8 @@ class RRminer(RPackage):
     and coherent set of functions."""
 
     homepage = "http://www3.dsi.uminho.pt/pcortez/rminer.html"
-    url      = "https://cran.r-project.org/src/contrib/rminer_1.4.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rminer"
+    url      = "https://cloud.r-project.org/src/contrib/rminer_1.4.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rminer"
 
     version('1.4.2', '7d5d90f4ae030cf647d67aa962412c05')
 

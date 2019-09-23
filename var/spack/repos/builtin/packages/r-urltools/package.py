@@ -10,8 +10,8 @@ class RUrltools(RPackage):
     """urltools: Vectorised Tools for URL Handling and Parsing"""
 
     homepage = "https://github.com/Ironholds/urltools/"
-    url      = "https://cran.r-project.org/src/contrib/urltools_1.7.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/urltools"
+    url      = "https://cloud.r-project.org/src/contrib/urltools_1.7.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/urltools"
 
     version('1.7.3', sha256='6020355c1b16a9e3956674e5dea9ac5c035c8eb3eb6bbdd841a2b5528cafa313')
 

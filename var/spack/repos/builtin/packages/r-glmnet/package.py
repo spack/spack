@@ -14,11 +14,13 @@ class RGlmnet(RPackage):
     multinomial. The algorithm uses cyclical coordinate descent in a path-wise
     fashion, as described in the paper linked to via the URL below."""
 
-    homepage = "https://cran.rstudio.com/web/packages/glmnet/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/glmnet_2.0-13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/glmnet"
+    homepage = "https://cloud.r-project.org/package=glmnet"
+    url      = "https://cloud.r-project.org/src/contrib/glmnet_2.0-13.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/glmnet"
+
+    version('2.0-18', sha256='e8dce9d7b8105f9cc18ba981d420de64a53b09abee219660d3612915d554256b')
     version('2.0-13', '1dd5636388df5c3a29207d0bf1253343')
     version('2.0-5', '049b18caa29529614cd684db3beaec2a')
 
-    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-matrix@1.0-6:', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))

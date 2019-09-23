@@ -56,49 +56,137 @@ set. The user can set the front-end and back-end operating setting by the class
 attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
+import functools
 import inspect
 
+import six
+
+import llnl.util.cpu as cpu
 import llnl.util.tty as tty
 from llnl.util.lang import memoized, list_modules, key_ordering
 
 import spack.compiler
 import spack.paths
 import spack.error as serr
+import spack.version
 from spack.util.naming import mod_to_class
 from spack.util.spack_yaml import syaml_dict
 
 
 class NoPlatformError(serr.SpackError):
-
     def __init__(self):
         super(NoPlatformError, self).__init__(
             "Could not determine a platform for this machine.")
 
 
-@key_ordering
-class Target(object):
-    """ Target is the processor of the host machine.
-        The host machine may have different front-end and back-end targets,
-        especially if it is a Cray machine. The target will have a name and
-        also the module_name (e.g craype-compiler). Targets will also
-        recognize which platform they came from using the set_platform method.
-        Targets will have compiler finding strategies
+def _ensure_other_is_target(method):
+    """Decorator to be used in dunder methods taking a single argument to
+    ensure that the argument is an instance of ``Target`` too.
     """
+    @functools.wraps(method)
+    def _impl(self, other):
+        if isinstance(other, six.string_types):
+            other = Target(other)
 
+        if not isinstance(other, Target):
+            return NotImplemented
+
+        return method(self, other)
+
+    return _impl
+
+
+class Target(object):
     def __init__(self, name, module_name=None):
-        self.name = name  # case of cray "ivybridge" but if it's x86_64
-        self.module_name = module_name  # craype-ivybridge
+        """Target models microarchitectures and their compatibility.
 
-    # Sets only the platform name to avoid recursiveness
+        Args:
+            name (str or Microarchitecture):micro-architecture of the
+                target
+            module_name (str): optional module name to get access to the
+                current target. This is typically used on machines
+                like Cray (e.g. craype-compiler)
+        """
+        if not isinstance(name, cpu.Microarchitecture):
+            name = cpu.targets.get(
+                name, cpu.generic_microarchitecture(name)
+            )
+        self.microarchitecture = name
+        self.module_name = module_name
 
-    def _cmp_key(self):
-        return (self.name, self.module_name)
+    @property
+    def name(self):
+        return self.microarchitecture.name
+
+    @_ensure_other_is_target
+    def __eq__(self, other):
+        return self.microarchitecture == other.microarchitecture and \
+            self.module_name == other.module_name
+
+    def __ne__(self, other):
+        # This method is necessary as long as we support Python 2. In Python 3
+        # __ne__ defaults to the implementation below
+        return not self == other
+
+    @_ensure_other_is_target
+    def __lt__(self, other):
+        # TODO: In the future it would be convenient to say
+        # TODO: `spec.architecture.target < other.architecture.target`
+        # TODO: and change the semantic of the comparison operators
+
+        # This is needed to sort deterministically specs in a list.
+        # It doesn't implement a total ordering semantic.
+        return self.microarchitecture.name < other.microarchitecture.name
+
+    def __hash__(self):
+        return hash((self.name, self.module_name))
+
+    @staticmethod
+    def from_dict_or_value(dict_or_value):
+        # A string here represents a generic target (like x86_64 or ppc64) or
+        # a custom micro-architecture
+        if isinstance(dict_or_value, six.string_types):
+            return Target(dict_or_value)
+
+        # TODO: From a dict we actually retrieve much more information than
+        # TODO: just the name. We can use that information to reconstruct an
+        # TODO: "old" micro-architecture or check the current definition.
+        target_info = dict_or_value
+        return Target(target_info['name'])
+
+    def to_dict_or_value(self):
+        """Returns a dict or a value representing the current target.
+
+        String values are used to keep backward compatibility with generic
+        targets, like e.g. x86_64 or ppc64. More specific micro-architectures
+        will return a dictionary which contains information on the name,
+        features, vendor, generation and parents of the current target.
+        """
+        # Generic targets represent either an architecture
+        # family (like x86_64) or a custom micro-architecture
+        if self.microarchitecture.vendor == 'generic':
+            return str(self)
+
+        return syaml_dict(
+            self.microarchitecture.to_dict(return_list_of_items=True)
+        )
 
     def __repr__(self):
-        return self.__str__()
+        cls_name = self.__class__.__name__
+        fmt = cls_name + '({0}, {1})'
+        return fmt.format(repr(self.microarchitecture),
+                          repr(self.module_name))
 
     def __str__(self):
-        return self.name
+        return str(self.microarchitecture)
+
+    def __contains__(self, cpu_flag):
+        return cpu_flag in self.microarchitecture
+
+    def optimization_flags(self, compiler):
+        return self.microarchitecture.optimization_flags(
+            compiler.name, str(compiler.version)
+        )
 
 
 @key_ordering
@@ -141,6 +229,8 @@ class Platform(object):
         front-end, and back-end. This can be overwritten
         by a subclass for which we want to provide further aliasing options.
         """
+        # TODO: Check if we can avoid using strings here
+        name = str(name)
         if name == 'default_target':
             name = self.default
         elif name == 'frontend' or name == 'fe':
@@ -226,7 +316,7 @@ class OperatingSystem(object):
         return self.__str__()
 
     def _cmp_key(self):
-        return self.name, self.version
+        return (self.name, self.version)
 
     def to_dict(self):
         return {
@@ -295,7 +385,7 @@ class Arch(object):
         else:
             os = self.os
         if isinstance(self.target, Target):
-            target = self.target.name
+            target = self.target.microarchitecture
         else:
             target = self.target
         return (platform, os, target)
@@ -305,7 +395,7 @@ class Arch(object):
         d = syaml_dict([
             ('platform', str_or_none(self.platform)),
             ('platform_os', str_or_none(self.os)),
-            ('target', str_or_none(self.target))])
+            ('target', self.target.to_dict_or_value())])
         return syaml_dict([('arch', d)])
 
     @staticmethod
@@ -335,9 +425,9 @@ def verify_platform(platform_name):
 
 
 def arch_for_spec(arch_spec):
-    """Transforms the given architecture spec into an architecture objct."""
+    """Transforms the given architecture spec into an architecture object."""
     arch_spec = spack.spec.ArchSpec(arch_spec)
-    assert(arch_spec.concrete)
+    assert arch_spec.concrete
 
     arch_plat = get_platform(arch_spec.platform)
     if not (arch_plat.operating_system(arch_spec.os) and

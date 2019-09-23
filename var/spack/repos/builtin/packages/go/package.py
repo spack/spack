@@ -35,8 +35,12 @@ class Go(Package):
 
     extendable = True
 
+    version('1.13', sha256='3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122')
+    version('1.12.9', sha256='ab0e56ed9c4732a653ed22e232652709afbf573e710f56a07f7fdeca578d62fc')
+    version('1.12.8', sha256='11ad2e2e31ff63fcf8a2bdffbe9bfa2e1845653358daed593c8c2d03453c9898')
     version('1.12.6', sha256='c96c5ccc7455638ae1a8b7498a030fe653731c8391c5f8e79590bce72f92b4ca')
     version('1.12.5', sha256='2aa5f088cbb332e73fc3def546800616b38d3bfe6b8713b8a6404060f22503e8')
+    version('1.11.13', sha256='5032095fd3f641cafcce164f551e5ae873785ce7b07ca7c143aecd18f7ba4076')
     version('1.11.11', sha256='1fff7c33ef2522e6dfaf6ab96ec4c2a8b76d018aae6fc88ce2bd40f2202d0f8c')
     version('1.11.10', sha256='df27e96a9d1d362c46ecd975f1faa56b8c300f5c529074e9ea79bdd885493c1b')
     version('1.11.5', 'bc1ef02bb1668835db1390a2e478dcbccb5dd16911691af9d75184bbe5aa943e')
