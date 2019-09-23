@@ -46,11 +46,15 @@ class Libflame(AutotoolsPackage):
 
     # TODO: Libflame prefers to defer to an external
     # LAPACK library for small problems. Is this to be
-    # implemented in spack ?
+    # implemented in spack?
 
-    # There is a known issue with the makefile :
+    # There is a known issue with the makefile:
     # https://groups.google.com/forum/#!topic/libflame-discuss/lQKEfjyudOY
     patch('Makefile_5.1.0.patch', when='@5.1.0')
+
+    # Problems with permissions on installed libraries:
+    # https://github.com/flame/libflame/issues/24
+    patch('Makefile_5.2.0.patch', when='@5.2.0')
 
     def flag_handler(self, name, flags):
         # -std=gnu99 at least required, old versions of GCC default to -std=c90
