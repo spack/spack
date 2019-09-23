@@ -26,8 +26,10 @@ if ($?SPACK_ROOT) then
 
     # Set up modules and dotkit search paths in the user environment
     set tcl_roots = `echo $_sp_tcl_roots:q | sed 's/:/ /g'`
+    set _sp_generic=`${_spack_share_dir}/csh/sp_get_generic_arch.csh`
     foreach tcl_root ($tcl_roots:q)
         _spack_pathadd MODULEPATH "$tcl_root/$_sp_sys_type"
+        _spack_pathadd MODULEPATH "$tcl_root/$_sp_generic"
     end
 
     set dotkit_roots = `echo $_sp_dotkit_roots:q | sed 's/:/ /g'`

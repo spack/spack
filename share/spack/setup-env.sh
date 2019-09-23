@@ -340,17 +340,38 @@ else
     eval `spack --print-shell-vars sh`
 fi;
 
+_sp_get_generic_arch() {
+    local plat os target 
+    target=`spack arch --target`
+    os=`spack arch --operating-system`
+    plat=`spack arch --platform`
+    spack arch --known-targets | 
+       sed -e 's/^/_/' | 
+       while read c1 c2 c3
+       do
+          if [ "$c1" != "_" ]
+          then
+             generic="$c3"
+          fi
+          if [ "$c2" = "$target" ]
+          then
+              echo "${plat}-${os}-${generic}"
+          fi
+       done
+}
 
 #
 # set module system roots
 #
 _sp_multi_pathadd() {
+    export _sp_generic=`_sp_get_generic_arch`
     local IFS=':'
     if [ "$_sp_shell" = zsh ]; then
         setopt sh_word_split
     fi
     for pth in $2; do
         _spack_pathadd "$1" "${pth}/${_sp_sys_type}"
+        _spack_pathadd "$1" "${pth}/${_sp_generic}"
     done
 }
 _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
