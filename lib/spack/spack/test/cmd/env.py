@@ -17,7 +17,7 @@ import spack.environment as ev
 from spack.cmd.env import _env_create
 from spack.spec import Spec
 from spack.main import SpackCommand
-from spack.stage import _stage_prefix
+from spack.stage import stage_prefix
 
 from spack.spec_list import SpecListError
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
@@ -577,7 +577,7 @@ def test_stage(mock_stage, mock_fetch, install_mockery):
     def check_stage(spec):
         spec = Spec(spec).concretized()
         for dep in spec.traverse():
-            stage_name = "{0}{1}-{2}-{3}".format(_stage_prefix, dep.name,
+            stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, dep.name,
                                                  dep.version, dep.dag_hash())
             assert os.path.isdir(os.path.join(root, stage_name))
 

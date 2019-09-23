@@ -33,7 +33,7 @@ from spack.util.crypto import prefix_bits, bit_length
 _source_path_subdir = 'spack-src'
 
 # The temporary stage name prefix.
-_stage_prefix = 'spack-stage-'
+stage_prefix = 'spack-'
 
 
 def _create_stage_root(path):
@@ -256,7 +256,7 @@ class Stage(object):
         # TODO: temporary stage area in _stage_root.
         self.name = name
         if name is None:
-            self.name = _stage_prefix + next(tempfile._get_candidate_names())
+            self.name = stage_prefix + next(tempfile._get_candidate_names())
         self.mirror_path = mirror_path
 
         # Use the provided path or construct an optionally named stage path.
@@ -687,7 +687,7 @@ def purge():
     root = get_stage_root()
     if os.path.isdir(root):
         for stage_dir in os.listdir(root):
-            if stage_dir.startswith(_stage_prefix) or stage_dir == '.lock':
+            if stage_dir.startswith(stage_prefix) or stage_dir == '.lock':
                 stage_path = os.path.join(root, stage_dir)
                 remove_linked_tree(stage_path)
 
