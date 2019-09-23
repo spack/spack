@@ -455,9 +455,6 @@ class Stage(object):
         elif spack.config.get('config:checksum'):
             self.fetcher.check()
 
-    # TODO: this refers to self.mirror_paths[0] but should explicitly refer
-    # to the global mirror ID to ensure that we cache resources to the flat
-    # /shared mirror root
     def cache_local(self):
         spack.caches.fetch_cache.store(self.fetcher, self.mirror_paths[0])
 
