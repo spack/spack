@@ -90,12 +90,13 @@ class Mesa(AutotoolsPackage):
     multi_depends('libdrm', when=plus_dri)
     multi_depends('dri2proto', when=plus_dri)
 
-    depends_on('libxdamage@1.1:', when='+glvnd')
-    depends_on('damageproto', when='+glvnd')
-    depends_on('libxfixes', when='+glvnd')
-    depends_on('fixesproto', when='+glvnd')
-    depends_on('libxxf86vm', when='+glvnd')
-    depends_on('xf86vidmodeproto', when='+glvnd')
+    multi_depends('libxdamage@1.1:', when=plus_dri)
+    multi_depends('libxfixes', when=plus_dri)
+    multi_depends('libxxf86vm', when=plus_dri)
+
+    multi_depends('damageproto', when=plus_dri)
+    multi_depends('fixesproto', when=plus_dri)
+    multi_depends('xf86vidmodeproto', when=plus_dri)
 
     depends_on('glproto@1.4.14:', when='+glx', type='build')
 
@@ -120,10 +121,14 @@ class Mesa(AutotoolsPackage):
         enable_glvnd = ''.join((
             '--', 'enable' if glvnd_enabled else 'disable', '-libglvnd'))
 
+        enable_dri = ''.join((
+            '--', 'enable' if dri_enabled else 'disable', '-dri'))
+
         args = [
             '--enable-shared',
             '--disable-static',
             enable_glvnd,
+            enable_dri,
             '--disable-nine',
             '--disable-omx-bellagio',
             '--disable-omx-tizonia',
@@ -159,17 +164,12 @@ class Mesa(AutotoolsPackage):
         else:
             args.append('--disable-glx')
 
-        if dri_enabled:
+        if egl_enabled:
             num_frontends += 1
-            if egl_enabled:
-                args.extend(['--enable-egl', '--enable-gbm'])
-            else:
-                args.extend(['--disable-egl', '--disable-gbm'])
-
-            args.append('--enable-dri')
+            args.extend(['--enable-egl', '--enable-gbm'])
             args_platforms.append('surfaceless')
         else:
-            args.append('--disable-dri')
+            args.extend(['--disable-egl', '--disable-gbm'])
 
         if '+opengl' in spec:
             args.append('--enable-opengl')
