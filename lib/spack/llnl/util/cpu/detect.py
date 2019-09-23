@@ -124,7 +124,7 @@ def raw_info_dictionary():
         try:
             info = factory()
         except Exception as e:
-            warnings.warn(e)
+            warnings.warn(str(e))
 
         if info:
             break
