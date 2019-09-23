@@ -24,7 +24,7 @@ class Openldap(AutotoolsPackage):
     variant('client_only', default=True, description='Client only installation')
     variant('icu', default=False, description='Build with unicode support')
     variant('openssl', default=False, description='Use OpenSSL for TLS support')
-    variant('perl_backend', default=False, description='Perl backend to Slapd')
+    variant('perl', default=False, description='Perl backend to Slapd')
 
     depends_on('icu4c', when='+icu')
     depends_on('gnutls', when='~client_only~openssl')
@@ -35,7 +35,7 @@ class Openldap(AutotoolsPackage):
     # depends_on('cyrus-sasl', when='~client_only') # not avail. in spack yet
     # depends_on('openslp', when='~client_only') # not avail. in spack yet
     # depends_on('Pth', when='~client_only') # not avail. in spack yet
-    depends_on('perl', when='+perl_backend')  # for slapd
+    depends_on('perl', when='~client_only+perl')  # for slapd
 
     # Ref: http://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
     @when('+client_only')
@@ -69,12 +69,12 @@ class Openldap(AutotoolsPackage):
                 '--enable-overlays=mod',
                 ]
 
-        if when('~openssl'):
+        if '~openssl' in self.spec:
             args.append('--with-tls=gnutls')
         else:
             args.append('--with-tls=openssl')
 
-        if '+perl_backend' in self.spec:
+        if '+perl' in self.spec:
             args.append('--enable-perl')
         else:
             args.append('--disable-perl')
