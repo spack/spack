@@ -250,4 +250,3 @@ class Mesa(AutotoolsPackage):
             '50_mesa.json')))
         run_env.set('__EGL_VENDOR_LIBRARY_DIRS', ':'.join((
             os.path.join(self.spec.prefix, 'share', 'glvnd', 'egl_vendor.d'))))
-
