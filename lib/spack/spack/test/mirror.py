@@ -58,41 +58,39 @@ def check_mirror():
         # Stage directory exists
         assert os.path.isdir(mirror_root)
 
-        # check that there are subdirs for each package
-        for name in repos:
-            subdir = os.path.join(mirror_root, name)
-            assert os.path.isdir(subdir)
+        for spec in specs:
+            fetcher = spec.package.fetcher[0]
+            mirror_paths = spack.mirror.mirror_archive_paths(spec, fetcher)
+            expected_path = os.path.join(mirror_root, mirror_paths[0])
+            assert os.path.exists(expected_path)
 
-            files = os.listdir(subdir)
-            assert len(files) == 1
+        # Now try to fetch each package.
+        for name, mock_repo in repos.items():
+            spec = Spec(name).concretized()
+            pkg = spec.package
 
-            # Now try to fetch each package.
-            for name, mock_repo in repos.items():
-                spec = Spec(name).concretized()
-                pkg = spec.package
+            with spack.config.override('config:checksum', False):
+                with pkg.stage:
+                    pkg.do_stage(mirror_only=True)
 
-                with spack.config.override('config:checksum', False):
-                    with pkg.stage:
-                        pkg.do_stage(mirror_only=True)
+                    # Compare the original repo with the expanded archive
+                    original_path = mock_repo.path
+                    if 'svn' in name:
+                        # have to check out the svn repo to compare.
+                        original_path = os.path.join(
+                            mock_repo.path, 'checked_out')
 
-                        # Compare the original repo with the expanded archive
-                        original_path = mock_repo.path
-                        if 'svn' in name:
-                            # have to check out the svn repo to compare.
-                            original_path = os.path.join(
-                                mock_repo.path, 'checked_out')
+                        svn = which('svn', required=True)
+                        svn('checkout', mock_repo.url, original_path)
 
-                            svn = which('svn', required=True)
-                            svn('checkout', mock_repo.url, original_path)
+                    dcmp = filecmp.dircmp(
+                        original_path, pkg.stage.source_path)
 
-                        dcmp = filecmp.dircmp(
-                            original_path, pkg.stage.source_path)
-
-                        # make sure there are no new files in the expanded
-                        # tarball
-                        assert not dcmp.right_only
-                        # and that all original files are present.
-                        assert all(l in exclude for l in dcmp.left_only)
+                    # make sure there are no new files in the expanded
+                    # tarball
+                    assert not dcmp.right_only
+                    # and that all original files are present.
+                    assert all(l in exclude for l in dcmp.left_only)
 
 
 def test_url_mirror(mock_archive):
