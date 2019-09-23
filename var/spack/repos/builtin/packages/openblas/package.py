@@ -39,11 +39,13 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='64 bit integers')
     variant('pic', default=True, description='Build position independent code')
 
-    variant('cpu_target', default='auto',
-        description='Set CPU target architecture (leave empty for autodetection;'
-                    'Set DYNAMIC to compile all supported archs in a single DSO;'
-                    'See https://github.com/xianyi/OpenBLAS/blob/develop/TargetList.txt'
-                    'for the complete list of options)')
+    variant('cpu_target', default='DYNAMIC',
+        description="Set CPU target architecture.\n"
+            "'DYNAMIC' compiles all supported archs in a single DSO.\n"
+            "Set 'auto' for autodetection and build to a single arch.\n"
+            "See " + git[:-4] + "/blob/develop/TargetList.txt"
+            "for the complete list of options"
+    )
 
     variant(
         'threads', default='none',
