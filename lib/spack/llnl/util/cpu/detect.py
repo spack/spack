@@ -77,11 +77,8 @@ def proc_cpuinfo():
 
 
 def check_output(args):
-    if sys.version_info[:2] == (2, 6):
-        return subprocess.run(
-            args, check=True, stdout=subprocess.PIPE).stdout  # nopyqver
-    else:
-        return subprocess.check_output(args)  # nopyqver
+    output = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
+    return six.text_type(output.decode('utf-8'))
 
 
 @info_dict(operating_system='Darwin')
