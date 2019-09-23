@@ -7,7 +7,6 @@ import functools
 import platform
 import re
 import subprocess
-import sys
 import warnings
 
 import six
