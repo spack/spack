@@ -205,7 +205,7 @@ class Clang(Compiler):
         ver = 'unknown'
         match = re.search(
             # Apple's LLVM compiler has its own versions, so suffix them.
-            r'^Apple LLVM version ([^ )]+)|'
+            r'^Apple (?:LLVM|clang) version ([^ )]+)|'
             # Normal clang compiler versions are left as-is
             r'clang version ([^ )]+)-svn[~.\w\d-]*|'
             r'clang version ([^ )]+)-[~.\w\d-]*|'
