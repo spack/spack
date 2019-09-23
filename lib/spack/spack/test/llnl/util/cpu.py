@@ -113,7 +113,7 @@ def test_equality(supported_target):
     # Test microarchitectures that are ordered with respect to each other
     ('x86_64 < skylake', True),
     ('icelake > skylake', True),
-    ('piledriver <= zen', True),
+    ('piledriver <= steamroller', True),
     ('zen2 >= zen', True),
     ('zen >= zen', True),
     # Test unrelated microarchitectures
