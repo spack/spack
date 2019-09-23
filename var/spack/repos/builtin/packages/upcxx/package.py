@@ -23,7 +23,7 @@ class Upcxx(Package):
 
     homepage = "https://upcxx.lbl.gov"
 
-    version('2019.9.0', '7642877e05300e38f6fa0afbc6062788', default=True)
+    version('2019.9.0', '7642877e05300e38f6fa0afbc6062788')
     version('2019.3.2', '844722cb0e8c0bc649017fce86469457')
 
     variant('cuda', default=False,
@@ -66,6 +66,8 @@ class Upcxx(Package):
         dep_spec.upcxx = self.prefix.bin.upcxx
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('UPCXX_INSTALL', self.prefix)
+        spack_env.set('UPCXX', self.prefix.bin.upcxx)
         if 'platform=cray' in self.spec:
             spack_env.set('UPCXX_GASNET_CONDUIT', 'aries')
             spack_env.set('UPCXX_NETWORK', 'aries')
