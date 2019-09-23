@@ -48,6 +48,10 @@ class Libflame(AutotoolsPackage):
     # LAPACK library for small problems. Is this to be
     # implemented in spack?
 
+    # Libflame has a secondary dependency on BLAS:
+    # https://github.com/flame/libflame/issues/24
+    depends_on('blas')
+
     # There is a known issue with the makefile:
     # https://groups.google.com/forum/#!topic/libflame-discuss/lQKEfjyudOY
     patch('Makefile_5.1.0.patch', when='@5.1.0')
@@ -63,7 +67,10 @@ class Libflame(AutotoolsPackage):
         return (flags, None, None)
 
     def configure_args(self):
-        config_args = []
+        # Libflame has a secondary dependency on BLAS,
+        # but doesn't know which library name to expect:
+        # https://github.com/flame/libflame/issues/24
+        config_args = ['LIBS=' + self.spec['blas'].libs.link_flags]
 
         if '+lapack2flame' in self.spec:
             config_args.append("--enable-lapack2flame")
