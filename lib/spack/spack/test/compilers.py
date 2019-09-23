@@ -329,6 +329,11 @@ def test_fj_flags():
 @pytest.mark.regression('10191')
 @pytest.mark.parametrize('version_str,expected_version', [
     # macOS clang
+    ('Apple clang version 11.0.0 (clang-1100.0.33.8)\n'
+     'Target: x86_64-apple-darwin18.7.0\n'
+     'Thread model: posix\n'
+     'InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n',  # noqa
+     '11.0.0-apple'),
     ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
      'Target: x86_64-apple-darwin15.2.0\n'
      'Thread model: posix\n', '7.0.2-apple'),
