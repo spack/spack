@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyrght 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,7 +46,6 @@ def no_path_access(monkeypatch):
         return False
 
     monkeypatch.setattr(os, 'access', _can_access)
-    yield
 
 
 #
@@ -134,7 +133,6 @@ def reset_compiler_cache():
 def clear_stage_root(monkeypatch):
     """Ensure spack.stage._stage_root is not set at test start."""
     monkeypatch.setattr(spack.stage, '_stage_root', None)
-    yield
 
 
 @pytest.fixture(scope='function', autouse=True)
