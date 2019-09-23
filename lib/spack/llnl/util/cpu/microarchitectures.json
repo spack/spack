@@ -642,7 +642,7 @@
       }
     },
     "zen": {
-      "from": "excavator",
+      "from": "x86_64",
       "vendor": "AuthenticAMD",
       "features": [
         "bmi1",
