@@ -13,6 +13,7 @@ class Libceed(Package):
     git      = "https://github.com/CEED/libCEED.git"
 
     version('develop', branch='master')
+    version('0.5', tag='v0.5')
     version('0.4', tag='v0.4')
     version('0.2', tag='v0.2')
     version('0.1', tag='v0.1')
@@ -60,7 +61,7 @@ class Libceed(Package):
             if '+debug' in spec:
                 opt = '-g'
             elif compiler.name == 'gcc':
-                opt = '-O -g -ffp-contract=fast'
+                opt = '-O3 -g -ffp-contract=fast'
                 if compiler.target in ['x86_64']:
                     opt += ' -march=native'
                 elif compiler.target in ['ppc64le']:
@@ -68,7 +69,7 @@ class Libceed(Package):
                 if compiler.version >= ver(4.9):
                     opt += ' -fopenmp-simd'
             elif compiler.name == 'clang':
-                opt = '-O -g -march=native -ffp-contract=fast'
+                opt = '-O3 -g -march=native -ffp-contract=fast'
                 if compiler.version.string.endswith('-apple'):
                     if compiler.version >= ver(10):
                         opt += ' -fopenmp-simd'
