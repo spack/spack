@@ -8,6 +8,7 @@ import platform
 import re
 import subprocess
 import sys
+import warnings
 
 import six
 
@@ -80,7 +81,7 @@ def check_output(args):
         return subprocess.run(
             args, check=True, stdout=subprocess.PIPE).stdout  # nopyqver
     else:
-        return subprocess.check_output(args).decode('utf-8')  # nopyqver
+        return subprocess.check_output(args)  # nopyqver
 
 
 @info_dict(operating_system='Darwin')
@@ -124,7 +125,10 @@ def raw_info_dictionary():
     """
     info = {}
     for factory in info_factory[platform.system()]:
-        info = factory()
+        try:
+            info = factory()
+        except Exception as e:
+            warnings.warn(e)
 
         if info:
             break
