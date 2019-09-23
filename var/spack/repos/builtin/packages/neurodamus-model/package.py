@@ -24,6 +24,7 @@ class NeurodamusModel(SimModel):
                                                       " other string: alternate path")
 
     depends_on('neurodamus-core')
+    depends_on('neurodamus-core@develop', when='@develop')
     depends_on('neurodamus-core+python', when='+python')
 
     depends_on("mpi")
