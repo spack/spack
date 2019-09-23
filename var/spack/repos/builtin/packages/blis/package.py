@@ -73,6 +73,10 @@ class Blis(Package):
     provides('blas', when="+blas")
     provides('blas', when="+cblas")
 
+    # Problems with permissions on installed libraries:
+    # https://github.com/flame/blis/issues/343
+    patch('Makefile_0.6.0.patch', when='@0.4.0:0.6.0')
+
     phases = ['configure', 'build', 'install']
 
     def configure(self, spec, prefix):
