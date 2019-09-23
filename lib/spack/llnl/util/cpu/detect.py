@@ -80,7 +80,7 @@ def check_output(args):
         return subprocess.run(
             args, check=True, stdout=subprocess.PIPE).stdout  # nopyqver
     else:
-        return subprocess.check_output(args)  # nopyqver
+        return subprocess.check_output(args).decode('utf-8')  # nopyqver
 
 
 @info_dict(operating_system='Darwin')
@@ -124,10 +124,7 @@ def raw_info_dictionary():
     """
     info = {}
     for factory in info_factory[platform.system()]:
-        try:
-            info = factory()
-        except Exception:
-            pass
+        info = factory()
 
         if info:
             break
