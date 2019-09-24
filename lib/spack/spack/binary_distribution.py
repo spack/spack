@@ -573,20 +573,19 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # so the pathname should be the same now that the directory layout
     # is confirmed
     workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    install_tree(workdir, spec.prefix, symlinks=True)
 
     # cleanup
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
     try:
-        relocate_package(workdir, spec, allow_root)
+        relocate_package(spec.prefix, spec, allow_root)
     except Exception as e:
-        shutil.rmtree(workdir)
+        shutil.rmtree(spec.prefix)
         tty.die(e)
     # Delay creating spec.prefix until verification is complete
     # and any relocation has been done.
-    else:
-        install_tree(workdir, spec.prefix, symlinks=True)
     finally:
         shutil.rmtree(tmpdir)
 
