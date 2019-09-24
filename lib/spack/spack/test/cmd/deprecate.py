@@ -10,6 +10,7 @@ import spack.store
 install = SpackCommand('install')
 deprecate = SpackCommand('deprecate')
 find = SpackCommand('find')
+activate = SpackCommand('activate')
 
 
 def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery):
@@ -79,3 +80,16 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
     assert sorted(deprecated) == sorted(list(old_spec.traverse()))
 
 
+def test_deprecate_fails_extensions(mock_packages, mock_archive, mock_fetch,
+                                    install_mockery):
+    install('extendee')
+    install('extension1')
+    activate('extension1')
+
+    output = deprecate('-yi', 'extendee', 'libelf', fail_on_error=False)
+    assert 'extension1' in output
+    assert "Deactivate extensions before deprecating" in output
+
+    output = deprecate('-yi', 'extension1', 'libelf', fail_on_error=False)
+    assert 'extendee' in output
+    assert 'is an active extension of' in output
