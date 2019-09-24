@@ -514,19 +514,8 @@
         }
       }
     },
-    "barcelona": {
-      "from": "x86_64",
-      "vendor": "AuthenticAMD",
-      "features": [
-        "mmx",
-        "sse",
-        "sse2",
-        "sse4a",
-        "abm"
-      ]
-    },
     "bulldozer": {
-      "from": "barcelona",
+      "from": "x86_64",
       "vendor": "AuthenticAMD",
       "features": [
         "mmx",
@@ -562,6 +551,8 @@
         "sse4a",
         "abm",
         "avx",
+        "xop",
+        "lwp",
         "aes",
         "pclmulqdq",
         "cx16",
@@ -570,7 +561,8 @@
         "sse4_2",
         "bmi1",
         "f16c",
-        "fma"
+        "fma",
+        "tbm"
       ],
       "compilers": {
         "gcc": {
@@ -590,6 +582,8 @@
         "sse4a",
         "abm",
         "avx",
+        "xop",
+        "lwp",
         "aes",
         "pclmulqdq",
         "cx16",
@@ -599,7 +593,8 @@
         "bmi1",
         "f16c",
         "fma",
-        "fsgsbase"
+        "fsgsbase",
+        "tbm"
       ],
       "compilers": {
         "gcc": {
@@ -619,6 +614,8 @@
         "sse4a",
         "abm",
         "avx",
+        "xop",
+        "lwp",
         "aes",
         "pclmulqdq",
         "cx16",
@@ -631,7 +628,8 @@
         "fsgsbase",
         "bmi2",
         "avx2",
-        "movbe"
+        "movbe",
+        "tbm"
       ],
       "compilers": {
         "gcc": {
@@ -642,7 +640,7 @@
       }
     },
     "zen": {
-      "from": "excavator",
+      "from": "x86_64",
       "vendor": "AuthenticAMD",
       "features": [
         "bmi1",

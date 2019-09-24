@@ -26,6 +26,7 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'linux-rhel7-ivybridge',
     'linux-rhel7-haswell',
     'linux-rhel7-zen',
+    'linux-rhel6-piledriver',
     'linux-centos7-power8le',
     'darwin-mojave-ivybridge',
     'darwin-mojave-broadwell',
@@ -112,7 +113,7 @@ def test_equality(supported_target):
     # Test microarchitectures that are ordered with respect to each other
     ('x86_64 < skylake', True),
     ('icelake > skylake', True),
-    ('piledriver <= zen', True),
+    ('piledriver <= steamroller', True),
     ('zen2 >= zen', True),
     ('zen >= zen', True),
     # Test unrelated microarchitectures
