@@ -2187,7 +2187,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             depr_yaml = spack.store.layout.deprecated_file_path(spec,
                                                                 replacement)
             fs.mkdirp(spack.store.layout.deprecated_dir_path(replacement))
-            shutil.copy2(self_yaml, new_file)
+            shutil.copy2(self_yaml, depr_yaml)
 
             Package.uninstall_by_spec(self.spec, force=True,
                                       replace=replacement)
