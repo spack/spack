@@ -41,6 +41,7 @@ class Maker(Package):
 
     patch('install.patch')
     patch('mpi.patch')
+    patch('MpiChunk.patch')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-module-build', type='build')
@@ -71,9 +72,23 @@ class Maker(Package):
                 filter_file(pattern, repl, 'Build.PL', backup=False)
 
         perl = which('perl')
+        rm = which('rm')
         with working_dir('src'):
             perl('Build.PL', '--install_base', prefix)
             perl('Build', 'install')
+
+        install_tree('lib', join_path(prefix, 'perl', 'lib'))
+
+        # Remove scripts that do not work. The 'mpi_evaluator' and
+        # 'mpi_iprscan' scripts depend on a custom perl module that is not
+        # shipped with maker. The 'maker2chado' script depends on setting up a
+        # CHADO database which is out of scope here.
+        for package in ('maker2chado', 'maker2jbrowse', 'maker2wap',
+                        'mpi_evaluator', 'mpi_iprscan'):
+            rm('-f', join_path(prefix.bin, package))
+
+        # Remove old IO::Prompt perl module
+        rm('-r', '-f', join_path(prefix, 'perl', 'lib', 'IO'))
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('ZOE', join_path(self.spec['snap-korf'].prefix, 'Zoe'))
