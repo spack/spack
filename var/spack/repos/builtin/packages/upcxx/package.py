@@ -6,11 +6,12 @@
 from spack import *
 
 
-def detect_scheduler():
-    if which('srun'):
-        return 'slurm'
-    elif which('aprun'):
-        return 'alps'
+def cross_detect():
+    if spack.architecture.platform().name == 'cray':
+        if which('srun'):
+            return 'cray-aries-slurm'
+        if which('alps'):
+            return 'cray-aries-alps'
     return 'none'
 
 
@@ -29,11 +30,10 @@ class Upcxx(Package):
     variant('cuda', default=False,
             description='Builds a CUDA-enabled version of UPC++')
 
-    variant('scheduler', values=('slurm', 'alps', 'none'),
+    variant('cross',default=cross_detect(),
+            description="UPC++ cross-compile target (autodetect by default)")
 
-            default=detect_scheduler(),
-            description="Resource manager to use")
-    conflicts('scheduler=none', when='platform=cray',
+    conflicts('cross=none', when='platform=cray',
               msg='None is unacceptable on Cray.')
 
     depends_on('cuda', when='+cuda')
@@ -48,10 +48,10 @@ class Upcxx(Package):
     def setup_environment(self, spack_env, run_env):
         if 'platform=cray' in self.spec:
             spack_env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
-            if "scheduler=slurm" in self.spec:
-                spack_env.set('CROSS', 'cray-aries-slurm')
-            elif "scheduler=alps" in self.spec:
-                spack_env.set('CROSS', 'cray-aries-alps')
+
+        if not 'cross=none' in self.spec:
+            spack_env.set('CROSS', self.spec.variants['cross'].value)
+
         if '+cuda' in self.spec:
             spack_env.set('UPCXX_CUDA', '1')
             spack_env.set('UPCXX_CUDA_NVCC', self.spec['cuda'].prefix.bin.nvcc)
