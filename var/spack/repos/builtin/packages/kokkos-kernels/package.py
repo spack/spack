@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 
+
 class KokkosKernels(MakefilePackage):
     """Kokkos C++ Performance Portability Programming EcoSystem: Math Kernels -
     Provides BLAS, Sparse BLAS and Graph Kernels."""
@@ -31,8 +32,8 @@ class KokkosKernels(MakefilePackage):
 
     def build(self, spec, prefix):
         with working_dir('build', create=True):
-            makefile_path = '%s%s' % ( self.stage.source_path, '/src/Makefile' )
-            copy(makefile_path,'Makefile')
+            makefile_path = '%s%s' % (self.stage.source_path, '/src/Makefile')
+            copy(makefile_path, 'Makefile')
             make_args = [
                 'KOKKOSKERNELS_INSTALL_PATH=%s' % prefix,
                 'KOKKOSKERNELS_PATH=%s' % self.stage.source_path,
