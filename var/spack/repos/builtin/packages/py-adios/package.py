@@ -42,7 +42,7 @@ class PyAdios(PythonPackage):
     # the first entry under "Bug Fixes" at
     # https://github.com/cython/cython/blob/0.29.x/CHANGES.rst
     depends_on('python@:3.6')
- 
+
     depends_on('py-numpy', type=['build', 'run'])
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', type=['run'], when='+mpi')
