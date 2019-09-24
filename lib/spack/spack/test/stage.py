@@ -753,6 +753,7 @@ class TestStage(object):
 
         assert exc_info.value.args[0] == errno.EACCES
 
+    @pytest.mark.nomockstage
     def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):
         """
         Test the case/path that triggers the generation of the warning
