@@ -73,14 +73,16 @@ def _create_stage_root(path):
         if not os.path.exists(p):
             mkdirp(p, mode=stat.S_IRWXU)
 
+            p_stat = os.stat(p)
             if not (p_stat.st_mode & stat.S_IRWXU):
                 tty.warn("Expected {0} to support mode {1}, but it is {2}"
                          .format(p, stat.S_IRWXU, p_stat.st_mode))
 
             if not can_access(p):
                 raise OSError(errno.EACCES, err_msg.format(path, p))
+        else:
+            p_stat = os.stat(p)
 
-        p_stat = os.stat(p)
         if user_uid != p_stat.st_uid:
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
                      .format(user_uid, p, p_stat.st_uid))
