@@ -15,7 +15,7 @@ class Flibcpp(CMakePackage):
     url = "https://github.com/swig-fortran/flibcpp/archive/v0.3.0.tar.gz"
 
     version('master', branch='master')
-    version('0.3.0', sha256='2e68a3c8fcfa4fad9f6d5e1cafa5bd44ee6b878cc5a4ee3d69a98f1950c0547b')
+    version('0.3.1', sha256='871570124122c18018478275d5040b4b787d1966e50ee95b634b0b5e0cd27e91')
 
     variant('doc', default=False, description='Build and install documentation')
     variant('shared', default=True, description='Build shared libraries')
