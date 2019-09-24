@@ -29,6 +29,7 @@ class Flibcpp(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+
         def hasopt(key):
             return "ON" if ("+" + key) in spec else "OFF"
 
@@ -40,4 +41,4 @@ class Flibcpp(CMakePackage):
         fstd = spec.variants['fstd'].value
         opts.append(('FLIBCPP_FORTRAN_STD', fstd))
 
-        return ['-D{0}={1}'.format(k,v) for (k,v) in opts]
+        return ['-D{0}={1}'.format(k, v) for (k, v) in opts]
