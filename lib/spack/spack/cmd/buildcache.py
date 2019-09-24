@@ -61,6 +61,8 @@ def setup_parser(subparser):
     create.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to create buildcache for")
+    create.add_argument('--no-deps', action='store_true', default='false',
+                        help='Create buildcache entry wo/ dependencies')
     create.set_defaults(func=createtarball)
 
     install = subparsers.add_parser('install', help=installtarball.__doc__)
@@ -333,6 +335,8 @@ def createtarball(args):
         else:
             tty.debug('adding matching spec %s' % match.format())
             specs.add(match)
+            if args.no_deps is True:
+                continue
             tty.debug('recursing dependencies')
             for d, node in match.traverse(order='post',
                                           depth=True,
