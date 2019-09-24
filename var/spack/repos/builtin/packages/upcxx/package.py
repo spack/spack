@@ -30,7 +30,7 @@ class Upcxx(Package):
     variant('cuda', default=False,
             description='Builds a CUDA-enabled version of UPC++')
 
-    variant('cross',default=cross_detect(),
+    variant('cross', default=cross_detect(),
             description="UPC++ cross-compile target (autodetect by default)")
 
     conflicts('cross=none', when='platform=cray',
@@ -49,7 +49,7 @@ class Upcxx(Package):
         if 'platform=cray' in self.spec:
             spack_env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
 
-        if not 'cross=none' in self.spec:
+        if 'cross=none' not in self.spec:
             spack_env.set('CROSS', self.spec.variants['cross'].value)
 
         if '+cuda' in self.spec:
