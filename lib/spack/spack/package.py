@@ -2183,18 +2183,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 r = replacement.format('{name}/{hash:7}')
                 tty.error("spec %s already deprecated in favor of %s" % (s, r))
         else:
-            self_meta_path = spack.store.layout.metadata_path(spec)
-            self_yaml = os.path.join(self_meta_path,
-                                     spack.store.layout.spec_file_name)
-            repl_meta_path = spack.store.layout.metadata_path(replacement)
-            repl_deprecated_dir = os.path.join(repl_meta_path,
-                                               spack.store.layout.deprecated_dir)
-            new_name = spec.dag_hash() + '_' + spack.store.layout.spec_file_name
-            new_file = os.path.join(repl_deprecated_dir, new_name)
-            fs.mkdirp(repl_deprecated_dir)
+            self_yaml = spack.store.layout.spec_file_path(spec)
+            depr_yaml = spack.store.layout.deprecated_file_path(spec,
+                                                                replacement)
+            fs.mkdirp(spack.store.layout.deprecated_dir_path(replacement))
             shutil.copy2(self_yaml, new_file)
 
-            Package.uninstall_by_spec(self.spec, force=True, replace=replacement)
+            Package.uninstall_by_spec(self.spec, force=True,
+                                      replace=replacement)
             link_fn(replacement.prefix, self.spec.prefix)
 
     def _check_extendable(self):

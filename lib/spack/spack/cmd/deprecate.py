@@ -22,6 +22,7 @@ import spack.cmd
 import spack.store
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+from spack.error import SpackError
 
 description = "Replace one package with another via symlinks"
 section = "admin"
@@ -98,8 +99,6 @@ def deprecate(parser, args):
     else:
         replacement = find_single_matching_spec(specs[1], env)
 
-    tty.msg('asslhfjajkslhgjasklghasl')
-
     # Check whether package to deprecate has active extensions
     if deprecated.package.extendable:
         view = spack.filesystem_view.YamlFilesystemView(deprecated.prefix,
@@ -121,7 +120,8 @@ def deprecate(parser, args):
         if deprecated.package.is_activated(view):
             short = deprecated.format('{name}/{hash:7}')
             short_extendee = extendee.format('{name}/{hash:7}')
-            msg = "Spec %s is an active extension of %s\n" % (short, extendee)
+            msg = "Spec %s is an active extension of %s\n" % (short,
+                                                              short_extendee)
             msg += "Deactivate %s to be able to deprecate it" % short
             tty.die(msg)
 
@@ -146,4 +146,3 @@ def deprecate(parser, args):
                     raise e
 
     deprecated.package.do_deprecate(replacement, link_fn)
-

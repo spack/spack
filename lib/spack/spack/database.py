@@ -136,7 +136,7 @@ class InstallRecord(object):
             try:
                 if any(x not in _valid_install_states for x in installed):
                     state_str = comma_and(list(map(lambda x: "'%d'" % x,
-                                                       _valid_install_states)))
+                                                   _valid_install_states)))
                     raise ValueError('Valid install states are %s' % state_str)
                 if self.installed:
                     return 'installed' in installed
@@ -567,8 +567,9 @@ class Database(object):
                 self._data = old_data
                 raise
 
-    def _construct_entry_from_directory_layout(self, directory_layout, old_data,
-                                               spec, replacement=None):
+    def _construct_entry_from_directory_layout(self, directory_layout,
+                                               old_data, spec,
+                                               replacement=None):
         # Try to recover explicit value from old DB, but
         # default it to True if DB was corrupt. This is
         # just to be conservative in case a command like

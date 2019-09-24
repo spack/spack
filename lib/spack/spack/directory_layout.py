@@ -100,7 +100,7 @@ class DirectoryLayout(object):
         if deprecated:
             if os.path.exists(path):
                 try:
-                    dep_file_name = spec.dag_hash() + '_' + self.spec_file_name
+                    dep_file_name = self.deprecated_file_name(spec)
                     metapath = os.path.join(os.readlink(path),
                                             self.metadata_dir,
                                             self.deprecated_dir,
@@ -247,6 +247,25 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
+    def deprecated_dir_path(self, spec):
+        """Gets full path to spec deprecated dir
+
+        directory of spec files for specs deprecated in favor of this spec"""
+        _check_concrete(spec)
+        return os.path.join(self.metadata_path(spec), self.metadata_dir)
+
+    def deprecated_file_name(self, spec):
+        """Gets name of deprecated spec file in deprecated dir"""
+        _check_concrete(spec)
+        return spec.dag_hash() + '_' + self.spec_file_name
+
+    def deprecated_file_path(self, deprecated_spec, replacement_spec):
+        """Gets full path to spec file for deprecated spec"""
+        _check_concrete(deprecated_spec)
+        _check_concrete(replacement_spec)
+        return os.path.join(self.deprecated_dir_path(replacement_spec),
+                            self.deprecated_file_name(deprecated_spec))
+
     @contextmanager
     def disable_upstream_check(self):
         self.check_upstream = False
@@ -331,10 +350,10 @@ class YamlDirectoryLayout(DirectoryLayout):
                        '*_' + self.spec_file_name]
         pattern = os.path.join(self.root, *path_elems)
         spec_files = glob.glob(pattern)
-        dep_spec_to_spec_file = lambda x: os.path.join(
+        get_depr_spec_file = lambda x: os.path.join(
             os.path.dirname(os.path.dirname(x)), self.spec_file_name)
-        return set((self.read_spec(s), self.read_spec(dep_spec_to_spec_file(s)))
-                for s in spec_files)
+        return set((self.read_spec(s), self.read_spec(get_depr_spec_file(s)))
+                   for s in spec_files)
 
     def specs_by_hash(self):
         by_hash = {}
