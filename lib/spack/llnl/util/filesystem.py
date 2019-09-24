@@ -1551,8 +1551,40 @@ def search_paths_for_executables(*path_hints):
     return executable_paths
 
 
+def partition(path, entry=None):
+    """
+    Split the prefixes of the path at the first occurrence of entry and
+    return a 3-tuple containing a list of the prefixes before the entry, a
+    string of the prefix ending with the entry, and a list of the prefixes
+    after the entry.
+
+    If the entry is not a node in the path, the result will be the prefix list
+    followed by an empty string and an empty list.
+    """
+    paths = prefixes(path)
+
+    if entry is not None:
+        # Derive the index of entry within paths, which will correspond to
+        # the location of the entry in within the path.
+        try:
+            entries = path.split(os.sep)
+            i = entries.index(entry)
+            if '' in entries:
+                i -= 1
+            return paths[:i], paths[i], paths[i + 1:]
+        except ValueError:
+            pass
+
+    return paths, '', []
+
+
 def prefixes(path):
     """Returns a list containing the path and its ancestors, top-to-bottom."""
     parts = [p or os.sep for p in path.rstrip(os.sep).split(os.sep)]
     paths = [os.path.join(*parts[:i]) for i, _ in enumerate(parts, 1)]
+
+    try:
+        paths.remove(os.sep)
+    except ValueError:
+        pass
     return paths

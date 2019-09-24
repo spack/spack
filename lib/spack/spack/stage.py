@@ -16,7 +16,7 @@ from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import prefixes, remove_linked_tree
+from llnl.util.filesystem import partition, remove_linked_tree
 
 import spack.paths
 import spack.caches
@@ -38,44 +38,52 @@ stage_prefix = 'spack-'
 
 def _create_stage_root(path):
     """Create the stage root directory and ensure appropriate access perms."""
-    assert path.startswith(os.sep) and len(path.strip()) > 1
+    assert path.startswith(os.path.sep) and len(path.strip()) > 1
 
     err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
     user_uid = os.getuid()
-    parts = path.strip(os.path.sep).split(os.path.sep)
 
-    i = 1 if path[0] == os.sep else 0
-    try:
-        j = parts.index(getpass.getuser()) + i
-    except ValueError:
-        j = None
+    group_paths, user_entry, user_paths = partition(path, getpass.getuser())
+    if user_entry != '':
+        user_paths.insert(0, user_entry)
 
-    paths = prefixes(path)
-    for p in paths[:j]:
+    for p in group_paths:
         if not os.path.exists(p):
             # Ensure access controls of subdirs created above `$user` inherit
             # from the parent and share the group.
             par_stat = os.stat(os.path.dirname(p))
             mkdirp(p, group=par_stat.st_gid, mode=par_stat.st_mode)
 
+            p_stat = os.stat(p)
+            if par_stat.st_gid != p_stat.st_gid:
+                tty.warn("Expected {0} to have group {1}, but it is {2}"
+                         .format(p, par_stat.st_gid, p_stat.st_gid))
+
+            if not (par_stat.st_mode & p_stat.st_mode):
+                tty.warn("Expected {0} to support mode {1}, but it is {2}"
+                         .format(p, par_stat.st_mode, p_stat.st_mode))
+
             if not can_access(p):
                 raise OSError(errno.EACCES, err_msg.format(path, p))
 
-    if j is not None:
-        for p in paths[j:]:
-            if not os.path.exists(p):
-                # Ensure access controls of subdirs from `$user` on down are
-                # restricted to the user.
-                mkdirp(p, mode=stat.S_IRWXU)
+    for p in user_paths:
+        # Ensure access controls of subdirs from `$user` on down are
+        # restricted to the user.
+        if not os.path.exists(p):
+            mkdirp(p, mode=stat.S_IRWXU)
 
-                if not can_access(p):
-                    raise OSError(errno.EACCES, err_msg.format(path, p))
+            if not (p_stat.st_mode & stat.S_IRWXU):
+                tty.warn("Expected {0} to support mode {1}, but it is {2}"
+                         .format(p, stat.S_IRWXU, p_stat.st_mode))
 
-            p_stat = os.stat(p)
-            if user_uid != p_stat.st_uid:
-                tty.warn("Expected user ({0} not {1}) to own {2}"
-                         .format(user_uid, p_stat.st_uid, p))
+            if not can_access(p):
+                raise OSError(errno.EACCES, err_msg.format(path, p))
+
+        p_stat = os.stat(p)
+        if user_uid != p_stat.st_uid:
+            tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
+                     .format(user_uid, p, p_stat.st_uid))
 
 
 def _first_accessible_path(paths):

@@ -14,7 +14,7 @@ import getpass
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, prefixes, working_dir
+from llnl.util.filesystem import mkdirp, partition, working_dir
 
 import spack.paths
 import spack.stage
@@ -414,28 +414,27 @@ def check_stage_dir_perms(prefix, path):
     # user.
     assert path.startswith(prefix)
 
+    user = getpass.getuser()
     prefix_status = os.stat(prefix)
     uid = os.getuid()
 
-    paths = prefixes(path)
-    i = paths.index(prefix)
+    # Skip processing prefix ancestors since no guarantee they will be in the
+    # required group (e.g. $TEMPDIR on HPC machines).
+    skip = prefix if prefix.endswith(os.sep) else os.path.join(prefix, os.sep)
+    group_paths, entry, user_paths = partition(path.replace(skip, ""), user)
+    if entry != '':
+        user_paths.insert(0, entry)
 
-    parts = path.strip(os.path.sep).split(os.path.sep)
-    try:
-        j = max(parts.index(getpass.getuser()), i)
-    except ValueError:
-        j = None
-
-    for p in paths[i:j]:
-        par_status = os.stat(os.path.dirname(p))
+    for p in group_paths:
+        parent = os.path.dirname(p)
+        par_status = os.stat(parent) if parent != '' else prefix_status
         assert prefix_status.st_gid == par_status.st_gid
         assert prefix_status.st_mode == par_status.st_mode
 
-    if j is not None:
-        for p in paths[j:]:
-            p_status = os.stat(p)
-            assert uid == p_status.st_uid
-            assert p_status.st_mode & stat.S_IRWXU == stat.S_IRWXU
+    for p in user_paths:
+        p_status = os.stat(p)
+        assert uid == p_status.st_uid
+        assert p_status.st_mode & stat.S_IRWXU == stat.S_IRWXU
 
 
 @pytest.mark.usefixtures('mock_packages')

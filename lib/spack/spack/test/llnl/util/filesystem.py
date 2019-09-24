@@ -296,3 +296,17 @@ def test_headers_directory_setter():
     # Setting directories to None also returns an empty list
     hl.directories = None
     assert hl.directories == []
+
+
+@pytest.mark.parametrize('path,entry,expected', [
+    ('/tmp/user/root', None,
+     (['/tmp', '/tmp/user', '/tmp/user/root'], '', [])),
+    ('/tmp/user/root', 'tmp', ([], '/tmp', ['/tmp/user', '/tmp/user/root'])),
+    ('/tmp/user/root', 'user', (['/tmp'], '/tmp/user', ['/tmp/user/root'])),
+    ('/tmp/user/root', 'root', (['/tmp', '/tmp/user'], '/tmp/user/root', [])),
+    ('relative/path', None, (['relative', 'relative/path'], '', [])),
+    ('relative/path', 'relative', ([], 'relative', ['relative/path'])),
+    ('relative/path', 'path', (['relative'], 'relative/path', []))
+])
+def test_partition(path, entry, expected):
+    assert fs.partition(path, entry) == expected
