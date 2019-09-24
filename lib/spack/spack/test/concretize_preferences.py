@@ -96,6 +96,26 @@ class TestConcretizePreferences(object):
         spec = concretize('mpileaks')
         assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
 
+    def test_preferred_target(self, mutable_mock_packages):
+        """Test preferred compilers are applied correctly
+        """
+        spec = concretize('mpich')
+        default = str(spec.target)
+        preferred = str(spec.target.family)
+
+        update_packages('mpich', 'target', [preferred])
+        spec = concretize('mpich')
+        assert str(spec.target) == preferred
+
+        spec = concretize('mpileaks')
+        assert str(spec['mpileaks'].target) == default
+        assert str(spec['mpich'].target) == preferred
+
+        update_packages('mpileaks', 'target', [preferred])
+        spec = concretize('mpileaks')
+        assert str(spec['mpich'].target) == preferred
+        assert str(spec['mpich'].target) == preferred
+
     def test_preferred_versions(self):
         """Test preferred package versions are applied correctly
         """
