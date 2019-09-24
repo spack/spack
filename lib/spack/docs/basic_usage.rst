@@ -865,9 +865,11 @@ or together by using the reserved keyword ``arch``:
 
    $ spack install libelf arch=cray-CNL10-haswell
 
-Normally users don't have to bother specifying the architecture
-if they are installing software for their current host as in that case the
-values will be detected automatically.
+Normally users don't have to bother specifying the architecture if they
+are installing software for their current host, as in that case the
+values will be detected automatically.  If you need fine-grained control
+over which packages use which targets (or over *all* packages' default
+target), see :ref:`concretization-preferences`.
 
 .. admonition:: Cray machines
 
