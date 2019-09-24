@@ -753,8 +753,14 @@ class TestStage(object):
 
         assert exc_info.value.args[0] == errno.EACCES
 
-    def test_create_stage_root_non_uid(self, tmpdir, monkeypatch):
-        """Test _create_stage_root with non-uid user dir."""
+    def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):
+        """
+        Test the case/path that triggers the generation of the warning
+        that a user subdirectory is expected to be owned by the user.
+
+        This situation has happened with some `config:build_stage` settings
+        for teams using a common service account for installing software.
+        """
         orig_stat = os.stat
 
         class MinStat:
