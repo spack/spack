@@ -28,6 +28,10 @@ class Fj(spack.compiler.Compiler):
     version_argument = '--version'
     version_regex = r'\((?:FCC|FRT)\) ([\d.]+)'
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
     @property
     def openmp_flag(self):
         return "-Kopenmp"
