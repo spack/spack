@@ -66,20 +66,20 @@ def get_patchelf():
     Returns the full patchelf binary path.
     """
     # as we may need patchelf, find out where it is
-    if str(spack.architecture.platform()) == 'test':
-        return None
-    if str(spack.architecture.platform()) == 'darwin':
-        return None
     patchelf = spack.util.executable.which('patchelf')
-    if patchelf is None:
+    if patchelf is not None:
+        return patchelf.path
+    else:
+        if str(spack.architecture.platform()) == 'test':
+            return None
+        if str(spack.architecture.platform()) == 'darwin':
+            return None
         patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
         patchelf = spack.repo.get(patchelf_spec)
         if not patchelf.installed:
             patchelf.do_install(use_cache=False)
         patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
         return patchelf_executable
-    else:
-        return patchelf.path
 
 
 def get_existing_elf_rpaths(path_name):
