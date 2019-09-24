@@ -777,10 +777,6 @@ class TestStage(object):
 
         assert os.stat(user_path).st_uid != os.getuid()
 
-        # Restore the original os.stat function to ensure Python 3 works
-        # during test stage directory cleanup.
-        monkeypatch.setattr(os, 'stat', orig_stat)
-
     def test_resolve_paths(self):
         """Test _resolve_paths."""
 
