@@ -13,6 +13,7 @@ place.
 It is up to the user to ensure binary compatibility between the deprecated
 installation and its replacement.
 '''
+from __future__ import print_function
 import argparse
 import os
 
@@ -73,7 +74,7 @@ def find_single_matching_spec(spec, env):
     if len(specs) > 1:
         tty.error('%s matches multiple packages:' % spec)
         print()
-        print spack.cmd.display_specs(spec, **display_args)
+        print(spack.cmd.display_specs(spec, **display_args))
         print()
         tty.die("Use a more specific spec to refer to %s" % spec)
     elif not specs:
