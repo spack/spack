@@ -683,16 +683,16 @@ class Llvm(CMakePackage):
                 # hence the test to see if the version starts with "flang".
                 targets.append('CppBackend')
 
-            if 'x86' in spec.architecture.target.family:
+            if 'x86' in spec.target.family:
                 targets.append('X86')
-            elif 'arm' in spec.architecture.target.family:
+            elif 'arm' in spec.target.family:
                 targets.append('ARM')
-            elif 'aarch64' in spec.architecture.target.family:
+            elif 'aarch64' in spec.target.family:
                 targets.append('AArch64')
-            elif 'sparc' in spec.architecture.target.family:
+            elif 'sparc' in spec.target.family:
                 targets.append('Sparc')
-            elif ('ppc' in spec.architecture.target.family or
-                  'power' in spec.architecture.target.family):
+            elif ('ppc' in spec.target.family or
+                  'power' in spec.target.family):
                 targets.append('PowerPC')
 
             cmake_args.append(
