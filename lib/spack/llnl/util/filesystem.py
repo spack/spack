@@ -49,6 +49,7 @@ __all__ = [
     'is_exe',
     'join_path',
     'mkdirp',
+    'partition',
     'prefixes',
     'remove_dead_links',
     'remove_if_dead_link',
