@@ -691,7 +691,8 @@ class Llvm(CMakePackage):
                 targets.append('AArch64')
             elif spec.target.family == 'sparc' or spec.target.family == 'sparc64':
                 targets.append('Sparc')
-            elif ('ppc' in spec.target.family or
+            elif (spec.target.family == 'ppc64' or spec.target.family == 'ppc64le' or
+                  spec.target.family == 'ppc' or spec.target.family == 'ppcle'):
                   'power' in spec.target.family):
                 targets.append('PowerPC')
 
