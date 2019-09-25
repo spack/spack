@@ -119,4 +119,18 @@ six
 * Homepage: https://pypi.python.org/pypi/six
 * Usage: Python 2 and 3 compatibility utilities.
 * Version: 1.11.0
+
+macholib
+--------
+
+* Homepage: https://macholib.readthedocs.io/en/latest/index.html#
+* Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
+* Version: 1.12
+
+altgraph
+--------
+
+* Homepage: https://altgraph.readthedocs.io/en/latest/index.html
+* Usage: dependency of macholib
+* Version: 0.16.1
 """
