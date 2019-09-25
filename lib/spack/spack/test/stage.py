@@ -745,7 +745,7 @@ class TestStage(object):
 
         assert exc_info.value.args[0] == errno.EACCES
 
-        # Ensure an OS Error is raised on a created, user directory
+        # Ensure an OS Error is raised on a created user directory
         spack_dir.ensure(dir=True)
         user_dir = spack_dir.join(getpass.getuser())
         with pytest.raises(OSError) as exc_info:
@@ -756,10 +756,11 @@ class TestStage(object):
     @pytest.mark.nomockstage
     def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):
         """
-        Test the case/path that triggers the generation of the warning
-        that a user subdirectory is expected to be owned by the user.
+        Test the code path that uses an existing user path -- whether `$user`
+        in `$tempdir` or not -- and triggers the generation of the UID
+        mismatch warning.
 
-        This situation has happened with some `config:build_stage` settings
+        This situation can happen with some `config:build_stage` settings
         for teams using a common service account for installing software.
         """
         orig_stat = os.stat
@@ -779,14 +780,69 @@ class TestStage(object):
         user_dir.ensure(dir=True)
         user_path = str(user_dir)
 
+        # TODO: Once wrap os.stat or able to ensure using a pytest with
+        # monkeypatch context function (i.e., 3.6.0 on), the call and
+        # assertion can be moved to the with block:
+        #
+        #  with monkeypatch.context() as m:
+        #      m.setattr(os, 'stat', _stat)
+        #      spack.stage._create_stage_root(user_path)
+        #      assert os.stat(user_path).st_uid != os.getuid()
         monkeypatch.setattr(os, 'stat', _stat)
         spack.stage._create_stage_root(user_path)
 
+        # The following check depends on the patched os.stat as it is a
+        # poor substitute for confirming the generated warnings.
         assert os.stat(user_path).st_uid != os.getuid()
+
+    @pytest.mark.nomockstage
+    def test_create_stage_root_bad_stat(self, tmpdir, monkeypatch):
+        """
+        Test the paths that create group (if user not in `$tempdir`) and
+        user path nodes and trigger gid (for former) and mode warnings.
+
+        This situation can happen with some `config:build_stage` settings
+        for teams using a common service account for installing software.
+        """
+        orig_stat = os.stat
+
+        class MinStat:
+            st_mode = 0
+            st_uid = -1
+            st_gid = -1
+
+        def _stat(path):
+            fake_stat = MinStat()
+            return fake_stat
+
+        user_dir = tmpdir.join('stage', getpass.getuser())
+        user_path = str(user_dir)
+
+        # TODO: Once wrap os.stat or able to ensure using a pytest with
+        # monkeypatch context function (i.e., 3.6.0 on), the call and
+        # assertions can be moved to the with block:
+        #
+        #  with monkeypatch.context() as m:
+        #      m.setattr(os, 'stat', _stat)
+        #      spack.stage._create_stage_root(user_path)
+        #
+        #      # Add assertion checks too
+        monkeypatch.setattr(os, 'stat', _stat)
+        spack.stage._create_stage_root(user_path)
+
+        # The following checks depend on the patched os.stat as they are a
+        # poor substitute for confirming the generated warnings.
+        tmp_stat = orig_stat(str(tmpdir))
+        stage_stat = os.stat(os.path.dirname(user_path))
+        assert stage_stat.st_gid != tmp_stat.st_gid
+        assert stage_stat.st_mode & tmp_stat.st_mode != tmp_stat.st_mode
+
+        user_stat = os.stat(user_path)
+        assert user_stat.st_uid != os.getuid()
+        assert user_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU
 
     def test_resolve_paths(self):
         """Test _resolve_paths."""
-
         assert spack.stage._resolve_paths([]) == []
 
         paths = [os.path.join(os.path.sep, 'a', 'b', 'c')]

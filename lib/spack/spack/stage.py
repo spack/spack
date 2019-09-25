@@ -60,7 +60,7 @@ def _create_stage_root(path):
                 tty.warn("Expected {0} to have group {1}, but it is {2}"
                          .format(p, par_stat.st_gid, p_stat.st_gid))
 
-            if not (par_stat.st_mode & p_stat.st_mode):
+            if par_stat.st_mode & p_stat.st_mode != par_stat.st_mode:
                 tty.warn("Expected {0} to support mode {1}, but it is {2}"
                          .format(p, par_stat.st_mode, p_stat.st_mode))
 
@@ -74,7 +74,7 @@ def _create_stage_root(path):
             mkdirp(p, mode=stat.S_IRWXU)
 
             p_stat = os.stat(p)
-            if not (p_stat.st_mode & stat.S_IRWXU):
+            if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
                 tty.warn("Expected {0} to support mode {1}, but it is {2}"
                          .format(p, stat.S_IRWXU, p_stat.st_mode))
 
