@@ -108,13 +108,7 @@ class Fftw(AutotoolsPackage):
     @property
     def selected_precisions(self):
         """Precisions that have been selected in this build"""
-        spec = self.spec
-        return list(filter(None, [
-            'float' if spec.satisfies('precision=float') else None,
-            'double' if spec.satisfies('precision=double') else None,
-            'long_double' if spec.satisfies('precision=long_double') else None,
-            'quad' if spec.satisfies('precision=quad') else None
-        ]))
+        return self.spec.variants['precision'].value
 
     def configure(self, spec, prefix):
         # Base options
