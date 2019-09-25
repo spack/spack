@@ -89,6 +89,3 @@ class Maker(Package):
 
         # Remove old IO::Prompt perl module
         rm('-r', '-f', join_path(prefix, 'perl', 'lib', 'IO'))
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('ZOE', join_path(self.spec['snap-korf'].prefix, 'Zoe'))
