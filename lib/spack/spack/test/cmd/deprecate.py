@@ -2,10 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pytest
 from spack.main import SpackCommand
 import spack.store
 
 install = SpackCommand('install')
+uninstall = SpackCommand('uninstall')
 deprecate = SpackCommand('deprecate')
 find = SpackCommand('find')
 activate = SpackCommand('activate')
@@ -60,6 +62,9 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
     install('libdwarf@20130729 ^libelf@0.8.13')
     install('libdwarf@20130207 ^libelf@0.8.10')
 
+    new_spec = spack.spec.Spec('libdwarf@20130729^libelf@0.8.13').concretized()
+    old_spec = spack.spec.Spec('libdwarf@20130207^libelf@0.8.10').concretized()
+
     all_installed = spack.store.db.query()
 
     deprecate('-y', '-d', 'libdwarf@20130207', 'libdwarf@20130729')
@@ -71,10 +76,7 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
     assert all_available == all_installed
     assert sorted(all_available) == sorted(deprecated + non_deprecated)
 
-    new_spec = spack.spec.Spec('libdwarf@20130729^libelf@0.8.13').concretized()
     assert sorted(non_deprecated) == sorted(list(new_spec.traverse()))
-
-    old_spec = spack.spec.Spec('libdwarf@20130207^libelf@0.8.10').concretized()
     assert sorted(deprecated) == sorted(list(old_spec.traverse()))
 
 
@@ -91,3 +93,41 @@ def test_deprecate_fails_extensions(mock_packages, mock_archive, mock_fetch,
     output = deprecate('-yi', 'extension1', 'libelf', fail_on_error=False)
     assert 'extendee' in output
     assert 'is an active extension of' in output
+
+
+def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch,
+                              install_mockery):
+    install('libelf@0.8.13')
+    install('libelf@0.8.10')
+
+    deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13')
+
+    non_deprecated = spack.store.db.query()
+
+    uninstall('-y', 'libelf@0.8.10')
+
+    assert spack.store.db.query() == spack.store.db.query(installed=any)
+    assert spack.store.db.query() == non_deprecated
+
+
+def test_deprecate_deprecated(mock_packages, mock_archive, mock_fetch,
+                              install_mockery):
+    install('libelf@0.8.13')
+    install('libelf@0.8.10')
+
+    deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13')
+    output = deprecate('-yi', 'libelf@0.8.10', 'libelf', fail_on_error=False)
+
+    assert "already deprecated in favor of" in output
+
+
+def test_concretize_deprecated(mock_packages, mock_archive, mock_fetch,
+                               install_mockery):
+    install('libelf@0.8.13')
+    install('libelf@0.8.10')
+
+    deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13')
+
+    spec = spack.spec.Spec('libelf@0.8.10')
+    with pytest.raises(spack.spec.SpecDeprecatedError):
+        spec.concretize()

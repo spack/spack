@@ -2241,6 +2241,9 @@ class Spec(object):
 
                 s.external_path = get_path_from_module(s.external_module)
 
+        # Mark everything in the spec as concrete, as well.
+        self._mark_concrete()
+
         # If any spec in the DAG is deprecated, throw an error
         deprecated = []
         for x in self.traverse():
@@ -2255,9 +2258,6 @@ class Spec(object):
             msg += '\n'
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
-
-        # Mark everything in the spec as concrete, as well.
-        self._mark_concrete()
 
         # Now that the spec is concrete we should check if
         # there are declared conflicts

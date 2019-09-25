@@ -67,14 +67,15 @@ def setup_parser(sp):
                     help="spec to replace and spec to replace with")
 
 
-def find_single_matching_spec(spec, env):
+def find_single_matching_spec(spec, env, installed=True):
     hashes = env.all_hashes() if env else None
 
-    specs = spack.store.db.query_local(spec, hashes=hashes)
+    specs = spack.store.db.query_local(spec, hashes=hashes,
+                                       installed=installed)
     if len(specs) > 1:
         tty.error('%s matches multiple packages:' % spec)
         print()
-        print(spack.cmd.display_specs(spec, **display_args))
+        print(spack.cmd.display_specs(specs, **display_args))
         print()
         tty.die("Use a more specific spec to refer to %s" % spec)
     elif not specs:
@@ -92,7 +93,9 @@ def deprecate(parser, args):
     if len(specs) != 2:
         raise SpackError('spack deprecate requires exactly two specs')
 
-    deprecated = find_single_matching_spec(specs[0], env)
+    deprecated = find_single_matching_spec(specs[0], env,
+                                           installed=['installed',
+                                                      'deprecated'])
 
     if args.install:
         replacement = specs[1].concretized()

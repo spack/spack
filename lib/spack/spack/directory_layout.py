@@ -252,7 +252,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         directory of spec files for specs deprecated in favor of this spec"""
         _check_concrete(spec)
-        return os.path.join(self.metadata_path(spec), self.metadata_dir)
+        return os.path.join(self.metadata_path(spec), self.deprecated_dir)
 
     def deprecated_file_name(self, spec):
         """Gets name of deprecated spec file in deprecated dir"""
