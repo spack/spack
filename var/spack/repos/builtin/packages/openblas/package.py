@@ -201,7 +201,7 @@ class Openblas(MakefilePackage):
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
 
-        if 'x86' in self.spec.architecture.target.lower():
+        if self.spec.target.family == 'x86_64':
             if '~avx2' in self.spec:
                 make_defs += ['NO_AVX2=1']
             if '~avx512' in self.spec:
