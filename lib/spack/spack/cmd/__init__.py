@@ -181,6 +181,7 @@ def disambiguate_spec(spec, env, local=False):
         spec (spack.spec.Spec): a spec to disambiguate
         env (spack.environment.Environment): a spack environment,
             if one is active, or None if no environment is active
+        local (boolean, default False): do not search chained spack instances
     """
     hashes = env.all_hashes() if env else None
     if local:
