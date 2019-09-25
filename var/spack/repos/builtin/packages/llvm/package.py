@@ -685,7 +685,7 @@ class Llvm(CMakePackage):
 
             if spec.target.family == 'x86' or spec.target.family == 'x86_64'
                 targets.append('X86')
-            elif 'arm' in spec.target.family:
+            elif spec.target.family == 'arm':
                 targets.append('ARM')
             elif 'aarch64' in spec.target.family:
                 targets.append('AArch64')
