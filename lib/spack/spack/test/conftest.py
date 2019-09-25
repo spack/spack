@@ -208,10 +208,6 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
     """
     Ensure that each (mock_stage) test leaves a clean stage when done.
 
-    This fixture can be disabled for non-staging tests by adding::
-
-        @pytest.mark.nomockstage
-
     Tests that are expected to dirty the stage can disable the check by
     adding::
 
@@ -219,24 +215,28 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
 
     and the associated stage files will be removed.
     """
-    if 'nomockstage' not in request.keywords:
-        stage_path = mock_stage
+    stage_path = mock_stage
 
-        yield
+    yield
 
-        files_in_stage = set()
-        if os.path.exists(stage_path):
-            stage_files = os.listdir(stage_path)
-            files_in_stage = set(stage_files) - ignore_stage_files
-
-        if 'disable_clean_stage_check' in request.keywords:
-            # clean up after tests that are expected to be dirty
-            for f in files_in_stage:
-                path = os.path.join(stage_path, f)
-                remove_whatever_it_is(path)
+    files_in_stage = set()
+    try:
+        stage_files = os.listdir(stage_path)
+        files_in_stage = set(stage_files) - ignore_stage_files
+    except OSError as err:
+        if err.errno == 2:
+            pass
         else:
-            ignore_stage_files |= files_in_stage
-            assert not files_in_stage
+            raise
+
+    if 'disable_clean_stage_check' in request.keywords:
+        # clean up after tests that are expected to be dirty
+        for f in files_in_stage:
+            path = os.path.join(stage_path, f)
+            remove_whatever_it_is(path)
+    else:
+        ignore_stage_files |= files_in_stage
+        assert not files_in_stage
 
 
 @pytest.fixture(autouse=True)
