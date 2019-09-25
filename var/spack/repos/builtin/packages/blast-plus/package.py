@@ -105,7 +105,7 @@ class BlastPlus(AutotoolsPackage):
             '--without-boost',
         ]
 
-        if 'aarch64' not in spec.architecture.target.lower():
+        if spec.target.family != 'aarch64':
             config_args.append('--with-64')
         if '+static' in spec:
             config_args.append('--with-static')

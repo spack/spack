@@ -26,7 +26,7 @@ class Ross(CMakePackage):
         args = []
 
         args.append("-DBUILD_SHARED_LIBS=ON")
-        args.append("-DARCH=%s" % self.spec.architecture.target)
+        args.append("-DARCH=%s" % self.spec.target)
         args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
         args.append("-DCMAKE_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx)
 
