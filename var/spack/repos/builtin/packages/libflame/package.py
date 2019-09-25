@@ -60,6 +60,10 @@ class Libflame(AutotoolsPackage):
     # https://github.com/flame/libflame/issues/24
     patch('Makefile_5.2.0.patch', when='@5.2.0')
 
+    # Problems building on macOS:
+    # https://github.com/flame/libflame/issues/23
+    patch('Makefile_5.2.0_darwin.patch', when='@5.2.0')
+
     def flag_handler(self, name, flags):
         # -std=gnu99 at least required, old versions of GCC default to -std=c90
         if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
@@ -104,3 +108,9 @@ class Libflame(AutotoolsPackage):
         config_args.append("--enable-max-arg-list-hack")
 
         return config_args
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)
