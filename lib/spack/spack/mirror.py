@@ -24,7 +24,6 @@ import spack.url as url
 import spack.fetch_strategy as fs
 from spack.spec import Spec
 from spack.version import VersionList
-from spack.util.compression import allowed_archive
 
 
 def _determine_extension(fetcher, spec):
@@ -103,7 +102,7 @@ def get_all_versions(base_specs):
 
         for version in pkg.versions:
             version_spec = Spec(pkg.name)
-            version_spec.versions = VersionList([v])
+            version_spec.versions = VersionList([version])
             version_specs.append(version_spec)
 
 
