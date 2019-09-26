@@ -41,20 +41,20 @@ class BinaryStringReplacementException(spack.error.SpackError):
             (file_path, old_len, new_len))
 
 
-class MissingMachotoolsException(spack.error.SpackError):
+class MissingMacholibException(spack.error.SpackError):
     """
     Raised when the size of the file changes after binary path substitution.
     """
 
     def __init__(self, error):
-        super(MissingMachotoolsException, self).__init__(
+        super(MissingMacholibException, self).__init__(
             "%s\n"
-            "Python package machotools needs to be avaiable to list\n"
+            "Python package macholib needs to be avaiable to list\n"
             "and modify a mach-o binary's rpaths, deps and id.\n"
-            "Use virtualenv with pip install machotools or\n"
-            "use spack to install the py-machotools package\n"
-            "spack install py-machotools\n"
-            "spack activate py-machotools\n"
+            "Use virtualenv with pip install macholib or\n"
+            "use spack to install the py-macholib package\n"
+            "spack install py-macholib\n"
+            "spack activate py-macholib\n"
             "spack load python\n"
             % error)
 
@@ -275,55 +275,50 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     return
 
 
-def modify_object_machotools(cur_path, rpaths, deps, idpath,
-                             new_rpaths, new_deps, new_idpath):
+def modify_object_macholib(cur_path, old_dir, new_dir):
     """
     Modify MachO binary path_name by replacing old_dir with new_dir
     or the relative path to spack install root.
     The old install dir in LC_ID_DYLIB is replaced with the new install dir
-    using py-machotools
+    using py-macholib
     The old install dir in LC_LOAD_DYLIB is replaced with the new install dir
-    using py-machotools
+    using py-macholib
     The old install dir in LC_RPATH is replaced with the new install dir using
-    using py-machotools
+    using py-macholib
     """
     if cur_path.endswith('.o'):
         return
     try:
-        import machotools
+        from macholib.MachO import MachO
+        from macholib.mach_o import LC_RPATH
     except ImportError as e:
-        raise MissingMachotoolsException(e)
-    rewriter = machotools.rewriter_factory(cur_path)
-    if machotools.detect.is_dylib(cur_path):
-        if not new_idpath == idpath:
-            rewriter.install_name = new_idpath
-    for orig, new in zip(deps, new_deps):
-        if not orig == new:
-            rewriter.change_dependency(orig, new)
-    rewriter.commit()
-    return
+        raise MissingMacholibException(e)
 
+    def match_func(cpath):
+        return str(cpath).replace(old_dir, new_dir)
 
-def machotools_get_paths(path_name):
-    """
-    Examines the output of otool -l path_name for these three fields:
-    LC_ID_DYLIB, LC_LOAD_DYLIB, LC_RPATH and parses out the rpaths,
-    dependiencies and library id.
-    Returns these values.
-    """
+    dll = MachO(cur_path)
+    dll.rewriteLoadCommands(match_func)
+    for header in dll.headers:
+        for (idx, (lc, cmd, data))  in enumerate(header.commands):
+            if lc.cmd == LC_RPATH:
+                rpath = data
+                rpath = rpath.strip('\x00')
+                new_rpath = match_func(rpath)
+                header.rewriteDataForCommand(idx, new_rpath)
+
     try:
-        import machotools
-    except ImportError as e:
-        raise MissingMachotoolsException(e)
-    idpath = None
-    rpaths = list()
-    deps = list()
-    rewriter = machotools.rewriter_factory(path_name)
-    if machotools.detect.is_dylib(path_name):
-        idpath = rewriter.install_name
-    rpaths = rewriter.rpaths
-    deps = rewriter.dependencies
-    return rpaths, deps, idpath
+        f = open(dll.filename, 'rb+')
+        for header in dll.headers:
+            f.seek(0)
+            dll.write(f)
+        f.seek(0, 2)
+        f.flush()
+        f.close()
+    except Exception:
+        pass
+
+    return
 
 
 def strings_contains_installroot(path_name, root_dir):
@@ -405,48 +400,41 @@ def relocate_macho_binaries(path_names, old_dir, new_dir, allow_root):
     """
     placeholder = set_placeholder(old_dir)
     for path_name in path_names:
-        deps = set()
-        idpath = None
+        if path_name.endswith('.o'):
+            continue
+        if new_dir == old_dir:
+            continue
         if platform.system().lower() == 'darwin':
-            if path_name.endswith('.o'):
-                continue
-            else:
-                rpaths, deps, idpath = macho_get_paths(path_name)
-        else:
-            rpaths, deps, idpath = machotools_get_paths(path_name)
-        # one pass to replace placeholder
-        (n_rpaths,
-         n_deps,
-         n_idpath) = macho_replace_paths(placeholder,
-                                         new_dir,
-                                         rpaths,
-                                         deps,
-                                         idpath)
-        # another pass to replace old_dir
-        (new_rpaths,
-         new_deps,
-         new_idpath) = macho_replace_paths(old_dir,
-                                           new_dir,
-                                           n_rpaths,
-                                           n_deps,
-                                           n_idpath)
-        if platform.system().lower() == 'darwin':
+            rpaths, deps, idpath = macho_get_paths(path_name)
+            # one pass to replace placeholder
+            (n_rpaths,
+             n_deps,
+             n_idpath) = macho_replace_paths(placeholder,
+                                             new_dir,
+                                             rpaths,
+                                             deps,
+                                             idpath)
+            # another pass to replace old_dir
+            (new_rpaths,
+             new_deps,
+             new_idpath) = macho_replace_paths(old_dir,
+                                               new_dir,
+                                               n_rpaths,
+                                               n_deps,
+                                               n_idpath)
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
         else:
-            modify_object_machotools(path_name,
-                                     rpaths, deps, idpath,
-                                     new_rpaths, new_deps, new_idpath)
-
-        if not new_dir == old_dir:
-            if len(new_dir) <= len(old_dir):
-                replace_prefix_bin(path_name, old_dir, new_dir)
-            else:
-                tty.warn('Cannot do a binary string replacement'
-                         ' with padding for %s'
-                         ' because %s is longer than %s' %
-                         (path_name, new_dir, old_dir))
+            modify_object_macholib(path_name, placeholder, new_dir)
+            modify_object_macholib(path_name, old_dir, new_dir)
+        if len(new_dir) <= len(old_dir):
+            replace_prefix_bin(path_name, old_dir, new_dir)
+        else:
+            tty.warn('Cannot do a binary string replacement'
+                     ' with padding for %s'
+                     ' because %s is longer than %s' %
+                     (path_name, new_dir, old_dir))
 
 
 def relocate_elf_binaries(path_names, old_dir, new_dir, allow_root):
@@ -498,21 +486,13 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names, old_dir,
         idpath = None
         if platform.system().lower() == 'darwin':
             (rpaths, deps, idpath) = macho_get_paths(cur_path)
-        else:
-            (rpaths, deps, idpath) = machotools_get_paths(cur_path)
-        (new_rpaths,
-         new_deps,
-         new_idpath) = macho_make_paths_relative(orig_path, old_dir,
-                                                 rpaths, deps, idpath)
-        if platform.system().lower() == 'darwin':
+            (new_rpaths,
+             new_deps,
+             new_idpath) = macho_make_paths_relative(orig_path, old_dir,
+                                                     rpaths, deps, idpath)
             modify_macho_object(cur_path,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-        else:
-            modify_object_machotools(cur_path,
-                                     rpaths, deps, idpath,
-                                     new_rpaths, new_deps, new_idpath)
-
         if (not allow_root and
                 not file_is_relocatable(cur_path)):
             raise InstallRootStringException(cur_path, old_dir)
