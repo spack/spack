@@ -59,6 +59,7 @@ class Umpire(CMakePackage):
         if '+numa' in spec:
             options.append('-DENABLE_NUMA=On')
 
+        # disable tests for now, fails on gcc@9.1.0
         options.append('-DENABLE_TESTS=Off')
         options.append('-DENABLE_BENCHMARKS=Off')
 

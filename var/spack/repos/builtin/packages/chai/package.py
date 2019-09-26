@@ -41,6 +41,8 @@ class Chai(CMakePackage):
 
         options.append('-Dumpire_DIR:PATH='
                        + spec['umpire'].prefix + "/share/umpire/cmake")
+
+        # disable tests for now, fails on gcc@9.1.0
         options.append('-DENABLE_TESTS=Off')
         options.append('-DENABLE_BENCHMARKS=Off')
 
