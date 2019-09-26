@@ -788,8 +788,8 @@ class OpenfoamArch(object):
         # spec.architecture.platform is like `uname -s`, but lower-case
         platform = spec.architecture.platform
 
-        # spec.architecture.target is like `uname -m`
-        target   = spec.architecture.target
+        # spec.target.family is like `uname -m`
+        target = spec.target.family
 
         if platform == 'linux':
             if target == 'x86_64':

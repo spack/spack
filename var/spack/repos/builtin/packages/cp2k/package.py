@@ -160,7 +160,6 @@ class Cp2k(MakefilePackage, CudaPackage):
         optimization_flags = {
             'gcc': [
                 '-O2',
-                '-mtune=native',
                 '-funroll-loops',
                 '-ftree-vectorize',
             ],
