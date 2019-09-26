@@ -25,4 +25,3 @@ class Libibumad(CMakePackage):
     def install(self, spec, prefix):
         with working_dir(join_path(self.build_directory, 'libibumad')):
             make('install')
-
