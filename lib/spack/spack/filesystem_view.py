@@ -413,7 +413,24 @@ class YamlFilesystemView(FilesystemView):
         remove_extension = ft.partial(self.remove_extension,
                                       with_dependents=with_dependents)
 
-        set(map(remove_extension, extensions))
+        extensions_depmap = dict((e,
+                                  [d for d in e.traverse(
+                                      root=False) if d in extensions]
+                                  ) for e in extensions)
+
+        extensions_sorted = []
+        while extensions_depmap:
+            for e in [e for e, d in extensions_depmap.items() if not d]:
+                extensions_sorted.append(e)
+                for ee in extensions_depmap.keys():
+                    extensions_depmap[ee] = \
+                        [d for d in extensions_depmap[ee] if d != e]
+                extensions_depmap.pop(e)
+        extensions_sorted.reverse()
+
+        assert set(extensions_sorted) == extensions
+
+        set(map(remove_extension, extensions_sorted))
         set(map(self.remove_standalone, standalones))
 
         self._purge_empty_directories()
