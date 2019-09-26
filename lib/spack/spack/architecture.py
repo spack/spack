@@ -493,3 +493,15 @@ def sys_type():
     """
     arch = Arch(platform(), 'default_os', 'default_target')
     return str(arch)
+
+
+@memoized
+def compatible_sys_types():
+    """Returns a list of all the systypes compatible with the current host."""
+    compatible_archs = []
+    current_host = cpu.host()
+    compatible_targets = [current_host] + current_host.ancestors
+    for target in compatible_targets:
+        arch = Arch(platform(), 'default_os', target)
+        compatible_archs.append(str(arch))
+    return compatible_archs

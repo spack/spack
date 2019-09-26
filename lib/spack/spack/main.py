@@ -585,7 +585,8 @@ def print_setup_info(*info):
 
     # print sys type
     shell_set('_sp_sys_type', spack.architecture.sys_type())
-
+    shell_set('_sp_compatible_sys_types',
+              ':'.join(spack.architecture.compatible_sys_types()))
     # print roots for all module systems
     module_roots = spack.config.get('config:module_roots')
     module_to_roots = {
