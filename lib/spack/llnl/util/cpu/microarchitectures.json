@@ -825,6 +825,41 @@
           "flags": "-march=armv8-a -mtune=generic"
         }
       }
+    },
+    "arm": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+      }
+    },
+    "ppc": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+      }
+    },
+    "ppcle": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+      }
+    },
+    "sparc": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+      }
+    },
+    "sparc64": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+      }
     }
   },
   "feature_aliases": {
