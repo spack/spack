@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Maverick(MakefilePackage):
     conflicts('%nag')
     conflicts('%pgi')
     conflicts('%xl')
-    conflicts('%xl_r')    
+    conflicts('%xl_r')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

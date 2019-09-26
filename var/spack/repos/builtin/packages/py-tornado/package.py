@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,7 @@ class PyTornado(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     # requirements from setup.py
-    # These dependencies breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-backports-ssl-match-hostname', when='^python@:2.7.8', type=('build', 'run'))  # noqa
-    # depends_on('py-singledispatch', when='^python@:3.3', type=('build', 'run'))  # noqa
-    # depends_on('py-certifi', when='^python@:3.3', type=('build', 'run'))
-    # depends_on('py-backports-abc@0.4:', when='^python@:3.4', type=('build', 'run'))  # noqa
-    depends_on('py-backports-ssl-match-hostname', type=('build', 'run'))
-    depends_on('py-singledispatch', type=('build', 'run'))
-    depends_on('py-certifi', type=('build', 'run'))
-    depends_on('py-backports-abc@0.4:', type=('build', 'run'))
+    depends_on('py-backports-ssl-match-hostname', when='^python@:2.7.8', type=('build', 'run'))
+    depends_on('py-singledispatch', when='^python@:3.3', type=('build', 'run'))
+    depends_on('py-certifi', when='^python@:3.3', type=('build', 'run'))
+    depends_on('py-backports-abc@0.4:', when='^python@:3.4', type=('build', 'run'))

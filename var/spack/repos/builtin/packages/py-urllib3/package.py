@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class PyUrllib3(PythonPackage):
     homepage = "https://urllib3.readthedocs.io/"
     url = "https://pypi.io/packages/source/u/urllib3/urllib3-1.20.tar.gz"
 
+    version('1.21.1', sha256='b14486978518ca0901a76ba973d7821047409d7f726f22156b24e83fd71382a5')
     version('1.20', '34691d4e7e20a8e9cdb452ea24fc38e7')
     version('1.14', '5e1407428ac33b521c71a7ac273b3847')
 

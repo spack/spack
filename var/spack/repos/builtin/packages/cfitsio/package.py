@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class Cfitsio(AutotoolsPackage):
     variant('bzip2', default=True, description='Enable bzip2 support')
     variant('shared', default=True, description='Build shared libraries')
 
+    depends_on('curl')
     depends_on('bzip2', when='+bzip2')
 
     def url_for_version(self, version):

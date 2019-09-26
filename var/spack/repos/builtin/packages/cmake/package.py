@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,25 @@ class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
     homepage = 'https://www.cmake.org'
-    url      = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
-    list_url = 'https://cmake.org/files/'
-    list_depth = 1
+    url      = 'https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz'
+    maintainers = ['chuckatkins']
 
+    version('3.15.3', sha256='13958243a01365b05652fa01b21d40fa834f70a9e30efa69c02604e64f58b8f5')
+    version('3.15.2', sha256='539088cb29a68e6d6a8fba5c00951e5e5b1a92c68fa38a83e1ed2f355933f768')
+    version('3.15.1', sha256='18dec548d8f8b04d53c60f9cedcebaa6762f8425339d1e2c889c383d3ccdd7f7')
+    version('3.15.0', sha256='0678d74a45832cacaea053d85a5685f3ed8352475e6ddf9fcb742ffca00199b5')
+    version('3.14.5', sha256='505ae49ebe3c63c595fa5f814975d8b72848447ee13b6613b0f8b96ebda18c06')
+    version('3.14.4', sha256='00b4dc9b0066079d10f16eed32ec592963a44e7967371d2f5077fd1670ff36d9')
+    version('3.14.3', sha256='215d0b64e81307182b29b63e562edf30b3875b834efdad09b3fcb5a7d2f4b632')
+    version('3.14.2', sha256='a3cbf562b99270c0ff192f692139e98c605f292bfdbc04d70da0309a5358e71e')
+    version('3.14.1', sha256='7321be640406338fc12590609c42b0fae7ea12980855c1be363d25dcd76bb25f')
+    version('3.14.0', sha256='aa76ba67b3c2af1946701f847073f4652af5cbd9f141f221c97af99127e75502')
+    version('3.13.4',   'fdd928fee35f472920071d1c7f1a6a2b72c9b25e04f7a37b409349aef3f20e9b')
+    version('3.13.3',   '665f905036b1f731a2a16f83fb298b1fb9d0f98c382625d023097151ad016b25')
+    version('3.13.2',   'c925e7d2c5ba511a69f43543ed7b4182a7d446c274c7480d0e42cd933076ae25')
+    version('3.13.1',   'befe1ce6d672f2881350e94d4e3cc809697dd2c09e5b708b76c1dae74e1b2210')
+    version('3.13.0',   '4058b2f1a53c026564e8936698d56c3b352d90df067b195cb749a97a3d273c90')
+    version('3.12.4',   '5255584bfd043eb717562cff8942d472f1c0e4679c4941d84baadaa9b28e3194')
     version('3.12.3',   'acbf13af31a741794106b76e5d22448b004a66485fc99f6d7df4d22e99da164a')
     version('3.12.2',   '6e7c550cfa1c2e216b35903dc70d80af')
     version('3.12.1',   '10109246a51102bfda45ff3935275fbf')
@@ -47,20 +62,40 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
+    # Revert the change that introduced a regression when parsing mpi link
+    # flags, see: https://gitlab.kitware.com/cmake/cmake/issues/19516
+    patch('cmake-revert-findmpi-link-flag-list.patch', when='@3.15.0')
+
+    # Fix linker error when using external libs on darwin.
+    # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
+    patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
+
+    # We default ownlibs to true because it greatly speeds up the CMake
+    # build, and CMake is built frequently. Also, CMake is almost always
+    # a build dependency, and its libs will not interfere with others in
+    # the build.
     variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
+    # Really this should conflict since it's enabling or disabling openssl for
+    # CMake's internal copy of curl.  Ideally we'd want a way to have the
+    # openssl variant disabled when ~ownlibs but there's not really a way to
+    # tie the values of those togethor, so for now we're just going to ignore
+    # the openssl variant entirely when ~ownlibs
+    # conflicts('~ownlibs', when='+openssl')
+
     depends_on('curl',           when='~ownlibs')
     depends_on('expat',          when='~ownlibs')
-    # depends_on('jsoncpp',        when='~ownlibs')  # circular dependency
     depends_on('zlib',           when='~ownlibs')
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
     depends_on('libarchive',     when='~ownlibs')
-    depends_on('libuv@1.0.0:',   when='~ownlibs')
+    depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
+    depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
+    depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
     depends_on('rhash',          when='@3.8.0:~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
@@ -83,10 +118,16 @@ class Cmake(Package):
 
     phases = ['bootstrap', 'build', 'install']
 
-    def url_for_version(self, version):
-        """Handle CMake's version-based custom URLs."""
-        url = 'https://cmake.org/files/v{0}/cmake-{1}.tar.gz'
-        return url.format(version.up_to(2), version)
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags' and self.compiler.name == 'fj':
+            cxx11plus_flags = (self.compiler.cxx11_flag,
+                               self.compiler.cxx14_flag)
+            cxxpre11_flags = (self.compiler.cxx98_flag)
+            if any(f in flags for f in cxxpre11_flags):
+                raise ValueError('cannot build cmake pre-c++11 standard')
+            elif not any(f in flags for f in cxx11plus_flags):
+                flags.append(self.compiler.cxx11_flag)
+        return (flags, None, None)
 
     def bootstrap_args(self):
         spec = self.spec
@@ -116,9 +157,9 @@ class Cmake(Package):
             args.append('--sphinx-html')
             args.append('--sphinx-man')
 
-        if '+openssl' in spec:
+        if '+ownlibs' in spec:
             args.append('--')
-            args.append('-DCMAKE_USE_OPENSSL=ON')
+            args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
 
         return args
 

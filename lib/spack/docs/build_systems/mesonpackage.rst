@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,6 +54,28 @@ Packages that use the Meson build system can be identified by the
 presence of a ``meson.build`` file. This file declares things
 like build instructions and dependencies.
 
+One thing to look for is the ``meson_version`` key that gets passed
+to the ``project`` function:
+
+.. code-block:: none
+   :emphasize-lines: 10
+
+   project('gtk+', 'c',
+        version: '3.94.0',
+        default_options: [
+          'buildtype=debugoptimized',
+          'warning_level=1',
+          # We only need c99, but glib needs GNU-specific features
+          # https://github.com/mesonbuild/meson/issues/2289
+          'c_std=gnu99',
+        ],
+        meson_version: '>= 0.43.0',
+        license: 'LGPLv2.1+')
+
+
+This means that Meson 0.43.0 is the earliest release that will work.
+You should specify this in a ``depends_on`` statement.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -66,6 +88,28 @@ the ``MesonPackage`` base class already contains:
 
    depends_on('meson', type='build')
    depends_on('ninja', type='build')
+
+
+If you need to specify a particular version requirement, you can
+override this in your package:
+
+.. code-block:: python
+
+   depends_on('meson@0.43.0:', type='build')
+   depends_on('ninja', type='build')
+
+
+^^^^^^^^^^^^^^^^^^^
+Finding meson flags
+^^^^^^^^^^^^^^^^^^^
+
+To get a list of valid flags that can be passed to ``meson``, run the
+following command in the directory that contains ``meson.build``:
+
+.. code-block:: console
+
+   $ meson setup --help
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to meson

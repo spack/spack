@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,6 +45,9 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    # Tagged development version used by the laghos package:
+    version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
+
     version('3.4.0',
             '4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
             url='https://bit.ly/mfem-3-4', extension='.tar.gz',
@@ -54,7 +57,8 @@ class Mfem(Package):
             'b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
             url='https://goo.gl/Kd7Jk8', extension='.tar.gz')
 
-    version('laghos-v1.0', tag='laghos-v1.0')
+    # Tagged development version used by the laghos package:
+    version('3.3.1-laghos-v1.0', tag='laghos-v1.0')
 
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
@@ -69,62 +73,62 @@ class Mfem(Package):
             url='http://goo.gl/xrScXn', extension='.tar.gz')
 
     variant('static', default=True,
-        description='Build static library')
+            description='Build static library')
     variant('shared', default=False,
-        description='Build shared library')
+            description='Build shared library')
     variant('mpi', default=True,
-        description='Enable MPI parallelism')
+            description='Enable MPI parallelism')
     # Can we make the default value for 'metis' to depend on the 'mpi' value?
     variant('metis', default=True,
-        description='Enable METIS support')
+            description='Enable METIS support')
     # TODO: The 'hypre' variant is the same as 'mpi', we may want to remove it.
     #       For now, keep the 'hypre' variant while ignoring its setting. This
     #       is done to preserve compatibility with other packages that refer to
     #       it, e.g. xSDK.
     variant('hypre', default=True,
-        description='Required for MPI parallelism')
+            description='Required for MPI parallelism')
     variant('openmp', default=False,
-        description='Enable OpenMP parallelism')
+            description='Enable OpenMP parallelism')
     variant('threadsafe', default=False,
-        description=('Enable thread safe features.'
-            ' Required for OpenMP.'
-            ' May cause minor performance issues.'))
+            description=('Enable thread safe features.'
+                         ' Required for OpenMP.'
+                         ' May cause minor performance issues.'))
     variant('superlu-dist', default=False,
-        description='Enable MPI parallel, sparse direct solvers')
+            description='Enable MPI parallel, sparse direct solvers')
     # Placeholder for STRUMPACK, support added in mfem v3.3.2:
     # variant('strumpack', default=False,
-    #     description='Enable support for STRUMPACK')
+    #       description='Enable support for STRUMPACK')
     variant('suite-sparse', default=False,
-        description='Enable serial, sparse direct solvers')
+            description='Enable serial, sparse direct solvers')
     variant('petsc', default=False,
-        description='Enable PETSc solvers, preconditioners, etc.')
+            description='Enable PETSc solvers, preconditioners, etc.')
     variant('sundials', default=False,
-        description='Enable Sundials time integrators')
+            description='Enable Sundials time integrators')
     variant('pumi', default=False,
-        description='Enable functionality based on PUMI')
+            description='Enable functionality based on PUMI')
     variant('mpfr', default=False,
-        description='Enable precise, 1D quadrature rules')
+            description='Enable precise, 1D quadrature rules')
     variant('lapack', default=False,
-        description='Use external blas/lapack routines')
+            description='Use external blas/lapack routines')
     variant('debug', default=False,
-        description='Build debug instead of optimized version')
+            description='Build debug instead of optimized version')
     variant('netcdf', default=False,
-        description='Enable Cubit/Genesis reader')
+            description='Enable Cubit/Genesis reader')
     variant('conduit', default=False,
-        description='Enable binary data I/O using Conduit')
+            description='Enable binary data I/O using Conduit')
     variant('gzstream', default=True,
-        description='Support zip\'d streams for I/O')
+            description='Support zip\'d streams for I/O')
     variant('gnutls', default=False,
-        description='Enable secure sockets using GnuTLS')
+            description='Enable secure sockets using GnuTLS')
     variant('libunwind', default=False,
-        description='Enable backtrace on error support using Libunwind')
+            description='Enable backtrace on error support using Libunwind')
     variant('timer', default='auto',
-        values=('auto', 'std', 'posix', 'mac', 'mpi'),
-        description='Timing functions to use in mfem::StopWatch')
+            values=('auto', 'std', 'posix', 'mac', 'mpi'),
+            description='Timing functions to use in mfem::StopWatch')
     variant('examples', default=False,
-        description='Build and install examples')
+            description='Build and install examples')
     variant('miniapps', default=False,
-        description='Build and install miniapps')
+            description='Build and install miniapps')
 
     conflicts('+shared', when='@:3.3.2')
     conflicts('~static~shared')
@@ -178,7 +182,7 @@ class Mfem(Package):
     depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
-    depends_on('conduit@0.3.1:', when='+conduit')
+    depends_on('conduit@0.3.1:,master:', when='+conduit')
     depends_on('conduit+mpi', when='+conduit+mpi')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
@@ -424,16 +428,18 @@ class Mfem(Package):
                 copy(str(self.config_mk), 'config.mk')
                 shutil.copystat('config.mk.orig', 'config.mk')
 
+        prefix_share = join_path(prefix, 'share', 'mfem')
+
         if '+examples' in spec:
             make('examples')
-            install_tree('examples', join_path(prefix, 'examples'))
+            install_tree('examples', join_path(prefix_share, 'examples'))
 
         if '+miniapps' in spec:
             make('miniapps')
-            install_tree('miniapps', join_path(prefix, 'miniapps'))
+            install_tree('miniapps', join_path(prefix_share, 'miniapps'))
 
         if install_em:
-            install_tree('data', join_path(prefix, 'data'))
+            install_tree('data', join_path(prefix_share, 'data'))
 
     @property
     def suitesparse_components(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,5 +19,5 @@ class PyOpenpmdValidator(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'))
-    depends_on('py-dateutil@2.3.0:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.3.0:', type=('build', 'run'))
     depends_on('py-h5py@2.0.0:', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class Libpcap(AutotoolsPackage):
-    "libpcap is a portable library in C/C++ for packet capture"
+    """libpcap is a portable library in C/C++ for packet capture."""
     homepage = "http://www.tcpdump.org/"
     list_url = "http://www.tcpdump.org/release/"
     url      = "http://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"

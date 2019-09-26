@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -86,6 +86,58 @@ else:
             super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
+def _read_from_url(url, accept_content_type=None):
+    context = None
+    verify_ssl = spack.config.get('config:verify_ssl')
+    pyver = sys.version_info
+    if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
+        if verify_ssl:
+            tty.warn("Spack will not check SSL certificates. You need to "
+                     "update your Python to enable certificate "
+                     "verification.")
+    elif verify_ssl:
+        # without a defined context, urlopen will not verify the ssl cert for
+        # python 3.x
+        context = ssl.create_default_context()
+    else:
+        context = ssl._create_unverified_context()
+
+    req = Request(url)
+
+    if accept_content_type:
+        # Make a HEAD request first to check the content type.  This lets
+        # us ignore tarballs and gigantic files.
+        # It would be nice to do this with the HTTP Accept header to avoid
+        # one round-trip.  However, most servers seem to ignore the header
+        # if you ask for a tarball with Accept: text/html.
+        req.get_method = lambda: "HEAD"
+        resp = _urlopen(req, timeout=_timeout, context=context)
+
+        if "Content-type" not in resp.headers:
+            tty.debug("ignoring page " + url)
+            return None, None
+
+        if not resp.headers["Content-type"].startswith(accept_content_type):
+            tty.debug("ignoring page " + url + " with content type " +
+                      resp.headers["Content-type"])
+            return None, None
+
+    # Do the real GET request when we know it's just HTML.
+    req.get_method = lambda: "GET"
+    response = _urlopen(req, timeout=_timeout, context=context)
+    response_url = response.geturl()
+
+    # Read the page and and stick it in the map we'll return
+    page = response.read().decode('utf-8')
+
+    return response_url, page
+
+
+def read_from_url(url, accept_content_type=None):
+    resp_url, contents = _read_from_url(url, accept_content_type)
+    return contents
+
+
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
     """Fetches URL and any pages it links to up to max_depth.
 
@@ -107,46 +159,11 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         root = re.sub('/index.html$', '', root)
 
     try:
-        context = None
-        verify_ssl = spack.config.get('config:verify_ssl')
-        pyver = sys.version_info
-        if (pyver < (2, 7, 9) or (3,) < pyver < (3, 4, 3)):
-            if verify_ssl:
-                tty.warn("Spack will not check SSL certificates. You need to "
-                         "update your Python to enable certificate "
-                         "verification.")
-        elif verify_ssl:
-            # We explicitly create default context to avoid error described in
-            # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
-            context = ssl.create_default_context()
-        else:
-            context = ssl._create_unverified_context()
+        response_url, page = _read_from_url(url, 'text/html')
 
-        # Make a HEAD request first to check the content type.  This lets
-        # us ignore tarballs and gigantic files.
-        # It would be nice to do this with the HTTP Accept header to avoid
-        # one round-trip.  However, most servers seem to ignore the header
-        # if you ask for a tarball with Accept: text/html.
-        req = Request(url)
-        req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=_timeout, context=context)
-
-        if "Content-type" not in resp.headers:
-            tty.debug("ignoring page " + url)
+        if not response_url or not page:
             return pages, links
 
-        if not resp.headers["Content-type"].startswith('text/html'):
-            tty.debug("ignoring page " + url + " with content type " +
-                      resp.headers["Content-type"])
-            return pages, links
-
-        # Do the real GET request when we know it's just HTML.
-        req.get_method = lambda: "GET"
-        response = _urlopen(req, timeout=_timeout, context=context)
-        response_url = response.geturl()
-
-        # Read the page and and stick it in the map we'll return
-        page = response.read().decode('utf-8')
         pages[response_url] = page
 
         # Parse out the links in the page
@@ -253,20 +270,18 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     """Scrape web pages for new versions of a tarball.
 
     Arguments:
-      archive_urls:
-          URL or sequence of URLs for different versions of a
-          package. Typically these are just the tarballs from the package
-          file itself.  By default, this searches the parent directories
-          of archives.
+        archive_urls (str or list or tuple): URL or sequence of URLs for
+            different versions of a package. Typically these are just the
+            tarballs from the package file itself. By default, this searches
+            the parent directories of archives.
 
     Keyword Arguments:
-      list_url:
-          URL for a listing of archives.  Spack wills scrape these
-          pages for download links that look like the archive URL.
+        list_url (str or None): URL for a listing of archives.
+            Spack will scrape these pages for download links that look
+            like the archive URL.
 
-      list_depth:
-          Max depth to follow links on list_url pages. Default 0.
-
+        list_depth (int): Max depth to follow links on list_url pages.
+            Defaults to 0.
     """
     if not isinstance(archive_urls, (list, tuple)):
         archive_urls = [archive_urls]
@@ -274,17 +289,17 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     # Generate a list of list_urls based on archive urls and any
     # explicitly listed list_url in the package
     list_urls = set()
-    if list_url:
+    if list_url is not None:
         list_urls.add(list_url)
     for aurl in archive_urls:
-        list_urls.add(spack.url.find_list_url(aurl))
+        list_urls |= spack.url.find_list_urls(aurl)
 
     # Add '/' to the end of the URL. Some web servers require this.
     additional_list_urls = set()
     for lurl in list_urls:
         if not lurl.endswith('/'):
             additional_list_urls.add(lurl + '/')
-    list_urls.update(additional_list_urls)
+    list_urls |= additional_list_urls
 
     # Grab some web pages to scrape.
     pages = {}
@@ -327,8 +342,10 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
         regexes.append(url_regex)
 
     # Build a dict version -> URL from any links that match the wildcards.
+    # Walk through archive_url links first.
+    # Any conflicting versions will be overwritten by the list_url links.
     versions = {}
-    for url in links:
+    for url in archive_urls + sorted(links):
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)

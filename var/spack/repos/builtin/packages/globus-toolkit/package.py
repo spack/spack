@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,4 +16,5 @@ class GlobusToolkit(AutotoolsPackage):
     version('6.0.1506371041', 'e17146f68e03b3482aaea3874d4087a5')
     version('6.0.1493989444', '9e9298b61d045e65732e12c9727ceaa8')
 
+    depends_on('pkgconfig', type='build')
     depends_on('openssl')

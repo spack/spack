@@ -1,0 +1,17 @@
+--- mlocal/frags/build_runtime_suid.mk	2019-08-30 20:43:13.000000000 -0700
++++ mlocal/frags/build_runtime_suid.mk	2019-09-10 12:21:09.120567773 -0700
+@@ -11,10 +11,10 @@
+ 		-o $@ $(SOURCEDIR)/cmd/starter/main_linux.go
+ 
+ $(starter_suid_INSTALL): $(starter_suid)
+-	@if [ `id -u` -ne 0 -a -z "${RPM_BUILD_ROOT}" ] ; then \
+-		echo "SUID binary requires to execute make install as root, use sudo make install to finish installation"; \
+-		exit 1 ; \
+-	fi
++#	@if [ `id -u` -ne 0 -a -z "${RPM_BUILD_ROOT}" ] ; then \
++#		echo "SUID binary requires to execute make install as root, use sudo make install to finish installation"; \
++#		exit 1 ; \
++#	fi
+ 	@echo " INSTALL SUID" $@
+ 	$(V)install -d $(@D)
+ 	$(V)install -m 4755 $(starter_suid) $(starter_suid_INSTALL)

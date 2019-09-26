@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,11 @@ class Pkgconf(AutotoolsPackage):
     maintaining compatibility."""
 
     homepage = "http://pkgconf.org/"
-    url      = "http://distfiles.alpinelinux.org/distfiles/pkgconf-1.4.2.tar.xz"
+    url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.5.4.tar.xz"
 
+    version('1.6.1',  '22b9ee38438901f9d60f180e5182821180854fa738fd071f593ea26a81da208c')
+    version('1.6.0',  '6135a3abb576672ba54a899860442ba185063f0f90dae5892f64f7bae8e1ece5')
+    version('1.5.4',  '9c5864a4e08428ef52f05a41c948529555458dec6d283b50f8b7d32463c54664')
     version('1.4.2',  '678d242b4eef1754bba6a58642af10bb')
     version('1.4.0',  'c509c0dad5a70aa4bc3210557b7eafce')
     version('1.3.10', '9b63707bf6f8da6efb3868101d7525fe')

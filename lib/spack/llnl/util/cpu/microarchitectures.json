@@ -1,0 +1,867 @@
+{
+  "microarchitectures": {
+    "x86": {
+      "from": null,
+      "vendor": "generic",
+      "features": []
+    },
+    "i686": {
+      "from": "x86",
+      "vendor": "GenuineIntel",
+      "features": []
+    },
+    "pentium2": {
+      "from": "i686",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx"
+      ]
+    },
+    "pentium3": {
+      "from": "pentium2",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse"
+      ]
+    },
+    "pentium4": {
+      "from": "pentium3",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2"
+      ]
+    },
+    "prescott": {
+      "from": "pentium4",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse3"
+      ]
+    },
+    "x86_64": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": {
+          "versions": "4:",
+          "name": "x86-64",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "nocona": {
+      "from": "x86_64",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse3"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "core2": {
+      "from": "nocona",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "nehalem": {
+      "from": "core2",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "4.6:4.8.5",
+            "name": "corei7",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "westmere": {
+      "from": "nehalem",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4.9:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "sandybridge": {
+      "from": "westmere",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "4.6:4.8.5",
+            "name": "corei7-avx",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "ivybridge": {
+      "from": "sandybridge",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": ":4.8.5",
+            "name": "core-avx-i",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "haswell": {
+      "from": "ivybridge",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": ":4.8.5",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "broadwell": {
+      "from": "haswell",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4.9:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "skylake": {
+      "from": "broadwell",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "5.3:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "mic_knl": {
+      "from": "broadwell",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "avx2",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "avx512f",
+        "avx512pf",
+        "avx512er",
+        "avx512cd"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "5.1:",
+          "name": "knl",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "skylake_avx512": {
+      "from": "skylake",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx512f",
+        "clwb",
+        "avx512vl",
+        "avx512bw",
+        "avx512dq",
+        "avx512cd"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "skylake-avx512",
+          "versions": "5.3:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "cannonlake": {
+      "from": "skylake",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx512f",
+        "avx512vl",
+        "avx512bw",
+        "avx512dq",
+        "avx512cd",
+        "avx512vbmi",
+        "avx512ifma",
+        "sha",
+        "umip"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "8:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "cascadelake": {
+      "from": "skylake_avx512",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx512f",
+        "clwb",
+        "avx512vl",
+        "avx512bw",
+        "avx512dq",
+        "avx512cd",
+        "avx512vnni"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "9:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "icelake": {
+      "from": [
+        "cascadelake",
+        "cannonlake"
+      ],
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx512f",
+        "avx512vl",
+        "avx512bw",
+        "avx512dq",
+        "avx512cd",
+        "avx512vbmi",
+        "avx512ifma",
+        "sha",
+        "umip",
+        "clwb",
+        "rdpid",
+        "gfni",
+        "avx512vbmi2",
+        "avx512vpopcntdq",
+        "avx512bitalg",
+        "avx512vnni",
+        "vpclmulqdq",
+        "vaes"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "icelake-client",
+          "versions": "8:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "bulldozer": {
+      "from": "x86_64",
+      "vendor": "AuthenticAMD",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "abm",
+        "avx",
+        "xop",
+        "lwp",
+        "aes",
+        "pclmulqdq",
+        "cx16",
+        "ssse3",
+        "sse4_1",
+        "sse4_2"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "bdver1",
+          "versions": "4.6:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "piledriver": {
+      "from": "bulldozer",
+      "vendor": "AuthenticAMD",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "abm",
+        "avx",
+        "xop",
+        "lwp",
+        "aes",
+        "pclmulqdq",
+        "cx16",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "bmi1",
+        "f16c",
+        "fma",
+        "tbm"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "bdver2",
+          "versions": "4.7:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "steamroller": {
+      "from": "piledriver",
+      "vendor": "AuthenticAMD",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "abm",
+        "avx",
+        "xop",
+        "lwp",
+        "aes",
+        "pclmulqdq",
+        "cx16",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "bmi1",
+        "f16c",
+        "fma",
+        "fsgsbase",
+        "tbm"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "bdver3",
+          "versions": "4.8:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "excavator": {
+      "from": "steamroller",
+      "vendor": "AuthenticAMD",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "abm",
+        "avx",
+        "xop",
+        "lwp",
+        "aes",
+        "pclmulqdq",
+        "cx16",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "bmi1",
+        "f16c",
+        "fma",
+        "fsgsbase",
+        "bmi2",
+        "avx2",
+        "movbe",
+        "tbm"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "bdver4",
+          "versions": "4.9:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "zen": {
+      "from": "x86_64",
+      "vendor": "AuthenticAMD",
+      "features": [
+        "bmi1",
+        "bmi2",
+        "f16c",
+        "fma",
+        "fsgsbase",
+        "avx",
+        "avx2",
+        "rdseed",
+        "clzero",
+        "aes",
+        "pclmulqdq",
+        "cx16",
+        "movbe",
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "abm",
+        "xsavec",
+        "xsaveopt",
+        "clflushopt",
+        "popcnt"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "znver1",
+          "versions": "6:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "zen2": {
+      "from": "zen",
+      "vendor": "AuthenticAMD",
+      "features": [
+        "bmi1",
+        "bmi2",
+        "f16c",
+        "fma",
+        "fsgsbase",
+        "avx",
+        "avx2",
+        "rdseed",
+        "clzero",
+        "aes",
+        "pclmulqdq",
+        "cx16",
+        "movbe",
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "abm",
+        "xsavec",
+        "xsaveopt",
+        "clflushopt",
+        "popcnt",
+        "clwb"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "znver2",
+          "versions": "9:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "ppc64": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": {
+          "versions": "4:",
+          "flags": "-mcpu={name} -mtune={name}"
+        }
+      }
+    },
+    "power7": {
+      "from": "ppc64",
+      "vendor": "IBM",
+      "generation": 7,
+      "features": [],
+      "compilers": {
+        "gcc": {
+          "versions": "4.5:",
+          "flags": "-mcpu={name} -mtune={name}"
+        }
+      }
+    },
+    "power8": {
+      "from": "power7",
+      "vendor": "IBM",
+      "generation": 8,
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-mcpu={name} -mtune={name}"
+          },
+          {
+            "versions": "4.8:4.8.5",
+            "warnings": "Using GCC 4.8 to optimize for Power 8 might not work if you are not on Red Hat Enterprise Linux 7, where a custom backport of the feature has been done. Upstream support from GCC starts in version 4.9",
+            "flags": "-mcpu={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "power9": {
+      "from": "power8",
+      "vendor": "IBM",
+      "generation": 9,
+      "features": [],
+      "compilers": {
+        "gcc": {
+          "versions": "6:",
+          "flags": "-mcpu={name} -mtune={name}"
+        }
+      }
+    },
+    "ppc64le": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": {
+          "versions": "4:",
+          "flags": "-mcpu={name} -mtune={name}"
+        }
+      }
+    },
+    "power8le": {
+      "from": "ppc64le",
+      "vendor": "IBM",
+      "generation": 8,
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "name": "power8",
+            "flags": "-mcpu={name} -mtune={name}"
+          },
+          {
+            "versions": "4.8:4.8.5",
+            "warnings": "Using GCC 4.8 to optimize for Power 8 might not work if you are not on Red Hat Enterprise Linux 7, where a custom backport of the feature has been done. Upstream support from GCC starts in version 4.9",
+            "name": "power8",
+            "flags": "-mcpu={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "power9le": {
+      "from": "power8le",
+      "vendor": "IBM",
+      "generation": 9,
+      "features": [],
+      "compilers": {
+        "gcc": {
+          "name": "power9",
+          "versions": "6:",
+          "flags": "-mcpu={name} -mtune={name}"
+        }
+      }
+    },
+    "aarch64": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": {
+          "versions": "4:",
+          "flags": "-march=armv8-a -mtune=generic"
+        }
+      }
+    }
+  },
+  "feature_aliases": {
+    "sse3": {
+      "reason": "ssse3 is a superset of sse3 and might be the only one listed",
+      "any_of": [
+        "ssse3"
+      ]
+    },
+    "avx512": {
+      "reason": "avx512 indicates generic support for any of the avx512 instruction sets",
+      "any_of": [
+        "avx512f",
+        "avx512vl",
+        "avx512bw",
+        "avx512dq",
+        "avx512cd"
+      ]
+    },
+    "altivec": {
+      "reason": "altivec is supported by Power PC architectures, but might not be listed in features",
+      "families": [
+        "ppc64le",
+        "ppc64"
+      ]
+    },
+    "sse4.1": {
+      "reason": "permits to refer to sse4_1 also as sse4.1",
+      "any_of": [
+        "sse4_1"
+      ]
+    },
+    "sse4.2": {
+      "reason": "permits to refer to sse4_2 also as sse4.2",
+      "any_of": [
+        "sse4_2"
+      ]
+    }
+  }
+}

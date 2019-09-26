@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,5 +19,5 @@ class PyPythonqwt(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.3:',   type=('build', 'run'))
     depends_on('py-sip',          type=('build', 'run'))
-    depends_on('py-pyqt@4:',      type=('build', 'run'))
+    depends_on('py-pyqt4',      type=('build', 'run'))
     depends_on('py-sphinx@1.1:',  type=('build', 'run'), when='+docs')

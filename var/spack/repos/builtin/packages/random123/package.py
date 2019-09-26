@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,9 @@ class Random123(Package):
     url      = "http://www.deshawresearch.com/downloads/download_random123.cgi/Random123-1.09.tar.gz"
 
     version('1.09', '67ae45ff94b12acea590a6aa04ed1123')
+
+    patch('ibmxl.patch', when='@1.09')
+    patch('arm-gcc.patch', when='@1.09')
 
     def install(self, spec, prefix):
         # Random123 doesn't have a build system.

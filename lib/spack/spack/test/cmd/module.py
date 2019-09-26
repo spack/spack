@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,12 @@ def _module_files(module_type, *specs):
     specs = [spack.spec.Spec(x).concretized() for x in specs]
     writer_cls = spack.modules.module_types[module_type]
     return [writer_cls(spec).layout.filename for spec in specs]
+
+
+@pytest.fixture(scope='module', autouse=True)
+def ensure_module_files_are_there(database):
+    module('dotkit', 'refresh', '-y')
+    module('tcl', 'refresh', '-y')
 
 
 @pytest.fixture(

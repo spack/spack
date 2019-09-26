@@ -1,0 +1,13 @@
+diff -Naur modred-2.0.4/setup.py modred-2.0.4.patched/setup.py
+--- modred-2.0.4/setup.py	2018-12-10 13:54:02.000000000 -0500
++++ modred-2.0.4.patched/setup.py	2018-12-10 13:54:45.000000000 -0500
+@@ -16,7 +16,8 @@
+ with open(os.path.join(here, 'modred/_version.py')) as f:
+     exec(f.read())
+ # Get the development status from the version string
+-parsed_version = parse_version(__version__)
++# parsed_version = parse_version(__version__)
++parsed_version = __version__.split('.')
+ if any(w in ['*a', '*alpha'] for w in parsed_version):
+     devstatus = 'Development Status :: 3 - Alpha'
+ elif any(w in ['*b', '*beta'] for w in parsed_version):

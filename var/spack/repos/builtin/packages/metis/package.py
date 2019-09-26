@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,7 @@ class Metis(Package):
     depends_on('cmake@2.8:', when='@5:', type='build')
 
     patch('install_gklib_defs_rename.patch', when='@5:')
+    patch('gklib_nomisleadingindentation_warning.patch', when='@5: %gcc@6:')
 
     def url_for_version(self, version):
         url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"

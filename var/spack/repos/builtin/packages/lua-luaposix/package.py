@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,4 +18,4 @@ class LuaLuaposix(Package):
 
     def install(self, spec, prefix):
         rockspec = glob.glob('luaposix-*.rockspec')
-        luarocks('--tree=' + prefix, 'install', rockspec[0])
+        luarocks('--tree=' + prefix, 'make', rockspec[0])

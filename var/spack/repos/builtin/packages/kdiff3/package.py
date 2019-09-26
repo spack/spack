@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Kdiff3(Package):
 
     version('0.9.98', 'b52f99f2cf2ea75ed5719315cbf77446')
 
-    depends_on("qt@5.2.0:")
+    depends_on("qt@:4.99,5.2.0:")
 
     def install(self, spec, prefix):
         # make is done inside

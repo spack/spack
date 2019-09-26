@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Cgm(AutotoolsPackage):
     """The Common Geometry Module, Argonne (CGMA) is a code library
        which provides geometry functionality used for mesh generation and
        other applications."""
-    homepage = "http://sigma.mcs.anl.gov/cgm-library"         
+    homepage = "http://sigma.mcs.anl.gov/cgm-library"
     url = "http://ftp.mcs.anl.gov/pub/fathom/cgm-16.0.tar.gz"
 
     version('16.0', 'a68aa5954d82502ff75d5eb91a29a01c')

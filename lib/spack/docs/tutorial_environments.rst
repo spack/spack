@@ -1,13 +1,13 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _environments-tutorial:
 
-================================================
-Environments, ``spack.yaml``, and ``spack.lock``
-================================================
+=====================
+Environments Tutorial
+=====================
 
 We've shown you how to install and remove packages with Spack.  You can
 use :ref:`cmd-spack-install` to install packages,
@@ -19,7 +19,7 @@ customize Spack's installation with configuration files like
 If you build a lot of software, or if you work on multiple projects,
 managing everything in one place can be overwhelming. The default ``spack
 find`` output may contain many packages, but you may want to *just* focus
-on packages a particular project.  Moreover, you may want to include
+on packages for a particular project.  Moreover, you may want to include
 special configuration with your package groups, e.g., to build all the
 packages in the same group the same way.
 
@@ -33,7 +33,7 @@ Let's look at the output of ``spack find`` at this point in the tutorial.
 
 .. code-block:: console
 
-   $ bin/spack find
+   $ spack find
    ==> 70 installed packages
    -- linux-ubuntu16.04-x86_64 / clang@3.8.0-2ubuntu4 --------------
    tcl@8.6.8  zlib@1.2.8  zlib@1.2.11
@@ -535,11 +535,11 @@ all of its specs.  We can run it here:
    [+]  rymw7im      ^automake@1.16.1%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
    [+]  o2pfwjf      ^libtool@2.4.6%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
 
-Now, all the specs in the environemnt are concrete and ready to be
-installed wiht ``mpich`` as the MPI immplementation.
+Now, all the specs in the environment are concrete and ready to be
+installed with ``mpich`` as the MPI implementation.
 
 Normally, we could just run ``spack config edit``, edit the environment
-configuration, ``spack add`` some specs, and ``install``.
+configuration, ``spack add`` some specs, and ``spack install``.
 
 But, when we already have installed packages in the environment, we have
 to force everything in the environment to be re-concretized using ``spack
@@ -710,7 +710,7 @@ install the project's dependencies.  They need only clone the repository,
 
 Spack concretizes the specs in the ``spack.yaml`` file and installs them.
 
-What happened here?  If you ``cd`` into a directory tha has a
+What happened here?  If you ``cd`` into a directory that has a
 ``spack.yaml`` file in it, Spack considers this directory's environment
 to be activated.  The directory does not have to live within Spack; it
 can be anywhere.
@@ -754,7 +754,7 @@ So, from ``~/code``, we can actually manipulate ``spack.yaml`` using
 ``spack.lock``
 ^^^^^^^^^^^^^^
 
-Ok, we've covered managed environments, environments in directories, and
+Okay, we've covered managed environments, environments in directories, and
 the last thing we'll cover is ``spack.lock``. You may remember that when
 we ran ``spack install``, Spack concretized all the specs in the
 ``spack.yaml`` file and installed them.
@@ -763,7 +763,7 @@ Whenever we concretize Specs in an environment, all concrete specs in the
 environment are written out to a ``spack.lock`` file *alongside*
 ``spack.yaml``.  The ``spack.lock`` file is not really human-readable
 like the ``spack.yaml`` file.  It is a ``json`` format that contains all
-the information that we need to ``reproduce`` the build of an
+the information that we need to *reproduce* the build of an
 environment:
 
 .. code-block:: console
@@ -802,11 +802,11 @@ be either a ``spack.yaml`` or a ``spack.lock`` file:
 Both of these create a new environment called ``my-project``, but which
 one you choose to use depends on your needs:
 
-  1.  copying the yaml file allows someone else to build your *requirements*,
-      potentially a different way.
+#. copying the yaml file allows someone else to build your *requirements*,
+   potentially a different way.
 
-  2. copying the lock file allows someone else to rebuild your
-     *installation* exactly as you built it.
+#. copying the lock file allows someone else to rebuild your
+   *installation* exactly as you built it.
 
 The first use case can *re-concretize* the same specs on new platforms in
 order to build, but it will preserve the abstract requirements.  The

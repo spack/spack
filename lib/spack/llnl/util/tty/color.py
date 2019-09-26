@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,9 +59,13 @@ The console can be reset later to plain text with '@.'.
 
 To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
+from __future__ import unicode_literals
 import re
 import sys
+
 from contextlib import contextmanager
+
+import six
 
 
 class ColorParseError(Exception):
@@ -244,7 +248,7 @@ def cescape(string):
     Returns:
         (str): the string with color codes escaped
     """
-    string = str(string)
+    string = six.text_type(string)
     string = string.replace('@', '@@')
     string = string.replace('}', '}}')
     return string

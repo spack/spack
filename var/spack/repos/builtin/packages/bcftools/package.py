@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,3 +32,9 @@ class Bcftools(AutotoolsPackage):
     depends_on('htslib@1.4',   when='@1.4')
     depends_on('htslib@1.3.1', when='@1.3.1')
     depends_on('htslib@1.2', when='@1.2')
+
+    def configure_args(self):
+        args = []
+        args.append('--with-htslib={0}'.format(self.spec['htslib'].prefix))
+
+        return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.spec
+import spack.hash_types as ht
 
 description = "show what would be installed, given a spec"
 section = "build"
@@ -41,12 +43,16 @@ def setup_parser(subparser):
 
 
 def spec(parser, args):
-    name_fmt = '$.' if args.namespaces else '$_'
-    kwargs = {'cover': args.cover,
-              'format': name_fmt + '$@$%@+$+$=',
-              'hashlen': None if args.very_long else 7,
-              'show_types': args.types,
-              'install_status': args.install_status}
+    name_fmt = '{namespace}.{name}' if args.namespaces else '{name}'
+    fmt = '{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}'
+    install_status_fn = spack.spec.Spec.install_status
+    kwargs = {
+        'cover': args.cover,
+        'format': name_fmt + fmt,
+        'hashlen': None if args.very_long else 7,
+        'show_types': args.types,
+        'status_fn': install_status_fn if args.install_status else None
+    }
 
     if not args.specs:
         tty.die("spack spec requires at least one spec")
@@ -58,7 +64,7 @@ def spec(parser, args):
                 spec.concretize()
 
             # use write because to_yaml already has a newline.
-            sys.stdout.write(spec.to_yaml())
+            sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
             continue
 
         kwargs['hashes'] = False  # Always False for input spec

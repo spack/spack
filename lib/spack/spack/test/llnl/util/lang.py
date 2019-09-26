@@ -1,10 +1,11 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
 
+import os.path
 from datetime import datetime, timedelta
 
 import llnl.util.lang
@@ -14,6 +15,19 @@ from llnl.util.lang import pretty_date, match_predicate
 @pytest.fixture()
 def now():
     return datetime.now()
+
+
+@pytest.fixture()
+def module_path(tmpdir):
+    m = tmpdir.join('foo.py')
+    content = """
+import os.path
+
+value = 1
+path = os.path.join('/usr', 'bin')
+"""
+    m.write(content)
+    return str(m)
 
 
 def test_pretty_date():
@@ -82,6 +96,8 @@ def test_pretty_string_to_date_delta(now, delta, pretty_string):
     ('%Y', '2018'),
     ('%Y-%m', '2015-03'),
     ('%Y-%m-%d', '2015-03-28'),
+    ('%Y-%m-%d %H:%M', '2015-03-28 11:12'),
+    ('%Y-%m-%d %H:%M:%S', '2015-03-28 23:34:45'),
 ])
 def test_pretty_string_to_date(format, pretty_string):
     t1 = datetime.strptime(pretty_string, format)
@@ -108,3 +124,9 @@ def test_match_predicate():
     with pytest.raises(ValueError):
         matcher = match_predicate(object())
         matcher('foo')
+
+
+def test_load_modules_from_file(module_path):
+    foo = llnl.util.lang.load_module_from_file('foo', module_path)
+    assert foo.value == 1
+    assert foo.path == os.path.join('/usr', 'bin')

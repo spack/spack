@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -113,8 +113,8 @@ class AutotoolsPackage(PackageBase):
                 check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
                 # The package's config.guess already runs OK, so just use it
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                tty.debug(e)
         else:
             return
 
@@ -142,8 +142,8 @@ class AutotoolsPackage(PackageBase):
                 os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                tty.debug(e)
 
         raise RuntimeError('Failed to find suitable config.guess')
 
@@ -191,10 +191,6 @@ class AutotoolsPackage(PackageBase):
         tty.warn('*********************************************************')
         with working_dir(self.configure_directory):
             m = inspect.getmodule(self)
-            # This part should be redundant in principle, but
-            # won't hurt
-            m.libtoolize()
-            m.aclocal()
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']
@@ -359,9 +355,17 @@ class AutotoolsPackage(PackageBase):
             options = [(name, condition in spec)]
         else:
             condition = '{name}={value}'
+            # "feature_values" is used to track values which correspond to
+            # features which can be enabled or disabled as understood by the
+            # package's build system. It excludes values which have special
+            # meanings and do not correspond to features (e.g. "none")
+            feature_values = getattr(
+                self.variants[name].values, 'feature_values', None
+            ) or self.variants[name].values
+
             options = [
                 (value, condition.format(name=name, value=value) in spec)
-                for value in self.variants[name].values
+                for value in feature_values
             ]
 
         # For each allowed value in the list of values

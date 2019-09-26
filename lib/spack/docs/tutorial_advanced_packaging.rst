@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,8 +27,8 @@ Setup for the tutorial
 
 .. note::
 
-  If you are not using the tutorial docker image, it is recommended that you
-  do this section of the tutorial in a fresh clone of Spack
+  We do not recommend doing this section of the tutorial in a
+  production Spack instance.
 
 The tutorial uses custom package definitions with missing sections that
 will be filled in during the tutorial. These package definitions are stored
@@ -38,13 +38,14 @@ in a separate package repository, which can be enabled with:
 
   $ spack repo add --scope=site var/spack/repos/tutorial
 
-This section of the tutorial may also require a newer version of gcc, which
-you can add with:
+This section of the tutorial may also require a newer version of
+gcc. If you have not already installed gcc@7.2.0 and added it to your
+configuration, you can do so with:
 
 .. code-block:: console
 
-  $ spack install gcc@7.2.0
-  $ spack compiler add --scope=site path/to/spack-installed-gcc/bin
+  $ spack install gcc@7.2.0 %gcc@5.4.0
+  $ spack compiler add --scope=site `spack location -i gcc@7.2.0 %gcc@5.4.0`
 
 If you are using the tutorial docker image, all dependency packages
 will have been installed. Otherwise, to install these packages you can use
@@ -346,7 +347,7 @@ we'll notice that this time the installation won't complete:
        11            options.extend([
 
   See build log for details:
-    /usr/local/var/spack/stage/arpack-ng-3.5.0-bloz7cqirpdxj33pg7uj32zs5likz2un/arpack-ng-3.5.0/spack-build.out
+    /usr/local/var/spack/stage/arpack-ng-3.5.0-bloz7cqirpdxj33pg7uj32zs5likz2un/arpack-ng-3.5.0/spack-build-out.txt
 
 Unlike ``openblas`` which provides a library named ``libopenblas.so``,
 ``netlib-lapack`` provides ``liblapack.so``, so it needs to implement
@@ -458,7 +459,7 @@ Let's look at an example and try to install ``netcdf ^mpich``:
        56                config_args.append('--enable-pnetcdf')
 
   See build log for details:
-    /usr/local/var/spack/stage/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj/netcdf-4.4.1.1/spack-build.out
+    /usr/local/var/spack/stage/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj/netcdf-4.4.1.1/spack-build-out.txt
 
 We can see from the error that ``netcdf`` needs to know how to link the *high-level interface*
 of ``hdf5``, and thus passes the extra parameter ``hl`` after the request to retrieve it.

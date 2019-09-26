@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Gasnet(AutotoolsPackage):
     homepage = "http://gasnet.lbl.gov"
     url      = "http://gasnet.lbl.gov/download/GASNet-1.24.0.tar.gz"
 
+    version('2019.3.0', sha256='97fe19bb5ab32d14a96d2dd19d0f03048f68bb20ca83abe0c00cdab40e86eba5')
     version('1.32.0', sha256='42e4774b3bbc7c142f77c41b6ce86b594f579073f46c31f47f424c7e31ee1511')
     version('1.30.0', '2ddb1d8397d62acfd389095ca8da72f6')
     version('1.28.2', '6ca0463dc2430570e40646c4d1e97b36')
@@ -26,7 +27,7 @@ class Gasnet(AutotoolsPackage):
     variant('mpi', default=True, description="Support MPI")
     variant('aligned-segments', default=False,
             description="Requirement to achieve aligned VM segments")
-    variant('pshm', default=True, 
+    variant('pshm', default=True,
             description="Support inter-process shared memory support")
     variant('segment-mmap-max', default='16GB',
             description="Upper bound for mmap-based GASNet segments")
@@ -35,18 +36,20 @@ class Gasnet(AutotoolsPackage):
 
     depends_on('mpi', when='+mpi')
 
+    def url_for_version(self, version):
+        url = "http://gasnet.lbl.gov/"
+        if version >= Version('2019'):
+            url += "EX/GASNet-{0}.tar.gz".format(version)
+        else:
+            url += "download/GASNet-{0}.tar.gz".format(version)
+
+        return url
+
     def configure_args(self):
         args = [
             # TODO: factor IB suport out into architecture description.
-            "--enable-ibv" if '+ibv' in self.spec else '--disable-ibv',
             "--enable-par",
-            "--enable-smp",
-            "--enable-udp",
-            "--enable-smp-safe",
-            "--enable-segment-fast",
-            "--enable-pshm" if '+pshm' in self.spec else "--disable-pshm",
-            "--with-segment-mmap-max={0}".format(
-                self.spec.variants['segment-mmap-max'].value),
+            "--enable-mpi-compat",
             # for consumers with shared libs
             "CC=%s %s" % (spack_cc, self.compiler.pic_flag),
             "CXX=%s %s" % (spack_cxx, self.compiler.pic_flag),
@@ -58,8 +61,16 @@ class Gasnet(AutotoolsPackage):
             args.append('--disable-aligned-segments')
 
         if '+mpi' in self.spec:
-            args.extend(['--enable-mpi', '--enable-mpi-compat', "MPI_CC=%s %s"
+            args.extend(['--enable-mpi',
+                         '--disable-udp',
+                         '--disable-ibv',
+                         'MPI_CC=%s %s'
                         % (self.spec['mpi'].mpicc, self.compiler.pic_flag)])
-        else:
-            args.extend(['--disable-mpi', '--disable-mpi-compat'])
+
+        if '+ibv' in self.spec:
+            args.extend(['--enable-ibv', '--disable-udp', '--disable-mpi'])
+
+        if '+udp' in self.spec:
+            args.extend(['--enable-udp', '--disable-ibv', '--disable-mpi'])
+
         return args

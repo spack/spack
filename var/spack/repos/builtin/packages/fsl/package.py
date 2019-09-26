@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class Fsl(Package):
     depends_on('python', type=('build', 'run'))
     depends_on('expat')
     depends_on('libx11')
-    depends_on('mesa-glu')
+    depends_on('glu')
     depends_on('zlib')
     depends_on('libpng')
     depends_on('boost')

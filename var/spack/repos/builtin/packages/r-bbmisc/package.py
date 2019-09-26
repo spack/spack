@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ class RBbmisc(RPackage):
        guys, mainly for package development."""
 
     homepage = "https://github.com/berndbischl/BBmisc"
-    url      = "https://cran.r-project.org/src/contrib/BBmisc_1.11.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/BBmisc"
+    url      = "https://cloud.r-project.org/src/contrib/BBmisc_1.11.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/BBmisc"
 
     version('1.11', '681642628037406beb6088d5f773473d')
 

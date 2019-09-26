@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,3 +14,5 @@ class Libzip(AutotoolsPackage):
     url      = "https://nih.at/libzip/libzip-1.2.0.tar.gz"
 
     version('1.2.0', '5c3372ab3a7897295bfefb27f745cf69')
+
+    depends_on('zlib@1.1.2:')

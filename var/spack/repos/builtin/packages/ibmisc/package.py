@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Ibmisc(CMakePackage):
 
     homepage = "https://github.com/citibeth/ibmisc"
     url      = "https://github.com/citibeth/ibmisc/archive/v0.1.0.tar.gz"
+
+    maintainers = ['citibeth']
 
     version('0.1.0', '18c63db3e466c5a6fc2db3f903d06ecb')
 
@@ -35,7 +37,7 @@ class Ibmisc(CMakePackage):
 
     depends_on('eigen')
     depends_on('everytrace', when='+everytrace')
-    depends_on('proj', when='+proj')
+    depends_on('proj@:4', when='+proj')
     depends_on('blitz', when='+blitz')
     depends_on('netcdf-cxx4', when='+netcdf')
     depends_on('udunits2', when='+udunits2')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Mpip(AutotoolsPackage):
 
     version("3.4.1", "1168adc83777ac31d6ebd385823aabbd")
 
-    depends_on("libelf")
+    depends_on("elf")
     depends_on("libdwarf")
     depends_on('libunwind', when=os.uname()[4] == "x86_64")
     depends_on("mpi")

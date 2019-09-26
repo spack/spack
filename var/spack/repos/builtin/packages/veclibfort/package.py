@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,12 @@ class Veclibfort(Package):
         return find_libraries(
             'libvecLibFort', root=self.prefix, shared=shared, recursive=True
         )
+
+    @property
+    def headers(self):
+        # veclibfort does not come with any headers. Return an empty list
+        # to avoid `spec['blas'].headers` from crashing.
+        return HeaderList([])
 
     def install(self, spec, prefix):
         if sys.platform != 'darwin':

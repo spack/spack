@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class SspaceLongread(Package):
 
     def url_for_version(self, version):
         return "file://{0}/40SSPACE-LongRead_v{1}.tar.gz".format(
-                os.getcwd(), version.dashed)
+            os.getcwd(), version.dashed)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

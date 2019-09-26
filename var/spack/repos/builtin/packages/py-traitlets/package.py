@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,4 @@ class PyTraitlets(PythonPackage):
     depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))
 
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))
-    depends_on('py-enum34', type=('build', 'run'))
+    depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))

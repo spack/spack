@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,6 +36,8 @@ def is_package(f):
 #: List of directories to exclude from checks.
 exclude_directories = [spack.paths.external_path]
 
+#: max line length we're enforcing (note: this duplicates what's in .flake8)
+max_line_length = 79
 
 #: This is a dict that maps:
 #:  filename pattern ->
@@ -96,7 +98,11 @@ def changed_files(args):
 
     git = which('git', required=True)
 
-    range = "{0}...".format(args.base)
+    base = args.base
+    if base is None:
+        base = os.environ.get('TRAVIS_BRANCH', 'develop')
+
+    range = "{0}...".format(base)
 
     git_args = [
         # Add changed files committed since branching off of develop
@@ -123,7 +129,7 @@ def changed_files(args):
 
         for f in files:
             # Ignore non-Python files
-            if not f.endswith('.py'):
+            if not (f.endswith('.py') or f == 'bin/spack'):
                 continue
 
             # Ignore files in the exclude locations
@@ -147,7 +153,16 @@ def add_pattern_exemptions(line, codes):
         return line + '\n'
 
     orig_len = len(line)
-    exemptions = ','.join(sorted(set(codes)))
+    codes = set(codes)
+
+    # don't add E501 unless the line is actually too long, as it can mask
+    # other errors like trailing whitespace
+    if orig_len <= max_line_length and "E501" in codes:
+        codes.remove("E501")
+        if not codes:
+            return line + "\n"
+
+    exemptions = ','.join(sorted(codes))
 
     # append exemption to line
     if '# noqa: ' in line:
@@ -156,7 +171,7 @@ def add_pattern_exemptions(line, codes):
         line += '  # noqa: {0}'.format(exemptions)
 
     # if THIS made the line too long, add an exemption for that
-    if len(line) > 79 and orig_len <= 79:
+    if len(line) > max_line_length and orig_len <= max_line_length:
         line += ',E501'
 
     return line + '\n'
@@ -193,7 +208,7 @@ def filter_file(source, dest, output=False):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-b', '--base', action='store', default='develop',
+        '-b', '--base', action='store', default=None,
         help="select base branch for collecting list of modified files")
     subparser.add_argument(
         '-k', '--keep-temp', action='store_true',

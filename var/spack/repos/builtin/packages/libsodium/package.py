@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libsodium(AutotoolsPackage):
     url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz"
     list_url = "https://download.libsodium.org/libsodium/releases/old"
 
+    version('1.0.17', '0f71e2680187a1558b5461e6879342c5')
+    version('1.0.16', '37b18839e57e7a62834231395c8e962b')
     version('1.0.15', '070373e73a0b10bd96f412e1732ebc42')
     version('1.0.13', 'f38aac160a4bd05f06f743863e54e499')
     version('1.0.12', 'c308e3faa724b630b86cc0aaf887a5d4')
@@ -28,6 +30,6 @@ class Libsodium(AutotoolsPackage):
         url = 'https://download.libsodium.org/libsodium/releases/'
         if version < Version('1.0.4'):
             url += 'old/unsupported/'
-        elif version < Version('1.0.12'):
+        elif version < Version('1.0.16'):
             url += 'old/'
         return url + 'libsodium-{0}.tar.gz'.format(version)

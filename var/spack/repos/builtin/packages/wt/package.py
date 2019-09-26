@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,8 @@ class Wt(CMakePackage):
     # variant('fastcgi', default=False,
     #         description='FastCGI connector via libfcgi++')
 
-    depends_on('boost@1.46.1:')
+    depends_on('pkgconfig', type='build')
+    depends_on('boost@1.46.1:1.65')
     depends_on('openssl', when='+openssl')
     depends_on('libharu', when='+libharu')
     depends_on('sqlite', when='+sqlite')

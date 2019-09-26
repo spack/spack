@@ -1,9 +1,10 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from os import chmod
 import glob
 
 
@@ -31,6 +32,7 @@ class Mirdeep2(Package):
         with working_dir('src'):
             files = glob.iglob("*.pl")
             for file in files:
+                chmod(file, 0o755)
                 change = FileFilter(file)
                 change.filter('usr/bin/perl', 'usr/bin/env perl')
                 change.filter('perl -W', 'perl')

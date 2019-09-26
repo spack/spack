@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,5 +27,5 @@ class PySfepy(PythonPackage):
     depends_on('py-matplotlib', type='run')
     depends_on('py-sympy', type='run')
     depends_on('hdf5+hl', type='run')
-    depends_on('py-pytables', type='run')
+    depends_on('py-tables', type='run')
     depends_on('py-petsc4py', type='run', when='+petsc')

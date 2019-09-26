@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Unibilium(Package):
     url      = "https://github.com/mauke/unibilium/archive/v1.2.0.tar.gz"
 
     version('1.2.0', '9b1c97839a880a373da6c097443b43c4')
+
+    depends_on('libtool', type='build')
 
     def install(self, spec, prefix):
         make("PREFIX=" + prefix)

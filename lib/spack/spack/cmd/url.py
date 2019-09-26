@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -257,6 +257,12 @@ def url_stats(args):
     # over all packages
     for pkg in spack.repo.path.all_packages():
         npkgs += 1
+
+        if not pkg.has_code:
+            for _ in pkg.versions:
+                inc('No code', 'total')
+                nvers += 1
+            continue
 
         # look at each version
         for v, args in pkg.versions.items():

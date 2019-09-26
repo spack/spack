@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,7 @@ class Thrift(Package):
     variant('python', default=True,
             description="Build support for python")
 
+    depends_on('pkgconfig', type='build')
     depends_on('java')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

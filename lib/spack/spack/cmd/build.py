@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ from spack.build_systems.waf import WafPackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.perl import PerlPackage
 from spack.build_systems.meson import MesonPackage
+from spack.build_systems.sip import SIPPackage
 
 description = 'stops at build stage when installing a package, if possible'
 section = "build"
@@ -28,6 +29,7 @@ build_system_to_phase = {
     PythonPackage: 'build',
     PerlPackage: 'build',
     MesonPackage: 'build',
+    SIPPackage: 'build',
 }
 
 

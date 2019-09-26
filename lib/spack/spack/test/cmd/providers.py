@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,11 +22,13 @@ def test_it_just_runs(pkg):
 
 
 @pytest.mark.parametrize('vpkg,provider_list', [
-    (('mpi',), ['intel-mpi',
+    (('mpi',), ['charmpp@6.7.1:',
+                'intel-mpi',
                 'intel-parallel-studio',
                 'mpich',
                 'mpich@1:',
                 'mpich@3:',
+                'mpilander',
                 'mvapich2',
                 'openmpi',
                 'openmpi@1.6.5',

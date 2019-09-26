@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,8 @@ class Boxlib(CMakePackage):
 
     depends_on('mpi')
 
-    variant('dims',
-        default='3',
-        values=('1', '2', '3'),
-        multi=False,
-        description='Number of spatial dimensions'
-    )
+    variant('dims', default='3', values=('1', '2', '3'), multi=False,
+            description='Number of spatial dimensions')
 
     def cmake_args(self):
         spec = self.spec

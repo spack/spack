@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -616,7 +616,7 @@ def test_bad_command_line_scopes(tmpdir, mock_config):
 def test_add_command_line_scopes(tmpdir, mutable_config):
     config_yaml = str(tmpdir.join('config.yaml'))
     with open(config_yaml, 'w') as f:
-            f.write("""\
+        f.write("""\
 config:
     verify_ssl: False
     dirty: False
@@ -677,7 +677,7 @@ def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
     f = StringIO(file_contents)
     data = syaml.load(f)
-    spack.config._validate(data, name)
+    spack.config.validate(data, name)
 
 
 def test_good_env_yaml(tmpdir):
