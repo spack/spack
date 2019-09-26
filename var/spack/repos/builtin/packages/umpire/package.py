@@ -61,5 +61,5 @@ class Umpire(CMakePackage):
 
         options.append('-DENABLE_TESTS=Off')
         options.append('-DENABLE_BENCHMARKS=Off')
-            
+
         return options

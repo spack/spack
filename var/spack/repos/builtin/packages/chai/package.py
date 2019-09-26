@@ -7,7 +7,7 @@ from spack import *
 
 
 class Chai(CMakePackage):
-    """Copy-hiding array interface - array-interface that handles automatic data migration between memory spaces"""
+    """Copy-hiding array interface for data migration between memory spaces"""
 
     homepage = "https://github.com/LLNL/CHAI"
     url      = "https://github.com/LLNL/CHAI.git"
@@ -19,14 +19,14 @@ class Chai(CMakePackage):
     version('1.2.0', tag='v1.2.0', submodules='True')
 
     variant('cuda', default=False, description='Build with CUDA support')
-    
+
     depends_on('umpire')
     depends_on('cmake@3.8:', type='build')
-    
+
     depends_on('umpire+cuda', when="+cuda")
     depends_on('cuda', when='+cuda')
     depends_on('cmake@3.9:', type='build', when="+cuda")
-    
+
     def cmake_args(self):
         spec = self.spec
 
@@ -39,7 +39,8 @@ class Chai(CMakePackage):
         else:
             options.append('-DENABLE_CUDA=Off')
 
-        options.append('-Dumpire_DIR:PATH='+spec['umpire'].prefix+"/share/umpire/cmake")
+        options.append('-Dumpire_DIR:PATH='
+                       + spec['umpire'].prefix + "/share/umpire/cmake")
         options.append('-DENABLE_TESTS=Off')
         options.append('-DENABLE_BENCHMARKS=Off')
 
