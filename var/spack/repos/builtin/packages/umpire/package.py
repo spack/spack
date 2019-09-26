@@ -87,6 +87,7 @@ class Umpire(CMakePackage, CudaPackage):
         options.append('-DENABLE_TESTS={0}'.format(
             'On' if self.run_tests else 'Off'))
 
+        # disable tests for now, fails on gcc@9.1.0
         options.append('-DENABLE_TESTS=Off')
         options.append('-DENABLE_BENCHMARKS=Off')
 
