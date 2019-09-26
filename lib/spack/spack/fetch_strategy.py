@@ -71,9 +71,16 @@ def _ensure_one_stage_entry(stage_path):
     return os.path.join(stage_path, stage_entries[0])
 
 
+# TODO: this should be extracted into a utility function and that should be
+# shared with Spec._spec_hash
 def _hash(content):
     sha = hashlib.sha1(content.encode('utf-8'))
-    return base64.b32encode(sha.digest()).lower()
+    b32_hash = base64.b32encode(sha.digest()).lower()
+
+    if sys.version_info[0] >= 3:
+        b32_hash = b32_hash.decode('utf-8')
+
+    return b32_hash
 
 
 class FSMeta(type):
