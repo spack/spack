@@ -26,8 +26,11 @@ if ($?SPACK_ROOT) then
 
     # Set up modules and dotkit search paths in the user environment
     set tcl_roots = `echo $_sp_tcl_roots:q | sed 's/:/ /g'`
+    set compatible_sys_types = `echo $_sp_compatible_sys_types:q | sed 's/:/ /g'`
     foreach tcl_root ($tcl_roots:q)
-        _spack_pathadd MODULEPATH "$tcl_root/$_sp_sys_type"
+        foreach systype ($compatible_sys_types:q)
+            _spack_pathadd MODULEPATH "$tcl_root/$systype"
+        end
     end
 
     set dotkit_roots = `echo $_sp_dotkit_roots:q | sed 's/:/ /g'`
