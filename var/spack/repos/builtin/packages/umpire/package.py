@@ -89,5 +89,5 @@ class Umpire(CMakePackage, CudaPackage):
 
         options.append('-DENABLE_TESTS=Off')
         options.append('-DENABLE_BENCHMARKS=Off')
-            
+
         return options
