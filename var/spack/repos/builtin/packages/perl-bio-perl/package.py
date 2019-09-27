@@ -96,3 +96,15 @@ class PerlBioPerl(PerlPackage):
         with open(config_answers_filename, 'r') as f:
             inspect.getmodule(self).perl('Build.PL', '--install_base=%s' %
                                          self.prefix, input=f)
+
+    # Need to also override the build and install methods to make sure that the
+    # Build script is run through perl and not use the shebang, as it might be
+    # too long. This is needed because this does not pick up the
+    # `@run_after(configure)` step defined in `PerlPackage`.
+    @when('@1.7.2')
+    def build(self, spec, prefix):
+        inspect.getmodule(self).perl('Build')
+
+    @when('@1.7.2')
+    def install(self, spec, prefix):
+        inspect.getmodule(self).perl('Build', 'install')
