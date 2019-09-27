@@ -105,6 +105,8 @@ def get_all_versions(base_specs):
             version_spec.versions = VersionList([version])
             version_specs.append(version_spec)
 
+    return version_specs
+
 
 def get_matching_versions(specs, num_versions=1):
     """Get a spec for EACH known version matching any spec in the list.
