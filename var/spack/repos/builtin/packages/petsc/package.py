@@ -316,7 +316,7 @@ class Petsc(Package):
         if 'zlib' in spec:
             options.extend([
                 '--with-zlib-include=%s' % spec['zlib'].prefix.include,
-                '--with-zlib-lib=%s'     % spec['zlib'].libs.ld_flags,
+                '--with-zlib-lib=%s'     % spec['zlib'].libs.joined(),
                 '--with-zlib=1'
             ])
         else:
