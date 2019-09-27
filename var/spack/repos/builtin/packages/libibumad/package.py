@@ -8,7 +8,7 @@ from spack import *
 
 
 class Libibumad(CMakePackage):
-    """This package installed the user-spack libraries and headers for libibumad.
+    """This package installed the user-space libraries and headers for libibumad.
        This is a subset of the linux-rdma distribution."""
 
     homepage = "https://github.com/linux-rdma/"
