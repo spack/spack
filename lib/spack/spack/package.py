@@ -1183,6 +1183,25 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         else:
             touch(no_patches_file)
 
+    @classmethod
+    def all_patches(self):
+        """Retrieve all patches associated with the package, including patches
+           on the package itself and patches on the dependencies of the
+           package."""
+        patches = []
+        for _, patch_list in self.patches.items():
+            for patch in patch_list:
+                patches.append(patch)
+
+        pkg_deps = self.dependencies
+        for dep_name in pkg_deps:
+            for _, dependency in pkg_deps[dep_name].items():
+                for _, patch_list in dependency.patches.items():
+                    for patch in patch_list:
+                        patches.append(patch)
+
+        return patches
+
     def content_hash(self, content=None):
         """Create a hash based on the sources and logic used to build the
         package. This includes the contents of all applied patches and the

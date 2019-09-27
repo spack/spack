@@ -217,14 +217,17 @@ def add_single_spec(spec, mirror_root, categories):
     num_retries = 3
     while num_retries > 0:
         try:
-            spec.package.do_fetch()
+            with spec.package.stage as pkg_stage:
+                pkg_stage.fetch()
+                pkg_stage.cache_local()
+                for patch in spec.package.all_patches():
+                    patch.fetch(pkg_stage)
+                    patch.clean()
             exception = None
             break
         except Exception as e:
             exception = sys.exc_info()
-        finally:
-            num_retries -= 1
-            spec.package.do_clean()
+        num_retries -= 1
 
     if exception:
         if spack.config.get('config:debug'):
