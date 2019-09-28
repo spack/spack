@@ -13,6 +13,7 @@ class PspValidation(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/psp-validation"
 
     version('develop', branch='master')
+    version('0.1.19', tag='psp-validation-v0.1.19')
     version('0.1.14', tag='psp-validation-v0.1.14')
     version('0.1.12', tag='psp-validation-v0.1.12')
 
