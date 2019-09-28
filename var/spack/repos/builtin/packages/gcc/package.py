@@ -8,8 +8,8 @@ from spack.operating_systems.mac_os import macos_version, macos_sdk_path
 from llnl.util import tty
 
 import glob
+import itertools
 import os
-import re
 import sys
 
 
@@ -422,20 +422,26 @@ class Gcc(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         # Search prefix directory for possibly modified compiler names
-        from spack.compilers.gcc import Gcc as GccCompiler
-        compiler_names = {}
-        bin_path = self.spec.prefix.bin
-        for name in os.listdir(bin_path):
-            path = os.path.join(bin_path, name)
-            if os.path.isfile(path) and not os.path.islink(path):
-                for suffix in GccCompiler.suffixes:
-                    name = re.sub(suffix, "", name)
-                compiler_names[name] = path
+        from spack.compilers.gcc import Gcc as Compiler
 
-        # Only set environment variables for languages that are enabled
-        run_env.set('CC', compiler_names['gcc'])
-        run_env.set('CXX', compiler_names['g++'])
-        if 'gfortran' in compiler_names:
-            run_env.set('FC', compiler_names['gfortran'])
-            run_env.set('F77', compiler_names['gfortran'])
-            run_env.set('F90', compiler_names['gfortran'])
+        # Get the contents of the installed binary directory
+        bin_path = self.spec.prefix.bin
+        bin_contents = os.listdir(bin_path)
+
+        # Find the first non-symlink compiler binary present for each language
+        for lang in ['cc', 'cxx', 'fc', 'f77']:
+            for filename, regexp in itertools.product(
+                    bin_contents,
+                    Compiler.search_regexps(lang)
+            ):
+                if not regexp.match(filename):
+                    continue
+
+                abspath = os.path.join(bin_path, filename)
+                if os.path.islink(abspath):
+                    continue
+
+                # Set the proper environment variable
+                run_env.set(lang.upper(), abspath)
+                # Stop searching filename/regex combos for this language
+                break
