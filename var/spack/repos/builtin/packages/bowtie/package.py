@@ -45,6 +45,13 @@ class Bowtie(MakefilePackage):
     # https://svnweb.freebsd.org/ports?view=revision&revision=483954
     patch('issue-87.patch', when='@:1.2.2 %gcc@8.0.0:')
 
+    # correspond to 'aarch64' architecture
+    # reference: https://github.com/BenLangmead/bowtie/pull/13
+    patch('for_aarch64.patch', when='target=aarch64:')
+
+    # measures for narrowing error
+    patch('fix_narrowing_err.patch')
+
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
         makefile.filter('CC = .*', 'CC = ' + env['CC'])
