@@ -22,6 +22,7 @@ class Bolt(CMakePackage):
     git      = "https://github.com/pmodels/bolt.git"
 
     version("master", branch="master")
+    version("1.0rc2", "f5ca4f9fb05d6e4edbbd32635828c833")
     version("1.0rc1", "77733ba2ad9440c29b36d1c1411a9793")
     version("1.0b1", "df76beb3a7f13ae2dcaf9ab099eea87b")
 
