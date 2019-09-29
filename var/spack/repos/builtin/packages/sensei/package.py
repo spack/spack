@@ -57,13 +57,13 @@ class Sensei(CMakePackage):
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
     depends_on("swig", when="+python")
-    
+
     # Can have either LibSim or Catalyst, but not both
     conflicts('+libsim', when='+catalyst')
 
     def cmake_args(self):
         spec = self.spec
-        
+
         args = [
             '-DCMAKE_CXX_STANDARD=11',
             '-DCMAKE_C_STANDARD=11',
@@ -71,14 +71,16 @@ class Sensei(CMakePackage):
             '-DCMAKE_C_FLAGS=-fPIC -Wall -Wextra -O3 -mtune=generic'
         ]
 
-        args.append('-DENABLE_SENSEI:BOOL={0}'.format('ON' if '+sencore' in spec else 'OFF'))
-        
+        sensei_switch = 'ON' if '+sencore' in spec else 'OFF'
+        args.append('-DENABLE_SENSEI:BOOL={0}'.format(sensei_switch))
+
         vtk_dir_needed = True
 
         if '+catalyst' in spec:
             args.append('-DENABLE_CATALYST:BOOL=ON')
             args.append('-DENABLE_CATALYST_PYTHON:BOOL=ON')
-            args.append('-DParaView_DIR:PATH={0}'.format(spec['paraview'].prefix))
+            pview_prefix = spec['paraview'].prefix
+            args.append('-DParaView_DIR:PATH={0}'.format(pview_prefix))
             vtk_dir_needed = False
         else:
             args.append('-DENABLE_CATALYST:BOOL=OFF')
@@ -91,9 +93,11 @@ class Sensei(CMakePackage):
         else:
             args.append('-DENABLE_LIBSIM:BOOL=OFF')
 
-        args.append('-DENABLE_VTK_IO:BOOL={0}'.format('ON' if '+vtkio' in spec else 'OFF'))
-        args.append('-DENABLE_PYTHON:BOOL={0}'.format('ON' if '+python' in spec else 'OFF'))
-        
+        vtkio_switch = 'ON' if '+vtkio' in spec else 'OFF'
+        args.append('-DENABLE_VTK_IO:BOOL={0}'.format(vtkio_switch))
+        python_switch = 'ON' if '+python' in spec else 'OFF'
+        args.append('-DENABLE_PYTHON:BOOL={0}'.format(python_switch))
+
         if '+adios' in spec:
             args.append('-DENABLE_ADIOS:BOOL=ON')
             args.append('-DADIOS_DIR:PATH={0}'.format(spec['adios'].prefix))
@@ -102,7 +106,7 @@ class Sensei(CMakePackage):
 
         if vtk_dir_needed:
             args.append('-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix))
-        
+
         if '+miniapps' in spec:
             args.append('-DENABLE_PARALLEL3D:BOOL=ON')
             args.append('-DENABLE_OSCILLATORS:BOOL=ON')
