@@ -15,4 +15,4 @@ class PerlUri(PerlPackage):
     version('1.72', 'cd56d81ed429efaa97e7f3ff08851b48')
     version('1.71', '247c3da29a794f72730e01aa5a715daf')
 
-    depends_on('perl-test-needs', type='test')
+    depends_on('perl-test-needs', type=('build', 'test'))
