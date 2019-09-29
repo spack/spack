@@ -7,7 +7,11 @@ from spack import *
 
 
 class Sensei(CMakePackage):
-    """SENSEI is a platform for scalable in-situ analysis and visualization."""
+    """SENSEI is a platform for scalable in-situ analysis and visualization.
+    Its design motto is 'Write once, run everywhere', this means that once
+    the application is instrumented with SENSEI it can use existing and 
+    future analysis backends. Existing backends include: Paraview/Catalyst,
+    Visit/Libsim, ADIOS, Python scripts, and so on."""
 
     homepage = "https://sensei-insitu.org"
     url      = "https://gitlab.kitware.com/sensei/sensei/-/archive/v2.1.1/sensei-v2.1.1.tar.gz"
