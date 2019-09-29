@@ -860,6 +860,13 @@
       "features": [],
       "compilers": {
       }
+    },
+    "darwin-x86_64": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+      }
     }
   },
   "feature_aliases": {
