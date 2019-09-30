@@ -16,7 +16,7 @@ class Libaio(Package):
 
     def install(self, spec, prefix):
         # libaio is not supported on OS X
-        if spec.satisfies('arch=darwin-x86_64'):
+        if spec.platform == 'darwin' and spec.target.family == 'x86_64':
             # create a dummy directory
             mkdir(prefix.lib)
             return
