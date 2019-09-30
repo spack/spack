@@ -18,6 +18,9 @@ class Slepc(Package):
     maintainers = ['joseeroman', 'balay']
 
     version('develop', branch='master')
+    version('3.12.0', '872831d961cf76389fafb7553231ae1a6676555850c98ea0e893c06f596b2e9e')
+    version('3.11.2', 'cd6a73ac0c9f689c12f2987000a7a28fa7df53fdc069fb59a2bb148699e741dd')
+    version('3.11.1', '4816070d4ecfeea6212c6944cee22dc7b4763df1eaf6ab7847cc5ac5132608fb')
     version('3.11.0', 'bf29043c311fe2c549a25e2b0835095723a3eebc1dff288a233b32913b5762a2')
     version('3.10.2', '0594972293f6586458a54b7c1e1121b311a9c9449060355d52bb3bf09ad6812b')
     version('3.10.1', 'f64787c8c2ab3d2f6db3c67d2bfe6ee84f741ce3dfde1d2f8221e131820a12a1')
@@ -42,6 +45,7 @@ class Slepc(Package):
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@develop', when='@develop')
+    depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
     depends_on('petsc@3.11:3.11.99', when='@3.11:3.11.99')
     depends_on('petsc@3.10:3.10.99', when='@3.10:3.10.99')
     depends_on('petsc@3.9:3.9.99', when='@3.9:3.9.99')
