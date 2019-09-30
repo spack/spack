@@ -91,6 +91,7 @@ packages:
       - python
     specs:
       - steps@3.4.1+petsc
+      - steps@3.5.0a+petsc
 
   gnu-stable-lapack-parallel:
     target_matrix:
