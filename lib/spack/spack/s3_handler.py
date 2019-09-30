@@ -10,6 +10,7 @@ from io import BufferedReader
 import six.moves.urllib.response as urllib_response
 import six.moves.urllib.request as urllib_request
 import six.moves.urllib.parse as urllib_parse
+import six.moves.urllib.error as urllib_error
 
 import spack
 
@@ -82,11 +83,12 @@ class UrllibS3Handler(urllib_request.HTTPSHandler):
 
                 except ClientError as err2:
                     if err.response['Error']['Code'] == 'NoSuchKey':
-                        raise err # raise original error
+                        # raise original error
+                        raise urllib_error.URLError(err)
 
-                    raise err2
+                    raise urllib_error.URLError(err2)
 
-            raise err
+            raise urllib_error.URLError(err)
 
 
 S3OpenerDirector = urllib_request.build_opener(UrllibS3Handler())
