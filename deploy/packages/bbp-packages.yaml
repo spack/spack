@@ -131,6 +131,7 @@ packages:
       - compiler
     specs:
       - neurodamus-core+common@2.7.0
+      - ultraliser
 
   intel-stable-parallel:
     target_matrix:
