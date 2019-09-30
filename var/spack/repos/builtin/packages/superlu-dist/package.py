@@ -33,6 +33,13 @@ class SuperluDist(CMakePackage):
     variant('int64', default=False, description='Build with 64 bit integers')
     variant('shared', default=True, description='Build shared libraries')
 
+    # The following conflicts are due to the usage of #pragma openmp taskloop.
+    # This pragma requires OpenMP 4.5 support. Support information is based on: 
+    # https://www.openmp.org/resources/openmp-compilers-tools/
+    conflicts('%gcc@:6.0.999', when='@5.3:')
+    conflicts('%intel@:16.9.999', when='@5.3:')
+    conflicts('%clang@:3.8.999', when='@5.3:')
+
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
