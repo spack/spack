@@ -10,7 +10,8 @@ class Libuv(AutotoolsPackage):
     """Multi-platform library with a focus on asynchronous IO"""
     homepage = "http://libuv.org"
     url      = "https://github.com/libuv/libuv/archive/v1.9.0.tar.gz"
-
+ 
+    version('1.32.0', '09de7f24598440114e7314279a5583de')
     version('1.25.0', '31a1873ebceacae42573bac8ec5da687')
     version('1.10.0', 'f7a12f3a8ee021c20cfbc9af4cc5b793')
     version('1.9.0',  '14737f9c76123a19a290dabb7d1cd04c')
