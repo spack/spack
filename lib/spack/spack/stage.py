@@ -33,7 +33,7 @@ from spack.util.crypto import prefix_bits, bit_length
 _source_path_subdir = 'spack-src'
 
 # The temporary stage name prefix.
-stage_prefix = 'spack-'
+stage_prefix = 'spack-stage-'
 
 
 def _create_stage_root(path):
