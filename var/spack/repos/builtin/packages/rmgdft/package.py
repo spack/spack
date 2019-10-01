@@ -25,7 +25,10 @@ from spack import *
 
 
 class Rmgdft(CMakePackage):
-    """RMG is an Open Source code for electronic structure calculations and modeling of materials and molecules. It is based on density functional theory and uses a real space basis and pseudopotentials."""
+    """RMG is an Open Source code for electronic structure calculations and
+    modeling of materials and molecules. It is based on density functional
+    theory and uses a real space basis and pseudopotentials.i
+    """
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.rmgdft.org/"
@@ -36,7 +39,8 @@ class Rmgdft(CMakePackage):
     version('4.0.0-beta.3', 'b827762e2da539bf2d41ec5512a7d900')
 
 #    Have not gotten this to work correctly yet.
-#    variant('rmg-cuda', default=False, description='Base version of the code using cuda')
+#    variant('rmg-cuda', default=False, 
+#    description='Base version of the code using cuda')
 
     # openmpi, mpich etc
     depends_on('mpi')
@@ -47,7 +51,8 @@ class Rmgdft(CMakePackage):
 
     depends_on('fftw')
 
-    # To get good performance some tweaking of this will be required on most systems
+    # To get good performance some tweaking of this will be required
+    # on most systems
     depends_on('blas')
 
     # Needed for qmcpack integration
@@ -57,4 +62,3 @@ class Rmgdft(CMakePackage):
     def cmake_args(self):
         args = ['-DBoost_USE_STATIC_LIBS=OFF']
         return args
-
