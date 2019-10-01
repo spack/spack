@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,10 +8,11 @@ import shutil
 import glob
 import tempfile
 import re
+from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import mkdirp, chgrp
+from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.spec
@@ -77,10 +78,13 @@ class DirectoryLayout(object):
 
         if spec.external:
             return spec.external_path
-        if self.check_upstream and spec.package.installed_upstream:
-            raise SpackError(
-                "Internal error: attempted to call path_for_spec on"
-                " upstream-installed package.")
+        if self.check_upstream:
+            upstream, record = spack.store.db.query_by_spec_hash(
+                spec.dag_hash())
+            if upstream:
+                raise SpackError(
+                    "Internal error: attempted to call path_for_spec on"
+                    " upstream-installed package.")
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
@@ -116,8 +120,8 @@ class ExtensionsLayout(object):
        directly in the installation folder - or extensions activated in
        filesystem views.
     """
-    def __init__(self, root, **kwargs):
-        self.root = root
+    def __init__(self, view, **kwargs):
+        self.view = view
 
     def add_extension(self, spec, ext_spec):
         """Add to the list of currently installed extensions."""
@@ -172,24 +176,24 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def __init__(self, root, **kwargs):
         super(YamlDirectoryLayout, self).__init__(root)
-        self.metadata_dir   = kwargs.get('metadata_dir', '.spack')
         self.hash_len       = kwargs.get('hash_len')
         self.path_scheme    = kwargs.get('path_scheme') or (
-            "${ARCHITECTURE}/"
-            "${COMPILERNAME}-${COMPILERVER}/"
-            "${PACKAGE}-${VERSION}-${HASH}")
+            "{architecture}/"
+            "{compiler.name}-{compiler.version}/"
+            "{name}-{version}-{hash}")
         if self.hash_len is not None:
-            if re.search(r'\${HASH:\d+}', self.path_scheme):
+            if re.search(r'{hash:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
                     "Conflicting options for installation layout hash length")
             self.path_scheme = self.path_scheme.replace(
-                "${HASH}", "${HASH:%d}" % self.hash_len)
+                "{hash}", "{hash:%d}" % self.hash_len)
 
+        # If any of these paths change, downstream databases may not be able to
+        # locate files in older upstream databases
+        self.metadata_dir        = '.spack'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'build.out'  # build log.
-        self.build_env_name      = 'build.env'  # build environment
-        self.packages_dir        = 'repos'      # archive of package.py files
+        self.packages_dir        = 'repos'  # archive of package.py files
 
     @property
     def hidden_file_paths(self):
@@ -227,22 +231,14 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
+    @contextmanager
+    def disable_upstream_check(self):
+        self.check_upstream = False
+        yield
+        self.check_upstream = True
+
     def metadata_path(self, spec):
-        if self.check_upstream and spec.package.installed_upstream:
-            # TODO: This assumes that older spack versions use the same
-            # relative metadata directory as the current Spack, which is
-            # generally reasonable (since this is not user-configurable).
-            # If changes to this path are accompanied by a DB version
-            # increment, then there will never by an issue with this.
-            return os.path.join(spec.prefix, self.metadata_dir)
-        else:
-            return os.path.join(self.path_for_spec(spec), self.metadata_dir)
-
-    def build_log_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.build_log_name)
-
-    def build_env_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.build_env_name)
+        return os.path.join(spec.prefix, self.metadata_dir)
 
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
@@ -258,15 +254,16 @@ class YamlDirectoryLayout(DirectoryLayout):
         # Cannot import at top of file
         from spack.package_prefs import get_package_dir_permissions
         from spack.package_prefs import get_package_group
+
+        # Each package folder can have its own specific permissions, while
+        # intermediate folders (arch/compiler) are set with access permissions
+        # equivalent to the root permissions of the layout.
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
-        mkdirp(spec.prefix, mode=perms)
-        if group:
-            chgrp(spec.prefix, group)
-            # Need to reset the sticky group bit after chgrp
-            os.chmod(spec.prefix, perms)
 
-        mkdirp(self.metadata_path(spec), mode=perms)
+        mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
+        mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
+
         self.write_spec(spec, self.spec_file_path(spec))
 
     def check_installed(self, spec):
@@ -319,11 +316,11 @@ class YamlDirectoryLayout(DirectoryLayout):
 class YamlViewExtensionsLayout(ExtensionsLayout):
     """Maintain extensions within a view.
     """
-    def __init__(self, root, layout):
+    def __init__(self, view, layout):
         """layout is the corresponding YamlDirectoryLayout object for which
            we implement extensions.
         """
-        super(YamlViewExtensionsLayout, self).__init__(root)
+        super(YamlViewExtensionsLayout, self).__init__(view)
         self.layout = layout
         self.extension_file_name = 'extensions.yaml'
 
@@ -364,15 +361,18 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
         _check_concrete(spec)
         normalize_path = lambda p: (
             os.path.abspath(p).rstrip(os.path.sep))
-        if normalize_path(spec.prefix) == normalize_path(self.root):
-            # For backwards compatibility, when the root is the extended
+
+        view_prefix = self.view.get_projection_for_spec(spec)
+        if normalize_path(spec.prefix) == normalize_path(view_prefix):
+            # For backwards compatibility, when the view is the extended
             # package's installation directory, do not include the spec name
             # as a subdirectory.
-            components = [self.root, self.layout.metadata_dir,
+            components = [view_prefix, self.layout.metadata_dir,
                           self.extension_file_name]
         else:
-            components = [self.root, self.layout.metadata_dir, spec.name,
+            components = [view_prefix, self.layout.metadata_dir, spec.name,
                           self.extension_file_name]
+
         return os.path.join(*components)
 
     def extension_map(self, spec):
@@ -396,9 +396,6 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
         """Get a dict<name -> spec> for all extensions currently
            installed for this package."""
         _check_concrete(spec)
-
-        if spec.external:
-            return {}
 
         if spec not in self._extension_maps:
             path = self.extension_file_path(spec)

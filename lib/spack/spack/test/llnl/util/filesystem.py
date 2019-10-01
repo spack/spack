@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,6 +107,21 @@ class TestCopyTree:
 
             assert os.path.exists('dest/sub/directory/a/b/2')
 
+    def test_parent_dir(self, stage):
+        """Test copying to from a parent directory."""
+
+        # Make sure we get the right error if we try to copy a parent into
+        # a descendent directory.
+        with pytest.raises(ValueError, matches="Cannot copy"):
+            with fs.working_dir(str(stage)):
+                fs.copy_tree('source', 'source/sub/directory')
+
+        # Only point with this check is to make sure we don't try to perform
+        # the copy.
+        with pytest.raises(IOError, matches="No such file or directory"):
+            with fs.working_dir(str(stage)):
+                fs.copy_tree('foo/ba', 'foo/bar')
+
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
 
@@ -182,6 +197,16 @@ class TestInstallTree:
             assert not os.path.islink('dest/2')
 
 
+def test_paths_containing_libs(dirs_with_libfiles):
+    lib_to_dirs, all_dirs = dirs_with_libfiles
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libgfortran'])) ==
+            set(lib_to_dirs['libgfortran']))
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libirc'])) ==
+            set(lib_to_dirs['libirc']))
+
+
 def test_move_transaction_commit(tmpdir):
 
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')
@@ -215,3 +240,69 @@ def test_move_transaction_rollback(tmpdir):
         pass
 
     assert h == fs.hash_directory(str(tmpdir))
+
+
+@pytest.mark.regression('10601')
+@pytest.mark.regression('10603')
+def test_recursive_search_of_headers_from_prefix(
+        installation_dir_with_headers
+):
+    # Try to inspect recursively from <prefix> and ensure we don't get
+    # subdirectories of the '<prefix>/include' path
+    prefix = str(installation_dir_with_headers)
+    header_list = fs.find_all_headers(prefix)
+
+    # Check that the header files we expect are all listed
+    assert os.path.join(prefix, 'include', 'ex3.h') in header_list
+    assert os.path.join(prefix, 'include', 'boost', 'ex3.h') in header_list
+    assert os.path.join(prefix, 'path', 'to', 'ex1.h') in header_list
+    assert os.path.join(prefix, 'path', 'to', 'subdir', 'ex2.h') in header_list
+
+    # Check that when computing directories we exclude <prefix>/include/boost
+    include_dirs = header_list.directories
+    assert os.path.join(prefix, 'include') in include_dirs
+    assert os.path.join(prefix, 'include', 'boost') not in include_dirs
+    assert os.path.join(prefix, 'path', 'to') in include_dirs
+    assert os.path.join(prefix, 'path', 'to', 'subdir') in include_dirs
+
+
+@pytest.mark.parametrize('list_of_headers,expected_directories', [
+    (['/pfx/include/foo.h', '/pfx/include/subdir/foo.h'], ['/pfx/include']),
+    (['/pfx/include/foo.h', '/pfx/subdir/foo.h'],
+     ['/pfx/include', '/pfx/subdir']),
+    (['/pfx/include/subdir/foo.h', '/pfx/subdir/foo.h'],
+     ['/pfx/include', '/pfx/subdir'])
+])
+def test_computation_of_header_directories(
+        list_of_headers, expected_directories
+):
+    hl = fs.HeaderList(list_of_headers)
+    assert hl.directories == expected_directories
+
+
+def test_headers_directory_setter():
+    hl = fs.HeaderList(
+        ['/pfx/include/subdir/foo.h', '/pfx/include/subdir/bar.h']
+    )
+
+    # Set directories using a list
+    hl.directories = ['/pfx/include/subdir']
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # If it's a single directory it's fine to not wrap it into a list
+    # when setting the property
+    hl.directories = '/pfx/include/subdir'
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # Paths are normalized, so it doesn't matter how many backslashes etc.
+    # are present in the original directory being used
+    hl.directories = '/pfx/include//subdir/'
+    assert hl.directories == ['/pfx/include/subdir']
+
+    # Setting an empty list is allowed and returns an empty list
+    hl.directories = []
+    assert hl.directories == []
+
+    # Setting directories to None also returns an empty list
+    hl.directories = None
+    assert hl.directories == []

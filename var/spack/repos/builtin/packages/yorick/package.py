@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Yorick(Package):
        files of numbers. Yorick includes an interactive graphics package, and a
        binary file package capable of translating to and from the raw numeric
        formats of all modern computers. Yorick is written in ANSI C and runs on
-       most operating systems (\*nix systems, MacOS X, Windows).
+       most operating systems (*nix systems, MacOS X, Windows).
     """
 
     homepage = "http://dhmunro.github.io/yorick-doc/"

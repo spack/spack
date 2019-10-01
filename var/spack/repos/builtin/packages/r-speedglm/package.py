@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,9 @@ class RSpeedglm(RPackage):
     """Fitting linear models and generalized linear models to
     large data sets by updating algorithms."""
 
-    homepage = "https://cran.r-project.org/package=speedglm"
-    url      = "https://cran.rstudio.com/src/contrib/speedglm_0.3-2.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/speedglm"
+    homepage = "https://cloud.r-project.org/package=speedglm"
+    url      = "https://cloud.r-project.org/src/contrib/speedglm_0.3-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/speedglm"
 
     version('0.3-2', 'c4874d4c2a677d657a335186ebb63131')
 

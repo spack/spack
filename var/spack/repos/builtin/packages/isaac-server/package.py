@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,5 +35,6 @@ class IsaacServer(CMakePackage):
 
     # https://github.com/ComputationalRadiationPhysics/isaac/pull/70
     patch('jpeg.patch', when='@:1.3.1')
+    patch('arm.patch', when='@:1.4.0 target=aarch64:')
 
     root_cmakelists_dir = 'server'

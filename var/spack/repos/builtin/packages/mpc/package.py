@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Mpc(AutotoolsPackage):
         if version < Version("1.0.1"):
             url = "http://www.multiprecision.org/mpc/download/mpc-{0}.tar.gz"
         else:
-            url = "https://ftp.gnu.org/gnu/mpc/mpc-{0}.tar.gz"
+            url = "https://ftpmirror.gnu.org/mpc/mpc-{0}.tar.gz"
 
         return url.format(version)
 

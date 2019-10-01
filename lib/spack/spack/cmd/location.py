@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,10 +9,12 @@ import os
 import argparse
 import llnl.util.tty as tty
 
+import spack.environment as ev
 import spack.cmd
 import spack.environment
 import spack.paths
 import spack.repo
+import spack.stage
 
 description = "print out locations of packages and spack directories"
 section = "basic"
@@ -75,7 +77,7 @@ def location(parser, args):
         print(spack.repo.path.first_repo().root)
 
     elif args.stages:
-        print(spack.paths.stage_path)
+        print(spack.stage.get_stage_root())
 
     else:
         specs = spack.cmd.parse_specs(args.spec)
@@ -86,7 +88,8 @@ def location(parser, args):
 
         if args.install_dir:
             # install_dir command matches against installed specs.
-            spec = spack.cmd.disambiguate_spec(specs[0])
+            env = ev.get_env(args, 'location')
+            spec = spack.cmd.disambiguate_spec(specs[0], env)
             print(spec.prefix)
 
         else:
@@ -105,7 +108,7 @@ def location(parser, args):
                     print(pkg.stage.path)
 
                 else:  # args.build_dir is the default.
-                    if not pkg.stage.source_path:
+                    if not pkg.stage.expanded:
                         tty.die("Build directory does not exist yet. "
                                 "Run this to create it:",
                                 "spack stage " + " ".join(args.spec))

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,9 +26,9 @@ class PyPyarrow(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
 
-    depends_on('arrow+python')
-    depends_on('arrow+parquet+python', when='+parquet')
-    depends_on('py-numpy')
+    for v in ('@0.9.0', '@0.11.0', '@0.12.1'):
+        depends_on('arrow+python' + v, when=v)
+        depends_on('arrow+parquet+python' + v, when='+parquet' + v)
 
     phases = ['build_ext', 'install']
 

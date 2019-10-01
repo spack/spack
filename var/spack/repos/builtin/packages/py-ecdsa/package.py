@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,14 @@ from spack import *
 
 
 class PyEcdsa(PythonPackage):
-    """Pure-Python Elliptic Curve Digital Signature Algorithm signature/verification."""
+    """ECDSA cryptographic signature library (pure python)"""
 
     homepage = "https://github.com/warner/python-ecdsa"
-    url      = "https://pypi.io/packages/source/e/ecdsa/ecdsa-0.13.2.tar.gz"
+    url      = "https://files.pythonhosted.org/packages/source/e/ecdsa/ecdsa-0.13.2.tar.gz"
 
-    version('0.13.2', '0ce51d17c0751e5232be4eafd69b7f13')
+    version('0.13.2', sha256='5c034ffa23413ac923541ceb3ac14ec15a0d2530690413bff58c12b80e56d884')
 
-    depends_on('py-setuptools', type=('build'))
-
-    depends_on('py-six', type='run')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six',        type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
+    depends_on('openssl',       type='test')

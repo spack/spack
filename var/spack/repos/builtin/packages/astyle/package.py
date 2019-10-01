@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,6 @@ class Astyle(MakefilePackage):
     url = "https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/astyle_3.0.1_linux.tar.gz"
     # Gentoo alternative
     # url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
-
-    maintainers = ['davydden']
 
     version('3.1',    '7712622f62661b1d8cb1062d7fedc390')
     version('3.0.1',  'c301f09679efa2e1eb6e6b5fd33788b4')

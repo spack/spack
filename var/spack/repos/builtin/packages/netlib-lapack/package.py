@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,7 @@ class NetlibLapack(CMakePackage):
 
     patch('ibm-xl.patch', when='@3.7: %xl')
     patch('ibm-xl.patch', when='@3.7: %xl_r')
+    patch('ibm-xl.patch', when='@3.7: %cce@9:')
 
     # https://github.com/Reference-LAPACK/lapack/issues/228
     # TODO: update 'when' once the version of lapack

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class OntAlbacore(Package):
     depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
     depends_on('py-setuptools',        type=('build', 'run'))
     depends_on('py-numpy@1.13.0',      type=('build', 'run'))
-    depends_on('py-dateutil',          type=('build', 'run'))
+    depends_on('py-python-dateutil',   type=('build', 'run'))
     depends_on('py-h5py',              type=('build', 'run'))
     depends_on('py-ont-fast5-api',     type=('build', 'run'))
     depends_on('py-pip',               type=('build'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class PyCvxopt(PythonPackage):
     variant('gsl',   default=False, description='Use GSL random number generators for constructing random matrices')
     variant('fftw',  default=False, description='Install the cvxopt.fftw interface to FFTW')
     variant('glpk',  default=False, description='Enable support for the linear programming solver GLPK')
-    # variant('mosek', default=False, description='Enable support for the linear, second-order cone, and quadratic programming solvers in MOSEK')  # noqa: flake8
+    # variant('mosek', default=False, description='Enable support for the linear, second-order cone, and quadratic programming solvers in MOSEK')  # noqa
     variant('dsdp',  default=False, description='Enable support for the semidefinite programming solver DSDP')
 
     # Required dependencies

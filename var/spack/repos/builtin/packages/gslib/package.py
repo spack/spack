@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Gslib(Package):
     homepage = "https://github.com/gslib/gslib"
     git      = "https://github.com/gslib/gslib.git"
 
+    version('1.0.3', tag='v1.0.3')
     version('1.0.2', tag='v1.0.2')
     version('1.0.1', tag='v1.0.1')
     version('1.0.0', tag='v1.0.0')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PyPromptToolkit(PythonPackage):
     homepage = "https://pypi.python.org/pypi/prompt_toolkit"
     url      = "https://pypi.io/packages/source/p/prompt_toolkit/prompt_toolkit-1.0.9.tar.gz"
 
+    version('2.0.9', sha256='2519ad1d8038fd5fc8e770362237ad0364d16a7650fb5724af6997ed5515e3c1')
     version('1.0.9', 'a39f91a54308fb7446b1a421c11f227c')
 
     depends_on('py-setuptools', type='build')

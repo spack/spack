@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,7 +53,7 @@ class Trinity(MakefilePackage):
     depends_on("py-numpy", type="run")
     depends_on("express", type="run")
     depends_on("perl-dbfile", type="run")
-    depends_on("perl-uri-escape", type="run")
+    depends_on("perl-uri", type="run")
     depends_on("r-fastcluster", type="run")
     depends_on("r-ctc", type="run")
     depends_on("r-goseq", type="run")

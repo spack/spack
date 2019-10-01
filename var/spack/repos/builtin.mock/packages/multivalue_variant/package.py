@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,8 @@ class MultivalueVariant(Package):
 
     variant('debug', default=False, description='Debug variant')
     variant(
-        'foo',
-        description='Multi-valued variant',
-        values=('bar', 'baz', 'barbaz'),
-        multi=True
+        'foo', description='Multi-valued variant',
+        values=any_combination_of('bar', 'baz', 'barbaz'),
     )
 
     variant(

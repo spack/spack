@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,6 +44,11 @@ class Portcullis(AutotoolsPackage):
             'export PYTHONPATH="$(PYTHONPATH):$(DESTDIR)$(pythondir)"',
             'scripts/Makefile.am', string=True
         )
+
+        # remove -m64 on aarch64
+        if self.spec.target.family == 'aarch64':
+            for f in ['lib/Makefile.am', 'src/Makefile.am']:
+                filter_file('-m64', '', f)
 
     def build(self, spec, prefix):
         # build manpages

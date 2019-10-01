@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -112,7 +112,7 @@ class InstallRecord(object):
             installation_time=None
     ):
         self.spec = spec
-        self.path = str(path)
+        self.path = str(path) if path else None
         self.installed = bool(installed)
         self.ref_count = ref_count
         self.explicit = explicit
@@ -132,6 +132,10 @@ class InstallRecord(object):
     def from_dict(cls, spec, dictionary):
         d = dict(dictionary.items())
         d.pop('spec', None)
+
+        # Old databases may have "None" for path for externals
+        if d['path'] == 'None':
+            d['path'] = None
         return InstallRecord(spec, **d)
 
 
@@ -380,7 +384,8 @@ class Database(object):
                 if not child:
                     msg = ("Missing dependency not in database: "
                            "%s needs %s-%s" % (
-                               spec.cformat('$_$/'), dname, dhash[:7]))
+                               spec.cformat('{name}{/hash:7}'),
+                               dname, dhash[:7]))
                     if self._fail_when_missing_deps:
                         raise MissingDependenciesError(msg)
                     tty.warn(msg)
@@ -464,8 +469,7 @@ class Database(object):
                 # spec has its own copies of its dependency specs.
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
-                record = InstallRecord.from_dict(spec, rec)
-                data[hash_key] = record
+                data[hash_key] = InstallRecord.from_dict(spec, rec)
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -520,91 +524,91 @@ class Database(object):
                 )
                 self._error = None
 
-            # Read first the `spec.yaml` files in the prefixes. They should be
-            # considered authoritative with respect to DB reindexing, as
-            # entries in the DB may be corrupted in a way that still makes
-            # them readable. If we considered DB entries authoritative
-            # instead, we would perpetuate errors over a reindex.
-
             old_data = self._data
-            directory_layout.check_upstream = False
             try:
-                # Initialize data in the reconstructed DB
-                self._data = {}
-
-                # Start inspecting the installed prefixes
-                processed_specs = set()
-
-                for spec in directory_layout.all_specs():
-                    # Try to recover explicit value from old DB, but
-                    # default it to True if DB was corrupt. This is
-                    # just to be conservative in case a command like
-                    # "autoremove" is run by the user after a reindex.
-                    tty.debug(
-                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
-                    explicit = True
-                    inst_time = os.stat(spec.prefix).st_ctime
-                    if old_data is not None:
-                        old_info = old_data.get(spec.dag_hash())
-                        if old_info is not None:
-                            explicit = old_info.explicit
-                            inst_time = old_info.installation_time
-
-                    extra_args = {
-                        'explicit': explicit,
-                        'installation_time': inst_time
-                    }
-                    self._add(spec, directory_layout, **extra_args)
-
-                    processed_specs.add(spec)
-
-                for key, entry in old_data.items():
-                    # We already took care of this spec using
-                    # `spec.yaml` from its prefix.
-                    if entry.spec in processed_specs:
-                        msg = 'SKIPPING RECONSTRUCTION FROM OLD DB: {0}'
-                        msg += ' [already reconstructed from spec.yaml]'
-                        tty.debug(msg.format(entry.spec))
-                        continue
-
-                    # If we arrived here it very likely means that
-                    # we have external specs that are not dependencies
-                    # of other specs. This may be the case for externally
-                    # installed compilers or externally installed
-                    # applications.
-                    tty.debug(
-                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
-                    try:
-                        layout = spack.store.layout
-                        if entry.spec.external:
-                            layout = None
-                            install_check = True
-                        else:
-                            install_check = layout.check_installed(entry.spec)
-
-                        if install_check:
-                            kwargs = {
-                                'spec': entry.spec,
-                                'directory_layout': layout,
-                                'explicit': entry.explicit,
-                                'installation_time': entry.installation_time  # noqa: E501
-                            }
-                            self._add(**kwargs)
-                            processed_specs.add(entry.spec)
-                    except Exception as e:
-                        # Something went wrong, so the spec was not restored
-                        # from old data
-                        tty.debug(e.message)
-                        pass
-
-                self._check_ref_counts()
-
+                self._construct_from_directory_layout(
+                    directory_layout, old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
                 raise
-            finally:
-                directory_layout.check_upstream = True
+
+    def _construct_from_directory_layout(self, directory_layout, old_data):
+        # Read first the `spec.yaml` files in the prefixes. They should be
+        # considered authoritative with respect to DB reindexing, as
+        # entries in the DB may be corrupted in a way that still makes
+        # them readable. If we considered DB entries authoritative
+        # instead, we would perpetuate errors over a reindex.
+
+        with directory_layout.disable_upstream_check():
+            # Initialize data in the reconstructed DB
+            self._data = {}
+
+            # Start inspecting the installed prefixes
+            processed_specs = set()
+
+            for spec in directory_layout.all_specs():
+                # Try to recover explicit value from old DB, but
+                # default it to True if DB was corrupt. This is
+                # just to be conservative in case a command like
+                # "autoremove" is run by the user after a reindex.
+                tty.debug(
+                    'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
+                explicit = True
+                inst_time = os.stat(spec.prefix).st_ctime
+                if old_data is not None:
+                    old_info = old_data.get(spec.dag_hash())
+                    if old_info is not None:
+                        explicit = old_info.explicit
+                        inst_time = old_info.installation_time
+
+                extra_args = {
+                    'explicit': explicit,
+                    'installation_time': inst_time
+                }
+                self._add(spec, directory_layout, **extra_args)
+
+                processed_specs.add(spec)
+
+            for key, entry in old_data.items():
+                # We already took care of this spec using
+                # `spec.yaml` from its prefix.
+                if entry.spec in processed_specs:
+                    msg = 'SKIPPING RECONSTRUCTION FROM OLD DB: {0}'
+                    msg += ' [already reconstructed from spec.yaml]'
+                    tty.debug(msg.format(entry.spec))
+                    continue
+
+                # If we arrived here it very likely means that
+                # we have external specs that are not dependencies
+                # of other specs. This may be the case for externally
+                # installed compilers or externally installed
+                # applications.
+                tty.debug(
+                    'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
+                try:
+                    layout = spack.store.layout
+                    if entry.spec.external:
+                        layout = None
+                        install_check = True
+                    else:
+                        install_check = layout.check_installed(entry.spec)
+
+                    if install_check:
+                        kwargs = {
+                            'spec': entry.spec,
+                            'directory_layout': layout,
+                            'explicit': entry.explicit,
+                            'installation_time': entry.installation_time  # noqa: E501
+                        }
+                        self._add(**kwargs)
+                        processed_specs.add(entry.spec)
+                except Exception as e:
+                    # Something went wrong, so the spec was not restored
+                    # from old data
+                    tty.debug(e)
+
+            self._check_ref_counts()
 
     def _check_ref_counts(self):
         """Ensure consistency of reference counts in the DB.
@@ -654,7 +658,8 @@ class Database(object):
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
-        except BaseException:
+        except BaseException as e:
+            tty.debug(e)
             # Clean up temp file if something goes wrong.
             if os.path.exists(temp_file):
                 os.remove(temp_file)
@@ -870,7 +875,8 @@ class Database(object):
             return self._remove(spec)
 
     @_autospec
-    def installed_relatives(self, spec, direction='children', transitive=True):
+    def installed_relatives(self, spec, direction='children', transitive=True,
+                            deptype='all'):
         """Return installed specs related to this one."""
         if direction not in ('parents', 'children'):
             raise ValueError("Invalid direction: %s" % direction)
@@ -878,11 +884,12 @@ class Database(object):
         relatives = set()
         for spec in self.query(spec):
             if transitive:
-                to_add = spec.traverse(direction=direction, root=False)
+                to_add = spec.traverse(
+                    direction=direction, root=False, deptype=deptype)
             elif direction == 'parents':
-                to_add = spec.dependents()
+                to_add = spec.dependents(deptype=deptype)
             else:  # direction == 'children'
-                to_add = spec.dependencies()
+                to_add = spec.dependencies(deptype=deptype)
 
             for relative in to_add:
                 hash_key = relative.dag_hash()
@@ -929,6 +936,73 @@ class Database(object):
             except spack.directory_layout.NoSuchExtensionError:
                 continue
             # TODO: conditional way to do this instead of catching exceptions
+
+    def get_by_hash_local(self, dag_hash, default=None, installed=any):
+        """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
+
+        Arguments:
+            dag_hash (str): hash (or hash prefix) to look up
+            default (object, optional): default value to return if dag_hash is
+                not in the DB (default: None)
+            installed (bool or any, optional): if ``True``, includes only
+                installed specs in the search; if ``False`` only missing specs,
+                and if ``any``, either installed or missing (default: any)
+
+        ``installed`` defaults to ``any`` so that we can refer to any
+        known hash.  Note that ``query()`` and ``query_one()`` differ in
+        that they only return installed specs by default.
+
+        Returns:
+            (list): a list of specs matching the hash or hash prefix
+
+        """
+        with self.read_transaction():
+            # hash is a full hash and is in the data somewhere
+            if dag_hash in self._data:
+                rec = self._data[dag_hash]
+                if installed is any or rec.installed == installed:
+                    return [rec.spec]
+                else:
+                    return default
+
+            # check if hash is a prefix of some installed (or previously
+            # installed) spec.
+            matches = [record.spec for h, record in self._data.items()
+                       if h.startswith(dag_hash) and
+                       (installed is any or installed == record.installed)]
+            if matches:
+                return matches
+
+            # nothing found
+            return default
+
+    def get_by_hash(self, dag_hash, default=None, installed=any):
+        """Look up a spec by DAG hash, or by a DAG hash prefix.
+
+        Arguments:
+            dag_hash (str): hash (or hash prefix) to look up
+            default (object, optional): default value to return if dag_hash is
+                not in the DB (default: None)
+            installed (bool or any, optional): if ``True``, includes only
+                installed specs in the search; if ``False`` only missing specs,
+                and if ``any``, either installed or missing (default: any)
+
+        ``installed`` defaults to ``any`` so that we can refer to any
+        known hash.  Note that ``query()`` and ``query_one()`` differ in
+        that they only return installed specs by default.
+
+        Returns:
+            (list): a list of specs matching the hash or hash prefix
+
+        """
+        search_path = [self] + self.upstream_dbs
+        for db in search_path:
+            spec = db.get_by_hash_local(
+                dag_hash, default=default, installed=installed)
+            if spec is not None:
+                return spec
+
+        return default
 
     def _query(
             self,

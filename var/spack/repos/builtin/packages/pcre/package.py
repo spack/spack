@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,9 @@ class Pcre(AutotoolsPackage):
     variant('jit', default=False,
             description='Enable JIT support.')
 
+    variant('multibyte', default=True,
+            description='Enable support for 16 and 32 bit characters.')
+
     variant('utf', default=True,
             description='Enable support for UTF-8/16/32, '
             'incompatible with EBCDIC.')
@@ -34,6 +37,10 @@ class Pcre(AutotoolsPackage):
 
         if '+jit' in self.spec:
             args.append('--enable-jit')
+
+        if '+multibyte' in self.spec:
+            args.append('--enable-pcre16')
+            args.append('--enable-pcre32')
 
         if '+utf' in self.spec:
             args.append('--enable-utf')

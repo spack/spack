@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,5 +26,6 @@ class Xxhash(MakefilePackage):
     version('0.5.1', '9417fd8a4d88204b680e21a60f0ccada')
     version('0.5.0', '42e9a31a2cfc2f626fde17e84a0b6bb7')
 
-    def install(self, spec, prefix):
-        make('prefix={0}'.format(prefix), 'install')
+    def edit(self, spec, prefix):
+        makefile = FileFilter("Makefile")
+        makefile.filter('/usr/local', prefix)

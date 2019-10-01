@@ -1,0 +1,53 @@
+--- ./src/Makefile	2018-11-05 13:28:12.000000000 -0700
++++ ./src/Makefile	2018-11-08 16:01:05.000000000 -0700
+@@ -1,37 +1,24 @@
++include $(KOKKOS_PATH)/Makefile.kokkos
+ #=======================================================================
+ #=================== Settings ==========================================
+ #=======================================================================
+ 
+-ifndef KOKKOSKERNELS_PATH
+-  MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+-  KOKKOSKERNELS_PATH = $(subst Makefile.minimal,,$(MAKEFILE_PATH))..
+-endif
+-
+-KOKKOS_PATH = ${KOKKOSKERNELS_PATH}/../kokkos
+-
+-
+-KOKKOS_DEVICES=OpenMP
+-
+-KOKKOSKERNELS_SCALARS="'double,complex<double>'"
++KOKKOSKERNELS_SCALARS="'double'"
+ KOKKOSKERNELS_OPTIONS=eti-only
+ 
+-ifndef PREFIX
+-  PREFIX = ${CURDIR}/install
+-endif
+-KOKKOSKERNELS_INSTALL_PATH = ${PREFIX}
+ 
+ default: build
+ 
+ CXX = g++
+ 
+-CXXFLAGS = -O3 -g
++CXXFLAGS = -O3
+ LINK = ${CXX}
+-LINKFLAGS =
++LINKFLAGS = $(KOKKOS_LINK_FLAGS)
+ 
+ DEPFLAGS = -M
+ 
+ OBJ =
+-LIB = -lpthread
++LIB = $(KOKKOS_LIBS)
+ 
+ 
+ #=======================================================================
+@@ -91,5 +78,4 @@
+ 
+ build: kokkoskernels-build-lib
+ 
+-install: kokkoskernels-install
+- 
++install: kokkoskernels-install
+\ No newline at end of file

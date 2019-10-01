@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class PyTestinfra(PythonPackage):
     homepage = "https://testinfra.readthedocs.io"
     url      = "https://pypi.python.org/packages/source/t/testinfra/testinfra-1.11.1.tar.gz"
 
+    version('1.18.0', sha256='4a0a70355b007729d78446c86bffd80bcea4ffe9adc9571f9c9779476c49153d')
     version('1.13.0', '1e0a135c784207f8609e7730901f1291')
     version('1.12.0', '9784c01d7af3d624c6ec3cd25cce2011')
     version('1.11.1', 'c64ce6b16661d647c62c9508de419f5f')

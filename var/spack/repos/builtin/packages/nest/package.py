@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -116,19 +116,19 @@ class Nest(CMakePackage):
             args.append('-Dwith-optimize=OFF')
 
         if '+gsl' in self.spec:
-            cmake_options.append('-Dwith-gsl=' + self.spec['gsl'].prefix)
+            args.append('-Dwith-gsl=' + self.spec['gsl'].prefix)
         else:
-            cmake_options.append('-Dwith-gsl=OFF')
+            args.append('-Dwith-gsl=OFF')
 
         if '+openmp' in self.spec:
-            cmake_options.append('-Dwith-openmp=ON')
+            args.append('-Dwith-openmp=ON')
         else:
-            cmake_options.append('-Dwith-openmp=OFF')
+            args.append('-Dwith-openmp=OFF')
 
         if '+shared' in self.spec:
-            cmake_options.append('-Dstatic-libraries=OFF')
+            args.append('-Dstatic-libraries=OFF')
         else:
-            cmake_options.append('-Dstatic-libraries=ON')
+            args.append('-Dstatic-libraries=ON')
 
         return args
 

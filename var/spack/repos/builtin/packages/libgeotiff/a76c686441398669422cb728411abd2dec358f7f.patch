@@ -1,0 +1,636 @@
+From a76c686441398669422cb728411abd2dec358f7f Mon Sep 17 00:00:00 2001
+From: Even Rouault <even.rouault@spatialys.com>
+Date: Sat, 15 Jun 2019 10:13:29 +0200
+Subject: [PATCH] testlistgeo: remove hardcoded path in test output (fixes
+ https://github.com/OSGeo/libgeotiff/issues/16#issuecomment-502267406)
+
+---
+ libgeotiff/test/testlistgeo          | 90 ++++++++++++++--------------
+ libgeotiff/test/testlistgeo_out.dist | 90 ++++++++++++++--------------
+ 2 files changed, 90 insertions(+), 90 deletions(-)
+
+diff --git a/libgeotiff/test/testlistgeo b/libgeotiff/test/testlistgeo
+index 60f2356..7fb4a2f 100755
+--- a/libgeotiff/test/testlistgeo
++++ b/libgeotiff/test/testlistgeo
+@@ -30,178 +30,178 @@ OUT=testlistgeo_out
+ 
+ rm -f ${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/byte.tif" >> ${OUT}
++echo "Testing listgeo byte.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/byte.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/pcs_32064.tif" >> ${OUT}
++echo "Testing listgeo pcs_32064.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/pcs_32064.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/GeogPrimeMeridianGeoKey.tif" >> ${OUT}
++echo "Testing listgeo GeogPrimeMeridianGeoKey.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/GeogPrimeMeridianGeoKey.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/GeogGeodeticDatumGeoKey.tif" >> ${OUT}
++echo "Testing listgeo GeogGeodeticDatumGeoKey.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/GeogGeodeticDatumGeoKey.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/GeogAngularUnitsGeoKey_9114.tif" >> ${OUT}
++echo "Testing listgeo GeogAngularUnitsGeoKey_9114.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/GeogAngularUnitsGeoKey_9114.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjLinearUnitsGeoKey_9036.tif" >> ${OUT}
++echo "Testing listgeo ProjLinearUnitsGeoKey_9036.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjLinearUnitsGeoKey_9036.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_28191_cassini_soldner.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_28191_cassini_soldner.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_28191_cassini_soldner.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/cassini_soldner.tif" >> ${OUT}
++echo "Testing listgeo cassini_soldner.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/cassini_soldner.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_27200_new_zealand_mapping_grid.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_27200_new_zealand_mapping_grid.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_27200_new_zealand_mapping_grid.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/new_zealand_mapping_grid.tif" >> ${OUT}
++echo "Testing listgeo new_zealand_mapping_grid.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/new_zealand_mapping_grid.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_29101_polyconic.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_29101_polyconic.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_29101_polyconic.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/polyconic.tif" >> ${OUT}
++echo "Testing listgeo polyconic.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/polyconic.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_6808_hotine_oblique_mercator_variant_a.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_6808_hotine_oblique_mercator_variant_a.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_6808_hotine_oblique_mercator_variant_a.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/hotine_oblique_mercator_variant_a.tif" >> ${OUT}
++echo "Testing listgeo hotine_oblique_mercator_variant_a.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/hotine_oblique_mercator_variant_a.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_8065_hotine_oblique_mercator_variant_b.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_8065_hotine_oblique_mercator_variant_b.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_8065_hotine_oblique_mercator_variant_b.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/hotine_oblique_mercator_variant_b.tif" >> ${OUT}
++echo "Testing listgeo hotine_oblique_mercator_variant_b.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/hotine_oblique_mercator_variant_b.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_8441_oblique_mercator_laborde.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_8441_oblique_mercator_laborde.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_8441_oblique_mercator_laborde.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/oblique_mercator_laborde.tif" >> ${OUT}
++echo "Testing listgeo oblique_mercator_laborde.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/oblique_mercator_laborde.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_5456_lcc1sp.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_5456_lcc1sp.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_5456_lcc1sp.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/lcc1sp.tif" >> ${OUT}
++echo "Testing listgeo lcc1sp.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/lcc1sp.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_5329_mercator1sp.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_5329_mercator1sp.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_5329_mercator1sp.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/mercator1sp.tif" >> ${OUT}
++echo "Testing listgeo mercator1sp.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/mercator1sp.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_5641_mercator2sp.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_5641_mercator2sp.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_5641_mercator2sp.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/mercator2sp.tif" >> ${OUT}
++echo "Testing listgeo mercator2sp.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/mercator2sp.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_5588_oblique_stereographic.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_5588_oblique_stereographic.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_5588_oblique_stereographic.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/oblique_stereographic.tif" >> ${OUT}
++echo "Testing listgeo oblique_stereographic.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/oblique_stereographic.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_5482_polar_stereographic_variant_a.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_5482_polar_stereographic_variant_a.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_5482_polar_stereographic_variant_a.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/polar_stereographic_variant_a.tif" >> ${OUT}
++echo "Testing listgeo polar_stereographic_variant_a.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/polar_stereographic_variant_a.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_3032_polar_stereographic_variant_b.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_3032_polar_stereographic_variant_b.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_3032_polar_stereographic_variant_b.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/polar_stereographic_variant_b.tif" >> ${OUT}
++echo "Testing listgeo polar_stereographic_variant_b.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/polar_stereographic_variant_b.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_3814_transverse_mercator.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_3814_transverse_mercator.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_3814_transverse_mercator.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/transverse_mercator.tif" >> ${OUT}
++echo "Testing listgeo transverse_mercator.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/transverse_mercator.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_2046_transverse_mercator_south_oriented.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_2046_transverse_mercator_south_oriented.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_2046_transverse_mercator_south_oriented.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/transverse_mercator_south_oriented.tif" >> ${OUT}
++echo "Testing listgeo transverse_mercator_south_oriented.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/transverse_mercator_south_oriented.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_3812_lcc2sp.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_3812_lcc2sp.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_3812_lcc2sp.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/lcc2sp.tif" >> ${OUT}
++echo "Testing listgeo lcc2sp.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/lcc2sp.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_3083_albers_equal_area.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_3083_albers_equal_area.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_3083_albers_equal_area.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/albers_equal_area.tif" >> ${OUT}
++echo "Testing listgeo albers_equal_area.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/albers_equal_area.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_3035_lambert_azimuthal_equal_area.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_3035_lambert_azimuthal_equal_area.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_3035_lambert_azimuthal_equal_area.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/lambert_azimuthal_equal_area.tif" >> ${OUT}
++echo "Testing listgeo lambert_azimuthal_equal_area.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/lambert_azimuthal_equal_area.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_3410_lambert_cylindrical_equal_area.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_3410_lambert_cylindrical_equal_area.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_3410_lambert_cylindrical_equal_area.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/lambert_cylindrical_equal_area.tif" >> ${OUT}
++echo "Testing listgeo lambert_cylindrical_equal_area.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/lambert_cylindrical_equal_area.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/ProjectedCSTypeGeoKey_4087_equidistant_cylindrical.tif" >> ${OUT}
++echo "Testing listgeo ProjectedCSTypeGeoKey_4087_equidistant_cylindrical.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/ProjectedCSTypeGeoKey_4087_equidistant_cylindrical.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+-echo "Testing listgeo ${DATA_DIR}/equidistant_cylindrical.tif" >> ${OUT}
++echo "Testing listgeo equidistant_cylindrical.tif" >> ${OUT}
+ $EXE ${DATA_DIR}/equidistant_cylindrical.tif >>${OUT}
+ echo "" >>${OUT}
+ 
+diff --git a/libgeotiff/test/testlistgeo_out.dist b/libgeotiff/test/testlistgeo_out.dist
+index e327238..68a948c 100644
+--- a/libgeotiff/test/testlistgeo_out.dist
++++ b/libgeotiff/test/testlistgeo_out.dist
+@@ -1,4 +1,4 @@
+-Testing listgeo ../test/data/byte.tif
++Testing listgeo byte.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -80,7 +80,7 @@ Upper Right   (  441920.000, 3751320.000)  (117d37'41.48"W, 33d54' 8.71"N)
+ Lower Right   (  441920.000, 3750120.000)  (117d37'41.20"W, 33d53'29.75"N)
+ Center        (  441320.000, 3750720.000)  (117d38' 4.70"W, 33d53'49.11"N)
+ 
+-Testing listgeo ../test/data/pcs_32064.tif
++Testing listgeo pcs_32064.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -123,7 +123,7 @@ Upper Right   (  440780.000, 3751320.000)  (102d20'16.55"W, 10d19'37.14"N)
+ Lower Right   (  440780.000, 3751260.000)  (102d20'16.55"W, 10d19'36.54"N)
+ Center        (  440750.000, 3751290.000)  (102d20'16.85"W, 10d19'36.84"N)
+ 
+-Testing listgeo ../test/data/GeogPrimeMeridianGeoKey.tif
++Testing listgeo GeogPrimeMeridianGeoKey.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -161,7 +161,7 @@ Upper Right   (131d 0' 0.00"E, 32d 0' 0.00"N)
+ Lower Right   (131d 0' 0.00"E, 31d 0' 0.00"N)
+ Center        (130d30' 0.00"E, 31d30' 0.00"N)
+ 
+-Testing listgeo ../test/data/GeogGeodeticDatumGeoKey.tif
++Testing listgeo GeogGeodeticDatumGeoKey.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -193,7 +193,7 @@ Upper Right   (131d 0' 0.00"E, 32d 0' 0.00"N)
+ Lower Right   (131d 0' 0.00"E, 31d 0' 0.00"N)
+ Center        (130d30' 0.00"E, 31d30' 0.00"N)
+ 
+-Testing listgeo ../test/data/GeogAngularUnitsGeoKey_9114.tif
++Testing listgeo GeogAngularUnitsGeoKey_9114.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -225,7 +225,7 @@ Upper Right   (131d 0' 0.00"E, 32d 0' 0.00"N)
+ Lower Right   (131d 0' 0.00"E, 31d 0' 0.00"N)
+ Center        (130d30' 0.00"E, 31d30' 0.00"N)
+ 
+-Testing listgeo ../test/data/ProjLinearUnitsGeoKey_9036.tif
++Testing listgeo ProjLinearUnitsGeoKey_9036.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -268,7 +268,7 @@ Upper Right   (  440780.000, 3751320.000)  (invalid)
+ Lower Right   (  440780.000, 3751260.000)  (invalid)
+ Center        (  440750.000, 3751290.000)  (invalid)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_28191_cassini_soldner.tif
++Testing listgeo ProjectedCSTypeGeoKey_28191_cassini_soldner.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -306,7 +306,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 40d47'32.51"E, 64d13'29.40"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 40d47'32.12"E, 64d13'27.47"N)
+ Center        (  440750.000, 3751290.000)  ( 40d47'30.10"E, 64d13'28.52"N)
+ 
+-Testing listgeo ../test/data/cassini_soldner.tif
++Testing listgeo cassini_soldner.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -355,7 +355,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 40d47'32.51"E, 64d13'29.40"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 40d47'32.12"E, 64d13'27.47"N)
+ Center        (  440750.000, 3751290.000)  ( 40d47'30.10"E, 64d13'28.52"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_27200_new_zealand_mapping_grid.tif
++Testing listgeo ProjectedCSTypeGeoKey_27200_new_zealand_mapping_grid.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -393,7 +393,7 @@ Upper Right   (  440780.000, 3751320.000)  (144d 0' 0.42"E, 55d42'40.94"S)
+ Lower Right   (  440780.000, 3751260.000)  (143d59'59.92"E, 55d42'41.81"S)
+ Center        (  440750.000, 3751290.000)  (143d59'59.40"E, 55d42'41.23"S)
+ 
+-Testing listgeo ../test/data/new_zealand_mapping_grid.tif
++Testing listgeo new_zealand_mapping_grid.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -442,7 +442,7 @@ Upper Right   (  440780.000, 3751320.000)  (144d 0' 0.42"E, 55d42'40.94"S)
+ Lower Right   (  440780.000, 3751260.000)  (143d59'59.92"E, 55d42'41.81"S)
+ Center        (  440750.000, 3751290.000)  (143d59'59.40"E, 55d42'41.23"S)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_29101_polyconic.tif
++Testing listgeo ProjectedCSTypeGeoKey_29101_polyconic.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -480,7 +480,7 @@ Upper Right   (  440780.000, 3751320.000)  (113d19' 5.97"W, 41d40' 1.51"S)
+ Lower Right   (  440780.000, 3751260.000)  (113d19' 7.51"W, 41d40' 2.67"S)
+ Center        (  440750.000, 3751290.000)  (113d19' 7.78"W, 41d40' 1.61"S)
+ 
+-Testing listgeo ../test/data/polyconic.tif
++Testing listgeo polyconic.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -531,7 +531,7 @@ Upper Right   (  440780.000, 3751320.000)  (113d19' 5.97"W, 41d40' 1.51"S)
+ Lower Right   (  440780.000, 3751260.000)  (113d19' 7.51"W, 41d40' 2.67"S)
+ Center        (  440750.000, 3751290.000)  (113d19' 7.78"W, 41d40' 1.61"S)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_6808_hotine_oblique_mercator_variant_a.tif
++Testing listgeo ProjectedCSTypeGeoKey_6808_hotine_oblique_mercator_variant_a.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -572,7 +572,7 @@ Upper Right   (  440780.000, 3751320.000)  (108d21'24.71"E, 42d37'42.73"N)
+ Lower Right   (  440780.000, 3751260.000)  (108d21'27.01"E, 42d37'42.64"N)
+ Center        (  440750.000, 3751290.000)  (108d21'25.79"E, 42d37'41.83"N)
+ 
+-Testing listgeo ../test/data/hotine_oblique_mercator_variant_a.tif
++Testing listgeo hotine_oblique_mercator_variant_a.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -627,7 +627,7 @@ Upper Right   (  440780.000, 3751320.000)  (108d21'24.71"E, 42d37'42.73"N)
+ Lower Right   (  440780.000, 3751260.000)  (108d21'27.01"E, 42d37'42.64"N)
+ Center        (  440750.000, 3751290.000)  (108d21'25.79"E, 42d37'41.83"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_8065_hotine_oblique_mercator_variant_b.tif
++Testing listgeo ProjectedCSTypeGeoKey_8065_hotine_oblique_mercator_variant_b.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -668,7 +668,7 @@ Upper Right   (  440780.000, 3751320.000)  (110d24'53.64"W, 40d20'32.45"N)
+ Lower Right   (  440780.000, 3751260.000)  (110d24'53.65"W, 40d20'31.86"N)
+ Center        (  440750.000, 3751290.000)  (110d24'54.03"W, 40d20'32.15"N)
+ 
+-Testing listgeo ../test/data/hotine_oblique_mercator_variant_b.tif
++Testing listgeo hotine_oblique_mercator_variant_b.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -724,7 +724,7 @@ Upper Right   (  440780.000, 3751320.000)  (110d24'53.64"W, 40d20'32.45"N)
+ Lower Right   (  440780.000, 3751260.000)  (110d24'53.65"W, 40d20'31.86"N)
+ Center        (  440750.000, 3751290.000)  (110d24'54.03"W, 40d20'32.15"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_8441_oblique_mercator_laborde.tif
++Testing listgeo ProjectedCSTypeGeoKey_8441_oblique_mercator_laborde.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -764,7 +764,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 46d30'52.38"E,  7d41'55.05"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 46d30'52.44"E,  7d41'53.12"N)
+ Center        (  440750.000, 3751290.000)  ( 46d30'51.44"E,  7d41'54.06"N)
+ 
+-Testing listgeo ../test/data/oblique_mercator_laborde.tif
++Testing listgeo oblique_mercator_laborde.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -817,7 +817,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 46d30'52.38"E,  7d41'55.05"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 46d30'52.44"E,  7d41'53.12"N)
+ Center        (  440750.000, 3751290.000)  ( 46d30'51.44"E,  7d41'54.06"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_5456_lcc1sp.tif
++Testing listgeo ProjectedCSTypeGeoKey_5456_lcc1sp.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -856,7 +856,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 84d56' 5.62"W, 40d22'42.48"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 84d56' 5.62"W, 40d22'40.80"N)
+ Center        (  440750.000, 3751290.000)  ( 84d56' 6.72"W, 40d22'41.64"N)
+ 
+-Testing listgeo ../test/data/lcc1sp.tif
++Testing listgeo lcc1sp.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -907,7 +907,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 84d56' 5.62"W, 40d22'42.48"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 84d56' 5.62"W, 40d22'40.80"N)
+ Center        (  440750.000, 3751290.000)  ( 84d56' 6.72"W, 40d22'41.64"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_5329_mercator1sp.tif
++Testing listgeo ProjectedCSTypeGeoKey_5329_mercator1sp.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -946,7 +946,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 27d53' 9.70"W, 24d57' 0.31"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 27d53' 9.70"W, 24d56'58.54"N)
+ Center        (  440750.000, 3751290.000)  ( 27d53'10.67"W, 24d56'59.43"N)
+ 
+-Testing listgeo ../test/data/mercator1sp.tif
++Testing listgeo mercator1sp.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -997,7 +997,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 27d53' 9.70"W, 24d57' 0.31"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 27d53' 9.70"W, 24d56'58.54"N)
+ Center        (  440750.000, 3751290.000)  ( 27d53'10.67"W, 24d56'59.43"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_5641_mercator2sp.tif
++Testing listgeo ProjectedCSTypeGeoKey_5641_mercator2sp.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1036,7 +1036,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 83d58'51.48"W, 49d 3'29.83"S)
+ Lower Right   (  440780.000, 3751260.000)  ( 83d58'51.48"W, 49d 3'31.11"S)
+ Center        (  440750.000, 3751290.000)  ( 83d58'52.45"W, 49d 3'30.47"S)
+ 
+-Testing listgeo ../test/data/mercator2sp.tif
++Testing listgeo mercator2sp.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1087,7 +1087,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 83d58'51.48"W, 49d 3'29.83"S)
+ Lower Right   (  440780.000, 3751260.000)  ( 83d58'51.48"W, 49d 3'31.11"S)
+ Center        (  440750.000, 3751290.000)  ( 83d58'52.45"W, 49d 3'30.47"S)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_5588_oblique_stereographic.tif
++Testing listgeo ProjectedCSTypeGeoKey_5588_oblique_stereographic.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1126,7 +1126,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 69d 5'15.13"W, 54d 0' 2.72"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 69d 5'15.09"W, 54d 0' 2.14"N)
+ Center        (  440750.000, 3751290.000)  ( 69d 5'15.61"W, 54d 0' 2.42"N)
+ 
+-Testing listgeo ../test/data/oblique_stereographic.tif
++Testing listgeo oblique_stereographic.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1178,7 +1178,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 69d 5'15.13"W, 54d 0' 2.72"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 69d 5'15.09"W, 54d 0' 2.14"N)
+ Center        (  440750.000, 3751290.000)  ( 69d 5'15.61"W, 54d 0' 2.42"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_5482_polar_stereographic_variant_a.tif
++Testing listgeo ProjectedCSTypeGeoKey_5482_polar_stereographic_variant_a.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1217,7 +1217,7 @@ Upper Right   (  440780.000, 3751320.000)  (121d 6'33.92"E, 44d29'36.70"S)
+ Lower Right   (  440780.000, 3751260.000)  (121d 6'31.93"E, 44d29'37.56"S)
+ Center        (  440750.000, 3751290.000)  (121d 6'32.32"E, 44d29'36.42"S)
+ 
+-Testing listgeo ../test/data/polar_stereographic_variant_a.tif
++Testing listgeo polar_stereographic_variant_a.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1268,7 +1268,7 @@ Upper Right   (  440780.000, 3751320.000)  (121d 6'33.92"E, 44d29'36.70"S)
+ Lower Right   (  440780.000, 3751260.000)  (121d 6'31.93"E, 44d29'37.56"S)
+ Center        (  440750.000, 3751290.000)  (121d 6'32.32"E, 44d29'36.42"S)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_3032_polar_stereographic_variant_b.tif
++Testing listgeo ProjectedCSTypeGeoKey_3032_polar_stereographic_variant_b.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1307,7 +1307,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 42d 1'23.21"W, 38d27' 3.26"S)
+ Lower Right   (  440780.000, 3751260.000)  ( 42d 1'25.13"W, 38d27' 2.65"S)
+ Center        (  440750.000, 3751290.000)  ( 42d 1'23.78"W, 38d27' 2.20"S)
+ 
+-Testing listgeo ../test/data/polar_stereographic_variant_b.tif
++Testing listgeo polar_stereographic_variant_b.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1358,7 +1358,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 42d 1'23.21"W, 38d27' 3.26"S)
+ Lower Right   (  440780.000, 3751260.000)  ( 42d 1'25.13"W, 38d27' 2.65"S)
+ Center        (  440750.000, 3751290.000)  ( 42d 1'23.78"W, 38d27' 2.20"S)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_3814_transverse_mercator.tif
++Testing listgeo ProjectedCSTypeGeoKey_3814_transverse_mercator.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1397,7 +1397,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 90d39'56.34"W, 54d33'48.60"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 90d39'56.30"W, 54d33'46.66"N)
+ Center        (  440750.000, 3751290.000)  ( 90d39'57.99"W, 54d33'47.62"N)
+ 
+-Testing listgeo ../test/data/transverse_mercator.tif
++Testing listgeo transverse_mercator.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1448,7 +1448,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 90d39'56.34"W, 54d33'48.60"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 90d39'56.30"W, 54d33'46.66"N)
+ Center        (  440750.000, 3751290.000)  ( 90d39'57.99"W, 54d33'47.62"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_2046_transverse_mercator_south_oriented.tif
++Testing listgeo ProjectedCSTypeGeoKey_2046_transverse_mercator_south_oriented.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1487,7 +1487,7 @@ Upper Right   (  440780.000, 3751320.000)
+ Lower Right   (  440780.000, 3751260.000)
+ Center        (  440750.000, 3751290.000)
+ 
+-Testing listgeo ../test/data/transverse_mercator_south_oriented.tif
++Testing listgeo transverse_mercator_south_oriented.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1538,7 +1538,7 @@ Upper Right   (  440780.000, 3751320.000)
+ Lower Right   (  440780.000, 3751260.000)
+ Center        (  440750.000, 3751290.000)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_3812_lcc2sp.tif
++Testing listgeo ProjectedCSTypeGeoKey_3812_lcc2sp.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1578,7 +1578,7 @@ Upper Right   (  440780.000, 3751320.000)  (  2d49'31.41"W, 77d 7'27.78"N)
+ Lower Right   (  440780.000, 3751260.000)  (  2d49'30.69"W, 77d 7'26.13"N)
+ Center        (  440750.000, 3751290.000)  (  2d49'34.75"W, 77d 7'26.87"N)
+ 
+-Testing listgeo ../test/data/lcc2sp.tif
++Testing listgeo lcc2sp.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1631,7 +1631,7 @@ Upper Right   (  440780.000, 3751320.000)  (  2d49'31.41"W, 77d 7'27.78"N)
+ Lower Right   (  440780.000, 3751260.000)  (  2d49'30.69"W, 77d 7'26.13"N)
+ Center        (  440750.000, 3751290.000)  (  2d49'34.75"W, 77d 7'26.87"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_3083_albers_equal_area.tif
++Testing listgeo ProjectedCSTypeGeoKey_3083_albers_equal_area.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1671,7 +1671,7 @@ Upper Right   (  440780.000, 3751320.000)  (108d13'28.61"W,  4d19'51.83"S)
+ Lower Right   (  440780.000, 3751260.000)  (108d13'28.49"W,  4d19'54.09"S)
+ Center        (  440750.000, 3751290.000)  (108d13'29.39"W,  4d19'53.05"S)
+ 
+-Testing listgeo ../test/data/albers_equal_area.tif
++Testing listgeo albers_equal_area.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1724,7 +1724,7 @@ Upper Right   (  440780.000, 3751320.000)  (108d13'28.61"W,  4d19'51.83"S)
+ Lower Right   (  440780.000, 3751260.000)  (108d13'28.49"W,  4d19'54.09"S)
+ Center        (  440750.000, 3751290.000)  (108d13'29.39"W,  4d19'53.05"S)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_3035_lambert_azimuthal_equal_area.tif
++Testing listgeo ProjectedCSTypeGeoKey_3035_lambert_azimuthal_equal_area.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1762,7 +1762,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 42d57'53.38"W, 43d35'57.45"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 42d57'51.69"W, 43d35'56.06"N)
+ Center        (  440750.000, 3751290.000)  ( 42d57'53.61"W, 43d35'56.10"N)
+ 
+-Testing listgeo ../test/data/lambert_azimuthal_equal_area.tif
++Testing listgeo lambert_azimuthal_equal_area.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1811,7 +1811,7 @@ Upper Right   (  440780.000, 3751320.000)  ( 42d57'53.38"W, 43d35'57.45"N)
+ Lower Right   (  440780.000, 3751260.000)  ( 42d57'51.69"W, 43d35'56.06"N)
+ Center        (  440750.000, 3751290.000)  ( 42d57'53.61"W, 43d35'56.10"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_3410_lambert_cylindrical_equal_area.tif
++Testing listgeo ProjectedCSTypeGeoKey_3410_lambert_cylindrical_equal_area.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1849,7 +1849,7 @@ Upper Right   (  440780.000, 3751320.000)  (  4d34'37.57"E, 30d39'27.66"N)
+ Lower Right   (  440780.000, 3751260.000)  (  4d34'37.57"E, 30d39'25.71"N)
+ Center        (  440750.000, 3751290.000)  (  4d34'36.45"E, 30d39'26.68"N)
+ 
+-Testing listgeo ../test/data/lambert_cylindrical_equal_area.tif
++Testing listgeo lambert_cylindrical_equal_area.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1897,7 +1897,7 @@ Upper Right   (  440780.000, 3751320.000)  (  4d34'37.57"E, 30d39'27.66"N)
+ Lower Right   (  440780.000, 3751260.000)  (  4d34'37.57"E, 30d39'25.71"N)
+ Center        (  440750.000, 3751290.000)  (  4d34'36.45"E, 30d39'26.68"N)
+ 
+-Testing listgeo ../test/data/ProjectedCSTypeGeoKey_4087_equidistant_cylindrical.tif
++Testing listgeo ProjectedCSTypeGeoKey_4087_equidistant_cylindrical.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0
+@@ -1936,7 +1936,7 @@ Upper Right   (  440780.000, 3751320.000)  (  3d57'34.54"E, 33d41'55.25"N)
+ Lower Right   (  440780.000, 3751260.000)  (  3d57'34.54"E, 33d41'53.31"N)
+ Center        (  440750.000, 3751290.000)  (  3d57'33.57"E, 33d41'54.28"N)
+ 
+-Testing listgeo ../test/data/equidistant_cylindrical.tif
++Testing listgeo equidistant_cylindrical.tif
+ Geotiff_Information:
+    Version: 1
+    Key_Revision: 1.0

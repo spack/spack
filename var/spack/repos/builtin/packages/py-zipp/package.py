@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,14 @@ from spack import *
 
 
 class PyZipp(PythonPackage):
-    """Pathlib-compatible object wrapper for zip files"""
+    """Backport of pathlib-compatible object wrapper for zip files."""
 
     homepage = "https://github.com/jaraco/zipp"
-    url      = "https://files.pythonhosted.org/packages/0f/f4/930f91b0527d9701623d4895a978ec0abd6b8904ef272a2701190fdbf9f8/zipp-0.3.3.tar.gz"
+    url      = "https://pypi.io/packages/source/z/zipp/zipp-0.6.0.tar.gz"
 
-    version('0.3.3', sha256='55ca87266c38af6658b84db8cfb7343cdb0bf275f93c7afaea0d8e7a209c7478')
+    version('0.6.0', sha256='3718b1cbcd963c7d4c5511a8240812904164b7f381b647143a89d3b98f9bcd8e')
 
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm@1.15.0:', type='build')
+    depends_on('py-more-itertools', type=('build', 'run'))

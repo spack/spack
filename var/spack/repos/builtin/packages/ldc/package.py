@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,7 +59,7 @@ class Ldc(CMakePackage):
 
         config_file = join_path(self.prefix.etc, 'ldc2.conf')
 
-        search_for = 'switches = \['
+        search_for = r'switches = \['
         substitute_with = 'switches = [\n' + \
                           '        "-L-rpath={0}",'.format(self.prefix.lib)
 

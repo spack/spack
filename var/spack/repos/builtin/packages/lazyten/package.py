@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,8 +71,6 @@ class Lazyten(CMakePackage):
             "-DAUTOCHECKOUT_MISSING_REPOS=OFF",
             #
             "-DBUILD_SHARED_LIBS=" + str("+shared" in spec),
-            "-DDRB_MACHINE_SPECIFIC_OPTIM_Release=ON",  # Adds -march=native
-            #
             # TODO Hard-disable tests for now, since rapidcheck not in Spack
             "-DLAZYTEN_ENABLE_TESTS=OFF",
             "-DLAZYTEN_ENABLE_EXAMPLES=" + str("+examples" in spec),

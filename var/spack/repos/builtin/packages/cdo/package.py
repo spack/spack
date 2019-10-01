@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,14 +17,17 @@ class Cdo(AutotoolsPackage):
 
     maintainers = ['skosukhin']
 
-    version('1.9.5', '0c60f2c94dc5c76421ecf363153a5043')
-    version('1.9.4', '377c9e5aa7d8cbcb4a6c558abb2eb053')
-    version('1.9.3', '13ae222164413dbd53532b03b072def5')
-    version('1.9.2', '38e68d34f0b5b44a52c3241be6831423')
-    version('1.9.1', 'e60a89f268ba24cee5c461f2c217829e')
-    version('1.9.0', '2d88561b3b4a880df0422a62e5027e40')
-    version('1.8.2', '6a2e2f99b7c67ee9a512c40a8d4a7121')
-    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31')
+    version('1.9.7.1', sha256='3771952e065bcf935d43e492707370ed2a0ecb59a06bea24f9ab69d77943962c',
+            url='https://code.mpimet.mpg.de/attachments/download/20124/cdo-1.9.7.1.tar.gz')
+    version('1.9.6', '322f56c5e13f525c585ee5318d4435db', url='https://code.mpimet.mpg.de/attachments/download/19299/cdo-1.9.6.tar.gz')
+    version('1.9.5', '0c60f2c94dc5c76421ecf363153a5043', url='https://code.mpimet.mpg.de/attachments/download/18264/cdo-1.9.5.tar.gz')
+    version('1.9.4', '377c9e5aa7d8cbcb4a6c558abb2eb053', url='https://code.mpimet.mpg.de/attachments/download/17374/cdo-1.9.4.tar.gz')
+    version('1.9.3', '13ae222164413dbd53532b03b072def5', url='https://code.mpimet.mpg.de/attachments/download/16435/cdo-1.9.3.tar.gz')
+    version('1.9.2', '38e68d34f0b5b44a52c3241be6831423', url='https://code.mpimet.mpg.de/attachments/download/16035/cdo-1.9.2.tar.gz')
+    version('1.9.1', 'e60a89f268ba24cee5c461f2c217829e', url='https://code.mpimet.mpg.de/attachments/download/15653/cdo-1.9.1.tar.gz')
+    version('1.9.0', '2d88561b3b4a880df0422a62e5027e40', url='https://code.mpimet.mpg.de/attachments/download/15187/cdo-1.9.0.tar.gz')
+    version('1.8.2', '6a2e2f99b7c67ee9a512c40a8d4a7121', url='https://code.mpimet.mpg.de/attachments/download/14686/cdo-1.8.2.tar.gz')
+    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz')
 
     variant('netcdf', default=True, description='Enable NetCDF support')
     variant('grib2', default='eccodes', values=('eccodes', 'grib-api', 'none'),
@@ -46,6 +49,8 @@ class Cdo(AutotoolsPackage):
             description='Enable Magics library support')
     variant('openmp', default=True, description='Enable OpenMP support')
 
+    depends_on('pkgconfig', type='build')
+
     depends_on('netcdf', when='+netcdf')
     # In this case CDO does not depend on hdf5 directly but we need the backend
     # of netcdf to be thread safe.
@@ -60,7 +65,7 @@ class Cdo(AutotoolsPackage):
 
     depends_on('udunits2', when='+udunits2')
     depends_on('libxml2', when='+libxml2')
-    depends_on('proj', when='+proj')
+    depends_on('proj@:5', when='+proj')
     depends_on('curl', when='+curl')
     depends_on('fftw@3:', when='+fftw3')
     depends_on('magics', when='+magics')
@@ -70,6 +75,8 @@ class Cdo(AutotoolsPackage):
               msg='Eccodes is supported starting version 1.9.0')
     conflicts('+szip', when='+external-grib1 grib2=none',
               msg='The configuration does not support GRIB1')
+    conflicts('%gcc@9:', when='@:1.9.6',
+              msg='GCC 9 changed OpenMP data sharing behavior')
 
     def configure_args(self):
         config_args = self.with_or_without('netcdf', activation_value='prefix')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack.architecture import OperatingSystem
 
 class Test(Platform):
     priority    = 1000000
-    front_end   = 'x86_32'
+    front_end   = 'x86'
     back_end    = 'x86_64'
     default     = 'x86_64'
 

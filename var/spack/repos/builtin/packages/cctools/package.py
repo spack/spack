@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Cctools(AutotoolsPackage):
     depends_on('swig')
     # depends_on('xrootd')
     depends_on('zlib')
+    patch('arm.patch', when='target=aarch64:')
 
     # Generally SYS_foo is defined to __NR_foo (sys/syscall.h) which
     # is then defined to a syscall number (asm/unistd_64.h).  Certain

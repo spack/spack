@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,5 +17,5 @@ class Cistem(AutotoolsPackage):
 
     version('1.0.0-beta', '479f395b30ad630df3cbba9c56eb29c2')
 
-    depends_on('wx@3.0.2')
+    depends_on('wxwidgets@3.0.2')
     depends_on('fftw')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,8 @@ class Dislin(Package):
     version('11.0.linux.i586_64', '6fb099b54f41db009cafc702eebb5bc6')
 
     depends_on('motif')
-    depends_on('mesa')
+    depends_on('gl')
+    depends_on('glx')
 
     @property
     def libs(self):

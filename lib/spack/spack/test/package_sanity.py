@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,7 +56,7 @@ def test_all_virtual_packages_have_default_providers():
 
 
 def test_package_version_consistency():
-    """Make sure all versions on builtin packages can produce a fetcher."""
+    """Make sure all versions on builtin packages produce a fetcher."""
     for name in spack.repo.all_package_names():
         pkg = spack.repo.get(name)
         spack.fetch_strategy.check_pkg_attributes(pkg)
@@ -75,8 +75,7 @@ def test_no_fixme():
         r'example.com',
     ]
     for name in spack.repo.all_package_names():
-        repo = spack.repo.Repo(spack.paths.packages_path)
-        filename = repo.filename_for_package_name(name)
+        filename = spack.repo.path.filename_for_package_name(name)
         with open(filename, 'r') as package_file:
             for i, line in enumerate(package_file):
                 pattern = next((r for r in fixme_regexes
@@ -87,3 +86,11 @@ def test_no_fixme():
                         (filename, i, line.strip())
                     )
             assert [] == errors
+
+
+def test_docstring():
+    """Ensure that every package has a docstring."""
+
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.get(name)
+        assert pkg.__doc__

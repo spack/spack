@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,9 +9,9 @@ from spack import *
 class RSom(RPackage):
     """Self-Organizing Map (with application in gene clustering)."""
 
-    homepage = "https://cran.r-project.org/web/packages/som/index.html"
-    url      = "https://cran.r-project.org/src/contrib/som_0.3-5.1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/som"
+    homepage = "https://cloud.r-project.org/package=som"
+    url      = "https://cloud.r-project.org/src/contrib/som_0.3-5.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/som"
 
     version('0.3-5.1', '802a5a80902579354ce3420faeeeb756')
     version('0.3-5', '72717499794c7aa945a768b742af8895')

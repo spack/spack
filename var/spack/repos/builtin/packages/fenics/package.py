@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,7 +58,9 @@ class Fenics(CMakePackage):
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5+hl', when='+hdf5')
+    # FIXME: next line fixes concretization with petsc
+    depends_on('hdf5+hl+fortran', when='+hdf5+petsc')
+    depends_on('hdf5+hl', when='+hdf5~petsc')
     depends_on('parmetis@4.0.2:^metis+real64', when='+parmetis')
     depends_on('scotch~metis', when='+scotch~mpi')
     depends_on('scotch+mpi~metis', when='+scotch+mpi')
@@ -115,13 +117,13 @@ class Fenics(CMakePackage):
     for release in releases:
         version(release['version'], release['md5'], url=base_url.format(
             pkg='dolfin', version=release['version']))
-        for name, md5 in release['resources'].items():
-            resource(name=name,
-                     url=base_url.format(pkg=name, **release),
+        for rname, md5 in release['resources'].items():
+            resource(name=rname,
+                     url=base_url.format(pkg=rname, **release),
                      md5=md5,
                      destination='depends',
                      when='@{version}'.format(**release),
-                     placement=name)
+                     placement=rname)
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'

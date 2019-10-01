@@ -98,9 +98,9 @@ compilers:
       f77: /path/to/gfortran472
       fc: /path/to/gfortran472
     flags:
-      cflags: -O0
-      cxxflags: -O0
-      fflags: -O0
+      cflags: -O0 -g
+      cxxflags: -O0 -g
+      fflags: -O0 -g
     modules: 'None'
 - compiler:
     spec: clang@3.5

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Wxpropgrid(Package):
 
     version('1.4.15', 'f44b5cd6fd60718bacfabbf7994f1e93')
 
-    depends_on("wx")
+    depends_on("wxwidgets")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix, "--with-wxdir=%s" %

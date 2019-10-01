@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class PyBabel(PythonPackage):
 
     import_modules = ['babel', 'babel.localtime', 'babel.messages']
 
+    version('2.6.0', 'c384ac03026e8fe6f9b90f55201f1bff')
     version('2.4.0', '90e7a0add19b2036a9b415630a0d9388')
     version('2.3.4', 'afa20bc55b0e991833030129ad498f35')
 

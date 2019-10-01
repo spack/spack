@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Argobots(AutotoolsPackage):
     git      = "https://github.com/pmodels/argobots.git"
 
     version("develop", branch="master")
+    version("1.0rc1", "729c018f3353976cb79c07ecaa13319d")
     version("1.0b1", "5eeab7b2c639d08bbea22db3026cdf39")
     version("1.0a1", "9d29d57d14d718f93b505178f6ba3e08")
 

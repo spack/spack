@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class PyProtobuf(PythonPackage):
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
+    version('3.7.1', sha256='21e395d7959551e759d604940a115c51c6347d90a475c9baf471a1a86b5604a9')
     version('3.6.1', sha256='1489b376b0f364bcc6f89519718c057eb191d7ad6f1b395ffd93d1aa45587811')
     version('3.6.0', sha256='a37836aa47d1b81c2db1a6b7a5e79926062b5d76bd962115a0e615551be2b48d')
     version('3.5.2.post1', '3b60685732bd0cbdc802dfcb6071efbcf5d927ce3127c13c33ea1a8efae3aa76')
@@ -42,3 +43,11 @@ class PyProtobuf(PythonPackage):
     def install_args(self, spec, prefix):
         args = super(PyProtobuf, self).install_args(spec, prefix)
         return args + ['--cpp_implementation']
+
+    @run_after('install')
+    def fix_import_error(self):
+        if str(self.spec['python'].version.up_to(1)) == '2':
+            touch = which('touch')
+            touch(self.prefix + '/' +
+                  self.spec['python'].package.site_packages_dir +
+                  '/google/__init__.py')

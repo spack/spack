@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,3 +23,7 @@ class OmptOpenmp(CMakePackage):
     conflicts('%gcc@:4.7')
 
     root_cmakelists_dir = 'runtime'
+
+    @property
+    def libs(self):
+        return find_libraries('libomp', root=self.prefix, recursive=True)

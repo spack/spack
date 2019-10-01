@@ -1,7 +1,9 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+if [ "$CURRENTLY_BUILDING_DOCKER_IMAGE" '!=' '1' ] ; then
 
 if [ x$SPACK_PROMPT '!=' x0 ] ; then
 
@@ -59,11 +61,11 @@ __write() {
 }
 
 __revparse_head() {
-    head="`git -C /spack rev-parse $@ HEAD 2>/dev/null`"
+    head="`git -C "$SPACK_ROOT" rev-parse $@ HEAD 2>/dev/null`"
     result="$?"
     if [ "$result" '!=' '0' ] ; then
-        head="`git --git-dir=/spack/.git \\
-              --work-tree=/spack rev-parse $@ HEAD 2>/dev/null`"
+        head="`git --git-dir="$SPACK_ROOT"/.git \\
+              --work-tree="$SPACK_ROOT" rev-parse $@ HEAD 2>/dev/null`"
         result="$?"
     fi
 
@@ -167,3 +169,5 @@ __update_prompt_main() {
 PROMPT_COMMAND=__update_prompt_main
 
 fi # [ x$SPACK_PROMPT '!=' x0 ]
+
+fi # [ "$CURRENTLY_BUILDING_DOCKER_IMAGE" '!=' '1' ]

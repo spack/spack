@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -241,5 +241,5 @@ class Charmpp(Package):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-        make('-C', join_path(self.stage.path, 'charm/tests'),
+        make('-C', join_path(self.stage.source_path, 'charm/tests'),
              'test', parallel=False)

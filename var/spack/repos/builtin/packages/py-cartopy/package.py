@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class PyCartopy(PythonPackage):
     depends_on('py-pyshp@1.1.4:',   type=('build', 'run'))
     depends_on('py-six@1.3.0:',     type=('build', 'run'))
     depends_on('geos@3.3.3:')
-    depends_on('proj@4.9.0:')
+    depends_on('proj@4.9.0:5')
 
     # optional dependecies
     depends_on('py-matplotlib@1.5.1:', type=('build', 'run'))
