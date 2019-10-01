@@ -16,23 +16,6 @@ from spack.operating_systems.cray_backend import CrayBackend
 from spack.util.module_cmd import module
 
 
-def _get_modules_in_modulecmd_output(output):
-    '''Return list of valid modules parsed from modulecmd output string.'''
-    return [i for i in re.split(r'  |\n', output)
-            if len(i.split()) == 1]
-
-
-def _fill_craype_target_names_from_modules(targets, modules):
-    '''Extend CrayPE CPU targets list with those found in list of modules.'''
-    # Craype- module prefixes that are not valid CPU targets.
-    non_targets = (
-        'hugepages', 'network', 'target', 'accel', 'xtpe', 'dl-plugin')
-    pattern = r'craype-(?!{0})(\S*)'.format('|'.join(non_targets))
-    for mod in modules:
-        if 'craype-' in mod:
-            targets.extend(re.findall(pattern, mod))
-
-
 _craype_name_to_target_name = {
     'x86_cascadelake': 'cascadelake',
     'x86_naples': 'zen',
@@ -149,9 +132,29 @@ class Cray(Platform):
 
     def _avail_targets(self):
         '''Return a list of available CrayPE CPU targets.'''
+
+        def modules_in_output(output):
+            """Return list of valid modules parsed from modulecmd output string."""
+            return [i for i in re.split(r'  |\n', output)
+                    if len(i.split()) == 1]
+
+        def target_names_from_modules(modules):    
+            """Extend CrayPE CPU targets list with those found in list of modules."""
+            # Craype- module prefixes that are not valid CPU targets.
+            targets = []
+            non_targets = (
+                'hugepages', 'network', 'target', 'accel', 'xtpe', 'dl-plugin')
+            pattern = r'craype-(?!{0})(\S*)'.format('|'.join(non_targets))
+            for mod in modules:
+                if 'craype-' in mod:
+                    targets.extend(re.findall(pattern, mod))
+
+            return targets
+
+        
         if getattr(self, '_craype_targets', None) is None:
             output = module('avail', '-t', 'craype-')
-            craype_modules = _get_modules_in_modulecmd_output(output)
-            self._craype_targets = targets = []
-            _fill_craype_target_names_from_modules(targets, craype_modules)
+            craype_modules = modules_in_output(output)
+            self._craype_targets = target_names_from_modules(craype_modules)
+
         return self._craype_targets
