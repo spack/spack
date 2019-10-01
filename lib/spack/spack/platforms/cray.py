@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import os.path
 import re
 import platform
 import llnl.util.cpu as cpu
@@ -151,10 +152,26 @@ class Cray(Platform):
 
             return targets
 
+        def modules_from_listdir():
+            craype_default_path = '/opt/cray/pe/craype/default/modulefiles'
+            if os.path.isdir(craype_default_path):
+                return os.listdir(craype_default_path)
+            return None
         
         if getattr(self, '_craype_targets', None) is None:
-            output = module('avail', '-t', 'craype-')
-            craype_modules = modules_in_output(output)
-            self._craype_targets = target_names_from_modules(craype_modules)
-
+            strategies = [
+                lambda: modules_in_output(module('avail', '-t', 'craype-')),
+                modules_from_listdir
+            ]
+            for available_craype_modules in strategies:
+                craype_modules = available_craype_modules()
+                craype_targets = target_names_from_modules(craype_modules)
+                if craype_targets:
+                    self._craype_targets = craype_targets
+                    break
+            else:
+                # If nothing is found add platform.machine()
+                # to avoid Spack erroring out
+                self._craype_targets = [platform.machine()]            
+                
         return self._craype_targets
