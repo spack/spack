@@ -95,8 +95,7 @@ class Cnl(OperatingSystem):
             v = read_clerelease_file()
             return spack.version.Version(v)[0]
         else:
-            raise spack.error.UnsupportedPlatformError(
-                'Unable to detect Cray OS version')
+            return spack.version.Version('unknown')
 
     def arguments_to_detect_version_fn(self, paths):
         import spack.compilers
