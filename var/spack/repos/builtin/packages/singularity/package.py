@@ -24,7 +24,7 @@ class Singularity(MakefilePackage):
     url      = "https://github.com/sylabs/singularity/releases/download/v3.1.1/singularity-3.1.1.tar.gz"
     git      = "https://github.com/sylabs/singularity.git"
 
-    maintainers = ['ArangoGutierrez','alalazo']
+    maintainers = ['ArangoGutierrez', 'alalazo']
     
     version('develop', branch='master')
 
