@@ -12,13 +12,14 @@ class Tasmanian(CMakePackage):
     interpolation as well as parameter calibration."""
 
     homepage = 'http://tasmanian.ornl.gov'
-    url      = 'https://github.com/ORNL/TASMANIAN/archive/v6.0.tar.gz'
+    url      = 'https://github.com/ORNL/TASMANIAN/archive/v7.0.tar.gz'
     git      = 'https://github.com/ORNL/TASMANIAN.git'
 
     maintainers = ['mkstoyanov']
 
     version('develop', branch='master')
 
+    version('7.0', '60916a3dee3d23c1c41ca8005238f66e')  # use for xsdk-0.5.0
     version('6.0', '43dcb1d2bcb2f2c829ad046d0e91e83d')  # use for xsdk-0.4.0
     version('5.1', '5d904029a24470a6acf4a87d3339846e')
 
@@ -54,7 +55,9 @@ class Tasmanian(CMakePackage):
             description='CMake build type',
             values=('Debug', 'Release'))
 
-    depends_on('cmake@3.5.1:', type='build')
+    depends_on('cmake@2.8:', type='build')
+    depends_on('cmake@3.5:', type='build', when='@6.0:')
+    depends_on('cmake@3.10:', type='build', when='@7.0:')
 
     depends_on('python@2.7:', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
@@ -68,7 +71,8 @@ class Tasmanian(CMakePackage):
     depends_on('cuda@8.0.61:', when='+cuda', type=('build', 'run'))
     depends_on('cuda@8.0.61:', when='+magma', type=('build', 'run'))
 
-    depends_on('magma@2.4.0:', when='+magma', type=('build', 'run'))
+    depends_on('magma@2.4.0:', when='+magma @6.0:', type=('build', 'run'))
+    depends_on('magma@2.5.0:', when='+magma @7.0:', type=('build', 'run'))
 
     conflicts('-cuda', when='+magma')  # currently MAGMA only works with CUDA
 
@@ -76,6 +80,10 @@ class Tasmanian(CMakePackage):
     conflicts('+magma', when='@:5.1')  # magma does not work prior to 6.0
     conflicts('+mpi', when='@:5.1')    # MPI is broken prior to 6.0
     conflicts('+xsdkflags', when='@:5.1')  # 6.0 is the first version included in xSDK
+
+    # patching some bugs
+    patch('addons70.patch', when='@7.0')
+    patch('packageconf70.patch', when='@7.0')
 
     def cmake_args(self):
         spec = self.spec
@@ -85,7 +93,7 @@ class Tasmanian(CMakePackage):
                 '-DUSE_XSDK_DEFAULTS:BOOL=ON',
                 '-DXSDK_ENABLE_PYTHON:BOOL={0}'.format(
                     'ON' if '+python' in spec else 'OFF'),
-                '-DTasmanian_ENABLE_MPI:BOOL={0}'.format(
+                '-DTPL_ENABLE_MPI:BOOL={0}'.format(
                     'ON' if '+mpi' in spec else 'OFF'),
                 '-DXSDK_ENABLE_OPENMP:BOOL={0}'.format(
                     'ON' if '+openmp' in spec else 'OFF'),
