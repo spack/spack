@@ -20,7 +20,7 @@ PATCHSET=35-201906112304
 DUMMY=foo=bar
 """)
 
-    monkeypatch.setattr(cray_backend, '_cle_release_file', 
+    monkeypatch.setattr(cray_backend, '_cle_release_file',
                         str(cle_release_path))
     attrs = cray_backend.read_cle_release_file()
 
@@ -69,7 +69,7 @@ DUMMY=foo=bar
         f.write('5.2.UP04\n')
 
     monkeypatch.setattr(cray_backend, '_clerelease_file', str(clerelease_path))
-    monkeypatch.setattr(cray_backend, '_cle_release_file', 
+    monkeypatch.setattr(cray_backend, '_cle_release_file',
                         str(cle_release_path))
 
     assert cray_backend.CrayBackend._detect_crayos_version() == 6
