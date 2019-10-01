@@ -88,7 +88,8 @@ class Cray(Platform):
         self.front_os = str(front_distro)
 
         self.add_operating_system(self.back_os, back_distro)
-        self.add_operating_system(self.front_os, front_distro)
+        if self.front_os != self.back_os:
+            self.add_operating_system(self.front_os, front_distro)
 
     @classmethod
     def setup_platform_environment(cls, pkg, env):
