@@ -25,7 +25,6 @@ class Singularity(MakefilePackage):
     git      = "https://github.com/sylabs/singularity.git"
 
     maintainers = ['ArangoGutierrez', 'alalazo']
-    
     version('master', branch='master')
 
     version('3.4.1', sha256='638fd7cc5ab2a20e779b8768f73baf21909148339d6c4edf6ff61349c53a70c2')
