@@ -16,6 +16,7 @@ import spack.fetch_strategy as fs
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
+import spack
 
 from spack.util.compression import allowed_archive
 from spack.util.crypto import checksum, Checker
@@ -195,10 +196,12 @@ class UrlPatch(Patch):
 
         # TODO: this could also use mirror.mirror_archive_paths but that needs
         # to be refactored so that it doesn't require a spec
-        mirror_path = os.path.join(
+        per_package_ref = os.path.join(
             self.owner.split('.')[-1], os.path.basename(self.url))
+        # Reference starting with "spack." is required to avoid cyclic imports
+        mirror_ref = spack.mirror.MirrorReference(per_package_ref)
 
-        self.stage = spack.stage.Stage(fetcher, mirror_paths=[mirror_path])
+        self.stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
         self.stage.create()
         self.stage.fetch()
         self.stage.check()

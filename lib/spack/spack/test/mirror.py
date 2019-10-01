@@ -61,7 +61,8 @@ def check_mirror():
         for spec in specs:
             fetcher = spec.package.fetcher[0]
             mirror_paths = spack.mirror.mirror_archive_paths(spec, fetcher)
-            expected_path = os.path.join(mirror_root, mirror_paths[0])
+            expected_path = os.path.join(
+                mirror_root, mirror_paths.storage_path)
             assert os.path.exists(expected_path)
 
         # Now try to fetch each package.
@@ -146,7 +147,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
 
     files_cached_in_mirror = set()
 
-    def record_store(_class, fetcher, relative_dst):
+    def record_store(_class, fetcher, relative_dst, cosmetic_path=None):
         files_cached_in_mirror.add(os.path.basename(relative_dst))
 
     def successful_fetch(_class):

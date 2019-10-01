@@ -68,6 +68,24 @@ Spack not to expand it with the following syntax:
     return ext
 
 
+class MirrorReference(object):
+    def __init__(self, cosmetic_path, global_path=None):
+        self.global_path = global_path
+        self.cosmetic_path = cosmetic_path
+
+    @property
+    def storage_path(self):
+        if self.global_path:
+            return self.global_path
+        else:
+            return self.cosmetic_path
+
+    def __iter__(self):
+        if self.global_path:
+            yield self.global_path
+        yield self.cosmetic_path
+
+
 def mirror_archive_paths(spec, fetcher, resource_name=None):
     """Get the relative path to the source archive within a mirror."""
     ext = _determine_extension(fetcher, spec)
@@ -76,12 +94,10 @@ def mirror_archive_paths(spec, fetcher, resource_name=None):
         spec, fetcher, resource_name)
 
     global_ref = fetcher.mirror_id()
-    if not global_ref:
-        return [per_package_ref]
-    if ext:
+    if global_ref and ext:
         global_ref += ".%s" % ext
 
-    return [global_ref, per_package_ref]
+    return MirrorReference(per_package_ref, global_ref)
 
 
 def mirror_archive_cosmetic_path(spec, fetcher, resource_name):

@@ -54,7 +54,7 @@ class MirrorCache(object):
         self.new_resources = set()
         self.existing_resources = set()
 
-    def store(self, fetcher, relative_dest):
+    def store(self, fetcher, relative_dest, cosmetic_path=None):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
 
@@ -65,6 +65,17 @@ class MirrorCache(object):
             self.new_resources.add(relative_dest)
             mkdirp(os.path.dirname(dst))
             fetcher.archive(dst)
+
+        # Add a symlink path that a human can read to understand what resource
+        # the archive path refers to
+        if not cosmetic_path:
+            return
+        cosmetic_path = os.path.join(self.root, cosmetic_path)
+        relative_dst = os.path.relpath(
+            dst, start=os.path.dirname(cosmetic_path))
+        if not os.path.exists(cosmetic_path):
+            mkdirp(os.path.dirname(cosmetic_path))
+            os.symlink(relative_dst, cosmetic_path)
 
 
 #: Spack's local cache for downloaded source archives

@@ -407,7 +407,7 @@ class Stage(object):
                     0, fs.URLFetchStrategy(
                         url, digest, expand=expand, extension=extension))
             if self.default_fetcher.cachable:
-                for rel_path in reversed(self.mirror_paths):
+                for rel_path in reversed(list(self.mirror_paths)):
                     cache_fetcher = spack.caches.fetch_cache.fetcher(
                         rel_path, digest, expand=expand,
                         extension=extension)
@@ -456,10 +456,13 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.fetch_cache.store(self.fetcher, self.mirror_paths[0])
+        spack.caches.fetch_cache.store(
+            self.fetcher, self.mirror_paths.storage_path)
 
         if spack.caches.mirror_cache:
-            spack.caches.mirror_cache.store(self.fetcher, self.mirror_paths[0])
+            spack.caches.mirror_cache.store(
+                self.fetcher, self.mirror_paths.storage_path,
+                self.mirror_paths.cosmetic_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
