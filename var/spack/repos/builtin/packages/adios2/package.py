@@ -94,7 +94,7 @@ class Adios2(CMakePackage):
     depends_on('bzip2', when='+bzip2')
     depends_on('libpng@1.6:', when='@2.4.0: +png')
     # depends_on('mgard', when='@2.3.0: +mgard')
-    depends_on('zfp', when='+zfp')
+    depends_on('zfp@0.5.1:', when='+zfp')
     # depends_on('sz@:1.4.12', when='+sz')
 
     extends('python', when='+python')
