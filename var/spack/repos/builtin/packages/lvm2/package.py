@@ -3,20 +3,22 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class Lvm2(AutotoolsPackage):
     """LVM2 is the userspace toolset that provides logical volume
-    management facilities on linux.  To use it you need 3 things:
-    device-mapper in your kernel, the userspace device-mapper support
-    library (libdevmapper) and the userspace LVM2 tools (dmsetup).  These
-    userspace components, and associated header files, are provided by this
-    package.  See http://sources.redhat.com/dm/ for additional information
-    about the device-mapper kernel and userspace components."""
+    management facilities on linux.
+
+    To use it you need 3 things: device-mapper in your kernel, the userspace
+    device-mapper support library (libdevmapper) and the userspace LVM2 tools
+    (dmsetup). These userspace components, and associated header files, are
+    provided by this package.
+
+    See http://sources.redhat.com/dm/ for additional information
+    about the device-mapper kernel and userspace components.
+    """
 
     homepage = "https://www.sourceware.org/lvm2"
-    url      = "https://sourceware.org/pub/lvm2/releases/LVM2.2.03.05.tgz"
+    url = "https://sourceware.org/pub/lvm2/releases/LVM2.2.03.05.tgz"
 
     version('2.03.05', sha256='ca52815c999b20c6d25e3192f142f081b93d01f07b9d787e99664b169dba2700')
     version('2.03.04', sha256='f151f36fc0039997d2d9369b607b9262568b1a268afe19fd1535807355402142')
@@ -35,13 +37,11 @@ class Lvm2(AutotoolsPackage):
     depends_on('libaio')
     depends_on('pkgconfig', type='build', when='+pkgconfig')
 
+    conflicts('platform=darwin',
+              msg='lvm2 depends on libaio which does not support Darwin')
+
     def configure_args(self):
-        args = ['--with-confdir={0}'.
-                format(self.prefix.etc),
-                '--with-default-system-dir={0}'.
-                format(self.prefix.etc.lvm)]
-        if self.spec.satisfies('+pkgconfig'):
-            args.append('--enable-pkgconfig')
-        else:
-            args.append('--disable-pkgconfig')
-        return args
+        return [
+            '--with-confdir={0}'.format(self.prefix.etc),
+            '--with-default-system-dir={0}'.format(self.prefix.etc.lvm)
+        ] + self.enable_or_disable('pkgconfig')
