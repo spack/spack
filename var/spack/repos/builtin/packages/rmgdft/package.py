@@ -10,7 +10,7 @@ from spack import *
 class Rmgdft(CMakePackage):
     """RMG is an Open Source code for electronic structure calculations and
     modeling of materials and molecules. It is based on density functional
-    theory and uses a real space basis and pseudopotentials.i
+    theory and uses a real space basis and pseudopotentials.
     """
 
     homepage = "http://www.rmgdft.org/"
