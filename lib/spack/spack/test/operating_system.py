@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.operating_systems.cray_backend as crauy_backend
+import spack.operating_systems.cray_backend as cray_backend
 
 
 def test_read_cle_release_file(tmpdir, monkeypatch):
