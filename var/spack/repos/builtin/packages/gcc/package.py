@@ -426,6 +426,10 @@ class Gcc(AutotoolsPackage):
 
         # Get the contents of the installed binary directory
         bin_path = self.spec.prefix.bin
+
+        if not os.path.isdir(bin_path):
+            return
+
         bin_contents = os.listdir(bin_path)
 
         # Find the first non-symlink compiler binary present for each language
