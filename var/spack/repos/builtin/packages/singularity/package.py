@@ -21,7 +21,7 @@ class Singularity(MakefilePackage):
     '''
 
     homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/sylabs/singularity/releases/download/v3.4.1/singularity-3.4.1.tar.gz"
+    url      = "https://github.com/sylabs/singularity/releases/download/v3.1.1/singularity-3.1.1.tar.gz"
     git      = "https://github.com/sylabs/singularity.git"
 
     version('develop', branch='master')
@@ -40,7 +40,7 @@ class Singularity(MakefilePackage):
     depends_on('shadow', type='run', when='@3.3:')
     depends_on('cryptsetup', type=('build', 'run'), when='@3.4:')
 
-    patch('singularity_v3.4.1_remove_root_check.patch', level=0, when='@3.4.1')
+    patch('singularity_v3.4.0_remove_root_check.patch', level=0, when='@3.4.0')
 
     # Go has novel ideas about how projects should be organized.
     # We'll point GOPATH at the stage dir, and move the unpacked src
