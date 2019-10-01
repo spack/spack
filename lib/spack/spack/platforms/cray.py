@@ -25,7 +25,8 @@ def _get_modules_in_modulecmd_output(output):
 def _fill_craype_target_names_from_modules(targets, modules):
     '''Extend CrayPE CPU targets list with those found in list of modules.'''
     # Craype- module prefixes that are not valid CPU targets.
-    non_targets = ('hugepages', 'network', 'target', 'accel', 'xtpe', 'dl-plugin')
+    non_targets = (
+        'hugepages', 'network', 'target', 'accel', 'xtpe', 'dl-plugin')
     pattern = r'craype-(?!{0})(\S*)'.format('|'.join(non_targets))
     for mod in modules:
         if 'craype-' in mod:
@@ -70,7 +71,7 @@ class Cray(Platform):
         if self.back_end not in self.targets:
             # We didn't find a target module for the backend
             raise NoPlatformError()
-        
+
         # Setup frontend targets
         for name in cpu.targets:
             if name not in self.targets:
@@ -125,7 +126,7 @@ class Cray(Platform):
         # env -i /bin/bash -lc echo $CRAY_CPU_TARGET 2> /dev/null
         if getattr(self, 'default', None) is None:
             env = which('env')
-            output = env("-i", "/bin/bash", "--norc", "--noprofile", "-lc", 
+            output = env("-i", "/bin/bash", "--norc", "--noprofile", "-lc",
                          "echo $CRAY_CPU_TARGET", output=str, error=os.devnull)
             default_from_module = output.strip()
             if default_from_module:
@@ -134,10 +135,10 @@ class Cray(Platform):
             else:
                 front_end = cpu.host().name
                 if front_end in list(
-                        map(lambda x: _target_name_from_craype_target_name(x), 
+                        map(lambda x: _target_name_from_craype_target_name(x),
                             self._avail_targets())
                 ):
-                    tty.debug("Found default from front-env as available module")
+                    tty.debug("default to front-end architecture")
                     return cpu.host().name
                 else:
                     return platform.machine()
