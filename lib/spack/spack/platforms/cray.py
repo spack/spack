@@ -12,7 +12,7 @@ from spack.paths import build_env_path
 from spack.util.executable import Executable
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.cray_frontend import CrayFrontend
-from spack.operating_systems.cnl import Cnl
+from spack.operating_systems.cray_backend import CrayBackend
 from spack.util.module_cmd import module
 
 
@@ -81,7 +81,7 @@ class Cray(Platform):
             self.add_target(self.front_end, Target(self.front_end))
 
         front_distro = CrayFrontend()
-        back_distro = Cnl()
+        back_distro = CrayBackend()
 
         self.default_os = str(back_distro)
         self.back_os = self.default_os

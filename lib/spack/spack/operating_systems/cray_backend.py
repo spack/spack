@@ -10,7 +10,7 @@ import llnl.util.tty as tty
 
 import spack.error
 import spack.version
-from spack.architecture import OperatingSystem
+from spack.operating_systems.linux_distro import LinuxDistro
 from spack.util.module_cmd import module
 
 #: Possible locations of the Cray CLE release file,
@@ -68,7 +68,7 @@ def read_clerelease_file():
             return line.strip()
 
 
-class Cnl(OperatingSystem):
+class CrayBackend(LinuxDistro):
     """Compute Node Linux (CNL) is the operating system used for the Cray XC
     series super computers. It is a very stripped down version of GNU/Linux.
     Any compilers found through this operating system will be used with
@@ -79,7 +79,10 @@ class Cnl(OperatingSystem):
     def __init__(self):
         name = 'cnl'
         version = self._detect_crayos_version()
-        super(Cnl, self).__init__(name, version)
+        if version:
+            super(LinuxDistro, self).__init__(name, version)
+        else:
+            super(CrayBackend, self).__init__()
         self.modulecmd = module
 
     def __str__(self):
@@ -95,7 +98,7 @@ class Cnl(OperatingSystem):
             v = read_clerelease_file()
             return spack.version.Version(v)[0]
         else:
-            return spack.version.Version('unknown')
+            return None
 
     def arguments_to_detect_version_fn(self, paths):
         import spack.compilers
