@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Libaio(Package):
+class Libaio(MakefilePackage):
     """Linux native Asynchronous I/O interface library.
 
     AIO enables even a single application thread to overlap I/O operations
@@ -21,5 +21,6 @@ class Libaio(Package):
 
     conflicts('platform=darwin', msg="libaio is a linux specific library")
 
-    def install(self, spec, prefix):
-        make('prefix={0}'.format(prefix), 'install')
+    @property
+    def install_targets(self):
+        return ['prefix={0}'.format(self.spec.prefix), 'install']
