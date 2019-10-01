@@ -5,6 +5,8 @@
 
 import os
 import re
+import platform
+import llnl.util.cpu as cpu
 import llnl.util.tty as tty
 from spack.paths import build_env_path
 from spack.util.executable import which
@@ -16,18 +18,30 @@ from spack.util.module_cmd import module
 
 def _get_modules_in_modulecmd_output(output):
     '''Return list of valid modules parsed from modulecmd output string.'''
-    return [i for i in output.splitlines()
+    return [i for i in re.split(r'  |\n', output)
             if len(i.split()) == 1]
 
 
-def _fill_craype_targets_from_modules(targets, modules):
+def _fill_craype_target_names_from_modules(targets, modules):
     '''Extend CrayPE CPU targets list with those found in list of modules.'''
     # Craype- module prefixes that are not valid CPU targets.
-    non_targets = ('hugepages', 'network', 'target', 'accel', 'xtpe')
+    non_targets = ('hugepages', 'network', 'target', 'accel', 'xtpe', 'dl-plugin')
     pattern = r'craype-(?!{0})(\S*)'.format('|'.join(non_targets))
     for mod in modules:
         if 'craype-' in mod:
             targets.extend(re.findall(pattern, mod))
+
+
+_craype_name_to_target_name = {
+    'x86_cascadelake': 'cascadelake',
+    'x86_naples': 'zen',
+    'x86_skylake': 'skylake-avx512'
+}
+
+
+def _target_name_from_craype_target_name(craype_name):
+    name = craype_name.replace('-', '_')
+    return _craype_name_to_target_name.get(name, name)
 
 
 class Cray(Platform):
@@ -47,30 +61,23 @@ class Cray(Platform):
 
         # Make all craype targets available.
         for target in self._avail_targets():
-            name = target.replace('-', '_')
+            name = _target_name_from_craype_target_name(target)
             self.add_target(name, Target(name, 'craype-%s' % target))
 
-        self.add_target("x86_64", Target("x86_64"))
-        self.add_target("front_end", Target("x86_64"))
-        self.front_end = "x86_64"
-
-        # Get aliased targets from config or best guess from environment:
-        for name in ('front_end', 'back_end'):
-            _target = getattr(self, name, None)
-            if _target is None:
-                _target = os.environ.get('SPACK_' + name.upper())
-            if _target is None and name == 'back_end':
-                _target = self._default_target_from_env()
-            if _target is not None:
-                safe_name = _target.replace('-', '_')
-                setattr(self, name, safe_name)
-                self.add_target(name, self.targets[safe_name])
-
-        if self.back_end is not None:
-            self.default = self.back_end
-            self.add_target('default', self.targets[self.back_end])
-        else:
+        self.back_end = os.environ.get('SPACK_BACK_END',
+                                       self._default_target_from_env())
+        self.default = self.back_end
+        if self.back_end not in self.targets:
+            # We didn't find a target module for the backend
             raise NoPlatformError()
+        
+        # Setup frontend targets
+        for name in cpu.targets:
+            if name not in self.targets:
+                self.add_target(name, Target(name))
+        self.front_end = os.environ.get('SPACK_FRONT_END', cpu.host().name)
+        if self.front_end not in self.targets:
+            self.add_target(self.front_end, Target(self.front_end))
 
         front_distro = CrayFrontend()
         back_distro = Cnl()
@@ -106,7 +113,7 @@ class Cray(Platform):
 
     @classmethod
     def detect(cls):
-        return os.environ.get('CRAYPE_VERSION') is not None
+        return 'CRAYPE_VERSION' in os.environ or os.path.exists('/opt/cray/pe')
 
     def _default_target_from_env(self):
         '''Set and return the default CrayPE target loaded in a clean login
@@ -118,11 +125,22 @@ class Cray(Platform):
         # env -i /bin/bash -lc echo $CRAY_CPU_TARGET 2> /dev/null
         if getattr(self, 'default', None) is None:
             env = which('env')
-            output = env("-i", "/bin/bash", "-lc", "echo $CRAY_CPU_TARGET",
-                         output=str, error=os.devnull)
-            self.default = output.strip()
-            tty.debug("Found default module:%s" % self.default)
-        return self.default
+            output = env("-i", "/bin/bash", "--norc", "--noprofile", "-lc", 
+                         "echo $CRAY_CPU_TARGET", output=str, error=os.devnull)
+            default_from_module = output.strip()
+            if default_from_module:
+                tty.debug("Found default module:%s" % default_from_module)
+                return default_from_module
+            else:
+                front_end = cpu.host().name
+                if front_end in list(
+                        map(lambda x: _target_name_from_craype_target_name(x), 
+                            self._avail_targets())
+                ):
+                    tty.debug("Found default from front-env as available module")
+                    return cpu.host().name
+                else:
+                    return platform.machine()
 
     def _avail_targets(self):
         '''Return a list of available CrayPE CPU targets.'''
@@ -130,5 +148,5 @@ class Cray(Platform):
             output = module('avail', '-t', 'craype-')
             craype_modules = _get_modules_in_modulecmd_output(output)
             self._craype_targets = targets = []
-            _fill_craype_targets_from_modules(targets, craype_modules)
+            _fill_craype_target_names_from_modules(targets, craype_modules)
         return self._craype_targets
