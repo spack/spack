@@ -37,7 +37,7 @@ class Mariadb(CMakePackage):
     depends_on('pkgconfig', type='build')
     depends_on('bison', type='build')
     depends_on('jemalloc')
-    depends_on('libaio', when='platform=darwin')
+    depends_on('libaio', when='platform=linux')
     depends_on('libedit')
     depends_on('libevent', when='+nonblocking')
     depends_on('ncurses')
