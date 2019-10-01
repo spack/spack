@@ -39,13 +39,13 @@ class Rmgdft(CMakePackage):
     version('4.0.0-beta.3', 'b827762e2da539bf2d41ec5512a7d900')
 
 #    Have not gotten this to work correctly yet.
-#    variant('rmg-cuda', default=False, 
+#    variant('rmg-cuda', default=False,
 #    description='Base version of the code using cuda')
 
     # openmpi, mpich etc
     depends_on('mpi')
 
-    # 1.61 is not the most recent release but newer versions seem to have some 
+    # 1.61 is not the most recent release but newer versions seem to have some
     # issues with cmake.
     depends_on('boost@1.61.0%gcc +shared')
 
@@ -56,7 +56,7 @@ class Rmgdft(CMakePackage):
     depends_on('blas')
 
     # Needed for qmcpack integration
-    #depends_on('hdf5')
+    # depends_on('hdf5')
     depends_on('hdf5@1.8.16:+hl~mpi')
 
     def cmake_args(self):
