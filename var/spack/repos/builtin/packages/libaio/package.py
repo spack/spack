@@ -5,7 +5,14 @@
 
 
 class Libaio(Package):
-    """This is the linux native Asynchronous I/O interface library."""
+    """Linux native Asynchronous I/O interface library.
+
+    AIO enables even a single application thread to overlap I/O operations
+    with other processing, by providing an interface for submitting one or
+    more I/O requests in one system call (io_submit()) without waiting for
+    completion, and a separate interface (io_getevents()) to reap completed
+    I/O operations associated with a given completion group.
+    """
 
     homepage = "http://lse.sourceforge.net/io/aio.html"
     url = "https://debian.inf.tu-dresden.de/debian/pool/main/liba/libaio/libaio_0.3.110.orig.tar.gz"
