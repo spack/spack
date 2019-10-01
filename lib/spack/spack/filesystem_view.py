@@ -358,6 +358,7 @@ class YamlFilesystemView(FilesystemView):
 
     def remove_file(self, src, dest):
         if not os.path.lexists(dest):
+            tty.warn("Tried to remove %s which does not exist" % dest)
             return
         if not os.path.islink(dest):
             raise ValueError("%s is not a link tree!" % dest)
