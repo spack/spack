@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install rmgdft
-#
-# You can edit this file again by typing:
-#
-#     spack edit rmgdft
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 
 from spack import *
 
@@ -30,11 +13,9 @@ class Rmgdft(CMakePackage):
     theory and uses a real space basis and pseudopotentials.i
     """
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.rmgdft.org/"
     url      = "https://github.com/RMGDFT/rmgdft/archive/v4.0.0-beta.3.tar.gz"
 
-    # FIXME: Add proper versions and checksums here.
     # version('1.2.3', '0123456789abcdef0123456789abcdef')
     version('4.0.0-beta.3', 'b827762e2da539bf2d41ec5512a7d900')
 
