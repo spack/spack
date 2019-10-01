@@ -41,7 +41,7 @@ def test_dict_functions_for_architecture():
 
 def test_platform():
     output_platform_class = spack.architecture.real_platform()
-    if os.environ.get('CRAYPE_VERSION') is not None:
+    if os.path.exists('/opt/cray/pe'):
         my_platform_class = Cray()
     elif os.path.exists('/bgsys'):
         my_platform_class = Bgq()
