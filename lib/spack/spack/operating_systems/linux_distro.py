@@ -15,26 +15,21 @@ class LinuxDistro(OperatingSystem):
         platform.dist()
     """
 
-    def __init__(self, override=None):
-        # allow subclasses to override name/version
-        if override:
-            distname = override[0]
-            version = override[1]
-        else:
-            try:
-                # This will throw an error if imported on a non-Linux platform.
-                from external.distro import linux_distribution
-                distname, version, _ = linux_distribution(
-                    full_distribution_name=False)
-                distname, version = str(distname), str(version)
-            except ImportError:
-                distname, version = 'unknown', ''
+    def __init__(self):
+        try:
+            # This will throw an error if imported on a non-Linux platform.
+            from external.distro import linux_distribution
+            distname, version, _ = linux_distribution(
+                full_distribution_name=False)
+            distname, version = str(distname), str(version)
+        except ImportError:
+            distname, version = 'unknown', ''
 
-            # Grabs major version from tuple on redhat; on other platforms
-            # grab the first legal identifier in the version field.  On
-            # debian you get things like 'wheezy/sid'; sid means unstable.
-            # We just record 'wheezy' and don't get quite so detailed.
-            version = re.split(r'[^\w-]', version)
+        # Grabs major version from tuple on redhat; on other platforms
+        # grab the first legal identifier in the version field.  On
+        # debian you get things like 'wheezy/sid'; sid means unstable.
+        # We just record 'wheezy' and don't get quite so detailed.
+        version = re.split(r'[^\w-]', version)
 
         if 'ubuntu' in distname:
             version = '.'.join(version[0:2])
