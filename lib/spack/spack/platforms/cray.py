@@ -135,12 +135,11 @@ class Cray(Platform):
         '''Return a list of available CrayPE CPU targets.'''
 
         def modules_in_output(output):
-            """Return list of valid modules parsed from modulecmd output string."""
+            """Returns a list of valid modules parsed from modulecmd output"""
             return [i for i in re.split(r'  |\n', output)
                     if len(i.split()) == 1]
 
-        def target_names_from_modules(modules):    
-            """Extend CrayPE CPU targets list with those found in list of modules."""
+        def target_names_from_modules(modules):
             # Craype- module prefixes that are not valid CPU targets.
             targets = []
             non_targets = (
@@ -157,7 +156,7 @@ class Cray(Platform):
             if os.path.isdir(craype_default_path):
                 return os.listdir(craype_default_path)
             return None
-        
+
         if getattr(self, '_craype_targets', None) is None:
             strategies = [
                 lambda: modules_in_output(module('avail', '-t', 'craype-')),
@@ -172,6 +171,6 @@ class Cray(Platform):
             else:
                 # If nothing is found add platform.machine()
                 # to avoid Spack erroring out
-                self._craype_targets = [platform.machine()]            
-                
+                self._craype_targets = [platform.machine()]
+
         return self._craype_targets
