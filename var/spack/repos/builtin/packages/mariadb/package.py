@@ -37,7 +37,7 @@ class Mariadb(CMakePackage):
     depends_on('pkgconfig', type='build')
     depends_on('bison', type='build')
     depends_on('jemalloc')
-    depends_on('libaio')
+    depends_on('libaio', when='platform=darwin')
     depends_on('libedit')
     depends_on('libevent', when='+nonblocking')
     depends_on('ncurses')
@@ -49,6 +49,3 @@ class Mariadb(CMakePackage):
     depends_on('msgpack-c')
 
     conflicts('%gcc@9.1.0:', when='@:5.5')
-
-    conflicts('platform=darwin',
-              msg='mariadb depends on libaio which does not support Darwin')
