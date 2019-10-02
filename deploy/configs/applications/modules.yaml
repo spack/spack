@@ -36,6 +36,7 @@ modules:
       - brayns-topologyviewer
       - brion
       - connectome-tools
+      - emsim
       - functionalizer
       - 'neurodamus%intel'
       - 'neurodamus-core+common'

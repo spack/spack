@@ -36,6 +36,15 @@ packages:
       - py-jupyter-notebook@4.2.3
       - brion@3.0.0 +python
 
+  gnu-stable-serial-ophiophob:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - emsim
+
   gnu-stable-outdated:
     target_matrix:
       - gnu-stable-py2
