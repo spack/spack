@@ -19,6 +19,7 @@ class Cdhit(MakefilePackage):
     variant('openmp', default=True, description='Compile with multi-threading support')
 
     depends_on('perl', type=('build', 'run'))
+    depends_on('zlib', type='link')
 
     def build(self, spec, prefix):
         mkdirp(prefix.bin)
