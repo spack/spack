@@ -87,7 +87,10 @@ def get_path_args_from_module_line(line):
         words_and_symbols = line.split(lua_quote)
         path_arg = words_and_symbols[-2]
     else:
-        path_arg = line.split()[2]
+        try:
+            path_arg = line.split()[2]
+        except IndexError:
+            return []
 
     paths = path_arg.split(':')
     return paths
