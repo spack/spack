@@ -26,8 +26,7 @@ class Openldap(AutotoolsPackage):
     # Below, tls=none is not an option from programming point of view
     # If +client_only, configure arguments for tls won't be enabled
     variant('tls', default='gnutls', description='Build with TLS support',
-            values=('gnutls', 'openssl'), multi=False
-    )
+            values=('gnutls', 'openssl'), multi=False)
 
     variant('perl', default=False, description='Perl backend to Slapd')
 
