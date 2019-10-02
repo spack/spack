@@ -208,6 +208,13 @@ def setup_parser(subparser):
         help='Destination mirror url')
     copy.set_defaults(func=buildcache_copy)
 
+    # Update buildcache index without copying any additional packages
+    update_index = subparsers.add_parser(
+            'update-index', help=buildcache_update_index.__doc__)
+    update_index.add_argument(
+        '-d', '--mirror-url', default=None, help='Destination mirror url')
+    update_index.set_defaults(func=buildcache_update_index)
+
 
 def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
     """Returns a list of specs matching the not necessarily
@@ -655,6 +662,19 @@ def buildcache_copy(args):
     if os.path.exists(cdashid_src_path):
         tty.msg('Copying {0}'.format(cdashidfile_rel_path))
         shutil.copyfile(cdashid_src_path, cdashid_dest_path)
+
+
+def buildcache_update_index(args):
+    """Update a buildcache index."""
+    outdir = '.'
+    if args.mirror_url:
+        outdir = args.mirror_url
+
+    mirror = spack.mirror.MirrorCollection().lookup(outdir)
+    outdir = url_util.format(mirror.push_url)
+
+    bindist.generate_package_index(
+            url_util.join(outdir, bindist.build_cache_relative_path()))
 
 
 def buildcache(parser, args):
