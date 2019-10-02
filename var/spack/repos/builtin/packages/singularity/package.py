@@ -41,7 +41,7 @@ class Singularity(MakefilePackage):
     depends_on('shadow', type='run', when='@3.3:')
     depends_on('cryptsetup', type=('build', 'run'), when='@3.4:')
 
-    patch('singularity_v3.4.0_remove_root_check.patch', level=0, when='@3.4.0')
+    patch('singularity_v3.4.0_remove_root_check.patch', level=0, when='@3.4.0:3.4.1')
 
     # Go has novel ideas about how projects should be organized.
     # We'll point GOPATH at the stage dir, and move the unpacked src
