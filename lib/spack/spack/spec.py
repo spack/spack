@@ -2232,6 +2232,13 @@ class Spec(object):
             mvar._patches_in_order_of_appearance = list(
                 t[-1] for t in ordered_hashes)
 
+        # This is awful!!!!
+        # TODO: anything better
+        # This allows us to access the package class for externals that
+        # override their prefix. We then mark the spec as concrete again after
+        # setting the external paths.
+        self._mark_concrete()
+
         for s in self.traverse():
             if s.external_module and not s.external_path:
                 compiler = spack.compilers.compiler_for_spec(
@@ -2239,7 +2246,10 @@ class Spec(object):
                 for mod in compiler.modules:
                     md.load_module(mod)
 
-                s.external_path = md.get_path_from_module(s.external_module)
+                try:
+                    s.external_path = s.package.external_prefix
+                except AttributeError:
+                    s.external_path = get_path_from_module(s.external_module)
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
