@@ -88,7 +88,6 @@ class Openldap(AutotoolsPackage):
 
         return args
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         make('depend')
         make()
-        make('install')
