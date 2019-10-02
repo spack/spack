@@ -12,14 +12,17 @@ class Grass(AutotoolsPackage):
        used for geospatial data management and analysis, image processing,
        graphics and maps production, spatial modeling, and visualization."""
 
-    homepage = "http://grass.osgeo.org"
+    homepage = "https://grass.osgeo.org"
+    url      = "https://grass.osgeo.org/grass78/source/grass-7.8.0.tar.gz"
+    list_url = "https://grass.osgeo.org/download/software/sources/"
 
-    version('7.6.1',    sha256='9e25c99cafd16ed8f5e2dca75b5a10dc2af0568dbedf3fc39f1c5a0a9c840b0b')
-    version('7.4.4',    sha256='96a39e273103f7375a670eba94fa3e5dad2819c5c5664c9aee8f145882a94e8c')
-    version('7.4.3',    sha256='004e65693ee97fd4d5dc7ad244e3286a115dccd88964d04be61c07db6574b399')
-    version('7.4.2',    sha256='18eb19bc0aa4cd7be3f30f79ac83f9d0a29c63657f4c1b05bf4c5d5d57a8f46d')
-    version('7.4.1',    sha256='560b8669caaafa9e8dbd4bbf2b4b4bbab7dca1cc46ee828eaf26c744fe0635fc')
-    version('7.4.0',    sha256='cb6fa188e030a3a447fc5451fbe0ecbeb4069ee2fd1bf52ed8e40e9b89e293cc')
+    version('7.8.0', sha256='4b1192294e959ffd962282344e4ff325c4472f73abe605e246a1da3beda7ccfa')
+    version('7.6.1', sha256='9e25c99cafd16ed8f5e2dca75b5a10dc2af0568dbedf3fc39f1c5a0a9c840b0b')
+    version('7.4.4', sha256='96a39e273103f7375a670eba94fa3e5dad2819c5c5664c9aee8f145882a94e8c')
+    version('7.4.3', sha256='004e65693ee97fd4d5dc7ad244e3286a115dccd88964d04be61c07db6574b399')
+    version('7.4.2', sha256='18eb19bc0aa4cd7be3f30f79ac83f9d0a29c63657f4c1b05bf4c5d5d57a8f46d')
+    version('7.4.1', sha256='560b8669caaafa9e8dbd4bbf2b4b4bbab7dca1cc46ee828eaf26c744fe0635fc')
+    version('7.4.0', sha256='cb6fa188e030a3a447fc5451fbe0ecbeb4069ee2fd1bf52ed8e40e9b89e293cc')
 
     variant('cxx',       default=True,  description='Add c++ functionality')
     variant('tiff',      default=True,  description='Add TIFF functionality')
@@ -51,7 +54,8 @@ class Grass(AutotoolsPackage):
     depends_on('proj@:4', when='@:7.5')
     depends_on('proj@:5', when='@:7.7')
     depends_on('gdal')
-    depends_on('python@2.7:2.9', type=('build', 'run'))
+    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('python@2.7:2.8', when='@:7.6', type=('build', 'run'))
     depends_on('libx11')
 
     # optional pieces
@@ -73,10 +77,8 @@ class Grass(AutotoolsPackage):
     depends_on('geos', when='+geos')
 
     def url_for_version(self, version):
-        base = 'https://grass.osgeo.org'
-        return '{0}/grass{1}/source/grass-{2}.tar.gz'.format(
-            base, version.up_to(2).joined, version.dotted
-        )
+        url = "https://grass.osgeo.org/grass{0}/source/grass-{1}.tar.gz"
+        return url.format(version.up_to(2).joined, version)
 
     def configure_args(self):
         spec = self.spec
