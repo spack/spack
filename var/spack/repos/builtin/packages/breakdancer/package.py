@@ -28,6 +28,8 @@ class Breakdancer(CMakePackage):
 
     depends_on('zlib')
 
+    depends_on('ncurses', type='link')
+
     depends_on('perl-statistics-descriptive', type='run')
     depends_on('perl-math-cdf', type='run')
     depends_on('perl-gd-graph', type='run')
