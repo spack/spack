@@ -11,7 +11,7 @@ class PyEasybuildFramework(PythonPackage):
     for (scientific) software on HPC systems.
     """
 
-    homepage = 'http://hpcugent.github.io/easybuild/'
+    homepage = 'https://easybuilders.github.io/easybuild'
     url      = 'https://pypi.io/packages/source/e/easybuild-framework/easybuild-framework-4.0.0.tar.gz'
     maintainers = ['boegel']
 
@@ -21,5 +21,7 @@ class PyEasybuildFramework(PythonPackage):
     depends_on('python@2.6:2.8', when='@:3', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.5:', when='@4:', type=('build', 'run'))
     depends_on('py-setuptools', when='@:3', type=('build', 'run'))
-    depends_on('py-vsc-base@2.5.4:', when='@2.9:', type='run')
-    depends_on('py-vsc-install', type='test')  # only required for tests (python -O -m test.framework.suite)
+    depends_on('py-vsc-base@2.5.4:', when='@2.9:3', type='run')
+
+    # Only required for tests (python -O -m test.framework.suite)
+    depends_on('py-vsc-install', when='@:3', type='test')

@@ -11,7 +11,7 @@ class Easybuild(PythonPackage):
     for (scientific) software on HPC systems.
     """
 
-    homepage = 'http://hpcugent.github.io/easybuild/'
+    homepage = 'https://easybuilders.github.io/easybuild/'
     url      = 'https://pypi.io/packages/source/e/easybuild/easybuild-4.0.0.tar.gz'
     maintainers = ['boegel']
 

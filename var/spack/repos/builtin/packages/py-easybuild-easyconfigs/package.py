@@ -11,7 +11,7 @@ class PyEasybuildEasyconfigs(PythonPackage):
     installation framework for (scientific) software on HPC systems.
     """
 
-    homepage = 'http://hpcugent.github.io/easybuild/'
+    homepage = 'https://easybuilders.github.io/easybuild'
     url      = 'https://pypi.io/packages/source/e/easybuild-easyconfigs/easybuild-easyconfigs-4.0.0.tar.gz'
     maintainers = ['boegel']
 
@@ -21,7 +21,6 @@ class PyEasybuildEasyconfigs(PythonPackage):
     depends_on('python@2.6:2.8', when='@:3', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.5:', when='@4:', type=('build', 'run'))
 
-    for v in ['@3.1:', '@4.0:']:
-        depends_on('py-easybuild-framework' + v, when=v, type='run')
     for v in ['@3.1.2', '@4.0.0']:
+        depends_on('py-easybuild-framework{0}:'.format(v), when=v + ':', type='run')
         depends_on('py-easybuild-easyblocks{0}:'.format(v), when=v, type='run')
