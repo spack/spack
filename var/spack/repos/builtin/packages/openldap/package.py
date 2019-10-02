@@ -23,9 +23,12 @@ class Openldap(AutotoolsPackage):
 
     variant('client_only', default=True, description='Client only installation')
     variant('icu', default=False, description='Build with unicode support')
-    variant('tls', default='none', description='Build with TLS support',
-            values=('gnutls', 'openssl', 'none'), multi=False, when='~client_only'
+    # Below, tls=none is not an option from programming point of view
+    # If +client_only, configure arguments for tls won't be enabled
+    variant('tls', default='gnutls', description='Build with TLS support',
+            values=('gnutls', 'openssl'), multi=False
     )
+
     variant('perl', default=False, description='Perl backend to Slapd')
 
     depends_on('icu4c', when='+icu')
@@ -53,7 +56,7 @@ class Openldap(AutotoolsPackage):
     @when('~client_only')
     def configure_args(self):
         # Ref: https://www.openldap.org/lists/openldap-technical/201009/msg00304.html
-        args = ['CPPFLAGS=-D_GNU_SOURCE',  # fixes a build error
+        args = ['CPPFLAGS=-D_GNU_SOURCE',  # fixes a build error, see Ref above
                 '--disable-static',
                 '--disable-debug',
                 '--with-cyrus-sasl',
@@ -72,10 +75,11 @@ class Openldap(AutotoolsPackage):
                 '--enable-overlays=mod',
                 ]
 
-        if 'tls=gnutls' in self.spec:
-            args.append('--with-tls=gnutls')
-        if 'tls=openssl' in self.spec:
-            args.append('--with-tls=openssl')
+        if '~client_only' in self.spec:
+            if 'tls=gnutls' in self.spec:
+                args.append('--with-tls=gnutls')
+            if 'tls=openssl' in self.spec:
+                args.append('--with-tls=openssl')
 
         if '+perl' in self.spec:
             args.append('--enable-perl')
