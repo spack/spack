@@ -31,9 +31,6 @@ import spack.util.url as url_util
 
 from spack.util.crypto import prefix_bits, bit_length
 
-# TODO(opadron): get rid of this once s3_fetch_strategy is merged into FS.py
-from spack import s3_fetch_strategy
-
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = 'spack-src'

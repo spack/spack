@@ -284,7 +284,7 @@ def generate_package_index(cache_prefix):
             f.write(BUILD_CACHE_INDEX_TEMPLATE.format(
                 title='Spack Package Index',
                 path_list='\n'.join(
-                    BUILD_CACHE_INDEX_ENTRY_TEMPLATE.format(path)
+                    BUILD_CACHE_INDEX_ENTRY_TEMPLATE.format(path=path)
                     for path in file_list)))
 
         web_util.push_to_url(

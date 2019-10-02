@@ -224,9 +224,13 @@ def push_to_url(local_path, remote_path, **kwargs):
     elif remote_url.scheme == 's3':
         extra_args = kwargs.get('extra_args', {})
 
+        remote_path = remote_url.path
+        while remote_path.startswith('/'):
+            remote_path = remote_path[1:]
+
         s3 = s3_util.create_s3_session(remote_url)
-        s3.upload_file(local_url.path, remote_url.s3_bucket,
-                       remote_url.path, ExtraArgs=extra_args)
+        s3.upload_file(local_url.path, remote_url.netloc,
+                       remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
             os.remove(local_url.path)
@@ -246,7 +250,7 @@ def url_exists(path):
         s3 = s3_util.create_s3_session(url)
         from botocore.exceptions import ClientError
         try:
-            s3.get_object(Bucket=url.s3_bucket, Key=url.path)
+            s3.get_object(Bucket=url.netloc, Key=url.path)
             return True
         except ClientError as err:
             if err.response['Error']['Code'] == 'NoSuchKey':
@@ -279,7 +283,7 @@ def remove_url(path):
 
 def _list_s3_objects(client, url, num_entries, start_after=None):
     list_args = dict(
-            Bucket=url.s3_bucket,
+            Bucket=url.netloc,
             Prefix=url.path,
             MaxKeys=num_entries)
 
@@ -440,8 +444,8 @@ def _urlopen(req, *args, **kwargs):
 
     # We don't pass 'context' parameter because it was only introduced starting
     # with versions 2.7.9 and 3.4.3 of Python.
-    if kwargs.get('context') is not None:
-        kwargs.pop('context', None)
+    if 'context' in kwargs:
+        del kwargs['context']
 
     opener = urlopen
     if url_util.parse(url).scheme == 's3':

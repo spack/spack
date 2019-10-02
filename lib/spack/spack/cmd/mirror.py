@@ -264,7 +264,7 @@ def mirror_create(args):
             tty.msg(msg.format(spec.cshort_spec))
 
         # Default name for directory is spack-mirror-<DATESTAMP>
-        mirror = spack.mirror.MirrorCollection(
+        mirror = spack.mirror.Mirror(
                 args.directory or spack.config.get('config:source_cache'))
 
         directory = url_util.format(mirror.push_url)
