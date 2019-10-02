@@ -28,7 +28,7 @@ packages:
       - brainbuilder@0.11.5
       - connectome-tools@0.3.2
       - spatial-index@0.1.0
-      - spykfunc@0.15.0
+      - spykfunc@0.15.1
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
       - py-basalt@0.2.4
