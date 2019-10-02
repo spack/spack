@@ -644,8 +644,7 @@ def get_specs(force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
-                if spec.satisfies(arch_spec):
-                    _cached_specs.append(spec)
+                _cached_specs.append(spec)
 
     return _cached_specs
 
