@@ -904,6 +904,12 @@
       "any_of": [
         "sse4_2"
       ]
+    },
+    "neon": {
+      "reason": "NEON is required in all standard ARMv8 implementations",
+      "families": [
+        "aarch64"
+      ]
     }
   }
 }
