@@ -13,5 +13,6 @@ class PerlUri(PerlPackage):
     url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/URI-1.72.tar.gz"
 
     version('1.72', 'cd56d81ed429efaa97e7f3ff08851b48')
+    version('1.71', '247c3da29a794f72730e01aa5a715daf')
 
-    depends_on('perl-test-needs', type=('build', 'run'))
+    depends_on('perl-test-needs', type=('build', 'test'))

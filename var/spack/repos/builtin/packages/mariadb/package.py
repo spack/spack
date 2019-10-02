@@ -7,15 +7,20 @@ from spack import *
 
 
 class Mariadb(CMakePackage):
-    """MariaDB turns data into structured information in a wide array of
+    """MariaDB Server is one of the most popular database servers
+    in the world.
+
+    MariaDB turns data into structured information in a wide array of
     applications, ranging from banking to websites. It is an enhanced, drop-in
     replacement for MySQL. MariaDB is used because it is fast, scalable and
     robust, with a rich ecosystem of storage engines, plugins and many other
-    tools make it very versatile for a wide variety of use cases."""
+    tools make it very versatile for a wide variety of use cases.
+    """
 
     homepage = "https://mariadb.org/about/"
-    url      = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
+    url = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
 
+    version('10.4.7', sha256='c8e6a6d0bb4f22c416ed675d24682a3ecfa383c5283efee70c8edf131374d817')
     version('10.2.8', 'f93cbd5bfde3c0d082994764ff7db580')
     version('10.1.23', '1a7392cc05c7c249acd4495022719ca8')
     version('5.5.56', '8bc7772fea3e11b0bc1a09d2278e2e32')
@@ -32,7 +37,7 @@ class Mariadb(CMakePackage):
     depends_on('pkgconfig', type='build')
     depends_on('bison', type='build')
     depends_on('jemalloc')
-    depends_on('libaio')
+    depends_on('libaio', when='platform=linux')
     depends_on('libedit')
     depends_on('libevent', when='+nonblocking')
     depends_on('ncurses')

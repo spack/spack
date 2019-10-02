@@ -427,7 +427,7 @@ class Qt(Package):
             '-{0}gtkstyle'.format('' if '+gtk' in spec else 'no-'),
             '-{0}webkit'.format('' if '+webkit' in spec else 'no-'),
             '-{0}phonon'.format('' if '+phonon' in spec else 'no-'),
-            '-arch', str(spec.architecture.target),
+            '-arch', str(spec.target.family),
         ])
 
         # Disable phonon backend until gstreamer is setup as dependency

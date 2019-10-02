@@ -277,13 +277,10 @@ class Dealii(CMakePackage, CudaPackage):
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
         if spec.satisfies('%gcc'):
             cxx_flags_release.extend(['-O3'])
-            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%intel'):
             cxx_flags_release.extend(['-O3'])
-            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%clang'):
             cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
-            cxx_flags.extend(['-march=native'])
 
         # Python bindings
         if spec.satisfies('@8.5.0:'):

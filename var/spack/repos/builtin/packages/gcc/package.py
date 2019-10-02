@@ -8,6 +8,7 @@ from spack.operating_systems.mac_os import macos_version, macos_sdk_path
 from llnl.util import tty
 
 import glob
+import itertools
 import os
 import sys
 
@@ -420,8 +421,31 @@ class Gcc(AutotoolsPackage):
         set_install_permissions(specs_file)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('CC', join_path(self.spec.prefix.bin, 'gcc'))
-        run_env.set('CXX', join_path(self.spec.prefix.bin, 'g++'))
-        run_env.set('FC', join_path(self.spec.prefix.bin, 'gfortran'))
-        run_env.set('F77', join_path(self.spec.prefix.bin, 'gfortran'))
-        run_env.set('F90', join_path(self.spec.prefix.bin, 'gfortran'))
+        # Search prefix directory for possibly modified compiler names
+        from spack.compilers.gcc import Gcc as Compiler
+
+        # Get the contents of the installed binary directory
+        bin_path = self.spec.prefix.bin
+
+        if not os.path.isdir(bin_path):
+            return
+
+        bin_contents = os.listdir(bin_path)
+
+        # Find the first non-symlink compiler binary present for each language
+        for lang in ['cc', 'cxx', 'fc', 'f77']:
+            for filename, regexp in itertools.product(
+                    bin_contents,
+                    Compiler.search_regexps(lang)
+            ):
+                if not regexp.match(filename):
+                    continue
+
+                abspath = os.path.join(bin_path, filename)
+                if os.path.islink(abspath):
+                    continue
+
+                # Set the proper environment variable
+                run_env.set(lang.upper(), abspath)
+                # Stop searching filename/regex combos for this language
+                break

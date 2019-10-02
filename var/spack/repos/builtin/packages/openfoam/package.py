@@ -286,8 +286,6 @@ class Openfoam(Package):
             description='With scotch/ptscotch decomposition')
     variant('zoltan', default=False,
             description='With zoltan renumbering')
-    # TODO?# variant('scalasca', default=False,
-    # TODO?#         description='With scalasca profiling')
     variant('mgridgen', default=False, description='With mgridgen support')
     variant('paraview', default=False,
             description='Build paraview plugins and runtime post-processing')
@@ -321,8 +319,7 @@ class Openfoam(Package):
     depends_on('parmgridgen',  when='+mgridgen', type='build')
     depends_on('zoltan',       when='+zoltan')
     depends_on('vtk',          when='+vtk')
-
-    # TODO?# depends_on('scalasca',     when='+scalasca')
+    depends_on('adios2',       when='@1912:')
 
     # For OpenFOAM plugins and run-time post-processing this should just be
     # 'paraview+plugins' but that resolves poorly.
@@ -555,6 +552,7 @@ class Openfoam(Package):
                 ('LD_LIBRARY_PATH', foam_add_lib(user_mpi['libdir'])),
                 ('PATH', foam_add_path(user_mpi['bindir'])),
             ],
+            'adios2': {},
             'scotch': {},
             'kahip': {},
             'metis': {},
@@ -563,6 +561,15 @@ class Openfoam(Package):
             'gperftools': [],  # Currently unused
             'vtk': [],
         }
+
+        # With adios2 after 1912 or develop (after 2019-10-01)
+        if spec.satisfies('@1912:'):
+            self.etc_config['adios2'] = [
+                ('ADIOS2_ARCH_PATH', spec['adios2'].prefix),
+                ('LD_LIBRARY_PATH',
+                 foam_add_lib(pkglib(spec['adios2'], '${ADIOS2_ARCH_PATH}'))),
+                ('PATH', foam_add_path('${ADIOS2_ARCH_PATH}/bin')),
+            ]
 
         if '+scotch' in spec:
             self.etc_config['scotch'] = {
@@ -788,8 +795,8 @@ class OpenfoamArch(object):
         # spec.architecture.platform is like `uname -s`, but lower-case
         platform = spec.architecture.platform
 
-        # spec.architecture.target is like `uname -m`
-        target   = spec.architecture.target
+        # spec.target.family is like `uname -m`
+        target = spec.target.family
 
         if platform == 'linux':
             if target == 'x86_64':

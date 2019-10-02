@@ -8,6 +8,7 @@ import os
 import fnmatch
 import glob
 import platform
+import sys
 from llnl.util.filesystem import join_path
 
 
@@ -38,16 +39,21 @@ class Tau(Package):
     version('2.24', '57ce33539c187f2e5ec68f0367c76db4')
     version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
 
+    # Disable some default dependencies on Darwin/OSX
+    darwin_default = False
+    if sys.platform != 'darwin':
+        darwin_default = True
+
     variant('scorep', default=False, description='Activates SCOREP support')
     variant('openmp', default=False, description='Use OpenMP threads')
     variant('pthreads', default=True, description='Use POSIX threads')
     variant('mpi', default=False, description='Specify use of TAU MPI wrapper library')
     variant('phase', default=False, description='Generate phase based profiles')
-    variant('papi', default=True, description='Activates Performance API')
+    variant('papi', default=darwin_default, description='Activates Performance API')
     variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
-    variant('libdwarf', default=True, description='Activates support of libdwarf')
-    variant('libelf', default=True, description='Activates support of libelf')
-    variant('libunwind', default=True, description='Activates support of libunwind')
+    variant('libdwarf', default=darwin_default, description='Activates support of libdwarf')
+    variant('libelf', default=darwin_default, description='Activates support of libelf')
+    variant('libunwind', default=darwin_default, description='Activates support of libunwind')
     variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
     variant('comm', default=False, description=' Generate profiles with MPI communicator info')
@@ -58,7 +64,7 @@ class Tau(Package):
     variant('shmem', default=False, description='Activates SHMEM support')
     variant('gasnet', default=False, description='Activates GASNET support')
     variant('cuda', default=False, description='Activates CUDA support')
-    variant('fortran', default=True, description='Activates Fortran support')
+    variant('fortran', default=darwin_default, description='Activates Fortran support')
     variant('io', default=True, description='Activates POSIX I/O support')
 
     # Support cross compiling.

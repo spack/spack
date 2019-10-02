@@ -20,7 +20,7 @@ class Transdecoder(MakefilePackage):
             url='https://github.com/TransDecoder/TransDecoder/archive/v3.0.1.tar.gz')
 
     depends_on('perl', type=('build', 'run'))
-    depends_on('perl-uri-escape', type='run')
+    depends_on('perl-uri', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.util)
