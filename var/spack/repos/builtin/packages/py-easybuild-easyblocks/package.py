@@ -21,5 +21,5 @@ class PyEasybuildEasyblocks(PythonPackage):
     depends_on('python@2.6:2.8', when='@:3', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.5:', when='@4:', type=('build', 'run'))
 
-    for v in ['@3.1.2:', '@4.0.0:']:
+    for v in ['@3.1.2', '@4.0.0']:
         depends_on('py-easybuild-framework' + v, when=v, type='run')
