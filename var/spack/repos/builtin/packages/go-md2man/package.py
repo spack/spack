@@ -37,6 +37,7 @@ class GoMd2man(Package):
 
         with working_dir('src'):
             env['GOPATH'] = self.stage.source_path
+            env['GO111MODULE'] = 'off'
             go = which('go')
             go('build', '-v', join_path(
                'github.com', 'cpuguy83', 'go-md2man'))
