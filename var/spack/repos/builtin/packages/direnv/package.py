@@ -12,6 +12,7 @@ class Direnv(Package):
     homepage = "https://direnv.net/"
     url      = "https://github.com/direnv/direnv/archive/v2.11.3.tar.gz"
 
+    version('2.20.0', '75a166c2ef83a3b8dfbd0544cadb5984')
     version('2.11.3', '5b9728e2dabed232b4932849647fd6e5')
 
     depends_on('go', type='build')
