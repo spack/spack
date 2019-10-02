@@ -23,11 +23,14 @@ class Openldap(AutotoolsPackage):
 
     variant('client_only', default=True, description='Client only installation')
     variant('icu', default=False, description='Build with unicode support')
-    variant('openssl', default=False, description='Use OpenSSL for TLS support')
+    variant('tls', default='none', description='Build with TLS support',
+            values=('gnutls', 'openssl', 'none'), multi=False, when='~client_only'
+    )
     variant('perl', default=False, description='Perl backend to Slapd')
 
     depends_on('icu4c', when='+icu')
-    depends_on('gnutls', when='~client_only~openssl')
+    depends_on('gnutls', when='~client_only tls=gnutls')
+    depends_on('openssl', when='~client_only tls=openssl')
     depends_on('unixodbc', when='~client_only')
     depends_on('postgresql', when='~client_only')
     depends_on('berkeley-db', when='~client_only')  # for slapd
@@ -69,9 +72,9 @@ class Openldap(AutotoolsPackage):
                 '--enable-overlays=mod',
                 ]
 
-        if '~openssl' in self.spec:
+        if 'tls=gnutls' in self.spec:
             args.append('--with-tls=gnutls')
-        else:
+        if 'tls=openssl' in self.spec:
             args.append('--with-tls=openssl')
 
         if '+perl' in self.spec:
