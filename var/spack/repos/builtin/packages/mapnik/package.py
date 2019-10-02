@@ -43,12 +43,12 @@ class Mapnik(AutotoolsPackage):
 
     def configure_args(self):
         return [
-        'CXXFLAGS="-std=c++11"',
-        'PREFIX=' + self.prefix,
-        'BOOST_INCLUDES=' + self.spec['boost'].prefix.include,
-        'BOOST_LIBS=' + self.spec['boost'].prefix.lib.directories[0],
-        'PROJ_INCLUDES=' + self.spec['proj'].prefix.include,
-        'PROJ_LIBS=' + self.spec['proj'].prefix.lib.directories[0],
-        'CAIRO_INCLUDES=' + self.spec['cairo'].prefix.include,
-        'CAIRO_LIBS=' + self.spec['cairo'].prefix.lib.directories[0],
+            'CXXFLAGS="-std=c++11"',
+            'PREFIX=' + self.prefix,
+            'BOOST_INCLUDES=' + self.spec['boost'].prefix.include,
+            'BOOST_LIBS=' + self.spec['boost'].prefix.lib.directories[0],
+            'PROJ_INCLUDES=' + self.spec['proj'].prefix.include,
+            'PROJ_LIBS=' + self.spec['proj'].prefix.lib.directories[0],
+            'CAIRO_INCLUDES=' + self.spec['cairo'].prefix.include,
+            'CAIRO_LIBS=' + self.spec['cairo'].prefix.lib.directories[0],
         ]
