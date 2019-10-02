@@ -26,7 +26,16 @@ class Zfp(CMakePackage):
             multi=False,
             description='Bit stream word size: use smaller for finer '
             'rate granularity. Use 8 for H5Z-ZFP filter.')
-
+    variant('strided', default=False,
+            description='Enable strided access for progressive zfp streams')
+    variant('aligned', default=False,
+            description='Enable aligned memory allocation')
+    variant('twoway', default=False,
+            description='Use two-way skew-associative cache')
+    variant('fasthash', default=False,
+            description='Use a faster but more collision prone hash function')
+    variant('profile', default=False,
+            description='Count cache misses')
     variant('shared', default=True,
             description='Build shared versions of the library')
 
@@ -36,12 +45,23 @@ class Zfp(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
             '-DZFP_BIT_STREAM_WORD_SIZE:STRING={0}'.format(
                 spec.variants['bsws'].value),
+            '-DZFP_WITH_BIT_STREAM_STRIDED:BOOL={0}'.format(
+                'ON' if '+strided' in spec else 'OFF'),
+            '-DZFP_WITH_ALIGNED_ALLOC:BOOL={0}'.format(
+                'ON' if '+aligned' in spec else 'OFF'),
+            '-DZFP_WITH_CACHE_TWOWAY:BOOL={0}'.format(
+                'ON' if '+twoway' in spec else 'OFF'),
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
             '-DBUILD_TESTING:BOOL={0}'.format(
                 'ON' if self.run_tests else 'OFF')
         ]
+        if spec.version >= Version('0.5.2'):
+            args.append('-DZFP_WITH_CACHE_FAST_HASH:BOOL={0}'.format(
+                'ON' if '+fasthash' in spec else 'OFF'))
+            args.append('-DZFP_WITH_CACHE_PROFILE:BOOL={0}'.format(
+                'ON' if '+profile' in spec else 'OFF'))
 
         return args
