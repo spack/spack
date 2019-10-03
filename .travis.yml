@@ -18,7 +18,7 @@ jobs:
   fast_finish: true
   include:
     - stage: 'style checks'
-      python: '2.7'
+      python: '3.7'
       os: linux
       language: python
       env: TEST_SUITE=flake8
@@ -58,17 +58,17 @@ jobs:
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
 # astyle (MakefilePackage)
-    - python: '2.7'
+    - python: '3.7'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=astyle' ]
 # tut (WafPackage)
-    - python: '2.7'
+    - python: '3.7'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=tut' ]
 # py-setuptools (PythonPackage)
-    - python: '2.7'
+    - python: '3.7'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=py-setuptools' ]
@@ -78,17 +78,17 @@ jobs:
 #      language: python
 #      env: [ TEST_SUITE=build, 'SPEC=perl-dbi' ]
 # openjpeg (CMakePackage + external cmake)
-    - python: '2.7'
+    - python: '3.7'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=openjpeg' ]
 # r-rcpp (RPackage + external R)
-    - python: '2.7'
+    - python: '3.7'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=r-rcpp' ]
 # mpich (AutotoolsPackage)
-    - python: '3.6'
+    - python: '3.7'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
