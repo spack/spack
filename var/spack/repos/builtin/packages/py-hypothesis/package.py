@@ -20,6 +20,7 @@ class PyHypothesis(PythonPackage):
 
     # TODO: Add missing dependency required to import hypothesis.extra.django
 
+    version('4.7.2',  sha256='87944c6379f77634474b88abbf1e5ed5fe966637cc926131eda5e2af5b54a608')
     version('3.7.0', '4afb25fa6785fceac034b63eaa2dfe28')
 
     depends_on('py-setuptools', type='build')

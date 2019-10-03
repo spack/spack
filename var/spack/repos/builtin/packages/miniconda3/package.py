@@ -11,8 +11,9 @@ class Miniconda3(Package):
     """The minimalist bootstrap toolset for conda and Python3."""
 
     homepage = "https://conda.io/miniconda.html"
-    url      = "https://repo.continuum.io/miniconda/Miniconda3-4.3.11-Linux-x86_64.sh"
+    url      = "https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh"
 
+    version('4.6.14', sha256='0d6b23895a91294a4924bd685a3a1f48e35a17970a073cd2f684ffe2c31fc4be', expand=False)
     version('4.5.11', sha256='ea4594241e13a2671c5b158b3b813f0794fe58d514795fbf72a1aad24db918cf', expand=False)
     version('4.5.4', 'a946ea1d0c4a642ddf0c3a26a18bb16d', expand=False)
     version('4.3.30', '0b80a152332a4ce5250f3c09589c7a81', expand=False)

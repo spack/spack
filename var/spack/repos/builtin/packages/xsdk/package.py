@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
 from spack import *
 
 
-class Xsdk(Package):
+class Xsdk(BundlePackage):
     """Xsdk is a suite of Department of Energy (DOE) packages for numerical
        simulation. This is a Spack bundle package that installs the xSDK
        packages
@@ -16,26 +15,25 @@ class Xsdk(Package):
 
     homepage = "http://xsdk.info"
 
-    # Dummy url since Spack complains if I don't list something, will be
-    # removed when metapackage is available
-    url      = 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/xsdk.tar.gz'
+    maintainers = ['balay', 'luszczek']
 
-    version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('0.4.0', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('0.3.0', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
+    version('develop')
+    version('0.4.0')
+    version('0.3.0')
+    version('xsdk-0.2.0')
 
     variant('debug', default=False, description='Compile in debug mode')
     variant('cuda', default=False, description='Enable CUDA dependent packages')
     variant('omega-h', default=True, description='Enable omega-h package build')
     variant('dealii', default=True, description='Enable dealii package build')
+    variant('phist', default=True, description='Enable phist package build')
 
-    depends_on('hypre@develop~internal-superlu', when='@develop')
+    depends_on('hypre@develop~internal-superlu+superlu-dist+shared', when='@develop')
     depends_on('hypre@2.15.1~internal-superlu', when='@0.4.0')
     depends_on('hypre@2.12.1~internal-superlu', when='@0.3.0')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
 
-    depends_on('mfem@develop+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
+    depends_on('mfem@develop+mpi+hypre+superlu-dist+petsc~sundials+examples+miniapps', when='@develop')
     depends_on('mfem@3.4.0+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.4.0')
     depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0')
 
@@ -44,9 +42,9 @@ class Xsdk(Package):
     depends_on('superlu-dist@5.2.2', when='@0.3.0')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
 
-    depends_on('trilinos@master+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
+    depends_on('trilinos@develop+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
                when='@develop')
-    depends_on('trilinos@12.14.0-rc1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
+    depends_on('trilinos@12.14.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
                when='@0.4.0')
     depends_on('trilinos@12.12.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
                when='@0.3.0')
@@ -62,8 +60,8 @@ class Xsdk(Package):
     depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
                when='@xsdk-0.2.0')
 
-    depends_on('dealii@develop~assimp~python~doc~slepc~gmsh+petsc+mpi+trilinos~int64+hdf5~netcdf+metis', when='@develop +dealii')
-    depends_on('dealii@9.0.1~assimp~python~doc~slepc~gmsh+petsc+mpi+trilinos~int64+hdf5~netcdf+metis', when='@0.4.0 +dealii')
+    depends_on('dealii@develop~assimp~python~doc~gmsh+petsc+slepc+mpi+trilinos~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine', when='@develop +dealii')
+    depends_on('dealii@9.0.1~assimp~python~doc~gmsh+petsc~slepc+mpi+trilinos~int64+hdf5~netcdf+metis~ginkgo~symengine', when='@0.4.0 +dealii')
 
     depends_on('pflotran@develop', when='@develop')
     depends_on('pflotran@xsdk-0.4.0', when='@0.4.0')
@@ -75,7 +73,7 @@ class Xsdk(Package):
     depends_on('alquimia@xsdk-0.3.0', when='@0.3.0')
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
 
-    depends_on('sundials@3.2.1~int64+hypre', when='@develop')
+    depends_on('sundials@4.1.0~int64+hypre', when='@develop')
     depends_on('sundials@3.2.1~int64+hypre', when='@0.4.0')
     depends_on('sundials@3.1.0~int64+hypre', when='@0.3.0')
 
@@ -86,8 +84,8 @@ class Xsdk(Package):
     depends_on('magma@2.4.0', when='@0.4.0 +cuda')
     depends_on('magma@2.2.0', when='@0.3.0 +cuda')
 
-    depends_on('amrex@develop', when='@develop %intel')
-    depends_on('amrex@develop', when='@develop %gcc')
+    depends_on('amrex@develop+sundials', when='@develop %intel')
+    depends_on('amrex@develop+sundials', when='@develop %gcc')
     depends_on('amrex@18.10.1', when='@0.4.0 %intel')
     depends_on('amrex@18.10.1', when='@0.4.0 %gcc')
 
@@ -112,9 +110,9 @@ class Xsdk(Package):
     # creates a conflict with other packages like petsc@develop. Actually
     # these are type='build' dependencies, but spack reports a conflict anyway.
     # This will be fixed once the new concretizer becomes available
-    # (says @adamjsteward)
-    depends_on('phist@develop kernel_lib=tpetra ~fortran ~scamac ~openmp ~host', when='@develop')
-    depends_on('phist@1.7.5 kernel_lib=tpetra ~fortran ~scamac ~openmp ~host', when='@0.4.0')
+    # (says @adamjstewart)
+    depends_on('phist@develop kernel_lib=tpetra ~fortran ~scamac ~openmp ~host', when='@develop +phist')
+    depends_on('phist@1.7.5 kernel_lib=tpetra ~fortran ~scamac ~openmp ~host', when='@0.4.0 +phist')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
@@ -123,12 +121,3 @@ class Xsdk(Package):
 
     # How do we propagate debug flag to all depends on packages ?
     # If I just do spack install xsdk+debug will that propogate it down?
-
-    # Dummy install for now,  will be removed when metapackage is available
-    def install(self, spec, prefix):
-        # Prevent the error message
-        #      ==> Error: Install failed for xsdk.  Nothing was installed!
-        #      ==> Error: Installation process had nonzero exit code : 256
-        with open(os.path.join(spec.prefix, 'bundle-package.txt'), 'w') as out:
-            out.write('This is a bundle\n')
-            out.close()

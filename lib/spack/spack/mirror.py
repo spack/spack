@@ -104,7 +104,8 @@ def get_matching_versions(specs, **kwargs):
         if spec.concrete:
             matching_spec.append(spec)
             pkg_versions -= 1
-            version_order.remove(spec.version)
+            if spec.version in version_order:
+                version_order.remove(spec.version)
 
         for v in version_order:
             # Generate no more than num_versions versions for each spec.
@@ -210,17 +211,21 @@ def create(path, specs, **kwargs):
 
 
 def add_single_spec(spec, mirror_root, categories, **kwargs):
-    tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
+    tty.msg("Adding package {pkg} to mirror".format(
+        pkg=spec.format("{name}{@version}")
+    ))
     try:
         spec.package.do_fetch()
         spec.package.do_clean()
 
     except Exception as e:
+        tty.debug(e)
         if spack.config.get('config:debug'):
             sys.excepthook(*sys.exc_info())
         else:
             tty.warn(
-                "Error while fetching %s" % spec.cformat('$_$@'), e.message)
+                "Error while fetching %s" % spec.cformat('{name}{@version}'),
+                e.message)
         categories['error'].append(spec)
 
 

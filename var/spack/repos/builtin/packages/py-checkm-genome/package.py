@@ -13,12 +13,16 @@ class PyCheckmGenome(PythonPackage):
     homepage = "https://ecogenomics.github.io/CheckM"
     url      = "https://pypi.io/packages/source/c/checkm-genome/checkm-genome-1.0.11.tar.gz"
 
+    version('1.0.13', sha256='ffb7e4966c0fac07c7e6e7db6f6eb5b48587fa83987f8a68efbaff2afb7da82e')
     version('1.0.11', '3058546ec324e2420cf72f0d2576114b')
 
-    depends_on('hmmer@3.1b1:')
-    depends_on('prodigal@2.6.1:')
-    depends_on('py-numpy@1.8.0:',        type=('build', 'run'))
-    depends_on('py-scipy@0.9.0:',        type=('build', 'run'))
-    depends_on('py-matplotlib@1.3.1:',   type=('build', 'run'))
-    depends_on('py-pysam@0.8.3:',        type=('build', 'run'))
-    depends_on('py-dendropy@4.0.0:',     type=('build', 'run'))
+    depends_on('hmmer@3.1b1:', type=('build', 'run'))
+    depends_on('pplacer', type=('build', 'run'))
+    depends_on('prodigal@2.6.1:', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
+    depends_on('py-backports-functools-lru-cache', type=('build', 'run'))
+    depends_on('py-numpy@1.8.0:', type=('build', 'run'))
+    depends_on('py-scipy@0.9.0:', type=('build', 'run'))
+    depends_on('py-matplotlib@1.3.1:2.2.3', type=('build', 'run'))
+    depends_on('py-pysam@0.8.3:', type=('build', 'run'))
+    depends_on('py-dendropy@4.0.0:', type=('build', 'run'))

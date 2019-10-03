@@ -17,6 +17,11 @@ class Velvet(MakefilePackage):
 
     depends_on('zlib')
 
+    def edit(self, spec, prefix):
+        if spec.target.family == 'aarch64':
+            makefile = FileFilter('Makefile')
+            makefile.filter('-m64', '')
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('velvetg', prefix.bin)

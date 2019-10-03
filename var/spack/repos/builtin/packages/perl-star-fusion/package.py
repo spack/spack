@@ -26,7 +26,7 @@ class PerlStarFusion(Package):
     depends_on('perl-intervaltree', type=('build', 'run'))
     depends_on('perl-dbi', type=('build', 'run'))
     depends_on('perl-dbfile', type=('build', 'run'))
-    depends_on('perl-uri-escape', type=('build', 'run'))
+    depends_on('perl-uri', type=('build', 'run'))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

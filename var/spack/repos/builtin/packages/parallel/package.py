@@ -15,6 +15,7 @@ class Parallel(AutotoolsPackage):
     homepage = "http://www.gnu.org/software/parallel/"
     url      = "https://ftpmirror.gnu.org/parallel/parallel-20170122.tar.bz2"
 
+    version('20190222', sha256='86b1badc56ee2de1483107c2adf634604fd72789c91f65e40138d21425906b1c')
     version('20170322', '4fe1b8d2e3974d26c77f0b514988214d')
     version('20170122', 'c9f0ec01463dc75dbbf292fd8be5f1eb')
     version('20160422', '24621f684130472694333709bd4454cb')

@@ -10,8 +10,10 @@ from llnl.util.filesystem import working_dir, is_exe
 
 import spack.repo
 import spack.config
+from spack.fetch_strategy import FailedDownloadError
 from spack.fetch_strategy import from_list_url, URLFetchStrategy
 from spack.spec import Spec
+from spack.stage import Stage
 from spack.version import ver
 import spack.util.crypto as crypto
 
@@ -21,7 +23,33 @@ def checksum_type(request):
     return request.param
 
 
+def test_urlfetchstrategy_sans_url():
+    """Ensure constructor with no URL fails."""
+    with pytest.raises(ValueError):
+        with URLFetchStrategy(None):
+            pass
+
+
+def test_urlfetchstrategy_bad_url(tmpdir):
+    """Ensure fetch with bad URL fails as expected."""
+    testpath = str(tmpdir)
+
+    with pytest.raises(FailedDownloadError):
+        fetcher = URLFetchStrategy(url='file:///does-not-exist')
+        assert fetcher is not None
+
+        with Stage(fetcher, path=testpath) as stage:
+            assert stage is not None
+            assert fetcher.archive_file is None
+            fetcher.fetch()
+
+
 @pytest.mark.parametrize('secure', [True, False])
+@pytest.mark.parametrize('mock_archive',
+                         [('.tar.gz', 'z'), ('.tgz', 'z'),
+                          ('.tar.bz2', 'j'), ('.tbz2', 'j'),
+                          ('.tar.xz', 'J'), ('.txz', 'J')],
+                         indirect=True)
 def test_fetch(
         mock_archive,
         secure,
@@ -62,67 +90,46 @@ def test_fetch(
             assert 'echo Building...' in contents
 
 
-def test_from_list_url(mock_packages, config):
+@pytest.mark.parametrize('spec,url,digest', [
+    ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', 'abc000'),
+    ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', 'abc100'),
+    ('url-list-test @3.0', 'foo-3.0.tar.gz', 'abc30'),
+    ('url-list-test @4.5', 'foo-4.5.tar.gz', 'abc45'),
+    ('url-list-test @2.0.0b2', 'foo-2.0.0b2.tar.gz', 'abc200b2'),
+    ('url-list-test @3.0a1', 'foo-3.0a1.tar.gz', 'abc30a1'),
+    ('url-list-test @4.5-rc5', 'foo-4.5-rc5.tar.gz', 'abc45rc5'),
+])
+def test_from_list_url(mock_packages, config, spec, url, digest):
+    """
+    Test URLs in the url-list-test package, which means they should
+    have checksums in the package.
+    """
+    specification = Spec(spec).concretized()
+    pkg = spack.repo.get(specification)
+    fetch_strategy = from_list_url(pkg)
+    assert isinstance(fetch_strategy, URLFetchStrategy)
+    assert os.path.basename(fetch_strategy.url) == url
+    assert fetch_strategy.digest == digest
+
+
+def test_from_list_url_unspecified(mock_packages, config):
+    """Test non-specific URLs from the url-list-test package."""
     pkg = spack.repo.get('url-list-test')
 
-    # These URLs are all in the url-list-test package and should have
-    # checksums taken from the package.
-    spec = Spec('url-list-test @0.0.0').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-0.0.0.tar.gz'
-    assert fetch_strategy.digest == 'abc000'
-
-    spec = Spec('url-list-test @1.0.0').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-1.0.0.tar.gz'
-    assert fetch_strategy.digest == 'abc100'
-
-    spec = Spec('url-list-test @3.0').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-3.0.tar.gz'
-    assert fetch_strategy.digest == 'abc30'
-
-    spec = Spec('url-list-test @4.5').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-4.5.tar.gz'
-    assert fetch_strategy.digest == 'abc45'
-
-    spec = Spec('url-list-test @2.0.0b2').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0b2.tar.gz'
-    assert fetch_strategy.digest == 'abc200b2'
-
-    spec = Spec('url-list-test @3.0a1').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-3.0a1.tar.gz'
-    assert fetch_strategy.digest == 'abc30a1'
-
-    spec = Spec('url-list-test @4.5-rc5').concretized()
-    pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
-    assert os.path.basename(fetch_strategy.url) == 'foo-4.5-rc5.tar.gz'
-    assert fetch_strategy.digest == 'abc45rc5'
-
-    # this one is not in the url-list-test package.
     spec = Spec('url-list-test @2.0.0').concretized()
     pkg = spack.repo.get(spec)
     fetch_strategy = from_list_url(pkg)
     assert isinstance(fetch_strategy, URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
     assert fetch_strategy.digest is None
+
+
+def test_nosource_from_list_url(mock_packages, config):
+    """This test confirms BundlePackages do not have list url."""
+    pkg = spack.repo.get('nosource')
+
+    fetch_strategy = from_list_url(pkg)
+    assert fetch_strategy is None
 
 
 def test_hash_detection(checksum_type):
@@ -135,3 +142,15 @@ def test_hash_detection(checksum_type):
 def test_unknown_hash(checksum_type):
     with pytest.raises(ValueError):
         crypto.Checker('a')
+
+
+def test_url_extra_fetch(tmpdir, mock_archive):
+    """Ensure a fetch after downloading is effectively a no-op."""
+    testpath = str(tmpdir)
+
+    fetcher = URLFetchStrategy(mock_archive.url)
+    with Stage(fetcher, path=testpath) as stage:
+        assert fetcher.archive_file is None
+        stage.fetch()
+        assert fetcher.archive_file is not None
+        fetcher.fetch()

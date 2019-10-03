@@ -7,7 +7,7 @@ tcl:
         - CMAKE_PREFIX_PATH
     environment:
       set:
-        '${PACKAGE}_ROOT': '${PREFIX}'
+        '{name}_ROOT': '{prefix}'
 
   'platform=test target=x86_64':
     environment:
@@ -17,6 +17,6 @@ tcl:
       unset:
         - BAR
 
-  'platform=test target=x86_32':
+  'platform=test target=x86':
     load:
       - 'foo/bar'

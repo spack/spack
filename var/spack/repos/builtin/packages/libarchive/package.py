@@ -21,7 +21,6 @@ class Libarchive(AutotoolsPackage):
 
     depends_on('zlib')
     depends_on('bzip2')
-    depends_on('lzma')
     depends_on('lz4')
     depends_on('xz')
     depends_on('lzo')

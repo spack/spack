@@ -26,7 +26,6 @@ class Trinotate(Package):
     depends_on('perl', type='run')
     depends_on('lighttpd', type='run')
     depends_on('perl-dbi', type='run')
-    depends_on('perl-dbd-mysql', type='run')
     depends_on('perl-cgi', type='run')
     depends_on('perl-dbd-sqlite', type='run')
 
@@ -34,6 +33,14 @@ class Trinotate(Package):
         with working_dir(join_path(self.stage.source_path, 'admin/util')):
             perlscripts = glob.glob('*.pl')
             filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', *perlscripts)
+
+        # trinotate web generates a config on run but puts it in a bad place
+        # this causes issues with permissions; we hack the source to keep it
+        # in the calling user's homedir
+
+        filter_file('"$FindBin::RealBin/TrinotateWeb.conf/lighttpd.conf.port',
+                    '$ENV{"HOME"} . "/.trinotate_lighttpd.conf.port',
+                    'run_TrinotateWebserver.pl', string=True)
 
     def install(self, spec, prefix):
         # most of the perl modules have local deps, install the whole tree

@@ -7,9 +7,9 @@ from spack import *
 
 
 class Libxstream(Package):
-    '''LIBXSTREAM is a library to work with streams, events, and code regions
+    """LIBXSTREAM is a library to work with streams, events, and code regions
     that are able to run asynchronous while preserving the usual stream
-    conditions.'''
+    conditions."""
 
     homepage = 'https://github.com/hfp/libxstream'
     url      = 'https://github.com/hfp/libxstream/archive/0.9.0.tar.gz'

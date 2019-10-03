@@ -13,18 +13,23 @@ class Cdhit(MakefilePackage):
     homepage = "http://cd-hit.org/"
     url      = "https://github.com/weizhongli/cdhit/archive/V4.6.8.tar.gz"
 
+    version('4.8.1', sha256='f8bc3cdd7aebb432fcd35eed0093e7a6413f1e36bbd2a837ebc06e57cdb20b70')
     version('4.6.8', 'bdd73ec0cceab6653aab7b31b57c5a8b')
 
     variant('openmp', default=True, description='Compile with multi-threading support')
+    variant('zlib', default=True, description='Compile with zlib')
 
     depends_on('perl', type=('build', 'run'))
+    depends_on('zlib', when='+zlib', type='link')
 
     def build(self, spec, prefix):
         mkdirp(prefix.bin)
+        make_args = []
         if '~openmp' in spec:
-            make('openmp=no')
-        else:
-            make()
+            make_args.append('openmp=no')
+        if '~zlib' in spec:
+            make_args.append('zlib=no')
+        make(*make_args)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('PREFIX', prefix.bin)

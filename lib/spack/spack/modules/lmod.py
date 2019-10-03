@@ -18,7 +18,7 @@ import spack.tengine as tengine
 from .common import BaseConfiguration, BaseFileLayout
 from .common import BaseContext, BaseModuleFileWriter
 
-#: TCL specific part of the configuration
+#: lmod specific part of the configuration
 configuration = spack.config.get('modules:lmod', {})
 
 #: Caches the configuration {spec_hash: configuration}
@@ -232,7 +232,7 @@ class LmodFileLayout(BaseFileLayout):
         to console to use it.
         """
         # Package name and version
-        base = os.path.join("${PACKAGE}", "${VERSION}")
+        base = os.path.join("{name}", "{version}")
         name_parts = [self.spec.format(base)]
         # The remaining elements are filename suffixes
         name_parts.extend(self.conf.suffixes)

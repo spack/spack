@@ -11,8 +11,9 @@ class Wcslib(AutotoolsPackage):
     defined in the FITS WCS papers."""
 
     homepage = "http://www.atnf.csiro.au/people/mcalabre/WCS/wcslib/"
-    url      = "ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib-5.18.tar.bz2"
+    url      = "ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib-6.4.tar.bz2"
 
+    version('6.4', sha256='13c11ff70a7725563ec5fa52707a9965fce186a1766db193d08c9766ea107000')
     version('5.18', '67a78354be74eca4f17d3e0853d5685f')
 
     variant('cfitsio', default=False, description='Include CFITSIO support')
@@ -46,3 +47,9 @@ class Wcslib(AutotoolsPackage):
             args.append('--without-x')
 
         return args
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)

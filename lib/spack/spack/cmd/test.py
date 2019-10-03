@@ -35,6 +35,10 @@ def setup_parser(subparser):
         '-L', '--long-list', action='store_true', default=False,
         help="list the entire hierarchy of tests")
     subparser.add_argument(
+        '--extension', default=None,
+        help="run test for a given Spack extension"
+    )
+    subparser.add_argument(
         'tests', nargs=argparse.REMAINDER,
         help="list of tests to run (will be passed to pytest -k)")
 
@@ -77,8 +81,16 @@ def test(parser, args, unknown_args):
         pytest.main(['-h'])
         return
 
-    # pytest.ini lives in lib/spack/spack/test
-    with working_dir(spack.paths.test_path):
+    # The default is to test the core of Spack. If the option `--extension`
+    # has been used, then test that extension.
+    pytest_root = spack.paths.test_path
+    if args.extension:
+        target = args.extension
+        extensions = spack.config.get('config:extensions')
+        pytest_root = spack.extensions.path_for_extension(target, *extensions)
+
+    # pytest.ini lives in the root of the spack repository.
+    with working_dir(pytest_root):
         # --list and --long-list print the test output better.
         if args.list or args.long_list:
             do_list(args, unknown_args)

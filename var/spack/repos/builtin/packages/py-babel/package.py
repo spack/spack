@@ -16,6 +16,7 @@ class PyBabel(PythonPackage):
 
     import_modules = ['babel', 'babel.localtime', 'babel.messages']
 
+    version('2.6.0', 'c384ac03026e8fe6f9b90f55201f1bff')
     version('2.4.0', '90e7a0add19b2036a9b415630a0d9388')
     version('2.3.4', 'afa20bc55b0e991833030129ad498f35')
 

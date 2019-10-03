@@ -7,7 +7,7 @@ from spack import *
 
 
 class Bamdst(MakefilePackage):
-    "Bamdst is a a lightweight bam file depth statistical tool."
+    """Bamdst is a a lightweight bam file depth statistical tool."""
 
     homepage = "https://github.com/shiquan/bamdst"
     git      = "https://github.com/shiquan/bamdst.git"

@@ -19,6 +19,10 @@ class Hisea(MakefilePackage):
 
     depends_on('boost')
 
+    def patch(self):
+        if self.spec.target.family == 'aarch64':
+            filter_file('-mpopcnt', '', 'Makefile')
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('hisea', prefix.bin)

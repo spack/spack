@@ -17,13 +17,21 @@ class Petsc(Package):
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url      = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
-    git      = "https://bitbucket.org/petsc/petsc.git"
+    git      = "https://gitlab.com/petsc/petsc.git"
 
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.12.0', 'ba9ecf69783c7ebf05bd1c91dd1d4b38bf09b7a2d5f9a774aa6bb46deff7cb14')
+    version('3.11.4', '319cb5a875a692a67fe5b1b90009ba8f182e21921ae645d38106544aff20c3c1')
+    version('3.11.3', '199ad9650a9f58603b49e7fff7cd003ceb03aa231e5d37d0bf0496c6348eca81')
+    version('3.11.2', '4d244dd7d1565d6534e776445fcf6977a6ee2a8bb2be4a36ac1e0fc1f9ad9cfa')
+    version('3.11.1', 'cb627f99f7ce1540ebbbf338189f89a5f1ecf3ab3b5b0e357f9e46c209f1fb23')
+    version('3.11.0', 'b3bed2a9263193c84138052a1b92d47299c3490dd24d1d0bf79fb884e71e678a')
+    version('3.10.5', '3a81c8406410e0ffa8a3e9f8efcdf2e683cc40613c9bb5cb378a6498f595803e')
+    version('3.10.4', '6c836df84caa9ae683ae401d3f94eb9471353156fec6db602bf2e857e4ec339f')
     version('3.10.3', 'cd106babbae091604fee40c258737c84dec048949be779eaef5a745df3dc8de4')
     version('3.10.2', '63ed950653ae9b8d19daea47e24c0338')
     version('3.10.1', '2d0d5a9bd8112a4147a2a23f7f62a906')
@@ -78,14 +86,21 @@ class Petsc(Package):
     variant('clanguage', default='C', values=('C', 'C++'),
             description='Specify C (recommended) or C++ to compile PETSc',
             multi=False)
+    variant('fftw', default=False,
+            description='Activates support for FFTW (only parallel)')
     variant('suite-sparse', default=False,
             description='Activates support for SuiteSparse')
-
+    variant('knl', default=False,
+            description='Build for KNL')
     variant('X', default=False,
             description='Activate X support')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
+
+    filter_compiler_wrappers(
+        'petscvariables', relative_root='lib/petsc/conf'
+    )
 
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
@@ -95,9 +110,14 @@ class Petsc(Package):
               when='@3.7.5%clang@8.1.0:')
     patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
 
+    patch('xcode_stub_out_of_sync.patch', when='@:3.10.4')
+
+    patch('xlf_fix-dup-petscfecreate.patch', when='@3.11.0')
+
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@develop')
+    depends_on('sowing@1.1.23-p1', when='@xsdk-0.2.0')
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK
@@ -106,7 +126,8 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python@2.6:2.8', type='build')
+    depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
+    depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
 
     # Other dependencies
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
@@ -140,8 +161,8 @@ class Petsc(Package):
     depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.2+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.10.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.10.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.12.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.12.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -151,6 +172,7 @@ class Petsc(Package):
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
+    depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
 
@@ -195,10 +217,7 @@ class Petsc(Package):
                    '--download-hwloc=0',
                    'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
                    'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
-                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags']),
-                   'COPTFLAGS=',
-                   'FOPTFLAGS=',
-                   'CXXOPTFLAGS=']
+                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -209,6 +228,11 @@ class Petsc(Package):
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
+        if '+debug' not in spec:
+            options.extend(['COPTFLAGS=',
+                            'FOPTFLAGS=',
+                            'CXXOPTFLAGS='])
+
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
@@ -216,6 +240,9 @@ class Petsc(Package):
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
+        if '+knl' in spec:
+            options.append('--with-avx-512-kernels')
+            options.append('--with-memalign=64')
         if '+X' in spec:
             options.append('--with-x=1')
         else:
@@ -246,7 +273,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos'):
+                        'mumps', 'trilinos', 'fftw'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))
@@ -280,7 +307,7 @@ class Petsc(Package):
                 'camd,amd,suitesparseconfig'
             options.extend([
                 '--with-suitesparse-include=%s' % spec[ss_spec].prefix.include,
-                '--with-suitesparse-lib=%s' % spec[ss_spec].libs.ld_flags,
+                '--with-suitesparse-lib=%s' % spec[ss_spec].libs.joined(),
                 '--with-suitesparse=1'
             ])
         else:
@@ -291,7 +318,7 @@ class Petsc(Package):
         if 'zlib' in spec:
             options.extend([
                 '--with-zlib-include=%s' % spec['zlib'].prefix.include,
-                '--with-zlib-lib=%s'     % spec['zlib'].libs.ld_flags,
+                '--with-zlib-lib=%s'     % spec['zlib'].libs.joined(),
                 '--with-zlib=1'
             ])
         else:

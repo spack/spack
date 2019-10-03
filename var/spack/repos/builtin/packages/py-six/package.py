@@ -14,6 +14,7 @@ class PySix(PythonPackage):
 
     import_modules = ['six']
 
+    version('1.12.0', '9ae5d1feed8c0215f4ae4adcd9207fcb')
     version('1.11.0', 'd12789f9baf7e9fb2524c0c64f1773f8')
     version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
     version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')

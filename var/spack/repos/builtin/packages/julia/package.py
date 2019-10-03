@@ -17,6 +17,8 @@ class Julia(Package):
     git      = "https://github.com/JuliaLang/julia.git"
 
     version('master', branch='master')
+    version('1.1.1',  sha256='3c5395dd3419ebb82d57bcc49dc729df3b225b9094e74376f8c649ee35ed79c2')
+    version('1.0.0', sha256='1a2497977b1d43bb821a5b7475b4054b29938baae8170881c6b8dd4099d133f1')
     version('0.6.2', '255d80bc8d56d5f059fe18f0798e32f6')
     version('release-0.5', branch='release-0.5')
     version('0.5.2', '8c3fff150a6f96cf0536fb3b4eaa5cbb')
@@ -37,9 +39,11 @@ class Julia(Package):
     variant("python", default=False,
             description="Install Julia Python package")
     variant("simd", default=False, description="Install Julia SIMD package")
+    variant("mkl", default=False, description="Use Intel MKL")
 
     patch('gc.patch', when='@0.4:0.4.5')
     patch('openblas.patch', when='@0.4:0.4.5')
+    patch('armgcc.patch', when='@1.0.0:1.1.1 %gcc@:5.9 target=aarch64:')
 
     variant('binutils', default=sys.platform != 'darwin',
             description="Build via binutils")
@@ -58,6 +62,7 @@ class Julia(Package):
     depends_on("git", when='@release-0.4')
     depends_on("openssl")
     depends_on("python@2.7:2.8")
+    depends_on("mkl", when='+mkl')
 
     # Run-time dependencies:
     # depends_on("arpack")
@@ -97,6 +102,8 @@ class Julia(Package):
     depends_on("mpi", when="+mpi", type="run")
     depends_on("py-matplotlib", when="+plot", type="run")
 
+    conflicts("@:0.7.0", when="target=aarch64:")
+
     def install(self, spec, prefix):
         # Julia needs git tags
         if os.path.isfile(".git/shallow"):
@@ -126,6 +133,13 @@ class Julia(Package):
                 "BUILD_LLVM_CLANG=1",
                 "LLVM_ASSERTIONS=1",
                 "USE_LLVM_SHLIB=1"]
+        if spec.target.family == 'aarch64':
+            options += [
+                'JULIA_CPU_TARGET=generic',
+                'MARCH=armv8-a+crc']
+        if '+mkl' in spec:
+            options += [
+                'USE_INTEL_MKL=1']
         with open('Make.user', 'w') as f:
             f.write('\n'.join(options) + '\n')
         make()
@@ -149,18 +163,29 @@ class Julia(Package):
         mkdirp(pkgdir)
 
         # Configure Julia
-        with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
+        if spec.satisfies('@master') or spec.satisfies("@0.7:"):
+            julia_config = 'startup.jl'
+            cache_path = 'DEPOT_PATH'
+            unshift = 'pushfirst!'
+        else:
+            julia_config = 'juliarc.jl'
+            cache_path = 'LOAD_CACHE_PATH'
+            unshift = 'unshift!'
+        with open(join_path(prefix, "etc", "julia", julia_config),
                   "a") as juliarc:
-            if "@master" in spec or "@release-0.5" in spec or "@0.5:" in spec:
+            if "@master" in spec or "@release-0.5" in spec or "@0.5" in spec:
                 # This is required for versions @0.5:
                 juliarc.write(
                     '# Point package manager to working certificates\n')
+                if spec.satisfies('@master') or spec.satisfies('@0,7'):
+                    juliarc.write('import LibGit2;')
                 juliarc.write('LibGit2.set_ssl_cert_locations("%s")\n' %
                               cacert_file)
                 juliarc.write('\n')
             juliarc.write('# Put compiler cache into a private directory\n')
-            juliarc.write('empty!(Base.LOAD_CACHE_PATH)\n')
-            juliarc.write('unshift!(Base.LOAD_CACHE_PATH, "%s")\n' % cachedir)
+            juliarc.write('empty!(Base.%s)\n' % cache_path)
+            juliarc.write('%s(Base.%s, "%s")\n' %
+                          (unshift, cache_path, cachedir))
             juliarc.write('\n')
             juliarc.write('# Put Julia packages into a private directory\n')
             juliarc.write('ENV["JULIA_PKGDIR"] = "%s"\n' % pkgdir)
@@ -168,22 +193,26 @@ class Julia(Package):
 
         # Install some commonly used packages
         julia = spec['julia'].command
-        julia("-e", 'Pkg.init(); Pkg.update()')
+        if spec.satisfies("@:0.7"):
+            julia("-e", 'Pkg.init(); Pkg.update()')
+            pkgstart = ''
+        else:
+            pkgstart = 'import Pkg;'
 
         # Install HDF5
         if "+hdf5" in spec:
-            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
+            with open(join_path(prefix, "etc", "julia", julia_config),
                       "a") as juliarc:
                 juliarc.write('# HDF5\n')
                 juliarc.write('push!(Libdl.DL_LOAD_PATH, "%s")\n' %
                               spec["hdf5"].prefix.lib)
                 juliarc.write('\n')
-            julia("-e", 'Pkg.add("HDF5"); using HDF5')
-            julia("-e", 'Pkg.add("JLD"); using JLD')
+            julia("-e", pkgstart + 'Pkg.add("HDF5"); using HDF5')
+            julia("-e", pkgstart + 'Pkg.add("JLD"); using JLD')
 
         # Install MPI
         if "+mpi" in spec:
-            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
+            with open(join_path(prefix, "etc", "julia", julia_config),
                       "a") as juliarc:
                 juliarc.write('# MPI\n')
                 juliarc.write('ENV["JULIA_MPI_C_COMPILER"] = "%s"\n' %
@@ -191,11 +220,11 @@ class Julia(Package):
                 juliarc.write('ENV["JULIA_MPI_Fortran_COMPILER"] = "%s"\n' %
                               join_path(spec["mpi"].prefix.bin, "mpifort"))
                 juliarc.write('\n')
-            julia("-e", 'Pkg.add("MPI"); using MPI')
+            julia("-e", pkgstart + 'Pkg.add("MPI"); using MPI')
 
         # Install Python
         if "+python" in spec or "+plot" in spec:
-            with open(join_path(prefix, "etc", "julia", "juliarc.jl"),
+            with open(join_path(prefix, "etc", "julia", julia_config),
                       "a") as juliarc:
                 juliarc.write('# Python\n')
                 juliarc.write('ENV["PYTHON"] = "%s"\n' % spec["python"].home)
@@ -203,15 +232,18 @@ class Julia(Package):
             # Python's OpenSSL package installer complains:
             # Error: PREFIX too long: 166 characters, but only 128 allowed
             # Error: post-link failed for: openssl-1.0.2g-0
-            julia("-e", 'Pkg.add("PyCall"); using PyCall')
+            julia("-e", pkgstart + 'Pkg.add("PyCall"); using PyCall')
 
         if "+plot" in spec:
-            julia("-e", 'Pkg.add("PyPlot"); using PyPlot')
-            julia("-e", 'Pkg.add("Colors"); using Colors')
+            julia("-e", pkgstart + 'Pkg.add("PyPlot"); using PyPlot')
+            julia("-e", pkgstart + 'Pkg.add("Colors"); using Colors')
             # These require maybe gtk and image-magick
-            julia("-e", 'Pkg.add("Plots"); using Plots')
-            julia("-e", 'Pkg.add("PlotRecipes"); using PlotRecipes')
-            julia("-e", 'Pkg.add("UnicodePlots"); using UnicodePlots')
+            julia("-e", pkgstart + 'Pkg.add("Plots"); using Plots')
+            julia("-e", pkgstart + 'Pkg.add("PlotRecipes"); using PlotRecipes')
+            julia(
+                "-e",
+                pkgstart + 'Pkg.add("UnicodePlots"); using UnicodePlots'
+            )
             julia("-e", """\
 using Plots
 using UnicodePlots
@@ -221,6 +253,6 @@ plot(x->sin(x)*cos(x), linspace(0, 2pi))
 
         # Install SIMD
         if "+simd" in spec:
-            julia("-e", 'Pkg.add("SIMD"); using SIMD')
+            julia("-e", pkgstart + 'Pkg.add("SIMD"); using SIMD')
 
-        julia("-e", 'Pkg.status()')
+        julia("-e", pkgstart + 'Pkg.status()')

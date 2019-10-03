@@ -21,10 +21,11 @@ class RGsubfn(RPackage):
     sql calls that may involve strings where substitution is
     desirable."""
 
-    homepage = "https://cran.r-project.org/package=gsubfn"
-    url      = "https://cran.r-project.org/src/contrib/gsubfn_0.6-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gsubfn"
+    homepage = "https://cloud.r-project.org/package=gsubfn"
+    url      = "https://cloud.r-project.org/src/contrib/gsubfn_0.6-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gsubfn"
 
+    version('0.7', sha256='89351df9e65722d2862f26a0a3985666de3c86e8400808ced8a6eb6e165a4602')
     version('0.6-6', '94195ff3502706c736d9c593c07252bc')
 
     depends_on('r-proto', type=('build', 'run'))

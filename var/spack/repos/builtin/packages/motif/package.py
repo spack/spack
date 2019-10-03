@@ -12,7 +12,7 @@ class Motif(AutotoolsPackage):
     specification and the widget toolkit
     """
     homepage = "http://motif.ics.com/"
-    url = "http://cfhcable.dl.sourceforge.net/project/motif/Motif 2.3.8 Source Code/motif-2.3.8.tar.gz"
+    url = "http://cfhcable.dl.sourceforge.net/project/motif/Motif%202.3.8%20Source%20Code/motif-2.3.8.tar.gz"
 
     version('2.3.8', '7572140bb52ba21ec2f0c85b2605e2b1')
 
@@ -24,3 +24,4 @@ class Motif(AutotoolsPackage):
     depends_on("libxcomposite")
     depends_on("libxfixes")
     depends_on("xbitmaps")
+    depends_on("jpeg")

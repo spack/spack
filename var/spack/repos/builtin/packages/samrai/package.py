@@ -14,8 +14,8 @@ class Samrai(AutotoolsPackage):
        (SAMR) technology in large-scale parallel application development.
 
     """
-    homepage = "https://computation.llnl.gov/projects/samrai"
-    url      = "https://computation.llnl.gov/projects/samrai/download/SAMRAI-v3.11.2.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/samrai"
+    url      = "https://computing.llnl.gov/projects/samrai/download/SAMRAI-v3.11.2.tar.gz"
     list_url = homepage
 
     version('3.12.0',     '07364f6e209284e45ac0e9caf1d610f6')

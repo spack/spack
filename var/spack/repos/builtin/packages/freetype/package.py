@@ -24,6 +24,10 @@ class Freetype(AutotoolsPackage):
     depends_on('bzip2')
     depends_on('pkgconfig', type='build')
 
+    conflicts('%intel', when='@2.8:',
+              msg='freetype-2.8 and above cannot be built with icc (does not '
+              'support __builtin_shuffle)')
+
     patch('windows.patch', when='@2.9.1')
 
     def configure_args(self):
@@ -31,7 +35,3 @@ class Freetype(AutotoolsPackage):
         if self.spec.satisfies('@2.9.1:'):
             args.append('--enable-freetype-config')
         return args
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('CPATH', self.prefix.include.freetype2)
-        run_env.prepend_path('CPATH', self.prefix.include.freetype2)

@@ -35,7 +35,7 @@ class Plplot(CMakePackage):
     depends_on('python@2.7:2.8', type=('build', 'run'), when='+python')
     depends_on('qt', when='+qt')
     depends_on('tcl', when='+tcl')
-    depends_on('wx', when='+wx')
+    depends_on('wxwidgets', when='+wx')
 
     depends_on('freetype')
     depends_on('gtkplus')

@@ -22,11 +22,13 @@ class Nekcem(Package):
     # We only have a development version
     version('develop')
     version('0b8bedd', commit='0b8beddfdcca646bfcc866dfda1c5f893338399b')
+    version('7332619', commit='7332619b73d03868a256614b61794dce2d95b360')
 
     # dependencies
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('python@2.7:', type='build')
 
     @run_before('install')
     def fortran_check(self):
@@ -80,6 +82,14 @@ class Nekcem(Package):
             elif self.compiler.name == 'pgi':
                 fflags += ['-r8']
                 cflags += ['-DUNDERSCORE']
+
+            error = Executable(fc)('empty.f', output=str, error=str,
+                                   fail_on_error=False)
+
+            if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
+                # Use '-std=legacy' to suppress an error that used to be a
+                # warning in previous versions of gfortran.
+                fflags += ['-std=legacy']
 
             if '+mpi' in spec:
                 fflags += ['-DMPI', '-DMPIIO']

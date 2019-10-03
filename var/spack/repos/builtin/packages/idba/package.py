@@ -18,12 +18,4 @@ class Idba(AutotoolsPackage):
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
-    depends_on('libtool', type='build')    
-
-    conflicts('%cce')
-    conflicts('%clang')
-    conflicts('%intel')
-    conflicts('%nag')
-    conflicts('%pgi')
-    conflicts('%xl')
-    conflicts('%xl_r')
+    depends_on('libtool', type='build')

@@ -22,7 +22,7 @@ class Paraver(Package):
 
     depends_on("boost")
     # depends_on("extrae")
-    depends_on("wx")
+    depends_on("wxwidgets")
     depends_on("wxpropgrid")
 
     def install(self, spec, prefix):

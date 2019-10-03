@@ -26,55 +26,43 @@ Then:
 
     $ git clone https://github.com/spack/spack.git
     $ cd spack/bin
-    $ ./spack install libelf
+    $ ./spack install zlib
 
 Documentation
 ----------------
 
-[**Full documentation**](http://spack.readthedocs.io/) for Spack is
-the first place to look.
+[**Full documentation**](http://spack.readthedocs.io/) is available, or
+run `spack help` or `spack help --all`.
 
-Try the
-[**Spack Tutorial**](http://spack.readthedocs.io/en/latest/tutorial.html),
-to learn how to use spack, write packages, or deploy packages for users
-at your site.
+Tutorial
+----------------
 
-See also:
-  * [Technical paper](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf) and
-    [slides](https://tgamblin.github.io/files/Gamblin-Spack-SC15-Talk.pdf) on Spack's design and implementation.
-  * [Short presentation](https://tgamblin.github.io/files/Gamblin-Spack-Lightning-Talk-BOF-SC15.pdf) from the *Getting Scientific Software Installed* BOF session at Supercomputing 2015.
+We maintain a
+[**hands-on tutorial**](http://spack.readthedocs.io/en/latest/tutorial.html).
+It covers basic to advanced usage, packaging, developer features, and large HPC
+deployments.  You can do all of the exercises on your own laptop using a
+Docker container.
 
-Get Involved!
+Feel free to use these materials to teach users at your organization
+about Spack.
+
+Community
 ------------------------
 
 Spack is an open source project.  Questions, discussion, and
 contributions are welcome. Contributions can be anything from new
-packages to bugfixes, or even new core features.
+packages to bugfixes, documentation, or even new core features.
 
-### Mailing list
+Resources:
 
-If you are interested in contributing to spack, join the mailing list.
-We're using Google Groups for this:
+* **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
+  To get an invitation, [**click here**](https://spackpm.herokuapp.com).
+* **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
+* **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
+  `@mention` us!
 
-  * [Spack Google Group](https://groups.google.com/d/forum/spack)
-
-### Slack channel
-
-Spack has a Slack channel where you can chat about all things Spack:
-
-  * [Spack on Slack](https://spackpm.slack.com)
-
-[Sign up here](https://spackpm.herokuapp.com) to get an invitation mailed
-to you.
-
-### Twitter
-
-You can follow [@spackpm](https://twitter.com/spackpm) on Twitter for
-updates. Also, feel free to `@mention` us in in questions or comments
-about your own experience with Spack.
-
-### Contributions
-
+Contributing
+------------------------
 Contributing to Spack is relatively easy.  Just send us a
 [pull request](https://help.github.com/articles/using-pull-requests/).
 When you send your request, make ``develop`` the destination branch on the
@@ -91,6 +79,13 @@ Spack uses a rough approximation of the
 branching model.  The ``develop`` branch contains the latest
 contributions, and ``master`` is always tagged and points to the latest
 stable release.
+
+Code of Conduct
+------------------------
+
+Please note that Spack has a
+[**Code of Conduct**](.github/CODE_OF_CONDUCT.md). By participating in
+the Spack community, you agree to abide by its rules.
 
 Authors
 ----------------

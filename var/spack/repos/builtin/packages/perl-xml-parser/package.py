@@ -16,6 +16,7 @@ class PerlXmlParser(PerlPackage):
     version('2.44', 'af4813fe3952362451201ced6fbce379')
 
     depends_on('expat')
+    depends_on('perl-libwww-perl', type=('build', 'run'))
 
     def configure_args(self):
         args = []

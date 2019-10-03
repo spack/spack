@@ -13,11 +13,16 @@ class RAnimation(RPackage):
     computational statistics, data mining and machine learning.
     These functions maybe helpful in teaching statistics and data analysis."""
 
-    homepage = "https://cran.r-project.org/package=animation"
-    url = "https://cran.r-project.org/src/contrib/animation_2.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/animation"
+    homepage = "https://cloud.r-project.org/package=animation"
+    url = "https://cloud.r-project.org/src/contrib/animation_2.5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/animation"
 
+    version('2.6', sha256='90293638920ac436e7e4de76ebfd92e1643ccdb0259b62128f16dd0b13245b0a')
     version('2.5', sha256='b232fef1b318c79710e5e1923d87baba4c85ffe2c77ddb188130e0911d8cb55f')
 
-    extends('r')
-    depends_on('r', type=('build', 'run'))
+    depends_on('r@2.14:', type=('build', 'run'))
+    depends_on('r-magick', when='@2.6:', type=('build', 'run'))
+    depends_on('image-magick')
+    depends_on('ffmpeg')
+    depends_on('swftools')
+    depends_on('texlive')

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -12,8 +14,10 @@ class Elpa(AutotoolsPackage):
     homepage = 'http://elpa.mpcdf.mpg.de/'
     url = 'http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
 
+    version('2018.11.001',
+            sha256='cc27fe8ba46ce6e6faa8aea02c8c9983052f8e73a00cfea38abf7613cb1e1b16')
     version('2018.05.001.rc1', 'ccd77bd8036988ee624f43c04992bcdd')
-    version('2017.11.001', '4a437be40cc966efb07aaab84c20cd6e', preferred=True)
+    version('2017.11.001', '4a437be40cc966efb07aaab84c20cd6e')
     version('2017.05.003', '7c8e5e58cafab212badaf4216695700f')
     version('2017.05.002', 'd0abc1ac1f493f93bf5e30ec8ab155dc')
     version('2016.11.001.pre', '5656fd066cf0dcd071dbcaf20a639b37')
@@ -43,6 +47,18 @@ class Elpa(AutotoolsPackage):
             libname, root=self.prefix, shared=True, recursive=True
         )
 
+    @property
+    def headers(self):
+        suffix = '_openmp' if self.spec.satisfies('+openmp') else ''
+        incdir = os.path.join(
+            self.spec.prefix.include,
+            'elpa{suffix}-{version!s}'.format(
+                suffix=suffix, version=self.spec.version))
+
+        hlist = find_all_headers(incdir)
+        hlist.directories = [incdir]
+        return hlist
+
     build_directory = 'spack-build'
 
     def setup_environment(self, spack_env, run_env):
@@ -68,8 +84,8 @@ class Elpa(AutotoolsPackage):
         # adjust the C compiler or CFLAGS
         if '+optflags' in self.spec:
             options.extend([
-                'FCFLAGS=-O2 -march=native -ffree-line-length-none',
-                'CFLAGS=-O2 -march=native'
+                'FCFLAGS=-O2 -ffree-line-length-none',
+                'CFLAGS=-O2'
             ])
         if '+openmp' in self.spec:
             options.append('--enable-openmp')

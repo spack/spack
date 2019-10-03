@@ -9,12 +9,13 @@ from itertools import product
 from spack.util.executable import which
 
 # Supported archive extensions.
-PRE_EXTS = ["tar", "TAR"]
-EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
+PRE_EXTS   = ["tar", "TAR"]
+EXTS       = ["gz", "bz2", "xz", "Z"]
+NOTAR_EXTS = ["zip", "tgz", "tbz2", "txz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
 ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(
-    PRE_EXTS, EXTS)] + PRE_EXTS + EXTS
+    PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
 
 
 def allowed_archive(path):

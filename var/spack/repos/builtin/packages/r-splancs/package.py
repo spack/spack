@@ -9,9 +9,9 @@ from spack import *
 class RSplancs(RPackage):
     """Spatial and Space-Time Point Pattern Analysis"""
 
-    homepage = "https://cran.r-project.org/web/packages/splancs/index.html"
-    url      = "https://cran.r-project.org/src/contrib/splancs_2.01-40.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/splancs"
+    homepage = "https://cloud.r-project.org/package=splancs"
+    url      = "https://cloud.r-project.org/src/contrib/splancs_2.01-40.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/splancs"
 
     version('2.01-40', 'dc08a5c9a1fd2098d78459152f4917ce')
 

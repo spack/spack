@@ -18,17 +18,15 @@ class Atlas(Package):
     """
     homepage = "http://math-atlas.sourceforge.net/"
 
-    version('3.11.39', '5f3252fa980f5f060f93edd4669321e2',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.39/atlas3.11.39.tar.bz2')
+    # Developer (unstable)
+    version('3.11.41', sha256='477d567a8d683e891d786e9e8bb6ad6659daa9ba18e8dd0e2f70b7a54095f8de')
+    version('3.11.39', '5f3252fa980f5f060f93edd4669321e2')
+    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825')
 
-    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
+    # Stable
+    version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef', preferred=True)
+    version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da')
 
-    version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef',
-            url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.3/atlas3.10.3.tar.bz2')
-
-    version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da',
-            url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
     # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0
     # Lapack routines. Stick with 3.5.0 until this is fixed.
     resource(name='lapack',
@@ -46,16 +44,24 @@ class Atlas(Package):
         multi=False
     )
 
-    variant('tune_cpu', default=-1,
-        multi=False,
-        description="Number of threads to tune to,\
-                -1 for autodetect, 0 for no threading"
-    )
+    variant('tune_cpu', default=-1, multi=False,
+            description="Number of threads to tune to, "
+            "-1 for autodetect, 0 for no threading")
 
     provides('blas')
     provides('lapack')
 
     parallel = False
+
+    def url_for_version(self, version):
+        url = 'https://sourceforge.net/projects/math-atlas/files/'
+
+        if version >= Version('3.11'):
+            url += 'Developer%20%28unstable%29/{0}/atlas{0}.tar.bz2'
+        else:
+            url += 'Stable/{0}/atlas{0}.tar.bz2'
+
+        return url.format(version)
 
     def patch(self):
         # Disable thread check.  LLNL's environment does not allow
@@ -93,6 +99,11 @@ class Atlas(Package):
             '-C', 'ic', spack_cc,
             '-C', 'if', spack_f77
         ])
+
+        # Workaround for macOS Clang:
+        # http://math-atlas.sourceforge.net/atlas_install/node66.html
+        if spec.satisfies('@3.10.3: %clang platform=darwin'):
+            options.append('--force-clang=' + spack_cc)
 
         # Lapack resource to provide full lapack build. Note that
         # ATLAS only provides a few LAPACK routines natively.

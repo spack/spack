@@ -46,14 +46,24 @@ class Cloverleaf3d(MakefilePackage):
 
         if '%gcc' in self.spec:
             targets.append('COMPILER=GNU')
+            targets.append('FLAGS_GNU=')
+            targets.append('CFLAGS_GNU=')
         elif '%cce' in self.spec:
             targets.append('COMPILER=CRAY')
+            targets.append('FLAGS_CRAY=')
+            targets.append('CFLAGS_CRAY=')
         elif '%intel' in self.spec:
             targets.append('COMPILER=INTEL')
+            targets.append('FLAGS_INTEL=')
+            targets.append('CFLAGS_INTEL=')
         elif '%pgi' in self.spec:
             targets.append('COMPILER=PGI')
+            targets.append('FLAGS_PGI=')
+            targets.append('CFLAGS_PGI=')
         elif '%xl' in self.spec:
             targets.append('COMPILER=XLF')
+            targets.append('FLAGS_XLF=')
+            targets.append('CFLAGS_XLF=')
 
         return targets
 

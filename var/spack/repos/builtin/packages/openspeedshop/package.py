@@ -27,6 +27,7 @@ class Openspeedshop(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
     version('develop', branch='master')
+    version('2.4.1', branch='2.4.1')
     version('2.4.0', branch='2.4.0')
     version('2.3.1.5', branch='2.3.1.5')
     version('2.3.1.4', branch='2.3.1.4')
@@ -43,8 +44,7 @@ class Openspeedshop(CMakePackage):
             description="build with cuda packages included.")
 
     variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
-            description='Build or not build a GUI of choice'
-    )
+            description='Build or not build a GUI of choice')
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
@@ -86,13 +86,14 @@ class Openspeedshop(CMakePackage):
     depends_on("sqlite")
 
     # For boost
-    depends_on("boost@1.66.0:")
+    # depends_on("boost@1.66.0:")
+    depends_on("boost@1.66.0:1.69.0")
 
     depends_on("dyninst@develop", when='@develop')
     depends_on("dyninst@10:", when='@2.3.1.3:9999')
 
     depends_on("python", when='@develop', type=('build', 'run'))
-    depends_on("python@2.7.14:2.7.15", when='@2.3.1.3:9999', type=('build', 'run'))
+    depends_on("python@2.7.14:2.7.99", when='@2.3.1.3:9999', type=('build', 'run'))
 
     depends_on("libxml2")
 
@@ -139,6 +140,7 @@ class Openspeedshop(CMakePackage):
     depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
+    patch('arm.patch', when='target=aarch64:')
     parallel = False
 
     build_directory = 'build_openspeedshop'
@@ -288,7 +290,7 @@ class Openspeedshop(CMakePackage):
                                         shared=True, recursive=True)
 
         # Set Dyninst RT library path to support OSS loop resolution code
-        run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
+        run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir[0])
 
         run_env.set('OPENSS_RAWDATA_DIR', '.')
 

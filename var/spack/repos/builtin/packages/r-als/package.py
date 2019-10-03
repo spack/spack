@@ -15,11 +15,12 @@ class RAls(RPackage):
     decomposed simultaneously by assuming that one of the two matrices
     in the bilinear decomposition is shared between datasets."""
 
-    homepage = "https://cran.r-project.org/package=ALS"
-    url      = "https://cran.rstudio.com/src/contrib/ALS_0.0.6.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/ALS"
+    homepage = "https://cloud.r-project.org/package=ALS"
+    url      = "https://cloud.r-project.org/src/contrib/ALS_0.0.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ALS"
 
     version('0.0.6', 'b72d97911e8ab7e4f8aed1a710b3d62d')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-iso', type=('build', 'run'))
-    depends_on('r-nnls', type=('build', 'run'))
+    depends_on('r-nnls@1.1:', type=('build', 'run'))

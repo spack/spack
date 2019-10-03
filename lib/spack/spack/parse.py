@@ -12,7 +12,7 @@ from six import string_types
 import spack.error
 
 
-class Token:
+class Token(object):
     """Represents tokens; generated from input by lexer and fed to parse()."""
 
     def __init__(self, type, value='', start=0, end=0):
@@ -25,7 +25,7 @@ class Token:
         return str(self)
 
     def __str__(self):
-        return "'%s'" % self.value
+        return "<%d: '%s'>" % (self.type, self.value)
 
     def is_a(self, type):
         return self.type == type
@@ -128,7 +128,7 @@ class Parser(object):
         raise ParseError(message, self.text, self.token.start)
 
     def unexpected_token(self):
-        self.next_token_error("Unexpected token")
+        self.next_token_error("Unexpected token: '%s'" % self.next.value)
 
     def expect(self, id):
         """Like accept(), but fails if we don't like the next token."""
@@ -143,7 +143,7 @@ class Parser(object):
 
     def setup(self, text):
         if isinstance(text, string_types):
-            text = shlex.split(text)
+            text = shlex.split(str(text))
         self.text = text
         self.push_tokens(self.lexer.lex(text))
 

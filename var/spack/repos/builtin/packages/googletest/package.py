@@ -38,7 +38,7 @@ class Googletest(CMakePackage):
             options = []
 
         options.append('-Dgtest_disable_pthreads={0}'.format(
-            'ON' if '+pthreads' in spec else 'OFF'))
+            'OFF' if '+pthreads' in spec else 'ON'))
         options.append('-DBUILD_SHARED_LIBS={0}'.format(
             'ON' if '+shared' in spec else 'OFF'))
         return options
@@ -59,3 +59,9 @@ class Googletest(CMakePackage):
             else:
                 install('libgtest.a', prefix.lib)
                 install('libgtest_main.a', prefix.lib)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)

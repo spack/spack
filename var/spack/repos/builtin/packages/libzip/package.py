@@ -14,3 +14,5 @@ class Libzip(AutotoolsPackage):
     url      = "https://nih.at/libzip/libzip-1.2.0.tar.gz"
 
     version('1.2.0', '5c3372ab3a7897295bfefb27f745cf69')
+
+    depends_on('zlib@1.1.2:')

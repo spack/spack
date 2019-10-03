@@ -113,8 +113,8 @@ class AutotoolsPackage(PackageBase):
                 check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
                 # The package's config.guess already runs OK, so just use it
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                tty.debug(e)
         else:
             return
 
@@ -142,8 +142,8 @@ class AutotoolsPackage(PackageBase):
                 os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                tty.debug(e)
 
         raise RuntimeError('Failed to find suitable config.guess')
 
@@ -191,10 +191,6 @@ class AutotoolsPackage(PackageBase):
         tty.warn('*********************************************************')
         with working_dir(self.configure_directory):
             m = inspect.getmodule(self)
-            # This part should be redundant in principle, but
-            # won't hurt
-            m.libtoolize()
-            m.aclocal()
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']

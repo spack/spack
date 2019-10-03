@@ -17,5 +17,5 @@ class Cistem(AutotoolsPackage):
 
     version('1.0.0-beta', '479f395b30ad630df3cbba9c56eb29c2')
 
-    depends_on('wx@3.0.2')
+    depends_on('wxwidgets@3.0.2')
     depends_on('fftw')

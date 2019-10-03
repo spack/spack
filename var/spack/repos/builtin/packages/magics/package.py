@@ -13,11 +13,12 @@ class Magics(CMakePackage):
        to be as backwards-compatible as possible with the Fortran interface."""
 
     homepage = "https://software.ecmwf.int/wiki/display/MAGP/Magics"
-    url      = "https://software.ecmwf.int/wiki/download/attachments/3473464/Magics-2.29.0-Source.tar.gz"
+    url      = "https://confluence.ecmwf.int/download/attachments/3473464/Magics-4.1.0-Source.tar.gz?api=v2"
     list_url = "https://software.ecmwf.int/wiki/display/MAGP/Releases"
 
     # The policy on which minor releases remain available and which get deleted
     # after a newer version becomes available is unclear.
+    version('4.1.0', sha256='e56fb1bf82d57957a61a76284ad22024f4a7c3c989f6f796e57dfd45d88400c0')
     version('2.34.3', 'b4180bc4114ffd723b80728947f50c17')
     version('2.34.1', '1ecc5cc20cb0c3f2f0b9171626f09d53')
     version('2.33.0', '8d513fd2244f2974b3517a8b30dd51f6')
@@ -50,12 +51,13 @@ class Magics(CMakePackage):
     # Build dependencies
     depends_on('cmake@2.8.11:', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('python@:2', type='build')
+    depends_on('python', type='build')
+    depends_on('python@:2', type='build', when='@:3')
     depends_on('perl', type='build')
     depends_on('perl-xml-parser', type='build')
 
     # Non-optional dependencies
-    depends_on('proj')
+    depends_on('proj@:5')
     depends_on('boost')
     depends_on('expat')
 
@@ -94,6 +96,9 @@ class Magics(CMakePackage):
               msg='Eccodes is supported starting version 2.29.1')
     conflicts('+python', when='@:2.28',
               msg='Python interface is supported starting version 2.29.0')
+    conflicts('+python', when='@4:',
+              msg='Python interface is separate from the library '
+              'starting with 4.0.0')
 
     # Replace system python and perl by spack versions:
     def patch(self):

@@ -19,29 +19,29 @@ class Dataspaces(AutotoolsPackage):
     """an extreme scale data management framework."""
 
     homepage = "http://www.dataspaces.org"
-    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.tar.gz"
+    url      = "https://dataspaces.rdi2.rutgers.edu/downloads/dataspaces-1.6.2.tar.gz"
     git      = "https://github.com/melrom/dataspaces.git"
 
     version('develop', branch='master')
     version('1.6.2', '73caa4920b6f2c0c6d6cb87640ff04be')
 
     variant('dimes',
-        default=False,
-        description='enabled DIMES transport mode')
+            default=False,
+            description='enabled DIMES transport mode')
     variant('cray-drc',
-        default=False,
-        description='using Cray Dynamic Credentials library')
+            default=False,
+            description='using Cray Dynamic Credentials library')
     variant('gni-cookie',
-        default='0x5420000',
-        description='Cray UGNI communication token',
-        values=is_string)
+            default='0x5420000',
+            description='Cray UGNI communication token',
+            values=is_string)
     variant('ptag',
-        default='250',
-        description='Cray UGNI protection tag',
-        values=is_string)
+            default='250',
+            description='Cray UGNI protection tag',
+            values=is_string)
     variant('mpi',
-        default=True,
-        description='Use MPI for collective communication')
+            default=True,
+            description='Use MPI for collective communication')
 
     depends_on('m4', type='build')
     depends_on('automake', type='build')

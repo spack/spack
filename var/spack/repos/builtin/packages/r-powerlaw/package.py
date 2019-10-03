@@ -13,9 +13,12 @@ class RPowerlaw(RPackage):
        is used to estimate the lower cut-off for the scaling region."""
 
     homepage = "https://github.com/csgillespie/poweRlaw"
-    url      = "https://cran.rstudio.com/src/contrib/poweRlaw_0.70.1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/poweRlaw"
+    url      = "https://cloud.r-project.org/src/contrib/poweRlaw_0.70.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/poweRlaw"
 
+    version('0.70.2', sha256='240f1454389b1a00ad483fb63e5b53243cc9367f21a3e7253ab2c293673459ab')
     version('0.70.1', '4117cb95c37f72441f320ea12f553065')
 
+    depends_on('r@3.1.0:', when='@:0.70.1', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@0.70.2:', type=('build', 'run'))
     depends_on('r-vgam', type=('build', 'run'))

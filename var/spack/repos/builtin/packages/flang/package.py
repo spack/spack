@@ -21,12 +21,14 @@ class Flang(CMakePackage):
     version('20180612', '62284e26214eaaff261a922c67f6878c')
 
     depends_on('llvm@flang-develop', when='@develop')
-    depends_on('llvm@flang-20180921', when='@20180921 target=x86_64')
-    depends_on('llvm@flang-20180612', when='@20180612 target=x86_64')
+    depends_on('llvm@flang-20180921', when='@20180921 target=x86_64:')
+    depends_on('llvm@flang-20180612', when='@20180612 target=x86_64:')
+
+    depends_on('llvm@flang-20180921', when='@20180921 target=aarch64:')
 
     # LLVM version specific to OpenPOWER.
-    depends_on('llvm@flang-ppc64le-20180921', when='@20180921 target=ppc64le')
-    depends_on('llvm@flang-ppc64le-20180612', when='@20180612 target=ppc64le')
+    depends_on('llvm@flang-ppc64le-20180921', when='@20180921 target=ppc64le:')
+    depends_on('llvm@flang-ppc64le-20180612', when='@20180612 target=ppc64le:')
 
     depends_on('pgmath@develop', when='@develop')
     depends_on('pgmath@20180921', when='@20180921')

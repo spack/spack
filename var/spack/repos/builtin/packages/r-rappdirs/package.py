@@ -11,9 +11,9 @@ class RRappdirs(RPackage):
     you should use to save data, caches and logs. A port of Python's
     'Appdirs' to R."""
 
-    homepage = "https://cran.r-project.org/package=rappdirs"
-    url      = "https://cran.rstudio.com/src/contrib/rappdirs_0.3.1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/rappdirs"
+    homepage = "https://cloud.r-project.org/package=rappdirs"
+    url      = "https://cloud.r-project.org/src/contrib/rappdirs_0.3.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rappdirs"
 
     version('0.3.1', 'fbbdceda2aa49374e61c7d387bf9ea21')
 

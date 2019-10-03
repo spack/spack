@@ -14,6 +14,7 @@ class Libxaw(AutotoolsPackage):
     url      = "https://www.x.org/archive/individual/lib/libXaw-1.0.13.tar.gz"
 
     version('1.0.13', '6c522476024df5872cddc5f1562fb656')
+    version('1.0.12', 'a1dd3ced7cefe99b2db8a5d390cf5fe9')
 
     depends_on('libx11')
     depends_on('libxext')

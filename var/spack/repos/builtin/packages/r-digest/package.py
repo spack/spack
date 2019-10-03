@@ -25,11 +25,14 @@ class RDigest(RPackage):
     used."""
 
     homepage = "http://dirk.eddelbuettel.com/code/digest.html"
-    url      = "https://cran.r-project.org/src/contrib/digest_0.6.12.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/digest"
+    url      = "https://cloud.r-project.org/src/contrib/digest_0.6.12.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/digest"
 
+    version('0.6.20', sha256='05674b0b5d888461ff770176c67b10a11be062b0fee5dbd9298f25a9a49830c7')
+    version('0.6.19', sha256='28d159bd589ecbd01b8da0826eaed417f5c1bf5a11b79e76bf67ce8d935cccf4')
     version('0.6.12', '738efd4d9a37c5a4001ae66e954ce07e')
     version('0.6.11', '52a864f55846b48b3cab0b5d0304a82a')
     version('0.6.9',  '48048ce6c466bdb124716e45ba4a0e83')
 
-    depends_on('r@2.4.1:')
+    depends_on('r@2.4.1:', when='@:0.6.15', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@0.6.16:', type=('build', 'run'))

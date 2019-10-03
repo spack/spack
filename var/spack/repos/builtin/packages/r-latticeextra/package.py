@@ -13,10 +13,11 @@ class RLatticeextra(RPackage):
     functions."""
 
     homepage = "http://latticeextra.r-forge.r-project.org/"
-    url      = "https://cran.rstudio.com/src/contrib/latticeExtra_0.6-28.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/latticeExtra"
+    url      = "https://cloud.r-project.org/src/contrib/latticeExtra_0.6-28.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/latticeExtra"
 
     version('0.6-28', '771938f25d0983763369b48a1153b26c')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-rcolorbrewer', type=('build', 'run'))

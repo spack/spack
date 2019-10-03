@@ -9,7 +9,7 @@ from spack.architecture import OperatingSystem
 
 class Test(Platform):
     priority    = 1000000
-    front_end   = 'x86_32'
+    front_end   = 'x86'
     back_end    = 'x86_64'
     default     = 'x86_64'
 

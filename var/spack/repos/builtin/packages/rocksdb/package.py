@@ -34,6 +34,12 @@ class Rocksdb(MakefilePackage):
 
     phases = ['install']
 
+    def patch(self):
+        filter_file(
+            '-march=native', '',
+            join_path('build_tools', 'build_detect_platform')
+        )
+
     def install(self, spec, prefix):
         cflags = []
         ldflags = []

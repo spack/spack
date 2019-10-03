@@ -13,6 +13,8 @@ class Alquimia(CMakePackage):
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
     git      = "https://github.com/LBL-EESA/alquimia-dev.git"
 
+    maintainers = ['smolins', 'balay']
+
     version('develop')
     version('xsdk-0.4.0', commit='2edad6733106142d014bb6e6a73c2b21d5e3cf2d')
     version('xsdk-0.3.0', tag='xsdk-0.3.0')

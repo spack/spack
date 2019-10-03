@@ -14,15 +14,15 @@ class Gdl(CMakePackage):
     """
 
     homepage = "https://github.com/gnudatalanguage/gdl"
-    url      = "https://github.com/gnudatalanguage/gdl/archive/v0.9.8.tar.gz"
+    url      = "https://github.com/gnudatalanguage/gdl/archive/v0.9.9.tar.gz"
 
+    version('0.9.9', sha256='ad5de3fec095a5c58b46338dcc7367d2565c093794ab1bbcf180bba1a712cf14')
     version('0.9.8', '447b0362e1df5ea8af814a969e89d3ec')
 
-    variant(
-            'graphicsmagick',
+    variant('graphicsmagick',
             default=False,
-            description='Enable GraphicsMagick'
-           )
+            description='Enable GraphicsMagick')
+
     variant('hdf4', default=False, description='Enable HDF4')
     variant('hdf5', default=True, description='Enable HDF5')
     variant('openmp', default=True, description='Enable OpenMP')
@@ -34,6 +34,7 @@ class Gdl(CMakePackage):
 
     extends('python', when='+python')
 
+    depends_on('cmake@3:', type='build')
     depends_on('graphicsmagick', when='+graphicsmagick')
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
@@ -41,10 +42,12 @@ class Gdl(CMakePackage):
     depends_on('plplot+wx', when='+wx@:5.11')
     depends_on('plplot+wx+wxold', when='+wx@5.12:')
     depends_on('plplot~wx', when='~wx')
-    depends_on('proj', when='+proj')
+    # Too many dependencies to test if GDL supports PROJ.6,
+    # so restricting to old API
+    depends_on('proj@:5', when='+proj')
     depends_on('py-numpy', type=('build', 'run'), when='+embed_python')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='+embed_python')
-    depends_on('wx', when='+wx')
+    depends_on('wxwidgets', when='+wx')
 
     depends_on('eigen')
     depends_on('fftw')

@@ -23,4 +23,4 @@ class Hacckernels(CMakePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('README', prefix)
-        install('spack-build/HACCKernels', prefix.bin)
+        install('../spack-build/HACCKernels', prefix.bin)

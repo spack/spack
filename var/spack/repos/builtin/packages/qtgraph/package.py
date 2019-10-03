@@ -20,8 +20,7 @@ class Qtgraph(QMakePackage):
     version('1.0.0.0', branch='1.0.0.0')
 
     # qtgraph depends on these packages
-    depends_on('qt@4.8.6:', when='@develop')
-    depends_on('qt@5.10.0', when='@1.0.0.0:')
+    depends_on('qt@5.10.0:', when='@1.0.0.0:')
 
     depends_on("graphviz@2.40.1:", when='@develop')
     depends_on("graphviz@2.40.1", when='@1.0.0.0:')
