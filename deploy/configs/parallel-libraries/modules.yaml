@@ -32,7 +32,7 @@ modules:
       - petsc
       - py-mpi4py
       - trilinos
-      - neuron+mpi
+      - neuron~debug+mpi
       - omega-h
     blacklist:
       - '%gcc'

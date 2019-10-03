@@ -44,8 +44,6 @@ modules:
       - neurodamus-neocortex
       - neurodamus-thalamus
       - neurodamus-mousify
-      #- 'neuron+mpi%intel'
-      - neuron~debug
       - parquet-converters
       - placement-algorithm
       - psp-validation
