@@ -1698,7 +1698,7 @@ def test_env_activate_csh_prints_shell_output(
 
 def test_concretize_user_specs_together():
     e = ev.create('coconcretization')
-    e.concretize_together = True
+    e.concretization = 'together'
 
     # Concretize a first time using 'mpich' as the MPI provider
     e.add('mpileaks')
@@ -1726,7 +1726,7 @@ def test_concretize_user_specs_together():
 
 def test_cant_install_single_spec_when_concretizing_together():
     e = ev.create('coconcretization')
-    e.concretize_together = True
+    e.concretization = 'together'
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
         e.install('zlib')

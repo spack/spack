@@ -120,9 +120,12 @@ schema = {
                             }
                         ]
                     },
-                    'concretize_together': {
-                        'type': 'boolean',
-                        'default': False
+                    'concretization': {
+                        'type': 'string',
+                        # Strategies are added dynamically by the
+                        # Environment class
+                        'enum': [],
+                        'default': 'separately'
                     }
                 }
             )

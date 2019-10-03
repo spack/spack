@@ -499,6 +499,19 @@ class ViewDescriptor(object):
         view.add_specs(*add_specs, with_dependencies=False)
 
 
+def _strategy(func):
+    """Registers a method as a valid concretization strategy and adds it
+    to the environment schema.
+    """
+    # Add the strategy to the schema using its function name as a name
+    strategy_name = func.__name__
+    subschema = spack.schema.env.schema['patternProperties']['^env|spack$']
+    strategies = subschema['properties']['concretization']['enum']
+    strategies.append(strategy_name)
+
+    return func
+
+
 class Environment(object):
     def __init__(self, path, init_file=None, with_view=None):
         """Create a new environment.
@@ -515,7 +528,7 @@ class Environment(object):
                 path to the view.
         """
         self.path = os.path.abspath(path)
-        self.concretize_together = False
+        self.concretization = False
         self.clear()
 
         if init_file:
@@ -593,8 +606,9 @@ class Environment(object):
                               for name, values in enable_view.items())
         else:
             self.views = {}
+        # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
-        self.concretize_together = configuration.get('concretize_together')
+        self.concretization = configuration.get('concretization')
 
     @property
     def user_specs(self):
@@ -849,12 +863,15 @@ class Environment(object):
             self.concretized_order = []
             self.specs_by_hash = {}
 
-        if self.concretize_together:
-            return self._concretize_together()
+        # Pick the right concretization strategy
+        concretization_strategy = getattr(self, self.concretization)
+        return concretization_strategy()
 
-        return self._concretize_separately()
-
-    def _concretize_together(self):
+    @_strategy
+    def together(self):
+        """Concretization strategy that concretizes all the specs
+        in the same DAG.
+        """
         # Exit early if the set of concretized specs is the set of user specs
         user_specs_did_not_change = not bool(
             set(self.user_specs) - set(self.concretized_user_specs)
@@ -874,7 +891,11 @@ class Environment(object):
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs
 
-    def _concretize_separately(self):
+    @_strategy
+    def separately(self):
+        """Concretization strategy that concretizes separately one
+        user spec after the other.
+        """
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
@@ -905,7 +926,7 @@ class Environment(object):
         This will automatically concretize the single spec, but it won't
         affect other as-yet unconcretized specs.
         """
-        if self.concretize_together:
+        if self.concretization == 'together':
             msg = 'cannot install a single spec in an environment that is ' \
                   'configured to be concretized together. Run instead:\n\n' \
                   '    $ spack add <spec>\n' \

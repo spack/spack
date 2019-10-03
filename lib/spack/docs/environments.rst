@@ -489,10 +489,9 @@ available from the yaml file.
 Spec concretization
 """""""""""""""""""
 
-Specs can be either concretized separately or together, as already
+Specs can be concretized separately or together, as already
 explained in :ref:`environments_concretization`. The behavior active
-under any environment is determined by the ``concretize_together``
-property:
+under any environment is determined by the ``concretization`` property:
 
 .. code-block:: yaml
 
@@ -502,9 +501,17 @@ property:
          - netcdf
          - nco
          - py-sphinx
-       concretize_together: true
+       concretization: together
 
-If this property is not set it will default to ``false``.
+which can currently take either one of the two allowed values ``together`` or ``separately``
+(the default).
+
+.. admonition:: Re-concretization of user specs
+
+   When concretizing specs together the entire set of specs will be
+   re-concretized after any addition of new user specs, to ensure that
+   the environment remains consistent. When instead the specs are concretized
+   separately only the new specs will be re-concretized after any addition.
 
 """""""""""""
 Spec Matrices
