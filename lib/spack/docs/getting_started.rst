@@ -71,7 +71,7 @@ This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
 
-If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
+If :ref:`environment-modules <InstallEnvironmentModules>` is
 installed and available, the ``spack`` command can also load and unload
 :ref:`modules <modules>`.
 

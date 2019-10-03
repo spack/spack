@@ -591,7 +591,6 @@ def print_setup_info(*info):
     module_roots = spack.config.get('config:module_roots')
     module_to_roots = {
         'tcl': list(),
-        'dotkit': list(),
         'lmod': list()
     }
     for name, path in module_roots.items():

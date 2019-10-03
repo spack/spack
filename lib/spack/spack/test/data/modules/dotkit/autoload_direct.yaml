@@ -1,5 +1,0 @@
-enable:
-  - dotkit
-dotkit:
-  all:
-    autoload: 'direct'
