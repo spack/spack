@@ -33,8 +33,8 @@ class EcpVizSdk(CMakePackage):
     # variant('rover', default=False, description="Enable ROVER")
 
     depends_on('ascent', when='+ascent')
-    depends_on('catalyst', when='+catalyst+mpi+python')
-    depends_on('paraview', when='+paraview+mpi+python')
+    depends_on('catalyst', when='+catalyst')
+    depends_on('paraview', when='+paraview')
     depends_on('sz', when='+sz')
     depends_on('visit', when='+visit')
     depends_on('vtkm', when='+vtkm')
