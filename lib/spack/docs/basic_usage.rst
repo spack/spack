@@ -1190,23 +1190,14 @@ Using Extensions
 ^^^^^^^^^^^^^^^^
 
 There are three ways to get ``numpy`` working in Python.  The first is
-to use :ref:`shell-support`.  You can simply ``use`` or ``load`` the
+to use :ref:`shell-support`.  You can simply ``load`` the
 module for the extension, and it will be added to the ``PYTHONPATH``
-in your current shell.
-
-For tcl modules:
+in your current shell:
 
 .. code-block:: console
 
    $ spack load python
    $ spack load py-numpy
-
-or, for dotkit:
-
-.. code-block:: console
-
-   $ spack use python
-   $ spack use py-numpy
 
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.

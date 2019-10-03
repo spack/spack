@@ -135,7 +135,16 @@ properties = {
                 'default': [],
                 'items': {
                     'type': 'string',
-                    'enum': ['tcl', 'dotkit', 'lmod']}},
+                    'enum': ['tcl', 'dotkit', 'lmod']
+                },
+                'deprecatedProperties': {
+                    'properties': ['dotkit'],
+                    'message': 'cannot enable "{property}" in modules.yaml '
+                               '[support for {property} module files has been'
+                               ' dropped]',
+                    'error': False
+                },
+            },
             'lmod': {
                 'allOf': [
                     # Base configuration
@@ -163,6 +172,13 @@ properties = {
                     {}  # Specific dotkit extensions
                 ]
             },
+        },
+        'deprecatedProperties': {
+            'properties': ['dotkit'],
+            'message': 'the section "{property}" in modules.yaml has no effect'
+                       ' [support for {property} module files has been '
+                       'dropped]',
+            'error': False
         },
     },
 }

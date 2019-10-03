@@ -167,7 +167,7 @@ is_not_set() {
 
 
 # -----------------------------------------------------------------------
-# Instead of invoking the module/use/dotkit commands, we print the
+# Instead of invoking the module commands, we print the
 # arguments that Spack invokes the command with, so we can check that
 # Spack passes the expected arguments in the tests below.
 #
@@ -175,14 +175,6 @@ is_not_set() {
 # -----------------------------------------------------------------------
 module() {
     echo module "$@"
-}
-
-use() {
-    echo use "$@"
-}
-
-unuse() {
-    echo unuse "$@"
 }
 
 # -----------------------------------------------------------------------
@@ -219,11 +211,9 @@ echo "Creating a mock package installation"
 spack -m install --fake a
 a_install=$(spack location -i a)
 a_module=$(spack -m module tcl find a)
-a_dotkit=$(spack -m module dotkit find a)
 
 b_install=$(spack location -i b)
 b_module=$(spack -m module tcl find b)
-b_dotkit=$(spack -m module dotkit find b)
 
 # create a test environment for tesitng environment commands
 echo "Creating a mock environment"
@@ -303,26 +293,6 @@ fails spack -m unload d
 contains "usage: spack unload " spack -m unload -h
 contains "usage: spack unload " spack -m unload -h d
 contains "usage: spack unload " spack -m unload --help
-
-title 'Testing `spack use`'
-contains "use $b_dotkit" spack -m use b
-fails spack -m use -l
-contains "use -l --arg $b_dotkit" spack -m use -l --arg b
-contains "use $b_dotkit $a_dotkit" spack -m use -r a
-contains "use $b_dotkit $a_dotkit" spack -m use --dependencies a
-fails spack -m use d
-contains "usage: spack use " spack -m use -h
-contains "usage: spack use " spack -m use -h d
-contains "usage: spack use " spack -m use --help
-
-title 'Testing `spack unuse`'
-contains "unuse $b_dotkit" spack -m unuse b
-fails spack -m unuse -l
-contains "unuse -l --arg $b_dotkit" spack -m unuse -l --arg b
-fails spack -m unuse d
-contains "usage: spack unuse "  spack -m unuse -h
-contains "usage: spack unuse "  spack -m unuse -h d
-contains "usage: spack unuse "  spack -m unuse --help
 
 title 'Testing `spack env`'
 contains "usage: spack env " spack env -h
