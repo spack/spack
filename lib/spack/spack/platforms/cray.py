@@ -97,6 +97,10 @@ class Cray(Platform):
         env.append_path("PKG_CONFIG_PATH", "/usr/lib64/pkgconfig")
         env.append_path("PKG_CONFIG_PATH", "/usr/local/lib64/pkgconfig")
 
+        if os.environ.get('CRAY_LD_LIBRARY_PATH'):
+            env.prepend_path('LD_LIBRARY_PATH', 
+                             os.environ['CRAY_LD_LIBRARY_PATH'])
+
     @classmethod
     def detect(cls):
         return 'CRAYPE_VERSION' in os.environ or os.path.exists('/opt/cray/pe')

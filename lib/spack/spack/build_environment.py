@@ -141,6 +141,7 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
+    env.unset('CRAY_LD_LIBRARY_PATH')
     env.unset('LIBRARY_PATH')
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
