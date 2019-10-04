@@ -122,9 +122,7 @@ schema = {
                     },
                     'concretization': {
                         'type': 'string',
-                        # Strategies are added dynamically by the
-                        # Environment class
-                        'enum': [],
+                        'enum': ['together', 'separately'],
                         'default': 'separately'
                     }
                 }

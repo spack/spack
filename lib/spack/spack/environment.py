@@ -500,18 +500,44 @@ class ViewDescriptor(object):
 
 
 def _strategy(func):
-    """Registers a method as a valid concretization strategy and adds it
-    to the environment schema.
+    """Registers a method as a valid strategy and checks that it is listed
+    in environment schema.
     """
-    # Add the strategy to the schema using its function name as a name
     strategy_name = func.__name__
     subschema = spack.schema.env.schema['patternProperties']['^env|spack$']
     strategies = subschema['properties']['concretization']['enum']
-    strategies.append(strategy_name)
+
+    msg = ("concretization strategy '{0}' needs to be added"
+           " to the environment schema")
+    assert strategy_name in strategies, msg.format(strategy_name)
+
+    # Mark a strategy as registered
+    func.registered = True
 
     return func
 
 
+def _ensure_consistency_with_schema(cls):
+    """Checks that the Environment class has all the methods needed to
+    ensure that the functionality promised by the schema could work.
+    """
+    subschema = spack.schema.env.schema['patternProperties']['^env|spack$']
+    strategies = subschema['properties']['concretization']['enum']
+
+    missing = []
+    for strategy_name in strategies:
+        maybe_method = getattr(cls, strategy_name, None)
+        method_is_registered = getattr(maybe_method, 'registered', False)
+        if not maybe_method or not method_is_registered:
+            missing.append(strategy_name)
+
+    msg = "could not find concretization strategies [{0}]"
+    assert not missing, msg.format(', '.join(missing))
+
+    return cls
+
+
+@_ensure_consistency_with_schema
 class Environment(object):
     def __init__(self, path, init_file=None, with_view=None):
         """Create a new environment.
