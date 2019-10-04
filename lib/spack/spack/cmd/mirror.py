@@ -263,7 +263,6 @@ def mirror_create(args):
             msg = 'Skipping {0} as it is an external spec.'
             tty.msg(msg.format(spec.cshort_spec))
 
-        # Default name for directory is spack-mirror-<DATESTAMP>
         mirror = spack.mirror.Mirror(
                 args.directory or spack.config.get('config:source_cache'))
 

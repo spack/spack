@@ -6,6 +6,8 @@
 """Caches used by Spack to store data"""
 import os
 
+import six.moves.urllib.parse as urllib_parse
+
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
 
@@ -52,7 +54,8 @@ def _fetch_cache():
 
 class MirrorCache(object):
     def __init__(self, root):
-        self.root = url_util.parse(root)
+        self.root = urllib_parse.urlparse(
+                root, scheme='file', allow_fragments=False)
         self.new_resources = set()
         self.existing_resources = set()
 
@@ -60,7 +63,10 @@ class MirrorCache(object):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
 
-        dst = url_util.parse(url_util.join(self.root, relative_dest))
+        dst = urllib_parse.urlparse(
+                url_util.join(self.root, relative_dest),
+                scheme='file',
+                allow_fragments=False)
 
         if web_util.url_exists(dst):
             self.existing_resources.add(relative_dest)

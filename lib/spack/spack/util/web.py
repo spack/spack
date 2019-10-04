@@ -21,6 +21,7 @@ from itertools import product
 from six import string_types
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
+import six.moves.urllib.parse as urllib_parse
 import multiprocessing.pool
 
 try:
@@ -90,7 +91,7 @@ class LinkParser(HTMLParser):
 
 
 class NonDaemonProcess(multiprocessing.Process):
-    """Process tha allows sub-processes, so pools can have sub-pools."""
+    """Process that allows sub-processes, so pools can have sub-pools."""
     @property
     def daemon(self):
         return False
@@ -117,6 +118,24 @@ else:
             super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
+def uses_ssl(parsed_url):
+    if parsed_url.scheme == 'https':
+        return True
+
+    if parsed_url.scheme == 's3':
+        endpoint_url = os.environ.get('AWS_ENDPOINT_URL')
+        if not endpoint_url:
+            return True
+
+        if urllib_parse.urlparse(
+                endpoint_url,
+                scheme='https',
+                allow_fragments=False).scheme == 'https':
+            return True
+
+    return False
+
+
 __UNABLE_TO_VERIFY_SSL = (
         lambda pyver: (
             (pyver < (2, 7, 9)) or
@@ -124,21 +143,17 @@ __UNABLE_TO_VERIFY_SSL = (
         ))(sys.version_info)
 
 def read_from_url(url, accept_content_type=None):
-    parsed_url = url_util.parse(url)
+    parsed_url = urllib_parse.urlparse(
+            url,
+            scheme='file',
+            allow_fragments=False)
+
     context = None
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
-    user_expects_verify_ssl = lambda: (
-            verify_ssl and (
-                parsed_url.scheme == 'https' or (
-                    parsed_url.scheme == 's3' and
-                    url_util.parse(
-                        parsed_url.netloc, scheme='https').scheme == 'https')))
-
-    if __UNABLE_TO_VERIFY_SSL and user_expects_verify_ssl():
-        tty.warn("Spack will not check SSL certificates. You need to update "
-                 "your Python to enable certificate verification.")
+    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(parsed_url):
+        warn_no_ssl_cert_checking()
     else:
         # without a defined context, urlopen will not verify the ssl cert for
         # python 3.x
@@ -183,27 +198,31 @@ def read_from_url(url, accept_content_type=None):
     return response.geturl(), response.headers, response
 
 
+def warn_no_ssl_cert_checking():
+    tty.warn("Spack will not check SSL certificates. You need to update "
+             "your Python to enable certificate verification.")
+
+
 def push_to_url(local_path, remote_path, **kwargs):
     keep_original = kwargs.get('keep_original', True)
 
-    local_url = url_util.parse(local_path)
+    local_url = urllib_parse.urlparse(
+            local_path,
+            scheme='file',
+            allow_fragments=False)
+
     if local_url.scheme != 'file':
         raise ValueError('local path must be a file:// url')
 
-    remote_url = url_util.parse(remote_path)
+    remote_url = urllib_parse.urlparse(
+            remote_path,
+            scheme='file',
+            allow_fragments=False)
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
-    user_expects_verify_ssl = lambda: (
-            verify_ssl and (
-                remote_url.scheme == 'https' or (
-                    remote_url.scheme == 's3' and
-                    url_util.parse(
-                        remote_url.netloc, scheme='https').scheme == 'https')))
-
-    if __UNABLE_TO_VERIFY_SSL and user_expects_verify_ssl():
-        tty.warn("Spack will not check SSL certificates. You need to update "
-                 "your Python to enable certificate verification.")
+    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_path):
+        warn_no_ssl_cert_checking()
 
     if remote_url.scheme == 'file':
         mkdirp(os.path.dirname(remote_url.path))
@@ -241,7 +260,7 @@ def push_to_url(local_path, remote_path, **kwargs):
 
 
 def url_exists(path):
-    url = url_util.parse(path)
+    url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
         return os.path.exists(url.path)
@@ -267,7 +286,7 @@ def url_exists(path):
 
 
 def remove_url(path):
-    url = url_util.parse(path)
+    url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
         os.remove(url.path)
@@ -317,7 +336,7 @@ def _iter_s3_prefix(client, url, num_entries=1024):
 
 
 def list_url(path):
-    url = url_util.parse(path)
+    url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
         return os.listdir(url.path)
@@ -448,7 +467,10 @@ def _urlopen(req, *args, **kwargs):
         del kwargs['context']
 
     opener = urlopen
-    if url_util.parse(url).scheme == 's3':
+    if urllib_parse.urlparse(
+            url,
+            scheme='file',
+            allow_fragments=False).scheme == 's3':
         import spack.s3_handler
         opener = spack.s3_handler.open
 

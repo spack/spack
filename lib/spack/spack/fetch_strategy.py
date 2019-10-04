@@ -1093,7 +1093,11 @@ class S3FetchStrategy(URLFetchStrategy):
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
-        parsed_url = url_util.parse(self.url)
+        parsed_url = urllib_parse.urlparse(
+                self.url,
+                scheme='file',
+                allow_fragments=False)
+
         if parsed_url.scheme != 's3':
             raise ValueError('S3FetchStrategy can only fetch from s3:// urls.')
 
@@ -1270,7 +1274,10 @@ def from_url_scheme(url, *args, **kwargs):
        in the given url."""
 
     url = kwargs.get('url', url)
-    parsed_url = urllib_parse.urlparse(url)
+    parsed_url = urllib_parse.urlparse(
+            url,
+            scheme='file',
+            allow_fragments=False)
 
     scheme_mapping = (
             kwargs.get('scheme_mapping') or

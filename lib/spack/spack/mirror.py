@@ -18,6 +18,7 @@ import os.path
 import operator
 
 import six
+import six.moves.urllib.parse as urllib_parse
 
 try:
     from collections.abc import Mapping
@@ -33,7 +34,6 @@ import spack.url as url
 import spack.fetch_strategy as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.url as url_util
 import spack.spec
 from spack.version import VersionList
 from spack.util.compression import allowed_archive
@@ -57,7 +57,13 @@ class Mirror(object):
     to them.  These two URLs are usually the same.
     """
 
-    def __init__(self, fetch_url, push_url=None, name=None):
+    def __init__(self,
+                 fetch_url,
+                 push_url=None,
+                 name=None,
+                 canonicalize_local_file_paths=True):
+
+        self._canonicalize = canonicalize_local_file_paths
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
@@ -372,7 +378,8 @@ def create(path, specs, **kwargs):
     it creates specs for those versions.  If the version satisfies any spec
     in the specs list, it is downloaded and added to the mirror.
     """
-    parsed = url_util.parse(path)
+
+    parsed = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
     is_file_scheme = (parsed.scheme == 'file')
 
     # Make sure nothing is in the way.

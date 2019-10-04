@@ -12,7 +12,11 @@ import spack.util.url as url_util
 
 
 def create_s3_session(url):
-    parsed_url = url_util.parse(url)
+    parsed_url = urllib_parse.urlparse(
+            url,
+            scheme='file',
+            allow_fragments=False)
+
     if parsed_url.scheme != 's3':
         raise ValueError(
                 'Can not create S3 session from URL with scheme: {}'.format(
@@ -29,7 +33,10 @@ def create_s3_session(url):
 
     endpoint_url = os.environ.get('AWS_ENDPOINT_URL')
     if endpoint_url:
-        if urllib_parse.urlparse(endpoint_url, scheme=None).scheme is None:
+        if urllib_parse.urlparse(
+                endpoint_url,
+                scheme=None,
+                allow_fragments=False).scheme is None:
             endpoint_url = '://'.join(('https', endpoint_url))
 
         s3_client_args['endpoint_url'] = endpoint_url
