@@ -23,10 +23,21 @@ class Procps(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('dejagnu',  type='test')
+    depends_on('libiconv')
     depends_on('gettext')
+    depends_on('ncurses')
 
     conflicts('platform=darwin', msg='procps is linux-only')
 
     def autoreconf(self, spec, prefix):
         sh = which('sh')
         sh('autogen.sh')
+
+    def configure_args(self):
+        return [
+            '--with-libiconv-prefix={0}'.format(self.spec['libiconv'].prefix),
+            '--with-libintl-prefix={0}'.format(self.spec['gettext'].prefix),
+            '--with-ncurses',
+            # Required to avoid libintl linking errors
+            '--disable-nls',
+        ]
