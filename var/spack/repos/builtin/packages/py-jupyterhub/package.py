@@ -10,12 +10,11 @@ class PyJupyterhub(PythonPackage):
     """Multi-user server for Jupyter notebooks."""
 
     homepage = "https://pypi.org/project/jupyterhub"
-    url      = "https://pypi.io/packages/source/j/jupyterhub/jupyterhub-0.9.4.tar.gz"
+    url      = "https://pypi.io/packages/source/j/jupyterhub/jupyterhub-1.0.0.tar.gz"
 
-    version('0.9.4',    sha256='86b1cce446d4e8347e26913878858fc8964d103fde19b606fe37ccc5188d629d')
+    version('1.0.0',    sha256='33541a515a041b9a518ca057c1c4ab4215a7450fdddc206401713ee8137fa67f')
 
     depends_on('python@3.5:')
-    depends_on('node-js', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-python-dateutil', type='run')
     depends_on('py-jinja2', type='run')
