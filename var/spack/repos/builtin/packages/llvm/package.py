@@ -619,8 +619,8 @@ class Llvm(CMakePackage):
 
         except ProcessError:
             explanation = ('The "lldb_codesign" identity must be available'
-                           ' to build LLVM with LLDB. See https://llvm.org/'
-                           'svn/llvm-project/lldb/trunk/docs/code-signing'
+                           ' to build LLVM with LLDB. See https://github.com/'
+                           'jevinskie/llvm-lldb/blob/master/docs/code-signing'
                            '.txt for details on how to create this identity.')
             raise RuntimeError(explanation)
 
