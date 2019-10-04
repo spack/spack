@@ -58,3 +58,10 @@ class Expect(AutotoolsPackage):
         link_name = join_path(self.prefix.lib, link_name)
 
         symlink(target, link_name)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(
+                join_path(self.prefix.lib, 'expect{0}'.format(self.version)))
