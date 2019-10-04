@@ -500,45 +500,6 @@ class ViewDescriptor(object):
         view.add_specs(*add_specs, with_dependencies=False)
 
 
-def _strategy(func):
-    """Registers a method as a valid strategy and checks that it is listed
-    in environment schema.
-    """
-    strategy_name = func.__name__
-    subschema = spack.schema.env.schema['patternProperties']['^env|spack$']
-    strategies = subschema['properties']['concretization']['enum']
-
-    msg = ("concretization strategy '{0}' needs to be added"
-           " to the environment schema")
-    assert strategy_name in strategies, msg.format(strategy_name)
-
-    # Mark a strategy as registered
-    func.registered = True
-
-    return func
-
-
-def _ensure_consistency_with_schema(cls):
-    """Checks that the Environment class has all the methods needed to
-    ensure that the functionality promised by the schema could work.
-    """
-    subschema = spack.schema.env.schema['patternProperties']['^env|spack$']
-    strategies = subschema['properties']['concretization']['enum']
-
-    missing = []
-    for strategy_name in strategies:
-        maybe_method = getattr(cls, strategy_name, None)
-        method_is_registered = getattr(maybe_method, 'registered', False)
-        if not maybe_method or not method_is_registered:
-            missing.append(strategy_name)
-
-    msg = "could not find concretization strategies [{0}]"
-    assert not missing, msg.format(', '.join(missing))
-
-    return cls
-
-
-@_ensure_consistency_with_schema
 class Environment(object):
     def __init__(self, path, init_file=None, with_view=None):
         """Create a new environment.
@@ -891,11 +852,15 @@ class Environment(object):
             self.specs_by_hash = {}
 
         # Pick the right concretization strategy
-        concretization_strategy = getattr(self, self.concretization)
-        return concretization_strategy()
+        if self.concretization == 'together':
+            return self._concretize_together()
+        if self.concretization == 'separately':
+            return self._concretize_separately()
 
-    @_strategy
-    def together(self):
+        msg = 'concretization strategy not implemented [{0}]'
+        raise SpackEnvironmentError(msg.format(self.concretization))
+
+    def _concretize_together(self):
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -935,8 +900,7 @@ class Environment(object):
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs
 
-    @_strategy
-    def separately(self):
+    def _concretize_separately(self):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
