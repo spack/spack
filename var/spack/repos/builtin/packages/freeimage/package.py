@@ -21,4 +21,4 @@ class Freeimage(MakefilePackage):
 
     def url_for_version(self, version):
         url = "https://downloads.sourceforge.net/project/freeimage/Source%20Distribution/{0}/FreeImage{1}.zip"
-        return url.format(version, str(version).replace('.', ''))
+        return url.format(version, version.joined)
