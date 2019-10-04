@@ -14,6 +14,8 @@ class Muse(MakefilePackage):
 
     version('1.0-rc', 'c63fdb48c041f6f9545879f1a7e4da58')
 
+    depends_on('zlib', type='link')
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('MuSE', prefix.bin.MuSE)
