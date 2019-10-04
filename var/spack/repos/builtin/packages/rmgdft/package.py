@@ -27,7 +27,7 @@ class Rmgdft(CMakePackage):
 
     # 1.61 is not the most recent release but newer versions seem to have some
     # issues with cmake.
-    depends_on('boost@1.61.0%gcc +shared')
+    depends_on('boost@:1.61.0 +shared')
 
     depends_on('fftw')
 
