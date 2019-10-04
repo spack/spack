@@ -16,7 +16,6 @@ class Rmgdft(CMakePackage):
     homepage = "http://www.rmgdft.org/"
     url      = "https://github.com/RMGDFT/rmgdft/archive/v4.0.0-beta.3.tar.gz"
 
-    # version('1.2.3', '0123456789abcdef0123456789abcdef')
     version('4.0.0-beta.3', 'b827762e2da539bf2d41ec5512a7d900')
 
 #    Have not gotten this to work correctly yet.
@@ -28,7 +27,7 @@ class Rmgdft(CMakePackage):
 
     # 1.61 is not the most recent release but newer versions seem to have some
     # issues with cmake.
-    depends_on('boost@1.61.0%gcc +shared')
+    depends_on('boost@:1.61.0 +shared')
 
     depends_on('fftw')
 
