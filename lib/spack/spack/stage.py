@@ -400,7 +400,8 @@ class Stage(object):
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
         if self.mirror_path:
-            urls = [url_util.join(mirror.fetch_url, self.mirror_path)
+            urls = [
+                url_util.join(mirror.fetch_url, self.mirror_path)
                 for mirror in spack.mirror.MirrorCollection().values()]
 
             # If this archive is normally fetched from a tarball URL,
@@ -421,11 +422,10 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.append(fs.from_url_scheme(
-                        url, digest, expand=expand, extension=extension))
+                    url, digest, expand=expand, extension=extension))
                 # fetchers.insert(
                 #     0, fs.URLFetchStrategy(
                 #         url, digest, expand=expand, extension=extension))
-
 
             if self.default_fetcher.cachable:
                 fetchers.insert(

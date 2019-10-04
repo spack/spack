@@ -14,7 +14,6 @@ import shutil
 import ssl
 import sys
 import traceback
-import hashlib
 
 from itertools import product
 
@@ -55,25 +54,27 @@ _timeout = 10
 # See docstring for standardize_header_names()
 _separators = ('', ' ', '_', '-')
 HTTP_HEADER_NAME_ALIASES = {
-        "Accept-ranges": set(
-            ''.join((A, 'ccept', sep, R, 'anges'))
-            for A, sep, R in product('Aa', _separators, 'Rr')),
+    "Accept-ranges": set(
+        ''.join((A, 'ccept', sep, R, 'anges'))
+        for A, sep, R in product('Aa', _separators, 'Rr')),
 
-        "Content-length": set(
-            ''.join((C, 'ontent', sep, L, 'ength'))
-            for C, sep, L in product('Cc', _separators, 'Ll')),
+    "Content-length": set(
+        ''.join((C, 'ontent', sep, L, 'ength'))
+        for C, sep, L in product('Cc', _separators, 'Ll')),
 
-        "Content-type": set(
-            ''.join((C, 'ontent', sep, T, 'ype'))
-            for C, sep, T in product('Cc', _separators, 'Tt')),
+    "Content-type": set(
+        ''.join((C, 'ontent', sep, T, 'ype'))
+        for C, sep, T in product('Cc', _separators, 'Tt')),
 
-        "Date": set(('Date', 'date')),
+    "Date": set(('Date', 'date')),
 
-        "Last-modified": set(''.join((L, 'ast', sep, M, 'odified'))
-            for L, sep, M in product('Ll', _separators, 'Mm')),
+    "Last-modified": set(
+        ''.join((L, 'ast', sep, M, 'odified'))
+        for L, sep, M in product('Ll', _separators, 'Mm')),
 
-        "Server": set(('Server', 'server'))
+    "Server": set(('Server', 'server'))
 }
+
 
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
@@ -137,16 +138,17 @@ def uses_ssl(parsed_url):
 
 
 __UNABLE_TO_VERIFY_SSL = (
-        lambda pyver: (
-            (pyver < (2, 7, 9)) or
-            ((3,) < pyver < (3, 4, 3))
-        ))(sys.version_info)
+    lambda pyver: (
+        (pyver < (2, 7, 9)) or
+        ((3,) < pyver < (3, 4, 3))
+    ))(sys.version_info)
+
 
 def read_from_url(url, accept_content_type=None):
     parsed_url = urllib_parse.urlparse(
-            url,
-            scheme='file',
-            allow_fragments=False)
+        url,
+        scheme='file',
+        allow_fragments=False)
 
     context = None
 
@@ -158,8 +160,8 @@ def read_from_url(url, accept_content_type=None):
         # without a defined context, urlopen will not verify the ssl cert for
         # python 3.x
         context = (
-                ssl.create_default_context() if verify_ssl else
-                ssl._create_unverified_context())
+            ssl.create_default_context() if verify_ssl else
+            ssl._create_unverified_context())
 
     req = Request(url)
     content_type = None
@@ -183,9 +185,9 @@ def read_from_url(url, accept_content_type=None):
         content_type = response.headers.get('Content-type')
 
     reject_content_type = (
-            accept_content_type and (
-                content_type is None or
-                not content_type.startswith(accept_content_type)))
+        accept_content_type and (
+            content_type is None or
+            not content_type.startswith(accept_content_type)))
 
     if reject_content_type:
         tty.debug("ignoring page {0}{1}{2}".format(
@@ -207,17 +209,17 @@ def push_to_url(local_path, remote_path, **kwargs):
     keep_original = kwargs.get('keep_original', True)
 
     local_url = urllib_parse.urlparse(
-            local_path,
-            scheme='file',
-            allow_fragments=False)
+        local_path,
+        scheme='file',
+        allow_fragments=False)
 
     if local_url.scheme != 'file':
         raise ValueError('local path must be a file:// url')
 
     remote_url = urllib_parse.urlparse(
-            remote_path,
-            scheme='file',
-            allow_fragments=False)
+        remote_path,
+        scheme='file',
+        allow_fragments=False)
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
@@ -281,7 +283,7 @@ def url_exists(path):
     try:
         read_from_url(url)
         return True
-    except URLError as err:
+    except URLError:
         return False
 
 
@@ -302,9 +304,9 @@ def remove_url(path):
 
 def _list_s3_objects(client, url, num_entries, start_after=None):
     list_args = dict(
-            Bucket=url.netloc,
-            Prefix=url.path,
-            MaxKeys=num_entries)
+        Bucket=url.netloc,
+        Prefix=url.path,
+        MaxKeys=num_entries)
 
     if start_after is not None:
         list_args['StartAfter'] = start_after
@@ -329,8 +331,11 @@ def _iter_s3_prefix(client, url, num_entries=1024):
     key = None
     while True:
         contents, key = _list_s3_objects(
-                client, url, num_entries, start_after=key)
-        for x in contents: yield x
+            client, url, num_entries, start_after=key)
+
+        for x in contents:
+            yield x
+
         if not key:
             break
 
@@ -343,9 +348,9 @@ def list_url(path):
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        return list(set(key.split('/', 1)[0]
-                for key in _iter_s3_prefix(
-                    s3_util.create_s3_session(url), url)))
+        return list(set(
+            key.split('/', 1)[0]
+            for key in _iter_s3_prefix(s3, url)))
 
 
 def _spider(url, visited, root, depth, max_depth, raise_on_error):
@@ -643,7 +648,8 @@ def standardize_header_names(headers):
         return headers
 
     if isinstance(headers, tuple):
-        if not headers: return headers
+        if not headers:
+            return headers
         old = headers[0]
         if isinstance(old, string_types):
             new = standardize_header_names(old)

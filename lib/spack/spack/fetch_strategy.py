@@ -41,7 +41,6 @@ import spack.config
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
-import spack.util.url as url_util
 import spack.util.web as web_util
 
 from spack.util.executable import which
@@ -54,11 +53,10 @@ from spack.util.compression import decompressor_for, extension
 all_strategies = []
 
 CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
-       "The contents of {subject} look like {content_type}."
-       "  Either the URL you are trying to use does not exist"
-       " or you have an internet gateway issue.  You can"
-       " remove the bad archive using 'spack clean <package>',"
-       " then try again using the correct URL.")
+    "The contents of {subject} look like {content_type}.  Either the URL"
+    " you are trying to use does not exist or you have an internet gateway"
+    " issue.  You can remove the bad archive using 'spack clean"
+    " <package>', then try again using the correct URL.")
 
 
 def warn_content_type_mismatch(subject, content_type='HTML'):
@@ -1085,7 +1083,8 @@ class S3FetchStrategy(URLFetchStrategy):
             super(S3FetchStrategy, self).__init__(*args, **kwargs)
         except ValueError:
             if not kwargs.get('url'):
-                raise ValueError("S3FetchStrategy requires a url for fetching.")
+                raise ValueError(
+                    "S3FetchStrategy requires a url for fetching.")
 
     @_needs_stage
     def fetch(self):
@@ -1094,14 +1093,14 @@ class S3FetchStrategy(URLFetchStrategy):
             return
 
         parsed_url = urllib_parse.urlparse(
-                self.url,
-                scheme='file',
-                allow_fragments=False)
+            self.url,
+            scheme='file',
+            allow_fragments=False)
 
         if parsed_url.scheme != 's3':
-            raise ValueError('S3FetchStrategy can only fetch from s3:// urls.')
+            raise ValueError(
+                'S3FetchStrategy can only fetch from s3:// urls.')
 
-        save_file = getattr(self.stage, "save_filename", None)
         tty.msg("Fetching %s" % self.url)
 
         basename = os.path.basename(parsed_url.path)
@@ -1119,8 +1118,8 @@ class S3FetchStrategy(URLFetchStrategy):
 
         if self.stage.save_filename:
             os.rename(
-                    os.path.join(self.stage.path, basename),
-                    self.stage.save_filename)
+                os.path.join(self.stage.path, basename),
+                self.stage.save_filename)
 
         if not self.archive_file:
             raise FailedDownloadError(self.url)
@@ -1275,17 +1274,17 @@ def from_url_scheme(url, *args, **kwargs):
 
     url = kwargs.get('url', url)
     parsed_url = urllib_parse.urlparse(
-            url,
-            scheme='file',
-            allow_fragments=False)
+        url,
+        scheme='file',
+        allow_fragments=False)
 
     scheme_mapping = (
-            kwargs.get('scheme_mapping') or
-            {
-                'file': 'url',
-                'http': 'url',
-                'https': 'url'
-            })
+        kwargs.get('scheme_mapping') or
+        {
+            'file': 'url',
+            'http': 'url',
+            'https': 'url'
+        })
 
     scheme = parsed_url.scheme
     scheme = scheme_mapping.get(scheme, scheme)
@@ -1296,8 +1295,8 @@ def from_url_scheme(url, *args, **kwargs):
             return fetcher(url, *args, **kwargs)
 
     raise ValueError(
-            'No FetchStrategy found for url with scheme: "{}"'.format(
-                parsed_url.scheme))
+        'No FetchStrategy found for url with scheme: "{}"'.format(
+            parsed_url.scheme))
 
 
 def from_list_url(pkg):

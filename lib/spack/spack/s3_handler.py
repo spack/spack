@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import itertools as it
-
 from io import BufferedReader
 
 import six.moves.urllib.response as urllib_response
@@ -12,16 +10,15 @@ import six.moves.urllib.request as urllib_request
 import six.moves.urllib.parse as urllib_parse
 import six.moves.urllib.error as urllib_error
 
-import spack
-
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
 import spack.util.web as web_util
 
 
-# NOTE(opadron): Workaround issue in boto where its StreamingBody implementation
-# is missing several APIs expected from IOBase.  These missing APIs prevent the
-# streams returned by boto from being passed as-are along to urllib.
+# NOTE(opadron): Workaround issue in boto where its StreamingBody
+# implementation is missing several APIs expected from IOBase.  These missing
+# APIs prevent the streams returned by boto from being passed as-are along to
+# urllib.
 #
 # https://github.com/boto/botocore/issues/879
 # https://github.com/python/cpython/pull/3249
@@ -59,7 +56,7 @@ def _s3_open(url):
     # NOTE(opadron): Apply workaround here (see above)
     stream = WrapStream(obj['Body'])
     headers = web_util.standardize_header_names(
-            obj['ResponseMetadata']['HTTPHeaders'])
+        obj['ResponseMetadata']['HTTPHeaders'])
 
     return url, headers, stream
 
@@ -77,9 +74,9 @@ class UrllibS3Handler(urllib_request.HTTPSHandler):
             if err.response['Error']['Code'] == 'NoSuchKey':
                 try:
                     _, headers, stream = _s3_open(
-                            url_util.join(orig_url, 'index.html'))
+                        url_util.join(orig_url, 'index.html'))
                     return urllib_response.addinfourl(
-                            stream, headers, orig_url)
+                        stream, headers, orig_url)
 
                 except ClientError as err2:
                     if err.response['Error']['Code'] == 'NoSuchKey':
@@ -94,4 +91,3 @@ class UrllibS3Handler(urllib_request.HTTPSHandler):
 S3OpenerDirector = urllib_request.build_opener(UrllibS3Handler())
 
 open = S3OpenerDirector.open
-

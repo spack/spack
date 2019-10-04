@@ -59,8 +59,9 @@ def canonicalize_local_file_url(url):
     All other URLs are returned unmodified.
     """
 
-    url_obj = (urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
-            if isinstance(url, string_types) else url)
+    url_obj = (
+        urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
+        if isinstance(url, string_types) else url)
 
     (scheme, netloc, path, params, query, _) = url_obj
     scheme = (scheme or 'file').lower()
@@ -88,9 +89,9 @@ def format(parsed_url):
     """
     if isinstance(parsed_url, string_types):
         parsed_url = urllib_parse.urlparse(
-                parsed_url,
-                scheme='file',
-                allow_fragments=False)
+            parsed_url,
+            scheme='file',
+            allow_fragments=False)
 
     return parsed_url.geturl()
 
@@ -98,20 +99,19 @@ def format(parsed_url):
 def join(base_url, path, *extra):
     if isinstance(base_url, string_types):
         base_url = urllib_parse.urlparse(
-                base_url,
-                scheme='file',
-                allow_fragments=False)
+            base_url,
+            scheme='file',
+            allow_fragments=False)
 
     (scheme, netloc, base_path, params, query, _) = base_url
     scheme = scheme.lower()
 
     path_tokens = [
-            part for part in itertools.chain(
-                _split_all(path),
-                itertools.chain.from_iterable(
-                    _split_all(extra_path) for extra_path in extra))
-
-                if part and part != '/']
+        part for part in itertools.chain(
+            _split_all(path),
+            itertools.chain.from_iterable(
+                _split_all(extra_path) for extra_path in extra))
+        if part and part != '/']
 
     base_path_args = ['/']
     if scheme == 's3':
@@ -127,8 +127,8 @@ def join(base_url, path, *extra):
 
     if scheme == 's3':
         path_tokens = [
-                part for part in _split_all(base_path)
-                if part and part != '/']
+            part for part in _split_all(base_path)
+            if part and part != '/']
 
         if path_tokens:
             netloc = path_tokens.pop(0)

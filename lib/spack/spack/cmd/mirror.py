@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-import os
-from datetime import datetime
 
 import argparse
 import llnl.util.tty as tty
@@ -35,7 +33,6 @@ def setup_parser(subparser):
 
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='mirror_command')
-
 
     # Create
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
@@ -173,27 +170,28 @@ def mirror_set_url(args):
         push_url = url
     else:
         changes_made = (
-                changes_made or fetch_url != push_url or push_url != url)
+            changes_made or fetch_url != push_url or push_url != url)
 
         fetch_url, push_url = url, url
 
-    items = [(
+    items = [
+        (
             (n, u)
-            if n != args.name else
-
-            (n, {"fetch": fetch_url, "push": push_url})
-            if fetch_url != push_url else
-
-            (n, fetch_url))
-
-            for n, u in mirrors.items()]
+            if n != args.name else (
+                (n, {"fetch": fetch_url, "push": push_url})
+                if fetch_url != push_url else (n, fetch_url)
+            )
+        )
+        for n, u in mirrors.items()
+    ]
 
     mirrors = syaml_dict(items)
     spack.config.set('mirrors', mirrors, scope=args.scope)
 
     if changes_made:
-        tty.msg("Changed%s url for mirror %s." %
-                ((" (push)" if args.push else ""), args.name))
+        tty.msg(
+            "Changed%s url for mirror %s." %
+            ((" (push)" if args.push else ""), args.name))
     else:
         tty.msg("Url already set for mirror %s." % args.name)
 
@@ -264,7 +262,7 @@ def mirror_create(args):
             tty.msg(msg.format(spec.cshort_spec))
 
         mirror = spack.mirror.Mirror(
-                args.directory or spack.config.get('config:source_cache'))
+            args.directory or spack.config.get('config:source_cache'))
 
         directory = url_util.format(mirror.push_url)
 

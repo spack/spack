@@ -8,19 +8,18 @@ import os
 import six.moves.urllib.parse as urllib_parse
 
 import spack
-import spack.util.url as url_util
 
 
 def create_s3_session(url):
     parsed_url = urllib_parse.urlparse(
-            url,
-            scheme='file',
-            allow_fragments=False)
+        url,
+        scheme='file',
+        allow_fragments=False)
 
     if parsed_url.scheme != 's3':
         raise ValueError(
-                'Can not create S3 session from URL with scheme: {}'.format(
-                    parsed_url.scheme))
+            'Can not create S3 session from URL with scheme: {}'.format(
+                parsed_url.scheme))
 
     # NOTE(opadron): import boto and friends as late as possible.  We don't
     # want to require boto as a dependency unless the user actually wants to

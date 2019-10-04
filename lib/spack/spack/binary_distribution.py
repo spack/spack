@@ -50,6 +50,7 @@ BUILD_CACHE_INDEX_TEMPLATE = '''
 
 BUILD_CACHE_INDEX_ENTRY_TEMPLATE = '  <li><a href="{path}">{path}</a>'
 
+
 class NoOverwriteException(Exception):
     """
     Raised when a file exists and must be overwritten.
@@ -275,10 +276,10 @@ def generate_package_index(cache_prefix):
     try:
         index_html_path = os.path.join(tmpdir, 'index.html')
         file_list = (
-                entry
-                for entry in web_util.list_url(cache_prefix)
-                if (entry.endswith('.yaml')
-                    or entry.endswith('.key')))
+            entry
+            for entry in web_util.list_url(cache_prefix)
+            if (entry.endswith('.yaml')
+                or entry.endswith('.key')))
 
         with open(index_html_path, 'w') as f:
             f.write(BUILD_CACHE_INDEX_TEMPLATE.format(
@@ -288,10 +289,10 @@ def generate_package_index(cache_prefix):
                     for path in file_list)))
 
         web_util.push_to_url(
-                index_html_path,
-                url_util.join(cache_prefix, 'index.html'),
-                keep_original=False,
-                extra_args={'ContentType': 'text/html'})
+            index_html_path,
+            url_util.join(cache_prefix, 'index.html'),
+            keep_original=False,
+            extra_args={'ContentType': 'text/html'})
     finally:
         shutil.rmtree(tmpdir)
 
@@ -316,7 +317,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         cache_prefix, tarball_path_name(spec, '.spack'))
 
     remote_spackfile_path = url_util.join(
-            outdir, os.path.relpath(spackfile_path, tmpdir))
+        outdir, os.path.relpath(spackfile_path, tmpdir))
 
     mkdirp(tarfile_dir)
     if web_util.url_exists(remote_spackfile_path):
@@ -334,7 +335,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         os.path.join(cache_prefix, specfile_name))
 
     remote_specfile_path = url_util.join(
-            outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
+        outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
 
     if web_util.url_exists(remote_specfile_path):
         if force:
@@ -421,9 +422,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         os.remove('%s.asc' % specfile_path)
 
     web_util.push_to_url(
-            spackfile_path, remote_spackfile_path, keep_original=False)
+        spackfile_path, remote_spackfile_path, keep_original=False)
     web_util.push_to_url(
-            specfile_path, remote_specfile_path, keep_original=False)
+        specfile_path, remote_specfile_path, keep_original=False)
 
     try:
         # create an index.html for the build_cache directory so specs can be
@@ -450,7 +451,7 @@ def download_tarball(spec):
 
     for mirror in spack.mirror.MirrorCollection().values():
         url = url_util.join(
-                mirror.fetch_url, _build_cache_relative_path, tarball)
+            mirror.fetch_url, _build_cache_relative_path, tarball)
 
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
@@ -669,7 +670,7 @@ def get_specs(force=False):
     urls = set()
     for mirror in spack.mirror.MirrorCollection().values():
         fetch_url_build_cache = url_util.join(
-                mirror.fetch_url, _build_cache_relative_path)
+            mirror.fetch_url, _build_cache_relative_path)
 
         mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
@@ -721,7 +722,7 @@ def get_keys(install=False, trust=False, force=False):
 
     for mirror in spack.mirror.MirrorCollection().values():
         fetch_url_build_cache = url_util.join(
-                mirror.fetch_url, _build_cache_relative_path)
+            mirror.fetch_url, _build_cache_relative_path)
 
         mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
@@ -877,7 +878,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
         mkdirp(path)
 
         stage = Stage(
-                description_url, name="build_cache", path=path, keep=True)
+            description_url, name="build_cache", path=path, keep=True)
 
         try:
             stage.fetch()
@@ -897,7 +898,9 @@ def download_buildcache_entry(file_descriptions):
                 "download of buildcache entries.")
 
     for mirror in spack.mirror.MirrorCollection().values():
-        mirror_root = os.path.join(mirror.fetch_url, _build_cache_relative_path)
+        mirror_root = os.path.join(
+            mirror.fetch_url,
+            _build_cache_relative_path)
 
         if _download_buildcache_entry(mirror_root, file_descriptions):
             return True

@@ -210,7 +210,7 @@ def setup_parser(subparser):
 
     # Update buildcache index without copying any additional packages
     update_index = subparsers.add_parser(
-            'update-index', help=buildcache_update_index.__doc__)
+        'update-index', help=buildcache_update_index.__doc__)
     update_index.add_argument(
         '-d', '--mirror-url', default=None, help='Destination mirror url')
     update_index.set_defaults(func=buildcache_update_index)
@@ -674,7 +674,7 @@ def buildcache_update_index(args):
     outdir = url_util.format(mirror.push_url)
 
     bindist.generate_package_index(
-            url_util.join(outdir, bindist.build_cache_relative_path()))
+        url_util.join(outdir, bindist.build_cache_relative_path()))
 
 
 def buildcache(parser, args):

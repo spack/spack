@@ -55,7 +55,7 @@ def _fetch_cache():
 class MirrorCache(object):
     def __init__(self, root):
         self.root = urllib_parse.urlparse(
-                root, scheme='file', allow_fragments=False)
+            root, scheme='file', allow_fragments=False)
         self.new_resources = set()
         self.existing_resources = set()
 
@@ -64,9 +64,9 @@ class MirrorCache(object):
         # normally be cached (e.g. the current tip of an hg/git branch)
 
         dst = urllib_parse.urlparse(
-                url_util.join(self.root, relative_dest),
-                scheme='file',
-                allow_fragments=False)
+            url_util.join(self.root, relative_dest),
+            scheme='file',
+            allow_fragments=False)
 
         if web_util.url_exists(dst):
             self.existing_resources.add(relative_dest)

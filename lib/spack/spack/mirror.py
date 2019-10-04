@@ -11,7 +11,6 @@ the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
-import re
 import sys
 import os
 import os.path
@@ -19,6 +18,8 @@ import operator
 
 import six
 import six.moves.urllib.parse as urllib_parse
+
+import ruamel.yaml.error as yaml_error
 
 try:
     from collections.abc import Mapping
@@ -47,6 +48,7 @@ def _display_mirror_entry(size, name, url, type_=None):
         type_ = ""
 
     print("%-*s%s%s" % (size + 4, name, url, type_))
+
 
 class Mirror(object):
     """Represents a named location for storing source tarballs and binary
@@ -79,7 +81,7 @@ class Mirror(object):
         try:
             data = syaml.load(stream)
             return Mirror.from_dict(data, name)
-        except MarkedYAMLError as e:
+        except yaml_error.MarkedYAMLError as e:
             raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
 
     @staticmethod
@@ -107,9 +109,9 @@ class Mirror(object):
             _display_mirror_entry(max_len, self._name, self._fetch_url)
         else:
             _display_mirror_entry(
-                    max_len, self._name, self._fetch_url, "fetch")
+                max_len, self._name, self._fetch_url, "fetch")
             _display_mirror_entry(
-                    max_len, self._name, self._push_url, "push")
+                max_len, self._name, self._push_url, "push")
 
     def __str__(self):
         name = self._name
@@ -122,7 +124,7 @@ class Mirror(object):
             return "[Mirror%s (%s)]" % (name, self._fetch_url)
 
         return "[Mirror%s (fetch: %s, push: %s)]" % (
-                name, self._fetch_url, self._push_url)
+            name, self._fetch_url, self._push_url)
 
     def __repr__(self):
         return ''.join((
@@ -187,7 +189,7 @@ class MirrorCollection(Mapping):
         try:
             data = syaml.load(stream)
             return MirrorCollection(data)
-        except MarkedYAMLError as e:
+        except yaml_error.MarkedYAMLError as e:
             raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
 
     @staticmethod
@@ -387,8 +389,9 @@ def create(path, specs, **kwargs):
         raise MirrorError("%s already exists and is a file." % parsed.path)
 
     # automatically spec-ify anything in the specs array.
-    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s)
-                for s in specs]
+    specs = [
+        s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s)
+        for s in specs]
 
     # Get concrete specs for each matching version of these specs.
     version_specs = get_matching_versions(
