@@ -22,3 +22,4 @@ class PyBbpAnalysisFramework(PythonPackage):
     depends_on('py-numpy', type='run')
     depends_on('py-scipy', type='run')
     depends_on('py-neurotools', type='run')
+    depends_on('py-progressbar', type='run')
