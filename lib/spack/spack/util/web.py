@@ -213,7 +213,8 @@ def push_to_url(local_path, remote_path, **kwargs):
         scheme='file',
         allow_fragments=False)
 
-    if local_url.scheme != 'file':
+    local_file_path = url_util.local_file_path(local_url)
+    if local_file_path is None:
         raise ValueError('local path must be a file:// url')
 
     remote_url = urllib_parse.urlparse(
@@ -226,21 +227,22 @@ def push_to_url(local_path, remote_path, **kwargs):
     if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_path):
         warn_no_ssl_cert_checking()
 
-    if remote_url.scheme == 'file':
-        mkdirp(os.path.dirname(remote_url.path))
+    remote_file_path = url_util.local_file_path(remote_url)
+    if remote_file_path is not None:
+        mkdirp(os.path.dirname(remote_file_path))
         if keep_original:
-            shutil.copy(local_url.path, remote_url.path)
+            shutil.copy(local_file_path, remote_file_path)
         else:
             try:
-                os.rename(local_url.path, remote_url.path)
+                os.rename(local_file_path, remote_file_path)
             except OSError as e:
                 if e.errno == errno.EXDEV:
                     # NOTE(opadron): The above move failed because it crosses
                     # filesystem boundaries.  Copy the file (plus original
                     # metadata), and then delete the original.  This operation
                     # needs to be done in separate steps.
-                    shutil.copy2(local_url.path, remote_url.path)
-                    os.remove(local_url.path)
+                    shutil.copy2(local_file_path, remote_file_path)
+                    os.remove(local_file_path)
 
     elif remote_url.scheme == 's3':
         extra_args = kwargs.get('extra_args', {})
@@ -250,11 +252,11 @@ def push_to_url(local_path, remote_path, **kwargs):
             remote_path = remote_path[1:]
 
         s3 = s3_util.create_s3_session(remote_url)
-        s3.upload_file(local_url.path, remote_url.netloc,
+        s3.upload_file(local_file_path, remote_url.netloc,
                        remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
-            os.remove(local_url.path)
+            os.remove(local_file_path)
 
     else:
         raise NotImplementedError(
@@ -265,7 +267,7 @@ def url_exists(path):
     url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
-        return os.path.exists(url.path)
+        return os.path.exists(url_util.local_file_path(url))
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
@@ -291,7 +293,7 @@ def remove_url(path):
     url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
-        os.remove(url.path)
+        os.remove(url_util.local_file_path(url))
         return
 
     if url.scheme == 's3':
@@ -344,7 +346,7 @@ def list_url(path):
     url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
-        return os.listdir(url.path)
+        return os.listdir(url_util.local_file_path(url))
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
