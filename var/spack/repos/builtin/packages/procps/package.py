@@ -21,6 +21,7 @@ class Procps(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('dejagnu',  type='test')
     depends_on('gettext')
 
