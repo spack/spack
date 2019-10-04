@@ -28,8 +28,9 @@ class Migrate(AutotoolsPackage):
     depends_on('openmpi', type=('build', 'link', 'run'), when='+mpi')
 
     configure_directory = 'src'
+
     def configure_args(self):
-        return  ['--with-zlib=system']
+        return ['--with-zlib=system']
 
     def build(self, spec, prefix):
         with working_dir('src'):
