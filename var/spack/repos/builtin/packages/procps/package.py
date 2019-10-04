@@ -14,6 +14,7 @@ class Procps(AutotoolsPackage):
     homepage = "https://gitlab.com/procps-ng/procps"
     git      = "https://gitlab.com/procps-ng/procps.git"
 
+    version('master', branch='master')
     version('3.3.15', tag='v3.3.15')
 
     depends_on('autoconf', type='build')
@@ -22,3 +23,7 @@ class Procps(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('dejagnu',  type='test')
     depends_on('gettext')
+
+    def autoreconf(self, spec, prefix):
+        sh = which('sh')
+        sh('autogen.sh')
