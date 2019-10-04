@@ -23,10 +23,13 @@ class Migrate(AutotoolsPackage):
     depends_on('automake')
     depends_on('libtool')
     depends_on('m4')
+    depends_on('zlib', type='link')
 
     depends_on('openmpi', type=('build', 'link', 'run'), when='+mpi')
 
     configure_directory = 'src'
+    def configure_args(self):
+        return  ['--with-zlib=system']
 
     def build(self, spec, prefix):
         with working_dir('src'):
