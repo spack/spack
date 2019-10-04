@@ -24,6 +24,8 @@ class Procps(AutotoolsPackage):
     depends_on('dejagnu',  type='test')
     depends_on('gettext')
 
+    conflicts('platform=darwin', msg='procps is linux-only')
+
     def autoreconf(self, spec, prefix):
         sh = which('sh')
         sh('autogen.sh')
