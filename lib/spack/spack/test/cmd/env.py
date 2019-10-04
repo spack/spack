@@ -1730,3 +1730,15 @@ def test_cant_install_single_spec_when_concretizing_together():
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
         e.install('zlib')
+
+
+def test_duplicate_packages_raise_when_concretizing_together():
+    e = ev.create('coconcretization')
+    e.concretization = 'together'
+
+    e.add('mpileaks+opt')
+    e.add('mpileaks~opt')
+    e.add('mpich')
+
+    with pytest.raises(ev.SpackEnvironmentError, match=r'cannot contain more'):
+        e.concretize()
