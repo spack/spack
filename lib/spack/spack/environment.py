@@ -516,7 +516,9 @@ class Environment(object):
                 path to the view.
         """
         self.path = os.path.abspath(path)
-        self.concretization = False
+        # This attribute will be set properly from configuration
+        # during concretization
+        self.concretization = None
         self.clear()
 
         if init_file:
