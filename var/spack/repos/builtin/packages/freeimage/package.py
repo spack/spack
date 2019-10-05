@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Freeimage(MakefilePackage):
     """FreeImage is an Open Source library project for developers who would like
        to support popular graphics image formats like PNG, BMP, JPEG, TIFF and
