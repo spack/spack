@@ -9,6 +9,10 @@ from spack import *
 class Watch(AutotoolsPackage):
     """Executes a program periodically, showing output fullscreen."""
 
+    # Note: there is a separate procps package, but it doesn't build on macOS.
+    # This package only contains the `watch` program, a subset of procps which
+    # does build on macOS.
+    # https://github.com/NixOS/nixpkgs/issues/18929#issuecomment-249388571
     homepage = "https://gitlab.com/procps-ng/procps"
     git      = "https://gitlab.com/procps-ng/procps.git"
 
@@ -22,6 +26,7 @@ class Watch(AutotoolsPackage):
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('ncurses')
 
+    # https://github.com/Homebrew/homebrew-core/blob/master/Formula/watch.rb
     def autoreconf(self, spec, prefix):
         sh = which('sh')
         sh('autogen.sh')
