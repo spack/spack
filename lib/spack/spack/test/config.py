@@ -507,6 +507,7 @@ def test_keys_are_ordered():
         'include',
         'lib/pkgconfig',
         'lib64/pkgconfig',
+        'share/pkgconfig',
         ''
     )
 
