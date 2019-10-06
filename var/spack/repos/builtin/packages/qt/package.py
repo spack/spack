@@ -51,7 +51,7 @@ class Qt(Package):
             description="Build the Webkit extension")
     variant('examples',   default=False,
             description="Build examples.")
-    variant('framework',   default=False,
+    variant('framework',   default=bool(MACOS_VERSION),
             description="Build as a macOS Framework package.")
     variant('tools',      default=True,
             description="Build tools, including Qt Designer.")

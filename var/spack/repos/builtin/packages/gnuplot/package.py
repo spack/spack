@@ -26,6 +26,7 @@ class Gnuplot(AutotoolsPackage):
     # dependency of readline. Fix it with a small patch
     patch('term_include.patch')
 
+    version('5.2.7', '97fe503ff3b2e356fe2ae32203fc7fd2cf9cef1f46b60fe46dc501a228b9f4ed')
     version('5.2.5', '039db2cce62ddcfd31a6696fe576f4224b3bc3f919e66191dfe2cdb058475caa')
     version('5.2.2', '60aedd08998160593199459dea8467fe')
     version('5.2.0', '0bd8f9af84c0ad2fa9de16772c366416')
@@ -64,6 +65,7 @@ class Gnuplot(AutotoolsPackage):
     depends_on('pango@1.10:', when='+cairo')
     depends_on('libx11', when='+X')
     depends_on('qt@5.7:+opengl', when='+qt')
+    depends_on('qt+framework', when='+qt platform=darwin')
 
     def configure_args(self):
         # see https://github.com/Homebrew/homebrew-core/blob/master/Formula/gnuplot.rb
