@@ -252,6 +252,5 @@ class Grass(AutotoolsPackage):
     # hence invoke the following function afterwards
     @run_after('configure')
     def fix_iconv_linking(self):
-        if self.spec.satisfies('@:7.6'):
-            makefile = FileFilter('include/Make/Platform.make')
-            makefile.filter(r'^ICONVLIB\s*=\s*', 'ICONVLIB = -liconv')
+        makefile = FileFilter('include/Make/Platform.make')
+        makefile.filter(r'^ICONVLIB\s*=.*', 'ICONVLIB = -liconv')
