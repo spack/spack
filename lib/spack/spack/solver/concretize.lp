@@ -39,6 +39,7 @@ variant_set(P, V) :- variant_set(P, V, _).
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant_set/3.
+#defined variant_single_value/2.
 
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
