@@ -28,3 +28,10 @@ class Pcre2(AutotoolsPackage):
             args.append('--enable-pcre2-32')
 
         return args
+
+    @property
+    def libs(self):
+        libs = find_libraries('libpcre2*',
+                              root=self.prefix.lib,
+                              recursive=False)
+        return libs
