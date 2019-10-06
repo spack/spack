@@ -346,6 +346,11 @@ class AspGenerator(object):
         self.fact(fn.arch_os_default(default_arch.os))
         self.fact(fn.arch_target_default(default_arch.target))
 
+    def virtual_providers(self, virtuals):
+        for vspec in virtuals:
+            providers = spack.repo.path.providers_for(vspec)
+            print("PROVIDE", providers, [type(t) for t in providers])
+
     def generate_asp_program(self, specs):
         """Write an ASP program for specs.
 
@@ -373,6 +378,7 @@ class AspGenerator(object):
         self.h1('General Constraints')
         self.compiler_defaults()
         self.arch_defaults()
+        self.virtual_providers(virtuals)
 
         self.h1('Package Constraints')
         for pkg in pkgs:
