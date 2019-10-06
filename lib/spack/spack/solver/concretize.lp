@@ -17,12 +17,21 @@ version_possible(P, V) :- version_declared(P, V), not version_conflict(P, V).
 %-----------------------------------------------------------------------------
 % Dependency semantics
 %-----------------------------------------------------------------------------
+% declared dependencies are real if they're not virtual
+depends_on(P, D) :- declared_dependency(P, D), not virtual(D), node(P).
 
-% dependencies imply new nodes.
+% if you declare a dependency on a virtual, you depend on one of its providers
+1 { depends_on(P, Q) : provides_virtual(Q, V) } 1
+    :- declared_dependency(P, V), virtual(V), node(P).
+
+% real dependencies imply new nodes.
 node(D) :- node(P), depends_on(P, D).
 
-% do not warn for solves with no dependencies
+% do not warn if generated program contains none of these.
 #defined depends_on/2.
+#defined declared_dependency/2.
+#defined virtual/1.
+#defined provides_virtual/2.
 
 %-----------------------------------------------------------------------------
 % Variant semantics

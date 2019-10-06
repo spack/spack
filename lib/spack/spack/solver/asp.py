@@ -278,7 +278,7 @@ class AspGenerator(object):
         # dependencies
         for name, conditions in pkg.dependencies.items():
             for cond, dep in conditions.items():
-                self.fact(fn.depends_on(dep.pkg.name, dep.spec.name))
+                self.fact(fn.declared_dependency(dep.pkg.name, dep.spec.name))
 
     def spec_clauses(self, spec):
         """Return a list of clauses the spec mandates are true.
@@ -347,9 +347,11 @@ class AspGenerator(object):
         self.fact(fn.arch_target_default(default_arch.target))
 
     def virtual_providers(self, virtuals):
+        self.h2("Virtual providers")
         for vspec in virtuals:
-            providers = spack.repo.path.providers_for(vspec)
-            print("PROVIDE", providers, [type(t) for t in providers])
+            self.fact(fn.virtual(vspec))
+            for provider in spack.repo.path.providers_for(vspec):
+                self.fact(fn.provides_virtual(provider, vspec))
 
     def generate_asp_program(self, specs):
         """Write an ASP program for specs.
@@ -363,9 +365,10 @@ class AspGenerator(object):
         pkg_names = set(spec.fullname for spec in specs)
 
         possible = set()
+        virtuals = set()
         for name in pkg_names:
             pkg = spack.repo.path.get_pkg_class(name)
-            possible.update(pkg.possible_dependencies())
+            possible.update(pkg.possible_dependencies(virtuals=virtuals))
 
         pkgs = set(possible) | set(pkg_names)
 
