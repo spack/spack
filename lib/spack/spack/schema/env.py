@@ -119,6 +119,11 @@ schema = {
                                 }
                             }
                         ]
+                    },
+                    'concretization': {
+                        'type': 'string',
+                        'enum': ['together', 'separately'],
+                        'default': 'separately'
                     }
                 }
             )
