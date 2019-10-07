@@ -75,10 +75,9 @@ def _create_stage_root(path):
 
             p_stat = os.stat(p)
             if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
-                tty.warn("Expected {0} to support mode {1}, but it is {2}"
-                         .format(p, stat.S_IRWXU, p_stat.st_mode))
+                tty.error("Expected {0} to support mode {1}, but it is {2}"
+                          .format(p, stat.S_IRWXU, p_stat.st_mode))
 
-            if not can_access(p):
                 raise OSError(errno.EACCES, err_msg.format(path, p))
         else:
             p_stat = os.stat(p)
