@@ -308,5 +308,5 @@ def test_headers_directory_setter():
     ('relative/path', 'relative', ([], 'relative', ['relative/path'])),
     ('relative/path', 'path', (['relative'], 'relative/path', []))
 ])
-def test_partition(path, entry, expected):
-    assert fs.partition(path, entry) == expected
+def test_partition_path(path, entry, expected):
+    assert fs.partition_path(path, entry) == expected

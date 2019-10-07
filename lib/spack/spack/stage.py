@@ -16,7 +16,7 @@ from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import partition, remove_linked_tree
+from llnl.util.filesystem import partition_path, remove_linked_tree
 
 import spack.paths
 import spack.caches
@@ -44,9 +44,9 @@ def _create_stage_root(path):
 
     user_uid = os.getuid()
 
-    group_paths, user_entry, user_paths = partition(path, getpass.getuser())
-    if user_entry != '':
-        user_paths.insert(0, user_entry)
+    # Obtain lists of ancestor and descendant paths of the $user node, if any.
+    group_paths, user_node, user_paths = partition_path(path,
+                                                        getpass.getuser())
 
     for p in group_paths:
         if not os.path.exists(p):
@@ -66,6 +66,11 @@ def _create_stage_root(path):
 
             if not can_access(p):
                 raise OSError(errno.EACCES, err_msg.format(path, p))
+
+    # Add the path ending with the $user node to the user paths to ensure paths
+    # from $user (on down) meet the ownership and permission requirements.
+    if user_node:
+        user_paths.insert(0, user_node)
 
     for p in user_paths:
         # Ensure access controls of subdirs from `$user` on down are

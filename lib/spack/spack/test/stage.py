@@ -14,7 +14,7 @@ import getpass
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, partition, working_dir
+from llnl.util.filesystem import mkdirp, partition_path, working_dir
 
 import spack.paths
 import spack.stage
@@ -418,18 +418,24 @@ def check_stage_dir_perms(prefix, path):
     prefix_status = os.stat(prefix)
     uid = os.getuid()
 
+    # Obtain lists of ancestor and descendant paths of the $user node, if any.
+    #
     # Skip processing prefix ancestors since no guarantee they will be in the
     # required group (e.g. $TEMPDIR on HPC machines).
     skip = prefix if prefix.endswith(os.sep) else os.path.join(prefix, os.sep)
-    group_paths, entry, user_paths = partition(path.replace(skip, ""), user)
-    if entry != '':
-        user_paths.insert(0, entry)
+    group_paths, user_node, user_paths = partition_path(path.replace(skip, ""),
+                                                        user)
 
     for p in group_paths:
         parent = os.path.dirname(p)
         par_status = os.stat(parent) if parent != '' else prefix_status
         assert prefix_status.st_gid == par_status.st_gid
         assert prefix_status.st_mode == par_status.st_mode
+
+    # Add the path ending with the $user node to the user paths to ensure paths
+    # from $user (on down) meet the ownership and permission requirements.
+    if user_node:
+        user_paths.insert(0, user_node)
 
     for p in user_paths:
         p_status = os.stat(p)
@@ -737,21 +743,28 @@ class TestStage(object):
 
     def test_create_stage_root(self, tmpdir, no_path_access):
         """Test _create_stage_root permissions."""
-        spack_dir = tmpdir.join('path')
+        test_dir = tmpdir.join('path')
+        test_path = str(test_dir)
 
-        # Ensure an OS Error is raised on the created, non-user directory
-        with pytest.raises(OSError) as exc_info:
-            spack.stage._create_stage_root(str(spack_dir))
+        try:
+            if getpass.getuser() in str(test_path).split(os.sep):
+                # Simply ensure directory created if tmpdir includes user
+                spack.stage._create_stage_root(test_path)
+                assert os.path.exists(test_path)
 
-        assert exc_info.value.errno == errno.EACCES
+                p_stat = os.stat(test_path)
+                assert p_stat.st_mode & stat.S_IRWXU == stat.S_IRWXU
+            else:
+                # Ensure an OS Error is raised on created, non-user directory
+                with pytest.raises(OSError) as exc_info:
+                    spack.stage._create_stage_root(test_path)
 
-        # Ensure an OS Error is raised on a created user directory
-        spack_dir.ensure(dir=True)
-        user_dir = spack_dir.join(getpass.getuser())
-        with pytest.raises(OSError) as exc_info:
-            spack.stage._create_stage_root(str(user_dir))
-
-        assert exc_info.value.errno == errno.EACCES
+                assert exc_info.value.errno == errno.EACCES
+        finally:
+            try:
+                shutil.rmtree(test_path)
+            except OSError:
+                pass
 
     @pytest.mark.nomockstage
     def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):

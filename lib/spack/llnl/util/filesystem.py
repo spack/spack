@@ -49,7 +49,7 @@ __all__ = [
     'is_exe',
     'join_path',
     'mkdirp',
-    'partition',
+    'partition_path',
     'prefixes',
     'remove_dead_links',
     'remove_if_dead_link',
@@ -1552,7 +1552,7 @@ def search_paths_for_executables(*path_hints):
     return executable_paths
 
 
-def partition(path, entry=None):
+def partition_path(path, entry=None):
     """
     Split the prefixes of the path at the first occurrence of entry and
     return a 3-tuple containing a list of the prefixes before the entry, a
