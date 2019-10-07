@@ -48,7 +48,7 @@ BUILD_CACHE_INDEX_TEMPLATE = '''
 </html>
 '''
 
-BUILD_CACHE_INDEX_ENTRY_TEMPLATE = '  <li><a href="{path}">{path}</a>'
+BUILD_CACHE_INDEX_ENTRY_TEMPLATE = '  <li><a href="{path}">{path}</a></li>'
 
 
 class NoOverwriteException(Exception):
