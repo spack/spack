@@ -15,7 +15,10 @@ class PyLineProfiler(PythonPackage):
     # unfortunately no new release is available and 2.0 does not
     # yet work with python?3.5?: so we use a current commit
     version('2.new', git='git@github.com:rkern/line_profiler.git', commit='3cdc2fab6793802d31130b1af2705bddebf6f7fd')
+    version('2.1.2', sha256='efa66e9e3045aa7cb1dd4bf0106e07dec9f80bc781a993fbaf8162a36c20af5c')
     version('2.0', 'fc93c6bcfac3b7cb1912cb28836d7ee6')
+
+    conflicts('python@:3.4', when='@:2.0')
 
     depends_on('python@2.5:')
     depends_on('py-setuptools',     type='build')
