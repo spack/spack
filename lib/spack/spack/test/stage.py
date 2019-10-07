@@ -743,7 +743,7 @@ class TestStage(object):
         with pytest.raises(OSError) as exc_info:
             spack.stage._create_stage_root(str(spack_dir))
 
-        assert exc_info.value.args[0] == errno.EACCES
+        assert exc_info.value.errno == errno.EACCES
 
         # Ensure an OS Error is raised on a created user directory
         spack_dir.ensure(dir=True)
@@ -751,7 +751,7 @@ class TestStage(object):
         with pytest.raises(OSError) as exc_info:
             spack.stage._create_stage_root(str(user_dir))
 
-        assert exc_info.value.args[0] == errno.EACCES
+        assert exc_info.value.errno == errno.EACCES
 
     @pytest.mark.nomockstage
     def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):
