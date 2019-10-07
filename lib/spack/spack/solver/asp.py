@@ -283,15 +283,51 @@ class AspGenerator(object):
         # dependencies
         for name, conditions in pkg.dependencies.items():
             for cond, dep in conditions.items():
-                self.fact(fn.declared_dependency(dep.pkg.name, dep.spec.name))
+                decl = fn.declared_dependency(dep.pkg.name, dep.spec.name)
+                if cond == spack.spec.Spec():
+                    self.fact(decl)
+                else:
+                    named_cond = cond.copy()
+                    if not named_cond.name:
+                        named_cond.name = pkg.name
+                    self.rule(
+                        decl,
+                        self._and(*self.spec_clauses(named_cond, body=True))
+                    )
 
-    def spec_clauses(self, spec):
-        """Return a list of clauses the spec mandates are true.
+    def spec_clauses(self, spec, body=False):
+        """Return a list of clauses for a spec mandates are true.
 
         Arguments:
             spec (Spec): the spec to analyze
+            body (bool): if True, generate clauses to be used in rule bodies
+                (final values) instead of rule heads (setters).
         """
         clauses = []
+
+        # TODO: do this with consistent suffixes.
+        class Head(object):
+            node = fn.node
+            arch_platform = fn.arch_platform_set
+            arch_os = fn.arch_os_set
+            arch_target = fn.arch_target_set
+            variant = fn.variant_set
+            node_compiler = fn.node_compiler_set
+            node_compiler_version = fn.node_compiler_version_set
+
+        class Body(object):
+            node = fn.node
+            arch_platform = fn.arch_platform
+            arch_os = fn.arch_os
+            arch_target = fn.arch_target
+            variant = fn.variant_value
+            node_compiler = fn.node_compiler
+            node_compiler_version = fn.node_compiler_version
+
+        f = Body if body else Head
+
+        if spec.name:
+            clauses.append(f.node(spec.name))
 
         clauses.extend(self.spec_versions(spec))
 
@@ -300,22 +336,24 @@ class AspGenerator(object):
         arch = spec.architecture
         if arch:
             if arch.platform:
-                clauses.append(fn.arch_platform_set(spec.name, arch.platform))
+                clauses.append(f.arch_platform(spec.name, arch.platform))
             if arch.os:
-                clauses.append(fn.arch_os_set(spec.name, arch.os))
+                clauses.append(f.arch_os(spec.name, arch.os))
             if arch.target:
-                clauses.append(fn.arch_target_set(spec.name, arch.target))
+                clauses.append(f.arch_target(spec.name, arch.target))
 
         # variants
         for vname, variant in spec.variants.items():
-            clauses.append(fn.variant_set(spec.name, vname, variant.value))
+            clauses.append(f.variant(spec.name, vname, variant.value))
 
         # compiler and compiler version
         if spec.compiler:
-            clauses.append(fn.node_compiler_set(spec.name, spec.compiler.name))
+            clauses.append(f.node_compiler(spec.name, spec.compiler.name))
             if spec.compiler.concrete:
-                clauses.append(fn.node_compiler_version_set(
+                clauses.append(f.node_compiler_version(
                     spec.name, spec.compiler.name, spec.compiler.version))
+
+#        if spec.dependencies:
 
         # TODO
         # dependencies
@@ -475,11 +513,20 @@ class ResultParser(object):
             answer = next(stream)
             tty.debug("Answer: %d" % answer_number, answer)
 
-            self._specs = {}
+            # parse functions out of ASP output
+            functions = []
             for m in re.finditer(r'(\w+)\(([^)]*)\)', answer):
                 name, arg_string = m.groups()
                 args = re.findall(r'"([^"]*)"', arg_string)
+                functions.append((name, args))
 
+            # Functions don't seem to be in particular order in output.
+            # Sort them here so that nodes are created before directives
+            # that need them, (depends_on(), etc.)
+            functions.sort(key=lambda f: f[0] != "node")
+
+            self._specs = {}
+            for name, args in functions:
                 action = getattr(self, name)
                 assert action and callable(action)
                 action(*args)
