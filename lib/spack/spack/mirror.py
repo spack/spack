@@ -250,7 +250,7 @@ def add_single_spec(spec, mirror_root, categories):
         try:
             with spec.package.stage as pkg_stage:
                 pkg_stage.fetch()
-                pkg_stage.cache_local()
+                pkg_stage.cache_local(mirror_only=True)
                 for patch in spec.package.all_patches():
                     patch.fetch(pkg_stage)
                     patch.clean()

@@ -455,9 +455,10 @@ class Stage(object):
         elif spack.config.get('config:checksum'):
             self.fetcher.check()
 
-    def cache_local(self):
-        spack.caches.fetch_cache.store(
-            self.fetcher, self.mirror_paths.storage_path)
+    def cache_local(self, mirror_only=False):
+        if not mirror_only:
+            spack.caches.fetch_cache.store(
+                self.fetcher, self.mirror_paths.storage_path)
 
         if spack.caches.mirror_cache:
             spack.caches.mirror_cache.store(
