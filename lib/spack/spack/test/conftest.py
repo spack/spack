@@ -5,6 +5,7 @@
 
 import collections
 import copy
+import errno
 import inspect
 import os
 import os.path
@@ -224,7 +225,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         stage_files = os.listdir(stage_path)
         files_in_stage = set(stage_files) - ignore_stage_files
     except OSError as err:
-        if err.errno == 2:
+        if err.errno == errno.ENOENT:
             pass
         else:
             raise
