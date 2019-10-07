@@ -18,6 +18,7 @@ class Pmdk(Package):
     git      = "https://github.com/pmem/pmdk.git"
 
     version('develop', branch='master')
+    version('1.7', sha256='865ce1b422bc83109cb4a63dcff8fd1077eea3617e668faf6a043208d8be03ca')
     version('1.6',     sha256='3b99e6c30709326a94d2e73a9247a8dfb58d0a394c5b7714e5c3d8a3ad2e2e9f')
     version('1.5',     sha256='6b069d7207febeb62440e89245e8b18fcdf40b6170d2ec2ef33c252ed16db2d4')
 
