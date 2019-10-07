@@ -1,0 +1,10 @@
+--- spack-src.org/CMakeLists.txt	2019-10-07 17:17:22.526981123 +0900
++++ spack-src/CMakeLists.txt	2019-10-07 17:17:11.712981862 +0900
+@@ -31,6 +31,7 @@
+ 
+ 
+ add_subdirectory(lib/zlib-1.2.7)
++include_directories(${CMAKE_CURRENT_BINARY_DIR}/lib/zlib-1.2.7 ${CMAKE_CURRENT_SOURCE_DIR}/lib/zlib-1.2.7)
+ add_subdirectory(lib/bamtools-2.3.0)
+ 
+ add_subdirectory(src)
