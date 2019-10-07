@@ -198,6 +198,11 @@ class AspGenerator(object):
             v for v in self.possible_versions[spec.name]
             if v.satisfies(spec.versions)
         ]
+
+        # don't bother restricting anything if all versions are allowed
+        if len(allowed_versions) == len(self.possible_versions[spec.name]):
+            return []
+
         predicates = [fn.version(spec.name, v) for v in allowed_versions]
 
         # conflict with any versions that do not satisfy the spec
@@ -287,9 +292,6 @@ class AspGenerator(object):
             spec (Spec): the spec to analyze
         """
         clauses = []
-
-        if spec.name:
-            clauses.append(fn.node(spec.name))
 
         clauses.extend(self.spec_versions(spec))
 
@@ -428,8 +430,14 @@ class ResultParser(object):
 
     def variant_value(self, pkg, name, value):
         pkg_class = spack.repo.path.get_pkg_class(pkg)
-        variant = pkg_class.variants[name].make_variant(value)
-        self._specs[pkg].variants[name] = variant
+
+        variant = self._specs[pkg].variants.get(name)
+        if variant:
+            # it's multi-valued
+            variant.append(value)
+        else:
+            variant = pkg_class.variants[name].make_variant(value)
+            self._specs[pkg].variants[name] = variant
 
     def version(self, pkg, version):
         self._specs[pkg].versions = ver([version])
