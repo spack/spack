@@ -793,9 +793,9 @@ class TestStage(object):
         user_dir.ensure(dir=True)
         user_path = str(user_dir)
 
-        # TODO: Once wrap os.stat or able to ensure using a pytest with
-        # monkeypatch context function (i.e., 3.6.0 on), the call and
-        # assertion can be moved to the with block:
+        # TODO: If we could guarantee access to the monkeypatch context
+        # function (i.e., 3.6.0 on), the call and assertion could be moved
+        # to a with block, such as:
         #
         #  with monkeypatch.context() as m:
         #      m.setattr(os, 'stat', _stat)
@@ -804,8 +804,8 @@ class TestStage(object):
         monkeypatch.setattr(os, 'stat', _stat)
         spack.stage._create_stage_root(user_path)
 
-        # The following check depends on the patched os.stat as it is a
-        # poor substitute for confirming the generated warnings.
+        # The following check depends on the patched os.stat as a poor
+        # substitute for confirming the generated warnings.
         assert os.stat(user_path).st_uid != os.getuid()
 
     def test_resolve_paths(self):
