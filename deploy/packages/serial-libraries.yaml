@@ -21,7 +21,6 @@ packages:
       - python
     specs:
       - arrow+parquet+python@0.11.0
-      - boost@1.65.0+python
       - neuron~mpi@7.6.8
 
   gnu-stable-serial-python3:
@@ -52,10 +51,10 @@ packages:
       - architecture
       - compiler
     specs:
-      - assimp ^boost@1.65.0
+      - assimp
       - boost
       - brion
-      - deflect  ^boost@1.65.0
+      - deflect
       - eigen
       - fmt
       - gmsh
