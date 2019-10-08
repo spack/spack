@@ -337,7 +337,11 @@ class Openfoam(Package):
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
-    patch('1806-have-kahip.patch', when='@1806')
+    # kahip patch (wmake)
+    patch('https://develop.openfoam.com/Development/OpenFOAM-plus/commit/4068c03c616a4964472e06d5fb5b9bc2dd0bf1b7.patch',
+          when='@1806',
+          sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
+    )
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
