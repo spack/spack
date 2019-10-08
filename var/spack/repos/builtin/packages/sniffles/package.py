@@ -15,7 +15,14 @@ class Sniffles(CMakePackage):
     version('1.0.7', '83bd93c5ab5dad3a6dc776f11d3a880e')
     version('1.0.5', 'c2f2350d00418ba4d82c074e7f0b1832')
 
-    patch('zlibbug.patch')
+    depends_on('zlib', type='link')
+    depends_on('bamtools', type='link')
+
+    patch('unused_libs.patch')
+
+    def cmake_args(self):
+        i = self.spec['bamtools'].prefix.include.bamtools
+        return ['-DCMAKE_CXX_FLAGS=-I{0}'.format(i)]
 
     # the build process doesn't actually install anything, do it by hand
     def install(self, spec, prefix):
