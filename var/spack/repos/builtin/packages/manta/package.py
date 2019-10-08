@@ -12,6 +12,7 @@ class Manta(CMakePackage):
     homepage = "https://github.com/Illumina/manta"
     url      = "https://github.com/Illumina/manta/releases/download/v1.3.2/manta-1.3.2.release_src.tar.bz2"
 
+    version('1.6.0', sha256='c846d61b02483265c09d58bd85dacf5326a94f38179b5ae4f70694be96e1368f')
     version('1.5.0', sha256='9aa1a59c9cb8d2dd33724a42959c9398aff7840c5bf3c895d2483a8093b3d2dc')
     version('1.4.0', '582d10f3bc56aecfa5c24931af3742b4')
     version('1.3.2', '83f43fe1a12605c1e9803d1020b24bd1')

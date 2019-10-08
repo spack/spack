@@ -7,8 +7,8 @@
 ########################################################################
 #
 # This file is part of Spack and sets up the spack environment for bash,
-# zsh, and dash (sh).  This includes dotkit support, module support, and
-# it also puts spack in your path.  The script also checks that at least
+# zsh, and dash (sh).  This includes environment modules and lmod support,
+# and it also puts spack in your path. The script also checks that at least
 # module support exists, and provides suggestions if it doesn't. Source
 # it like this:
 #
@@ -16,27 +16,27 @@
 #
 ########################################################################
 # This is a wrapper around the spack command that forwards calls to
-# 'spack use' and 'spack unuse' to shell functions.  This in turn
-# allows them to be used to invoke dotkit functions.
+# 'spack load' and 'spack unload' to shell functions.  This in turn
+# allows them to be used to invoke environment modules functions.
 #
-# 'spack use' is smarter than just 'use' because it converts its
-# arguments into a unique spack spec that is then passed to dotkit
+# 'spack load' is smarter than just 'load' because it converts its
+# arguments into a unique Spack spec that is then passed to module
 # commands.  This allows the user to use packages without knowing all
 # their installation details.
 #
 # e.g., rather than requiring a full spec for libelf, the user can type:
 #
-#     spack use libelf
+#     spack load libelf
 #
-# This will first find the available libelf dotkits and use a
+# This will first find the available libelf module file and use a
 # matching one.  If there are two versions of libelf, the user would
 # need to be more specific, e.g.:
 #
-#     spack use libelf@0.8.13
+#     spack load libelf@0.8.13
 #
 # This is very similar to how regular spack commands work and it
 # avoids the need to come up with a user-friendly naming scheme for
-# spack dotfiles.
+# spack module files.
 ########################################################################
 
 spack() {
@@ -140,7 +140,7 @@ spack() {
             fi
             return
             ;;
-        "use"|"unuse"|"load"|"unload")
+        "load"|"unload")
             # Shift any other args for use off before parsing spec.
             _sp_subcommand_args=""
             _sp_module_args=""
@@ -161,20 +161,6 @@ spack() {
             # tool's commands to add/remove the result from the environment.
             # If spack module command comes back with an error, do nothing.
             case $_sp_subcommand in
-                "use")
-                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "$@"); then
-                        use $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi
-                    ;;
-                "unuse")
-                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "$@"); then
-                        unuse $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi
-                    ;;
                 "load")
                     if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "$@"); then
                         module load $_sp_module_args $_sp_full_spec
@@ -350,11 +336,12 @@ _sp_multi_pathadd() {
         setopt sh_word_split
     fi
     for pth in $2; do
-        _spack_pathadd "$1" "${pth}/${_sp_sys_type}"
+        for systype in ${_sp_compatible_sys_types}; do
+            _spack_pathadd "$1" "${pth}/${systype}"
+        done
     done
 }
 _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
-_sp_multi_pathadd DK_NODE "$_sp_dotkit_roots"
 
 # Add programmable tab completion for Bash
 #

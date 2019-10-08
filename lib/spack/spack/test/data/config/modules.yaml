@@ -16,7 +16,6 @@
 modules:
   enable:
     - tcl
-    - dotkit
   prefix_inspections:
     bin:
       - PATH
@@ -37,6 +36,8 @@ modules:
     lib/pkgconfig:
       - PKG_CONFIG_PATH
     lib64/pkgconfig:
+      - PKG_CONFIG_PATH
+    share/pkgconfig:
       - PKG_CONFIG_PATH
     '':
       - CMAKE_PREFIX_PATH

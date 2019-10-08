@@ -7,7 +7,7 @@ from spack import *
 import os
 
 
-class Paraview(CMakePackage):
+class Paraview(CMakePackage, CudaPackage):
     """ParaView is an open-source, multi-platform data analysis and
     visualization application."""
 
@@ -232,6 +232,16 @@ class Paraview(CMakePackage):
                 '-DMPI_CXX_COMPILER:PATH=%s' % spec['mpi'].mpicxx,
                 '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
                 '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc
+            ])
+
+        if '+cuda' in spec:
+            cmake_args.extend([
+                '-DPARAVIEW_USE_CUDA:BOOL=ON',
+                '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=OFF'
+            ])
+        else:
+            cmake_args.extend([
+                '-DPARAVIEW_USE_CUDA:BOOL=OFF',
             ])
 
         if 'darwin' in spec.architecture:

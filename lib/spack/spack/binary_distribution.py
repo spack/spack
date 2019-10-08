@@ -607,7 +607,6 @@ def get_specs(force=False):
         tty.warn("No Spack mirrors are currently configured")
         return {}
 
-    path = str(spack.architecture.sys_type())
     urls = set()
     for mirror_name, mirror_url in mirrors.items():
         if mirror_url.startswith('file'):
@@ -624,7 +623,7 @@ def get_specs(force=False):
             tty.msg("Finding buildcaches on %s" % mirror_url)
             p, links = spider(mirror_url + "/" + _build_cache_relative_path)
             for link in links:
-                if re.search("spec.yaml", link) and re.search(path, link):
+                if re.search("spec.yaml", link):
                     urls.add(link)
 
     _cached_specs = []

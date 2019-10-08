@@ -1694,3 +1694,51 @@ def test_env_activate_csh_prints_shell_output(
     assert "setenv SPACK_ENV" in out
     assert "set prompt=" in out
     assert "alias despacktivate" in out
+
+
+def test_concretize_user_specs_together():
+    e = ev.create('coconcretization')
+    e.concretization = 'together'
+
+    # Concretize a first time using 'mpich' as the MPI provider
+    e.add('mpileaks')
+    e.add('mpich')
+    e.concretize()
+
+    assert all('mpich' in spec for _, spec in e.concretized_specs())
+    assert all('mpich2' not in spec for _, spec in e.concretized_specs())
+
+    # Concretize a second time using 'mpich2' as the MPI provider
+    e.remove('mpich')
+    e.add('mpich2')
+    e.concretize()
+
+    assert all('mpich2' in spec for _, spec in e.concretized_specs())
+    assert all('mpich' not in spec for _, spec in e.concretized_specs())
+
+    # Concretize again without changing anything, check everything
+    # stays the same
+    e.concretize()
+
+    assert all('mpich2' in spec for _, spec in e.concretized_specs())
+    assert all('mpich' not in spec for _, spec in e.concretized_specs())
+
+
+def test_cant_install_single_spec_when_concretizing_together():
+    e = ev.create('coconcretization')
+    e.concretization = 'together'
+
+    with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
+        e.install('zlib')
+
+
+def test_duplicate_packages_raise_when_concretizing_together():
+    e = ev.create('coconcretization')
+    e.concretization = 'together'
+
+    e.add('mpileaks+opt')
+    e.add('mpileaks~opt')
+    e.add('mpich')
+
+    with pytest.raises(ev.SpackEnvironmentError, match=r'cannot contain more'):
+        e.concretize()
