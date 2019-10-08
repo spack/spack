@@ -43,8 +43,28 @@ spec.
 On BB5, clone this repository to get started using Spack.
 The following commands are a good way to get started:
 
-    $ git clone https://github.com/BlueBrain/spack.git
-    $ . spack/share/spack/setup-env.sh
+```bash
+git clone https://github.com/BlueBrain/spack.git                     # 1)
+. spack/share/spack/setup-env.sh                                     # 2)
+mkdir -p ~/.spack                                                    # 3)
+ln -s /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/*.yaml ~/.spack      # 4)
+export SPACK_INSTALL_PREFIX=$HOME/software                           # 5)
+```
+
+Steps 1) and 2) are the only mandatory ones, however 3) 4) 5) are necessary to used
+precompiled packages (more on this next section).
+
+### Concretization
+
+Before building a program, one can have a look at all the software that would be required to build it.
+
+
+Wouldn't have we performed the instructions 3), 4) and 5) in the previous step,
+here is how the output would look like for the circuit building workflow.
+
+
+
+
     $ spack spec -I spykfunc|head -n 15
     Input spec
     --------------------------------
@@ -62,16 +82,12 @@ The following commands are a good way to get started:
      -               ^openssl@1.1.1%gcc@4.8.5+systemcerts arch=linux-rhel7-x86_64
      -                   ^perl@5.26.2%gcc@4.8.5+cpanm patches=0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac +shared+threads arch=linux-rhel7-x86_64
 
-Here we see all the software that would be required to build one program of
-the circuit building workflow.
+
 The leading `-` sign in the output signifies that this particular piece of
 software would have to be built from scratch.
 To reduce the amount of time spent compiling the same software, we can
-configure Spack to use centrally build packages on BB5:
-
-    $ mkdir -p ~/.spack
-    $ ln -s /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/*.yaml ~/.spack
-    $ export SPACK_INSTALL_PREFIX=$HOME/software
+configure Spack to use centrally build packages on BB5 and that's what the steps
+3), 4) and 5) are doing.
 
 The configuration thus set up uses the environment variable
 `SPACK_INSTALL_PREFIX` as the installation directory for packages.
