@@ -37,6 +37,7 @@ class Coreneuron(CMakePackage):
     url      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', git=url, submodules=True)
+    version('0.16', git=url, tag='0.16', submodules=True)
     version('0.15', git=url, tag='0.15', submodules=True)
     version('0.14', git=url, tag='0.14', submodules=True)
 

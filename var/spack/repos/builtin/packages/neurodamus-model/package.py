@@ -18,7 +18,6 @@ class NeurodamusModel(SimModel):
     """
     # NOTE: Several variants / dependencies come from SimModel
     variant('synapsetool', default=True,  description="Enable Synapsetool reader")
-    variant('sonata',      default=False, description="Enable Synapsetool with Sonata")
     variant('python',      default=False, description="Install neurodamus-python alongside")
     variant('common_mods', default='',    description="Source of common mods. '': no change,"
                                                       " other string: alternate path")
@@ -31,14 +30,11 @@ class NeurodamusModel(SimModel):
     depends_on("hdf5+mpi")
     depends_on('reportinglib')
     depends_on('reportinglib+profile', when='+profile')
-    depends_on('synapsetool+mpi', when='+synapsetool~sonata')
-    depends_on('synapsetool+mpi+sonata', when='+synapsetool+sonata')
+    depends_on('synapsetool+mpi', when='+synapsetool')
     # NOTE: With Spack chain we no longer require support for external libs.
     # However, in some setups (notably tests) some libraries might still be
     # specificed as external and, if static, and we must bring their dependencies.
     depends_on('zlib')  # for hdf5
-
-    conflicts('+sonata', when='~synapsetool')
 
     phases = ['build_model', 'merge_hoc_mod', 'build', 'install']
 
