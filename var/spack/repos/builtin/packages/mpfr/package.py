@@ -10,9 +10,10 @@ class Mpfr(AutotoolsPackage):
     """The MPFR library is a C library for multiple-precision
        floating-point computations with correct rounding."""
 
-    homepage = "http://www.mpfr.org"
-    url      = "https://ftpmirror.gnu.org/mpfr/mpfr-4.0.1.tar.bz2"
+    homepage = "https://www.mpfr.org/"
+    url      = "https://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.bz2"
 
+    version('4.0.2', sha256='c05e3f02d09e0e9019384cdd58e0f19c64e6db1fd6f5ecf77b4b1c61ca253acc')
     version('4.0.1', '8c21d8ac7460493b2b9f3ef3cc610454')
     version('4.0.0', 'ef619f3bb68039e35c4a219e06be72d0')
     version('3.1.6', '320c28198def956aeacdb240b46b8969')
@@ -23,11 +24,13 @@ class Mpfr(AutotoolsPackage):
 
     # mpir is a drop-in replacement for gmp
     depends_on('gmp@4.1:')  # 4.2.3 or higher is recommended
-    depends_on('gmp@5.0:', when='@4.0.0:')  # http://www.mpfr.org/mpfr-4.0.0/
+    depends_on('gmp@5.0:', when='@4.0.0:')  # https://www.mpfr.org/mpfr-4.0.0/
 
     # Check the Bugs section of old release pages for patches.
-    # http://www.mpfr.org/mpfr-X.Y.Z/#bugs
+    # https://www.mpfr.org/mpfr-X.Y.Z/#bugs
     patches = {
+        '4.0.2': 'f2d2a530acb5e70e1a9d5b80881dbb4a504d56535c4bc103d83e0bb630172029',
+        '4.0.1': '5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739',
         '3.1.6': '66a5d58364113a21405fc53f4a48f4e8',
         '3.1.5': '1dc5fe65feb5607b89fe0f410d53b627',
         '3.1.4': 'd124381573404fe83654c7d5a79aeabf',
@@ -36,7 +39,7 @@ class Mpfr(AutotoolsPackage):
     }
 
     for ver, checksum in patches.items():
-        patch('http://www.mpfr.org/mpfr-{0}/allpatches'.format(ver),
+        patch('https://www.mpfr.org/mpfr-{0}/allpatches'.format(ver),
               when='@' + ver, sha256=checksum)
 
     def configure_args(self):
