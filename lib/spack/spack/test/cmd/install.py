@@ -21,10 +21,13 @@ import spack.cmd.install
 from spack.error import SpackError
 from spack.spec import Spec
 from spack.main import SpackCommand
+import spack.environment as ev
 
 from six.moves.urllib.error import HTTPError, URLError
 
 install = SpackCommand('install')
+env = SpackCommand('env')
+add = SpackCommand('add')
 
 
 @pytest.fixture(scope='module')
@@ -600,3 +603,45 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
             assert False
         except spack.main.SpackCommandError:
             pass
+
+
+def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
+    dep = Spec('dependency-install').concretized()
+    root = Spec('dependent-install').concretized()
+
+    install('--only', 'dependencies', 'dependent-install')
+
+    assert os.path.exists(dep.prefix)
+    assert not os.path.exists(root.prefix)
+
+
+@pytest.mark.regression('12002')
+def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
+                                          mutable_mock_env_path):
+    env('create', 'test')
+
+    with ev.read('test'):
+        dep = Spec('dependency-install').concretized()
+        root = Spec('dependent-install').concretized()
+
+        install('-v', '--only', 'dependencies', 'dependent-install')
+
+        assert os.path.exists(dep.prefix)
+        assert not os.path.exists(root.prefix)
+
+
+@pytest.mark.regression('12002')
+def test_install_only_dependencies_of_all_in_env(
+    tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
+):
+    env('create', 'test')
+
+    with ev.read('test'):
+        dep = Spec('dependency-install').concretized()
+        root = Spec('dependent-install').concretized()
+
+        add('dependent-install')
+        install('--only', 'dependencies')
+
+        assert os.path.exists(dep.prefix)
+        assert not os.path.exists(root.prefix)
