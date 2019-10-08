@@ -191,7 +191,8 @@ class Qmcpack(CMakePackage, CudaPackage):
         if spec.satisfies('@:3.7.0'):
             xml2_prefix = spec['libxml2'].prefix
             args.append('-DLIBXML2_HOME={0}'.format(xml2_prefix))
-            args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(xml2_prefix.include))
+            args.append(
+                '-DLibxml2_INCLUDE_DIRS={0}'.format(xml2_prefix.include))
             args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(xml2_prefix.lib))
 
         if '^fftw@3:' in spec:
