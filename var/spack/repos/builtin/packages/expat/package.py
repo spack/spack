@@ -11,7 +11,12 @@ class Expat(AutotoolsPackage):
     """Expat is an XML parser library written in C."""
 
     homepage = "https://libexpat.github.io/"
-    url      = "https://github.com/libexpat/libexpat/releases/download/R_2_2_2/expat-2.2.2.tar.bz2"
+    url      = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
+
+    version('2.2.9', sha256='f1063084dc4302a427dabcca499c8312b3a32a29b7d2506653ecc8f950a9a237')
+    version('2.2.5', '789e297f547980fc9ecc036f9a070d49')
+    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
+    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
 
     # Version 2.2.2 introduced a requirement for a high quality
     # entropy source.  "Older" linux systems (aka CentOS 7) do not
@@ -23,11 +28,8 @@ class Expat(AutotoolsPackage):
     # `~libbsd`.
     variant('libbsd', default=sys.platform != 'darwin',
             description="Use libbsd (for high quality randomness)")
-    depends_on('libbsd', when="@2.2.1:+libbsd")
 
-    version('2.2.5', '789e297f547980fc9ecc036f9a070d49')
-    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
+    depends_on('libbsd', when="@2.2.1:+libbsd")
 
     def url_for_version(self, version):
         url = 'https://github.com/libexpat/libexpat/releases/download/R_{0}/expat-{1}.tar.bz2'
