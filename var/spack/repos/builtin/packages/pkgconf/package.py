@@ -13,11 +13,13 @@ class Pkgconf(AutotoolsPackage):
     maintaining compatibility."""
 
     homepage = "http://pkgconf.org/"
-    url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.5.4.tar.xz"
+    # URL must remain http:// so Spack can bootstrap curl
+    url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.6.3.tar.xz"
 
-    version('1.6.1',  '22b9ee38438901f9d60f180e5182821180854fa738fd071f593ea26a81da208c')
-    version('1.6.0',  '6135a3abb576672ba54a899860442ba185063f0f90dae5892f64f7bae8e1ece5')
-    version('1.5.4',  '9c5864a4e08428ef52f05a41c948529555458dec6d283b50f8b7d32463c54664')
+    version('1.6.3', sha256='61f0b31b0d5ea0e862b454a80c170f57bad47879c0c42bd8de89200ff62ea210')
+    version('1.6.1', sha256='22b9ee38438901f9d60f180e5182821180854fa738fd071f593ea26a81da208c')
+    version('1.6.0', sha256='6135a3abb576672ba54a899860442ba185063f0f90dae5892f64f7bae8e1ece5')
+    version('1.5.4', sha256='9c5864a4e08428ef52f05a41c948529555458dec6d283b50f8b7d32463c54664')
     version('1.4.2',  '678d242b4eef1754bba6a58642af10bb')
     version('1.4.0',  'c509c0dad5a70aa4bc3210557b7eafce')
     version('1.3.10', '9b63707bf6f8da6efb3868101d7525fe')
