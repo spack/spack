@@ -11,7 +11,7 @@ class PyCertipy(PythonPackage):
     and certificates on the fly."""
 
     homepage = "https://pypi.org/project/certipy/"
-    url      = "https://files.pythonhosted.org/packages/source/c/certipy/certipy-0.1.3.tar.gz"
+    url      = "https://pypi.io/packages/source/c/certipy/certipy-0.1.3.tar.gz"
 
     version('0.1.3', sha256='695704b7716b033375c9a1324d0d30f27110a28895c40151a90ec07ff1032859')
 
