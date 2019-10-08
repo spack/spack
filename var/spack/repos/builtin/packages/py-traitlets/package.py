@@ -12,6 +12,8 @@ class PyTraitlets(PythonPackage):
     homepage = "https://pypi.python.org/pypi/traitlets"
     url      = "https://github.com/ipython/traitlets/archive/4.3.1.tar.gz"
 
+    version('4.3.3', sha256='b686c1aadf6ee5a9ee4c22df23bc5cd5bb7b5cfa18afe092e0a139cc2f05fe2e')
+    version('4.3.2', sha256='370f938ad730d52272ef74f96f831cb21138f6168e46fe582fe256c35cc656ce')
     version('4.3.1', '146a4885ea64079f62a33b2049841543')
     version('4.3.0', '17af8d1306a401c42dbc92a080722422')
     version('4.2.2', 'ffc03056dc5c8d1fc5dbd6eac76e1e46')
