@@ -366,10 +366,7 @@ class AspGenerator(object):
                 clauses.append(f.node_compiler_version(
                     spec.name, spec.compiler.name, spec.compiler.version))
 
-#        if spec.dependencies:
-
         # TODO
-        # dependencies
         # external_path
         # external_module
         # compiler_flags
@@ -404,7 +401,8 @@ class AspGenerator(object):
         for vspec in virtuals:
             self.fact(fn.virtual(vspec))
             for provider in spack.repo.path.providers_for(vspec):
-                self.fact(fn.provides_virtual(provider, vspec))
+                # TODO: handle versioned virtuals
+                self.fact(fn.provides_virtual(provider.name, vspec))
 
     def generate_asp_program(self, specs):
         """Write an ASP program for specs.

@@ -24,6 +24,12 @@ depends_on(P, D) :- declared_dependency(P, D), not virtual(D), node(P).
 1 { depends_on(P, Q) : provides_virtual(Q, V) } 1
     :- declared_dependency(P, V), virtual(V), node(P).
 
+% for any virtual, there can only be one node providing it in the DAG
+provider(P, V) :- node(P), provides_virtual(P, V).
+1 { provider(P, V) : node(P) } 1 :- virtual(V).
+
+% all nodes must be reachable from some root
+% TODO: this doesn't seem to be working yet
 needed(D) :- depends_on(_, D), node(D).
 needed(P) :- root(P).
 :- node(P), not needed(P).
