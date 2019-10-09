@@ -24,6 +24,11 @@ depends_on(P, D) :- declared_dependency(P, D), not virtual(D), node(P).
 1 { depends_on(P, Q) : provides_virtual(Q, V) } 1
     :- declared_dependency(P, V), virtual(V), node(P).
 
+needed(D) :- depends_on(_, D), node(D).
+needed(P) :- root(P).
+:- node(P), not needed(P).
+#defined root/1.
+
 % real dependencies imply new nodes.
 node(D) :- node(P), depends_on(P, D).
 
@@ -36,9 +41,8 @@ node(D) :- node(P), depends_on(P, D).
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------
-
 % one variant value for single-valued variants.
-1 { variant_value(P, V, X) : variant_value(P, V, X) } 1
+1 { variant_value(P, V, X) : variant_possible_value(P, V, X) } 1
     :- node(P), variant(P, V), variant_single_value(P, V).
 
 % if a variant is set to anything, it is considered 'set'.
@@ -47,8 +51,19 @@ variant_set(P, V) :- variant_set(P, V, _).
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(P, V, X) :- node(P), variant(P, V), variant_set(P, V, X).
-variant_value(P, V, X) :- node(P), variant(P, V), not variant_set(P, V),
-                 variant_default_value(P, V, X).
+
+% prefer default values.
+variant_not_default(P, V, X, 1)
+    :- variant_value(P, V, X),
+       not variant_default_value(P, V, X),
+       node(P).
+
+variant_not_default(P, V, X, 0)
+    :- variant_value(P, V, X),
+       variant_default_value(P, V, X),
+       node(P).
+
+#minimize { N@1,P,V,X : variant_not_default(P, V, X, N) }.
 
 % suppress wranings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
