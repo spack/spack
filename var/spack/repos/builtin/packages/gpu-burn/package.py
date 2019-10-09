@@ -6,7 +6,7 @@
 from spack import *
 
 
-class GpuBurn(Package, CudaPackage):
+class GpuBurn(MakefilePackage, CudaPackage):
     """Multi-GPU CUDA stress test. Note that the file pointed to by COMPARE_PTX
     needs to be copied or linked to the current working directory before
     running gpu_burn."""
@@ -25,7 +25,7 @@ class GpuBurn(Package, CudaPackage):
 
     conflicts('~cuda', msg='gpu-burn requires cuda')
 
-    def patch(self):
+    def edit(self, spec, prefix):
         # update cuda architecture if necessary
         if '+cuda' in self.spec:
             cuda_arch = self.spec.variants['cuda_arch'].value
@@ -45,7 +45,6 @@ class GpuBurn(Package, CudaPackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.share)
-        make()
         install('gpu_burn', prefix.bin)
         install('compare.ptx', prefix.share)
 
