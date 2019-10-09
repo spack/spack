@@ -174,7 +174,7 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
 
     def mirror_id(self):
         """This is a unique ID for a source that is intended to help identify
-        reuse of resources accross packages.
+        reuse of resources across packages.
 
         It is unique like source-id, but it does not include the package name
         and is not necessarily easy for a human to create themselves.
