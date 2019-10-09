@@ -1580,12 +1580,40 @@ def partition_path(path, entry=None):
 
 
 def prefixes(path):
-    """Returns a list containing the path and its ancestors, top-to-bottom."""
-    parts = [p or os.sep for p in path.rstrip(os.sep).split(os.sep)]
-    paths = [os.path.join(*parts[:i]) for i, _ in enumerate(parts, 1)]
+    """
+    Returns a list containing the path and its ancestors, top-to-bottom.
+
+    The list for an absolute path will not include an ``os.sep`` entry.
+    For example, assuming ``os.sep`` is ``/``, given path ``/ab/cd/efg``
+    the resulting paths will be, in order: ``/ab``, ``/ab/cd``, and
+    ``/ab/cd/efg``
+
+    The list for a relative path starting ``./`` will not include ``.``.
+    For example, path ``./hi/jkl/mn`` results in a list with the following
+    paths, in order: ``./hi``, ``./hi/jkl``, and ``./hi/jkl/mn``.
+
+    Parameters:
+        path (str): the string used to derive ancestor paths
+
+    Returns:
+        A list containing ancestor paths in order and ending with the path
+    """
+    if not path:
+        return []
+
+    parts = path.strip(os.sep).split(os.sep)
+    if path.startswith(os.sep):
+        parts.insert(0, os.sep)
+    paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
 
     try:
         paths.remove(os.sep)
     except ValueError:
         pass
+
+    try:
+        paths.remove('.')
+    except ValueError:
+        pass
+
     return paths

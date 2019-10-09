@@ -310,3 +310,12 @@ def test_headers_directory_setter():
 ])
 def test_partition_path(path, entry, expected):
     assert fs.partition_path(path, entry) == expected
+
+
+@pytest.mark.parametrize('path,expected', [
+    ('/tmp/user/dir', ['/tmp', '/tmp/user', '/tmp/user/dir']),
+    ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
+    ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
+])
+def test_prefixes(path, expected):
+    assert fs.prefixes(path) == expected

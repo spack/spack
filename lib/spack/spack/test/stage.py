@@ -428,7 +428,7 @@ def check_stage_dir_perms(prefix, path):
                                                         user)
 
     for p in group_paths:
-        p_status = os.stat(os.path.join(prefix,p))
+        p_status = os.stat(os.path.join(prefix, p))
         assert p_status.st_gid == prefix_status.st_gid
         assert p_status.st_mode == prefix_status.st_mode
 
@@ -438,7 +438,7 @@ def check_stage_dir_perms(prefix, path):
         user_paths.insert(0, user_node)
 
     for p in user_paths:
-        p_status = os.stat(os.path.join(prefix,p))
+        p_status = os.stat(os.path.join(prefix, p))
         assert uid == p_status.st_uid
         assert p_status.st_mode & stat.S_IRWXU == stat.S_IRWXU
 
