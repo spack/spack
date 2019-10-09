@@ -252,6 +252,7 @@ def add_single_spec(spec, mirror_root, categories):
                 pkg_stage.cache_mirror()
                 for patch in spec.package.all_patches():
                     patch.fetch(pkg_stage)
+                    patch.stage.cache_mirror()
                     patch.clean()
             exception = None
             break

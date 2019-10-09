@@ -181,6 +181,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
+    # TODO: this function doesn't use the stage arg
     def fetch(self, stage):
         """Retrieve the patch in a temporary stage and compute self.path
 
@@ -205,7 +206,6 @@ class UrlPatch(Patch):
         self.stage.create()
         self.stage.fetch()
         self.stage.check()
-        self.stage.cache_local()
 
         root = self.stage.path
         if self.archive_sha256:
