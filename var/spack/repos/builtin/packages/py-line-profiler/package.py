@@ -17,7 +17,7 @@ class PyLineProfiler(PythonPackage):
     version('2.1.2', sha256='efa66e9e3045aa7cb1dd4bf0106e07dec9f80bc781a993fbaf8162a36c20af5c')
     version('2.0', 'fc93c6bcfac3b7cb1912cb28836d7ee6')
 
-    depends_on('python@2.5:')
+    depends_on('python@2.5:', type=('build', 'run'))
     depends_on('py-setuptools',     type='build')
     depends_on('py-cython',         type='build')
     depends_on('py-ipython@0.13:',  type=('build', 'run'))
