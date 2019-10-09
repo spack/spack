@@ -15,6 +15,8 @@ class Psmc(MakefilePackage):
 
     version('2016-1-21', commit='e5f7df5d00bb75ec603ae0beff62c0d7e37640b9')
 
+    depends_on('zlib', type='link')
+
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', prefix.bin.utils)
 
