@@ -24,7 +24,6 @@ class Sensei(CMakePackage):
     version('1.1.0', sha256='e5a4ba691573ff6c7b0d4793665e218ee5868ebcc0198915d1f16a4b7b92a368')
     version('1.0.0', sha256='bdcb03c56b51f2795ec5a7e85a5abb01d473d192fac50f2a8bf2608cc3564ff8')
 
-    variant('build_type', default='RelWithDebInfo', description='CMake build type', values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant('sencore', default=True, description='Enables the SENSEI core library')
     variant('catalyst', default=True, description='Build with ParaView-Catalyst support')
     variant('libsim', default=False, description='Build with VisIt-Libsim support')
@@ -33,14 +32,17 @@ class Sensei(CMakePackage):
     variant('python', default=False, description='Enable Python bindings')
     variant('miniapps', default=True, description='Enable the parallel 3D and oscillators miniapps')
 
-    depends_on("paraview@5.5:5.6", when="+catalyst")
+    # Paraview 5.6 depends on Python 3, but all SENSEI versions up to 2.2.1 do not
+    # support Python 3. So for now, until SENSEI 3, is available SENSEI can only
+    # work with Paraview 5.5.x
+    depends_on("paraview@5.5.0:5.5.2+python+mpi+hdf5", when="+catalyst")
     depends_on("visit", when="+libsim")
     depends_on("vtk", when="+libsim")
-    depends_on("vtk", when="+adios ~libsim ~catalyst")
-    depends_on("vtk", when="+sencore ~catalyst")
-    depends_on("vtk", when="+python ~libsim ~catalyst")
+    depends_on("vtk", when="~libsim ~catalyst")
     depends_on("adios", when="+adios")
-    depends_on("python", when="+python")
+    # SENSEI does not support Python 3 for now. Once SENSEI 3 is available, the
+    # line below should be modified
+    depends_on("python@:2", when="+python")
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
     depends_on("swig", when="+python")
@@ -51,11 +53,11 @@ class Sensei(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        # -Ox flags are set by default in CMake based on the build type
         args = [
             '-DCMAKE_CXX_STANDARD=11',
             '-DCMAKE_C_STANDARD=11',
-            '-DCMAKE_CXX_FLAGS=-fPIC -Wall -Wextra -O3 -mtune=generic',
-            '-DCMAKE_C_FLAGS=-fPIC -Wall -Wextra -O3 -mtune=generic'
+            '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'
         ]
 
         sensei_switch = 'ON' if '+sencore' in spec else 'OFF'
@@ -82,7 +84,12 @@ class Sensei(CMakePackage):
 
         vtkio_switch = 'ON' if '+vtkio' in spec else 'OFF'
         args.append('-DENABLE_VTK_IO:BOOL={0}'.format(vtkio_switch))
-        python_switch = 'ON' if '+python' in spec else 'OFF'
+
+        python_switch = 'OFF'
+        if '+python' in spec:
+            python_switch = 'ON'
+            python_path = spec['python'].command.path
+            args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(python_path))
         args.append('-DENABLE_PYTHON:BOOL={0}'.format(python_switch))
 
         if '+adios' in spec:
