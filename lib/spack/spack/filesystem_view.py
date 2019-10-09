@@ -214,15 +214,13 @@ class YamlFilesystemView(FilesystemView):
                 f.write(s_yaml.dump({'projections': self.projections}))
 
     def read_projections(self):
-        try:
+        if os.path.exists(self.projections_path):
             with open(self.projections_path, 'r') as f:
                 projections_data = s_yaml.load(f)
                 spack.config.validate(projections_data,
                                       spack.schema.projections.schema)
                 return projections_data['projections']
-        except IOError:
-            return {}
-        except OSError:
+        else:
             return {}
 
     def add_specs(self, *specs, **kwargs):

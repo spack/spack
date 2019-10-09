@@ -5,23 +5,21 @@
 
 """Tests for the `spack.verify` module"""
 import os
-import json
 import sys
 import time
 import shutil
 
 import llnl.util.filesystem as fs
 
+import spack.util.spack_json as sjson
 import spack.verify
 import spack.spec
 import spack.store
-from spack.main import SpackCommand
-
-verify = SpackCommand('verify')
-install = SpackCommand('install')
 
 
-def test_link_manifest(tmpdir):
+def test_link_manifest_entry(tmpdir):
+    # Test that symlinks are properly checked against the manifest.
+    # Test that the appropriate errors are generated when the check fails.
     file = str(tmpdir.join('file'))
     open(file, 'a').close()
     link = str(tmpdir.join('link'))
@@ -36,7 +34,6 @@ def test_link_manifest(tmpdir):
     assert not results
 
     data['type'] = 'garbage'
-    results = spack.verify.check_entry(link, data)
 
     results = spack.verify.check_entry(link, data)
     assert results
@@ -56,7 +53,9 @@ def test_link_manifest(tmpdir):
     assert results.errors[link] == ['link']
 
 
-def test_dir_manifest(tmpdir):
+def test_dir_manifest_entry(tmpdir):
+    # Test that directories are properly checked against the manifest.
+    # Test that the appropriate errors are generated when the check fails.
     dirent = str(tmpdir.join('dir'))
     fs.mkdirp(dirent)
 
@@ -75,14 +74,19 @@ def test_dir_manifest(tmpdir):
     assert results.errors[dirent] == ['type']
 
 
-def test_file_manifest(tmpdir):
+def test_file_manifest_entry(tmpdir):
+    # Test that files are properly checked against the manifest.
+    # Test that the appropriate errors are generated when the check fails.
+    orig_str = 'This is a file'
+    new_str = 'The file has changed'
+
     file = str(tmpdir.join('dir'))
     with open(file, 'w') as f:
-        f.write('This is a file')
+        f.write(orig_str)
 
     data = spack.verify.create_manifest_entry(file)
     assert data['type'] == 'file'
-    assert data['size'] == 14
+    assert data['size'] == len(orig_str)
     assert all(x in data for x in ('mode', 'owner', 'group'))
 
     results = spack.verify.check_entry(file, data)
@@ -98,7 +102,7 @@ def test_file_manifest(tmpdir):
     data['type'] = 'file'
 
     with open(file, 'w') as f:
-        f.write('The file has changed')
+        f.write(new_str)
 
     results = spack.verify.check_entry(file, data)
 
@@ -112,7 +116,9 @@ def test_file_manifest(tmpdir):
     assert sorted(results.errors[file]) == sorted(expected)
 
 
-def test_check_chmod_manifest(tmpdir):
+def test_check_chmod_manifest_entry(tmpdir):
+    # Check that the verification properly identifies errors for files whose
+    # permissions have been modified.
     file = str(tmpdir.join('dir'))
     with open(file, 'w') as f:
         f.write('This is a file')
@@ -127,13 +133,14 @@ def test_check_chmod_manifest(tmpdir):
     assert results.errors[file] == ['mode']
 
 
-def test_check_prefix_manifest(tmpdir, monkeypatch):
+def test_check_prefix_manifest(tmpdir):
+    # Test the verification of an entire prefix and its contents
     prefix_path = tmpdir.join('prefix')
     prefix = str(prefix_path)
 
     spec = spack.spec.Spec('libelf')
     spec._mark_concrete()
-    monkeypatch.setattr(spack.spec.Spec, 'prefix', prefix)
+    spec.prefix = prefix
 
     results = spack.verify.check_spec_manifest(spec)
     assert results
@@ -179,10 +186,13 @@ def test_check_prefix_manifest(tmpdir, monkeypatch):
 
     results = spack.verify.check_spec_manifest(spec)
     assert results
+    print results
     assert results.errors[spec.prefix] == ['manifest corrupted']
 
 
 def test_single_file_verification(tmpdir):
+    # Test the API to verify a single file, including finding the package
+    # to which it belongs
     filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
     filepath = os.path.join(filedir, 'file')
     metadir = os.path.join(str(tmpdir), spack.store.layout.metadata_dir)
@@ -199,10 +209,7 @@ def test_single_file_verification(tmpdir):
                                  spack.store.layout.manifest_file_name)
 
     with open(manifest_file, 'wb') as f:
-        js = json.dumps({filepath: data})
-        if sys.version_info[0] >= 3:
-            js = js.encode()
-        f.write(js)
+        sjson.dump({filepath: data}, f)
 
     results = spack.verify.check_file_manifest(filepath)
     assert not results
@@ -228,72 +235,3 @@ def test_single_file_verification(tmpdir):
     assert results.errors[filepath] == ['not owned by any package']
 
 
-def test_single_file_verify_cmd(tmpdir):
-    filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
-    filepath = os.path.join(filedir, 'file')
-    metadir = os.path.join(str(tmpdir), spack.store.layout.metadata_dir)
-
-    fs.mkdirp(filedir)
-    fs.mkdirp(metadir)
-
-    with open(filepath, 'w') as f:
-        f.write("I'm a file")
-
-    data = spack.verify.create_manifest_entry(filepath)
-
-    manifest_file = os.path.join(metadir,
-                                 spack.store.layout.manifest_file_name)
-
-    with open(manifest_file, 'wb') as f:
-        js = json.dumps({filepath: data})
-        if sys.version_info[0] >= 3:
-            js = js.encode()
-        f.write(js)
-
-    results = verify('-f', filepath)
-    assert not results
-
-    time.sleep(1)
-    with open(filepath, 'w') as f:
-        f.write("I changed.")
-
-    results = verify('-f', filepath)
-
-    expected = ['hash']
-    mtime = os.stat(filepath).st_mtime
-    if mtime != data['time']:
-        expected.append('mtime')
-
-    assert results
-    assert filepath in results
-    assert all(x in results for x in expected)
-
-    results = verify('-fj', filepath)
-    res = json.loads(results)
-    assert len(res) == 1
-    errors = res.pop(filepath)
-    assert sorted(errors) == sorted(expected)
-
-
-def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive,
-                                mock_fetch, config, install_mockery):
-    install('libelf')
-    s = spack.spec.Spec('libelf').concretized()
-    prefix = s.prefix
-    hash = s.dag_hash()
-
-    results = verify('/%s' % hash)
-    assert not results
-
-    new_file = os.path.join(prefix, 'new_file_for_verify_test')
-    with open(new_file, 'w') as f:
-        f.write('New file')
-
-    results = verify('/%s' % hash)
-    assert new_file in results
-    assert 'added' in results
-
-    results = verify('-j', '/%s' % hash)
-    res = json.loads(results)
-    assert len(res) == 1
-    assert res[new_file] == ['added']

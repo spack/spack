@@ -2,14 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import json
 import os
 import hashlib
 import base64
-import sys
 
 import llnl.util.tty as tty
 
+import spack.util.spack_json as sjson
 import spack.util.file_permissions as fp
 import spack.store
 import spack.filesystem_view
@@ -19,8 +18,6 @@ def compute_hash(path):
     with open(path, 'rb') as f:
         sha1 = hashlib.sha1(f.read()).digest()
         b32 = base64.b32encode(sha1)
-        if sys.version_info[0] >= 3:
-            b32 = b32.decode()
 
         return b32
 
@@ -65,10 +62,7 @@ def write_manifest(spec):
         manifest[spec.prefix] = create_manifest_entry(spec.prefix)
 
         with open(manifest_file, 'wb') as f:
-            js = json.dumps(manifest)
-            if sys.version_info[0] >= 3:
-                js = js.encode()
-            f.write(js)
+            sjson.dump(manifest, f)
 
         fp.set_permissions_by_spec(manifest_file, spec)
 
@@ -137,7 +131,7 @@ def check_file_manifest(file):
 
     try:
         with open(manifest_file, 'r') as f:
-            manifest = json.load(f)
+            manifest = sjson.load(f)
     except Exception:
         results.add_error(file, "manifest corrupted")
         return results
@@ -163,7 +157,7 @@ def check_spec_manifest(spec):
 
     try:
         with open(manifest_file, 'r') as f:
-            manifest = json.load(f)
+            manifest = sjson.load(f)
     except Exception:
         results.add_error(prefix, "manifest corrupted")
         return results
@@ -200,7 +194,7 @@ def check_spec_manifest(spec):
             if is_extension_artifact(path):
                 continue
 
-            # Do not check manifest file. Can't store your own hash, etc
+            # Do not check manifest file. Can't store your own hash
             # Nothing to check for ext_file
             if path == manifest_file or path == ext_file:
                 continue
@@ -236,7 +230,7 @@ class VerificationResults(object):
         return self.__bool__()
 
     def json_string(self):
-        return json.dumps(self.errors)
+        return sjson.dump(self.errors)
 
     def __str__(self):
         res = ''

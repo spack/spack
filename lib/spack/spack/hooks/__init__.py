@@ -40,6 +40,7 @@ def all_hook_modules():
         if name == 'write_install_manifest':
             last_mod = mod
 
+    # Sort ascending, True > False
     modules.sort(key=lambda x: x is last_mod)
 
     return modules

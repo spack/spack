@@ -58,7 +58,6 @@ def verify(parser, args):
         spec_args = spack.cmd.parse_specs(args.files_or_specs)
 
     if args.all:
-        # setup db query local vs global
         query = spack.store.db.query_local if local else spack.store.db.query
 
         # construct spec list
