@@ -88,6 +88,9 @@ class Patch(object):
 
         apply_patch(stage, self.path, self.level, self.working_dir)
 
+    def cache(self):
+        return None
+
     def to_dict(self):
         """Partial dictionary -- subclases should add to this."""
         return {
@@ -235,6 +238,9 @@ class UrlPatch(Patch):
                 raise fs.ChecksumError(
                     "sha256 checksum failed for %s" % self.path,
                     "Expected %s but got %s" % (self.sha256, checker.sum))
+
+    def cache(self):
+        return self.stage
 
     def clean(self):
         self.stage.destroy()

@@ -464,10 +464,10 @@ class Stage(object):
     def cache_mirror(self):
         """Perform a fetch if the resource is not already cached"""
         dst_root = spack.caches.mirror_cache.root
-        possible_mirror_locations = list(
-            os.path.join(dst_root, rel_path) for rel_path in self.mirror_paths)
+        absolute_storage_path = os.path.join(
+            dst_root, self.mirror_paths.storage_path)
 
-        if any(os.path.exists(p) for p in possible_mirror_locations):
+        if os.path.exists(absolute_storage_path):
             return
 
         self.fetch()
