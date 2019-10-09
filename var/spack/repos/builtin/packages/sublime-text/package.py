@@ -46,6 +46,3 @@ class SublimeText(Package):
         mkdirp(dst)
         force_symlink(src, join_path(dst, 'sublime_text'))
         force_symlink(src, join_path(dst, 'subl'))
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix, "bin"))
