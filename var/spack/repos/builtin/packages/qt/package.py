@@ -21,6 +21,7 @@ class Qt(Package):
 
     phases = ['configure', 'build', 'install']
 
+    version('5.13.1', 'adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e')
     version('5.12.5', 'a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298')
     version('5.12.2', '59b8cb4e728450b21224dcaaa40eb25bafc5196b6988f2225c394c6b7f881ff5')
     version('5.11.3', '859417642713cee2493ee3646a7fee782c9f1db39e41d7bb1322bba0c5f0ff4d')
@@ -376,6 +377,7 @@ class Qt(Package):
             # FIXME: those could work for other versions
             png = self.spec['libpng']
             jpeg = self.spec['jpeg']
+            zlib = self.spec['zlib']
             config_args.extend([
                 '-system-libpng',
                 '{0}'.format(png.libs.search_flags),
@@ -383,7 +385,9 @@ class Qt(Package):
                 '-system-libjpeg',
                 '{0}'.format(jpeg.libs.search_flags),
                 '{0}'.format(jpeg.headers.include_flags),
-                '-system-zlib'
+                '-system-zlib',
+                '{0}'.format(zlib.libs.search_flags),
+                '{0}'.format(zlib.headers.include_flags)
             ])
 
         if '@:5.7.0' in self.spec:
