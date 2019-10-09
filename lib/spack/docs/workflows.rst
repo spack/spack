@@ -1100,7 +1100,7 @@ handle simple single-user installations on your laptop. Most macOS users are
 already familiar with package managers like Homebrew and Conda, where all
 installed packages are symlinked to a single central location like ``/usr/local``.
 In this section, we will show you how to emulate the behavior of Homebrew/Conda
-using :ref:`<environments>`!
+using :ref:`environments`!
 
 ^^^^^
 Setup
