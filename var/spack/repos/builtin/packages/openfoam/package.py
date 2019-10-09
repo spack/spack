@@ -337,7 +337,11 @@ class Openfoam(Package):
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
-    patch('1806-have-kahip.patch', when='@1806')
+    # kahip patch (wmake)
+    patch('https://develop.openfoam.com/Development/OpenFOAM-plus/commit/4068c03c616a4964472e06d5fb5b9bc2dd0bf1b7.patch',
+          when='@1806',
+          sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
+    )
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -364,7 +368,7 @@ class Openfoam(Package):
     #
 
     def url_for_version(self, version):
-        # Prior to 'v1706' and additional '+' in the naming
+        # Prior to 1706 had additional '+' in the naming
         fmt = self.list_url
         if version <= Version('1612'):
             fmt += 'v{0}+/OpenFOAM-v{0}+.tgz'
@@ -480,6 +484,18 @@ class Openfoam(Package):
         """Adjust OpenFOAM build for spack.
            Where needed, apply filter as an alternative to normal patching."""
         add_extra_files(self, self.common, self.assets)
+
+        # Prior to 1812, required OpenFOAM-v{VER} directory when sourcing
+        projdir = "OpenFOAM-v{0}".format(self.version)
+        if not os.path.exists(join_path(self.stage.path, projdir)):
+            tty.info('Added directory link {0}'.format(projdir))
+            os.symlink(
+                os.path.relpath(
+                    self.stage.source_path,
+                    self.stage.path
+                ),
+                join_path(self.stage.path, projdir)
+            )
 
         # Avoid WM_PROJECT_INST_DIR for ThirdParty
         # This modification is non-critical
