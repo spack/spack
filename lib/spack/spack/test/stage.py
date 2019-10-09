@@ -412,6 +412,7 @@ def check_stage_dir_perms(prefix, path):
     # Ensure the path's subdirectories -- to `$user` -- have their parent's
     # perms while those from `$user` on are owned and restricted to the
     # user.
+    print('TLD: check_stage_dir_perms(%s, %s)...' % (prefix, path))
     assert path.startswith(prefix)
 
     user = getpass.getuser()
@@ -422,15 +423,14 @@ def check_stage_dir_perms(prefix, path):
     #
     # Skip processing prefix ancestors since no guarantee they will be in the
     # required group (e.g. $TEMPDIR on HPC machines).
-    skip = prefix if prefix.endswith(os.sep) else os.path.join(prefix, os.sep)
+    skip = prefix if prefix.endswith(os.sep) else prefix + os.sep
     group_paths, user_node, user_paths = partition_path(path.replace(skip, ""),
                                                         user)
 
     for p in group_paths:
-        parent = os.path.dirname(p)
-        par_status = os.stat(parent) if parent != '' else prefix_status
-        assert prefix_status.st_gid == par_status.st_gid
-        assert prefix_status.st_mode == par_status.st_mode
+        p_status = os.stat(os.path.join(prefix,p))
+        assert p_status.st_gid == prefix_status.st_gid
+        assert p_status.st_mode == prefix_status.st_mode
 
     # Add the path ending with the $user node to the user paths to ensure paths
     # from $user (on down) meet the ownership and permission requirements.
@@ -438,7 +438,7 @@ def check_stage_dir_perms(prefix, path):
         user_paths.insert(0, user_node)
 
     for p in user_paths:
-        p_status = os.stat(p)
+        p_status = os.stat(os.path.join(prefix,p))
         assert uid == p_status.st_uid
         assert p_status.st_mode & stat.S_IRWXU == stat.S_IRWXU
 
