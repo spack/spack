@@ -32,9 +32,9 @@ class Sensei(CMakePackage):
     variant('python', default=False, description='Enable Python bindings')
     variant('miniapps', default=True, description='Enable the parallel 3D and oscillators miniapps')
 
-    # Paraview 5.6 depends on Python 3, but all SENSEI versions up to 2.2.1 do not
-    # support Python 3. So for now, until SENSEI 3, is available SENSEI can only
-    # work with Paraview 5.5.x
+    # Paraview 5.6 depends on Python 3, but all SENSEI versions up to 2.2.1 do
+    # not support Python 3. So for now, until SENSEI 3, is available SENSEI
+    # can only work with Paraview 5.5.x
     depends_on("paraview@5.5.0:5.5.2+python+mpi+hdf5", when="+catalyst")
     depends_on("visit", when="+libsim")
     depends_on("vtk", when="+libsim")
