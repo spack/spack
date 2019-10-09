@@ -32,7 +32,7 @@ class Lock(object):
     """
 
     def __init__(self, path, start=0, length=0, debug=False,
-                 default_timeout=None):
+                 default_timeout=None, desc=''):
         """Construct a new lock on the file at ``path``.
 
         By default, the lock applies to the whole file.  Optionally,
@@ -55,6 +55,9 @@ class Lock(object):
 
         # enable debug mode
         self.debug = debug
+
+        # optional debug description
+        self.desc = ' ({0})'.format(desc) if desc else ''
 
         # If the user doesn't set a default timeout, or if they choose
         # None, 0, etc. then lock attempts will not time out (unless the
@@ -104,6 +107,7 @@ class Lock(object):
         is returned.
         """
         assert op in (fcntl.LOCK_SH, fcntl.LOCK_EX)
+        lock_type = {fcntl.LOCK_SH: 'read', fcntl.LOCK_EX: 'write'}
 
         timeout = timeout or self.default_timeout
 
@@ -132,23 +136,32 @@ class Lock(object):
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
 
+        # TODO/TBD: Should max attempts be used?  Configurable?
+        max_attempts = timeout * 10 if timeout else 100
+        pid = self.pid if self.pid is not None else os.getpid()
+        self._debug("PID {0} locking: timeout {1} sec, {2} max attempts".
+                    format(pid, timeout, max_attempts))
+
         poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
         num_attempts = 0
-        while (not timeout) or (time.time() - start_time) < timeout:
+        while num_attempts < max_attempts:
+            if timeout and (time.time() - start_time) >= timeout:
+                raise LockTimeoutError("PID {0} timed out waiting for lock.".
+                                       format(pid))
+
             num_attempts += 1
+            self._debug("PID {0} attempt #{1}: attempting a {2} lock".
+                        format(pid, num_attempts, lock_type[op]))
             if self._poll_lock(op):
                 total_wait_time = time.time() - start_time
                 return total_wait_time, num_attempts
 
             time.sleep(next(poll_intervals))
 
-        num_attempts += 1
-        if self._poll_lock(op):
-            total_wait_time = time.time() - start_time
-            return total_wait_time, num_attempts
-
-        raise LockTimeoutError("Timed out waiting for lock.")
+        raise LockLimitError(
+            "PID {0} exceeded attempts limit ({1}) waiting for lock.".
+            format(pid, max_attempts))
 
     def _poll_lock(self, op):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
@@ -171,11 +184,16 @@ class Lock(object):
             return True
 
         except IOError as e:
-            if e.errno in (errno.EAGAIN, errno.EACCES):
-                # EAGAIN and EACCES == locked by another process
+            if e.errno == errno.EAGAIN:
+                # locked by another process, try again
                 pass
+            elif e.errno == errno.EACCES:
+                # permission denied
+                tty.warn("Unable to acquire the lock: {0}".format(str(e)))
             else:
                 raise
+
+        return False
 
     def _ensure_parent_directory(self):
         parent = os.path.dirname(self.path)
@@ -231,6 +249,8 @@ class Lock(object):
                     self._length, self._start, os.SEEK_SET)
         self._file.close()
         self._file = None
+        self._reads = 0
+        self._writes = 0
 
     def acquire_read(self, timeout=None):
         """Acquires a recursive, shared lock for reading.
@@ -245,16 +265,18 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
+        lock_type = 'READ LOCK'
+        # self._acquiring_debug(lock_type)
         if self._reads == 0 and self._writes == 0:
-            self._debug(
-                'READ LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
-                .format(self))
+            self._acquiring_debug(lock_type)
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
-            self._acquired_debug('READ LOCK', wait_time, nattempts)
             self._reads += 1
+            self._acquired_debug(lock_type, wait_time, nattempts)
             return True
         else:
+            # TODO/TBD: Still increment reads if have a write lock?
+            #  (See masquerading comment.)
             self._reads += 1
             return False
 
@@ -271,16 +293,18 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
+        lock_type = 'WRITE LOCK'
+        # self._acquiring_debug(lock_type)
         if self._writes == 0:
-            self._debug(
-                'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
-                .format(self))
+            self._acquiring_debug(lock_type)
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
-            self._acquired_debug('WRITE LOCK', wait_time, nattempts)
             self._writes += 1
+            self._acquired_debug(lock_type, wait_time, nattempts)
             return True
         else:
+            # TODO/TBD: Still increment writes if have a write lock?
+            #  (See masquerading comment.)
             self._writes += 1
             return False
 
@@ -296,15 +320,18 @@ class Lock(object):
         """
         assert self._reads > 0
 
+        lock_type = 'READ LOCK'
+        # self._releasing_debug(lock_type)
         if self._reads == 1 and self._writes == 0:
-            self._debug(
-                'READ LOCK: {0.path}[{0._start}:{0._length}] [Released]'
-                .format(self))
+            self._releasing_debug(lock_type)
             self._unlock()      # can raise LockError.
-            self._reads -= 1
+            self._released_debug(lock_type)
             return True
-        else:
+        elif self._reads >= 1:
             self._reads -= 1
+            return False
+        else:
+            self._unreleased_warning(lock_type)
             return False
 
     def release_write(self):
@@ -314,36 +341,58 @@ class Lock(object):
         there are still outstanding locks.
 
         Does limited correctness checking: if a read lock is released
-        when none are held, this will raise an assertion error.
+        when none are held, this will generate a warning.
 
         """
         assert self._writes > 0
 
+        lock_type = 'WRITE LOCK'
+        # self._releasing_debug(lock_type)
         if self._writes == 1 and self._reads == 0:
-            self._debug(
-                'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Released]'
-                .format(self))
+            self._releasing_debug(lock_type)
             self._unlock()      # can raise LockError.
-            self._writes -= 1
+            self._released_debug(lock_type)
             return True
-        else:
+        elif self._writes >= 1:
             self._writes -= 1
+            return False
+        else:
+            self._unreleased_warning(lock_type)
             return False
 
     def _debug(self, *args):
         tty.debug(*args)
 
+    def _acquiring_debug(self, lock_type):
+        self._debug(self._status_msg(lock_type, 'Acquiring'))
+
     def _acquired_debug(self, lock_type, wait_time, nattempts):
-        attempts_format = 'attempt' if nattempts == 1 else 'attempt'
+        attempts_format = 'attempt' if nattempts == 1 else 'attempts'
         if nattempts > 1:
             acquired_attempts_format = ' after {0:0.2f}s and {1:d} {2}'.format(
                 wait_time, nattempts, attempts_format)
         else:
             # Dont print anything if we succeeded immediately
             acquired_attempts_format = ''
-        self._debug(
-            '{0}: {1.path}[{1._start}:{1._length}] [Acquired{2}]'
-            .format(lock_type, self, acquired_attempts_format))
+        self._debug(self._status_msg(lock_type, 'Acquired{0}'.
+                                     format(acquired_attempts_format)))
+
+    def _get_counts_desc(self):
+        return 'reads {0}, writes {1}'.format(self._reads, self._writes)
+
+    def _released_debug(self, lock_type):
+        self._debug(self._status_msg(lock_type, 'Released'))
+
+    def _releasing_debug(self, lock_type):
+        self._debug(self._status_msg(lock_type, 'Releasing'))
+
+    def _status_msg(self, lock_type, status):
+        status_desc = '[{0}] ({1})'.format(status, self._get_counts_desc())
+        return '{0}{1.desc}: {1.path}[{1._start}:{1._length}] {2}'.format(
+            lock_type, self, status_desc)
+
+    def _unreleased_warning(self, lock_type):
+        tty.warn(self._status_msg(lock_type, 'No lock to release'))
 
 
 class LockTransaction(object):
@@ -413,6 +462,10 @@ class WriteTransaction(LockTransaction):
 
 class LockError(Exception):
     """Raised for any errors related to locks."""
+
+
+class LockLimitError(LockError):
+    """Raised when exceed maximum attempts to acquire a lock."""
 
 
 class LockTimeoutError(LockError):
