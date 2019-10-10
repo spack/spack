@@ -236,8 +236,8 @@ def create(path, specs):
 class MirrorStats(object):
     def __init__(self):
         self.present = {}
-        self.added = {}
-        self.error = set()
+        self.new = {}
+        self.errors = set()
 
         self.current_spec = None
         self.added_resources = set()
@@ -250,7 +250,7 @@ class MirrorStats(object):
     def _tally_current_spec(self):
         if self.current_spec:
             if self.added_resources:
-                self.added[self.current_spec] = len(self.added_resources)
+                self.new[self.current_spec] = len(self.added_resources)
             if self.existing_resources:
                 self.present[self.current_spec] = len(self.existing_resources)
             self.add_count = set()
@@ -259,7 +259,7 @@ class MirrorStats(object):
 
     def stats(self):
         self._tally_current_spec()
-        return list(self.present), list(self.added), list(self.error)
+        return list(self.present), list(self.new), list(self.errors)
 
     def already_existed(self, resource):
         # If an error occurred after caching a subset of a spec's
@@ -271,7 +271,7 @@ class MirrorStats(object):
         self.added_resources.add(resource)
 
     def error(self):
-        self.error.add(self.current_spec)
+        self.errors.add(self.current_spec)
 
 
 def add_single_spec(spec, mirror_root, mirror_stats):
