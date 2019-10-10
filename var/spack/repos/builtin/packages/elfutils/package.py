@@ -17,10 +17,11 @@ class Elfutils(AutotoolsPackage):
     version of elfutils."""
 
     homepage = "https://fedorahosted.org/elfutils/"
-    url      = "https://sourceware.org/elfutils/ftp/0.176/elfutils-0.176.tar.bz2"
+    url      = "https://sourceware.org/elfutils/ftp/0.177/elfutils-0.177.tar.bz2"
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+		version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e')
     version('0.176', sha256='eb5747c371b0af0f71e86215a5ebb88728533c3a104a43d4231963f308cd1023')
     version('0.175', sha256='f7ef925541ee32c6d15ae5cb27da5f119e01a5ccdbe9fe57bf836730d7b7a65b')
     version('0.174', sha256='cdf27e70076e10a29539d89e367101d516bc4aa11b0d7777fe52139e3fcad08a')
