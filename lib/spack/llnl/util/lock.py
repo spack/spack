@@ -137,7 +137,7 @@ class Lock(object):
             raise LockROFileError(self.path)
 
         # TODO/TBD: Should max attempts be used?  Configurable?
-        max_attempts = timeout * 10 if timeout else 100
+        max_attempts = max(int(timeout * 10) if timeout else 100, 200)
         pid = self.pid if self.pid is not None else os.getpid()
         self._debug("PID {0} locking: timeout {1} sec, {2} max attempts".
                     format(pid, timeout, max_attempts))
