@@ -14,7 +14,10 @@ class FluxCore(AutotoolsPackage):
     url      = "https://github.com/flux-framework/flux-core/releases/download/v0.8.0/flux-core-0.8.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-core.git"
 
-    version('master',  branch='master')
+    version('master', branch='master')
+    version('0.11.3', sha256='91b5d7dca8fc28a77777c4e4cb8717fc3dc2c174e70611740689a71901c6de7e')
+    version('0.11.2', sha256='ab8637428cd9b74b2dff4842d10e0fc4acc8213c4e51f31d32a4cbfbdf730412')
+    version('0.11.1', sha256='3c8495db0f3b701f6dfe3e2a75aed794fc561e9f28284e8c02ac67693bfe890e')
     version('0.11.0', sha256='a4d8ff92e79b4ca19d556395bb8c5f8dc02fd9d5a8cc38c4a2c66867a96de5ea')
     version('0.10.0', sha256='a70cdd228077af60c9443a5c69d3da932e447dd11697f5fef9028c48dabb3041')
     version('0.9.0',  sha256='7b5b4aa72704b3c4432136b9e515e0d663568e6dbfc3ecd2f91c83b65841104e')
@@ -46,10 +49,10 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-cffi", type=('build', 'run'))
     depends_on("py-six", type=('build', 'run'), when="@0.11.0:,master")
     depends_on("py-pyyaml", type=('build', 'run'), when="@0.11.0:,master")
-    depends_on("py-jsonschema", type=('build', 'run'), when="@master")
+    depends_on("py-jsonschema", type=('build', 'run'), when="@0.12.0:,master")
     depends_on("jansson")
     depends_on("pkgconfig")
-    depends_on("yaml-cpp", when="@:0.11.0")
+    depends_on("yaml-cpp", when="@:0.11.99")
     depends_on("lz4", when="@0.11.0:,master")
 
     # versions up to 0.8.0 uses pylint to check Flux's python binding

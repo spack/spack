@@ -15,6 +15,7 @@ class FluxSched(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-sched.git"
 
     version('master', branch='master')
+    version('0.7.1', sha256='a35e555a353feed6b7b814ae83d05362356f9ee33ffa75d7dfb7e2fe86c21294')
     version('0.7.0', sha256='69267a3aaacaedd9896fd90cfe17aef266cba4fb28c77f8123d95a31ce739a7b')
     version('0.6.0', sha256='3301d4c10810414228e5969b84b75fe1285abb97453070eb5a77f386d8184f8d')
     version('0.5.0', sha256='d6347f5c85c12c76364dccb39d63c007094ca9cbbbae4e8f4e98d8b1c0b07e89')
@@ -39,6 +40,7 @@ class FluxSched(AutotoolsPackage):
     depends_on("flux-core@0.9.0", when='@0.5.0')
     depends_on("flux-core@0.10.0", when='@0.6.0')
     depends_on("flux-core@0.11.0", when='@0.7.0')
+    depends_on("flux-core@0.11.2:0.11.99", when='@0.7.1')
     depends_on("flux-core@master", when='@master')
 
     # Need autotools when building on master:
