@@ -186,7 +186,6 @@ def test_check_prefix_manifest(tmpdir):
 
     results = spack.verify.check_spec_manifest(spec)
     assert results
-    print results
     assert results.errors[spec.prefix] == ['manifest corrupted']
 
 
@@ -233,5 +232,3 @@ def test_single_file_verification(tmpdir):
     results = spack.verify.check_file_manifest(filepath)
     assert results
     assert results.errors[filepath] == ['not owned by any package']
-
-
