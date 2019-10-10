@@ -13,7 +13,7 @@ class PySmartOpen(PythonPackage):
        different formats."""
 
     homepage = "https://github.com/piskvorky/smart_open"
-    url      = "https://files.pythonhosted.org/packages/37/c0/25d19badc495428dec6a4bf7782de617ee0246a9211af75b302a2681dea7/smart_open-1.8.4.tar.gz"
+    url      = "https://github.com/RaRe-Technologies/smart_open/archive/1.8.4.tar.gz"
 
     version('1.8.4', sha256='788e07f035defcbb62e3c1e313329a70b0976f4f65406ee767db73ad5d2d04f9')
 
