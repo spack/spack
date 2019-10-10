@@ -46,7 +46,11 @@ packages_path      = os.path.join(repos_path, "builtin")
 mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
 #: User configuration location
-user_config_path = os.path.expanduser('~/.spack')
+# This is now obsolete as it can be customized
+# in etc/spack/defaults/config.yaml;
+# the default has been retained for backward
+# compatibility
+# user_config_path = os.path.expanduser('~/.spack')
 
 
 opt_path        = os.path.join(prefix, "opt")
