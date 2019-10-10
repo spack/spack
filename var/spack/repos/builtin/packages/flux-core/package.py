@@ -63,6 +63,24 @@ class FluxCore(AutotoolsPackage):
     depends_on("automake", type='build', when='@master')
     depends_on("libtool", type='build', when='@master')
 
+    def url_for_version(self, version):
+        '''
+        Flux uses a fork of ZeroMQ's Collective Code Construction Contract
+        (https://github.com/flux-framework/rfc/blob/master/spec_1.adoc).
+        This model requires a repository fork for every stable release that has
+        patch releases.  For example, 0.8.0 and 0.9.0 are both tags within the
+        main repository, but 0.8.1 and 0.9.5 would be releases on the v0.8 and
+        v0.9 forks, respectively.
+
+        Rather than provide an explicit URL for each patch release, make Spack
+        aware of this repo structure.
+        '''
+        if version[-1] == 0:
+            url = "https://github.com/flux-framework/flux-core/releases/download/v{0}/flux-core-{0}.tar.gz"
+        else:
+            url = "https://github.com/flux-framework/flux-core-v{1}/releases/download/v{0}/flux-core-{0}.tar.gz"
+        return url.format(version.up_to(3), version.up_to(2))
+
     def setup(self):
         pass
 
