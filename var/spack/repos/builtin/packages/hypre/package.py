@@ -59,6 +59,7 @@ class Hypre(Package):
     patch('darwin-shared-libs-for-hypre-2.14.0.patch', when='+shared@2.14.0 platform=darwin')
     patch('superlu-dist-link-2.15.0.patch', when='+superlu-dist @2.15:2.16.0')
     patch('superlu-dist-link-2.14.0.patch', when='+superlu-dist @:2.14.0')
+    patch('hypre21800-compat.patch', when='@2.18.0')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")
