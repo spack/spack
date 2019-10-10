@@ -14,6 +14,6 @@ class F18(CMakePackage):
 
     git      = "https://github.com/flang-compiler/f18"
 
-    version('develop', branch='master')
+    version('master', branch='master')
 
-    depends_on('llvm@6.0.0+clang', when='@develop')
+    depends_on('llvm@6.0.0+clang', when='@master')
