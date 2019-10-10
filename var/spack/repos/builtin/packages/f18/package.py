@@ -17,7 +17,3 @@ class F18(CMakePackage):
     version('develop', branch='master')
 
     depends_on('llvm@6.0.0+clang', when='@develop')
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install("spack-build/tools/f18/bin/f18", prefix.bin)
