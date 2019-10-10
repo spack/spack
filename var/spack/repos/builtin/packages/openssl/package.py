@@ -19,12 +19,13 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     homepage = "http://www.openssl.org"
 
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://www.openssl.org/source/openssl-1.0.2m.tar.gz"
-    list_url = "https://www.openssl.org/source/old/"
+    url = "http://www.openssl.org/source/openssl-1.1.1d.tar.gz"
+    list_url = "http://www.openssl.org/source/old/"
     list_depth = 1
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
+    version('1.1.1d', sha256='1e3a91bc1f9dfce01af26026f856e064eab4c8ee0a8f457b5ae30b40b8b711f2')
     version('1.1.1c', sha256='f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d0804fdb3f4c90')
     version('1.1.1b', sha256='5c557b023230413dfb0756f3137a13e6d726838ccd1430888ad15bfb2b43ea4b')
     version('1.1.1a', sha256='fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41')
@@ -32,6 +33,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     # The 1.1.0 series is currently only receiving security fixes and will go
     # out of support on 11th September 2019.
+    version('1.1.0l', sha256='74a2f756c64fd7386a29184dc0344f4831192d61dc2481a93a4c5dd727f41148')
     version('1.1.0k', sha256='efa4965f4f773574d6cbda1cf874dbbe455ab1c0d4f906115f867d30444470b1')
     version('1.1.0j', sha256='31bec6c203ce1a8e93d5994f4ed304c63ccf07676118b6634edded12ad1b3246')
     version('1.1.0i', sha256='ebbfc844a8c8cc0ea5dc10b86c9ce97f401837f3fa08c17b2cdadc118253cf99')
@@ -43,6 +45,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     # Our previous LTS version (1.0.2 series) will continue to be supported
     # until 31st December 2019 (security fixes only during the last year of
     # support).
+    version('1.0.2t', sha256='14cb464efe7ac6b54799b34456bd69558a749a4931ecfd9cf9f71d7881cac7bc')
     version('1.0.2s', sha256='cabd5c9492825ce5bd23f3c3aeed6a97f8142f606d893df216411f07d1abab96')
     version('1.0.2r', sha256='ae51d08bba8a83958e894946f15303ff894d75c2b8bbd44a852b64e3fe11d0d6')
     version('1.0.2p', sha256='50a98e07b1a89eb8f6a99477f262df71c6fa7bef77df4dc83025a2845c827d00')
