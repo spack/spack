@@ -219,29 +219,62 @@ def create(path, specs):
             raise MirrorError(
                 "Cannot create directory '%s':" % mirror_root, str(e))
 
-    # Things to keep track of while parsing specs.
-    categories = {
-        'present': [],
-        'mirrored': [],
-        'error': []
-    }
-
     mirror_cache = spack.caches.MirrorCache(mirror_root)
+    mirror_stats = MirrorStats()
     try:
         spack.caches.mirror_cache = mirror_cache
         # Iterate through packages and download all safe tarballs for each
         for spec in specs:
-            add_single_spec(spec, mirror_root, categories)
+            mirror_stats.next_spec(spec)
+            add_single_spec(spec, mirror_root, mirror_stats)
     finally:
         spack.caches.mirror_cache = None
 
-    categories['mirrored'] = list(mirror_cache.new_resources)
-    categories['present'] = list(mirror_cache.existing_resources)
-
-    return categories['present'], categories['mirrored'], categories['error']
+    return mirror_stats.stats()
 
 
-def add_single_spec(spec, mirror_root, categories):
+class MirrorStats(object):
+    def __init__(self):
+        self.present = {}
+        self.added = {}
+        self.error = set()
+
+        self.current_spec = None
+        self.added_resources = set()
+        self.existing_resources = set()
+
+    def next_spec(self, spec):
+        self._tally_current_spec()
+        self.current_spec = spec
+
+    def _tally_current_spec(self):
+        if self.current_spec:
+            if self.added_resources:
+                self.added[self.current_spec] = len(self.added_resources)
+            if self.existing_resources:
+                self.present[self.current_spec] = len(self.existing_resources)
+            self.add_count = set()
+            self.exists_count = set()
+        self.current_spec = None
+
+    def stats(self):
+        self._tally_current_spec()
+        return list(self.present), list(self.added), list(self.error)
+
+    def already_existed(self, resource):
+        # If an error occurred after caching a subset of a spec's
+        # resources, a secondary attempt may consider them already added
+        if resource not in self.added_resources:
+            self.existing_resources.add(resource)
+
+    def added(self, resource):
+        self.added_resources.add(resource)
+
+    def error(self):
+        self.error.add(self.current_spec)
+
+
+def add_single_spec(spec, mirror_root, mirror_stats):
     tty.msg("Adding package {pkg} to mirror".format(
         pkg=spec.format("{name}{@version}")
     ))
@@ -249,11 +282,11 @@ def add_single_spec(spec, mirror_root, categories):
     while num_retries > 0:
         try:
             with spec.package.stage as pkg_stage:
-                pkg_stage.cache_mirror()
+                pkg_stage.cache_mirror(mirror_stats)
                 for patch in spec.package.all_patches():
                     patch.fetch(pkg_stage)
                     if patch.cache():
-                        patch.cache().cache_mirror()
+                        patch.cache().cache_mirror(mirror_stats)
                     patch.clean()
             exception = None
             break
@@ -268,7 +301,7 @@ def add_single_spec(spec, mirror_root, categories):
             tty.warn(
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
                 e.message)
-        categories['error'].append(spec)
+        mirror_stats.error()
 
 
 class MirrorError(spack.error.SpackError):

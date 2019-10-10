@@ -51,20 +51,14 @@ def _fetch_cache():
 class MirrorCache(object):
     def __init__(self, root):
         self.root = os.path.abspath(root)
-        self.new_resources = set()
-        self.existing_resources = set()
 
     def store(self, fetcher, relative_dest, cosmetic_path=None):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
 
         dst = os.path.join(self.root, relative_dest)
-        if os.path.exists(dst):
-            self.existing_resources.add(relative_dest)
-        else:
-            self.new_resources.add(relative_dest)
-            mkdirp(os.path.dirname(dst))
-            fetcher.archive(dst)
+        mkdirp(os.path.dirname(dst))
+        fetcher.archive(dst)
 
         # Add a symlink path that a human can read to understand what resource
         # the archive path refers to

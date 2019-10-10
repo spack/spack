@@ -461,19 +461,21 @@ class Stage(object):
         spack.caches.fetch_cache.store(
             self.fetcher, self.mirror_paths.storage_path)
 
-    def cache_mirror(self):
+    def cache_mirror(self, stats):
         """Perform a fetch if the resource is not already cached"""
         dst_root = spack.caches.mirror_cache.root
         absolute_storage_path = os.path.join(
             dst_root, self.mirror_paths.storage_path)
 
         if os.path.exists(absolute_storage_path):
+            stats.already_existed(absolute_storage_path)
             return
 
         self.fetch()
         spack.caches.mirror_cache.store(
             self.fetcher, self.mirror_paths.storage_path,
             self.mirror_paths.cosmetic_path)
+        stats.added(absolute_storage_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
