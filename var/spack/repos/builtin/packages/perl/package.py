@@ -31,14 +31,15 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
-    version('5.25.11', '37a398682c36cd85992b34b5c1c25dc1')
+    version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
     # Maintenance releases (even numbers, recommended)
-    version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
-    version('5.26.2', 'dc0fea097f3992a8cd53f8ac0810d523', preferred=True)
-    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
+    version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2', preferred=True)
 
     # End of life releases
+    version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
+    version('5.26.2', 'dc0fea097f3992a8cd53f8ac0810d523')
+    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
     version('5.22.4', '31a71821682e02378fcdadeed85688b8')
     version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
     version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
