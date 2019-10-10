@@ -5,7 +5,6 @@
 
 """Tests for the `spack.verify` module"""
 import os
-import sys
 import time
 import shutil
 
