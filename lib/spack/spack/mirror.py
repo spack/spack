@@ -291,16 +291,17 @@ def add_single_spec(spec, mirror_root, mirror_stats):
             exception = None
             break
         except Exception as e:
-            exception = sys.exc_info()
+            exc_tuple = sys.exc_info()
+            exception = e
         num_retries -= 1
 
     if exception:
         if spack.config.get('config:debug'):
-            traceback.print_exception(file=sys.stderr, *exception)
+            traceback.print_exception(file=sys.stderr, *exc_tuple)
         else:
             tty.warn(
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
-                e.message)
+                exception.message)
         mirror_stats.error()
 
 
