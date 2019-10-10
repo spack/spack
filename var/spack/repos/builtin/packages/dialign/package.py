@@ -8,7 +8,7 @@ from spack import *
 
 class Dialign(MakefilePackage):
     """DIALIGN is a software program for multiple sequence alignment developed
-    by Burkhard Morgensternet al.."""
+    by Burkhard Morgenstern et al.."""
 
     homepage = "https://bibiserv.cebitec.uni-bielefeld.de/dialign"
     url      = "https://bibiserv.cebitec.uni-bielefeld.de/applications/dialign/resources/downloads/dialign-2.2.1-src.tar.gz"
