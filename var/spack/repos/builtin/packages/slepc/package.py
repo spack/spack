@@ -93,7 +93,7 @@ class Slepc(Package):
         if '+blopex' in spec:
             options.append('--download-blopex')
 
-        configure('--prefix=%s' % prefix, *options)
+        python('configure', '--prefix=%s' % prefix, *options)
 
         make('MAKE_NP=%s' % make_jobs, parallel=False)
         if self.run_tests:
