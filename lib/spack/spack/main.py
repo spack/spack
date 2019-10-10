@@ -588,11 +588,14 @@ def print_setup_info(*info):
     shell_set('_sp_compatible_sys_types',
               ':'.join(spack.architecture.compatible_sys_types()))
     # print roots for all module systems
-    module_roots = spack.config.get('config:module_roots')
     module_to_roots = {
         'tcl': list(),
         'lmod': list()
     }
+    module_roots = spack.config.get('config:module_roots')
+    module_roots = dict(
+        (k, v) for k, v in module_roots.items() if k in module_to_roots
+    )
     for name, path in module_roots.items():
         path = spack.util.path.canonicalize_path(path)
         module_to_roots[name].append(path)
@@ -601,6 +604,10 @@ def print_setup_info(*info):
         'upstreams') or {}
     for install_properties in other_spack_instances.values():
         upstream_module_roots = install_properties.get('modules', {})
+        upstream_module_roots = dict(
+            (k, v) for k, v in upstream_module_roots.items()
+            if k in module_to_roots
+        )
         for module_type, root in upstream_module_roots.items():
             module_to_roots[module_type].append(root)
 

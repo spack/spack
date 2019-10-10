@@ -58,3 +58,15 @@ class Expect(AutotoolsPackage):
         link_name = join_path(self.prefix.lib, link_name)
 
         symlink(target, link_name)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(
+                join_path(self.prefix.lib, 'expect{0}'.format(self.version)))
+
+        old = 'libexpect{0}.dylib'.format(self.version)
+        new = glob.glob(join_path(self.prefix.lib, 'expect*', 'libexpect*'))[0]
+        install_name_tool = Executable('install_name_tool')
+        install_name_tool('-change', old, new, self.prefix.bin.expect)

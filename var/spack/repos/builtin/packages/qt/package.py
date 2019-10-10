@@ -21,6 +21,9 @@ class Qt(Package):
 
     phases = ['configure', 'build', 'install']
 
+    version('5.13.1', 'adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e')
+    version('5.12.5', 'a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298')
+    version('5.12.2', '59b8cb4e728450b21224dcaaa40eb25bafc5196b6988f2225c394c6b7f881ff5')
     version('5.11.3', '859417642713cee2493ee3646a7fee782c9f1db39e41d7bb1322bba0c5f0ff4d')
     version('5.11.2', 'c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81')
     version('5.10.0', 'c5e275ab0ed7ee61d0f4b82cd471770d')
@@ -49,7 +52,7 @@ class Qt(Package):
             description="Build the Webkit extension")
     variant('examples',   default=False,
             description="Build examples.")
-    variant('framework',   default=False,
+    variant('framework',   default=bool(MACOS_VERSION),
             description="Build as a macOS Framework package.")
     variant('tools',      default=True,
             description="Build tools, including Qt Designer.")
@@ -70,7 +73,7 @@ class Qt(Package):
 
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
-    patch('restore-pc-files.patch', when='@5.9: platform=darwin')
+    patch('restore-pc-files.patch', when='@5.9:5.11 platform=darwin')
 
     patch('qt3accept.patch', when='@3.3.8b')
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
@@ -302,6 +305,7 @@ class Qt(Package):
     @property
     def common_config_args(self):
         # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
+        openssl = self.spec['openssl']
         config_args = [
             '-prefix', self.prefix,
             '-v',
@@ -309,6 +313,9 @@ class Qt(Package):
             '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
             '-release',
             '-confirm-license',
+            '-openssl-linked',
+            '{0}'.format(openssl.libs.search_flags),
+            '{0}'.format(openssl.headers.include_flags),
             '-optimized-qmake',
             '-no-pch',
         ]
@@ -344,20 +351,43 @@ class Qt(Package):
             config_args.append('-static')
 
         if self.spec.satisfies('@5:'):
-            config_args.append('-system-harfbuzz')
-            config_args.append('-system-pcre')
+            pcre = self.spec['pcre'] if self.spec.satisfies('@5.0:5.8') \
+                else self.spec['pcre2']
+            harfbuzz = self.spec['harfbuzz']
+            config_args.extend([
+                '-system-harfbuzz',
+                '{0}'.format(harfbuzz.libs.search_flags),
+                '{0}'.format(harfbuzz.headers.include_flags),
+                '-system-pcre',
+                '{0}'.format(pcre.libs.search_flags),
+                '{0}'.format(pcre.headers.include_flags)
+            ])
 
         if self.spec.satisfies('@5.7:'):
-            config_args.append('-system-doubleconversion')
+            dc = self.spec['double-conversion']
+            config_args.extend([
+                '-system-doubleconversion',
+                '{0}'.format(dc.libs.search_flags),
+                '{0}'.format(dc.headers.include_flags)
+            ])
 
         if '@:5.7.1' in self.spec:
             config_args.append('-no-openvg')
         else:
             # FIXME: those could work for other versions
+            png = self.spec['libpng']
+            jpeg = self.spec['jpeg']
+            zlib = self.spec['zlib']
             config_args.extend([
                 '-system-libpng',
+                '{0}'.format(png.libs.search_flags),
+                '{0}'.format(png.headers.include_flags),
                 '-system-libjpeg',
-                '-system-zlib'
+                '{0}'.format(jpeg.libs.search_flags),
+                '{0}'.format(jpeg.headers.include_flags),
+                '-system-zlib',
+                '{0}'.format(zlib.libs.search_flags),
+                '{0}'.format(zlib.headers.include_flags)
             ])
 
         if '@:5.7.0' in self.spec:
@@ -387,11 +417,12 @@ class Qt(Package):
                 '' if '+framework' in self.spec else 'no-'))
         if '@5:' in self.spec and MACOS_VERSION:
             config_args.extend([
-                '-no-xinput2',
                 '-no-xcb-xlib',
                 '-no-pulseaudio',
                 '-no-alsa',
             ])
+            if self.spec.satisfies('@:5.11'):
+                config_args.append('-no-xinput2')
 
         # FIXME: else: -system-xcb ?
 

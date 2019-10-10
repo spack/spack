@@ -33,7 +33,9 @@ class Qmcpack(CMakePackage, CudaPackage):
     version('3.1.0', tag='v3.1.0')
 
     # These defaults match those in the QMCPACK manual
-    variant('debug', default=False, description='Build debug version')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
     variant('mpi', default=True, description='Build with MPI support')
     variant('phdf5', default=True, description='Build with parallel collective I/O')
     variant('complex', default=False,
@@ -184,10 +186,14 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         # Currently FFTW_HOME and LIBXML2_HOME are used by CMake.
         # Any CMake warnings about other variables are benign.
-        xml2_prefix = spec['libxml2'].prefix
-        args.append('-DLIBXML2_HOME={0}'.format(xml2_prefix))
-        args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(xml2_prefix.include))
-        args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(xml2_prefix.lib))
+        # Starting with QMCPACK 3.8.0, CMake uses the builtin find(libxml2)
+        # function
+        if spec.satisfies('@:3.7.0'):
+            xml2_prefix = spec['libxml2'].prefix
+            args.append('-DLIBXML2_HOME={0}'.format(xml2_prefix))
+            args.append(
+                '-DLibxml2_INCLUDE_DIRS={0}'.format(xml2_prefix.include))
+            args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(xml2_prefix.lib))
 
         if '^fftw@3:' in spec:
             fftw_prefix = spec['fftw'].prefix
