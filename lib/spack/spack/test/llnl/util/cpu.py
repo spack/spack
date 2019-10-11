@@ -207,7 +207,8 @@ def test_optimization_flags(target_name, compiler, version, expected_flags):
 
 
 @pytest.mark.parametrize('target_name,compiler,version', [
-    ('excavator', 'gcc', '4.8.5')
+    ('excavator', 'gcc', '4.8.5'),
+    ('skylake', 'gcc', 'string')
 ])
 def test_unsupported_optimization_flags(target_name, compiler, version):
     target = llnl.util.cpu.targets[target_name]
