@@ -17,7 +17,7 @@ class XcbUtilImage(AutotoolsPackage):
     homepage = "https://xcb.freedesktop.org/"
     url      = "https://xcb.freedesktop.org/dist/xcb-util-image-0.4.0.tar.gz"
 
-    version('0.4.0', '32c9c2f72ebd58a2b2e210f27fee86f7')
+    version('0.4.0', sha256='cb2c86190cf6216260b7357a57d9100811bb6f78c24576a3a5bfef6ad3740a42')
 
     depends_on('libxcb@1.4:')
     depends_on('xcb-util')

@@ -23,13 +23,13 @@ class QuantumEspresso(Package):
     version('develop', branch='develop')
     version('6.4.1', sha256='b0d7e9f617b848753ad923d8c6ca5490d5d82495f82b032b71a0ff2f2e9cfa08')
     version('6.4', sha256='781366d03da75516fdcf9100a1caadb26ccdd1dedd942a6f8595ff0edca74bfe')
-    version('6.3',   '1b67687d90d1d16781d566d44d14634c')
-    version('6.2.1', '769cc973382156bffd35254c3dbaf453')
-    version('6.2.0', '972176a58d16ae8cf0c9a308479e2b97')
-    version('6.1.0', '3fe861dcb5f6ec3d15f802319d5d801b')
-    version('6.0.0', 'd915f2faf69d0e499f8e1681c42cbfc9')
-    version('5.4',   '085f7e4de0952e266957bbc79563c54e')
-    version('5.3',   'be3f8778e302cffb89258a5f936a7592')
+    version('6.3',   sha256='4067c8fffa957aabbd5cf2439e2fcb6cf3752325393c67a17d99fd09edf8689c')
+    version('6.2.1', sha256='11fe24b4a9d85834f8b6d429baebed8b360a685ecfae222887ed451e118a9156')
+    version('6.2.0', sha256='e204df367c8ea1a50c7534b44481841d835a542a23ae71c3e33ad712fc636c8b')
+    version('6.1.0', sha256='fd2c2eb346b3ca8f08138df5ef3f69b466c256d2119db40eea1b578b0a42c66e')
+    version('6.0.0', sha256='bc77d9553bf5a9253ae74058dffb1d6e5fb61093188e78d3b8d8564755136f19')
+    version('5.4',   sha256='e3993fccae9cea04a5c6492e8b961a053a63727051cb5c4eb6008f62cda8f335')
+    version('5.3',   sha256='3b26038efb9e3f8ac7a2b950c31d8c29169a3556c0b68c299eb88a4be8dc9048')
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
@@ -137,14 +137,14 @@ class QuantumEspresso(Package):
     # QE upstream patches
     # QE 6.3 requires multiple patches to fix MKL detection
     # There may still be problems on Mac with MKL detection
-    patch_url = 'https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff'
-    patch_checksum = 'bc8c5b8523156cee002d97dab42a5976dffae20605da485a427b902a236d7e6b'
-    patch(patch_url, sha256=patch_checksum, when='@6.3:6.3.0')
+    patch('https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff',
+          sha256='bc8c5b8523156cee002d97dab42a5976dffae20605da485a427b902a236d7e6b',
+          when='@6.3:6.3.0')
 
     # QE 6.3 `make install` broken and a patch must be applied
-    patch_url = 'https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff'
-    patch_checksum = 'b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca'
-    patch(patch_url, sha256=patch_checksum, when='@6.3:6.3.0')
+    patch('https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff',
+          sha256='b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca',
+          when='@6.3:6.3.0')
 
     def install(self, spec, prefix):
 

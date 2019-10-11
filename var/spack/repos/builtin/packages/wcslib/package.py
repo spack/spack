@@ -14,7 +14,7 @@ class Wcslib(AutotoolsPackage):
     url      = "ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib-6.4.tar.bz2"
 
     version('6.4', sha256='13c11ff70a7725563ec5fa52707a9965fce186a1766db193d08c9766ea107000')
-    version('5.18', '67a78354be74eca4f17d3e0853d5685f')
+    version('5.18', md5='67a78354be74eca4f17d3e0853d5685f')
 
     variant('cfitsio', default=False, description='Include CFITSIO support')
     variant('x',       default=False, description='Use the X Window System')

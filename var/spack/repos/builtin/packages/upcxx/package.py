@@ -24,8 +24,8 @@ class Upcxx(Package):
 
     homepage = "https://upcxx.lbl.gov"
 
-    version('2019.9.0', '7642877e05300e38f6fa0afbc6062788')
-    version('2019.3.2', '844722cb0e8c0bc649017fce86469457')
+    version('2019.9.0', sha256='7d67ccbeeefb59de9f403acc719f52127a30801a2c2b9774a1df03f850f8f1d4')
+    version('2019.3.2', sha256='dcb0b337c05a0feb2ed5386f5da6c60342412b49cab10f282f461e74411018ad')
 
     variant('cuda', default=False,
             description='Builds a CUDA-enabled version of UPC++')

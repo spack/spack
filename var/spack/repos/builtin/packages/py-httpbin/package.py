@@ -12,7 +12,7 @@ class PyHttpbin(PythonPackage):
     homepage = "https://github.com/Runscope/httpbin"
     url = "https://pypi.io/packages/source/h/httpbin/httpbin-0.5.0.tar.gz"
 
-    version('0.5.0', '923793df99156caa484975ade96ee115')
+    version('0.5.0', sha256='79fbc5d27e4194ea908b0fa18e09a59d95d287c91667aa69bcd010342d1589b5')
 
     depends_on('py-setuptools',         type='build')
     depends_on('py-decorator@3.4.0:',   type=('build', 'run'))

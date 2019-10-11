@@ -11,12 +11,12 @@ class Subversion(Package):
     homepage = 'https://subversion.apache.org/'
     url = 'http://archive.apache.org/dist/subversion/subversion-1.8.13.tar.gz'
 
-    version('1.9.7',     '1a5f48acf9d0faa60e8c7aea96a9b29ab1d4dcac')
-    version('1.9.6',     '89e1b3f9d79422c094ccb95769360d5fe7df2bb1')
-    version('1.9.5',     'ac9f8ee235f1b667dd6506864af8035aaedfc2d9')
-    version('1.9.3',     'a92bcfaec4e5038f82c74a7b5bbd2f46')
-    version('1.8.17',    'd1f8d45f97168d6271c58c5b25421cc32954c81b')
-    version('1.8.13',    '8065b3698d799507fb72dd7926ed32b6')
+    version('1.9.7',     sha256='c72a209c883e20245f14c4e644803f50ae83ae24652e385ff5e82300a0d06c3c')
+    version('1.9.6',     sha256='a400cbc46d05cb29f2d7806405bb539e9e045b24013b0f12f8f82688513321a7')
+    version('1.9.5',     sha256='280ba586c5d51d7b976b65d22d5e8e42f3908ed1c968d71120dcf534ce857a83')
+    version('1.9.3',     sha256='74cd21d2f8a2a54e4dbd2389fe1605a19dbda8ba88ffc4bb0edc9a66e143cc93')
+    version('1.8.17',    sha256='1b2cb9a0ca454035e55b114ee91c6433b9ede6c2893f2fb140939094d33919e4')
+    version('1.8.13',    sha256='17e8900a877ac9f0d5ef437c20df437fec4eb2c5cb9882609d2277e2312da52c')
 
     variant('perl', default=False, description='Build with Perl bindings')
 

@@ -12,10 +12,10 @@ class Bash(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/bash/"
     url      = "https://ftpmirror.gnu.org/bash/bash-4.4.tar.gz"
 
-    version('5.0', sha256='b4a80f2ac66170b2913efbfb9f2594f1f76c7b1afd11f799e22035d63077fb4d')
-    version('4.4.12', '7c112970cbdcadfc331e10eeb5f6aa41')
-    version('4.4', '148888a7c95ac23705559b6f477dfe25')
-    version('4.3', '81348932d5da294953e15d4814c74dd1')
+    version('5.0',    sha256='b4a80f2ac66170b2913efbfb9f2594f1f76c7b1afd11f799e22035d63077fb4d')
+    version('4.4.12', sha256='57d8432be54541531a496fd4904fdc08c12542f43605a9202594fa5d5f9f2331')
+    version('4.4',    sha256='d86b3392c1202e8ff5a423b302e6284db7f8f435ea9f39b5b1b20fd3ac36dfcb')
+    version('4.3',    sha256='afc687a28e0e24dc21b988fa159ff9dbcf6b7caa92ade8645cc6d5605cd024d4')
 
     depends_on('ncurses')
     depends_on('readline@5.0:')

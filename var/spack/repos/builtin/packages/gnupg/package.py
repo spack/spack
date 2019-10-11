@@ -14,8 +14,8 @@ class Gnupg(AutotoolsPackage):
     url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.3.tar.bz2"
 
     version('2.2.15', sha256='cb8ce298d7b36558ffc48aec961b14c830ff1783eef7a623411188b5e0f5d454')
-    version('2.2.3', '6911c0127e4231ce52d60f26029dba68')
-    version('2.1.21', '685ebf4c3a7134ba0209c96b18b2f064')
+    version('2.2.3', sha256='cbd37105d139f7aa74f92b6f65d136658682094b0e308666b820ae4b984084b4')
+    version('2.1.21', sha256='7aead8a8ba75b69866f583b6c747d91414d523bfdfbe9a8e0fe026b16ba427dd')
 
     depends_on('libgcrypt')
     depends_on('libassuan@2.4:', when='@:2.2.3')

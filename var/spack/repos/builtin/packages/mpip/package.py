@@ -12,7 +12,7 @@ class Mpip(AutotoolsPackage):
     homepage = "http://mpip.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/mpip/mpiP/mpiP-3.4.1/mpiP-3.4.1.tar.gz"
 
-    version("3.4.1", "1168adc83777ac31d6ebd385823aabbd")
+    version("3.4.1", sha256="688bf37d73211e6a915f9fc59c358282a266d166c0a10af07a38a01a473296f0")
 
     depends_on("elf")
     depends_on("libdwarf")

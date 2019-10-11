@@ -12,7 +12,7 @@ class G4ndl(Package):
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4NDL.4.5.tar.gz"
 
-    version('4.5', 'cba928a520a788f2bc8229c7ef57f83d0934bb0c6a18c31ef05ef4865edcdf8e')
+    version('4.5', sha256='cba928a520a788f2bc8229c7ef57f83d0934bb0c6a18c31ef05ef4865edcdf8e')
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))

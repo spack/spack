@@ -19,11 +19,11 @@ class Tasmanian(CMakePackage):
 
     version('develop', branch='master')
 
-    version('7.0', '60916a3dee3d23c1c41ca8005238f66e')  # use for xsdk-0.5.0
-    version('6.0', '43dcb1d2bcb2f2c829ad046d0e91e83d')  # use for xsdk-0.4.0
-    version('5.1', '5d904029a24470a6acf4a87d3339846e')
+    version('7.0', sha256='4094ba4ee2f1831c575d00368c8471d3038f813398be2e500739cef5c7c4a47b')  # use for xsdk-0.5.0
+    version('6.0', sha256='ceab842e9fbce2f2de971ba6226967caaf1627b3e5d10799c3bd2e7c3285ba8b')  # use for xsdk-0.4.0
+    version('5.1', sha256='b0c1be505ce5f8041984c63edca9100d81df655733681858f5cc10e8c0c72711')
 
-    version('5.0', '4bf131841d786033863d271739be0f7a',
+    version('5.0', sha256='2540bb63dea987ab205f7b375aff41f320b1de9bd7f1d1064ef96b22eeda1251',
             url='http://tasmanian.ornl.gov/documents/Tasmanian_v5.0.zip')
 
     variant('xsdkflags', default=False,

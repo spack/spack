@@ -12,7 +12,7 @@ class Libxdamage(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXdamage"
     url      = "https://www.x.org/archive/individual/lib/libXdamage-1.1.4.tar.gz"
 
-    version('1.1.4', '95867778da012623815214769007c0d7')
+    version('1.1.4', sha256='4bb3e9d917f5f593df2277d452926ee6ad96de7b7cd1017cbcf4579fe5d3442b')
 
     depends_on('libxfixes')
     depends_on('libx11')

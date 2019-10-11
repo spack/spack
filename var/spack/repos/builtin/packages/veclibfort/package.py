@@ -17,7 +17,7 @@ class Veclibfort(Package):
     git      = "https://github.com/mcg1969/vecLibFort.git"
 
     version('develop', branch='master')
-    version('0.4.2', '83395ffcbe8a2122c3f726a5c3a7cf93')
+    version('0.4.2', sha256='c61316632bffa1c76e3c7f92b11c9def4b6f41973ecf9e124d68de6ae37fbc85')
 
     variant('shared', default=True,
             description="Build shared libraries as well as static libs.")

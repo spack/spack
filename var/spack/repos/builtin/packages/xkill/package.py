@@ -14,7 +14,7 @@ class Xkill(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xkill"
     url      = "https://www.x.org/archive/individual/app/xkill-1.0.4.tar.gz"
 
-    version('1.0.4', 'b04c15bfd0b619f1e4ff3e44607e738d')
+    version('1.0.4', sha256='f80115f2dcca3d4b61f3c28188752c21ca7b2718b54b6e0274c0497a7f827da0')
 
     depends_on('libx11')
     depends_on('libxmu')

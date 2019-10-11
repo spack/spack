@@ -18,8 +18,8 @@ class Xsdktrilinos(CMakePackage):
 
     version('develop', tag='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
-    version('12.8.1', '9cc338ded17d1e10ea6c0dc18b22dcd4')
-    version('12.6.4', '44c4c54ccbac73bb8939f68797b9454a')
+    version('12.8.1', sha256='f545c0821743f23af3b48f242c66bbc4593e3804436336db4eb3bb08622ad794')
+    version('12.6.4', md5='44c4c54ccbac73bb8939f68797b9454a')
 
     variant('hypre',        default=True,
             description='Compile with Hypre preconditioner')

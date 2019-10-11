@@ -12,5 +12,5 @@ class PyPysocks(PythonPackage):
     homepage = "https://github.com/Anorov/PySocks"
     url      = "https://pypi.io/packages/source/P/PySocks/PySocks-1.6.6.tar.gz"
 
-    version('1.6.6', '571f4c23982fa86bf0e7a441f1b6c881')
-    version('1.5.7', '68f4ad7a8d4fa725656ae3e9dd142d29')
+    version('1.6.6', sha256='02419a225ff5dcfc3c9695ef8fc9b4d8cc99658e650c6d4718d4c8f451e63f41')
+    version('1.5.7', sha256='e51c7694b10288e6fd9a28e15c0bcce9aca0327e7b32ebcd9af05fcd56f38b88')

@@ -15,8 +15,8 @@ class PyLlvmlite(PythonPackage):
     version('0.27.1', sha256='48a1c3ae69fd8920cba153bfed8a46ac46474bc706a2100226df4abffe0000ab')
     version('0.26.0', sha256='13e84fe6ebb0667233074b429fd44955f309dead3161ec89d9169145dbad2ebf')
     version('0.25.0', sha256='fd64def9a51dd7dc61913a7a08eeba5b9785522740bec5a7c5995b2a90525025')
-    version('0.23.0', '6fc856576a11dbeef71de862f7c419de')
-    version('0.20.0', 'f2aa60d0981842b7930ba001b03679ab')
+    version('0.23.0', sha256='bc8b1b46274d05b578fe9e980a6d98fa71c8727f6f9ed31d4d8468dce7aa5762')
+    version('0.20.0', sha256='b2f174848df16bb9195a07fec102110a06d018da736bd9b3570a54d44c797c29')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))

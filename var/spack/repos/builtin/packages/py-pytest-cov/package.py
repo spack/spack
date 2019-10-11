@@ -12,7 +12,7 @@ class PyPytestCov(PythonPackage):
     homepage = "https://github.com/pytest-dev/pytest-cov"
     url      = "https://pypi.io/packages/source/p/pytest-cov/pytest-cov-2.3.1.tar.gz"
 
-    version('2.3.1', '8e7475454313a035d08f387ee6d725cb')
+    version('2.3.1', sha256='fa0a212283cdf52e2eecc24dd6459bb7687cc29adb60cb84258fab73be8dda0f')
 
     extends('python', ignore=r'bin/*')
 

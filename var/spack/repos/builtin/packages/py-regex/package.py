@@ -12,6 +12,6 @@ class PyRegex(PythonPackage):
     homepage = "https://pypi.python.org/pypi/regex/"
     url      = "https://pypi.io/packages/source/r/regex/regex-2017.07.11.tar.gz"
 
-    version('2017.07.11', '95f81ebb5273c7ad9a0c4d1ac5a94eb4')
+    version('2017.07.11', sha256='dbda8bdc31a1c85445f1a1b29d04abda46e5c690f8f933a9cc3a85a358969616')
 
     depends_on('py-setuptools', type='build')

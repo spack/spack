@@ -12,6 +12,6 @@ class PyItsdangerous(PythonPackage):
     homepage = "http://github.com/mitsuhiko/itsdangerous"
     url = "https://pypi.io/packages/source/i/itsdangerous/itsdangerous-0.24.tar.gz"
 
-    version('0.24', 'a3d55aa79369aef5345c036a8a26307f')
+    version('0.24', sha256='cbb3fcf8d3e33df861709ecaf89d9e6629cff0a217bc2848f1b41cd30d360519')
 
     depends_on('py-setuptools', type='build')

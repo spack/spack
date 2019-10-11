@@ -264,13 +264,13 @@ class Openfoam(Package):
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')
-    version('1906', 'ab7017e262c0c0fceec55c31e2153180')
-    version('1812_190531', 'a4b416838a8a76fdec22706a33c96de3')
-    version('1812', '6a315687b3601eeece7ff7c7aed3d9a5')
-    version('1806', 'bb244a3bde7048a03edfccffc46c763f')
-    version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
-    version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
-    version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
+    version('1906', sha256='15e38c2dc659b63753a0dd3dff913222cc46d6a40089a1b76973dd741145f61a')
+    version('1812_190531', sha256='51f0ef49a199edf3cd94e2ccfc7330e54e93c8e4ddb29ee66fe3e6b443583b34')
+    version('1812', sha256='d4d23d913419c6a364b1fe91509c1fadb5661bdf2eedb8fe9a8a005924eb2032')
+    version('1806', sha256='6951aab6405294fe59cec90b0a4e425f5403043191cda02ebaaa890ce1fcc819')
+    version('1712', sha256='4d22caa25d638d4c59bb93ee4dec51e8f71724f9f507eeb4162f771ebe885d21')
+    version('1706', sha256='7779048bb53798d9a5bd2b2be0bf302c5fd3dff98e29249d6e0ef7eeb83db79a')
+    version('1612', sha256='2909c43506a68e1f23efd0ca6186a6948ae0fc8fe1e39c78cc23ef0d69f3569d')
 
     variant('float32', default=False,
             description='Use single-precision')

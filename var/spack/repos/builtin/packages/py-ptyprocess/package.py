@@ -12,4 +12,4 @@ class PyPtyprocess(PythonPackage):
     homepage = "https://pypi.python.org/pypi/ptyprocess"
     url      = "https://pypi.io/packages/source/p/ptyprocess/ptyprocess-0.5.1.tar.gz"
 
-    version('0.5.1', '94e537122914cc9ec9c1eadcd36e73a1')
+    version('0.5.1', sha256='0530ce63a9295bfae7bd06edc02b6aa935619f486f0f1dc0972f516265ee81a6')

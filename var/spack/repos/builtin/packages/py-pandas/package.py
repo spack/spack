@@ -38,13 +38,13 @@ class PyPandas(PythonPackage):
     version('0.24.2', sha256='4f919f409c433577a501e023943e582c57355d50a724c589e78bc1d551a535a2')
     version('0.24.1', sha256='435821cb2501eabbcee7e83614bd710940dc0cf28b5afbc4bdb816c31cec71af')
     version('0.23.4', sha256='5b24ca47acf69222e82530e89111dd9d14f9b970ab2cd3a1c2c78f0c4fbba4f4')
-    version('0.21.1', '42ae7f81b81a86c3f91f663b66c525f7')
+    version('0.21.1', sha256='c5f5cba88bf0659554c41c909e1f78139f6fce8fa9315a29a23692b38ff9788a')
     version('0.20.0', sha256='54f7a2bb2a7832c0446ad51d779806f07ec4ea2bb7c9aea4b83669fa97e778c4')
-    version('0.19.2', '26df3ef7cd5686fa284321f4f48b38cd')
-    version('0.19.0', 'bc9bb7188e510b5d44fbdd249698a2c3')
-    version('0.18.0', 'f143762cd7a59815e348adf4308d2cf6')
-    version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
-    version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
+    version('0.19.2', sha256='6f0f4f598c2b16746803c8bafef7c721c57e4844da752d36240c0acf97658014')
+    version('0.19.0', sha256='4697606cdf023c6b7fcb74e48aaf25cf282a1a00e339d2d274cf1b663748805b')
+    version('0.18.0', sha256='c975710ce8154b50f39a46aa3ea88d95b680191d1d9d4b5dd91eae7215e01814')
+    version('0.16.1', sha256='570d243f8cb068bf780461b9225d2e7bef7c90aa10d43cf908fe541fc92df8b6')
+    version('0.16.0', sha256='4013de6f8796ca9d2871218861823bd9878a8dfacd26e08ccf9afdd01bbad9f1')
 
     # https://dev.pandas.io/install.html#dependencies
     # Required dependencies

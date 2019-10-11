@@ -15,7 +15,7 @@ class Infernal(AutotoolsPackage):
     homepage = "http://eddylab.org/infernal/"
     url      = "http://eddylab.org/infernal/infernal-1.1.2.tar.gz"
 
-    version('1.1.2', 'a73e6bbab0c4b79af2cc4c0aabb8accc')
+    version('1.1.2', sha256='ac8c24f484205cfb7124c38d6dc638a28f2b9035b9433efec5dc753c7e84226b')
 
     variant('mpi', default=False, description='Enable MPI parallel support')
 

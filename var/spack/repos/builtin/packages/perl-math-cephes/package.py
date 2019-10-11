@@ -13,4 +13,4 @@ class PerlMathCephes(PerlPackage):
     homepage = "http://search.cpan.org/~shlomif/Math-Cephes/lib/Math/Cephes.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/Math-Cephes-0.5305.tar.gz"
 
-    version('0.5305', '30922dd213783aaaf91a47626f6a1853')
+    version('0.5305', sha256='561a800a4822e748d2befc366baa4b21e879a40cc00c22293c7b8736caeb83a1')
