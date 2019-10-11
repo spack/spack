@@ -155,6 +155,8 @@ class Tensorflow(Package):
         mkdirp(tmp_path)
         env['TEST_TMPDIR'] = tmp_path
         env['HOME'] = tmp_path
+        env['CC'] = env['SPACK_CC']
+        env['CXX'] = env['SPACK_CXX']
 
         configure()
 
@@ -213,9 +215,9 @@ class Tensorflow(Package):
                         'tensorflow/tools/pip_package/setup.py')
 
         if '+cuda' in spec:
-            bazel('-c', 'opt', '--config=cuda', '//tensorflow/tools/pip_package:build_pip_package')
+            bazel('--jobs={}'.format(make_jobs), '-c', 'opt', '--config=cuda', '//tensorflow/tools/pip_package:build_pip_package')
         else:
-            bazel('-c', 'opt', '//tensorflow/tools/pip_package:build_pip_package')
+            bazel('--jobs={}'.format(make_jobs), '-c', 'opt', '//tensorflow/tools/pip_package:build_pip_package')
 
         build_pip_package = Executable('bazel-bin/tensorflow/tools/pip_package/build_pip_package')
         build_pip_package(tmp_path)
