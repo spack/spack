@@ -734,7 +734,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            self.spec, fetcher, resource.name)
+            fetcher,
+            os.path.join(self.name, "%s-%s" % (resource.name, self.version)))
         stage = ResourceStage(resource.fetcher,
                               root=root_stage,
                               resource=resource,
@@ -745,7 +746,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
-        mirror_paths = spack.mirror.mirror_archive_paths(self.spec, fetcher)
+        mirror_paths = spack.mirror.mirror_archive_paths(
+            fetcher,
+            os.path.join(self.name, "%s-%s" % (self.name, self.version)),
+            self.spec)
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())

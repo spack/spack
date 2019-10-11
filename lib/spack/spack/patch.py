@@ -196,14 +196,14 @@ class UrlPatch(Patch):
         if self.archive_sha256:
             fetch_digest = self.archive_sha256
 
-        fetcher = fs.URLFetchStrategy(self.url, fetch_digest)
+        fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
+                                      expand=bool(self.archive_sha256))
 
-        # TODO: this could also use mirror.mirror_archive_paths but that needs
-        # to be refactored so that it doesn't require a spec
         per_package_ref = os.path.join(
             self.owner.split('.')[-1], os.path.basename(self.url))
         # Reference starting with "spack." is required to avoid cyclic imports
-        mirror_ref = spack.mirror.MirrorReference(per_package_ref)
+        mirror_ref = spack.mirror.mirror_archive_paths(
+            fetcher, per_package_ref)
 
         self.stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
         self.stage.create()

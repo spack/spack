@@ -79,9 +79,10 @@ class MirrorReference(object):
         yield self.cosmetic_path
 
 
-def mirror_archive_paths(spec, fetcher, resource_name=None):
+def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     """Get the relative path to the source archive within a mirror."""
-    if spec and (not resource_name):
+    ext = None
+    if spec:
         ext = spec.package.versions[spec.package.version].get(
             'extension', None)
     # If the spec does not explicitly specify an extension (the default case),
@@ -91,34 +92,14 @@ def mirror_archive_paths(spec, fetcher, resource_name=None):
     # an option to specify an extension, so it must be inferred for those.
     ext = ext or _determine_extension(fetcher)
 
-    per_package_ref = _mirror_archive_cosmetic_path(
-        spec, resource_name, ext)
+    if ext:
+        per_package_ref += ".%s" % ext
 
     global_ref = fetcher.mirror_id()
     if global_ref and ext:
         global_ref += ".%s" % ext
 
     return MirrorReference(per_package_ref, global_ref)
-
-
-def _mirror_archive_cosmetic_path(spec, resource_name, extension):
-    """Create a relative path that starts with a directory with the same name
-       as the package and the filename of the source archive is derived from
-       the package name like "<package-name>-<version>". This name is intended
-       to be easy for a human to generate (if they have retrieved the source
-       themselves) and easy to associate with the package/version as listed
-       in the package.py file.
-    """
-
-    if resource_name:
-        per_package_ref = "%s-%s" % (resource_name, spec.version)
-    else:
-        per_package_ref = "%s-%s" % (spec.package.name, spec.version)
-
-    if extension:
-        per_package_ref += ".%s" % extension
-
-    return os.path.join(spec.name, per_package_ref)
 
 
 def get_all_versions(base_specs):
