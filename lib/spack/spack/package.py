@@ -1386,8 +1386,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 if when_spec in self.spec:
                     resources.extend(resource_list)
         else:
-            for _, resource_list in self.resources.items():
-                resources.extend(resource_list)
+            for when_spec, resource_list in self.resources.items():
+                # Note that variant checking is always strict for specs where
+                # the name is not specified. But with strict variant checking,
+                # only variants mentioned in 'other' are checked. Here we only
+                # want to make sure that no constraints in when_spec
+                # conflict with the spec, so we need to invoke
+                # when_spec.satisfies(self.spec) vs.
+                # self.spec.satisfies(when_spec)
+                if when_spec.satisfies(self.spec, strict=False):
+                    resources.extend(resource_list)
         # Sorts the resources by the length of the string representing their
         # destination. Since any nested resource must contain another
         # resource's name in its path, it seems that should work
