@@ -10,10 +10,11 @@ class PyPytz(PythonPackage):
     """World timezone definitions, modern and historical."""
 
     homepage = "http://pythonhosted.org/pytz"
-    url      = "https://pypi.io/packages/source/p/pytz/pytz-2016.10.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pytz/pytz-2019.3.tar.gz"
 
     import_modules = ['pytz']
 
+    version('2019.3', sha256='b02c06db6cf09c12dd25137e563b31700d3b80fcc4ad23abb7a315f2789819be')
     version('2018.4', sha256='c06425302f2cf668f1bba7a0a03f3c1d34d4ebeef2c72003da308b3947c7f749')
     version('2017.2',   'f89bde8a811c8a1a5bac17eaaa94383c')
     version('2016.10',  'cc9f16ba436efabdcef3c4d32ae4919c')
