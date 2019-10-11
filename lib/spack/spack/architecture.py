@@ -68,7 +68,6 @@ from llnl.util.lang import memoized, list_modules, key_ordering
 import spack.compiler
 import spack.paths
 import spack.error as serr
-import llnl.util.version
 from spack.util.naming import mod_to_class
 from spack.util.spack_yaml import syaml_dict
 

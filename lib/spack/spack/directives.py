@@ -656,5 +656,6 @@ class DependencyPatchError(DirectiveError):
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
 
+
 class VersionChecksumError(DirectiveError):
     """Raised for version checksum errors."""
