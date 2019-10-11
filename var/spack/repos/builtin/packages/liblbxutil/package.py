@@ -18,6 +18,7 @@ class Liblbxutil(AutotoolsPackage):
     depends_on('xproto', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+    depends_on('zlib', type='link')
 
     # There is a bug in the library that causes the following messages:
     # undefined symbol: Xfree

@@ -44,7 +44,7 @@ class Mysql(CMakePackage):
     variant('client_only', default=False,
             description='Build and install client only.')
     variant('cxxstd',
-            default='98',
+            default='14',
             values=('98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
@@ -69,6 +69,8 @@ class Mysql(CMakePackage):
     depends_on('cmake@2.8.12:', type='build', when='@8.0.0:')
 
     depends_on('gmake@3.75:', type='build')
+    depends_on('pkgconfig', type='build', when='@5.7.0:')
+    depends_on('doxygen', type='build', when='@8.0.0:')
 
     # Each version of MySQL requires a specific version of boost
     # See BOOST_PACKAGE_NAME in cmake/boost.cmake
@@ -100,8 +102,9 @@ class Mysql(CMakePackage):
 
     depends_on('ncurses')
     depends_on('openssl')
+    depends_on('libtirpc', when='@5.7.0:')
     depends_on('perl', type=['build', 'test'], when='@:7.99.99')
-    depends_on('bison@2.1:', type='build', when='@develop')
+    depends_on('bison@2.1:', type='build')
     depends_on('m4', type='build', when='@develop platform=solaris')
 
     patch('fix-no-server-5.5.patch', level=1, when='@5.5.0:5.5.999')

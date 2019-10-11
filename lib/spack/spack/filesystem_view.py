@@ -357,6 +357,9 @@ class YamlFilesystemView(FilesystemView):
         tree.unmerge_directories(view_dst, ignore_file)
 
     def remove_file(self, src, dest):
+        if not os.path.lexists(dest):
+            tty.warn("Tried to remove %s which does not exist" % dest)
+            return
         if not os.path.islink(dest):
             raise ValueError("%s is not a link tree!" % dest)
         # remove if dest is a hardlink/symlink to src; this will only

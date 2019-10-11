@@ -14,3 +14,9 @@ class PerlPerlioGzip(PerlPackage):
 
     version('0.20', '0393eae5d0b23df6cf40ed44af7d711c')
     version('0.19', 'dbcfc1450f6b593b65048b8ced061c98')
+
+    depends_on('zlib', type='link')
+
+    def configure_args(self):
+        p = self.spec['zlib'].prefix.include
+        return ['INC=-I{0}'.format(p)]

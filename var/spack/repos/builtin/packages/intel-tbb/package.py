@@ -124,7 +124,7 @@ class IntelTbb(Package):
                     if l.strip().startswith("CPLUS ="):
                         of.write("# coerced to spack\n")
                         of.write("CPLUS = $(CXX)\n")
-                    elif l.strip().startswith("CPLUS ="):
+                    elif l.strip().startswith("CONLY ="):
                         of.write("# coerced to spack\n")
                         of.write("CONLY = $(CC)\n")
                     else:

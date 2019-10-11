@@ -62,6 +62,9 @@ from spack.util.package_hash import package_hash
 from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
+"""Allowed URL schemes for spack packages."""
+_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
+
 
 # Filename for the Spack build/install log.
 _spack_build_logfile = 'spack-build-out.txt'

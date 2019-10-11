@@ -18,4 +18,4 @@ class PerlTestMost(PerlPackage):
     depends_on('perl-test-differences', type=('build', 'run'))
     depends_on('perl-test-exception', type=('build', 'run'))
     depends_on('perl-test-warn', type=('build', 'run'))
-    depends_on('perl-test-deep', type=('build', 'run')) 
+    depends_on('perl-test-deep', type=('build', 'run'))

@@ -17,12 +17,8 @@ class Boxlib(CMakePackage):
 
     depends_on('mpi')
 
-    variant('dims',
-        default='3',
-        values=('1', '2', '3'),
-        multi=False,
-        description='Number of spatial dimensions'
-    )
+    variant('dims', default='3', values=('1', '2', '3'), multi=False,
+            description='Number of spatial dimensions')
 
     def cmake_args(self):
         spec = self.spec

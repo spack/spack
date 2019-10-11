@@ -168,6 +168,7 @@ def clean_environment():
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
+    spec = pkg.spec
 
     # Set compiler variables used by CMake and autotools
     assert all(key in compiler.link_paths for key in (
@@ -199,6 +200,10 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
+    # Set the target parameters that the compiler will add
+    isa_arg = spec.architecture.target.optimization_flags(compiler)
+    env.set('SPACK_TARGET_ARGS', isa_arg)
+
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
     inject_flags = {}
@@ -217,7 +222,7 @@ def set_compiler_environment_variables(pkg, env):
                 handler = pkg.flag_handler.__func__
             else:
                 handler = pkg.flag_handler.im_func
-        injf, envf, bsf = handler(pkg, flag, pkg.spec.compiler_flags[flag])
+        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
@@ -234,7 +239,7 @@ def set_compiler_environment_variables(pkg, env):
             env.set(flag.upper(), ' '.join(f for f in env_flags[flag]))
     pkg.flags_to_build_system_args(build_system_flags)
 
-    env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
+    env.set('SPACK_COMPILER_SPEC', str(spec.compiler))
 
     env.set('SPACK_SYSTEM_DIRS', ':'.join(system_dirs))
 
@@ -348,9 +353,9 @@ def set_build_environment_variables(pkg, env, dirty):
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
-    if compiler.implicit_rpaths:
-        implicit_rpaths = ':'.join(compiler.implicit_rpaths)
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', implicit_rpaths)
+    implicit_rpaths = compiler.implicit_rpaths()
+    if implicit_rpaths:
+        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', ':'.join(implicit_rpaths))
 
     # Add bin directories from dependencies to the PATH for the build.
     for prefix in build_prefixes:

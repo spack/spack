@@ -22,3 +22,6 @@ class Denovogear(CMakePackage):
     depends_on('boost@1.47:1.60', type=('build'))
     depends_on('htslib@1.2:', type=('build'))
     depends_on('eigen', type=('build'))
+    depends_on('zlib', type=('link'))
+
+    patch('stream-open.patch', when='@:1.1.1')

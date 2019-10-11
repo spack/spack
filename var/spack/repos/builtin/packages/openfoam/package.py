@@ -286,8 +286,6 @@ class Openfoam(Package):
             description='With scotch/ptscotch decomposition')
     variant('zoltan', default=False,
             description='With zoltan renumbering')
-    # TODO?# variant('scalasca', default=False,
-    # TODO?#         description='With scalasca profiling')
     variant('mgridgen', default=False, description='With mgridgen support')
     variant('paraview', default=False,
             description='Build paraview plugins and runtime post-processing')
@@ -321,8 +319,7 @@ class Openfoam(Package):
     depends_on('parmgridgen',  when='+mgridgen', type='build')
     depends_on('zoltan',       when='+zoltan')
     depends_on('vtk',          when='+vtk')
-
-    # TODO?# depends_on('scalasca',     when='+scalasca')
+    depends_on('adios2',       when='@1912:')
 
     # For OpenFOAM plugins and run-time post-processing this should just be
     # 'paraview+plugins' but that resolves poorly.
@@ -340,7 +337,11 @@ class Openfoam(Package):
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
-    patch('1806-have-kahip.patch', when='@1806')
+    # kahip patch (wmake)
+    patch('https://develop.openfoam.com/Development/OpenFOAM-plus/commit/4068c03c616a4964472e06d5fb5b9bc2dd0bf1b7.patch',
+          when='@1806',
+          sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
+    )
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -367,7 +368,7 @@ class Openfoam(Package):
     #
 
     def url_for_version(self, version):
-        # Prior to 'v1706' and additional '+' in the naming
+        # Prior to 1706 had additional '+' in the naming
         fmt = self.list_url
         if version <= Version('1612'):
             fmt += 'v{0}+/OpenFOAM-v{0}+.tgz'
@@ -484,6 +485,18 @@ class Openfoam(Package):
            Where needed, apply filter as an alternative to normal patching."""
         add_extra_files(self, self.common, self.assets)
 
+        # Prior to 1812, required OpenFOAM-v{VER} directory when sourcing
+        projdir = "OpenFOAM-v{0}".format(self.version)
+        if not os.path.exists(join_path(self.stage.path, projdir)):
+            tty.info('Added directory link {0}'.format(projdir))
+            os.symlink(
+                os.path.relpath(
+                    self.stage.source_path,
+                    self.stage.path
+                ),
+                join_path(self.stage.path, projdir)
+            )
+
         # Avoid WM_PROJECT_INST_DIR for ThirdParty
         # This modification is non-critical
         edits = {
@@ -555,6 +568,7 @@ class Openfoam(Package):
                 ('LD_LIBRARY_PATH', foam_add_lib(user_mpi['libdir'])),
                 ('PATH', foam_add_path(user_mpi['bindir'])),
             ],
+            'adios2': {},
             'scotch': {},
             'kahip': {},
             'metis': {},
@@ -563,6 +577,15 @@ class Openfoam(Package):
             'gperftools': [],  # Currently unused
             'vtk': [],
         }
+
+        # With adios2 after 1912 or develop (after 2019-10-01)
+        if spec.satisfies('@1912:'):
+            self.etc_config['adios2'] = [
+                ('ADIOS2_ARCH_PATH', spec['adios2'].prefix),
+                ('LD_LIBRARY_PATH',
+                 foam_add_lib(pkglib(spec['adios2'], '${ADIOS2_ARCH_PATH}'))),
+                ('PATH', foam_add_path('${ADIOS2_ARCH_PATH}/bin')),
+            ]
 
         if '+scotch' in spec:
             self.etc_config['scotch'] = {
@@ -788,8 +811,8 @@ class OpenfoamArch(object):
         # spec.architecture.platform is like `uname -s`, but lower-case
         platform = spec.architecture.platform
 
-        # spec.architecture.target is like `uname -m`
-        target   = spec.architecture.target
+        # spec.target.family is like `uname -m`
+        target = spec.target.family
 
         if platform == 'linux':
             if target == 'x86_64':

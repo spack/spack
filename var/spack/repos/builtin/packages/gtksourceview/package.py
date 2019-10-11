@@ -27,7 +27,7 @@ class Gtksourceview(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('gobject-introspection', type='build')
     depends_on('intltool', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('gettext')
     depends_on('glib@2.48.0:', when='@3.24.11:4.2.0')
     depends_on('gtkplus@3.20.0:', when='@3.24.11:4.2.0')

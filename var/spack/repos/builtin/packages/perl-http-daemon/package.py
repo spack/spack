@@ -16,3 +16,5 @@ class PerlHttpDaemon(PerlPackage):
 
     depends_on('perl-lwp-mediatypes', type=('build', 'run'))
     depends_on('perl-http-message', type=('build', 'run'))
+    depends_on('perl-http-date', type=('build', 'run'))
+    depends_on('perl-module-build-tiny', type='build')

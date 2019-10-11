@@ -21,13 +21,16 @@ class PySip(Package):
     version('4.16.7', '32abc003980599d33ffd789734de4c36')
     version('4.16.5', '6d01ea966a53e4c7ae5c5e48c40e49e5')
 
-    extends('python')
+    variant('module', default='sip', description='Name of private SIP module',
+            values=str, multi=False)
 
-    # https://www.riverbankcomputing.com/static/Docs/sip/installation.html
-    phases = ['configure', 'build', 'install']
+    extends('python')
 
     depends_on('flex', type='build', when='@develop')
     depends_on('bison', type='build', when='@develop')
+
+    # https://www.riverbankcomputing.com/static/Docs/sip/installation.html
+    phases = ['configure', 'build', 'install']
 
     @run_before('configure')
     def prepare(self):
@@ -35,11 +38,16 @@ class PySip(Package):
             python('build.py', 'prepare')
 
     def configure(self, spec, prefix):
-        python('configure.py',
-               '--bindir={0}'.format(prefix.bin),
-               '--destdir={0}'.format(site_packages_dir),
-               '--incdir={0}'.format(python_include_dir),
-               '--sipdir={0}'.format(prefix.share.sip))
+        args = [
+            '--sip-module={0}'.format(spec.variants['module'].value),
+            '--bindir={0}'.format(prefix.bin),
+            '--destdir={0}'.format(site_packages_dir),
+            '--incdir={0}'.format(python_include_dir),
+            '--sipdir={0}'.format(prefix.share.sip),
+            '--stubsdir={0}'.format(site_packages_dir),
+        ]
+
+        python('configure.py', *args)
 
     def build(self, spec, prefix):
         make()

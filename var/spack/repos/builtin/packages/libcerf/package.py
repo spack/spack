@@ -25,5 +25,8 @@ class Libcerf(AutotoolsPackage):
         # http://clang.debian.net/status.php?version=3.8.1&key=UNUSED_FUNCTION
         if spec.satisfies('%clang'):
             options.append('CFLAGS=-Wno-unused-function')
+        # fujitsu compiler has a error about unused functions too.
+        if spec.satisfies('%fj'):
+            options.append('CFLAGS=-Wno-unused-function')
 
         return options

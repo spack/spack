@@ -86,7 +86,7 @@ class Openblas(MakefilePackage):
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
-    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=ppc64')
+    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=power8')
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
@@ -201,7 +201,7 @@ class Openblas(MakefilePackage):
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
 
-        if 'x86' in self.spec.architecture.target.lower():
+        if self.spec.target.family == 'x86_64':
             if '~avx2' in self.spec:
                 make_defs += ['NO_AVX2=1']
             if '~avx512' in self.spec:

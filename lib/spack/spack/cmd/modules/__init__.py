@@ -137,7 +137,6 @@ def loads(module_type, specs, args, out=sys.stdout):
     module_commands = {
         'tcl': 'module load ',
         'lmod': 'module load ',
-        'dotkit': 'use '
     }
 
     d = {

@@ -19,7 +19,7 @@
       * post_uninstall(spec)
 
    This can be used to implement support for things like module
-   systems (e.g. modules, dotkit, etc.) or to add other custom
+   systems (e.g. modules, lmod, etc.) or to add other custom
    features.
 """
 import os.path

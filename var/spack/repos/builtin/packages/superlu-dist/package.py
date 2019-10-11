@@ -31,6 +31,7 @@ class SuperluDist(CMakePackage):
     version('5.0.0', '78d1d6460ff16b3f71e4bcd7306397574d54d421249553ccc26567f00a10bfc6')
 
     variant('int64', default=False, description='Build with 64 bit integers')
+    variant('openmp', default=False, description='Build with OpenMP support (needs a good multithreaded BLAS implementation for good performance)')
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('mpi')
@@ -57,6 +58,11 @@ class SuperluDist(CMakePackage):
             args.append('-DXSDK_INDEX_SIZE=64')
         else:
             args.append('-DXSDK_INDEX_SIZE=32')
+
+        if '+openmp' in spec:
+            args.append('-Denable_openmp=ON')
+        else:
+            args.append('-Denable_openmp=OFF')
 
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')

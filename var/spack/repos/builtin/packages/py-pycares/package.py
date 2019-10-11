@@ -17,4 +17,4 @@ class PyPycares(PythonPackage):
     version('3.0.0', '5f938c037c5905ebc5617a157c654088')
 
     depends_on('python@2.6:')
-    depends_on('py-cffi')    
+    depends_on('py-cffi')

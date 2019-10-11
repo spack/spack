@@ -46,7 +46,7 @@ class Portcullis(AutotoolsPackage):
         )
 
         # remove -m64 on aarch64
-        if self.spec.satisfies('target=aarch64'):
+        if self.spec.target.family == 'aarch64':
             for f in ['lib/Makefile.am', 'src/Makefile.am']:
                 filter_file('-m64', '', f)
 

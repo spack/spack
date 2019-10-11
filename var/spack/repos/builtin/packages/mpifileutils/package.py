@@ -43,17 +43,17 @@ class Mpifileutils(Package):
     depends_on('cmake@3.1:', when='@0.9:', type='build')
 
     variant('xattr', default=True,
-        description="Enable code for extended attributes")
+            description="Enable code for extended attributes")
 
     variant('lustre', default=False,
-        description="Enable optimizations and features for Lustre")
+            description="Enable optimizations and features for Lustre")
 
     variant('experimental', default=False,
-        description="Install experimental tools")
+            description="Install experimental tools")
     conflicts('+experimental', when='@:0.6')
 
     variant('gpfs', default=False,
-        description="Enable optimizations and features for GPFS")
+            description="Enable optimizations and features for GPFS")
     conflicts('+gpfs', when='@:0.8.1')
 
     def cmake_args(self):

@@ -3,11 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
+import os.path
 
 import llnl.util.lang
-# os is used for rename, etc in patch()
-import os
+
+from spack import *
 
 
 class Fftw(AutotoolsPackage):
@@ -19,7 +20,7 @@ class Fftw(AutotoolsPackage):
        library of choice for most applications."""
 
     homepage = "http://www.fftw.org"
-    url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
+    url = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 
     version('3.3.8', '8aac833c943d8e90d51b697b27d4384d')
@@ -34,45 +35,28 @@ class Fftw(AutotoolsPackage):
     patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
 
     variant(
-        'float', default=True,
-        description='Produces a single precision version of the library')
-    variant(
-        'double', default=True,
-        description='Produces a double precision version of the library')
-    variant(
-        'long_double', default=True,
-        description='Produces a long double precision version of the library')
-    variant(
-        'quad', default=False,
-        description='Produces a quad precision version of the library '
-                    '(works only with GCC and libquadmath)')
+        'precision', values=any_combination_of(
+            'float', 'double', 'long_double', 'quad'
+        ).prohibit_empty_set().with_default('float,double'),
+        description='Build the selected floating-point precision libraries'
+    )
     variant('openmp', default=False, description="Enable OpenMP support.")
     variant('mpi', default=True, description='Activate MPI support')
     variant(
         'pfft_patches', default=False,
         description='Add extra transpose functions for PFFT compatibility')
 
-    variant(
-        'simd',
-        default='sse2,avx,avx2',
-        values=(
-            'sse', 'sse2', 'avx', 'avx2', 'avx512',  # Intel
-            'avx-128-fma', 'kcvi',  # Intel
-            'altivec', 'vsx',  # IBM
-            'neon',  # ARM
-            'generic-simd128', 'generic-simd256'  # Generic
-        ),
-        description='Optimizations that are enabled in this build',
-        multi=True
-    )
-    variant('fma', default=False, description='Activate support for fma')
-
     depends_on('mpi', when='+mpi')
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
+
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
     conflicts('%gcc@8:8.9999', when="@3.3.7")
+    conflicts('precision=long_double', when='@2.1.5',
+              msg='Long double precision is not supported in FFTW 2')
+    conflicts('precision=quad', when='@2.1.5',
+              msg='Quad precision is not supported in FFTW 2')
 
     provides('fftw-api@2', when='@2.1.5')
     provides('fftw-api@3', when='@3:')
@@ -121,6 +105,11 @@ class Fftw(AutotoolsPackage):
             autoreconf = which('autoreconf')
             autoreconf('-ifv')
 
+    @property
+    def selected_precisions(self):
+        """Precisions that have been selected in this build"""
+        return self.spec.variants['precision'].value
+
     def configure(self, spec, prefix):
         # Base options
         options = [
@@ -148,68 +137,60 @@ class Fftw(AutotoolsPackage):
         if '+mpi' in spec:
             options.append('--enable-mpi')
 
-        # SIMD support
-        float_options, double_options = [], []
-        if spec.satisfies('@3:', strict=True):
-            for opts in (float_options, double_options):
-                opts += self.enable_or_disable('simd')
-                opts += self.enable_or_disable('fma')
+        # Specific SIMD support. Note there's SSE support too for float, but
+        # given that it can be activated only for float and that most machines
+        # are new enough to have SSE2 it has been skipped not to complicate the
+        # recipe further.
+        simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
+                         'kcvi', 'altivec', 'vsx', 'neon']
+        simd_options = []
+        for feature in simd_features:
+            msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
+            simd_options.append(msg.format(feature))
 
+        # If no features are found, enable the generic ones
+        if not any(f in spec.target for f in simd_features):
+            simd_options += [
+                '--enable-generic-simd128',
+                '--enable-generic-simd256'
+            ]
+
+        simd_options += [
+            '--enable-fma' if 'fma' in spec.target else '--disable-fma'
+        ]
+
+        # Double is the default precision, for all the others we need
+        # to enable the corresponding option.
+        enable_precision = {
+            'float': ['--enable-float'],
+            'double': None,
+            'long_double': ['--enable-long-double'],
+            'quad': ['--enable-quad-precision']
+        }
+
+        # Different precisions must be configured and compiled one at a time
         configure = Executable('../configure')
+        for precision in self.selected_precisions:
+            opts = (enable_precision[precision] or []) + options[:]
 
-        # Build double/float/long double/quad variants
-        if '+double' in spec:
-            with working_dir('double', create=True):
-                configure(*(options + double_options))
-        if '+float' in spec:
-            with working_dir('float', create=True):
-                configure('--enable-float', *(options + float_options))
-        if spec.satisfies('@3:+long_double'):
-            with working_dir('long-double', create=True):
-                configure('--enable-long-double', *options)
-        if spec.satisfies('@3:+quad'):
-            with working_dir('quad', create=True):
-                configure('--enable-quad-precision', *options)
+            # SIMD optimizations are available only for float and double
+            # starting from FFTW 3
+            if precision in ('float', 'double') and spec.satisfies('@3:'):
+                opts += simd_options
+
+            with working_dir(precision, create=True):
+                configure(*opts)
+
+    def for_each_precision_make(self, *targets):
+        for precision in self.selected_precisions:
+            with working_dir(precision):
+                make(*targets)
 
     def build(self, spec, prefix):
-        if '+double' in spec:
-            with working_dir('double'):
-                make()
-        if '+float' in spec:
-            with working_dir('float'):
-                make()
-        if spec.satisfies('@3:+long_double'):
-            with working_dir('long-double'):
-                make()
-        if spec.satisfies('@3:+quad'):
-            with working_dir('quad'):
-                make()
+        self.for_each_precision_make()
 
     def check(self):
-        spec = self.spec
-        if '+double' in spec:
-            with working_dir('double'):
-                make("check")
-        if '+float' in spec:
-            with working_dir('float'):
-                make("check")
-        if spec.satisfies('@3:+long_double'):
-            with working_dir('long-double'):
-                make("check")
-        if spec.satisfies('@3:+quad'):
-            with working_dir('quad'):
-                make("check")
+        self.for_each_precision_make('check')
 
     def install(self, spec, prefix):
-        if '+double' in spec:
-            with working_dir('double'):
-                make("install")
-        if '+float' in spec:
-            with working_dir('float'):
-                make("install")
-        if spec.satisfies('@3:+long_double'):
-            with working_dir('long-double'):
-                make("install")
-        if spec.satisfies('@3:+quad'):
-            with working_dir('quad'):
-                make("install")
+        self.for_each_precision_make('install')

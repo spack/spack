@@ -231,7 +231,7 @@ class PythonPackage(PackageBase):
         if ('py-setuptools' == spec.name or          # this is setuptools, or
             'py-setuptools' in spec._dependencies and  # it's an immediate dep
             'build' in spec._dependencies['py-setuptools'].deptypes):
-                args += ['--single-version-externally-managed', '--root=/']
+            args += ['--single-version-externally-managed', '--root=/']
 
         return args
 

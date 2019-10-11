@@ -18,7 +18,7 @@ class Diffsplice(MakefilePackage):
     version('0.1.1',     'be90e6c072402d5aae0b4e2cbb8c10ac')
 
     def edit(self, spec, prefix):
-        if spec.satisfies('target=aarch64'):
+        if spec.target.family == 'aarch64':
             makefile = FileFilter(join_path(self.build_directory, 'Makefile'))
             makefile.filter('-m64', '')
 

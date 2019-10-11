@@ -13,14 +13,19 @@ class PyMaestrowf(PythonPackage):
     homepage = "https://github.com/LLNL/maestrowf/"
     url      = "https://github.com/LLNL/maestrowf/archive/v1.1.2.tar.gz"
 
+    maintainers = ['FrankD412']
+
+    version('1.1.4', 'e2da101fb1cad9a164d375eccb1f07ce')
+    version('1.1.3', '0299e4ae3ec8b8c0296df0efaa8b517f')
     version('1.1.2', 'a9e05d82910cd2dd077321fb9b0c8dcd')
     version('1.1.1', 'd38bbf634de4f29fd01d1864ba2f70e0')
     version('1.1.0', '3c20bf36fbb85d14c3bfdb865944a409')
     version('1.0.1', '6838fc8bdc7ca0c1adbb6a0333f005b4')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pyyaml',     type=('build', 'run'))
+    depends_on('py-pyyaml@4.2b1:',     type=('build', 'run'))
     depends_on('py-six',        type=('build', 'run'))
-    depends_on('py-enum34',     type=('build', 'run'))
+    depends_on('py-enum34',     type=('build', 'run'), when='^python@:3.3')
+    depends_on('py-enum34',     type=('build', 'run'), when='@:1.1.3')
     depends_on('py-tabulate',   type=('build', 'run'), when='@1.1.0:')
     depends_on('py-filelock',   type=('build', 'run'), when='@1.1.0:')

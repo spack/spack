@@ -15,6 +15,8 @@ class Seqprep(MakefilePackage):
 
     version('1.3.2', 'b6a4f5491dfdb0ce38bf791454151468')
 
+    depends_on('zlib', type='link')
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('SeqPrep', prefix.bin)

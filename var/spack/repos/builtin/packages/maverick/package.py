@@ -22,7 +22,7 @@ class Maverick(MakefilePackage):
     conflicts('%nag')
     conflicts('%pgi')
     conflicts('%xl')
-    conflicts('%xl_r')    
+    conflicts('%xl_r')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

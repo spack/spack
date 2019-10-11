@@ -41,8 +41,8 @@ class Lbann(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
     variant('al', default=True, description='Builds with support for Aluminum Library')
-    variant('conduit', default=True, 
-            description='Builds with support for Conduit Library ' +
+    variant('conduit', default=True,
+            description='Builds with support for Conduit Library '
             '(note that for v0.99 conduit is required)')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('docs', default=False, description='Builds with support for building documentation')

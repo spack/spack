@@ -22,6 +22,10 @@ class Czmq(AutotoolsPackage):
     depends_on("libuuid")
     depends_on('zeromq')
 
+    def autoreconf(self, spec, prefix):
+        autogen = Executable('./autogen.sh')
+        autogen()
+
     def configure_args(self):
         config_args = []
         if 'clang' in self.compiler.name:

@@ -27,7 +27,7 @@ class PlanckLikelihood(Package):
 
     patch('fortran.patch')
     patch('make.patch')
-    patch('arm.patch', when='target=aarch64')
+    patch('arm.patch', when='target=aarch64:')
 
     resource(
         name='baseline',

@@ -8,6 +8,7 @@ import os
 import fnmatch
 import glob
 import platform
+import sys
 from llnl.util.filesystem import join_path
 
 
@@ -38,16 +39,21 @@ class Tau(Package):
     version('2.24', '57ce33539c187f2e5ec68f0367c76db4')
     version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
 
+    # Disable some default dependencies on Darwin/OSX
+    darwin_default = False
+    if sys.platform != 'darwin':
+        darwin_default = True
+
     variant('scorep', default=False, description='Activates SCOREP support')
     variant('openmp', default=False, description='Use OpenMP threads')
     variant('pthreads', default=True, description='Use POSIX threads')
     variant('mpi', default=False, description='Specify use of TAU MPI wrapper library')
     variant('phase', default=False, description='Generate phase based profiles')
-    variant('papi', default=True, description='Activates Performance API')
+    variant('papi', default=darwin_default, description='Activates Performance API')
     variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
-    variant('libdwarf', default=True, description='Activates support of libdwarf')
-    variant('libelf', default=True, description='Activates support of libelf')
-    variant('libunwind', default=True, description='Activates support of libunwind')
+    variant('libdwarf', default=darwin_default, description='Activates support of libdwarf')
+    variant('libelf', default=darwin_default, description='Activates support of libelf')
+    variant('libunwind', default=darwin_default, description='Activates support of libunwind')
     variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
     variant('comm', default=False, description=' Generate profiles with MPI communicator info')
@@ -58,6 +64,8 @@ class Tau(Package):
     variant('shmem', default=False, description='Activates SHMEM support')
     variant('gasnet', default=False, description='Activates GASNET support')
     variant('cuda', default=False, description='Activates CUDA support')
+    variant('fortran', default=darwin_default, description='Activates Fortran support')
+    variant('io', default=True, description='Activates POSIX I/O support')
 
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
@@ -88,7 +96,7 @@ class Tau(Package):
 
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
-    def set_compiler_options(self):
+    def set_compiler_options(self, spec):
 
         useropt = ["-O2 -g", self.rpath_args]
 
@@ -108,10 +116,10 @@ class Tau(Package):
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
-        compiler_options = ['-c++=%s' % self.compiler.cxx,
-                            '-cc=%s' % self.compiler.cc]
+        compiler_options = ['-c++=%s' % os.path.basename(self.compiler.cxx),
+                            '-cc=%s' % os.path.basename(self.compiler.cc)]
 
-        if self.compiler.fc:
+        if '+fortran' in spec and self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
 
         ##########
@@ -170,6 +178,12 @@ class Tau(Package):
 
         if '+opari' in spec:
             options.append('-opari')
+
+        if '+ompt' in spec:
+            options.append('-ompt')
+
+        if '+io' in spec:
+            options.append('-iowrapper')
 
         if '+binutils' in spec:
             options.append("-bfd=%s" % spec['binutils'].prefix)
@@ -231,7 +245,7 @@ class Tau(Package):
                     break
             options.append("-pythonlib=%s" % lib_path)
 
-        compiler_specific_options = self.set_compiler_options()
+        compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
         configure(*options)
         make("install")

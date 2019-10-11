@@ -74,7 +74,6 @@ the location for each type of module.  e.g.:
    module_roots:
      tcl:    $spack/share/spack/modules
      lmod:   $spack/share/spack/lmod
-     dotkit: $spack/share/spack/dotkit
 
 See :ref:`modules` for details.
 

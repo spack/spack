@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import glob
 
 
 class Augustus(MakefilePackage):
@@ -22,6 +23,7 @@ class Augustus(MakefilePackage):
     version('3.2.3', 'b8c47ea8d0c45aa7bb9a82626c8ff830',
             url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.3.tar.gz')
 
+    depends_on('perl', type=('build', 'run'))
     depends_on('bamtools')
     depends_on('gsl')
     depends_on('boost')
@@ -29,7 +31,6 @@ class Augustus(MakefilePackage):
     depends_on('htslib', when='@3.3.1:')
     depends_on('bcftools', when='@3.3.1:')
     depends_on('samtools', when='@3.3.1:')
-    depends_on('tabix', when='@3.3.1:')
     depends_on('curl', when='@3.3.1:')
 
     def edit(self, spec, prefix):
@@ -64,19 +65,19 @@ class Augustus(MakefilePackage):
         with working_dir(join_path('auxprogs', 'bam2wig')):
             makefile = FileFilter('Makefile')
             # point tools to spack installations
-            bcftools = self.spec['bcftools'].prefix.include
-            samtools = self.spec['samtools'].prefix.include
-            htslib = self.spec['htslib'].prefix.include
-            tabix = self.spec['tabix'].prefix.include
+            if 'bcftools' in spec:
+                bcftools = self.spec['bcftools'].prefix.include
+                makefile.filter('BCFTOOLS=.*$',
+                                'BCFTOOLS=%s' % bcftools)
+            if 'samtools' in spec:
+                samtools = self.spec['samtools'].prefix.include
+                makefile.filter('SAMTOOLS=.*$',
+                                'SAMTOOLS=%s' % samtools)
+            if 'htslib' in spec:
+                htslib = self.spec['htslib'].prefix.include
+                makefile.filter('HTSLIB=.*$',
+                                'HTSLIB=%s' % htslib)
 
-            makefile.filter('SAMTOOLS=.*$',
-                            'SAMTOOLS=%s' % samtools)
-            makefile.filter('HTSLIB=.*$',
-                            'HTSLIB=%s' % htslib)
-            makefile.filter('BCFTOOLS=.*$',
-                            'BCFTOOLS=%s' % bcftools)
-            makefile.filter('TABIX=.*$',
-                            'TABIX=%s' % tabix)
             # fix bad linking dirs
             makefile.filter('$(SAMTOOLS)/libbam.a',
                             '$(SAMTOOLS)/../lib/libbam.a', string=True)
@@ -87,6 +88,15 @@ class Augustus(MakefilePackage):
         install_tree('bin', join_path(self.spec.prefix, 'bin'))
         install_tree('config', join_path(self.spec.prefix, 'config'))
         install_tree('scripts', join_path(self.spec.prefix, 'scripts'))
+
+    @run_after('install')
+    def filter_sbang(self):
+        with working_dir(self.prefix.scripts):
+            pattern = '^#!.*/usr/bin/perl'
+            repl = '#!{0}'.format(self.spec['perl'].command.path)
+            files = glob.iglob("*.pl")
+            for file in files:
+                filter_file(pattern, repl, *files, backup=False)
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('AUGUSTUS_CONFIG_PATH', join_path(

@@ -18,7 +18,7 @@ class Abyss(AutotoolsPackage):
     version('2.0.2', '1623f55ad7f4586e80f6e74b1f27c798')
     version('1.5.2', '10d6d72d1a915e618d41a5cbbcf2364c')
 
-    variant('maxk', values=int, default=0, 
+    variant('maxk', values=int, default=0,
             description='''set the maximum k-mer length.
             This value must be a multiple of 32''')
 
@@ -44,7 +44,7 @@ class Abyss(AutotoolsPackage):
                 '--with-sqlite=%s' % self.spec['sqlite'].prefix,
                 '--with-mpi=%s' % self.spec['mpi'].prefix]
         if maxk:
-                args.append('--enable-maxk=%s' % maxk)
+            args.append('--enable-maxk=%s' % maxk)
         if self.spec['mpi'].name == 'mpich':
-                args.append('--enable-mpich')
+            args.append('--enable-mpich')
         return args

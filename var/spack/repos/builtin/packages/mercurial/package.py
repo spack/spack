@@ -11,7 +11,7 @@ class Mercurial(PythonPackage):
     """Mercurial is a free, distributed source control management tool."""
 
     homepage = "https://www.mercurial-scm.org"
-    url      = "https://www.mercurial-scm.org/release/mercurial-4.1.2.tar.gz"
+    url      = "https://www.mercurial-scm.org/release/mercurial-5.1.1.tar.gz"
 
     import_modules = [
         'hgext', 'hgext3rd', 'mercurial', 'hgext.convert', 'hgext.fsmonitor',
@@ -20,6 +20,8 @@ class Mercurial(PythonPackage):
         'mercurial.httpclient', 'mercurial.pure'
     ]
 
+    version('5.1.1',  sha256='35fc8ba5e0379c1b3affa2757e83fb0509e8ac314cbd9f1fd133cf265d16e49f')
+    version('4.9.1',  sha256='1bdd21bb87d1e05fb5cd395d488d0e0cc2f2f90ce0fd248e31a03595da5ccb47')
     version('4.4.1', '37974a416d1d9525e1375c92025b16d9')
     version('4.1.2', '934c99808bdc8385e074b902d59b0d93')
     version('3.9.1', '3759dd10edb8c1a6dfb8ff0ce82658ce')

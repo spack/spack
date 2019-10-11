@@ -15,3 +15,5 @@ class Ngmlr(CMakePackage):
     url      = "https://github.com/philres/ngmlr/archive/v0.2.5.tar.gz"
 
     version('0.2.5', '1b2b1aaeb6a3accc8b9f3e5c29e77037')
+
+    depends_on('zlib', type='link')

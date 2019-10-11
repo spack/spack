@@ -42,3 +42,11 @@ class PyProtobuf(PythonPackage):
     def install_args(self, spec, prefix):
         args = super(PyProtobuf, self).install_args(spec, prefix)
         return args + ['--cpp_implementation']
+
+    @run_after('install')
+    def fix_import_error(self):
+        if str(self.spec['python'].version.up_to(1)) == '2':
+            touch = which('touch')
+            touch(self.prefix + '/' +
+                  self.spec['python'].package.site_packages_dir +
+                  '/google/__init__.py')

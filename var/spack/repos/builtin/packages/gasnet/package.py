@@ -27,7 +27,7 @@ class Gasnet(AutotoolsPackage):
     variant('mpi', default=True, description="Support MPI")
     variant('aligned-segments', default=False,
             description="Requirement to achieve aligned VM segments")
-    variant('pshm', default=True, 
+    variant('pshm', default=True,
             description="Support inter-process shared memory support")
     variant('segment-mmap-max', default='16GB',
             description="Upper bound for mmap-based GASNet segments")
@@ -48,15 +48,8 @@ class Gasnet(AutotoolsPackage):
     def configure_args(self):
         args = [
             # TODO: factor IB suport out into architecture description.
-            "--enable-ibv" if '+ibv' in self.spec else '--disable-ibv',
             "--enable-par",
-            "--enable-smp",
-            "--enable-udp",
-            "--enable-smp-safe",
-            "--enable-segment-fast",
-            "--enable-pshm" if '+pshm' in self.spec else "--disable-pshm",
-            "--with-segment-mmap-max={0}".format(
-                self.spec.variants['segment-mmap-max'].value),
+            "--enable-mpi-compat",
             # for consumers with shared libs
             "CC=%s %s" % (spack_cc, self.compiler.pic_flag),
             "CXX=%s %s" % (spack_cxx, self.compiler.pic_flag),
@@ -68,8 +61,16 @@ class Gasnet(AutotoolsPackage):
             args.append('--disable-aligned-segments')
 
         if '+mpi' in self.spec:
-            args.extend(['--enable-mpi', '--enable-mpi-compat', "MPI_CC=%s %s"
+            args.extend(['--enable-mpi',
+                         '--disable-udp',
+                         '--disable-ibv',
+                         'MPI_CC=%s %s'
                         % (self.spec['mpi'].mpicc, self.compiler.pic_flag)])
-        else:
-            args.extend(['--disable-mpi', '--disable-mpi-compat'])
+
+        if '+ibv' in self.spec:
+            args.extend(['--enable-ibv', '--disable-udp', '--disable-mpi'])
+
+        if '+udp' in self.spec:
+            args.extend(['--enable-udp', '--disable-ibv', '--disable-mpi'])
+
         return args

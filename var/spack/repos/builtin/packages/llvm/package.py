@@ -181,6 +181,22 @@ class Llvm(CMakePackage):
             }
         },
         {
+            'version': '9.0.0',
+            'md5': '0fd4283ff485dffb71a4f1cc8fd3fc72',
+            'resources': {
+                'compiler-rt': 'c92b8a1aed654463962d77445ebee10b',
+                'openmp': 'aea2a701d5d62605bf82cfc2bb57cd0f',
+                'polly': '5cd3222a5d7f96cf789dd0bdba14d0fc',
+                'libcxx': '3b26e4c37aac2650b594668437a57966',
+                'libcxxabi': 'bd8799cc69c7660c7a4729019fbfe286',
+                'cfe': '0df6971e2f99b1e99e7bfb533e4067af',
+                'clang-tools-extra': '6d1b6e8a9c24ccf98b6ed4f63dbb6356',
+                'lldb': '963b43e591d9501965e932fc4218d1a0',
+                'lld': 'aa70e956ddbe0c7bff029b8358ff6c44',
+                'libunwind': 'ea60ad42e59193ae99bf239d69dfa086'
+            }
+        },
+        {
             'version': '8.0.0',
             'md5': '74818f431563603515a62be1ee69a142',
             'resources': {
@@ -603,8 +619,8 @@ class Llvm(CMakePackage):
 
         except ProcessError:
             explanation = ('The "lldb_codesign" identity must be available'
-                           ' to build LLVM with LLDB. See https://llvm.org/'
-                           'svn/llvm-project/lldb/trunk/docs/code-signing'
+                           ' to build LLVM with LLDB. See https://github.com/'
+                           'jevinskie/llvm-lldb/blob/master/docs/code-signing'
                            '.txt for details on how to create this identity.')
             raise RuntimeError(explanation)
 
@@ -683,16 +699,19 @@ class Llvm(CMakePackage):
                 # hence the test to see if the version starts with "flang".
                 targets.append('CppBackend')
 
-            if 'x86' in spec.architecture.target.lower():
+            if spec.target.family == 'x86' or spec.target.family == 'x86_64':
                 targets.append('X86')
-            elif 'arm' in spec.architecture.target.lower():
+            elif spec.target.family == 'arm':
                 targets.append('ARM')
-            elif 'aarch64' in spec.architecture.target.lower():
+            elif spec.target.family == 'aarch64':
                 targets.append('AArch64')
-            elif 'sparc' in spec.architecture.target.lower():
+            elif (spec.target.family == 'sparc' or
+                  spec.target.family == 'sparc64'):
                 targets.append('Sparc')
-            elif ('ppc' in spec.architecture.target.lower() or
-                  'power' in spec.architecture.target.lower()):
+            elif (spec.target.family == 'ppc64' or
+                  spec.target.family == 'ppc64le' or
+                  spec.target.family == 'ppc' or
+                  spec.target.family == 'ppcle'):
                 targets.append('PowerPC')
 
             cmake_args.append(

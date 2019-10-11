@@ -18,4 +18,4 @@ class LuaLuaposix(Package):
 
     def install(self, spec, prefix):
         rockspec = glob.glob('luaposix-*.rockspec')
-        luarocks('--tree=' + prefix, 'install', rockspec[0])
+        luarocks('--tree=' + prefix, 'make', rockspec[0])

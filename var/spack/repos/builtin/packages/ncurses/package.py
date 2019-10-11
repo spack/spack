@@ -17,7 +17,8 @@ class Ncurses(AutotoolsPackage):
     SYSV-curses enhancements over BSD curses."""
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
-    url      = "https://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
+    # URL must remain http:// so Spack can bootstrap curl
+    url      = "http://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
 
     version('6.1', '98c889aaf8d23910d2b92d65be2e737a')
     version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
@@ -56,7 +57,9 @@ class Ncurses(AutotoolsPackage):
                       '--without-manpages',
                       '--without-tests']
 
-        wide_opts = ['--enable-widec']
+        wide_opts = ['--enable-widec',
+                     '--without-manpages',
+                     '--without-tests']
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')

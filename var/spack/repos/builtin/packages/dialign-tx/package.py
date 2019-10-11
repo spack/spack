@@ -24,7 +24,7 @@ class DialignTx(MakefilePackage):
             makefile = FileFilter('Makefile')
             makefile.filter(' -march=i686 ', ' ')
             makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
-            if spec.satisfies('target=aarch64'):
+            if spec.target.family == 'aarch64':
                 makefile.filter('-mfpmath=sse -msse  -mmmx', ' ')
 
     def install(self, spec, prefix):

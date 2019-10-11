@@ -113,19 +113,29 @@ def _first_accessible_path(paths):
 
 
 def _resolve_paths(candidates):
-    """Resolve paths, removing extra $user from $tempdir if needed."""
+    """
+    Resolve candidate paths and make user-related adjustments.
+
+    Adjustments involve removing extra $user from $tempdir if $tempdir includes
+    $user and appending $user if it is not present in the path.
+    """
     temp_path = sup.canonicalize_path('$tempdir')
-    tmp_has_usr = getpass.getuser() in temp_path.split(os.path.sep)
+    user = getpass.getuser()
+    tmp_has_usr = user in temp_path.split(os.path.sep)
 
     paths = []
     for path in candidates:
-        # First remove the extra `$user` node from a `$tempdir/$user` entry
-        # for hosts that automatically append `$user` to `$tempdir`.  As
-        # written, this will remove only the first `$user` in the path.
+        # Remove the extra `$user` node from a `$tempdir/$user` entry for
+        # hosts that automatically append `$user` to `$tempdir`.
         if path.startswith(os.path.join('$tempdir', '$user')) and tmp_has_usr:
             path = path.replace("/$user", "", 1)
 
-        paths.append(sup.canonicalize_path(path))
+        # Ensure the path is unique per user.
+        can_path = sup.canonicalize_path(path)
+        if user not in can_path:
+            can_path = os.path.join(can_path, user)
+
+        paths.append(can_path)
 
     return paths
 
@@ -147,14 +157,6 @@ def get_stage_root():
         if not path:
             raise StageError("No accessible stage paths in:",
                              ' '.join(resolved_candidates))
-
-        # Ensure that path is unique per user in an attempt to avoid
-        # conflicts in shared temporary spaces.  Emulate permissions from
-        # `tempfile.mkdtemp`.
-        user = getpass.getuser()
-        if user not in path:
-            path = os.path.join(path, user)
-            mkdirp(path, mode=stat.S_IRWXU)
 
         _stage_root = path
 

@@ -84,8 +84,8 @@ class Elpa(AutotoolsPackage):
         # adjust the C compiler or CFLAGS
         if '+optflags' in self.spec:
             options.extend([
-                'FCFLAGS=-O2 -march=native -ffree-line-length-none',
-                'CFLAGS=-O2 -march=native'
+                'FCFLAGS=-O2 -ffree-line-length-none',
+                'CFLAGS=-O2'
             ])
         if '+openmp' in self.spec:
             options.append('--enable-openmp')

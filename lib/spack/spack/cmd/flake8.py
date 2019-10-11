@@ -36,6 +36,8 @@ def is_package(f):
 #: List of directories to exclude from checks.
 exclude_directories = [spack.paths.external_path]
 
+#: max line length we're enforcing (note: this duplicates what's in .flake8)
+max_line_length = 79
 
 #: This is a dict that maps:
 #:  filename pattern ->
@@ -151,7 +153,16 @@ def add_pattern_exemptions(line, codes):
         return line + '\n'
 
     orig_len = len(line)
-    exemptions = ','.join(sorted(set(codes)))
+    codes = set(codes)
+
+    # don't add E501 unless the line is actually too long, as it can mask
+    # other errors like trailing whitespace
+    if orig_len <= max_line_length and "E501" in codes:
+        codes.remove("E501")
+        if not codes:
+            return line + "\n"
+
+    exemptions = ','.join(sorted(codes))
 
     # append exemption to line
     if '# noqa: ' in line:
@@ -160,7 +171,7 @@ def add_pattern_exemptions(line, codes):
         line += '  # noqa: {0}'.format(exemptions)
 
     # if THIS made the line too long, add an exemption for that
-    if len(line) > 79 and orig_len <= 79:
+    if len(line) > max_line_length and orig_len <= max_line_length:
         line += ',E501'
 
     return line + '\n'

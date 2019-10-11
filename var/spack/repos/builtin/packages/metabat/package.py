@@ -18,6 +18,8 @@ class Metabat(SConsPackage):
 
     depends_on('boost@1.55.0:', type=('build', 'run'))
     depends_on('perl', type='run')
+    depends_on('zlib', type='link')
+    depends_on('ncurses', type='link')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
