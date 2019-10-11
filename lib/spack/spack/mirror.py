@@ -235,8 +235,8 @@ class MirrorStats(object):
                 self.new[self.current_spec] = len(self.added_resources)
             if self.existing_resources:
                 self.present[self.current_spec] = len(self.existing_resources)
-            self.add_count = set()
-            self.exists_count = set()
+            self.added_resources = set()
+            self.existing_resources = set()
         self.current_spec = None
 
     def stats(self):
