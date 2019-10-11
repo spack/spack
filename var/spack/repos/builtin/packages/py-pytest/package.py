@@ -10,10 +10,11 @@ class PyPytest(PythonPackage):
     """pytest: simple powerful testing with Python."""
 
     homepage = "http://pytest.org/"
-    url      = "https://pypi.io/packages/source/p/pytest/pytest-5.1.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pytest/pytest-5.2.1.tar.gz"
 
     import_modules = ['pytest']
 
+    version('5.2.1', sha256='ca563435f4941d0cb34767301c27bc65c510cb82e90b9ecf9cb52dc2c63caaa0')
     version('5.1.1', sha256='c3d5020755f70c82eceda3feaf556af9a341334414a8eca521a18f463bcead88')
     version('4.6.5', sha256='8fc39199bdda3d9d025d3b1f4eb99a192c20828030ea7c9a0d2840721de7d347')
     version('4.3.0', 'e1913b607c5c4e7d886ba6f13a43617e')
@@ -35,7 +36,7 @@ class PyPytest(PythonPackage):
     depends_on('py-setuptools@30.3:', when='@3.9.0:3.9.1', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm', when='@3.1:', type='build')
-    depends_on('py-py@1.5.0:', type=('build', 'run'))
+    depends_on('py-py@1.5.0:', when='@3.3:', type=('build', 'run'))
     depends_on('py-py@1.4.33:', when='@3.1.2:3.2.3,3.2.5:3.2.999', type=('build', 'run'))
     depends_on('py-py@1.4.33:1.4.999', when='@3.2.4', type=('build', 'run'))
     depends_on('py-py@1.4.29:', when='@:3.1.1', type=('build', 'run'))
