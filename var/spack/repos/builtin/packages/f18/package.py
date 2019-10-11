@@ -10,9 +10,9 @@ class F18(CMakePackage):
     """F18 is a front-end for Fortran intended to replace the existing front-end
     in the Flang compiler"""
 
+    # Package information
     homepage = "https://github.com/flang-compiler/f18"
-
-    git      = "https://github.com/flang-compiler/f18"
+    git      = "https://github.com/flang-compiler/f18.git"
 
     version('master', branch='master')
 
