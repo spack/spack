@@ -13,7 +13,7 @@ import spack.repo
 import spack.config
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.version import ver
+from llnl.util.version import ver
 from spack.fetch_strategy import HgFetchStrategy
 from spack.util.executable import which
 

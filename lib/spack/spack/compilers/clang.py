@@ -15,7 +15,7 @@ import spack.paths
 import spack.stage
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.util.executable import Executable
-from spack.version import ver
+from llnl.util.version import ver
 
 
 #: compiler symlink mappings for mixed f77 compilers

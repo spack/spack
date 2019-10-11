@@ -37,7 +37,7 @@ import spack.architecture
 import spack.error
 import spack.tengine
 from spack.config import config
-from spack.version import ver, Version, VersionList, VersionRange
+from llnl.util.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 

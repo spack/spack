@@ -9,7 +9,7 @@ where it makes sense.
 """
 import pytest
 
-from spack.version import Version, VersionList, ver
+from llnl.util.version import Version, VersionList, ver
 
 
 def assert_ver_lt(a, b):

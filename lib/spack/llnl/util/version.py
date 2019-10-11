@@ -29,9 +29,7 @@ import numbers
 from bisect import bisect_left
 from functools import wraps
 from six import string_types
-
-import spack.error
-from spack.util.spack_yaml import syaml_dict
+from ordereddict_backport import OrderedDict
 
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
@@ -679,11 +677,11 @@ class VersionList(object):
     def to_dict(self):
         """Generate human-readable dict for YAML."""
         if self.concrete:
-            return syaml_dict([
+            return OrderedDict([
                 ('version', str(self[0]))
             ])
         else:
-            return syaml_dict([
+            return OrderedDict([
                 ('versions', [str(v) for v in self])
             ])
 
@@ -849,11 +847,3 @@ def ver(obj):
         return obj
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
-
-
-class VersionError(spack.error.SpackError):
-    """This is raised when something is wrong with a version."""
-
-
-class VersionChecksumError(VersionError):
-    """Raised for version checksum errors."""

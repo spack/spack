@@ -13,7 +13,7 @@ import spack.repo
 from spack.concretize import find_spec, NoValidVersionError
 from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
-from spack.version import ver
+from llnl.util.version import ver
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 import spack.compilers
 import spack.platforms.test

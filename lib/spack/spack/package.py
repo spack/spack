@@ -59,7 +59,7 @@ from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
-from spack.version import Version
+from llnl.util.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 
 """Allowed URL schemes for spack packages."""

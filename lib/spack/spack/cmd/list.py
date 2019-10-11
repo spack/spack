@@ -21,7 +21,7 @@ from llnl.util.tty.colify import colify
 import spack.dependency
 import spack.repo
 import spack.cmd.common.arguments as arguments
-from spack.version import VersionList
+from llnl.util.version import VersionList
 
 description = "list and search available packages"
 section = "basic"

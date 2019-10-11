@@ -13,7 +13,7 @@ from llnl.util.lang import classproperty
 import spack.repo
 import spack.error
 from spack.util.path import canonicalize_path
-from spack.version import VersionList
+from llnl.util.version import VersionList
 from spack.config import ConfigError
 
 _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,

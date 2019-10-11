@@ -8,7 +8,7 @@ import os
 
 import spack.paths
 from spack.util.web import spider, find_versions_of_archive
-from spack.version import ver
+from llnl.util.version import ver
 
 
 web_data_path = os.path.join(spack.paths.test_path, 'data', 'web')

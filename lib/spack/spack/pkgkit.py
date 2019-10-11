@@ -33,7 +33,7 @@ from spack.build_systems.sip import SIPPackage
 
 from spack.mixins import filter_compiler_wrappers
 
-from spack.version import Version, ver
+from llnl.util.version import Version, ver
 
 from spack.spec import Spec
 

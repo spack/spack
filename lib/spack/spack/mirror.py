@@ -21,7 +21,7 @@ import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
 from spack.spec import Spec
-from spack.version import VersionList
+from llnl.util.version import VersionList
 from spack.util.compression import allowed_archive
 
 

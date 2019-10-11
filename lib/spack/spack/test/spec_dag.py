@@ -10,6 +10,8 @@ import pytest
 import spack.architecture
 import spack.package
 
+import llnl.util.version
+
 from spack.spec import Spec
 from spack.dependency import all_deptypes, Dependency, canonical_deptype
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
@@ -112,7 +114,7 @@ def test_installed_deps():
     with spack.repo.swap(mock_repo):
         c_spec = Spec('c')
         c_spec.concretize()
-        assert c_spec['d'].version == spack.version.Version('2')
+        assert c_spec['d'].version == llnl.util.version.Version('2')
 
         c_installed = spack.spec.Spec.from_dict(c_spec.to_dict())
         for spec in c_installed.traverse():
@@ -122,8 +124,8 @@ def test_installed_deps():
         a_spec._add_dependency(c_installed, default)
         a_spec.concretize()
 
-        assert a_spec['d'].version == spack.version.Version('3')
-        assert a_spec['e'].version == spack.version.Version('2')
+        assert a_spec['d'].version == llnl.util.version.Version('3')
+        assert a_spec['e'].version == llnl.util.version.Version('2')
 
 
 @pytest.mark.usefixtures('config')

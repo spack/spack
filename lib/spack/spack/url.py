@@ -35,7 +35,7 @@ from llnl.util.tty.color import colorize
 
 import spack.error
 import spack.util.compression as comp
-from spack.version import Version
+from llnl.util.version import Version
 
 
 #
@@ -566,7 +566,7 @@ def parse_version(path):
         path (str): The filename or URL for the package
 
     Returns:
-        spack.version.Version: The version of the package
+        llnl.util.version.Version: The version of the package
 
     Raises:
         UndetectableVersionError: If the URL does not match any regexes

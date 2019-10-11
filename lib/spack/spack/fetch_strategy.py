@@ -41,7 +41,7 @@ import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 from spack.util.executable import which
 from spack.util.string import comma_and, quote
-from spack.version import Version, ver
+from llnl.util.version import Version, ver
 from spack.util.compression import decompressor_for, extension
 
 

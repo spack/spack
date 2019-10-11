@@ -43,7 +43,7 @@ from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
-from spack.version import Version
+from llnl.util.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
 
 

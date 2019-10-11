@@ -14,7 +14,7 @@ import spack.repo
 import spack.util.crypto
 import spack.util.web
 from spack.util.naming import valid_fully_qualified_module_name
-from spack.version import ver, Version
+from llnl.util.version import ver, Version
 
 description = "checksum available versions of a package"
 section = "packaging"

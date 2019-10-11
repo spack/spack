@@ -122,7 +122,7 @@ from spack.variant import BoolValuedVariant, substitute_abstract_variants
 from spack.variant import VariantMap, UnknownVariantError
 from spack.variant import DuplicateVariantError
 from spack.variant import UnsatisfiableVariantSpecError
-from spack.version import VersionList, VersionRange, Version, ver
+from llnl.util.version import VersionList, VersionRange, Version, ver
 from ruamel.yaml.error import MarkedYAMLError
 
 __all__ = [

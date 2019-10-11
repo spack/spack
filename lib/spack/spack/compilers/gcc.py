@@ -8,7 +8,7 @@ import re
 import spack.compilers.clang
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
+from llnl.util.version import ver
 
 
 class Gcc(Compiler):

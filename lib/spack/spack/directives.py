@@ -45,7 +45,7 @@ import spack.variant
 from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import Version, VersionChecksumError
+from llnl.util.version import Version
 
 __all__ = []
 
@@ -655,3 +655,6 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+class VersionChecksumError(DirectiveError):
+    """Raised for version checksum errors."""

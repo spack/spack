@@ -10,7 +10,7 @@ import spack.cmd.compiler
 import spack.compilers
 import spack.spec
 import spack.util.pattern
-from spack.version import Version
+from llnl.util.version import Version
 
 test_version = '4.5.3'
 

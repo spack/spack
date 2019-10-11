@@ -6,7 +6,7 @@
 import platform as py_platform
 
 from spack.architecture import OperatingSystem
-from spack.version import Version
+from llnl.util.version import Version
 from spack.util.executable import Executable
 
 

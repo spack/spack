@@ -18,7 +18,7 @@ from llnl.util.filesystem import \
     HeaderList, find_headers, \
     LibraryList, find_libraries, find_system_libraries
 
-from spack.version import Version, ver
+from llnl.util.version import Version, ver
 from spack.package import PackageBase, run_after, InstallError
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable

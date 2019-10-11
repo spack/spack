@@ -14,7 +14,7 @@ from spack.fetch_strategy import FailedDownloadError
 from spack.fetch_strategy import from_list_url, URLFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.version import ver
+from llnl.util.version import ver
 import spack.util.crypto as crypto
 
 

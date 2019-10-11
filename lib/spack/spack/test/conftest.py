@@ -38,7 +38,7 @@ from spack.package import PackageBase
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
-from spack.version import Version
+from llnl.util.version import Version
 
 
 #

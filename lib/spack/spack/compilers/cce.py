@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
+from llnl.util.version import ver
 
 
 class Cce(Compiler):
