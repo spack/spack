@@ -71,8 +71,9 @@ class Abinit(AutotoolsPackage):
     # depends_on('elpa~openmp', when='+elpa+mpi~openmp')
     # depends_on('elpa+openmp', when='+elpa+mpi+openmp')
 
-    depends_on('fftw+float', when='~openmp')
-    depends_on('fftw+float+openmp', when='+openmp')
+    depends_on('fftw precision=float')
+    depends_on('fftw~openmp', when='~openmp')
+    depends_on('fftw+openmp', when='+openmp')
 
     depends_on('netcdf-fortran', when='+hdf5')
     depends_on('hdf5+mpi', when='+mpi+hdf5')  # required for NetCDF-4 support

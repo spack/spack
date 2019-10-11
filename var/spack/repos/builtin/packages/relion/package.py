@@ -37,7 +37,7 @@ class Relion(CMakePackage, CudaPackage):
     # relion will not build with newer versions of cmake
     # per https://github.com/3dem/relion/issues/380
     depends_on('cmake@3:3.9.4', type='build')
-    depends_on('fftw+float+double')
+    depends_on('fftw precision=float,double')
     depends_on('fltk', when='+gui')
     depends_on('libtiff')
 
