@@ -216,32 +216,18 @@ class Microarchitecture(object):
             compiler_info = [compiler_info]
 
         def satisfies_constraint(entry, version):
-            min_version, max_version = entry['versions'].split(':')
+            constraints = llnl.util.version.VersionList()
+            for range_or_ver in entry['versions'].split(','):
+                if ':' in range_or_ver:
+                    min, max = entry['versions'].split(':')
+                    constraint = llnl.util.version.VersionRange(min or None,
+                                                                max or None)
+                else:
+                    constraint = llnl.util.version.Version(range_or_ver)
+                constraints.add(constraint)
 
-            # Check version suffixes
-            min_version, _, min_suffix = min_version.partition('-')
-            max_version, _, max_suffix = max_version.partition('-')
-            version, _, suffix = version.partition('-')
-
-            # If the suffixes are not all equal there's no match
-            if suffix != min_suffix or suffix != max_suffix:
-                return False
-
-            # Assume compiler versions fit into semver
-            tuplify = lambda x: tuple(int(y) for y in x.split('.'))
-
-            version = tuplify(version)
-            if min_version:
-                min_version = tuplify(min_version)
-                if min_version > version:
-                    return False
-
-            if max_version:
-                max_version = tuplify(max_version)
-                if max_version < version:
-                    return False
-
-            return True
+            version = llnl.util.version.Version(version)
+            return version.satisfies(constraints)
 
         for compiler_entry in compiler_info:
             if satisfies_constraint(compiler_entry, version):
