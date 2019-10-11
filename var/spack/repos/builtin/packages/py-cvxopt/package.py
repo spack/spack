@@ -15,7 +15,7 @@ class PyCvxopt(PythonPackage):
 
     import_modules = ['cvxopt']
 
-    version('1.1.9', 'a56e7b23d76c2b5aaf3bea2a7c245ea7')
+    version('1.1.9', sha256='8f157e7397158812cabd340b68546f1baa55a486ed0aad8bc26877593dc2983d')
 
     variant('gsl',   default=False, description='Use GSL random number generators for constructing random matrices')
     variant('fftw',  default=False, description='Install the cvxopt.fftw interface to FFTW')

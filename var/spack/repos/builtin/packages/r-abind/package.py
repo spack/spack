@@ -17,6 +17,6 @@ class RAbind(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/abind"
 
     version('1.4-5', sha256='3a3ace5afbcb86e56889efcebf3bf5c3bb042a282ba7cc4412d450bb246a3f2c')
-    version('1.4-3', '10fcf80c677b991bf263d38be35a1fc5')
+    version('1.4-3', sha256='b6c255878c1ab81701ae701f34546e88be115629b984ac4272e311fa3c0ea6ce')
 
     depends_on('r@1.5.0:', type=('build', 'run'))

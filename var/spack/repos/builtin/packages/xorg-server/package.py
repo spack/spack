@@ -13,7 +13,7 @@ class XorgServer(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/xserver"
     url      = "https://www.x.org/archive/individual/xserver/xorg-server-1.18.99.901.tar.gz"
 
-    version('1.18.99.901', 'd0242b95991c221c4fcc0d283aba7a42')
+    version('1.18.99.901', sha256='c8425163b588de2ee7e5c8e65b0749f2710f55a7e02a8d1dc83b3630868ceb21')
 
     depends_on('pixman@0.27.2:')
     depends_on('font-util')

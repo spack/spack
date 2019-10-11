@@ -16,12 +16,12 @@ class PyPytest(PythonPackage):
 
     version('5.1.1', sha256='c3d5020755f70c82eceda3feaf556af9a341334414a8eca521a18f463bcead88')
     version('4.6.5', sha256='8fc39199bdda3d9d025d3b1f4eb99a192c20828030ea7c9a0d2840721de7d347')
-    version('4.3.0', 'e1913b607c5c4e7d886ba6f13a43617e')
-    version('3.7.2', 'd12d0d556a21fd8633e105f1a8d5a0f9')
-    version('3.7.1', '2704e16bb2c11af494167f80a7cd37c4')
-    version('3.5.1', 'ffd870ee3ca561695d2f916f0f0f3c0b')
-    version('3.0.7', '89c60546507dc7eb6e9e40a6e9f720bd')
-    version('3.0.2', '61dc36e65a6f6c11c53b1388e043a9f5')
+    version('4.3.0', sha256='067a1d4bf827ffdd56ad21bd46674703fce77c5957f6c1eef731f6146bfcef1c')
+    version('3.7.2', sha256='3459a123ad5532852d36f6f4501dfe1acf4af1dd9541834a164666aa40395b02')
+    version('3.7.1', sha256='86a8dbf407e437351cef4dba46736e9c5a6e3c3ac71b2e942209748e76ff2086')
+    version('3.5.1', sha256='54713b26c97538db6ff0703a12b19aeaeb60b5e599de542e7fca0ec83b9038e8')
+    version('3.0.7', sha256='b70696ebd1a5e6b627e7e3ac1365a4bc60aaf3495e843c1e70448966c5224cab')
+    version('3.0.2', sha256='64d8937626dd2a4bc15ef0edd307d26636a72a3f3f9664c424d78e40efb1e339')
 
     depends_on('python@3.5:', when='@5:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@3.3:4', type=('build', 'run'))

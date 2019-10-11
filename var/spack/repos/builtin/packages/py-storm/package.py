@@ -11,6 +11,6 @@ class PyStorm(PythonPackage):
     homepage = "https://storm.canonical.com/"
     url      = "https://launchpad.net/storm/trunk/0.20/+download/storm-0.20.tar.gz"
 
-    version('0.20', '8628503141f0f06c0749d607ac09b9c7')
+    version('0.20', sha256='0fa70043bb1a1c178c2f760db35f5956244cecf50dab7fb22d78be7507726603')
 
     depends_on('py-setuptools', type='build')

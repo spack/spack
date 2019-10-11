@@ -18,6 +18,6 @@ class PyJoblib(PythonPackage):
     ]
 
     version('0.13.2', sha256='315d6b19643ec4afd4c41c671f9f2d65ea9d787da093487a81ead7b0bac94524')
-    version('0.10.3', '455401ccfaf399538d8e5333086df2d3')
-    version('0.10.2', 'ebb42af4342c2445b175f86bd478d869')
-    version('0.10.0', '61e40322c4fed5c22905f67d7d1aa557')
+    version('0.10.3', sha256='29b2965a9efbc90a5fe66a389ae35ac5b5b0c1feabfc7cab7fd5d19f429a071d')
+    version('0.10.2', sha256='3123553bdad83b143428033537c9e1939caf4a4d8813dade6a2246948c94494b')
+    version('0.10.0', sha256='49b3a0ba956eaa2f077e1ebd230b3c8d7b98afc67520207ada20a4d8b8efd071')

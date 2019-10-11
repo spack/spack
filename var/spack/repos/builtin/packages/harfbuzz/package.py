@@ -15,7 +15,7 @@ class Harfbuzz(AutotoolsPackage):
     version('2.1.3', sha256='613264460bb6814c3894e3953225c5357402915853a652d40b4230ce5faf0bee')
     version('1.9.0', sha256='11eca62bf0ac549b8d6be55f4e130946399939cdfe7a562fdaee711190248b00')
     version('1.4.6', sha256='21a78b81cd20cbffdb04b59ac7edfb410e42141869f637ae1d6778e74928d293')
-    version('0.9.37', 'bfe733250e34629a188d82e3b971bc1e')
+    version('0.9.37', sha256='255f3b3842dead16863d1d0c216643d97b80bfa087aaa8fc5926da24ac120207')
 
     depends_on("pkgconfig", type="build")
     depends_on("glib")

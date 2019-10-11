@@ -19,7 +19,7 @@ class Opennurbs(Package):
 
     version('develop', branch='develop')
 
-    version('percept', '59163fd085a24c7a4c2170c70bb60fea',
+    version('percept', sha256='d12a8f14f0b27d286fb7a75ab3c4e300f77d1fbb028326d1c8d28e4641605538',
             url='https://github.com/PerceptTools/percept/raw/master/build-cmake/opennurbs-percept.tar.gz')
 
     variant('shared', default=True,

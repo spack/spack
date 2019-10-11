@@ -23,12 +23,12 @@ class PySphinx(PythonPackage):
 
     version('1.8.4',   sha256='c1c00fc4f6e8b101a0d037065043460dffc2d507257f2f11acaed71fd2b0c83c')
     version('1.8.2',   sha256='120732cbddb1b2364471c3d9f8bfd4b0c5b550862f99a65736c77f970b142aea')
-    version('1.7.4', '95f3b83f521314600e5b09e99cf32c46')
-    version('1.6.3', 'c5ad61f4e0974375ca2c2b58ef8d5411')
-    version('1.6.1', '26cb1cdca7aa4afc8c925d926b6268e7')
-    version('1.5.5', 'f9581b3556df9722143c47290273bcf8')
-    version('1.4.5', '5c2cd2dac45dfa6123d067e32a89e89a')
-    version('1.3.1', '8786a194acf9673464c5455b11fd4332')
+    version('1.7.4', sha256='e9b1a75a3eae05dded19c80eb17325be675e0698975baae976df603b6ed1eb10')
+    version('1.6.3', sha256='af8bdb8c714552b77d01d4536e3d6d2879d6cb9d25423d29163d5788e27046e6')
+    version('1.6.1', sha256='7581d82c3f206f0ac380edeeba890a2e2d2be011e5abe94684ceb0df4b6acc3f')
+    version('1.5.5', sha256='4064ea6c56feeb268838cb8fbbee507d0c3d5d92fa63a7df935a916b52c9e2f5')
+    version('1.4.5', sha256='c5df65d97a58365cbf4ea10212186a9a45d89c61ed2c071de6090cdf9ddb4028')
+    version('1.3.1', sha256='1a6e5130c2b42d2de301693c299f78cc4bd3501e78b610c08e45efc70e2b5114')
 
     extends('python', ignore='bin/(pybabel|pygmentize)')
 

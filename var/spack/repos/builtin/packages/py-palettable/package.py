@@ -12,6 +12,6 @@ class PyPalettable(PythonPackage):
     homepage = "https://jiffyclub.github.io/palettable/"
     url      = "https://pypi.io/packages/source/p/palettable/palettable-3.0.0.tar.gz"
 
-    version('3.0.0', '6e430319fe01386c81dbbc62534e3cc4')
+    version('3.0.0', sha256='eed9eb0399386ff42f90ca61d4fa38a1819a93d5adfc2d546e3e2869d9972c31')
 
     depends_on('py-setuptools', type='build')

@@ -28,5 +28,5 @@ class PyDocutils(PythonPackage):
     ]
 
     version('0.14', sha256='51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274')
-    version('0.13.1', 'ea4a893c633c788be9b8078b6b305d53')
-    version('0.12',   '4622263b62c5c771c03502afa3157768')
+    version('0.13.1', sha256='718c0f5fb677be0f34b781e04241c4067cbd9327b66bdd8e763201130f5175be')
+    version('0.12',   sha256='c7db717810ab6965f66c8cf0398a98c9d8df982da39b4cd7f162911eb89596fa')

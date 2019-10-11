@@ -21,7 +21,7 @@ class Fltk(Package):
     homepage = 'http://www.fltk.org/'
     url = 'http://fltk.org/pub/fltk/1.3.3/fltk-1.3.3-source.tar.gz'
 
-    version('1.3.3', '9ccdb0d19dc104b87179bd9fd10822e3')
+    version('1.3.3', sha256='f8398d98d7221d40e77bc7b19e761adaf2f1ef8bb0c30eceb7beb4f2273d0d97')
 
     depends_on('libx11')
 

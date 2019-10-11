@@ -13,7 +13,7 @@ class PyUnittest2(PythonPackage):
     homepage = "https://pypi.python.org/pypi/unittest2"
     url      = "https://pypi.io/packages/source/u/unittest2/unittest2-1.1.0.tar.gz"
 
-    version('1.1.0', 'f72dae5d44f091df36b6b513305ea000')
+    version('1.1.0', sha256='22882a0e418c284e1f718a822b3b022944d53d2d908e1690b319a9d3eb2c0579')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))

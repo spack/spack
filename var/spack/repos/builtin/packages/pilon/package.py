@@ -14,8 +14,8 @@ class Pilon(Package):
     homepage = "https://github.com/broadinstitute/pilon"
     url      = "https://github.com/broadinstitute/pilon/releases/download/v1.22/pilon-1.22.jar"
 
-    version('1.22', '3c45568dc1b878a9a0316410ec62ab04', expand=False)
-    version('1.13', '9e96b4cf4ea595b1996c7e9ca76498b5', expand=False)
+    version('1.22', sha256='ff738f3bbb964237f6b2cf69243ebf9a21cb7f4edf10bbdcc66fa4ebaad5d13d', expand=False)
+    version('1.13', sha256='c6195a054acbc76afc457e6a7615f75c91adc28faeb7b8738ee2b65309b0bbe3', expand=False)
 
     depends_on('java@1.7:', type='run')
 

@@ -12,7 +12,7 @@ class PyPlotly(PythonPackage):
     homepage = "https://plot.ly/python/"
     url      = "https://github.com/plotly/plotly.py/archive/v2.2.0.tar.gz"
 
-    version('2.2.0', '835802cdc6743439ff993447dfe47a0e')
+    version('2.2.0', sha256='dad2a49fe355dddb6ae159e96c10ac22413a33cbac513b4dbf3791e63ec33c1f')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-requests@2.3.0', type=('build', 'run'))

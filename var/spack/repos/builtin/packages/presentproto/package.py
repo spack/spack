@@ -12,7 +12,7 @@ class Presentproto(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/presentproto/"
     url      = "https://www.x.org/archive/individual/proto/presentproto-1.0.tar.gz"
 
-    version('1.0', '57eaf4bb58e86476ec89cfb42d675961')
+    version('1.0', sha256='02f8042cb351dd5c3699a0dbdb2ab25f86532efe3e1e3e97897e7f44b5c67040')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

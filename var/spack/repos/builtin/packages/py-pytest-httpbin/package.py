@@ -12,7 +12,7 @@ class PyPytestHttpbin(PythonPackage):
     homepage = "https://github.com/kevin1024/pytest-httpbin"
     url      = "https://pypi.io/packages/source/p/pytest-httpbin/pytest-httpbin-0.2.3.tar.gz"
 
-    version('0.2.3', 'b8ebb8e2fbac1a445fb5d044f7fec556')
+    version('0.2.3', sha256='c5b698dfa474ffc9caebcb35e34346b753eb226aea5c2e1b69fefedbcf161bf8')
 
     extends('python', ignore=r'bin/flask')
 

@@ -16,10 +16,10 @@ class PyPillow(PythonPackage):
     homepage = "https://python-pillow.org/"
     url = "https://pypi.io/packages/source/P/Pillow/Pillow-5.1.0.tar.gz"
 
-    version('5.4.1', 'f7d0ce066fc7ea7a685739227887aeaf')
-    version('5.1.0', '308f9c13b376abce96ab6ebd6c889cc4')
-    version('3.2.0', '7cfd093c11205d9e2ebe3c51dfcad510')
-    version('3.0.0', 'fc8ac44e93da09678eac7e30c9b7377d')
+    version('5.4.1', sha256='5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f')
+    version('5.1.0', sha256='cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef')
+    version('3.2.0', sha256='64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a')
+    version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
 
     provides('pil')
 

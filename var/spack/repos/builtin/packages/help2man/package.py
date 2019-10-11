@@ -14,7 +14,7 @@ class Help2man(AutotoolsPackage):
     url      = "https://ftpmirror.gnu.org/help2man/help2man-1.47.4.tar.xz"
 
     version('1.47.8', sha256='528f6a81ad34cbc76aa7dce5a82f8b3d2078ef065271ab81fda033842018a8dc')
-    version('1.47.4', '544aca496a7d89de3e5d99e56a2f03d3')
+    version('1.47.4', sha256='d4ecf697d13f14dd1a78c5995f06459bff706fd1ce593d1c02d81667c0207753')
 
     depends_on('gettext', type='build')
     depends_on('perl', type=('build', 'run'))
