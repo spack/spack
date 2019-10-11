@@ -16,6 +16,7 @@ class PyCertifi(PythonPackage):
 
     import_modules = ['certifi']
 
+    version('2019.9.11', sha256='e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50')
     version('2019.6.16', sha256='945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695')
     version('2017.4.17', sha256='f7527ebf7461582ce95f7a9e03dd141ce810d40590834f4ec20cddd54234c10a')
     version('2017.1.23',  'b72521a8badff5e89a8eabea586d79ab')
