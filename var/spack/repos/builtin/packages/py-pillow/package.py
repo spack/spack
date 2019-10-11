@@ -71,7 +71,7 @@ class PyPillow(PythonPackage):
         setup.filter('ZLIB_ROOT = None',
                      'ZLIB_ROOT = ("{0}", "{1}")'.format(
                          spec['zlib'].prefix.lib,
-                             spec['zlib'].prefix.include))
+                         spec['zlib'].prefix.include))
         if '+tiff' in spec:
             setup.filter('TIFF_ROOT = None',
                          'TIFF_ROOT = ("{0}", "{1}")'.format(
