@@ -22,7 +22,7 @@ class F18(CMakePackage):
             values=('Debug', 'Release', 'RelWithDebInfo'))
 
     # Dependencies
-    depends_on('cmake@3.9.0:')
+    depends_on('cmake@3.9.0:', type='build')
     depends_on('llvm+clang@7:')
 
     # Conflicts
