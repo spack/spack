@@ -20,4 +20,4 @@ class Embree(CMakePackage):
     depends_on('tbb')
 
     def cmake_args(self):
-        return ['-DEMBREE_TUTORIALS=OFF']
+        return ['-DEMBREE_TUTORIALS=OFF', '-DEMBREE_IGNORE_INVALID_RAYS=ON']
