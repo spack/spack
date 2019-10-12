@@ -13,7 +13,7 @@ class Archer(CMakePackage):
     homepage = "https://github.com/PRUNERS/ARCHER"
     url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
+    version('1.0.0', sha256='df814a475606b83c659932caa30a68bed1c62e713386b375c1b78eb8d60e0d15')
 
     depends_on('cmake@3.4.3:', type='build')
     depends_on('llvm')
