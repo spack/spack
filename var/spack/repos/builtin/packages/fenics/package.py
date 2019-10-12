@@ -102,16 +102,6 @@ class Fenics(CMakePackage):
                 'ufl': 'c75c4781e5104504f158cb42cd87aceffa9052e8e9db6e9764e6a5b6115d7f73',
             }
         },
-        {
-            'version': '1.5.0',
-            'sha256': '9b589a3534299a5e6d22c13c5eb30bb8',
-            'resources': {
-                'ffc': '755be60597d66f13c1e113739e7b9b620ee4271e0f7cc1053553a568bc08e7f4',
-                'fiat': '2b053fa9f70399f8903b987f98a4fa2b06df9559c07c1d5f0b2b5e43c51de670',
-                'instant': '36e042de26d97f5e3d43f2f52544d91ba0f14e1c73c7d07ed7804030b43d935d',
-                'ufl': '2879a5b0937502676fa55765bcb8237ff78e8b70995a118ffe1de042b20e491b',
-            }
-        },
     ]
 
     for release in releases:
