@@ -13,7 +13,6 @@ class PyOpenpyxl(PythonPackage):
     url      = "https://pypi.io/packages/source/o/openpyxl/openpyxl-2.4.5.tar.gz"
 
     version('2.4.5', sha256='78c331e819fb0a63a1339d452ba0b575d1a31f09fdcce793a31bec7e9ef4ef21')
-    version('2.2.0-b1', md5='eeefabe384f6e53166c8c2e6abe5d11b')
 
     depends_on('python@2.6:2.8,3.0:3.1,3.3:')
 

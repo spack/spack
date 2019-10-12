@@ -21,7 +21,6 @@ class PyTraitlets(PythonPackage):
     version('4.2.0', sha256='923cbe84bef30c27d2083f014f23a5da0ebe7da2e67a683d97acb07002e2ce0d')
     version('4.1.0', sha256='93ead8dbf7e9617c88b79620072bfc499e7f25613f3df2234e5fdf08348c0a83')
     version('4.0.0', sha256='03f380cb2e47689ae55dbe9a5dccbdde5cad8c4637312d720f4c3a991fb15cd2')
-    version('4.0',   md5='14544e25ccf8e920ed1cbf833852481f')
 
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))

@@ -15,7 +15,6 @@ class Vardictjava(Package):
     url      = "https://github.com/AstraZeneca-NGS/VarDictJava/releases/download/v1.5.1/VarDict-1.5.1.tar"
 
     version('1.5.1', sha256='f1d710d238e8ab41b02a99fa8698baeee8c8668635a847b826913dd03a9176b9')
-    version('1.4.4', md5='6b2d7e1e5502b875760fc9938a0fe5e0')
 
     depends_on('java@8:', type='run')
 

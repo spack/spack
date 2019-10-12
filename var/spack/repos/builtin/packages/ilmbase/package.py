@@ -16,8 +16,6 @@ class Ilmbase(AutotoolsPackage):
 
     version('2.2.0', sha256='ecf815b60695555c1fbc73679e84c7c9902f4e8faa6e8000d2f905b8b86cedc7',
             url='http://download.savannah.nongnu.org/releases/openexr/ilmbase-2.2.0.tar.gz')
-    version('2.1.0', md5='af1115f4d759c574ce84efcde9845d29',
-            url='http://download.savannah.nongnu.org/releases/openexr/ilmbase-2.1.0.tar.gz')
     version('2.0.1', sha256='19b03975fea4461f2eff91f5df138b301b3ea9709eccbda98447f372bf09735f',
             url='http://download.savannah.nongnu.org/releases/openexr/ilmbase-2.0.1.tar.gz')
     version('1.0.2', sha256='2e5cda799ffdfca9b1a16bb120d49c74a39af1457ef22f968918c6200ba62e44',

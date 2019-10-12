@@ -22,7 +22,6 @@ class Mvapich2(AutotoolsPackage):
     version('2.3a', sha256='7f0bc94265de9f66af567a263b1be6ef01755f7f6aedd25303d640cc4d8b1cff')
     version('2.2', sha256='791a6fc2b23de63b430b3e598bf05b1b25b82ba8bf7e0622fc81ba593b3bb131')
     version('2.1', sha256='49f3225ad17d2f3b6b127236a0abdc979ca8a3efb8d47ab4b6cd4f5252d05d29')
-    version('2.0', md5='9fbb68a4111a8b6338e476dc657388b4')
 
     provides('mpi')
     provides('mpi@:3.0')

@@ -20,8 +20,6 @@ class Nwchem(Package):
             url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2')
     version('6.8', sha256='8401d9f4cce2f653a38639df61260b06be580ff0e1b8d77ed3262da159b372a6',
             url='https://github.com/nwchemgit/nwchem/archive/v6.8-release.tar.gz')
-    version('6.6', md5='c581001c004ea5e5dfacb783385825e3',
-            url='http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz')
 
     depends_on('blas')
     depends_on('lapack')

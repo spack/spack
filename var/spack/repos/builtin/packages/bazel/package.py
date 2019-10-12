@@ -30,11 +30,6 @@ class Bazel(Package):
     version('0.9.0', sha256='efb28fed4ffcfaee653e0657f6500fc4cbac61e32104f4208da385676e76312a')
     version('0.4.5', sha256='2b737be42678900470ae9e48c975ac5b2296d9ae23c007bf118350dbe7c0552b')
     version('0.4.4', sha256='d52a21dda271ae645711ce99c70cf44c5d3a809138e656bbff00998827548ebb')
-    version('0.3.1', md5='5c959467484a7fc7dd2e5e4a1e8e866b')
-    version('0.3.0', md5='33a2cb457d28e1bee9282134769b9283')
-    version('0.2.3', md5='393a491d690e43caaba88005efe6da91')
-    version('0.2.2b', md5='75081804f073cbd194da1a07b16cba5f')
-    version('0.2.2', md5='644bc4ea7f429d835e74f255dc1054e6')
 
     depends_on('java@8:', type=('build', 'link', 'run'))
     depends_on('zip')

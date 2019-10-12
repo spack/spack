@@ -16,11 +16,6 @@ class Armadillo(CMakePackage):
 
     version('8.100.1', sha256='54773f7d828bd3885c598f90122b530ded65d9b195c9034e082baea737cd138d')
     version('7.950.1', sha256='a32da32a0ea420b8397a53e4b40ed279c1a5fc791dd492a2ced81ffb14ad0d1b')
-    # NOTE: v7.900.1 download url seems broken is no v7.950.1?
-    version('7.900.1', md5='5ef71763bd429a3d481499878351f3be')
-    version('7.500.0', md5='7d316fdf3c3c7ea92b64704180ae315d')
-    version('7.200.2', md5='b21585372d67a8876117fd515d8cf0a2')
-    version('7.200.1', md5='ed86d6df0058979e107502e1fe3e469e')
 
     variant('hdf5', default=False, description='Include HDF5 support')
 

@@ -18,9 +18,6 @@ class Latte(CMakePackage):
 
     version('develop', branch='master')
     version('1.2.1', sha256='a21dda5ebdcefa56e9ff7296d74ef03f89c200d2e110a02af7a84612668bf702')
-    version('1.2.0', md5='b9bf8f84a0e0cf7b0e278a1bc7751b3d')
-    version('1.1.1', md5='ab11867ba6235189681cf6e50a50cc50')
-    version('1.0.1', md5='d0b99edbcf7a19abe0a68a192d6f6234')
 
     variant('mpi', default=True,
             description='Build with mpi')

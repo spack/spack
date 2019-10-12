@@ -21,11 +21,6 @@ class Bcl2fastq2(Package):
 
     version('2.20.0.422', sha256='8dd3044767d044aa4ce46de0de562b111c44e5b8b7348e04e665eb1b4f101fe3')
     version('2.19.1.403', sha256='cf13580f2c1ebcc3642b4d98a02ad01e41a44e644db7d31730f9767b25521806')
-    version('2.18.0.12', md5='fbe06492117f65609c41be0c27e3215c')
-    # 2.17.1.14 is no longer distributed.  If you have a copy of the
-    # source tarball, you can drop it into a local mirror w/ the name
-    # mirror/bcl2fastq2/bcl2fastq2-2.17.1.14.zip and go from there.
-    version('2.17.1.14', md5='7426226c6db095862e636b95c38608d3')
 
     conflicts('platform=darwin',
               msg='malloc.h/etc requirements break build on macs')
