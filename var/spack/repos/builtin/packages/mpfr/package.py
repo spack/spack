@@ -42,6 +42,13 @@ class Mpfr(AutotoolsPackage):
         patch('https://www.mpfr.org/mpfr-{0}/allpatches'.format(ver),
               when='@' + ver, sha256=checksum)
 
+    def flag_handler(self, name, flags):
+        # Work around macOS Catalina / Xcode 11 code generation bug
+        # (test failure t-toom53, due to wrong code in mpn/toom53_mul.o)
+        if self.spec.satisfies('os=catalina') and name == 'cflags':
+            flags.append('-fno-stack-check')
+        return (flags, None, None)
+
     def configure_args(self):
         args = [
             '--with-gmp=' + self.spec['gmp'].prefix,
