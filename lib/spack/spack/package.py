@@ -465,10 +465,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: _spack_build_envfile.
     archive_files = []
 
+    #: Boolean. Set to ``True`` for packages that require a manual download.
+    #: This is currently only used by package sanity tests.
+    manual_download = False
+
     #
     # Set default licensing information
     #
-
     #: Boolean. If set to ``True``, this software requires a license.
     #: If set to ``False``, all of the ``license_*`` attributes will
     #: be ignored. Defaults to ``False``.
