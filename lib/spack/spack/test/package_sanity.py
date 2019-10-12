@@ -8,9 +8,10 @@ import re
 
 import pytest
 
+import spack.fetch_strategy
 import spack.paths
 import spack.repo
-import spack.fetch_strategy
+import spack.util.crypto as crypto
 
 
 def check_repo():
@@ -94,3 +95,42 @@ def test_docstring():
     for name in spack.repo.all_package_names():
         pkg = spack.repo.get(name)
         assert pkg.__doc__
+
+
+def test_all_packages_use_sha256_checksums():
+    """Make sure that no packages use md5 checksums."""
+
+    errors = []
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.path.get(name)
+
+        # for now, don't enforce on packages that require manual downloads
+        # TODO: eventually fix these, too.
+        if pkg.manual_download:
+            continue
+
+        def invalid_sha256_digest(fetcher):
+            if getattr(fetcher, "digest", None):
+                h = crypto.hash_algo_for_digest(fetcher.digest)
+                if h != "sha256":
+                    return h
+
+        for v, args in pkg.versions.items():
+            fetcher = spack.fetch_strategy.for_package_version(pkg, v)
+            bad_digest = invalid_sha256_digest(fetcher)
+            if bad_digest:
+                errors.append(
+                    "All packages must use sha256 checksums. %s@%s uses %s." %
+                    (name, v, bad_digest)
+                )
+
+        for _, resources in pkg.resources.items():
+            for resource in resources:
+                bad_digest = invalid_sha256_digest(resource.fetcher)
+                if bad_digest:
+                    errors.append(
+                        "All packages must use sha256 checksums."
+                        "Resource in %s uses %s." % (name, v, bad_digest)
+                    )
+
+    assert [] == errors
