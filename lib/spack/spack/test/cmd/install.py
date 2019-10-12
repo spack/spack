@@ -591,3 +591,12 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
 
         assert 'WARNING: ALL CAPITAL WARNING!' in msg
         assert 'foo.c:89: warning: some weird warning!' in msg
+
+
+def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
+    with capfd.disabled():
+        try:
+            install('--cache-only', 'libdwarf')
+            assert False
+        except spack.main.SpackCommandError:
+            pass
