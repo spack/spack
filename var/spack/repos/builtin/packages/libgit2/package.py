@@ -17,7 +17,6 @@ class Libgit2(CMakePackage):
     url      = "https://github.com/libgit2/libgit2/archive/v0.24.2.tar.gz"
 
     version('0.26.0', sha256='6a62393e0ceb37d02fe0d5707713f504e7acac9006ef33da1e88960bd78b6eac')
-    version('0.24.2', md5='735661b5b73e3c120d13e2bae21e49b3')
 
     depends_on('cmake@2.8:', type='build')
     depends_on('libssh2')

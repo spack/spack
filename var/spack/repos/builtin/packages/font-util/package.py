@@ -26,7 +26,7 @@ class FontUtil(AutotoolsPackage):
 
     font_baseurl = 'https://www.x.org/archive/individual/font/'
     fonts = []
-    # name, version, md5
+    # name, version, sha256
     fonts_resource = [
         ['encodings', '1.0.4', '55861d9cf456bd717a3d30a3193402c02174ed3c0dcee828798165fe307ee324'],
         ['font-alias', '1.0.3', '63087cb61d17bfc9cd6f4f9359f63a3b1dd83300a31a42fd93dca084724c6afb'],
@@ -68,7 +68,7 @@ class FontUtil(AutotoolsPackage):
     for f_r in fonts_resource:
         f = f_r[0]
         resource(name=f, url=font_baseurl + f + '-' + f_r[1] + '.tar.gz',
-                 md5=f_r[2], destination=f, when='fonts=' + f)
+                 sha256=f_r[2], destination=f, when='fonts=' + f)
         fonts.append(f)
 
     variant('fonts',

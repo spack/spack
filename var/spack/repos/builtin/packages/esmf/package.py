@@ -18,7 +18,6 @@ class Esmf(MakefilePackage):
     url      = "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_7_1_0r/esmf_7_1_0r_src.tar.gz"
 
     version('7.1.0r', sha256='ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889')
-    version('7.0.1', md5='d3316ea79b032b8fb0cd40e5868a0261')
 
     variant('mpi',     default=True,  description='Build with MPI support')
     variant('lapack',  default=True,  description='Build with LAPACK support')

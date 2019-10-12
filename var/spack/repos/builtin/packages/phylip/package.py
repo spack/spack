@@ -14,7 +14,6 @@ class Phylip(Package):
     url      = "http://evolution.gs.washington.edu/phylip/download/phylip-3.697.tar.gz"
 
     version('3.697', sha256='9a26d8b08b8afea7f708509ef41df484003101eaf4beceb5cf7851eb940510c1')
-    version('3.696', md5='dbe5abc26f6089ead3dba41c2db526ee')
 
     def install(self, spec, prefix):
         with working_dir('src'):

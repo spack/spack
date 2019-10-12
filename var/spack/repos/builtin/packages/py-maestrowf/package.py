@@ -16,7 +16,6 @@ class PyMaestrowf(PythonPackage):
     maintainers = ['FrankD412']
 
     version('1.1.4', sha256='2cb0fa6f6281d8618ac79217ea5f4fd8cb24955c4315e873657f96b815f171d5')
-    version('1.1.3', md5='0299e4ae3ec8b8c0296df0efaa8b517f')
     version('1.1.2', sha256='ebb45bff54625435bc9f2462e1bdc3b5bdc4d943378c53e7810c11836794c5e0')
     version('1.1.1', sha256='a476ad4b40846d7b7f9540d6413df1b42eb655735e8d3c6c07e0baa68e20a8bb')
     version('1.1.0', sha256='14e701d6a10ab758215aab6b6809817d9a39416a4f477cd2f2551883fc68477b')

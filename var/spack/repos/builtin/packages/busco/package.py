@@ -16,7 +16,7 @@ class Busco(PythonPackage):
 
     # TODO: check the installation procedure for version 3.0.2
     # and uncomment the following line
-    # version('3.0.2', md5='31d80042bb7e96422843fa43d0acbd21')
+    # version('3.0.2', sha256='dbea093315b766b0f7c4fe3cafbbdf51ade79ec84bde04f1f437b48333200f34')
 
     # There is no tag for version 3.0.1
     version('3.0.1', commit='078252e00399550d7b0e8941cd4d986c8e868a83')

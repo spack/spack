@@ -15,9 +15,6 @@ class QtCreator(QMakePackage):
     list_depth = 2
 
     version('4.8.0', sha256='4c4813454637141a45aa8f18be5733e4ba993335d95940aadf12fda66cf6f849')
-    version('4.4.0', md5='bae2e08bb5087aba65d41eb3f9328d9a')
-    version('4.3.1', md5='6769ea47f287e2d9e30ff92acb899eef')
-    version('4.1.0', md5='657727e4209befa4bf5889dff62d9e0a')
 
     depends_on('qt@5.6.0:+opengl')
     # Qt Creator comes bundled with its own copy of sqlite. Qt has a build

@@ -26,7 +26,7 @@ class Pexsi(MakefilePackage):
     homepage = 'https://math.berkeley.edu/~linlin/pexsi/index.html'
     url = 'https://math.berkeley.edu/~linlin/pexsi/download/pexsi_v0.9.0.tar.gz'
 
-    # version('1.0', md5='4600b03e235935fe623acf500df0edfa')
+    # version('1.0', sha256='1574c66fd69ff2a37c6250d65c4df43b57c79822b49bd65662582a0cd5d82f54')
     version('0.10.2', sha256='8714c71b76542e096211b537a9cb1ffb2c28f53eea4f5a92f94cc1ca1e7b499f')
     version('0.9.2', sha256='9dc0fb66fc52c2b68e8fe485bbf4354ab0d9a548a4eaf7211eb4174c51bcf1de')
     version('0.9.0', sha256='e5efe0c129013392cdac3234e37f1f4fea641c139b1fbea47618b4b839d05029')

@@ -23,9 +23,6 @@ class PyPyside(PythonPackage):
     # and show little interest in certifying PySide 1.2.4 for Python.
     version('1.2.4', sha256='1421bc1bf612c396070de9e1ffe227c07c1f3129278bc7d30c754b5146be2433')  # rpath problems
 
-    # This is not available from pypi
-    # version('1.2.3', md5='fa5d5438b045ede36104bba25a6ccc10')
-
     # v1.2.2 does not work with Python3
     version('1.2.2', sha256='53129fd85e133ef630144c0598d25c451eab72019cdcb1012f2aec773a3f25be', preferred=True)
 

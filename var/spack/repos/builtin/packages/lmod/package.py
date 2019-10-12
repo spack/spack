@@ -19,10 +19,10 @@ class Lmod(AutotoolsPackage):
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
     url      = 'https://github.com/TACC/Lmod/archive/7.4.11.tar.gz'
 
-    version('8.1.5', sha256='3e5846d3d8e593cbcdfa0aed1474569bf5b5cfd19fd288de22051823d449d344')
-    version('8.0.9', sha256='9813c22ae4dd21eb3dc480f6ce307156512092b4bca954bf8aacc15944f23673')
+    version('8.1.5',  sha256='3e5846d3d8e593cbcdfa0aed1474569bf5b5cfd19fd288de22051823d449d344')
+    version('8.0.9',  sha256='9813c22ae4dd21eb3dc480f6ce307156512092b4bca954bf8aacc15944f23673')
     version('7.8.15', sha256='00a257f5073d656adc73045997c28f323b7a4f6d901f1c57b7db2b0cd6bee6e6')
-    version('7.8', sha256='40388380a36a00c3ce929a9f88c8fffc93deeabf87a7c3f8864a82acad38c3ba')
+    version('7.8',    sha256='40388380a36a00c3ce929a9f88c8fffc93deeabf87a7c3f8864a82acad38c3ba')
     version('7.7.29', sha256='269235d07d8ea387a2578f90bb64cf8ad16b4f28dcce196b293eb48cf1f71fb4')
     version('7.7.13', sha256='6145f075e5d49e12fcf0e75bb38afb27f205d23ba3496c1ff6c8b2cbaa9908be')
     version('7.7',    sha256='090118fcecedbce5515cca8b77297f082686583aa06ca811b9703cd828f10e0a')
@@ -37,7 +37,6 @@ class Lmod(AutotoolsPackage):
     version('6.4.5',  sha256='741744a2837c9d92fceeccfebdc8e07ce4f4b7e56f67b214d317955bbd8786b7')
     version('6.4.1',  sha256='a260b4e42269a80b517c066ba8484658362ea095e80767a2376bbe33d9b070a5')
     version('6.3.7',  sha256='55ddb52cbdc0e2e389b3405229336df9aabfa582c874f5df2559ea264e2ee4ae')
-    version('6.0.1',  md5='91abf52fe5033bd419ffe2842ebe7af9')
 
     depends_on('lua@5.1:')
     depends_on('lua-luaposix', type=('build', 'run'))

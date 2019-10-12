@@ -19,7 +19,6 @@ class Turbine(AutotoolsPackage):
 
     version('master', branch='master')
     version('1.2.3', sha256='a3156c7e0b39e166da3de8892f55fa5d535b0c99c87a9add067c801098fe51ba')
-    version('1.2.1', md5='c8976b22849aafe02a8fb4259dfed434')
     version('1.1.0', sha256='98fad47597935a04d15072e42bf85411d55ef00cb6f953e9f14d6de902e33209')
 
     variant('python', default=False,

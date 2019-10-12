@@ -29,8 +29,6 @@ class Protobuf(CMakePackage):
     version('3.2.0', sha256='a839d3f1519ff9d68ab908de5a0f269650ef1fc501c10f6eefd4cae51d29b86f')
     version('3.1.0', sha256='fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d')
     version('3.0.2', sha256='a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e')
-    # does not build with CMake:
-    # version('2.5.0', md5='9c21577a03adc1879aba5b52d06e25cf')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

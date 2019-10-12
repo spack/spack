@@ -17,10 +17,6 @@ class Flit(MakefilePackage):
     url      = "https://github.com/PRUNERS/FLiT/archive/v2.0-alpha.1.tar.gz"
 
     version('2.0-alpha.1', sha256='8de2bd400acf0f513d69f3dbf588e8984dfb18b8ccaaf684391811a0582f694b')
-    # FIXME: fix install and build to handle the old version, which is not
-    #        installable
-    # version('1.0.0',       md5='27763c89b044c5e3cfe62dd319a36a2b')
-    conflicts("@:1.999", msg="Only can build version 2.0 and up")
 
     # Add dependencies
     depends_on('python@3:', type='run')

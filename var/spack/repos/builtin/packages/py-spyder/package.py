@@ -13,7 +13,6 @@ class PySpyder(PythonPackage):
     url      = "https://pypi.io/packages/source/s/spyder/spyder-3.1.3.tar.gz"
 
     version('3.1.3', sha256='4978872cc5a006803bc8742d0a8fb43c49aef9524f0a9fcb8bd6dfcfdc2d2d6a')
-    version('2.3.9', md5='dd01e07a77123c128ff79ba57b97c1d7')
 
     depends_on('python@2.7.0:2.8.0,3.3.0:', type=('build', 'run'))
     depends_on('py-rope@0.9.4:',      type=('build', 'run'), when='^python@:3')

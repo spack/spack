@@ -55,7 +55,7 @@ class PlanckLikelihood(Package):
     resource(
         name='plik-unbinned',
         url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-unbinned.R2.00.tar.gz",
-        md5='c5869aa6b6581b6863d2a6e0ffd3826c',
+        sha256='69cdfee40d63a8b60b1f715d4e276d76693ec1a6f1b2658abac2b8d7dff4fa44',
         destination='.',
         when='+plik-unbinned')
 

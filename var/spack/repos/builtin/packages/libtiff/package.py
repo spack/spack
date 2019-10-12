@@ -17,7 +17,6 @@ class Libtiff(AutotoolsPackage):
     version('4.0.8', sha256='59d7a5a8ccd92059913f246877db95a2918e6c04fb9d43fd74e5c3390dac2910')
     version('4.0.7', sha256='9f43a2cfb9589e5cecaa66e16bf87f814c945f22df7ba600d63aac4632c4f019')
     version('4.0.6', sha256='4d57a50907b510e3049a4bba0d7888930fdfc16ce49f1bf693e5b6247370d68c')
-    version('4.0.3', md5='051c1068e6a0627f461948c365290410')
     version('3.9.7', sha256='f5d64dd4ce61c55f5e9f6dc3920fbe5a41e02c2e607da7117a35eb5c320cef6a')
 
     depends_on('jpeg')

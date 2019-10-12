@@ -23,8 +23,6 @@ class IntelIpp(IntelPackage):
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13006/l_ipp_2018.3.222.tgz')
     version('2018.2.199', sha256='55cb5c910b2c1e2bd798163fb5019b992b1259a0692e328bb9054778cf01562b',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12726/l_ipp_2018.2.199.tgz')
-    version('2018.1.163', md5='183d4888f3d91f632b617fdd401f04ed',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12414/l_ipp_2018.1.163.tgz')
     version('2018.0.128', sha256='da568ceec1b7acbcc8f666b73d4092788b037b1b03c0436974b82155056ed166',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12071/l_ipp_2018.0.128.tgz')
     version('2017.3.196', sha256='50d49a1000a88a8a58bd610466e90ae28d07a70993a78cbbf85d44d27c4232b6',

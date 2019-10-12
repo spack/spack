@@ -15,7 +15,6 @@ class PyPytz(PythonPackage):
     import_modules = ['pytz']
 
     version('2018.4', sha256='c06425302f2cf668f1bba7a0a03f3c1d34d4ebeef2c72003da308b3947c7f749')
-    version('2017.2',   md5='f89bde8a811c8a1a5bac17eaaa94383c')
     version('2016.10',  sha256='9a43e20aa537cfad8fe7a1715165c91cb4a6935d40947f2d070e4c80f2dcd22b')
     version('2016.6.1', sha256='6f57732f0f8849817e9853eb9d50d85d1ebb1404f702dbc44ee627c642a486ca')
     version('2014.10',  sha256='a94138b638907491f473c875e8c95203a6a02efef52b6562be302e435016f4f3')

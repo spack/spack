@@ -13,8 +13,6 @@ class PyPygpu(PythonPackage):
     url      = "https://github.com/Theano/libgpuarray/archive/v0.6.1.tar.gz"
 
     version('0.7.5', sha256='39c4d2e743848be43c8819c736e089ae51b11aa446cc6ee05af945c2dfd63420')
-    version('0.7.4', md5='19f57cd381175162048c8154f5251546')
-    version('0.7.3', md5='cb44aeb8482330974abdb36b0a477e5d')
     version('0.7.2', sha256='ef11ee6f8d62d53831277fd3dcab662aa770a5b5de2d30fe3018c4af959204da')
     version('0.7.1', sha256='4d0f9dd63b0595a8c04d8cee91b2619847c033b011c71d776caa784322382ed6')
     version('0.7.0', sha256='afe7907435dcbf78b3ea9b9f6c97e5a0d4a219a7170f5025ca0db1c289bb88df')
