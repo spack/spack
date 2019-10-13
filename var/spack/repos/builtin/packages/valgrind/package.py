@@ -36,7 +36,7 @@ class Valgrind(AutotoolsPackage):
             description='Activates boost support for valgrind')
     variant('only64bit', default=True,
             description='Sets --enable-only64bit option for valgrind')
-    variant('ubsan', default=True,
+    variant('ubsan', default=sys.platform != 'darwin',
             description='Activates ubsan support for valgrind')
 
     conflicts('+ubsan', when='platform=darwin %clang',
