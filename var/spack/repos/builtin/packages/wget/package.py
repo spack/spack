@@ -43,6 +43,7 @@ class Wget(AutotoolsPackage):
 
     depends_on('perl@5.12.0:', type='build')
     depends_on('pkgconfig', type='build')
+    depends_on('libiconv')
 
     depends_on('valgrind', type='test')
 
