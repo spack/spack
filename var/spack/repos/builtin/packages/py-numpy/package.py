@@ -203,7 +203,7 @@ class PyNumpy(PythonPackage):
         spec = self.spec
 
         # https://numpy.org/devdocs/user/building.html#blas
-        if '~blas' in spec:
+        if 'blas' not in spec:
             blas = ''
         elif spec['blas'].name == 'intel-mkl' or \
                 spec['blas'].name == 'intel-parallel-studio':
@@ -222,7 +222,7 @@ class PyNumpy(PythonPackage):
         spack_env.set('NPY_BLAS_ORDER', blas)
 
         # https://numpy.org/devdocs/user/building.html#lapack
-        if '~lapack' in spec:
+        if 'lapack' not in spec:
             lapack = ''
         elif spec['lapack'].name == 'intel-mkl' or \
                 spec['lapack'].name == 'intel-parallel-studio':
