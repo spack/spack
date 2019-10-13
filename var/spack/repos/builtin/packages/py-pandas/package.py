@@ -17,7 +17,7 @@ class PyPandas(PythonPackage):
 
     """
     homepage = "http://pandas.pydata.org/"
-    url = "https://pypi.io/packages/source/p/pandas/pandas-0.25.0.tar.gz"
+    url = "https://pypi.io/packages/source/p/pandas/pandas-0.25.1.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [
@@ -34,6 +34,7 @@ class PyPandas(PythonPackage):
         'pandas.api.extensions'
     ]
 
+    version('0.25.1', sha256='cb2e197b7b0687becb026b84d3c242482f20cbb29a9981e43604eb67576da9f6')
     version('0.25.0', sha256='914341ad2d5b1ea522798efa4016430b66107d05781dbfe7cf05eba8f37df995')
     version('0.24.2', sha256='4f919f409c433577a501e023943e582c57355d50a724c589e78bc1d551a535a2')
     version('0.24.1', sha256='435821cb2501eabbcee7e83614bd710940dc0cf28b5afbc4bdb816c31cec71af')
@@ -46,7 +47,7 @@ class PyPandas(PythonPackage):
     version('0.16.1', sha256='570d243f8cb068bf780461b9225d2e7bef7c90aa10d43cf908fe541fc92df8b6')
     version('0.16.0', sha256='4013de6f8796ca9d2871218861823bd9878a8dfacd26e08ccf9afdd01bbad9f1')
 
-    # https://dev.pandas.io/install.html#dependencies
+    # https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies
     # Required dependencies
     depends_on('python@3.5.3:', type=('build', 'run'), when='@0.25:')
     depends_on('py-setuptools@24.2.0:', type='build')
@@ -63,9 +64,10 @@ class PyPandas(PythonPackage):
     depends_on('py-bottleneck@1.2.1:', type=('build', 'run'), when='@0.25:')
 
     # Optional dependencies
-    # https://dev.pandas.io/install.html#optional-dependencies
+    # https://pandas.pydata.org/pandas-docs/stable/install.html#optional-dependencies
 
     # Test dependencies
-    # https://dev.pandas.io/install.html#running-the-test-suite
+    # https://pandas.pydata.org/pandas-docs/stable/development/contributing.html#running-the-test-suite
     depends_on('py-pytest@4.0.2:', type='test')
     depends_on('py-hypothesis@3.58:', type='test')
+    depends_on('py-pyarrow@0.10.0:', type='test')
