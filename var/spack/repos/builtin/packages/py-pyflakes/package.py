@@ -10,8 +10,9 @@ class PyPyflakes(PythonPackage):
     """A simple program which checks Python source files for errors."""
 
     homepage = "https://github.com/PyCQA/pyflakes"
-    url      = "https://github.com/PyCQA/pyflakes/archive/1.3.0.tar.gz"
+    url      = "https://github.com/PyCQA/pyflakes/archive/2.1.1.tar.gz"
 
+    version('2.1.1', sha256='2c98f07a9dd57d9f33561f6b54a64a766cdf79a3c869bd8c07b7fe03094fb8c3')
     version('2.1.0', sha256='6cd8775b6430daad386c0de00dfbc27ce2c24468cdcc4d3da41e4aa39d8ce167')
     version('1.6.0', sha256='f9c72359e05bf8dc27eaaee8cdcae464497f2ccadae87ac6517605ba6040ec99')
     version('1.5.0', sha256='943ba426420a66b5adebdbe8007e676bba11bf4006e7964d9d9ae98478c57792')
@@ -27,6 +28,7 @@ class PyPyflakes(PythonPackage):
     version('0.9.1', sha256='e22d2e24cc97a03db24aa8d96cb0fc66ca110adabc321215f5feca2f1068d29a')
     version('0.9.0', sha256='b1d395d1af3922edbfdbd05ac7082d855a2613aff2cd949ff0f29e25fb51f7f3')
 
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-pyflakes requires py-setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
