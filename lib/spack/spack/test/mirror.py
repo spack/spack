@@ -183,5 +183,5 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
 
         assert not (set([
             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
-            'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz'
+            'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz'  # NOQA: ignore=E501
         ]) - files_cached_in_mirror)
