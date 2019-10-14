@@ -459,7 +459,10 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        web_util.push_to_url(self.archive_file, destination)
+        web_util.push_to_url(
+                self.archive_file,
+                destination,
+                keep_original=False)
 
     @_needs_stage
     def check(self):
@@ -1111,7 +1114,7 @@ class S3FetchStrategy(URLFetchStrategy):
             with open(basename, 'wb') as f:
                 shutil.copyfileobj(stream, f)
 
-            content_type = headers['ContentType']
+            content_type = headers['Content-type']
 
         if content_type == 'text/html':
             warn_content_type_mismatch(self.archive_file or "the archive")

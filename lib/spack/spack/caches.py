@@ -7,6 +7,7 @@
 import os
 
 import six.moves.urllib.parse as urllib_parse
+import six
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
@@ -54,8 +55,11 @@ def _fetch_cache():
 
 class MirrorCache(object):
     def __init__(self, root):
-        self.root = urllib_parse.urlparse(
-            root, scheme='file', allow_fragments=False)
+        if isinstance(root, six.string_types):
+            root = urllib_parse.urlparse(
+                root, scheme='file', allow_fragments=False)
+
+        self.root = root
         self.new_resources = set()
         self.existing_resources = set()
 
