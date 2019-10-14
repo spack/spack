@@ -224,7 +224,7 @@ def push_to_url(local_path, remote_path, **kwargs):
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
-    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_path):
+    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_url):
         warn_no_ssl_cert_checking()
 
     remote_file_path = url_util.local_file_path(remote_url)
