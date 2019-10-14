@@ -31,10 +31,32 @@ def load(stream):
 
 def dump(data, stream=None):
     """Dump JSON with a reasonable amount of indentation and separation."""
+    data = _destrify(data)
     if stream is None:
         return json.dumps(data, **_json_dump_args)
     else:
         return json.dump(data, stream, **_json_dump_args)
+
+
+def _destrify(data, ignore_dicts=False):
+    # If this is a string in python3, return its byte representation
+    if sys.version_info[0] >= 3:
+        if isinstance(data, string_types):
+            return data.encode('utf-8')
+
+    # if this is a list of values, return list of byteified values
+    if isinstance(data, list):
+        return [_destrify(item, ignore_dicts=ignore_dicts) for item in data]
+
+    # if this is a dictionary, return dictionary of byteified keys and values
+    # but only if we haven't already byteified it
+    if isinstance(data, dict) and not ignore_dicts:
+        return dict((_destrify(key, ignore_dicts=ignore_dicts),
+                     _destrify(value, ignore_dicts=ignore_dicts)) for key, value in
+                    iteritems(data))
+
+    # if it's anything else, return it in its original form
+    return data
 
 
 def _strify(data, ignore_dicts=False):
