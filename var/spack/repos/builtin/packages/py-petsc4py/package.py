@@ -14,7 +14,7 @@ class PyPetsc4py(PythonPackage):
     url      = "https://bitbucket.org/petsc/petsc4py/get/3.10.0.tar.gz"
     git      = "https://bitbucket.org/petsc/petsc4py.git"
 
-    maintainers = ['dalcin', 'balay']
+    maintainers = ['dalcinl', 'balay']
 
     version('develop', branch='master')
     version('3.12.0', sha256='1ddffc35163ec81de50ca43b8a82fdbe73baf02d9e24d594685d5f4a6c17a8cb')
