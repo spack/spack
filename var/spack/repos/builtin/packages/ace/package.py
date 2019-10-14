@@ -18,9 +18,12 @@ class Ace(Package):
     url = "http://download.dre.vanderbilt.edu/previous_versions/" \
           "ACE-6.5.1.tar.gz"
 
-    version('6.5.6', '6e633602bc04b9d5c20899acdd41d5be0d5c3e53')
-    version('6.5.1', '721e0f830930f7bb2ffff9746b2a3fddc4656d71')
-    version('6.5.0', 'fee283b02e63e56dd917c1a897283a0a276387c2')
+    version('6.5.6', '7717cad84d4a9c3d6b2c47963eb555d96de0be657870bcab6fcef4'
+                     'c0423af0de')
+    version('6.5.1', '1f318adadb19da23c9be570a9c600a330056b18950fe0bf0eb1cf5'
+                     'cac8b72a32')
+    version('6.5.0', 'b6f9ec922fbdcecb4348e16d851d0d1f135df1836dfe77d2e0b642'
+                     '95ddb83066')
 
     def install(self, spec, prefix):
 
