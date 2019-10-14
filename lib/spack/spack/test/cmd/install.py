@@ -634,14 +634,17 @@ def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
 def test_install_only_dependencies_of_all_in_env(
     tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
 ):
-    env('create', 'test')
+    env('create', '--without-view', 'test')
 
     with ev.read('test'):
-        dep = Spec('dependency-install').concretized()
-        root = Spec('dependent-install').concretized()
+        roots = [Spec('dependent-install@1.0').concretized(),
+                 Spec('dependent-install@2.0').concretized()]
 
-        add('dependent-install')
+        add('dependent-install@1.0')
+        add('dependent-install@2.0')
         install('--only', 'dependencies')
 
-        assert os.path.exists(dep.prefix)
-        assert not os.path.exists(root.prefix)
+        for root in roots:
+            assert not os.path.exists(root.prefix)
+            for dep in root.traverse(root=False):
+                assert os.path.exists(dep.prefix)
