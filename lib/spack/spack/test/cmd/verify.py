@@ -36,7 +36,7 @@ def test_single_file_verify_cmd(tmpdir):
     manifest_file = os.path.join(metadir,
                                  spack.store.layout.manifest_file_name)
 
-    with open(manifest_file, 'wb') as f:
+    with open(manifest_file, 'w') as f:
         sjson.dump({filepath: data}, f)
 
     results = verify('-f', filepath)

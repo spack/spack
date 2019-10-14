@@ -5,6 +5,7 @@
 import os
 import hashlib
 import base64
+import sys
 
 import llnl.util.tty as tty
 
@@ -18,6 +19,9 @@ def compute_hash(path):
     with open(path, 'rb') as f:
         sha1 = hashlib.sha1(f.read()).digest()
         b32 = base64.b32encode(sha1)
+
+        if sys.version_info[0] >= 3:
+            b32 = b32.decode()
 
         return b32
 
@@ -61,7 +65,7 @@ def write_manifest(spec):
                 manifest[path] = create_manifest_entry(path)
         manifest[spec.prefix] = create_manifest_entry(spec.prefix)
 
-        with open(manifest_file, 'wb') as f:
+        with open(manifest_file, 'w') as f:
             sjson.dump(manifest, f)
 
         fp.set_permissions_by_spec(manifest_file, spec)
