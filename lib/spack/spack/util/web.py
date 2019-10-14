@@ -17,7 +17,7 @@ import traceback
 
 from itertools import product
 
-from six import string_types
+import six
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
 import six.moves.urllib.parse as urllib_parse
@@ -208,19 +208,23 @@ def warn_no_ssl_cert_checking():
 def push_to_url(local_path, remote_path, **kwargs):
     keep_original = kwargs.get('keep_original', True)
 
-    local_url = urllib_parse.urlparse(
-        local_path,
-        scheme='file',
-        allow_fragments=False)
+    local_url = (
+        urllib_parse.urlparse(
+            local_path,
+            scheme='file',
+            allow_fragments=False)
+        if isinstance(local_path, six.string_types) else local_path)
 
     local_file_path = url_util.local_file_path(local_url)
     if local_file_path is None:
         raise ValueError('local path must be a file:// url')
 
-    remote_url = urllib_parse.urlparse(
-        remote_path,
-        scheme='file',
-        allow_fragments=False)
+    remote_url = (
+        urllib_parse.urlparse(
+            remote_path,
+            scheme='file',
+            allow_fragments=False)
+        if isinstance(remote_path, six.string_types) else remote_path)
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
@@ -263,8 +267,9 @@ def push_to_url(local_path, remote_path, **kwargs):
             'Unrecognized URL scheme: {}'.format(remote_url.scheme))
 
 
-def url_exists(path):
-    url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
+def url_exists(url):
+    if isinstance(url, six.string_types):
+        url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
         return os.path.exists(url_util.local_file_path(url))
@@ -289,8 +294,9 @@ def url_exists(path):
         return False
 
 
-def remove_url(path):
-    url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
+def remove_url(url):
+    if isinstance(url, six.string_types):
+        url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
         os.remove(url_util.local_file_path(url))
@@ -342,8 +348,9 @@ def _iter_s3_prefix(client, url, num_entries=1024):
             break
 
 
-def list_url(path):
-    url = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
+def list_url(url):
+    if isinstance(url, six.string_types):
+        url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
 
     if url.scheme == 'file':
         return os.listdir(url_util.local_file_path(url))
@@ -640,7 +647,7 @@ def standardize_header_names(headers):
 
     In all other cases headers is returned unaltered.
     """
-    if isinstance(headers, string_types):
+    if isinstance(headers, six.string_types):
         for standardized_spelling, other_spellings in (
                 HTTP_HEADER_NAME_ALIASES.items()):
             if headers in other_spellings:
@@ -653,7 +660,7 @@ def standardize_header_names(headers):
         if not headers:
             return headers
         old = headers[0]
-        if isinstance(old, string_types):
+        if isinstance(old, six.string_types):
             new = standardize_header_names(old)
             if old is not new:
                 return (new,) + headers[1:]
@@ -663,7 +670,7 @@ def standardize_header_names(headers):
         changed = False
         new_dict = {}
         for key, value in headers.items():
-            if isinstance(key, (tuple, string_types)):
+            if isinstance(key, (tuple, six.string_types)):
                 old_key, key = key, standardize_header_names(key)
                 changed = changed or key is not old_key
 
@@ -677,7 +684,7 @@ def standardize_header_names(headers):
         changed = False
         new_list = []
         for item in headers:
-            if isinstance(item, (tuple, string_types)):
+            if isinstance(item, (tuple, six.string_types)):
                 old_item, item = item, standardize_header_names(item)
                 changed = changed or item is not old_item
 
