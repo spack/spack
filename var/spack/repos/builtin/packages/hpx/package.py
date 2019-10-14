@@ -37,6 +37,7 @@ class Hpx(CMakePackage, CudaPackage):
     variant('networking', default=True,
             description='Support for networking and multi=node runs')
     variant('tools', default=False, description='Build HPX tools')
+    variant('examples', default=False, description='Build examples')
 
     depends_on('boost')
     depends_on('hwloc')
@@ -114,6 +115,11 @@ class Hpx(CMakePackage, CudaPackage):
         # Tools
         args.append('-DHPX_WITH_TOOLS={0}'.format(
             'ON' if '+tools' in spec else 'OFF'
+        ))
+
+        # Examples
+        args.append('-DHPX_WITH_EXAMPLES={0}'.format(
+            'ON' if '+examples' in spec else 'OFF'
         ))
 
         args.extend([
