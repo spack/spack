@@ -195,8 +195,44 @@ class AspGenerator(object):
         that arise from a spec.
         """
         pkg = packagize(pkg)
-        for v in self.possible_versions[pkg.name]:
-            self.fact(fn.version_declared(pkg.name, v))
+
+        config = spack.config.get("packages")
+        version_prefs = config.get(pkg.name, {}).get("version", {})
+        priority = dict((v, i) for i, v in enumerate(version_prefs))
+
+        # The keys below show the order of precedence of factors used
+        # to select a version when concretizing.  The item with
+        # the "largest" key will be selected.
+        #
+        # NOTE: When COMPARING VERSIONS, the '@develop' version is always
+        #       larger than other versions.  BUT when CONCRETIZING,
+        #       the largest NON-develop version is selected by default.
+        keyfn = lambda v: (
+            # ------- Special direction from the user
+            # Respect order listed in packages.yaml
+            -priority.get(v, 0),
+
+            # The preferred=True flag (packages or packages.yaml or both?)
+            pkg.versions.get(v).get('preferred', False),
+
+            # ------- Regular case: use latest non-develop version by default.
+            # Avoid @develop version, which would otherwise be the "largest"
+            # in straight version comparisons
+            not v.isdevelop(),
+
+            # Compare the version itself
+            # This includes the logic:
+            #    a) develop > everything (disabled by "not v.isdevelop() above)
+            #    b) numeric > non-numeric
+            #    c) Numeric or string comparison
+            v)
+
+        most_to_least_preferred = sorted(
+            self.possible_versions[pkg.name], key=keyfn, reverse=True
+        )
+
+        for i, v in enumerate(most_to_least_preferred):
+            self.fact(fn.version_declared(pkg.name, v, i))
 
     def spec_versions(self, spec):
         """Return list of clauses expressing spec's version constraints."""
@@ -718,6 +754,14 @@ def solve(specs, dump=None, models=0):
                     # 1 is "competition" format with just optimal answer
                     # 2 is JSON format with all explored answers
                     '--outf=1',
+                    # Use a highest priority criteria-first optimization
+                    # strategy, which means we'll explore recent
+                    # versions, preferred packages first.  This works
+                    # well because Spack solutions are pretty easy to
+                    # find -- there are just a lot of them.  Without
+                    # this, it can take a VERY long time to find good
+                    # solutions, and a lot of models are explored.
+                    '--opt-strategy=bb,hier',
                     input=program,
                     output=output,
                     error=warnings,

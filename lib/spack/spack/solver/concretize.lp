@@ -6,12 +6,19 @@
 % Version semantics
 %-----------------------------------------------------------------------------
 
+% versions are declared w/priority -- declared with priority implies declared
+version_declared(P, V) :- version_declared(P, V, _).
+
 % If something is a package, it has only one version and that must be a
 % possible version.
 1 { version(P, V) : version_possible(P, V) } 1 :- node(P).
 
 % If a version is declared but conflicted, it's not possible.
 version_possible(P, V) :- version_declared(P, V), not version_conflict(P, V).
+
+version_weight(P, V, N) :- version(P, V), version_declared(P, V, N).
+#minimize{ N@3,P,V : version_weight(P, V, N) }.
+
 #defined version_conflict/2.
 
 %-----------------------------------------------------------------------------
