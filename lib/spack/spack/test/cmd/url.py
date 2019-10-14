@@ -131,4 +131,8 @@ def test_url_stats(capfd):
         output = url('stats')
         npkgs = '%d packages' % len(spack.repo.all_package_names())
         assert npkgs in output
-        assert 'total versions' in output
+        assert 'url' in output
+        assert 'git' in output
+        assert 'schemes' in output
+        assert 'versions' in output
+        assert 'resources' in output
