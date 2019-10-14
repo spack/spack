@@ -73,7 +73,7 @@ class Kokkos(Package):
                   'Volta70', 'Volta72')
 
     # C++ standard variant
-    variant('cxxstandard', default='none',
+    variant('cxxstd', default='none',
             values=('c++11', 'c++14', 'c++17', 'c++1y', 'c++1z', 'c++2a'),
             multi=False,
             description='set cxxstandard Kokkos option')
@@ -156,7 +156,7 @@ class Kokkos(Package):
                 g_args.append('--cxxflags=-fPIC')
 
             # C++ standard
-            cxxstandard = spec.variants['cxxstandard'].value
+            cxxstandard = spec.variants['cxxstd'].value
             if cxxstandard != 'none':
                 g_args.append('--cxxstandard=%s' % cxxstandard)
 
