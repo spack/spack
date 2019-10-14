@@ -638,11 +638,11 @@ def test_simultaneous_installs():
     # TODO: use more secure shell=False
     output = subprocess.check_output("spack install bzip2 & "
                                      "spack install bzip2 && "
-                                     "wait", shell=True).decode(
-                                                         'utf-8')
+                                     "wait",
+                                     shell=True).decode('utf-8')
 
     query_string = 'Successfully installed bzip2'
-    query_lock_string =  'spack is currently locked'
+    query_lock_string = 'spack is currently locked'
 
     # a controlled simultaneous install scenario involves
     # one successful install & one locked access exit

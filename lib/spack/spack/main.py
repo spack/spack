@@ -18,6 +18,8 @@ import pstats
 import argparse
 import traceback
 import warnings
+import socket
+import platform
 from six import StringIO
 
 import llnl.util.tty as tty
@@ -89,6 +91,28 @@ required_command_properties = ['level', 'section', 'description']
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
+
+
+def get_lock_linux(process_name):
+    """
+    Use Linux-specific abstract sockets for
+    experimental support for locking
+    'spack install' commands when attempting
+    simultaneous install operations
+    see: https://stackoverflow.com/a/7758075/2942522
+    """
+    get_lock_linux._lock_socket = socket.socket(socket.AF_UNIX,
+                                                socket.SOCK_DGRAM)
+    try:
+        get_lock_linux._lock_socket.bind('\0' + process_name)
+        print('Acquired spack install Linux lock')
+    except socket.error:
+        print("spack is currently locked from "
+              "additional install commands to protect "
+              "against undesirable behavior with simultaneous "
+              "installs")
+        # this is now an expected / handled exit with status 0
+        sys.exit(0)
 
 
 def set_working_dir():
@@ -684,6 +708,14 @@ def main(argv=None):
         # is no module for it, just die.
         cmd_name = args.command[0]
         cmd_name = aliases.get(cmd_name, cmd_name)
+
+        # simultaneous installs, at least for the same package, can
+        # be problematic; for now, use a Linux-specific experimental
+        # abstract socket locking to prevent multiple simultaneous
+        # "spack install" calls using the same spack instance
+
+        if cmd_name == 'install' and platform.system() == 'Linux':
+            get_lock_linux('spack_install')
 
         try:
             command = parser.add_command(cmd_name)
