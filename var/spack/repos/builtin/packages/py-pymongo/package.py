@@ -13,7 +13,7 @@ class PyPymongo(PythonPackage):
     Python driver for MongoDB. The gridfs package is a gridfs
     implementation on top of pymongo.
 
-PyMongo supports MongoDB 2.6, 3.0, 3.2, 3.4, 3.6, 4.0 and 4.2."""
+    PyMongo supports MongoDB 2.6, 3.0, 3.2, 3.4, 3.6, 4.0 and 4.2."""
 
     homepage = "https://pypi.org/project/pymongo/"
     url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.9.0.tar.gz"
