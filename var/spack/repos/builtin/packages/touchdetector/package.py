@@ -58,6 +58,7 @@ class Touchdetector(CMakePackage):
     depends_on('mpi')
     depends_on('pugixml', when='@4.5:')
     depends_on('range-v3', when='@5.0.2:')
+    depends_on('highfive+mpi', when='@5.3.0:')
 
     # Old dependencies
     depends_on('hpctools~openmp', when='~openmp@:4.4')
