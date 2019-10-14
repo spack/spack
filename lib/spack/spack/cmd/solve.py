@@ -32,8 +32,8 @@ def setup_parser(subparser):
         help="outputs: a list with any of: "
         "%s (default), all" % ', '.join(dump_options))
     subparser.add_argument(
-        '--models', action='store', type=int, default=1,
-        help="number of solutions to display (0 for all)")
+        '--models', action='store', type=int, default=0,
+        help="number of solutions to search (default 0 for all)")
 
     # Below are arguments w.r.t. spec display (like spack spec)
     arguments.add_common_arguments(
@@ -87,7 +87,7 @@ def solve(parser, args):
 
     # dump generated ASP program
     result = asp.solve(specs, dump=dump, models=models)
-    if dump == ['asp']:
+    if 'solutions' not in dump:
         return
 
     # die if no solution was found
@@ -101,9 +101,8 @@ def solve(parser, args):
         assert best[1] == result.answers[-1][1]
 
         opt, i, answer = best
-        tty.msg(
-            "%d Answers. Best optimization %s:" % (i + 1, opt)
-        )
+        tty.msg("Best of %d answers." % (i + 1))
+        tty.msg("Optimization %s" % opt)
 
         # iterate over roots from command line
         for spec in specs:

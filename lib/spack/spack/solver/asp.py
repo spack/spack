@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 import collections
-import json
 import pkgutil
 import re
 import sys
@@ -299,7 +298,7 @@ class AspGenerator(object):
                     union.update(s)
                 values = union
 
-            for  value in values:
+            for value in values:
                 self.fact(fn.variant_possible_value(pkg.name, name, value))
 
             self.out.write('\n')
@@ -583,6 +582,11 @@ class ResultParser(object):
             action(*args)
 
     def parse_json(self, data, result):
+        """Parse Clingo's JSON output format, which can give a lot of answers.
+
+        This can be slow, espeically if Clingo comes back having explored
+        a lot of models.
+        """
         if data["Result"] == "UNSATISFIABLE":
             result.satisfiable = False
             return
@@ -600,6 +604,33 @@ class ResultParser(object):
 
         self.call_actions_for_functions(functions)
         result.answers.append((opt, best_model_number, self._specs))
+
+    def parse_best(self, output, result):
+        """Parse Clingo's competition output format, which gives one answer."""
+        best_model_number = 0
+        for line in output:
+            match = re.match(r"% Answer: (\d+)", line)
+            if match:
+                best_model_number = int(match.group(1))
+
+            if re.match("INCONSISTENT", line):
+                result.satisfiable = False
+                return
+
+            if re.match("ANSWER", line):
+                result.satisfiable = True
+
+                answer = next(output)
+                functions = [
+                    f.rstrip(".") for f in re.split(r"\s+", answer.strip())
+                ]
+                self.call_actions_for_functions(functions)
+
+                costs = re.split(r"\s+", next(output).strip())
+                opt = [int(x) for x in costs[1:]]
+
+                result.answers.append((opt, best_model_number, self._specs))
+
 
 class Result(object):
     def __init__(self, asp):
@@ -648,13 +679,13 @@ def highlight(string):
 #
 # These are handwritten parts for the Spack ASP model.
 #
-def solve(specs, dump=None, models=1):
+def solve(specs, dump=None, models=0):
     """Solve for a stable model of specs.
 
     Arguments:
         specs (list): list of Specs to solve.
         dump (tuple): what to dump
-        models (int): number of satisfying specs to find (default: 1)
+        models (int): number of models to search (default: 0)
     """
     clingo = which('clingo', required=True)
     parser = ResultParser()
@@ -683,8 +714,10 @@ def solve(specs, dump=None, models=1):
         with tempfile.TemporaryFile("w+") as output:
             with tempfile.TemporaryFile() as warnings:
                 clingo(
-                    '--models=0',
-                    '--outf=2',
+                    '--models=%d' % models,
+                    # 1 is "competition" format with just optimal answer
+                    # 2 is JSON format with all explored answers
+                    '--outf=1',
                     input=program,
                     output=output,
                     error=warnings,
@@ -698,25 +731,20 @@ def solve(specs, dump=None, models=1):
                     if sys.stdout.isatty():
                         tty.msg('Clingo gave the following warnings:')
                     colorize(result.warnings)
-                else:
-                    if sys.stdout.isatty():
-                        tty.msg('No warnings.')
 
                 output.seek(0)
                 result.output = output.read()
-                data = json.loads(result.output)
 
                 # dump the raw output of the solver
                 if 'output' in dump:
                     if sys.stdout.isatty():
                         tty.msg('Clingo output:')
-
                     print(result.output)
 
                     if 'solutions' not in dump:
                         return
 
                 output.seek(0)
-                parser.parse_json(data, result)
+                parser.parse_best(output, result)
 
     return result
