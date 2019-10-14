@@ -5,7 +5,9 @@
 
 import argparse
 import os
+import subprocess
 import filecmp
+import platform
 import re
 from six.moves import builtins
 import time
@@ -20,11 +22,13 @@ import spack.package
 import spack.cmd.install
 from spack.error import SpackError
 from spack.spec import Spec
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 
 from six.moves.urllib.error import HTTPError, URLError
 
 install = SpackCommand('install')
+uninstall = SpackCommand('uninstall')
+clean = SpackCommand('clean')
 
 
 @pytest.fixture(scope='module')
@@ -600,3 +604,48 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
             assert False
         except spack.main.SpackCommandError:
             pass
+
+
+@pytest.mark.xfail(platform.system() != 'Linux',
+                   reason="install socket locking is"
+                          " currently Linux-only")
+def test_simultaneous_installs():
+    # test support for graceful handling of simultaneous installs
+    # of the same package (Linux-only for now)
+    # TODO: also test "locking" with simultaneous installs
+    # of *different* packages in same spack instance?
+
+    # if the cache is cleared & bzip2 is not available
+    # this test should consistently fail
+    # without a fix for simultaneous installs
+
+    # clear all caches
+    # TODO: the mock cache doesn't support cleaning...
+    # for now, the test will still fail, though the error
+    # message can change when the cache is populated
+    # on a rerun
+    # clean("--all")
+
+    # uninstall bzip2 if it is available (i.e., in CI)
+    # for some reason
+
+    try:
+        uninstall("-y", "bzip2")
+    except SpackCommandError:
+        # if bzip2 not present, just continue
+        pass
+
+    # TODO: use more secure shell=False
+    output = subprocess.check_output("spack install bzip2 & "
+                                     "spack install bzip2 && "
+                                     "wait", shell=True).decode(
+                                                         'utf-8')
+
+    query_string = 'Successfully installed bzip2'
+    query_lock_string =  'spack is currently locked'
+
+    # a controlled simultaneous install scenario involves
+    # one successful install & one locked access exit
+
+    assert output.count(query_string) == 1
+    assert output.count(query_lock_string) == 1
