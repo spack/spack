@@ -19,6 +19,7 @@ import llnl.util.tty.color as color
 
 import spack
 import spack.cmd
+import spack.config
 import spack.spec
 import spack.package
 import spack.package_prefs
@@ -61,7 +62,14 @@ class AspObject(object):
 
 def _id(thing):
     """Quote string if needed for it to be a valid identifier."""
-    return thing if isinstance(thing, AspObject) else '"%s"' % str(thing)
+    if isinstance(thing, AspObject):
+        return thing
+    elif isinstance(thing, bool):
+        return '"%s"' % str(thing)
+    elif isinstance(thing, int):
+        return str(thing)
+    else:
+        return '"%s"' % str(thing)
 
 
 class AspFunction(AspObject):
@@ -70,6 +78,10 @@ class AspFunction(AspObject):
         self.args = []
 
     def __call__(self, *args):
+        self.args[:] = args
+        return self
+
+    def __getitem___(self, *args):
         self.args[:] = args
         return self
 
@@ -128,6 +140,7 @@ class AspGenerator(object):
         self.out = out
         self.func = AspFunctionBuilder()
         self.possible_versions = {}
+        self.possible_virtuals = None
 
     def title(self, name, char):
         self.out.write('\n')
@@ -309,6 +322,33 @@ class AspGenerator(object):
                         self._and(*self.spec_clauses(named_cond, body=True))
                     )
 
+        # virtual preferences
+        self.virtual_preferences(
+            pkg.name,
+            lambda v, p, i: self.fact(
+                fn.pkg_provider_preference(pkg.name, v, p, i)
+            )
+        )
+
+    def virtual_preferences(self, pkg_name, func):
+        """Call func(vspec, provider, i) for each of pkg's provider prefs."""
+        config = spack.config.get("packages")
+        pkg_prefs = config.get(pkg_name, {}).get("providers", {})
+        for vspec, providers in pkg_prefs.items():
+            if vspec not in self.possible_virtuals:
+                continue
+
+            for i, provider in enumerate(providers):
+                func(vspec, provider, i)
+
+    def provider_defaults(self):
+        self.h2("Default virtual providers")
+        assert self.possible_virtuals is not None
+        self.virtual_preferences(
+            "all",
+            lambda v, p, i: self.fact(fn.default_provider_preference(v, p, i))
+        )
+
     def spec_clauses(self, spec, body=False):
         """Return a list of clauses for a spec mandates are true.
 
@@ -358,7 +398,12 @@ class AspGenerator(object):
 
         # variants
         for vname, variant in spec.variants.items():
-            clauses.append(f.variant(spec.name, vname, variant.value))
+            value = variant.value
+            if isinstance(value, tuple):
+                for v in value:
+                    clauses.append(f.variant(spec.name, vname, v))
+            else:
+                clauses.append(f.variant(spec.name, vname, variant.value))
 
         # compiler and compiler version
         if spec.compiler:
@@ -397,9 +442,12 @@ class AspGenerator(object):
         self.fact(fn.arch_os_default(default_arch.os))
         self.fact(fn.arch_target_default(default_arch.target))
 
-    def virtual_providers(self, virtuals):
+    def virtual_providers(self):
         self.h2("Virtual providers")
-        for vspec in virtuals:
+        assert self.possible_virtuals is not None
+
+        # what provides what
+        for vspec in self.possible_virtuals:
             self.fact(fn.virtual(vspec))
             for provider in spack.repo.path.providers_for(vspec):
                 # TODO: handle versioned virtuals
@@ -417,10 +465,12 @@ class AspGenerator(object):
         pkg_names = set(spec.fullname for spec in specs)
 
         possible = set()
-        virtuals = set()
+        self.possible_virtuals = set()
         for name in pkg_names:
             pkg = spack.repo.path.get_pkg_class(name)
-            possible.update(pkg.possible_dependencies(virtuals=virtuals))
+            possible.update(
+                pkg.possible_dependencies(virtuals=self.possible_virtuals)
+            )
 
         pkgs = set(possible) | set(pkg_names)
 
@@ -433,7 +483,8 @@ class AspGenerator(object):
         self.h1('General Constraints')
         self.compiler_defaults()
         self.arch_defaults()
-        self.virtual_providers(virtuals)
+        self.virtual_providers()
+        self.provider_defaults()
 
         self.h1('Package Constraints')
         for pkg in pkgs:

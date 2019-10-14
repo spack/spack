@@ -28,12 +28,30 @@ depends_on(P, D) :- declared_dependency(P, D), not virtual(D), node(P).
 provider(P, V) :- node(P), provides_virtual(P, V).
 1 { provider(P, V) : node(P) } 1 :- virtual(V).
 
+% give dependents the virtuals they want
+provider_weight(D, N)
+    :- virtual(V), depends_on(P, D), provider(D, V),
+       pkg_provider_preference(P, V, D, N).
+provider_weight(D, N)
+    :- virtual(V), depends_on(P, D), provider(D, V),
+       not pkg_provider_preference(P, V, D, _),
+       default_provider_preference(V, D, N).
+
+% if there's no preference for something, it costs 100 to discourage its
+% use with minimization
+provider_weight(D, 100)
+    :- virtual(V), depends_on(P, D), provider(D, V),
+       not pkg_provider_preference(P, V, D, _),
+       not default_provider_preference(V, D, _).
+
+% pick most preferred virtual providers
+#minimize{ N@2,D : provider_weight(D, N) }.
+
 % all nodes must be reachable from some root
-% TODO: this doesn't seem to be working yet
-needed(D) :- depends_on(_, D), node(D).
-needed(P) :- root(P).
+needed(D) :- root(D), node(D).
+needed(D) :- root(P), depends_on(P, D).
+needed(D) :- needed(P), depends_on(P, D), node(P).
 :- node(P), not needed(P).
-#defined root/1.
 
 % real dependencies imply new nodes.
 node(D) :- node(P), depends_on(P, D).
@@ -43,6 +61,9 @@ node(D) :- node(P), depends_on(P, D).
 #defined declared_dependency/2.
 #defined virtual/1.
 #defined provides_virtual/2.
+#defined pkg_provider_preference/4.
+#defined default_provider_preference/3.
+#defined root/1.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
