@@ -124,7 +124,7 @@ def uses_ssl(parsed_url):
         return True
 
     if parsed_url.scheme == 's3':
-        endpoint_url = os.environ.get('AWS_ENDPOINT_URL')
+        endpoint_url = os.environ.get('S3_ENDPOINT_URL')
         if not endpoint_url:
             return True
 
