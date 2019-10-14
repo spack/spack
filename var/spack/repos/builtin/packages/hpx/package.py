@@ -21,7 +21,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     variant('cxxstd',
             default='17',
-            values=('98', '11', '14', '17'),
+            values=('11', '14', '17'),
             description='Use the specified C++ standard when building.')
 
     variant(
@@ -54,7 +54,6 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('hwloc@1.6:', when='@:1.1.0')
 
     # CXX Standard
-    depends_on('boost cxxstd=98', when='cxxstd=98')
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
@@ -77,7 +76,6 @@ class Hpx(CMakePackage, CudaPackage):
 
     def cxx_standard(self):
         value = self.spec.variants['cxxstd'].value
-        value = '0X' if value == '98' else value
         return '-DHPX_WITH_CXX{0}=ON'.format(value)
 
     def instrumentation_args(self):
