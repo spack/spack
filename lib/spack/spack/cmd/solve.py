@@ -22,7 +22,7 @@ section = 'developer'
 level = 'long'
 
 #: output options
-dump_options = ('asp', 'warnings', 'output', 'solutions')
+dump_options = ('asp', 'output', 'solutions')
 
 
 def setup_parser(subparser):
@@ -87,6 +87,8 @@ def solve(parser, args):
 
     # dump generated ASP program
     result = asp.solve(specs, dump=dump, models=models)
+    if dump == ['asp']:
+        return
 
     # die if no solution was found
     # TODO: we need to be able to provide better error messages than this
@@ -95,13 +97,20 @@ def solve(parser, args):
 
     # dump the solutions as concretized specs
     if 'solutions' in dump:
-        for i, answer in enumerate(result.answers):
-            tty.msg("Answer %d" % (i + 1))
-            for spec in specs:
-                answer_spec = answer[spec.name]
-                if args.yaml:
-                    out = answer_spec.to_yaml()
-                else:
-                    out = answer_spec.tree(
-                        color=sys.stdout.isatty(), **kwargs)
-                sys.stdout.write(out)
+        best = min(result.answers)
+        assert best[1] == result.answers[-1][1]
+
+        opt, i, answer = best
+        tty.msg(
+            "%d Answers. Best optimization %s:" % (i + 1, opt)
+        )
+
+        # iterate over roots from command line
+        for spec in specs:
+            answer_spec = answer[spec.name]
+            if args.yaml:
+                out = answer_spec.to_yaml()
+            else:
+                out = answer_spec.tree(
+                    color=sys.stdout.isatty(), **kwargs)
+            sys.stdout.write(out)

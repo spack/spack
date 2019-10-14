@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import collections
+import json
 import pkgutil
 import re
 import sys
@@ -503,64 +504,60 @@ class ResultParser(object):
         self._specs[pkg]._add_dependency(
             self._specs[dep], ('link', 'run'))
 
-    def parse(self, stream, result):
-        for line in stream:
-            match = re.match(r'SATISFIABLE', line)
-            if match:
-                result.satisfiable = True
+    def call_actions_for_functions(self, function_strings):
+        function_re = re.compile(r'(\w+)\(([^)]*)\)')
+
+        # parse functions out of ASP output
+        functions = []
+        for string in function_strings:
+            m = function_re.match(string)
+            name, arg_string = m.groups()
+            args = re.split(r'\s*,\s*', arg_string)
+            args = [s.strip('"') if s.startswith('"') else int(s)
+                    for s in args]
+            functions.append((name, args))
+
+        # Functions don't seem to be in particular order in output.
+        # Sort them here so that nodes are first, and so created
+        # before directives that need them (depends_on(), etc.)
+        functions.sort(key=lambda f: f[0] != "node")
+
+        self._specs = {}
+        for name, args in functions:
+            action = getattr(self, name, None)
+            if not action:
+                print("%s(%s)" % (name, ", ".join(str(a) for a in args)))
                 continue
+            assert action and callable(action)
+            action(*args)
 
-            match = re.match(r'OPTIMUM FOUND', line)
-            if match:
-                result.satisfiable = True
-                continue
+    def parse_json(self, data, result):
+        if data["Result"] == "UNSATISFIABLE":
+            result.satisfiable = False
+            return
 
-            match = re.match(r'UNSATISFIABLE', line)
-            if match:
-                result.satisfiable = False
-                continue
+        result.satisfiable = True
+        if data["Result"] == "OPTIMUM FOUND":
+            result.optimal = True
 
-            match = re.match(r'Answer: (\d+)', line)
-            if not match:
-                continue
+        nmodels = data["Models"]["Number"]
+        best_model_number = nmodels - 1
+        best_model = data["Call"][0]["Witnesses"][best_model_number]
+        opt = list(best_model["Costs"])
 
-            answer_number = int(match.group(1))
-            assert answer_number == len(result.answers) + 1
+        functions = best_model["Value"]
 
-            answer = next(stream)
-            tty.debug("Answer: %d" % answer_number, answer)
-
-            # parse functions out of ASP output
-            functions = []
-            for m in re.finditer(r'(\w+)\(([^)]*)\)', answer):
-                name, arg_string = m.groups()
-                args = re.split(r'\s*,\s*', arg_string)
-                args = [s.strip('"') if s.startswith('"') else int(s)
-                        for s in args]
-                functions.append((name, args))
-
-            # Functions don't seem to be in particular order in output.
-            # Sort them here so that nodes are first, and so created
-            # before directives that need them (depends_on(), etc.)
-            functions.sort(key=lambda f: f[0] != "node")
-
-            self._specs = {}
-            for name, args in functions:
-                action = getattr(self, name, None)
-                if not action:
-                    print("%s(%s)" % (name, ", ".join(str(a) for a in args)))
-                    continue
-                assert action and callable(action)
-                action(*args)
-
-            result.answers.append(self._specs)
-
+        self.call_actions_for_functions(functions)
+        result.answers.append((opt, best_model_number, self._specs))
 
 class Result(object):
     def __init__(self, asp):
         self.asp = asp
         self.satisfiable = None
+        self.optimal = None
         self.warnings = None
+
+        # specs ordered by optimization level
         self.answers = []
 
 
@@ -625,12 +622,18 @@ def solve(specs, dump=None, models=1):
         if 'asp' in dump:
             if sys.stdout.isatty():
                 tty.msg('ASP program:')
-            colorize(result.asp)
+
+            if dump == ['asp']:
+                print(result.asp)
+                return
+            else:
+                colorize(result.asp)
 
         with tempfile.TemporaryFile("w+") as output:
             with tempfile.TemporaryFile() as warnings:
                 clingo(
-                    '--models=%d' % models,
+                    '--models=0',
+                    '--outf=2',
                     input=program,
                     output=output,
                     error=warnings,
@@ -640,25 +643,29 @@ def solve(specs, dump=None, models=1):
                 result.warnings = warnings.read().decode("utf-8")
 
                 # dump any warnings generated by the solver
-                if 'warnings' in dump:
-                    if result.warnings:
-                        if sys.stdout.isatty():
-                            tty.msg('Clingo gave the following warnings:')
-                        colorize(result.warnings)
-                    else:
-                        if sys.stdout.isatty():
-                            tty.msg('No warnings.')
+                if result.warnings:
+                    if sys.stdout.isatty():
+                        tty.msg('Clingo gave the following warnings:')
+                    colorize(result.warnings)
+                else:
+                    if sys.stdout.isatty():
+                        tty.msg('No warnings.')
 
                 output.seek(0)
                 result.output = output.read()
+                data = json.loads(result.output)
 
                 # dump the raw output of the solver
                 if 'output' in dump:
                     if sys.stdout.isatty():
                         tty.msg('Clingo output:')
-                    colorize(result.output)
+
+                    print(result.output)
+
+                    if 'solutions' not in dump:
+                        return
 
                 output.seek(0)
-                parser.parse(output, result)
+                parser.parse_json(data, result)
 
     return result
