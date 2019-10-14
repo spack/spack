@@ -41,7 +41,7 @@ def setup_parser(subparser):
         'specs', nargs=argparse.REMAINDER,
         help="specs of packages to put in mirror")
     create_parser.add_argument(
-        '--all',
+        '-a', '--all', action='store_true',
         help="mirror all versions of all packages in Spack, or all packages"
              " in the current environment if there is an active environment"
              " (this requires significant time and space)")
