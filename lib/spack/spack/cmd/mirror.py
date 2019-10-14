@@ -41,6 +41,11 @@ def setup_parser(subparser):
         'specs', nargs=argparse.REMAINDER,
         help="specs of packages to put in mirror")
     create_parser.add_argument(
+        '--all',
+        help="mirror all versions of all packages in Spack, or all packages"
+             " in the current environment if there is an active environment"
+             " (this requires significant time and space)")
+    create_parser.add_argument(
         '-f', '--file', help="file with specs of packages to put in mirror")
     create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
@@ -164,6 +169,11 @@ def mirror_create(args):
 
         if not specs:
             # If nothing is passed, use environment or all if no active env
+            if not args.all:
+                tty.die("No packages were specified. To mirror all packages,"
+                        " use the '--all' option (this will require"
+                        " significant time and space).")
+
             env = ev.get_env(args, 'mirror')
             if env:
                 mirror_specs = env.specs_by_hash.values()
