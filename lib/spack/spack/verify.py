@@ -226,12 +226,8 @@ class VerificationResults(object):
             self.errors[path] = self.errors.get(path, []) + fields
         return self
 
-    def __bool__(self):
-        return True if self.errors else False
-
-    def __nonzero__(self):
-        # Backwards compatibility for python 2.x
-        return self.__bool__()
+    def has_errors(self):
+        return bool(self.errors)
 
     def json_string(self):
         return sjson.dump(self.errors)

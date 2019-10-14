@@ -82,11 +82,12 @@ def verify(parser, args):
     for spec in specs:
         tty.debug("Verifying package %s")
         results = spack.verify.check_spec_manifest(spec)
-        if results:
+        if results.has_errors():
             if args.json:
                 print(results.json_string())
             else:
                 tty.msg("In package %s" % spec.format('{name}/{hash:7}'))
                 print(results)
+            return 1
         else:
             tty.debug(results)
