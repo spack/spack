@@ -60,7 +60,11 @@ def check_mirror():
 
         for spec in specs:
             fetcher = spec.package.fetcher[0]
-            mirror_paths = spack.mirror.mirror_archive_paths(spec, fetcher)
+            per_package_ref = os.path.join(
+                spec.name, '-'.join([spec.name, str(spec.version)]))
+            mirror_paths = spack.mirror.mirror_archive_paths(
+                fetcher,
+                per_package_ref)
             expected_path = os.path.join(
                 mirror_root, mirror_paths.storage_path)
             assert os.path.exists(expected_path)
@@ -177,5 +181,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         with spack.config.override('config:checksum', False):
             spack.mirror.create(mirror_root, list(spec.traverse()))
 
-        assert not (set(['urlpatch.patch', 'urlpatch2.patch.gz']) -
-                    files_cached_in_mirror)
+        assert not (set([
+            'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
+            'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz'
+        ]) - files_cached_in_mirror)
