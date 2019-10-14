@@ -1519,9 +1519,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         dirty = kwargs.get('dirty', False)
         restage = kwargs.get('restage', False)
 
-        # Pop install_self so that it doesn't affect recursion
-        # Pop explicit so that it doesn't affect recursion
+        # install_self defaults True and is popped so that dependencies are
+        # always installed regardless of whether the root was installed
         install_self = kwargs.pop('install_package', True)
+        # explicit defaults False so that dependents are implicit regardless
+        # of whether their dependents are implicitly or explicitly installed.
+        # Spack ensures root packages of install commands are always marked to
+        # install explicit
         explicit = kwargs.pop('explicit', False)
 
         # For external packages the workflow is simplified, and basically
