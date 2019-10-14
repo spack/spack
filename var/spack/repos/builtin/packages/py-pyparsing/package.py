@@ -9,10 +9,11 @@ from spack import *
 class PyPyparsing(PythonPackage):
     """A Python Parsing Module."""
     homepage = "http://pyparsing.wikispaces.com/"
-    url      = "https://pypi.io/packages/source/p/pyparsing/pyparsing-2.2.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyparsing/pyparsing-2.4.2.tar.gz"
 
     import_modules = ['pyparsing']
 
+    version('2.4.2',  sha256='6f98a7b9397e206d78cc01df10131398f1c8b8510a2f4d97d9abd82e1aacdd80')
     version('2.3.1',  sha256='66c9268862641abcac4a96ba74506e594c884e3f57690a696d21ad8210ed667a')
     version('2.2.0',  sha256='0832bcf47acd283788593e7a0f542407bd9550a55a8a8435214a1960e04bcb04')
     version('2.1.10', sha256='811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188')
@@ -20,6 +21,7 @@ class PyPyparsing(PythonPackage):
 
     patch('setuptools-import.patch', when='@:2.1.10')
 
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     # Newer versions of setuptools require pyparsing. Although setuptools is an
     # optional dependency of pyparsing, if it is not found, setup.py will
     # fallback on distutils.core instead. Don't add a setuptools dependency
