@@ -5,7 +5,6 @@
 
 """Tests for the `spack verify` command"""
 import os
-import time
 
 import llnl.util.filesystem as fs
 
@@ -42,7 +41,7 @@ def test_single_file_verify_cmd(tmpdir):
     results = verify('-f', filepath)
     assert not results
 
-    time.sleep(1)
+    os.utime(filepath, (0, 0))
     with open(filepath, 'w') as f:
         f.write("I changed.")
 
