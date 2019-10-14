@@ -5,11 +5,11 @@
 
 from spack import *
 from glob import glob
-import os
 
 
 class Tensorflow(Package):
-    """TensorFlow is an Open Source Software Library for Machine Intelligence"""
+    """TensorFlow is an Open Source Software Library for Machine Intelligence
+    """
 
     homepage = "https://www.tensorflow.org"
     url      = "https://github.com/tensorflow/tensorflow/archive/v0.10.0.tar.gz"
@@ -69,7 +69,7 @@ class Tensorflow(Package):
     depends_on('cudnn', when='+cuda')
 
     patch('url-zlib.patch',  when='@0.10.0')
-    patch('crosstool.patch', when='@1.0.0-rc2') # auch auf 0.10.0 wenn mit cuda!
+    patch('crosstool.patch', when='@1.0.0-rc2')  # also on 0.10.0 if +cuda!
 
     def install(self, spec, prefix):
         if '+gcp' in spec:
@@ -139,7 +139,7 @@ class Tensorflow(Package):
             env['TF_NEED_IGNITE'] = '0'
             env['TF_NEED_ROCM'] = '0'
 
-        # set tmpdir to a non-NFS filesystem (because bazel uses ~/.cache/bazel)
+        # set tmpdir to a non-NFS filesystem (because bazel uses ~/.cache/bazel)        # noqa: E501
         # TODO: This should be checked for non-nfsy filesystem, but the current
         #       best idea for it is to check
         #           subprocess.call(['stat', '--file-system', '--format=%T', tmp_path]) # noqa: E501
