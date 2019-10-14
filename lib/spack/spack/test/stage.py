@@ -778,6 +778,8 @@ class TestStage(object):
             res_paths[1] = can_tempdir
             res_paths[2] = os.path.join(can_tempdir, user)
             res_paths[3] = os.path.join(can_tempdir, 'stage', user)
+        else:
+            res_paths[0] = os.path.join(res_paths[0], user)
 
         assert spack.stage._resolve_paths(paths) == res_paths
 
