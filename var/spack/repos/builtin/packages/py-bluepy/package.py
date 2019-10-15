@@ -12,8 +12,8 @@ class PyBluepy(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/bluepy"
     git      = "ssh://bbpcode.epfl.ch/nse/bluepy"
 
-    version('develop', branch='master')
-    version('0.13.5', tag='bluepy-v0.13.5', preferred=True)
+    version('0.14.1', tag='bluepy-v0.14.1')
+    version('0.13.5', tag='bluepy-v0.13.5')
     version('0.12.7', tag='bluepy-v0.12.7')
 
     depends_on('py-setuptools', type=('build', 'run'))
