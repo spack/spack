@@ -653,7 +653,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
 
 
-def hash_directory(directory):
+def hash_directory(directory, ignore=[]):
     """Hashes recursively the content of a directory.
 
     Args:
@@ -670,11 +670,12 @@ def hash_directory(directory):
     for root, dirs, files in os.walk(directory):
         for name in sorted(files):
             filename = os.path.join(root, name)
-            # TODO: if caching big files becomes an issue, convert this to
-            # TODO: read in chunks. Currently it's used only for testing
-            # TODO: purposes.
-            with open(filename, 'rb') as f:
-                md5_hash.update(f.read())
+            if filename not in ignore:
+                # TODO: if caching big files becomes an issue, convert this to
+                # TODO: read in chunks. Currently it's used only for testing
+                # TODO: purposes.
+                with open(filename, 'rb') as f:
+                    md5_hash.update(f.read())
 
     return md5_hash.hexdigest()
 
