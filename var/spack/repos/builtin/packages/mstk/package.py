@@ -57,7 +57,7 @@ class Mstk(CMakePackage):
             options.append('-DMSTK_USE_MARKERS=ON')
 
         # Parallel variant
-        if self.spec.variants['parallel'].value != "none":
+        if not self.spec.satisfies('parallel=none'):
             # Use mpi for compilation
             options.append('-DCMAKE_CXX_COMPILER=mpicxx')
             options.append('-DCMAKE_C_COMPILER=mpicc')
