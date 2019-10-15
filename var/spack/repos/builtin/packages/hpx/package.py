@@ -34,8 +34,12 @@ class Hpx(CMakePackage, CudaPackage):
         'apex', 'google_perftools', 'papi', 'valgrind'
     ), description='Add support for various kind of instrumentation')
 
-    variant('networking', default=True,
-            description='Support for networking and multi=node runs')
+    variant(
+        "networking",
+        values=any_combination_of("tcp", "mpi").with_default("tcp"),
+        description="Support for networking through parcelports",
+    )
+
     variant('tools', default=False, description='Build HPX tools')
     variant('examples', default=False, description='Build examples')
 
@@ -63,6 +67,9 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
+
+    # MPI
+    depends_on('mpi', when='networking=mpi')
 
     # Instrumentation
     depends_on('apex', when='instrumentation=apex')
@@ -104,7 +111,13 @@ class Hpx(CMakePackage, CudaPackage):
 
         # Networking
         args.append('-DHPX_WITH_NETWORKING={0}'.format(
-            'ON' if '+networking' in spec else 'OFF'
+            'OFF' if 'networking=none' in spec else 'ON'
+        ))
+        args.append('-DHPX_WITH_PARCELPORT_TCP={0}'.format(
+            'ON' if 'networking=tcp' in spec else 'OFF'
+        ))
+        args.append('-DHPX_WITH_PARCELPORT_MPI={0}'.format(
+            'ON' if 'networking=mpi' in spec else 'OFF'
         ))
 
         # Cuda support
