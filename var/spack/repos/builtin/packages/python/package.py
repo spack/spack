@@ -25,12 +25,13 @@ class Python(AutotoolsPackage):
     """The Python programming language."""
 
     homepage = "https://www.python.org/"
-    url      = "https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz"
+    url      = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
     maintainers = ['adamjstewart']
 
+    version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
     version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3')
     version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
