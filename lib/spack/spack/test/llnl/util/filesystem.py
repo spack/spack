@@ -323,6 +323,7 @@ def test_partition_path(path, entry, expected):
 
 
 @pytest.mark.parametrize('path,expected', [
+    ('', []),
     ('/tmp/user/dir', ['/tmp', '/tmp/user', '/tmp/user/dir']),
     ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
     ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
