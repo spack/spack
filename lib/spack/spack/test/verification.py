@@ -99,15 +99,13 @@ def test_file_manifest_entry(tmpdir):
 
     data['type'] = 'file'
 
+    os.utime(file, (0, 0))
     with open(file, 'w') as f:
         f.write(new_str)
 
     results = spack.verify.check_entry(file, data)
 
-    expected = ['size', 'hash']
-    mtime = os.stat(file).st_mtime
-    if mtime != data['time']:
-        expected.append('mtime')
+    expected = ['size', 'hash', 'mtime']
 
     assert results.has_errors()
     assert file in results.errors
@@ -217,10 +215,7 @@ def test_single_file_verification(tmpdir):
 
     results = spack.verify.check_file_manifest(filepath)
 
-    expected = ['hash']
-    mtime = os.stat(filepath).st_mtime
-    if mtime != data['time']:
-        expected.append('mtime')
+    expected = ['hash', 'mtime']
 
     assert results.has_errors()
     assert filepath in results.errors
