@@ -38,14 +38,15 @@ def test_single_file_verify_cmd(tmpdir):
     with open(manifest_file, 'w') as f:
         sjson.dump({filepath: data}, f)
 
-    results = verify('-f', filepath)
+    results = verify('-f', filepath, fail_on_error=False)
+    print(results)
     assert not results
 
     os.utime(filepath, (0, 0))
     with open(filepath, 'w') as f:
         f.write("I changed.")
 
-    results = verify('-f', filepath)
+    results = verify('-f', filepath, fail_on_error=False)
 
     expected = ['hash']
     mtime = os.stat(filepath).st_mtime
@@ -56,7 +57,7 @@ def test_single_file_verify_cmd(tmpdir):
     assert filepath in results
     assert all(x in results for x in expected)
 
-    results = verify('-fj', filepath)
+    results = verify('-fj', filepath, fail_on_error=False)
     res = sjson.load(results)
     assert len(res) == 1
     errors = res.pop(filepath)
@@ -71,18 +72,18 @@ def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive,
     prefix = s.prefix
     hash = s.dag_hash()
 
-    results = verify('/%s' % hash)
+    results = verify('/%s' % hash, fail_on_error=False)
     assert not results
 
     new_file = os.path.join(prefix, 'new_file_for_verify_test')
     with open(new_file, 'w') as f:
         f.write('New file')
 
-    results = verify('/%s' % hash)
+    results = verify('/%s' % hash, fail_on_error=False)
     assert new_file in results
     assert 'added' in results
 
-    results = verify('-j', '/%s' % hash)
+    results = verify('-j', '/%s' % hash, fail_on_error=False)
     res = sjson.load(results)
     assert len(res) == 1
     assert res[new_file] == ['added']

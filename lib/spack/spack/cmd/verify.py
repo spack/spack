@@ -29,12 +29,14 @@ def setup_parser(subparser):
                            help="Files or specs to verify")
 
     type = subparser.add_mutually_exclusive_group()
-    type.add_argument('-s', '--specs', action='store_const', const='specs',
-                      dest='type', default='specs',
-                      help='Treat entries as specs (default)')
-    type.add_argument('-f', '--files', action='store_const', const='files',
-                      dest='type', default='specs',
-                      help="Treat entries as files. Cannot be used with '-a'")
+    type.add_argument(
+        '-s', '--specs',
+        action='store_const', const='specs', dest='type', default='specs',
+        help='Treat entries as specs (default)')
+    type.add_argument(
+        '-f', '--files',
+        action='store_const', const='files', dest='type', default='specs',
+        help="Treat entries as absolute filenames. Cannot be used with '-a'")
 
 
 def verify(parser, args):
@@ -47,7 +49,7 @@ def verify(parser, args):
 
         for file in args.files_or_specs:
             results = spack.verify.check_file_manifest(file)
-            if results:
+            if results.has_errors():
                 if args.json:
                     print(results.json_string())
                 else:

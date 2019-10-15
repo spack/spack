@@ -29,12 +29,12 @@ def test_link_manifest_entry(tmpdir):
     assert all(x in data for x in ('mode', 'owner', 'group'))
 
     results = spack.verify.check_entry(link, data)
-    assert not results
+    assert not results.has_errors()
 
     data['type'] = 'garbage'
 
     results = spack.verify.check_entry(link, data)
-    assert results
+    assert results.has_errors()
     assert link in results.errors
     assert results.errors[link] == ['type']
 
@@ -46,7 +46,7 @@ def test_link_manifest_entry(tmpdir):
     os.symlink(file2, link)
 
     results = spack.verify.check_entry(link, data)
-    assert results
+    assert results.has_errors()
     assert link in results.errors
     assert results.errors[link] == ['link']
 
@@ -62,12 +62,12 @@ def test_dir_manifest_entry(tmpdir):
     assert all(x in data for x in ('mode', 'owner', 'group'))
 
     results = spack.verify.check_entry(dirent, data)
-    assert not results
+    assert not results.has_errors()
 
     data['type'] = 'garbage'
 
     results = spack.verify.check_entry(dirent, data)
-    assert results
+    assert results.has_errors()
     assert dirent in results.errors
     assert results.errors[dirent] == ['type']
 
@@ -88,12 +88,12 @@ def test_file_manifest_entry(tmpdir):
     assert all(x in data for x in ('mode', 'owner', 'group'))
 
     results = spack.verify.check_entry(file, data)
-    assert not results
+    assert not results.has_errors()
 
     data['type'] = 'garbage'
 
     results = spack.verify.check_entry(file, data)
-    assert results
+    assert results.has_errors()
     assert file in results.errors
     assert results.errors[file] == ['type']
 
@@ -109,7 +109,7 @@ def test_file_manifest_entry(tmpdir):
     if mtime != data['time']:
         expected.append('mtime')
 
-    assert results
+    assert results.has_errors()
     assert file in results.errors
     assert sorted(results.errors[file]) == sorted(expected)
 
@@ -126,7 +126,7 @@ def test_check_chmod_manifest_entry(tmpdir):
     os.chmod(file, data['mode'] - 1)
 
     results = spack.verify.check_entry(file, data)
-    assert results
+    assert results.has_errors()
     assert file in results.errors
     assert results.errors[file] == ['mode']
 
@@ -141,7 +141,7 @@ def test_check_prefix_manifest(tmpdir):
     spec.prefix = prefix
 
     results = spack.verify.check_spec_manifest(spec)
-    assert results
+    assert results.has_errors()
     assert prefix in results.errors
     assert results.errors[prefix] == ['manifest missing']
 
@@ -161,7 +161,7 @@ def test_check_prefix_manifest(tmpdir):
 
     spack.verify.write_manifest(spec)
     results = spack.verify.check_spec_manifest(spec)
-    assert not results
+    assert not results.has_errors()
 
     os.remove(link)
     malware = os.path.join(metadata_dir, 'hiddenmalware')
@@ -169,7 +169,7 @@ def test_check_prefix_manifest(tmpdir):
         f.write("Foul evil deeds")
 
     results = spack.verify.check_spec_manifest(spec)
-    assert results
+    assert results.has_errors()
     assert all(x in results.errors for x in (malware, link))
     assert len(results.errors) == 2
 
@@ -183,7 +183,7 @@ def test_check_prefix_manifest(tmpdir):
         f.write("{This) string is not proper json")
 
     results = spack.verify.check_spec_manifest(spec)
-    assert results
+    assert results.has_errors()
     assert results.errors[spec.prefix] == ['manifest corrupted']
 
 
@@ -209,7 +209,7 @@ def test_single_file_verification(tmpdir):
         sjson.dump({filepath: data}, f)
 
     results = spack.verify.check_file_manifest(filepath)
-    assert not results
+    assert not results.has_errors()
 
     os.utime(filepath, (0, 0))
     with open(filepath, 'w') as f:
@@ -222,11 +222,11 @@ def test_single_file_verification(tmpdir):
     if mtime != data['time']:
         expected.append('mtime')
 
-    assert results
+    assert results.has_errors()
     assert filepath in results.errors
     assert sorted(results.errors[filepath]) == sorted(expected)
 
     shutil.rmtree(metadir)
     results = spack.verify.check_file_manifest(filepath)
-    assert results
+    assert results.has_errors()
     assert results.errors[filepath] == ['not owned by any package']
