@@ -52,30 +52,41 @@ class Mstk(CMakePackage):
     depends_on("exodusii", when='+exodusii')
 
     def cmake_args(self):
-        options = ['-DCMAKE_BUILD_TYPE=Release']
+        options = ['']
         if '+use_markers' in self.spec:
             options.append('-DMSTK_USE_MARKERS=ON')
 
         # Parallel variant
         if not self.spec.satisfies('parallel=none'):
             # Use mpi for compilation
-            options.append('-DCMAKE_CXX_COMPILER=mpicxx')
-            options.append('-DCMAKE_C_COMPILER=mpicc')
-            options.append('-DCMAKE_FORTRAN_COMPILER=mpifort')
+            options.append('-DCMAKE_CXX_COMPILER='+self.spec['mpi'].mpicxx)
+            options.append('-DCMAKE_C_COMPILER='+self.spec['mpi'].mpicc)
+            options.append('-DCMAKE_FORTRAN_COMPILER='+self.spec['mpi'].mpifort)
             options.append('-DENABLE_PARALLEL=ON')
+        else:
+            options.append('-ENABLE_PARALLEL=OFF')
 
         if 'parallel=metis' in self.spec:
             options.append('-DENABLE_METIS=ON')
+        else:
+            options.append('-DENABLE_METIS=OFF')
 
         if 'parallel=zoltan' in self.spec:
             options.append('-DENABLE_ZOLTAN=ON')
+        else:
+            options.append('-DENABLE_ZOLTAN=OFF')
 
         if 'parallel=zoltan_parametis' in self.spec:
             options.append('-DENABLE_ZOLTAN=ON')
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
+        else:
+            options.append('-DENABLE_ZOLTAN=OFF')
+            options.append('-DZOLTAN_NEEDS_ParMETIS=OFF')
 
         # ExodusII variant
         if '+exodusii' in self.spec:
             options.append('-DENABLE_ExodusII=ON')
+        else:
+            options.append('-DENABLE_ExodusII=OFF')
 
         return options
