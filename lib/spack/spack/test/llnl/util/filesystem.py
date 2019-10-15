@@ -5,10 +5,14 @@
 
 """Tests for ``llnl/util/filesystem.py``"""
 
-import llnl.util.filesystem as fs
-import os
-import stat
 import pytest
+import os
+import shutil
+import stat
+import sys
+
+import llnl.util.filesystem as fs
+import spack.paths
 
 
 @pytest.fixture()
@@ -306,3 +310,31 @@ def test_headers_directory_setter():
     # Setting directories to None also returns an empty list
     hl.directories = None
     assert hl.directories == []
+
+
+@pytest.mark.regression('7358')
+@pytest.mark.parametrize('regex,replacement,filename,keyword_args', [
+    (r"\<malloc\.h\>", "<stdlib.h>", 'x86_cpuid_info.c', {}),
+    (r"CDIR", "CURRENT_DIRECTORY", 'selfextract.bsx',
+     {'stop_at': '__ARCHIVE_BELOW__'})
+])
+def test_filter_files_with_different_encodings(
+        regex, replacement, filename, tmpdir, keyword_args
+):
+    # All files given as input to this test must satisfy the pre-requisite
+    # that the 'replacement' string is not present in the file initially and
+    # that there's at least one match for the regex
+    original_file = os.path.join(
+        spack.paths.test_path, 'data', 'filter_file', filename
+    )
+    target_file = os.path.join(str(tmpdir), filename)
+    shutil.copy(original_file, target_file)
+    # This should not raise exceptions
+    fs.filter_file(regex, replacement, target_file, **keyword_args)
+    # Check the strings have been replaced
+    extra_kwargs = {}
+    if sys.version_info > (3, 0):
+        extra_kwargs = {'errors': 'surrogateescape'}
+
+    with open(target_file, mode='r', **extra_kwargs) as f:
+        assert replacement in f.read()
