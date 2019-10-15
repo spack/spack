@@ -298,7 +298,7 @@ class URLFetchStrategy(FetchStrategy):
     def mirror_id(self):
         if not self.digest:
             return None
-        return os.path.sep.join(['mirror-archive', self.digest])
+        return os.path.sep.join(['archive', self.digest])
 
     @_needs_stage
     def fetch(self):
@@ -761,7 +761,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         repo_ref = self.commit or self.tag or self.branch
         if repo_ref:
             id += "-" + repo_ref
-        return os.path.sep.join(['mirror-git', id])
+        return os.path.sep.join(['git', id])
 
     def get_source_id(self):
         if not self.branch:
@@ -948,7 +948,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         id = _hash(self.url)
         if self.revision:
             id += "-" + self.revision
-        return os.path.sep.join(['mirror-svn', id])
+        return os.path.sep.join(['svn', id])
 
     @_needs_stage
     def fetch(self):
@@ -1057,7 +1057,7 @@ class HgFetchStrategy(VCSFetchStrategy):
         id = _hash(self.url)
         if self.revision:
             id += "-" + self.revision
-        return os.path.sep.join(['mirror-hg', id])
+        return os.path.sep.join(['hg', id])
 
     def get_source_id(self):
         output = self.hg('id', self.url, output=str)

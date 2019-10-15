@@ -96,6 +96,8 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
         per_package_ref += ".%s" % ext
 
     global_ref = fetcher.mirror_id()
+    if global_ref:
+        global_ref = os.path.join('_source-cache', global_ref)
     if global_ref and ext:
         global_ref += ".%s" % ext
 
