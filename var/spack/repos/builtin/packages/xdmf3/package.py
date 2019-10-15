@@ -3,11 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import fileinput
 import os
-import platform
-import re
-import sys
 
 from spack import *
 
@@ -51,30 +47,27 @@ class Xdmf3(CMakePackage):
 
         return cmake_args
 
-    def install(self, spec, prefix):
-        super().install(spec, prefix)
-
+    @run_after('install')
+    def post_install(self, spec, prefix):
         # Check if we have a `lib64` library dir or a `lib`
         dist, ver, dist_id = platform.dist()
 
-        if ('Ubuntu' == dist) or (sys.platform == 'darwin'):
-            cmake_prefix = os.path.join(self.prefix.lib, "cmake")
+        if os.path.exists(self.prefix.lib):
+            cmake_prefix = join_path(self.prefix.lib, "cmake")
         else:
-            cmake_prefix = os.path.join(self.prefix.lib64, "cmake")
+            cmake_prefix = join_path(self.prefix.lib64, "cmake")
 
         # I need to create also the the related directory (Xdmf -> xdmf3)
+        # to allow paraview to find the package
         new_dir_name = "xdmf3"
-        os.mkdir(os.path.join(cmake_prefix, new_dir_name))
+        mkdirp(join_path(cmake_prefix, new_dir_name))
         new_file_name = new_dir_name + "Config.cmake"
 
-        # Symlinking here
-        orig = os.path.join(cmake_prefix, "Xdmf", "XdmfConfig.cmake")
-        dst = os.path.join(cmake_prefix, new_dir_name, new_file_name)
-        os.symlink(orig, dst)
+        # Copy here
+        orig = join_path(cmake_prefix, "Xdmf", "XdmfConfig.cmake")
+        dst = join_path(cmake_prefix, new_dir_name, new_file_name)
+        force_symlink(orig, dst)
 
         # I also need to change the variables name in the folder "made for
-        # Paraview" from 'XDMF_' to 'XDMF3_'
-        pattern = re.compile(re.escape("set(XDMF_"))
-        for line in fileinput.input(dst, inplace=True):
-            line = re.sub(pattern, "set(XDMF3_", line)
-            sys.stdout.write(line)
+        # Paraview" from 'XDMF_' to 'XDMF3_'Z
+        filter_file('set(XDMF_', 'set(XDMF3_', dst, string=True)
