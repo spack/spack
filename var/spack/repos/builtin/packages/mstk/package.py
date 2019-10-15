@@ -59,9 +59,10 @@ class Mstk(CMakePackage):
         # Parallel variant
         if not self.spec.satisfies('parallel=none'):
             # Use mpi for compilation
-            options.append('-DCMAKE_CXX_COMPILER='+self.spec['mpi'].mpicxx)
-            options.append('-DCMAKE_C_COMPILER='+self.spec['mpi'].mpicc)
-            options.append('-DCMAKE_FORTRAN_COMPILER='+self.spec['mpi'].mpifort)
+            options.append('-DCMAKE_CXX_COMPILER=' + self.spec['mpi'].mpicxx)
+            options.append('-DCMAKE_C_COMPILER=' + self.spec['mpi'].mpicc)
+            options.append('-DCMAKE_FORTRAN_COMPILER=' 
+                           + self.spec['mpi'].mpifort)
             options.append('-DENABLE_PARALLEL=ON')
         else:
             options.append('-ENABLE_PARALLEL=OFF')
