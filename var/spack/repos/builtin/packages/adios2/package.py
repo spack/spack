@@ -32,7 +32,8 @@ class Adios2(CMakePackage):
             description='Enable position independent code '
                         '(for usage of static in shared downstream deps)')
     variant('endian_reverse', default=False,
-            description='Enable Endian Interoperability')
+            description='Enable endian conversion if a different '
+                        'endianness is detected between write and read.')
 
     # compression libraries
     variant('blosc', default=True,
