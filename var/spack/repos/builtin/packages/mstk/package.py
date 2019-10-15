@@ -44,7 +44,7 @@ class Mstk(CMakePackage):
     depends_on("mpi", when='parallel=zoltan_parmetis')
 
     depends_on("zoltan -fortran", when='parallel=zoltan')
-    depends_on("zoltan -fortran +parmetis", when='parallel="zoltan_parmetis"')
+    depends_on("zoltan -fortran +parmetis", when='parallel=zoltan_parmetis')
 
     # Exodusii variant
     # The default exodusii build with mpi support
