@@ -54,7 +54,7 @@ class Mstk(CMakePackage):
 
     def cmake_args(self):
         options = ['-DCMAKE_BUILD_TYPE=Release']
-        if self.spec.variants['use_markers'].value is True:
+        if '+use_markers' in self.spec:
             options.append('-DMSTK_USE_MARKERS=ON')
 
         # Parallel variant
