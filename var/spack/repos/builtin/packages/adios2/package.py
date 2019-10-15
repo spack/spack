@@ -57,7 +57,7 @@ class Adios2(CMakePackage):
             description='Enable the HDF5 engine')
 
     # optional language bindings, C++11 and C always provided
-    variant('python', default=True,
+    variant('python', default=False,
             description='Enable the Python bindings')
     variant('fortran', default=True,
             description='Enable the Fortran bindings')
