@@ -75,7 +75,7 @@ class Mstk(CMakePackage):
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
 
         # ExodusII variant
-        if self.spec.variants['exodusii'].value is True:
+        if '+exodusii' in self.spec:
             options.append('-DENABLE_ExodusII=ON')
 
         return options
