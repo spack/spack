@@ -70,7 +70,7 @@ class Mstk(CMakePackage):
         if "zoltan" in self.spec.variants['parallel'].value:
             options.append('-DENABLE_ZOLTAN=ON')
 
-        if "zoltan_parmetis" in self.spec.variants['parallel'].value:
+        if 'parallel=zoltan_parametis' in self.spec:
             options.append('-DENABLE_ZOLTAN=ON')
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
 
