@@ -200,8 +200,23 @@ class Target(object):
                 warnings.warn(msg.format(compiler))
                 return ''
 
+        try:
+            # Try to check if the current compiler comes with a
+            # version number supported by archspec.cpu
+            compiler_version = compiler.version
+            v, _, suffix = str(compiler_version).partition('-')
+            _ = tuple(int(y) for y in v.split('.'))
+        except (TypeError, ValueError):
+            # If not try to deduce the correct version. Depending on
+            # where this function is called we might get either a
+            # CompilerSpec or a fully fledged compiler object
+            import spack.spec
+            if isinstance(compiler, spack.spec.CompilerSpec):
+                compiler = spack.compilers.compilers_for_spec(compiler).pop()
+            compiler_version = compiler.cc_version(compiler.cc)
+
         return self.microarchitecture.optimization_flags(
-            compiler.name, str(compiler.version)
+            compiler.name, str(compiler_version)
         )
 
 
