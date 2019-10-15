@@ -64,7 +64,7 @@ class Mstk(CMakePackage):
             options.append('-DCMAKE_FORTRAN_COMPILER=mpifort')
             options.append('-DENABLE_PARALLEL=ON')
 
-        if "metis" in self.spec.variants['parallel'].value:
+        if 'parallel=metis' in self.spec:
             options.append('-DENABLE_METIS=ON')
 
         if "zoltan" in self.spec.variants['parallel'].value:
