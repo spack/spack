@@ -24,7 +24,7 @@ class Mstk(CMakePackage):
     homepage = "https://github.com/MeshToolkit/MSTK"
     git      = "https://github.com/MeshToolkit/MSTK"
 
-    version("develop", branch='master', submodules=False, preferred=True)
+    version('master', branch='master')
 
     variant('parallel', default='none', description='Enable Parallel Support',
             values=(
