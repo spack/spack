@@ -462,7 +462,7 @@ class URLFetchStrategy(FetchStrategy):
         web_util.push_to_url(
                 self.archive_file,
                 destination,
-                keep_original=False)
+                keep_original=True)
 
     @_needs_stage
     def check(self):
