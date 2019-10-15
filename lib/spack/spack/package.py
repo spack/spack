@@ -1519,6 +1519,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         dirty = kwargs.get('dirty', False)
         restage = kwargs.get('restage', False)
 
+        # install_self defaults True and is popped so that dependencies are
+        # always installed regardless of whether the root was installed
+        install_self = kwargs.pop('install_package', True)
+        # explicit defaults False so that dependents are implicit regardless
+        # of whether their dependents are implicitly or explicitly installed.
+        # Spack ensures root packages of install commands are always marked to
+        # install explicit
+        explicit = kwargs.pop('explicit', False)
+
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
         if self.spec.external:
@@ -1567,6 +1576,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Then install the compiler if it is not already installed.
         if install_deps:
             Package._install_bootstrap_compiler(self, **kwargs)
+
+        if not install_self:
+            return
 
         # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))

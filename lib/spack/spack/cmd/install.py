@@ -39,8 +39,15 @@ def update_kwargs_from_args(args, kwargs):
         'fake': args.fake,
         'dirty': args.dirty,
         'use_cache': args.use_cache,
-        'cache_only': args.cache_only
+        'cache_only': args.cache_only,
+        'explicit': True  # Always true for install command
     })
+
+    kwargs.update({
+        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_package': ('package' in args.things_to_install)
+    })
+
     if hasattr(args, 'setup'):
         setups = set()
         for arglist_s in args.setup:
@@ -188,25 +195,14 @@ def default_log_file(spec):
 def install_spec(cli_args, kwargs, abstract_spec, spec):
     """Do the actual installation."""
 
-    # handle active environment, if any
-    def install(spec, kwargs):
+    try:
+        # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
         if env:
             env.install(abstract_spec, spec, **kwargs)
             env.write()
         else:
             spec.package.do_install(**kwargs)
-
-    try:
-        if cli_args.things_to_install == 'dependencies':
-            # Install dependencies as-if they were installed
-            # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
-            for s in spec.dependencies():
-                install(s, kwargs)
-        else:
-            kwargs['explicit'] = True
-            install(spec, kwargs)
 
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
@@ -242,10 +238,6 @@ def install(parser, args, **kwargs):
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
     update_kwargs_from_args(args, kwargs)
-    kwargs.update({
-        'install_dependencies': ('dependencies' in args.things_to_install),
-        'install_package': ('package' in args.things_to_install)
-    })
 
     if args.run_tests:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
