@@ -33,7 +33,6 @@ class Mstk(CMakePackage):
                 'zoltan', 'zoltan_parmetis'), multi=True)
     variant('exodusii', default=False,
             description='Enable ExodusII')
-    variant('tests', default=True, description="Enable testing")
     variant('use_markers', default=True, description="Enable MSTK to use markers")
 
     depends_on("cmake@3.8:")
