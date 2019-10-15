@@ -19,7 +19,7 @@ install = SpackCommand('install')
 
 
 def test_single_file_verify_cmd(tmpdir):
-    # Test the verify command interfact to verifying a single file.
+    # Test the verify command interface to verifying a single file.
     filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
     filepath = os.path.join(filedir, 'file')
     metadir = os.path.join(str(tmpdir), spack.store.layout.metadata_dir)
