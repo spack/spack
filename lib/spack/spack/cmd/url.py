@@ -239,80 +239,104 @@ def url_summary(args):
 
 
 def url_stats(args):
-    stats = {}  # stats about fetchers in packages.
-    nvers = 0   # total number of versions
-    npkgs = 0   # total number of packages
+    class UrlStats(object):
+        def __init__(self):
+            self.total = 0
+            self.schemes = defaultdict(lambda: 0)
+            self.checksums = defaultdict(lambda: 0)
+            self.url_type = defaultdict(lambda: 0)
+            self.git_type = defaultdict(lambda: 0)
 
-    def inc(fstype, category, attr=None):
-        """Increment statistics in the stats dict."""
-        categories = stats.setdefault(fstype, {})
-        if attr:
-            cat_stats = categories.setdefault(category, {})
-            val = cat_stats.setdefault(attr, 0)
-            stats[fstype][category][attr] = val + 1
-        else:
-            val = categories.setdefault(category, 0)
-            stats[fstype][category] = val + 1
+        def add(self, fetcher):
+            self.total += 1
 
-    # over all packages
-    for pkg in spack.repo.path.all_packages():
-        npkgs += 1
+            url_type = fetcher.url_attr
+            self.url_type[url_type or 'no code'] += 1
 
-        if not pkg.has_code:
-            for _ in pkg.versions:
-                inc('No code', 'total')
-                nvers += 1
-            continue
-
-        # look at each version
-        for v, args in pkg.versions.items():
-            # figure out what type of fetcher it is
-            fetcher = fs.for_package_version(pkg, v)
-            nvers += 1
-
-            fstype = fetcher.url_attr
-            inc(fstype, 'total')
-
-            # put some special stats in for particular types of fetchers.
-            if fstype == 'git':
-                if 'commit' in args:
-                    inc('git', 'security', 'commit')
+            if url_type == 'url':
+                digest = getattr(fetcher, 'digest', None)
+                if digest:
+                    algo = crypto.hash_algo_for_digest(digest)
                 else:
-                    inc('git', 'security', 'no commit')
-            elif fstype == 'url':
-                for h in crypto.hashes:
-                    if h in args:
-                        inc('url', 'checksums', h)
-                        break
-                else:
-                    if 'checksum' in args:
-                        h = crypto.hash_algo_for_digest(args['checksum'])
-                        inc('url', 'checksums', h)
-                    else:
-                        inc('url', 'checksums', 'no checksum')
+                    algo = 'no checksum'
+                self.checksums[algo] += 1
 
                 # parse out the URL scheme (https/http/ftp/etc.)
                 urlinfo = urlparse(fetcher.url)
-                inc('url', 'schemes', urlinfo.scheme)
+                self.schemes[urlinfo.scheme] += 1
+
+            elif url_type == 'git':
+                if getattr(fetcher, 'commit', None):
+                    self.git_type['commit'] += 1
+                elif getattr(fetcher, 'branch', None):
+                    self.git_type['branch'] += 1
+                elif getattr(fetcher, 'tag', None):
+                    self.git_type['tag'] += 1
+                else:
+                    self.git_type['no ref'] += 1
+
+    npkgs = 0
+    version_stats = UrlStats()
+    resource_stats = UrlStats()
+
+    for pkg in spack.repo.path.all_packages():
+        npkgs += 1
+
+        for v, args in pkg.versions.items():
+            fetcher = fs.for_package_version(pkg, v)
+            version_stats.add(fetcher)
+
+        for _, resources in pkg.resources.items():
+            for resource in resources:
+                resource_stats.add(resource.fetcher)
 
     # print a nice summary table
-    tty.msg("%d total versions for %d packages:" % (nvers, npkgs))
-    line_width = 36
-    print("-" * line_width)
-    for fetcher, fetcher_stats in sorted(stats.items(), reverse=True):
-        fs_total = fetcher_stats['total']
-        fs_pct = float(fs_total) / nvers * 100
-        print("%-22s%5d%8.1f%%" % (fetcher, fs_total, fs_pct))
+    tty.msg("URL stats for %d packages:" % npkgs)
 
-        for category, cat_stats in sorted(fetcher_stats.items(), reverse=True):
-            if category == 'total':
-                continue
-            print("  %s" % category)
+    def print_line():
+        print("-" * 62)
 
-            for name, number in sorted(cat_stats.items(), reverse=True):
-                pct = float(number) / fs_total * 100
-                print("    %-18s%5d%8.1f%%" % (name, number, pct))
-        print("-" * line_width)
+    def print_stat(indent, name, stat_name=None):
+        width = 20 - indent
+        fmt = " " * indent
+        fmt += "%%-%ds" % width
+        if stat_name is None:
+            print(fmt % name)
+        else:
+            fmt += "%12d%8.1f%%%12d%8.1f%%"
+            v = getattr(version_stats, stat_name).get(name, 0)
+            r = getattr(resource_stats, stat_name).get(name, 0)
+            print(fmt % (name,
+                         v, v / version_stats.total * 100,
+                         r, r / resource_stats.total * 100))
+
+    print_line()
+    print("%-20s%12s%9s%12s%9s" % ("stat", "versions", "%", "resources", "%"))
+    print_line()
+    print_stat(0, "url", "url_type")
+
+    print_stat(4, "schemes")
+    schemes = set(version_stats.schemes) | set(resource_stats.schemes)
+    for scheme in schemes:
+        print_stat(8, scheme, "schemes")
+
+    print_stat(4, "checksums")
+    checksums = set(version_stats.checksums) | set(resource_stats.checksums)
+    for checksum in checksums:
+        print_stat(8, checksum, "checksums")
+    print_line()
+
+    types = set(version_stats.url_type) | set(resource_stats.url_type)
+    types -= set(["url", "git"])
+    for url_type in sorted(types):
+        print_stat(0, url_type, "url_type")
+        print_line()
+
+    print_stat(0, "git", "url_type")
+    git_types = set(version_stats.git_type) | set(resource_stats.git_type)
+    for git_type in sorted(git_types):
+        print_stat(4, git_type, "git_type")
+    print_line()
 
 
 def print_name_and_version(url):

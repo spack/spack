@@ -14,8 +14,8 @@ class PyMock(PythonPackage):
     homepage = "https://github.com/testing-cabal/mock"
     url      = "https://pypi.io/packages/source/m/mock/mock-1.3.0.tar.gz"
 
-    version('2.0.0', '0febfafd14330c9dcaa40de2d82d40ad')
-    version('1.3.0', '73ee8a4afb3ff4da1b4afa287f39fdeb')
+    version('2.0.0', sha256='b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba')
+    version('1.3.0', sha256='1e247dbecc6ce057299eb7ee019ad68314bb93152e81d9a6110d35f4d5eca0f6')
 
     depends_on('py-pbr@0.11:', type=('build', 'run'))
     depends_on('py-six@1.7:',  type=('build', 'run'))

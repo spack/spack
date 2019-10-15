@@ -23,7 +23,7 @@ class Dataspaces(AutotoolsPackage):
     git      = "https://github.com/melrom/dataspaces.git"
 
     version('develop', branch='master')
-    version('1.6.2', '73caa4920b6f2c0c6d6cb87640ff04be')
+    version('1.6.2', sha256='3c43d551c1e8198a4ab269c83928e1dc6f8054e6d41ceaee45155d91a48cf9bf')
 
     variant('dimes',
             default=False,

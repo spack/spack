@@ -13,7 +13,7 @@ class PyBxPython(PythonPackage):
     homepage = "https://github.com/bxlab/bx-python"
     url      = "https://github.com/bxlab/bx-python/archive/v0.7.4.tar.gz"
 
-    version('0.7.4', 'a47b8cc55c104ac97440c6cc62be8697')
+    version('0.7.4', sha256='1066d1e56d062d0661f23c19942eb757bd7ab7cb8bc7d89a72fdc3931c995cb4')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy',      type=('build', 'run'))

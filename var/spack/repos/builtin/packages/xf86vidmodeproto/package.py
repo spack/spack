@@ -15,7 +15,7 @@ class Xf86vidmodeproto(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/proto/xf86vidmodeproto"
     url      = "https://www.x.org/archive/individual/proto/xf86vidmodeproto-2.3.1.tar.gz"
 
-    version('2.3.1', '99016d0fe355bae0bb23ce00fb4d4a2c')
+    version('2.3.1', sha256='c3512b11cefa7558576551f8582c6e7071c8a24d78176059d94b84b48b262979')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

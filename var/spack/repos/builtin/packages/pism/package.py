@@ -17,7 +17,6 @@ class Pism(CMakePackage):
 
     version('develop', branch='dev')
     version('1.1.4', sha256='8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44')
-    version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
     version('0.7.x', branch='stable0.7')
     version('icebin', branch='efischer/dev')
 

@@ -16,5 +16,5 @@ class Patchelf(AutotoolsPackage):
     list_url = "http://nixos.org/releases/patchelf/"
     list_depth = 1
 
-    version('0.9', '3c265508526760f233620f35d79c79fc')
-    version('0.8', '407b229e6a681ffb0e2cdd5915cb2d01')
+    version('0.9', sha256='f2aa40a6148cb3b0ca807a1bf836b081793e55ec9e5540a5356d800132be7e0a')
+    version('0.8', sha256='14af06a2da688d577d64ff8dac065bb8903bbffbe01d30c62df7af9bf4ce72fe')

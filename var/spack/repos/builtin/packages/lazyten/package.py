@@ -20,7 +20,7 @@ class Lazyten(CMakePackage):
     # Versions
     #
     version("develop", branch="master")
-    version('0.4.1', 'd06f7996144e1bf1b0aee82c2af36e83')
+    version('0.4.1', sha256='696d151382993c13d04516c77db3ea712a70e3cb449539b9e79abc78cf245ae4')
 
     #
     # Variants

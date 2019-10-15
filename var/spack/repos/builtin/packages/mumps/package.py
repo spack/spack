@@ -15,13 +15,13 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
-    version('5.2.0', '41f2c7cb20d69599fb47e2ad6f628f3798c429f49e72e757e70722680f70853f')
-    version('5.1.2', 'eb345cda145da9aea01b851d17e54e7eef08e16bfa148100ac1f7f046cd42ae9')
-    version('5.1.1', 'f15c6b5dd8c71b1241004cd19818259d')
-    version('5.0.2', '591bcb2c205dcb0283872608cdf04927')
+    version('5.2.0', sha256='41f2c7cb20d69599fb47e2ad6f628f3798c429f49e72e757e70722680f70853f')
+    version('5.1.2', sha256='eb345cda145da9aea01b851d17e54e7eef08e16bfa148100ac1f7f046cd42ae9')
+    version('5.1.1', sha256='a2a1f89c470f2b66e9982953cbd047d429a002fab9975400cef7190d01084a06')
+    version('5.0.2', sha256='77292b204942640256097a3da482c2abcd1e0d5a74ecd1d4bab0f5ef6e60fe45')
     # Alternate location if main server is down.
-    # version('5.0.1', 'b477573fdcc87babe861f62316833db0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
-    version('5.0.1', 'b477573fdcc87babe861f62316833db0')
+    # version('5.0.1', sha256='50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
+    version('5.0.1', sha256='50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0')
 
     variant('mpi', default=True,
             description='Compile MUMPS with MPI support')

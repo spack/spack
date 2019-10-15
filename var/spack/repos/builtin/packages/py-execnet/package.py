@@ -14,7 +14,7 @@ class PyExecnet(PythonPackage):
     homepage = "http://codespeak.net/execnet"
     url      = "https://pypi.io/packages/source/e/execnet/execnet-1.4.1.tar.gz"
 
-    version('1.4.1', '0ff84b6c79d0dafb7e2971629c4d127a')
+    version('1.4.1', sha256='f66dd4a7519725a1b7e14ad9ae7d3df8e09b2da88062386e08e941cafc0ef3e6')
 
     depends_on('py-setuptools',  type='build')
     depends_on('py-setuptools-scm',  type='build')

@@ -465,10 +465,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: _spack_build_envfile.
     archive_files = []
 
+    #: Boolean. Set to ``True`` for packages that require a manual download.
+    #: This is currently only used by package sanity tests.
+    manual_download = False
+
     #
     # Set default licensing information
     #
-
     #: Boolean. If set to ``True``, this software requires a license.
     #: If set to ``False``, all of the ``license_*`` attributes will
     #: be ignored. Defaults to ``False``.
@@ -1497,6 +1500,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             restage (bool): Force spack to restage the package source.
             force (bool): Install again, even if already installed.
             use_cache (bool): Install from binary package, if available.
+            cache_only (bool): Fail if binary package unavailable.
             stop_at (InstallPhase): last installation phase to be executed
                 (or None)
         """
@@ -1515,6 +1519,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         tests = kwargs.get('tests', False)
         dirty = kwargs.get('dirty', False)
         restage = kwargs.get('restage', False)
+
+        # install_self defaults True and is popped so that dependencies are
+        # always installed regardless of whether the root was installed
+        install_self = kwargs.pop('install_package', True)
+        # explicit defaults False so that dependents are implicit regardless
+        # of whether their dependents are implicitly or explicitly installed.
+        # Spack ensures root packages of install commands are always marked to
+        # install explicit
+        explicit = kwargs.pop('explicit', False)
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
@@ -1565,6 +1578,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if install_deps:
             Package._install_bootstrap_compiler(self, **kwargs)
 
+        if not install_self:
+            return
+
         # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
@@ -1575,6 +1591,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 print_pkg(self.prefix)
                 spack.hooks.post_install(self.spec)
                 return
+            elif kwargs.get('cache_only', False):
+                tty.die('No binary for %s found and cache-only specified')
 
             tty.msg('No binary for %s found: installing from source'
                     % self.name)
@@ -1790,7 +1808,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if restage and self.stage.managed_by_spack:
             self.stage.destroy()
-            self.stage.create()
 
         return partial
 

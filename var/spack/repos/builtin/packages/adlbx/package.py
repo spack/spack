@@ -15,9 +15,8 @@ class Adlbx(AutotoolsPackage):
     git      = "https://github.com/swift-lang/swift-t.git"
 
     version('master', branch='master')
-    version('0.9.2', 'a7d9e208eb3b49b8bb857562f6bb61bb')
-    version('0.9.1', '07151ddef5fb83d8f4b40700013d9daf')
-    version('0.8.0', '34ade59ce3be5bc296955231d47a27dd')
+    version('0.9.2', sha256='524902d648001b689a98492402d754a607b8c1d0734699154063c1a4f3410d4a')
+    version('0.9.1', sha256='8913493fe0c097ff13c721ab057514e5bdb55f6318d4e3512692ab739c3190b3')
 
     depends_on('exmcutils@master', when='@master')
     depends_on('exmcutils@:0.5.3', when='@:0.8.0')

@@ -14,7 +14,7 @@ class Xbiff(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xbiff"
     url      = "https://www.x.org/archive/individual/app/xbiff-1.0.3.tar.gz"
 
-    version('1.0.3', '779c888cb45da82a612e7f47971df9ab')
+    version('1.0.3', sha256='b4b702348674985741685e3ec7fcb5640ffb7bf20e753fc2d708f70f2e4c304d')
 
     depends_on('libxaw')
     depends_on('libxmu')

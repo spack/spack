@@ -14,7 +14,7 @@ class XkeyboardConfig(AutotoolsPackage):
     homepage = "https://www.freedesktop.org/wiki/Software/XKeyboardConfig/"
     url      = "https://www.x.org/archive/individual/data/xkeyboard-config/xkeyboard-config-2.18.tar.gz"
 
-    version('2.18', '96c43e04dbfbb1e6e6abd4678292062c')
+    version('2.18', sha256='d5c511319a3bd89dc40622a33b51ba41a2c2caad33ee2bfe502363fcc4c3817d')
 
     depends_on('libx11@1.4.3:')
 

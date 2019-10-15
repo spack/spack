@@ -16,8 +16,8 @@ class Libgcrypt(AutotoolsPackage):
     url = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.1.tar.bz2"
 
     version('1.8.4', sha256='f638143a0672628fde0cad745e9b14deb85dffb175709cacc1f4fe24b93f2227')
-    version('1.8.1', 'b21817f9d850064d2177285f1073ec55')
-    version('1.7.6', '54e180679a7ae4d090f8689ca32b654c')
-    version('1.6.2', 'b54395a93cb1e57619943c082da09d5f')
+    version('1.8.1', sha256='7a2875f8b1ae0301732e878c0cca2c9664ff09ef71408f085c50e332656a78b3')
+    version('1.7.6', sha256='626aafee84af9d2ce253d2c143dc1c0902dda045780cc241f39970fc60be05bc')
+    version('1.6.2', sha256='de084492a6b38cdb27b67eaf749ceba76bf7029f63a9c0c3c1b05c88c9885c4c')
 
     depends_on("libgpg-error")

@@ -22,10 +22,10 @@ class Vtkm(CMakePackage, CudaPackage):
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
     version('master', branch='master')
-    version('1.4.0', "b0d76bbf5a69c18ec6f1fca4f7858047b65330bd")
-    version('1.3.0', "d9f6e274dec2ea01273cccaba356d23ca88c5a25")
-    version('1.2.0', "3295fed86012226c107e1f2605ca7cc583586b63")
-    version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
+    version('1.4.0', sha256="60e1ce73a8c6beda8aed5f2d3ae670b6b0c78c068c6eff4ece769e6d719d5065")
+    version('1.3.0', sha256="72c2c8525a77a456fe0b6a1af0328dad6b9a688f402a3d3ebfa8942e0b5dba1a")
+    version('1.2.0', sha256="9103d954284661f6f03e5b18be6d7bc94254603e6abc8fce67f617f4ad325a0e")
+    version('1.1.0', sha256="a1746b1547d6fb901ea7d7ed50834e8832d6d41ddd497c84d02e1481100d43bc")
 
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols

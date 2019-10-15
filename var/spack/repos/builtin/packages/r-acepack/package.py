@@ -13,4 +13,4 @@ class RAcepack(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/acepack_1.4.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/acepack"
 
-    version('1.4.1', 'a35354655e5260afa0e1860fcc68d871')
+    version('1.4.1', sha256='82750507926f02a696f6cc03693e8d4a5ee7e92500c8c15a16a9c12addcd28b9')

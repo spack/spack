@@ -18,7 +18,7 @@ class Ants(CMakePackage):
     homepage = "http://stnava.github.io/ANTs/"
     url      = "https://github.com/ANTsX/ANTs/archive/v2.2.0.tar.gz"
 
-    version('2.2.0', '5661b949268100ac0f7baf6d2702b4dd')
+    version('2.2.0', sha256='62f8f9ae141cb45025f4bb59277c053acf658d4a3ba868c9e0f609af72e66b4a')
 
     depends_on('zlib', type='link')
 

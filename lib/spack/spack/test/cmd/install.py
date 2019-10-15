@@ -21,10 +21,13 @@ import spack.cmd.install
 from spack.error import SpackError
 from spack.spec import Spec
 from spack.main import SpackCommand
+import spack.environment as ev
 
 from six.moves.urllib.error import HTTPError, URLError
 
 install = SpackCommand('install')
+env = SpackCommand('env')
+add = SpackCommand('add')
 
 
 @pytest.fixture(scope='module')
@@ -591,3 +594,57 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
 
         assert 'WARNING: ALL CAPITAL WARNING!' in msg
         assert 'foo.c:89: warning: some weird warning!' in msg
+
+
+def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
+    with capfd.disabled():
+        try:
+            install('--cache-only', 'libdwarf')
+            assert False
+        except spack.main.SpackCommandError:
+            pass
+
+
+def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
+    dep = Spec('dependency-install').concretized()
+    root = Spec('dependent-install').concretized()
+
+    install('--only', 'dependencies', 'dependent-install')
+
+    assert os.path.exists(dep.prefix)
+    assert not os.path.exists(root.prefix)
+
+
+@pytest.mark.regression('12002')
+def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
+                                          mutable_mock_env_path):
+    env('create', 'test')
+
+    with ev.read('test'):
+        dep = Spec('dependency-install').concretized()
+        root = Spec('dependent-install').concretized()
+
+        install('-v', '--only', 'dependencies', 'dependent-install')
+
+        assert os.path.exists(dep.prefix)
+        assert not os.path.exists(root.prefix)
+
+
+@pytest.mark.regression('12002')
+def test_install_only_dependencies_of_all_in_env(
+    tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
+):
+    env('create', '--without-view', 'test')
+
+    with ev.read('test'):
+        roots = [Spec('dependent-install@1.0').concretized(),
+                 Spec('dependent-install@2.0').concretized()]
+
+        add('dependent-install@1.0')
+        add('dependent-install@2.0')
+        install('--only', 'dependencies')
+
+        for root in roots:
+            assert not os.path.exists(root.prefix)
+            for dep in root.traverse(root=False):
+                assert os.path.exists(dep.prefix)

@@ -23,12 +23,12 @@ class Fftw(AutotoolsPackage):
     url = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 
-    version('3.3.8', '8aac833c943d8e90d51b697b27d4384d')
-    version('3.3.7', '0d5915d7d39b3253c1cc05030d79ac47')
-    version('3.3.6-pl2', '927e481edbb32575397eb3d62535a856')
-    version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
-    version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
-    version('2.1.5', '8d16a84f3ca02a785ef9eb36249ba433')
+    version('3.3.8', sha256='6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303')
+    version('3.3.7', sha256='3b609b7feba5230e8f6dd8d245ddbefac324c5a6ae4186947670d9ac2cd25573')
+    version('3.3.6-pl2', sha256='a5de35c5c824a78a058ca54278c706cdf3d4abba1c56b63531c2cb05f5d57da2')
+    version('3.3.5', sha256='8ecfe1b04732ec3f5b7d279fdb8efcad536d555f9d1e8fabd027037d45ea8bcf')
+    version('3.3.4', sha256='8f0cde90929bc05587c3368d2f15cd0530a60b8a9912a8e2979a72dbe5af0982')
+    version('2.1.5', sha256='f8057fae1c7df8b99116783ef3e94a6a44518d49c72e2e630c24b689c6022630')
 
     patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)

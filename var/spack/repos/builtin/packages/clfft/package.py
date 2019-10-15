@@ -12,7 +12,7 @@ class Clfft(CMakePackage):
     homepage = "https://github.com/clMathLibraries/clFFT"
     url      = "https://github.com/clMathLibraries/clFFT/archive/v2.12.2.tar.gz"
 
-    version('2.12.2', '9104d85f9f2f3c58dd8efc0e4b06496f')
+    version('2.12.2', sha256='e7348c146ad48c6a3e6997b7702202ad3ee3b5df99edf7ef00bbacc21e897b12')
 
     variant('client', default=True,
             description='build client and callback client')

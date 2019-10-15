@@ -17,10 +17,10 @@ class PyMpi4py(PythonPackage):
     git      = "https://github.com/mpi4py/mpi4py.git"
 
     version('develop', branch='master')
-    version('3.0.1', '969bcde3188fb98e0be61b5d78a8745f')
-    version('3.0.0', 'bfe19f20cef5e92f6e49e50fb627ee70')
-    version('2.0.0', '4f7d8126d7367c239fd67615680990e3')
-    version('1.3.1', 'dbe9d22bdc8ed965c23a7ceb6f32fc3c')
+    version('3.0.1', sha256='6549a5b81931303baf6600fa2e3bc04d8bd1d5c82f3c21379d0d64a9abcca851')
+    version('3.0.0', sha256='b457b02d85bdd9a4775a097fac5234a20397b43e073f14d9e29b6cd78c68efd7')
+    version('2.0.0', sha256='6543a05851a7aa1e6d165e673d422ba24e45c41e4221f0993fe1e5924a00cb81')
+    version('1.3.1', sha256='e7bd2044aaac5a6ea87a87b2ecc73b310bb6efe5026031e33067ea3c2efc3507')
 
     depends_on('python@2.7:2.8,3.3:')
     depends_on('py-setuptools', type='build')

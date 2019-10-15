@@ -794,9 +794,9 @@ class TestStage(object):
         assert spack.stage._stage_root is None
 
     @pytest.mark.parametrize(
-        'path,purged', [('spack-stage-mypkg-1-hash', True),
-                        ('spack-stage-pkg2-2-hash', True),
-                        ('stage-a1b2c3', False)])
+        'path,purged', [('spack-stage-1234567890abcdef1234567890abcdef', True),
+                        ('spack-stage-anything-goes-here', True),
+                        ('stage-spack', False)])
     def test_stage_purge(self, tmpdir, clear_stage_root, path, purged):
         """Test purging of stage directories."""
         stage_dir = tmpdir.join('stage')

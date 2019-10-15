@@ -34,6 +34,9 @@ def setup_parser(subparser):
     cache_group.add_argument(
         '--no-cache', action='store_false', dest='use_cache', default=True,
         help="do not check for pre-built Spack packages in mirrors")
+    cache_group.add_argument(
+        '--cache-only', action='store_true', dest='cache_only', default=False,
+        help="only install package from binary mirrors")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -46,7 +49,8 @@ def bootstrap(parser, args, **kwargs):
         'install_deps': 'dependencies',
         'verbose': args.verbose,
         'dirty': args.dirty,
-        'use_cache': args.use_cache
+        'use_cache': args.use_cache,
+        'cache_only': args.cache_only
     })
 
     # Define requirement dictionary defining general specs which need

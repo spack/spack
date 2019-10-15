@@ -15,7 +15,7 @@ class PyPymol(PythonPackage):
     homepage = "https://pymol.org"
     url      = "https://sourceforge.net/projects/pymol/files/pymol/2/pymol-v2.1.0.tar.bz2"
 
-    version('2.1.0', 'ef2ab2ce11d65785ca3258b4e6982dfb')
+    version('2.1.0', sha256='7ae8ebb899533d691a67c1ec731b00518dea456ab3e258aa052a65c24b63eae2')
 
     depends_on('python+tkinter', type=('build', 'run'))
     depends_on('tcl')

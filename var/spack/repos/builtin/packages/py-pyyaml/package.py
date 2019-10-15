@@ -12,5 +12,5 @@ class PyPyyaml(PythonPackage):
     url      = "http://pyyaml.org/download/pyyaml/PyYAML-3.11.tar.gz"
 
     version('3.13', sha256='3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf')
-    version('3.12', '4c129761b661d181ebf7ff4eb2d79950')
-    version('3.11', 'f50e08ef0fe55178479d3a618efe21db')
+    version('3.12', sha256='592766c6303207a20efc445587778322d7f73b161bd994f227adaa341ba212ab')
+    version('3.11', sha256='c36c938a872e5ff494938b33b14aaa156cb439ec67548fcab3535bb78b0846e8')

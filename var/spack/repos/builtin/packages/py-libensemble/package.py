@@ -21,8 +21,8 @@ class PyLibensemble(PythonPackage):
     version('0.4.1', sha256='282c32ffb79d84cc80b5cc7043c202d5f0b8ebff10f63924752f092e3938db5e')
     version('0.4.0', sha256='9384aa3a58cbc20bbd1c6fddfadb5e6a943d593a3a81c8665f030dbc6d76e76e')
     version('0.3.0', sha256='c8efdf45d0da0ef6299ee778cea1c285c95972af70d3a729ee6dc855e66f9294')
-    version('0.2.0', 'ee96047594a3f5a1533f24d3b1f365f9')
-    version('0.1.0', '0c3d45dd139429de1a5273e5bd8e46ec')
+    version('0.2.0', sha256='ecac7275d4d0f4a5e497e5c9ef2cd998da82b2c020a0fb87546eeea262f495ff')
+    version('0.1.0', sha256='0b27c59ae80f7af8b1bee92fcf2eb6c9a8fd3494bf2eb6b3ea17a7c03d3726bb')
 
     variant('mpi',  default=False, description='Install with MPI')
     variant('scipy',  default=False, description='Install with scipy')

@@ -729,6 +729,7 @@
       "features": [],
       "compilers": {
         "gcc": {
+          "name": "powerpc64",
           "versions": "4:",
           "flags": "-mcpu={name} -mtune={name}"
         }
@@ -783,6 +784,7 @@
       "features": [],
       "compilers": {
         "gcc": {
+          "name": "powerpc64le",
           "versions": "4:",
           "flags": "-mcpu={name} -mtune={name}"
         }
