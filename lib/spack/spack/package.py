@@ -42,6 +42,7 @@ import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
 import spack.mixins
+import spack.multimethod
 import spack.repo
 import spack.url
 import spack.util.web
@@ -138,7 +139,8 @@ class InstallPhase(object):
 
 class PackageMeta(
     spack.directives.DirectiveMeta,
-    spack.mixins.PackageMixinsMeta
+    spack.mixins.PackageMixinsMeta,
+    spack.multimethod.MultiMethodMeta
 ):
     """
     Package metaclass for supporting directives (e.g., depends_on) and phases
