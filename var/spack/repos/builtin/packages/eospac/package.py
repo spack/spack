@@ -43,8 +43,8 @@ class Eospac(Package):
                  'INSTALLED_INCLUDE_DIR={0}'.format(prefix.include),
                  'INSTALLED_EXAMPLE_DIR={0}'.format(prefix.example),
                  'INSTALLED_BIN_DIR={0}'.format(prefix.bin))
-        
-        # fix conflict with linux's getopt for 6.4.0beta.2 
+
+        # fix conflict with linux's getopt for 6.4.0beta.2
         if spec.satisfies('@6.4.0beta.2'):
             with working_dir(prefix.bin):
                 move('getopt', 'driver_getopt')
