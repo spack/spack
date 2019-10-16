@@ -58,12 +58,6 @@ class Adios2(CMakePackage):
     variant('hdf5', default=False,
             description='Enable the HDF5 engine')
 
-    # transitive dependencies with optional dependencies
-    variant('libffi', default=True,
-            description='Code generation for emulated platforms in DILL')
-    variant('libfabric', default=True,
-            description='RMDA communication in EVPath and SST')
-
     # optional language bindings, C++11 and C always provided
     variant('python', default=False,
             description='Enable the Python bindings')
@@ -84,8 +78,10 @@ class Adios2(CMakePackage):
     depends_on('cmake@3.6.0:', type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('libffi', when='+libffi')               # optional in DILL
-    depends_on('libfabric@1.6.0:', when='+libfabric')  # optional in EVPath and SST
+    depends_on('libffi', when='+sst')            # optional in DILL
+    depends_on('libfabric@1.6.0:', when='+sst')  # optional in EVPath and SST
+    # depends_on('bison', when='+sst')     # optional in FFS, broken package
+    # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
 
     depends_on('mpi', when='+mpi')
     depends_on('zeromq', when='+dataman')
@@ -155,10 +151,18 @@ class Adios2(CMakePackage):
             args.append('-DADIOS2_USE_DataSpaces={0}'.format(
                 'ON' if '+dataspaces' in spec else 'OFF'))
 
-        if spec.satisfies('~libffi'):
+        # transitive dependencies in SST via DILL, FFS, EVPath, etc.
+        if spec.satisfies('~sst'):
             args.append('-DCMAKE_DISABLE_FIND_PACKAGE_LibFFI=TRUE')
-        if spec.satisfies('~libfabric'):
+        if spec.satisfies('~sst'):
             args.append('-DCMAKE_DISABLE_FIND_PACKAGE_LIBFABRIC=TRUE')
+        # if spec.satisfies('~sst'):  # broken package
+        args.append('-DCMAKE_DISABLE_FIND_PACKAGE_BISON=TRUE')
+        # if spec.satisfies('~sst'):  # depends on BISON
+        args.append('-DCMAKE_DISABLE_FIND_PACKAGE_FLEX=TRUE')
+        # not yet packaged
+        args.append('-DCMAKE_DISABLE_FIND_PACKAGE_CrayDRC=TRUE')
+        args.append('-DCMAKE_DISABLE_FIND_PACKAGE_NVSTREAM=TRUE')
 
         if spec.satisfies('~shared'):
             args.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL={0}'.format(
