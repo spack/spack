@@ -187,3 +187,22 @@ def test_optimization_flags(
     compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
+
+
+@pytest.mark.parametrize('compiler,real_version,target_str,expected_flags', [
+    (spack.spec.CompilerSpec('gcc@9.2.0'), None, 'haswell',
+     '-march=haswell -mtune=haswell'),
+    # Check that custom string versions are accepted
+    (spack.spec.CompilerSpec('gcc@foo'), '9.2.0', 'icelake',
+     '-march=icelake-client -mtune=icelake-client'),
+])
+def test_optimization_flags_with_custom_versions(
+        compiler, real_version, target_str, expected_flags, monkeypatch, config
+):
+    target = spack.architecture.Target(target_str)
+    if real_version:
+        monkeypatch.setattr(
+            spack.compiler.Compiler, 'cc_version', lambda x, y: real_version
+        )
+    opt_flags = target.optimization_flags(compiler)
+    assert opt_flags == expected_flags
