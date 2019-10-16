@@ -653,6 +653,7 @@ class TestStage(object):
         assert source_path.endswith(spack.stage._source_path_subdir)
         assert not os.path.exists(source_path)
 
+    @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
     def test_first_accessible_path(self, tmpdir):
         """Test _first_accessible_path names."""
         spack_dir = tmpdir.join('paths')
@@ -783,6 +784,7 @@ class TestStage(object):
 
         assert spack.stage._resolve_paths(paths) == res_paths
 
+    @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
     def test_get_stage_root_bad_path(self, clear_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
         with spack.config.override('config:build_stage', '/no/such/path'):
