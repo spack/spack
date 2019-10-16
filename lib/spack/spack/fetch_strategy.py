@@ -83,6 +83,13 @@ def _hash(content):
     return b32_hash
 
 
+def _global_dir(fname):
+    # Given a filename that will be placed in a directory of many files,
+    # produce a directory name that can be used to split the files evenly
+    # among many directories.
+    return _hash(fname)[:2]
+
+
 class FSMeta(type):
     """This metaclass registers all fetch strategies in a list."""
     def __init__(cls, name, bases, dict):
@@ -298,7 +305,11 @@ class URLFetchStrategy(FetchStrategy):
     def mirror_id(self):
         if not self.digest:
             return None
-        return os.path.sep.join(['archive', self.digest])
+        # The filename is the digest. A directory is also created based on
+        # truncating the digest to avoid creating a directory with too many
+        # entries
+        return os.path.sep.join(
+            ['archive', _global_dir(self.digest), self.digest])
 
     @_needs_stage
     def fetch(self):
@@ -761,7 +772,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         repo_ref = self.commit or self.tag or self.branch
         if repo_ref:
             id += "-" + repo_ref
-        return os.path.sep.join(['git', id])
+        return os.path.sep.join(['git', _global_dir(id), id])
 
     def get_source_id(self):
         if not self.branch:
@@ -948,7 +959,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         id = _hash(self.url)
         if self.revision:
             id += "-" + self.revision
-        return os.path.sep.join(['svn', id])
+        return os.path.sep.join(['svn', _global_dir(id), id])
 
     @_needs_stage
     def fetch(self):
@@ -1057,7 +1068,7 @@ class HgFetchStrategy(VCSFetchStrategy):
         id = _hash(self.url)
         if self.revision:
             id += "-" + self.revision
-        return os.path.sep.join(['hg', id])
+        return os.path.sep.join(['hg', _global_dir(id), id])
 
     def get_source_id(self):
         output = self.hg('id', self.url, output=str)
