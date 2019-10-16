@@ -32,3 +32,7 @@ class Bison(AutotoolsPackage):
         patch('secure_snprintf.patch', level=0, when='@3.0.4')
 
     build_directory = 'spack-build'
+
+    @property
+    def parallel(self):
+        return not self.spec.satisfies('@3.4.2')
