@@ -56,7 +56,7 @@ from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
-from spack.stage import Stage, ResourceStage, StageComposite
+from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
@@ -753,7 +753,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         mp = spack.mirror.mirror_archive_path(self.spec, fetcher)
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
+        stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version,
+                                             s.dag_hash())
 
         def download_search():
             dynamic_fetcher = fs.from_list_url(self)

@@ -5,6 +5,7 @@
 
 import collections
 import copy
+import errno
 import inspect
 import itertools
 import os
@@ -39,6 +40,14 @@ from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version
+
+
+@pytest.fixture
+def no_path_access(monkeypatch):
+    def _can_access(path, perms):
+        return False
+
+    monkeypatch.setattr(os, 'access', _can_access)
 
 
 #
@@ -184,23 +193,29 @@ def working_env():
 
 @pytest.fixture(scope='function', autouse=True)
 def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
-    """Ensure that each test leaves a clean stage when done.
+    """
+    Ensure that each (mock_stage) test leaves a clean stage when done.
 
-    This can be disabled for tests that are expected to dirty the stage
-    by adding::
+    Tests that are expected to dirty the stage can disable the check by
+    adding::
 
         @pytest.mark.disable_clean_stage_check
 
-    to tests that need it.
+    and the associated stage files will be removed.
     """
     stage_path = mock_stage
 
     yield
 
     files_in_stage = set()
-    if os.path.exists(stage_path):
+    try:
         stage_files = os.listdir(stage_path)
         files_in_stage = set(stage_files) - ignore_stage_files
+    except OSError as err:
+        if err.errno == errno.ENOENT:
+            pass
+        else:
+            raise
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
