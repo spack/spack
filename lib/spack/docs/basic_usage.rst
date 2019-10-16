@@ -277,6 +277,40 @@ the tarballs in question to it (see :ref:`mirrors`):
 
        $ spack install galahad
 
+-----------------------
+Verifying installations
+-----------------------
+
+The ``spack verify`` command can be used to verify the validity of
+Spack-installed packages any time after installation.
+
+At installation time, Spack creates a manifest of every file in the
+installation prefix. For links, Spack tracks the mode, ownership, and
+destination. For directories, Spack tracks the mode, and
+ownership. For files, Spack tracks the mode, ownership, modification
+time, hash, and size. The Spack verify command will check, for every
+file in each package, whether any of those attributes have changed. It
+will also check for newly added files or deleted files from the
+installation prefix. Spack can either check all installed packages
+using the `-a,--all` or accept specs listed on the command line to
+verify.
+
+The ``spack verify`` command can also verify for individual files that
+they haven't been altered since installation time. If the given file
+is not in a Spack installation prefix, Spack will report that it is
+not owned by any package. To check individual files instead of specs,
+use the ``-f,--files`` option.
+
+Spack installation manifests are part of the tarball signed by Spack
+for binary package distribution. When installed from a binary package,
+Spack uses the packaged installation manifest instead of creating one
+at install time.
+
+The ``spack verify`` command also accepts the ``-l,--local`` option to
+check only local packages (as opposed to those used transparently from
+``upstream`` spack instances) and the ``-j,--json`` option to output
+machine-readable json data for any errors.
+
 -------------------------
 Seeing installed packages
 -------------------------
@@ -848,18 +882,113 @@ that executables will run without the need to set ``LD_LIBRARY_PATH``.
 Architecture specifiers
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The architecture can be specified by using the reserved
-words ``target`` and/or ``os`` (``target=x86-64 os=debian7``). You can also
-use the triplet form of platform, operating system and processor.
+Each node in the dependency graph of a spec has an architecture attribute.
+This attribute is a triplet of platform, operating system and processor.
+You can specify the elements either separately, by using
+the reserved keywords ``platform``, ``os`` and ``target``:
+
+.. code-block:: console
+
+   $ spack install libelf platform=linux
+   $ spack install libelf os=ubuntu18.04
+   $ spack install libelf target=broadwell
+
+or together by using the reserved keyword ``arch``:
 
 .. code-block:: console
 
    $ spack install libelf arch=cray-CNL10-haswell
 
-Users on non-Cray systems won't have to worry about specifying the architecture.
-Spack will autodetect what kind of operating system is on your machine as well
-as the processor. For more information on how the architecture can be
-used on Cray machines, see :ref:`cray-support`
+Normally users don't have to bother specifying the architecture if they
+are installing software for their current host, as in that case the
+values will be detected automatically.  If you need fine-grained control
+over which packages use which targets (or over *all* packages' default
+target), see :ref:`concretization-preferences`.
+
+.. admonition:: Cray machines
+
+  The situation is a little bit different for Cray machines and a detailed
+  explanation on how the architecture can be set on them can be found at :ref:`cray-support`
+
+.. _support-for-microarchitectures:
+
+"""""""""""""""""""""""""""""""""""""""
+Support for specific microarchitectures
+"""""""""""""""""""""""""""""""""""""""
+
+Spack knows how to detect and optimize for many specific microarchitectures
+(including recent Intel, AMD and IBM chips) and encodes this information in
+the ``target`` portion of the architecture specification. A complete list of
+the microarchitectures known to Spack can be obtained in the following way:
+
+.. command-output:: spack arch --known-targets
+
+When a spec is installed Spack matches the compiler being used with the
+microarchitecture being targeted to inject appropriate optimization flags
+at compile time. Giving a command such as the following:
+
+.. code-block:: console
+
+   $ spack install zlib%gcc@9.0.1 target=icelake
+
+will produce compilation lines similar to:
+
+.. code-block:: console
+
+   $ /usr/bin/gcc-9 -march=icelake-client -mtune=icelake-client -c ztest10532.c
+   $ /usr/bin/gcc-9 -march=icelake-client -mtune=icelake-client -c -fPIC -O2 ztest10532.
+   ...
+
+where the flags ``-march=icelake-client -mtune=icelake-client`` are injected
+by Spack based on the requested target and compiler.
+
+If Spack knows that the requested compiler can't optimize for the current target
+or can't build binaries for that target at all, it will exit with a meaningful error message:
+
+.. code-block:: console
+
+   $ spack install zlib%gcc@5.5.0 target=icelake
+   ==> Error: cannot produce optimized binary for micro-architecture "icelake" with gcc@5.5.0 [supported compiler versions are 8:]
+
+When instead an old compiler is selected on a recent enough microarchitecture but there is
+no explicit ``target`` specification, Spack will optimize for the best match it can find instead
+of failing:
+
+.. code-block:: console
+
+   $ spack arch
+   linux-ubuntu18.04-broadwell
+
+   $ spack spec zlib%gcc@4.8
+   Input spec
+   --------------------------------
+   zlib%gcc@4.8
+
+   Concretized
+   --------------------------------
+   zlib@1.2.11%gcc@4.8+optimize+pic+shared arch=linux-ubuntu18.04-haswell
+
+   $ spack spec zlib%gcc@9.0.1
+   Input spec
+   --------------------------------
+   zlib%gcc@9.0.1
+
+   Concretized
+   --------------------------------
+   zlib@1.2.11%gcc@9.0.1+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
+
+In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when
+compiling with ``gcc@4.8`` since support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
+
+Finally if Spack has no information to match compiler and target, it will
+proceed with the installation but avoid injecting any microarchitecture
+specific flags.
+
+.. warning::
+
+   Currently Spack doesn't print any warning to the user if it has no information
+   on which optimization flags should be used for a given compiler. This behavior
+   might change in the future.
 
 .. _sec-virtual-dependencies:
 
@@ -1095,23 +1224,14 @@ Using Extensions
 ^^^^^^^^^^^^^^^^
 
 There are three ways to get ``numpy`` working in Python.  The first is
-to use :ref:`shell-support`.  You can simply ``use`` or ``load`` the
+to use :ref:`shell-support`.  You can simply ``load`` the
 module for the extension, and it will be added to the ``PYTHONPATH``
-in your current shell.
-
-For tcl modules:
+in your current shell:
 
 .. code-block:: console
 
    $ spack load python
    $ spack load py-numpy
-
-or, for dotkit:
-
-.. code-block:: console
-
-   $ spack use python
-   $ spack use py-numpy
 
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.

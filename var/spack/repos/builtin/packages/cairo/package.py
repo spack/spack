@@ -14,9 +14,9 @@ class Cairo(AutotoolsPackage):
     url      = "https://www.cairographics.org/releases/cairo-1.16.0.tar.xz"
 
     version('1.16.0', sha256='5e7b29b3f113ef870d1e3ecf8adf21f923396401604bda16d44be45e66052331')
-    version('1.14.12', '490025a0ba0622a853010f49fb6343f29fb70b9b')
-    version('1.14.8', 'c6f7b99986f93c9df78653c3e6a3b5043f65145e')
-    version('1.14.0', '53cf589b983412ea7f78feee2e1ba9cea6e3ebae')
+    version('1.14.12', sha256='8c90f00c500b2299c0a323dd9beead2a00353752b2092ead558139bd67f7bf16')
+    version('1.14.8', sha256='d1f2d98ae9a4111564f6de4e013d639cf77155baf2556582295a0f00a9bc5e20')
+    version('1.14.0', sha256='2cf5f81432e77ea4359af9dcd0f4faf37d015934501391c311bfd2d19a0134b7')
 
     variant('X', default=False, description="Build with X11 support")
     variant('pdf', default=False, description="Enable cairo's PDF surface backend feature")

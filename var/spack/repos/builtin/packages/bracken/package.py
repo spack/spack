@@ -14,7 +14,7 @@ class Bracken(Package):
     homepage = "https://ccb.jhu.edu/software/bracken"
     url      = "https://github.com/jenniferlu717/Bracken/archive/1.0.0.tar.gz"
 
-    version('1.0.0', 'bd91805655269c5f3becb8f8028bab6d')
+    version('1.0.0', sha256='8ee736535ad994588339d94d0db4c0b1ba554a619f5f96332ee09f2aabdfe176')
 
     depends_on('perl')
     depends_on('python@2.7:')

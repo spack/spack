@@ -13,7 +13,7 @@ class Xwud(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xwud"
     url      = "https://www.x.org/archive/individual/app/xwud-1.0.4.tar.gz"
 
-    version('1.0.4', 'bb44485a37496f0121e5843bcf5bb01b')
+    version('1.0.4', sha256='b7c124ccd87f529daedb7ef01c670ce6049fe141fd9ba7f444361de34510cd6c')
 
     depends_on('libx11')
 

@@ -21,8 +21,8 @@ class VotcaCsg(CMakePackage):
 
     version('develop', branch='master')
     version('1.5', sha256='160387cdc51f87dd20ff2e2eed97086beee415d48f3c92f4199f6109068c8ff4')
-    version('1.4.1', 'e4195d69db2036e9d76f22115ae31f81')
-    version('1.4', 'd009e761e5e3afd51eed89c420610a67')
+    version('1.4.1', sha256='41dccaecadd0165c011bec36a113629e27745a5a133d1a042efe4356acdb5450')
+    version('1.4', sha256='c13e7febd792de8c3d426203f089bd4d33b8067f9db5e8840e4579c88b61146e')
 
     depends_on("cmake@2.8:", type='build')
     for v in ["1.4", "1.4.1", "1.5", "develop"]:

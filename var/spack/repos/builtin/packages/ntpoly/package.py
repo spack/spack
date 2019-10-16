@@ -26,4 +26,7 @@ class Ntpoly(CMakePackage):
 
     def cmake_args(self):
         args = ["-DNOSWIG=Yes"]
+        if self.spec.satisfies('%fj'):
+            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
         return args

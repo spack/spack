@@ -17,9 +17,9 @@ class XercesC(AutotoolsPackage):
     homepage = "https://xerces.apache.org/xerces-c"
     url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.1.tar.bz2"
 
-    version('3.2.2', '4c395216ecbef3c88a756ff4090e6f7e')
-    version('3.2.1', '8f98a81a3589bbc2dad9837452f7d319')
-    version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
+    version('3.2.2', sha256='1f2a4d1dbd0086ce0f52b718ac0fa4af3dc1ce7a7ff73a581a05fbe78a82bce0')
+    version('3.2.1', sha256='a36b6e162913ec218cfb84772d2535d43c3365355a601d45d4b8ce11f0ece0da')
+    version('3.1.4', sha256='9408f12c1628ecf80730bedbe8b2caad810edd01bb4c66f77b60c873e8cc6891')
 
     # Whilst still using Autotools, can use full cxxstd with 'default'
     # If build is moved to CMake, then will also need a patch to Xerces-C's

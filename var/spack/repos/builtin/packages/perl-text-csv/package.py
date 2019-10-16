@@ -12,4 +12,4 @@ class PerlTextCsv(PerlPackage):
     homepage = "http://search.cpan.org/~ishigaki/Text-CSV/lib/Text/CSV.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/I/IS/ISHIGAKI/Text-CSV-1.95.tar.gz"
 
-    version('1.95', '1e076b4b1f8ba6a5003bf93f3c437a9e')
+    version('1.95', sha256='7e0a11d9c1129a55b68a26aa4b37c894279df255aa63ec8341d514ab848dbf61')

@@ -16,7 +16,7 @@ class Aspell(AutotoolsPackage):
 
     extendable = True           # support activating dictionaries
 
-    version('0.60.6.1', 'e66a9c9af6a60dc46134fdacf6ce97d7')
+    version('0.60.6.1', sha256='f52583a83a63633701c5f71db3dc40aab87b7f76b29723aeb27941eff42df6e1')
 
     patch('darwin.patch', when='platform=darwin')
     patch('issue-519.patch', when='@:0.60.6.1')

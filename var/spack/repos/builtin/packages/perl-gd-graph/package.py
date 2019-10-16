@@ -12,7 +12,7 @@ class PerlGdGraph(PerlPackage):
     homepage = "http://search.cpan.org/~bwarfield/GDGraph/Graph.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/B/BW/BWARFIELD/GDGraph-1.4308.tar.gz"
 
-    version('1.4308', 'fcdd34d5e09ae917b5d264887734b3b1')
+    version('1.4308', sha256='75b3c7e280431404ed096c6e120d552cc39052a8610787149515e94b9ba237cb')
 
     depends_on('perl-capture-tiny', type=('build', 'run'))
     depends_on('perl-test-exception', type=('build', 'run'))

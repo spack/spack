@@ -14,6 +14,8 @@ class Cryptsetup(AutotoolsPackage):
     list_url = "https://www.kernel.org/pub/linux/utils/cryptsetup/"
     list_depth = 1
 
+    # If you're adding newer versions, check whether the patch below
+    # still needs to be applied.
     version('2.2.1', sha256='94e79a31ed38bdb0acd9af7ccca1605a2ac62ca850ed640202876b1ee11c1c61')
 
     depends_on('libuuid', type=('build', 'link'))
@@ -31,6 +33,8 @@ class Cryptsetup(AutotoolsPackage):
     # Upstream includes support for discovering the location of the libintl
     # library but is missing the bit in the Makefile.ac that includes it in
     # the LDFLAGS. See https://gitlab.com/cryptsetup/cryptsetup/issues/479
+    # This *should* be unnecessary starting with release 2.2.2, see
+    # https://gitlab.com/cryptsetup/cryptsetup/issues/479#note_227617031
     patch('autotools-libintl.patch')
 
     def url_for_version(self, version):

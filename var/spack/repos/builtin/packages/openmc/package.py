@@ -18,7 +18,7 @@ class Openmc(CMakePackage):
     url = "https://github.com/openmc-dev/openmc/tarball/v0.10.0"
     git = "https://github.com/openmc-dev/openmc.git"
 
-    version('0.10.0', 'abb57bd1b226eb96909dafeec31369b0')
+    version('0.10.0', sha256='47650cb45e2c326ae439208d6f137d75ad3e5c657055912d989592c6e216178f')
     version('develop')
 
     depends_on("hdf5+hl")

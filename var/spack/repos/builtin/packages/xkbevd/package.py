@@ -12,7 +12,7 @@ class Xkbevd(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xkbevd"
     url      = "https://www.x.org/archive/individual/app/xkbevd-1.1.4.tar.gz"
 
-    version('1.1.4', '0e9e05761551b1e58bd541231f90ae87')
+    version('1.1.4', sha256='97dc2c19617da115c3d1183807338fa78c3fd074d8355d10a484f7b1c5b18459')
 
     depends_on('libxkbfile')
     depends_on('libx11')

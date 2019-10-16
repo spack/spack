@@ -12,7 +12,7 @@ class PyShiboken(PythonPackage):
     homepage = "https://shiboken.readthedocs.org/"
     url      = "https://pypi.io/packages/source/S/Shiboken/Shiboken-1.2.2.tar.gz"
 
-    version('1.2.2', '345cfebda221f525842e079a6141e555')
+    version('1.2.2', sha256='0baee03c6244ab56e42e4200d0cb5e234682b11cc296ed0a192fe457d054972f')
 
     depends_on('cmake', type='build')
 

@@ -74,7 +74,6 @@ the location for each type of module.  e.g.:
    module_roots:
      tcl:    $spack/share/spack/modules
      lmod:   $spack/share/spack/lmod
-     dotkit: $spack/share/spack/dotkit
 
 See :ref:`modules` for details.
 
@@ -92,9 +91,10 @@ the selected ``build_stage`` path.
 .. warning:: We highly recommend specifying ``build_stage`` paths that
    distinguish between staging and other activities to ensure 
    ``spack clean`` does not inadvertently remove unrelated files.
-   This can be accomplished by using a combination of ``spack`` and or
-   ``stage`` in each path as shown in the default settings and documented
-   examples.
+   Spack prepends ``spack-stage-`` to temporary staging directory names to
+   reduce this risk.  Using a combination of ``spack`` and or ``stage`` in
+   each specified path, as shown in the default settings and documented
+   examples, will add another layer of protection.
 
 By default, Spack's ``build_stage`` is configured like this:
 

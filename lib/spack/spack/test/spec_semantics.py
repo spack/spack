@@ -183,13 +183,13 @@ class TestSpecSematics(object):
 
         check_unsatisfiable(
             'foo platform=linux',
-            'platform=test os=redhat6 target=x86_32')
+            'platform=test os=redhat6 target=x86')
         check_unsatisfiable(
             'foo os=redhat6',
             'platform=test os=debian6 target=x86_64')
         check_unsatisfiable(
             'foo target=x86_64',
-            'platform=test os=redhat6 target=x86_32')
+            'platform=test os=redhat6 target=x86')
 
         check_satisfies(
             'foo arch=test-None-None',
@@ -217,8 +217,8 @@ class TestSpecSematics(object):
             'foo platform=test target=default_target os=default_os',
             'platform=test os=default_os')
         check_unsatisfiable(
-            'foo platform=test target=x86_32 os=redhat6',
-            'platform=linux target=x86_32 os=redhat6')
+            'foo platform=test target=x86 os=redhat6',
+            'platform=linux target=x86 os=redhat6')
 
     def test_satisfies_dependencies(self):
         check_satisfies('mpileaks^mpich', '^mpich')
@@ -944,3 +944,40 @@ class TestSpecSematics(object):
 
         with pytest.raises(SpecError):
             spec.prefix
+
+    def test_forwarding_of_architecture_attributes(self):
+        spec = Spec('libelf').concretized()
+
+        # Check that we can still access each member through
+        # the architecture attribute
+        assert 'test' in spec.architecture
+        assert 'debian' in spec.architecture
+        assert 'x86_64' in spec.architecture
+
+        # Check that we forward the platform and os attribute correctly
+        assert spec.platform == 'test'
+        assert spec.os == 'debian6'
+
+        # Check that the target is also forwarded correctly and supports
+        # all the operators we expect
+        assert spec.target == 'x86_64'
+        assert spec.target.family == 'x86_64'
+        assert 'avx512' not in spec.target
+        assert spec.target < 'broadwell'
+
+    @pytest.mark.parametrize('spec,constraint,expected_result', [
+        ('libelf target=haswell', 'target=broadwell', False),
+        ('libelf target=haswell', 'target=haswell', True),
+        ('libelf target=haswell', 'target=x86_64:', True),
+        ('libelf target=haswell', 'target=:haswell', True),
+        ('libelf target=haswell', 'target=icelake,:nocona', False),
+        ('libelf target=haswell', 'target=haswell,:nocona', True),
+        # Check that a single target is not treated as the start
+        # or the end of an open range
+        ('libelf target=haswell', 'target=x86_64', False),
+        ('libelf target=x86_64', 'target=haswell', False),
+    ])
+    @pytest.mark.regression('13111')
+    def test_target_constraints(self, spec, constraint, expected_result):
+        s = Spec(spec)
+        assert s.satisfies(constraint) is expected_result

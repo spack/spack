@@ -19,6 +19,7 @@ class Signalp(Package):
 
     homepage = "http://www.cbs.dtu.dk/services/SignalP/"
     url      = "file://{0}/signalp-4.1f.Linux.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('4.1f', 'a9aeb66259202649c959846f3f4d9744')
 

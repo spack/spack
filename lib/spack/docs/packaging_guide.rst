@@ -410,6 +410,8 @@ For tarball downloads, Spack can currently support checksums using the
 MD5, SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512 algorithms.  It
 determines the algorithm to use based on the hash length.
 
+.. _versions-and-fetching:
+
 ---------------------
 Versions and fetching
 ---------------------
@@ -3212,6 +3214,137 @@ It's also a bit more concise than satisfies.  The difference between
 the two functions is that ``satisfies()`` tests whether spec
 constraints overlap at all, while ``in`` tests whether a spec or any
 of its dependencies satisfy the provided spec.
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Architecture specifiers
+^^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned in :ref:`support-for-microarchitectures` each node in a concretized spec
+object has an architecture attribute which is a triplet of ``platform``, ``os`` and ``target``.
+Each of these three items can be queried to take decisions when configuring, building or
+installing a package.
+
+""""""""""""""""""""""""""""""""""""""""""""""
+Querying the platform and the operating system
+""""""""""""""""""""""""""""""""""""""""""""""
+
+Sometimes the actions to be taken to install a package might differ depending on the
+platform we are installing for. If that is the case we can use conditionals:
+
+.. code-block:: python
+
+   if spec.platform == 'darwin':
+       # Actions that are specific to Darwin
+       args.append('--darwin-specific-flag')
+
+and branch based on the current spec platform. If we need to make a package directive
+conditional on the platform we can instead employ the usual spec syntax and pass the
+corresponding constraint to the appropriate argument of that directive:
+
+.. code-block:: python
+
+   class Libnl(AutotoolsPackage):
+
+       conflicts('platform=darwin', msg='libnl requires FreeBSD or Linux')
+
+Similar considerations are also valid for the ``os`` part of a spec's architecture.
+For instance:
+
+.. code-block:: python
+
+   class Glib(AutotoolsPackage)
+
+       patch('old-kernels.patch', when='os=centos6')
+
+will apply the patch only when the operating system is Centos 6.
+
+.. note::
+
+   Even though experienced Python programmers might recognize that there are other ways
+   to retrieve information on the platform:
+
+   .. code-block:: python
+
+      if sys.platform == 'darwin':
+          # Actions that are specific to Darwin
+          args.append('--darwin-specific-flag')
+
+   querying the spec architecture's platform should be considered the preferred. The key difference
+   is that a query on ``sys.platform``, or anything similar, is always bound to the host on which the
+   interpreter running Spack is located and as such it won't work correctly in environments where
+   cross-compilation is required.
+
+"""""""""""""""""""""""""""""""""""""
+Querying the target microarchitecture
+"""""""""""""""""""""""""""""""""""""
+
+The third item of the architecture tuple is the ``target`` which abstracts the information on the
+CPU microarchitecture. A list of all the targets known to Spack can be obtained via the
+command line:
+
+.. command-output:: spack arch --known-targets
+
+Within directives each of the names above can be used to match a particular target:
+
+.. code-block:: python
+
+   class Julia(Package):
+       # This patch is only applied on icelake microarchitectures
+       patch("icelake.patch", when="target=icelake")
+
+It's also possible to select all the architectures belonging to the same family
+using an open range:
+
+.. code-block:: python
+
+   class Julia(Package):
+       # This patch is applied on all x86_64 microarchitectures.
+       # The trailing colon that denotes an open range of targets
+       patch("generic_x86_64.patch", when="target=x86_64:")
+
+in a way that resembles what was shown in :ref:`versions-and-fetching` for versions.
+Where ``target`` objects really shine though is when they are used in methods
+called at configure, build or install time. In that case we can test targets
+for supported features, for instance:
+
+.. code-block:: python
+
+   if 'avx512' in spec.target:
+       args.append('--with-avx512')
+
+The snippet above will append the ``--with-avx512`` item to a list of arguments only if the corresponding
+feature is supported by the current target. Sometimes we need to take different actions based
+on the architecture family and not on the specific microarchitecture. In those cases
+we can check the ``family`` attribute:
+
+.. code-block:: python
+
+   if spec.target.family == 'ppc64le':
+       args.append('--enable-power')
+
+Possible values for the ``family`` attribute are displayed by ``spack arch --known-targets``
+under the "Generic architectures (families)" header.
+Finally it's possible to perform actions based on whether the current microarchitecture
+is compatible with a known one:
+
+.. code-block:: python
+
+   if spec.target > 'haswell':
+       args.append('--needs-at-least-haswell')
+
+The snippet above will add an item to a list of configure options only if the current
+architecture is a superset of ``haswell`` or, said otherwise, only if the current
+architecture is a later microarchitecture still compatible with ``haswell``.
+
+.. admonition:: Using Spack on unknown microarchitectures
+
+   If Spack is used on an unknown microarchitecture it will try to perform a best match
+   of the features it detects and will select the closest microarchitecture it has
+   information for. In case nothing matches, it will create on the fly a new generic
+   architecture. This is done to allow users to still be able to use Spack
+   for their work. The software built won't be probably as optimized as it could but just
+   as you need a newer compiler to build for newer architectures, you may need newer
+   versions of Spack for new architectures to be correctly labeled.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 Accessing Dependencies

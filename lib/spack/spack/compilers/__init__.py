@@ -10,12 +10,12 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-import platform as py_platform
 import six
 
 import llnl.util.lang
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.cpu as cpu
 
 import spack.paths
 import spack.error
@@ -401,8 +401,18 @@ def get_compilers(config, cspec=None, arch_spec=None):
         # any given arch spec. If the compiler has no assigned
         # target this is an old compiler config file, skip this logic.
         target = items.get('target', None)
-        if arch_spec and target and (target != arch_spec.target and
-                                     target != 'any'):
+
+        try:
+            current_target = llnl.util.cpu.targets[str(arch_spec.target)]
+            family = str(current_target.family)
+        except KeyError:
+            # TODO: Check if this exception handling makes sense, or if we
+            # TODO: need to change / refactor tests
+            family = arch_spec.target
+        except AttributeError:
+            assert arch_spec is None
+
+        if arch_spec and target and (target != family and target != 'any'):
             continue
 
         compilers.append(_compiler_from_config_entry(items))
@@ -645,8 +655,9 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        target = cpu.host()
         compiler = compiler_cls(
-            spec, operating_system, py_platform.machine(), paths
+            spec, operating_system, str(target.family), paths
         )
         return [compiler]
 

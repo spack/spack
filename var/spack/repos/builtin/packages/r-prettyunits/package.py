@@ -15,7 +15,7 @@ class RPrettyunits(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/prettyunits_1.0.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/prettyunits"
 
-    version('1.0.2', '0a091a297e8b37df54e7fcf28697ee50')
+    version('1.0.2', sha256='35a4980586c20650538ae1e4fed4d80fdde3f212b98546fc3c7d9469a1207f5c')
 
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-assertthat', type=('build', 'run'))

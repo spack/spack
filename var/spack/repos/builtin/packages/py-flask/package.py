@@ -12,9 +12,9 @@ class PyFlask(PythonPackage):
     homepage = "http://github.com/pallets/flask"
     url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
 
-    version('0.12.2', '97278dfdafda98ba7902e890b0289177')
-    version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
-    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
+    version('0.12.2', sha256='49f44461237b69ecd901cc7ce66feea0319b9158743dd27a2899962ab214dac1')
+    version('0.12.1', sha256='9dce4b6bfbb5b062181d3f7da8f727ff70c1156cbb4024351eafd426deb5fb88')
+    version('0.11.1', sha256='b4713f2bfb9ebc2966b8a49903ae0d3984781d5c878591cf2f7b484d28756b0e')
 
     depends_on('py-setuptools',         type='build')
     depends_on('py-werkzeug@0.7:',      type=('build', 'run'))

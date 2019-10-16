@@ -16,6 +16,7 @@ import ruamel.yaml as yaml
 
 import spack.paths
 import spack.config
+import spack.main
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -506,6 +507,7 @@ def test_keys_are_ordered():
         'include',
         'lib/pkgconfig',
         'lib64/pkgconfig',
+        'share/pkgconfig',
         ''
     )
 
@@ -623,6 +625,51 @@ config:
 """)
 
     spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
+
+
+def test_nested_override():
+    """Ensure proper scope naming of nested overrides."""
+    base_name = spack.config.overrides_base_name
+
+    def _check_scopes(num_expected, debug_values):
+        scope_names = [s.name for s in spack.config.config.scopes.values() if
+                       s.name.startswith(base_name)]
+
+        for i in range(num_expected):
+            name = '{0}{1}'.format(base_name, i)
+            assert name in scope_names
+
+            data = spack.config.config.get_config('config', name)
+            assert data['debug'] == debug_values[i]
+
+    # Check results from single and nested override
+    with spack.config.override('config:debug', True):
+        with spack.config.override('config:debug', False):
+            _check_scopes(2, [True, False])
+
+        _check_scopes(1, [True])
+
+
+def test_alternate_override(monkeypatch):
+    """Ensure proper scope naming of override when conflict present."""
+    base_name = spack.config.overrides_base_name
+
+    def _matching_scopes(regexpr):
+        return [spack.config.InternalConfigScope('{0}1'.format(base_name))]
+
+    # Check that the alternate naming works
+    monkeypatch.setattr(spack.config.config, 'matching_scopes',
+                        _matching_scopes)
+
+    with spack.config.override('config:debug', False):
+        name = '{0}2'.format(base_name)
+
+        scope_names = [s.name for s in spack.config.config.scopes.values() if
+                       s.name.startswith(base_name)]
+        assert name in scope_names
+
+        data = spack.config.config.get_config('config', name)
+        assert data['debug'] is False
 
 
 def test_immutable_scope(tmpdir):
@@ -759,3 +806,19 @@ compilers:
     - compiler:
          fenfironfent: /bad/value
 """)
+
+
+@pytest.mark.regression('13045')
+def test_dotkit_in_config_does_not_raise(
+        mock_config, write_config_file, capsys
+):
+    write_config_file('config',
+                      {'config': {'module_roots': {'dotkit': '/some/path'}}},
+                      'high')
+    spack.main.print_setup_info('sh')
+    captured = capsys.readouterr()
+
+    # Check that we set the variables we expect and that
+    # we throw a a deprecation warning without raising
+    assert '_sp_sys_type' in captured[0]  # stdout
+    assert 'Warning' in captured[1]  # stderr

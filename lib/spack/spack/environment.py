@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import os
 import re
 import sys
@@ -19,6 +20,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
+import spack.concretize
 import spack.error
 import spack.hash_types as ht
 import spack.repo
@@ -514,6 +516,9 @@ class Environment(object):
                 path to the view.
         """
         self.path = os.path.abspath(path)
+        # This attribute will be set properly from configuration
+        # during concretization
+        self.concretization = None
         self.clear()
 
         if init_file:
@@ -591,6 +596,9 @@ class Environment(object):
                               for name, values in enable_view.items())
         else:
             self.views = {}
+        # Retrieve the current concretization strategy
+        configuration = config_dict(self.yaml)
+        self.concretization = configuration.get('concretization')
 
     @property
     def user_specs(self):
@@ -845,6 +853,59 @@ class Environment(object):
             self.concretized_order = []
             self.specs_by_hash = {}
 
+        # Pick the right concretization strategy
+        if self.concretization == 'together':
+            return self._concretize_together()
+        if self.concretization == 'separately':
+            return self._concretize_separately()
+
+        msg = 'concretization strategy not implemented [{0}]'
+        raise SpackEnvironmentError(msg.format(self.concretization))
+
+    def _concretize_together(self):
+        """Concretization strategy that concretizes all the specs
+        in the same DAG.
+        """
+        # Exit early if the set of concretized specs is the set of user specs
+        user_specs_did_not_change = not bool(
+            set(self.user_specs) - set(self.concretized_user_specs)
+        )
+        if user_specs_did_not_change:
+            return []
+
+        # Check that user specs don't have duplicate packages
+        counter = collections.defaultdict(int)
+        for user_spec in self.user_specs:
+            counter[user_spec.name] += 1
+
+        duplicates = []
+        for name, count in counter.items():
+            if count > 1:
+                duplicates.append(name)
+
+        if duplicates:
+            msg = ('environment that are configured to concretize specs'
+                   ' together cannot contain more than one spec for each'
+                   ' package [{0}]'.format(', '.join(duplicates)))
+            raise SpackEnvironmentError(msg)
+
+        # Proceed with concretization
+        self.concretized_user_specs = []
+        self.concretized_order = []
+        self.specs_by_hash = {}
+
+        concrete_specs = spack.concretize.concretize_specs_together(
+            *self.user_specs
+        )
+        concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
+        for abstract, concrete in concretized_specs:
+            self._add_concrete_spec(abstract, concrete)
+        return concretized_specs
+
+    def _concretize_separately(self):
+        """Concretization strategy that concretizes separately one
+        user spec after the other.
+        """
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
@@ -875,6 +936,13 @@ class Environment(object):
         This will automatically concretize the single spec, but it won't
         affect other as-yet unconcretized specs.
         """
+        if self.concretization == 'together':
+            msg = 'cannot install a single spec in an environment that is ' \
+                  'configured to be concretized together. Run instead:\n\n' \
+                  '    $ spack add <spec>\n' \
+                  '    $ spack install\n'
+            raise SpackEnvironmentError(msg)
+
         spec = Spec(user_spec)
 
         if self.add(spec):
@@ -949,7 +1017,8 @@ class Environment(object):
             ('LD_LIBRARY_PATH', ['lib', 'lib64']),
             ('LIBRARY_PATH', ['lib', 'lib64']),
             ('CPATH', ['include']),
-            ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig']),
+            ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig',
+                                 'share/pkgconfig']),
             ('CMAKE_PREFIX_PATH', ['']),
         ]
 
@@ -1291,7 +1360,7 @@ class Environment(object):
     def __enter__(self):
         self._previous_active = _active_environment
         activate(self)
-        return
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         deactivate()

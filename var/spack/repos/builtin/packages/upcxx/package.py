@@ -4,31 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import llnl.util.tty as tty
-import os
 
 
-def detect_scheduler():
-    if (os.environ.get('CROSS') is None):
-        srunbin = which('srun')
-        if srunbin is None:
-            aprunbin = which('aprun')
-            if aprunbin is None:
-                tty.warn("CROSS has not been set, however "
-                         "cannot detect scheduler.")
-                return 'none'
-            else:
-                tty.warn("CROSS has not been set, however "
-                         "aprun has been found, assuming alps scheduler.")
-                return 'alps'
-        else:
-            tty.warn("CROSS has not been set, however "
-                     "srun has been found, assuming slurm scheduler.")
-            return 'slurm'
-    else:
-        tty.warn("CROSS has been set to %s by the user."
-                 % os.environ.get('CROSS'))
-        return 'user'
+def cross_detect():
+    if spack.architecture.platform().name == 'cray':
+        if which('srun'):
+            return 'cray-aries-slurm'
+        if which('alps'):
+            return 'cray-aries-alps'
+    return 'none'
 
 
 class Upcxx(Package):
@@ -40,15 +24,16 @@ class Upcxx(Package):
 
     homepage = "https://upcxx.lbl.gov"
 
-    version('2019.3.2', '844722cb0e8c0bc649017fce86469457')
+    version('2019.9.0', sha256='7d67ccbeeefb59de9f403acc719f52127a30801a2c2b9774a1df03f850f8f1d4')
+    version('2019.3.2', sha256='dcb0b337c05a0feb2ed5386f5da6c60342412b49cab10f282f461e74411018ad')
 
     variant('cuda', default=False,
             description='Builds a CUDA-enabled version of UPC++')
 
-    variant('scheduler', values=('slurm', 'alps', 'user', 'none'),
-            default=detect_scheduler(),
-            description="Resource manager to use")
-    conflicts('scheduler=none', when='platform=cray',
+    variant('cross', default=cross_detect(),
+            description="UPC++ cross-compile target (autodetect by default)")
+
+    conflicts('cross=none', when='platform=cray',
               msg='None is unacceptable on Cray.')
 
     depends_on('cuda', when='+cuda')
@@ -63,17 +48,19 @@ class Upcxx(Package):
     def setup_environment(self, spack_env, run_env):
         if 'platform=cray' in self.spec:
             spack_env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
-            if "scheduler=slurm" in self.spec:
-                tty.warn("CROSS has been automatically set to %s."
-                         % 'cray-aries-slurm')
-                spack_env.set('CROSS', 'cray-aries-slurm')
-            elif "scheduler=alps" in self.spec:
-                tty.warn("CROSS has been automatically set to %s."
-                         % 'cray-aries-alps')
-                spack_env.set('CROSS', 'cray-aries-alps')
+
+        if 'cross=none' not in self.spec:
+            spack_env.set('CROSS', self.spec.variants['cross'].value)
+
         if '+cuda' in self.spec:
             spack_env.set('UPCXX_CUDA', '1')
             spack_env.set('UPCXX_CUDA_NVCC', self.spec['cuda'].prefix.bin.nvcc)
+
+        run_env.set('UPCXX_INSTALL', self.prefix)
+        run_env.set('UPCXX', self.prefix.bin.upcxx)
+        if 'platform=cray' in self.spec:
+            run_env.set('UPCXX_GASNET_CONDUIT', 'aries')
+            run_env.set('UPCXX_NETWORK', 'aries')
 
     def setup_dependent_package(self, module, dep_spec):
         dep_spec.upcxx = self.prefix.bin.upcxx
@@ -83,7 +70,10 @@ class Upcxx(Package):
         spack_env.set('UPCXX', self.prefix.bin.upcxx)
         if 'platform=cray' in self.spec:
             spack_env.set('UPCXX_GASNET_CONDUIT', 'aries')
+            spack_env.set('UPCXX_NETWORK', 'aries')
 
     def install(self, spec, prefix):
-        installsh = Executable('./install')
+        env['CC'] = self.compiler.cc
+        env['CXX'] = self.compiler.cxx
+        installsh = Executable("./install")
         installsh(prefix)

@@ -12,7 +12,7 @@ class Xsetpointer(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xsetpointer"
     url      = "https://www.x.org/archive/individual/app/xsetpointer-1.0.1.tar.gz"
 
-    version('1.0.1', 'bb206b6875f2428c2281e1165b6c7f88')
+    version('1.0.1', sha256='54be93b20fd6f1deac67246d6e214a60b02dcfbf05295e43751f7a04edb986ac')
 
     depends_on('libxi')
     depends_on('libx11')

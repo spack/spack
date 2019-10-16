@@ -37,7 +37,7 @@ class Xios(Package):
     depends_on('boost')
     depends_on('blitz')
     depends_on('perl', type='build')
-    depends_on('perl-uri-escape', type='build')
+    depends_on('perl-uri', type='build')
     depends_on('gmake', type='build')
 
     @when('%clang')

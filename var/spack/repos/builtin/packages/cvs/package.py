@@ -12,6 +12,6 @@ class Cvs(AutotoolsPackage):
     homepage = "http://www.nongnu.org/cvs/"
     url      = "https://ftpmirror.gnu.org/non-gnu/cvs/source/feature/1.12.13/cvs-1.12.13.tar.bz2"
 
-    version('1.12.13', '93a8dacc6ff0e723a130835713235863f1f5ada9')
+    version('1.12.13', sha256='78853613b9a6873a30e1cc2417f738c330e75f887afdaf7b3d0800cb19ca515e')
 
     parallel = False

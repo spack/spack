@@ -11,7 +11,7 @@ class PyPatsy(PythonPackage):
     homepage = "https://github.com/pydata/patsy"
     url      = "https://pypi.io/packages/source/p/patsy/patsy-0.4.1.zip"
 
-    version('0.4.1', '9445f29e3426d1ed30d683a1e1453f84')
+    version('0.4.1', sha256='dc1cc280045b0e6e50c04706fd1e26d2a00ea400aa112f88e8142f88b0b7d3d4')
 
     variant('splines', default=False, description="Offers spline related functions")
 

@@ -12,4 +12,4 @@ class Smalt(AutotoolsPackage):
     homepage = "http://www.sanger.ac.uk/science/tools/smalt-0"
     url      = "https://downloads.sourceforge.net/project/smalt/smalt-0.7.6.tar.gz"
 
-    version('0.7.6', 'c3215d70ba960c8fdc8e80191695c60b')
+    version('0.7.6', sha256='89ccdfe471edba3577b43de9ebfdaedb5cd6e26b02bf4000c554253433796b31')

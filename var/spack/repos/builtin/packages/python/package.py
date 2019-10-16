@@ -25,44 +25,45 @@ class Python(AutotoolsPackage):
     """The Python programming language."""
 
     homepage = "https://www.python.org/"
-    url      = "https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz"
+    url      = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
     maintainers = ['adamjstewart']
 
+    version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
     version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3')
     version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
-    version('3.7.0',  '41b6595deb4147a1ed517a7d9a580271')
+    version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
     version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
     version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
     version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
-    version('3.6.5', 'ab25d24b1f8cc4990ade979f6dc37883')
-    version('3.6.4', '9de6494314ea199e3633211696735f65')
-    version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
-    version('3.6.2', 'e1a36bfffdd1d3a780b1825daf16e56c')
-    version('3.6.1', '2d0fc9f3a5940707590e07f03ecb08b9')
-    version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
+    version('3.6.5', sha256='53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6')
+    version('3.6.4', sha256='7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486')
+    version('3.6.3', sha256='ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91')
+    version('3.6.2', sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82')
+    version('3.6.1', sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828')
+    version('3.6.0', sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b')
     version('3.5.7', sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
-    version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
-    version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
-    version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
+    version('3.5.2', sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0')
+    version('3.5.1', sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7')
+    version('3.5.0', sha256='584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0')
     version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d')
-    version('3.4.3', '4281ff86778db65892c05151d5de738d')
-    version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
-    version('3.2.6', '23815d82ae706e9b781ca65865353d39')
-    version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
-    version('2.7.16', 'f1a2ace631068444831d01485466ece0', preferred=True)
-    version('2.7.15', '045fb3440219a1f6923fefdabde63342')
-    version('2.7.14', 'cee2e4b33ad3750da77b2e85f2f8b724')
-    version('2.7.13', '17add4bf0ad0ec2f08e0cae6d205c700')
-    version('2.7.12', '88d61f82e3616a4be952828b3694109d')
-    version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b')
-    version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
-    version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
-    version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
+    version('3.4.3', sha256='8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147')
+    version('3.3.6', sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034')
+    version('3.2.6', sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e')
+    version('3.1.5', sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103')
+    version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5', preferred=True)
+    version('2.7.15', sha256='18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db')
+    version('2.7.14', sha256='304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8')
+    version('2.7.13', sha256='a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1')
+    version('2.7.12', sha256='3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6')
+    version('2.7.11', sha256='82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6')
+    version('2.7.10', sha256='eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a')
+    version('2.7.9', sha256='c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b')
+    version('2.7.8', sha256='74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557')
 
     extendable = True
 

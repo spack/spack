@@ -12,7 +12,7 @@ class PyFsspec(PythonPackage):
     homepage = "https://github.com/intake/filesystem_spec"
     url = "https://github.com/intake/filesystem_spec/archive/0.4.4.tar.gz"
 
-    version('0.4.4', '27dfc3dab37d5c037683c7a3eaf7acd8b24ee56e4ce3edb14af54bdb43973d43')
+    version('0.4.4', sha256='27dfc3dab37d5c037683c7a3eaf7acd8b24ee56e4ce3edb14af54bdb43973d43')
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

@@ -12,7 +12,7 @@ class PyPytestXdist(PythonPackage):
     homepage = "https://github.com/pytest-dev/pytest-xdist"
     url      = "https://pypi.io/packages/source/p/pytest-xdist/pytest-xdist-1.16.0.tar.gz"
 
-    version('1.16.0', '68dabf856981ad93b14960b098b05bff')
+    version('1.16.0', sha256='42e5a1e5da9d7cff3e74b07f8692598382f95624f234ff7e00a3b1237e0feba2')
 
     depends_on('py-setuptools',    type='build')
     depends_on('py-execnet@1.1:',  type=('build', 'run'))

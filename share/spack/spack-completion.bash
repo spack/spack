@@ -126,7 +126,7 @@ function _spack_add {
 
 function _spack_arch {
     compgen -W "-h --help -p --platform -o --operating-system
-                -t --target" -- "$cur"
+                -t --target --known-targets" -- "$cur"
 }
 
 function _spack_blame {
@@ -760,7 +760,7 @@ function _spack_module {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "lmod tcl dotkit" -- "$cur"
+        compgen -W "lmod tcl" -- "$cur"
     fi
 }
 
@@ -812,53 +812,6 @@ function _spack_module_tcl_rm {
     fi
 }
 
-function _spack_module_dotkit {
-    if $list_options
-    then
-        compgen -W "-h --help" -- "$cur"
-    else
-        compgen -W "refresh find rm loads" -- "$cur"
-    fi
-}
-
-
-function _spack_module_dotkit_find {
-    if $list_options
-    then
-        compgen -W "-h --help --full-path -r --dependencies" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
-
-function _spack_module_dotkit_loads {
-    if $list_options
-    then
-        compgen -W "-h --help --input-only -p --prefix -x --exclude
-                    -r --dependencies" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-
-}
-
-function _spack_module_dotkit_refresh {
-    if $list_options
-    then
-        compgen -W "-h --help --delete-tree -y --yes-to-all" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
-
-function _spack_module_dotkit_rm {
-    if $list_options
-    then
-        compgen -W "-h --help -y --yes-to-all" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
 
 function _spack_module_lmod {
     if $list_options

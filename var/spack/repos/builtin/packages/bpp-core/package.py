@@ -12,7 +12,7 @@ class BppCore(CMakePackage):
     homepage = "http://biopp.univ-montp2.fr/wiki/index.php/Installation"
     url      = "http://biopp.univ-montp2.fr/repos/sources/bpp-core-2.2.0.tar.gz"
 
-    version('2.2.0', '5789ed2ae8687d13664140cd77203477')
+    version('2.2.0', sha256='aacd4afddd1584ab6bfa1ff6931259408f1d39958a0bdc5f78bf1f9ee4e98b79')
 
     depends_on('cmake@2.6:', type='build')
 

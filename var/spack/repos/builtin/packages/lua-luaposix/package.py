@@ -12,7 +12,7 @@ class LuaLuaposix(Package):
     homepage = "https://github.com/luaposix/luaposix/"
     url      = "https://github.com/luaposix/luaposix/archive/release-v33.4.0.tar.gz"
 
-    version('33.4.0', 'b36ff049095f28752caeb0b46144516c')
+    version('33.4.0', sha256='e66262f5b7fe1c32c65f17a5ef5ffb31c4d1877019b4870a5d373e2ab6526a21')
 
     extends("lua")
 
