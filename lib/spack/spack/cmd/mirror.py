@@ -46,6 +46,11 @@ def setup_parser(subparser):
              " in the current environment if there is an active environment"
              " (this requires significant time and space)")
     create_parser.add_argument(
+        '-V', '--all-versions', action='store_true',
+        help="when specifying packages with a file or on the command line,"
+             " retrieve all versions of those packages (this also retrieves"
+             " package dependencies automatically)")
+    create_parser.add_argument(
         '-f', '--file', help="file with specs of packages to put in mirror")
     create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
@@ -182,6 +187,13 @@ def mirror_create(args):
                 mirror_specs = spack.mirror.get_all_versions(specs)
                 mirror_specs.sort(
                     key=lambda s: s.format("{name}{@version}").lower())
+        elif args.all_versions:
+            base_specs = list(specs)
+            specs = list()
+            for spec in base_specs:
+                specs.extend(Spec(x) for x in
+                             spec.package.possible_dependencies())
+            mirror_specs = spack.mirror.get_all_versions(specs)
         else:
             # If the user asked for dependencies, traverse spec DAG get them.
             if args.dependencies:
