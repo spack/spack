@@ -35,6 +35,7 @@ import spack.url as url
 import spack.fetch_strategy as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.url as url_util
 import spack.spec
 from spack.version import VersionList
 from spack.util.compression import allowed_archive
@@ -382,11 +383,11 @@ def create(path, specs, **kwargs):
     """
 
     parsed = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
-    is_file_scheme = (parsed.scheme == 'file')
+    mirror_root = url_util.local_file_path(parsed)
 
     # Make sure nothing is in the way.
-    if is_file_scheme and os.path.isfile(parsed.path):
-        raise MirrorError("%s already exists and is a file." % parsed.path)
+    if mirror_root and os.path.isfile(mirror_root):
+        raise MirrorError("%s already exists and is a file." % mirror_root)
 
     # automatically spec-ify anything in the specs array.
     specs = [
@@ -400,8 +401,7 @@ def create(path, specs, **kwargs):
         s.concretize()
 
     # Get the absolute path of the root before we start jumping around.
-    mirror_root = parsed.path
-    if is_file_scheme and not os.path.isdir(mirror_root):
+    if mirror_root and not os.path.isdir(mirror_root):
         try:
             mkdirp(mirror_root)
         except OSError as e:

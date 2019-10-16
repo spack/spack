@@ -271,8 +271,9 @@ def url_exists(url):
     if isinstance(url, six.string_types):
         url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
 
-    if url.scheme == 'file':
-        return os.path.exists(url_util.local_file_path(url))
+    local_path = url_util.local_file_path(url)
+    if local_path:
+        return os.path.exists(local_path)
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
@@ -298,8 +299,9 @@ def remove_url(url):
     if isinstance(url, six.string_types):
         url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
 
-    if url.scheme == 'file':
-        os.remove(url_util.local_file_path(url))
+    local_path = url_util.local_file_path(url)
+    if local_path:
+        os.remove(local_path)
         return
 
     if url.scheme == 's3':
@@ -352,8 +354,9 @@ def list_url(url):
     if isinstance(url, six.string_types):
         url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
 
-    if url.scheme == 'file':
-        return os.listdir(url_util.local_file_path(url))
+    local_path = url_util.local_file_path(url)
+    if local_path:
+        return os.listdir(local_path)
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
@@ -397,8 +400,10 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
         while link_parser.links:
             raw_link = link_parser.links.pop()
-            abs_link = url_util.join(response_url, raw_link.strip())
-
+            abs_link = url_util.join(
+                response_url,
+                raw_link.strip(),
+                resolve_href=True)
             links.add(abs_link)
 
             # Skip stuff that looks like an archive

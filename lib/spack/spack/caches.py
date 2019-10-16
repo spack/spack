@@ -12,6 +12,7 @@ import six
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
 
+import spack.error
 import spack.paths
 import spack.config
 import spack.fetch_strategy
@@ -55,29 +56,24 @@ def _fetch_cache():
 
 class MirrorCache(object):
     def __init__(self, root):
-        if isinstance(root, six.string_types):
-            root = urllib_parse.urlparse(
-                root, scheme='file', allow_fragments=False)
+        self.root = url_util.local_file_path(root)
+        if not self.root:
+            raise spack.error.SpackError(
+                'MirrorCaches only work with file:// URLs')
 
-        self.root = root
         self.new_resources = set()
         self.existing_resources = set()
 
     def store(self, fetcher, relative_dest):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
+        dst = os.path.join(self.root, relative_dest)
 
-        dst = urllib_parse.urlparse(
-            url_util.join(self.root, relative_dest),
-            scheme='file',
-            allow_fragments=False)
-
-        if web_util.url_exists(dst):
+        if os.path.exists(dst):
             self.existing_resources.add(relative_dest)
         else:
             self.new_resources.add(relative_dest)
-            if dst.scheme == 'file':
-                mkdirp(os.path.dirname(dst.path))
+            mkdirp(os.path.dirname(dst))
             fetcher.archive(dst)
 
 

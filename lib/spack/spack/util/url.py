@@ -96,12 +96,49 @@ def format(parsed_url):
     return parsed_url.geturl()
 
 
-def join(base_url, path, *extra):
+def join(base_url, path, *extra, **kwargs):
+    """Joins a base URL with one or more local URL path components
+
+    If resolve_href is True, treat the base URL as though it where the locator
+    of a web page, and the remaining URL path components as though they formed
+    a relative URL to be resolved against it (i.e.: as in
+    os.path.join(path, *extra)).  The result is an absolute URL to the resource
+    to which a user's browser would navigate if they clicked on a link with an
+    "href" attribute equal to the relative URL.
+
+    If resolve_href is False (default), then the URL path components are joined
+    as in os.path.join().
+
+    Examples:
+      base_url = 's3://bucket/index.html'
+      body = fetch_body(prefix)
+      link = get_href(body) # link == '../other-bucket/document.txt'
+
+      # wrong - link is a local URL that needs to be resolved against base_url
+      spack.util.url.join(base_url, link)
+      's3://bucket/other_bucket/document.txt'
+
+      # correct - resolve local URL against base_url
+      spack.util.url.join(base_url, link, resolve_href=True)
+      's3://other_bucket/document.txt'
+
+      prefix = 'https://mirror.spack.io/build_cache'
+
+      # wrong - prefix is just a URL prefix
+      spack.util.url.join(prefix, 'my-package', resolve_href=True)
+      'https://mirror.spack.io/my-package'
+
+      # correct - simply append additional URL path components
+      spack.util.url.join(prefix, 'my-package', resolve_href=False) # default
+      'https://mirror.spack.io/build_cache/my-package'
+    """
     if isinstance(base_url, string_types):
         base_url = urllib_parse.urlparse(
             base_url,
             scheme='file',
             allow_fragments=False)
+
+    resolve_href = kwargs.get('resolve_href', False)
 
     (scheme, netloc, base_path, params, query, _) = base_url
     scheme = scheme.lower()
@@ -122,6 +159,11 @@ def join(base_url, path, *extra):
         base_path = base_path[1:]
 
     base_path_args.append(base_path)
+
+    if resolve_href:
+        new_base_path, _ = os.path.split(os.path.join(*base_path_args))
+        base_path_args = [new_base_path]
+
     base_path_args.extend(path_tokens)
     base_path = os.path.relpath(os.path.join(*base_path_args), '/')
 
