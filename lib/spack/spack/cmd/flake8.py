@@ -227,6 +227,9 @@ def setup_parser(subparser):
         '-U', '--no-untracked', dest='untracked', action='store_false',
         default=True, help="exclude untracked files from checks")
     subparser.add_argument(
+        '-d', '--debug', action='store_true',
+        help="support spack option to write out debug logs during testing")
+    subparser.add_argument(
         'files', nargs=argparse.REMAINDER, help="specific files to check")
 
 
