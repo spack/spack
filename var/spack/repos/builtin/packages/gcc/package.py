@@ -275,13 +275,9 @@ class Gcc(AutotoolsPackage):
             '--with-bugurl=https://github.com/spack/spack/issues',
             # Xcode 10 dropped 32-bit support
             '--disable-multilib',
-            # Don't bother with full 3-stage bootstrapping process
-            # Builds much faster, but doesn't test build as well
-            # See https://gcc.gnu.org/install/build.html
-            '--disable-bootstrap',
             '--enable-languages={0}'.format(
                 ','.join(spec.variants['languages'].value)),
-            # Drop gettext and libiconv dependencies
+            # Drop gettext dependency
             '--disable-nls',
             '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix),
             '--with-mpfr={0}'.format(spec['mpfr'].prefix),
