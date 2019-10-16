@@ -151,6 +151,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
         tty.debug(msg.format(filename, regex))
 
         backup_filename = filename + "~"
+        tmp_filename = filename + ".spack~"
 
         if ignore_absent and not os.path.exists(filename):
             msg = 'FILTER FILE: file "{0}" not found. Skipping to next file.'
@@ -162,6 +163,10 @@ def filter_file(regex, repl, *filenames, **kwargs):
         if not os.path.exists(backup_filename):
             shutil.copy(filename, backup_filename)
 
+        # Create a temporary file to read from. We cannot use backup_filename
+        # in case filter_file is invoked multiple times on the same file.
+        shutil.copy(filename, tmp_filename)
+
         try:
             extra_kwargs = {}
             if sys.version_info > (3, 0):
@@ -169,7 +174,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
             # Open as a text file and filter until the end of the file is
             # reached or we found a marker in the line if it was specified
-            with open(backup_filename, mode='r', **extra_kwargs) as input_file:
+            with open(tmp_filename, mode='r', **extra_kwargs) as input_file:
                 with open(filename, mode='w', **extra_kwargs) as output_file:
                     # Using iter and readline is a workaround needed not to
                     # disable input_file.tell(), which will happen if we call
@@ -188,17 +193,19 @@ def filter_file(regex, repl, *filenames, **kwargs):
             # If we stopped filtering at some point, reopen the file in
             # binary mode and copy verbatim the remaining part
             if current_position and stop_at:
-                with open(backup_filename, mode='rb') as input_file:
+                with open(tmp_filename, mode='rb') as input_file:
                     input_file.seek(current_position)
                     with open(filename, mode='ab') as output_file:
                         output_file.writelines(input_file.readlines())
 
         except BaseException:
+            os.remove(tmp_filename)
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise
 
         finally:
+            os.remove(tmp_filename)
             if not backup and os.path.exists(backup_filename):
                 os.remove(backup_filename)
 
