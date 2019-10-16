@@ -338,3 +338,27 @@ def test_filter_files_with_different_encodings(
 
     with open(target_file, mode='r', **extra_kwargs) as f:
         assert replacement in f.read()
+
+
+def test_filter_files_multiple(tmpdir):
+    # All files given as input to this test must satisfy the pre-requisite
+    # that the 'replacement' string is not present in the file initially and
+    # that there's at least one match for the regex
+    original_file = os.path.join(
+        spack.paths.test_path, 'data', 'filter_file', 'x86_cpuid_info.c'
+    )
+    target_file = os.path.join(str(tmpdir), 'x86_cpuid_info.c')
+    shutil.copy(original_file, target_file)
+    # This should not raise exceptions
+    fs.filter_file(r'\<malloc.h\>', '<unistd.h>', target_file)
+    fs.filter_file(r'\<string.h\>', '<unistd.h>', target_file)
+    fs.filter_file(r'\<stdio.h\>',  '<unistd.h>', target_file)
+    # Check the strings have been replaced
+    extra_kwargs = {}
+    if sys.version_info > (3, 0):
+        extra_kwargs = {'errors': 'surrogateescape'}
+
+    with open(target_file, mode='r', **extra_kwargs) as f:
+        assert '<malloc.h>' not in f.read()
+        assert '<string.h>' not in f.read()
+        assert '<stdio.h>' not in f.read()
