@@ -10,11 +10,12 @@ import sys
 class Mvapich2(AutotoolsPackage):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
     homepage = "http://mvapich.cse.ohio-state.edu/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
+    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.2.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
     # Prefer the latest stable release
-    version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf', preferred=True)
+    version('2.3.2', sha256='30cc0d7bcaa075d204692f76bca4d65a539e0f661c7460ffa9f835d6249e1ebf', preferred=True)
+    version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf')
     version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd')
     version('2.3rc2', sha256='dc3801f879a54358d17002a56afd45186e2e83edc5b8367b5c317e282eb6d6bf')
     version('2.3rc1', sha256='607d309c864a6d57f5fa78fe6dd02368919736b8be0f4ddb938aba303ef9c45c')
@@ -23,7 +24,7 @@ class Mvapich2(AutotoolsPackage):
     version('2.1', sha256='49f3225ad17d2f3b6b127236a0abdc979ca8a3efb8d47ab4b6cd4f5252d05d29')
 
     provides('mpi')
-    provides('mpi@:3.0')
+    provides('mpi@:3.1')
 
     variant('debug', default=False,
             description='Enable debug info and error messages at run-time')
@@ -71,7 +72,7 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'fabrics',
         description='The fabric enabled for this build',
-        default='psm',
+        default='mrail',
         values=(
             'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
             'nemesisibtcp', 'nemesistcpib', 'nemesisofi'
