@@ -31,7 +31,7 @@ class Ispc(Package):
             }
             self.versions[version] = {'checksum': checksums[version]}
             if self.spec.satisfies('@1.11.0:'):
-                return url.format(version, 'MacOs')
+                return url.format(version, 'macOS')
             else:
                 return url.format(version, 'osx')
         else:  # linux
