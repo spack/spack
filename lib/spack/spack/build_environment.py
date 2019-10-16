@@ -737,7 +737,8 @@ def modifications_from_dependencies(spec, context):
 
     # Maps the context to deptype and method to be called
     deptype_and_method = {
-        'build': (('build', 'test'), 'setup_dependent_build_environment'),
+        'build': (('build', 'link', 'test'),
+                  'setup_dependent_build_environment'),
         'run': (('link', 'run'), 'setup_dependent_run_environment')
     }
     deptype, method = deptype_and_method[context]
