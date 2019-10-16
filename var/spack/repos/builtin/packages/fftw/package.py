@@ -141,8 +141,9 @@ class Fftw(AutotoolsPackage):
         # given that it can be activated only for float and that most machines
         # are new enough to have SSE2 it has been skipped not to complicate the
         # recipe further.
+        # There is also altivec for float only
         simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
-                         'kcvi', 'altivec', 'vsx', 'neon']
+                         'kcvi', 'vsx', 'neon']
         simd_options = []
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
