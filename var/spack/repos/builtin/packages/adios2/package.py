@@ -51,10 +51,18 @@ class Adios2(CMakePackage):
             description='Enable the SST staging engine')
     variant('dataman', default=True,
             description='Enable the DataMan engine for WAN transports')
+    variant('dataspaces', default=False,
+            description='Enable support for DATASPACES')
     variant('ssc', default=True,
             description='Enable the SSC staging engine')
     variant('hdf5', default=False,
             description='Enable the HDF5 engine')
+
+    # transitive dependencies with optional dependencies
+    variant('libffi', default=True,
+            description='Code generation for emulated platforms in DILL')
+    variant('libfabric', default=True,
+            description='RMDA communication in EVPath and SST')
 
     # optional language bindings, C++11 and C always provided
     variant('python', default=False,
@@ -76,9 +84,13 @@ class Adios2(CMakePackage):
     depends_on('cmake@3.6.0:', type='build')
     depends_on('pkgconfig', type='build')
 
+    depends_on('libffi', when='+libffi')               # optional in DILL
+    depends_on('libfabric@1.6.0:', when='+libfabric')  # optional in EVPath and SST
+
     depends_on('mpi', when='+mpi')
     depends_on('zeromq', when='+dataman')
     depends_on('zeromq', when='@2.4: +ssc')
+    depends_on('dataspaces@1.8.0:', when='+dataspaces')
 
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -138,6 +150,15 @@ class Adios2(CMakePackage):
                 'ON' if '+png' in spec else 'OFF'))
             args.append('-DADIOS2_USE_SSC={0}'.format(
                 'ON' if '+ssc' in spec else 'OFF'))
+
+        if self.spec.version >= Version('2.5.0'):
+            args.append('-DADIOS2_USE_DataSpaces={0}'.format(
+                'ON' if '+dataspaces' in spec else 'OFF'))
+
+        if spec.satisfies('~libffi'):
+            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_LibFFI=TRUE')
+        if spec.satisfies('~libfabric'):
+            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_LIBFABRIC=TRUE')
 
         if spec.satisfies('~shared'):
             args.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL={0}'.format(
