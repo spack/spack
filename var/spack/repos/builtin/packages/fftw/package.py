@@ -137,11 +137,7 @@ class Fftw(AutotoolsPackage):
         if '+mpi' in spec:
             options.append('--enable-mpi')
 
-        # Specific SIMD support. Note there's SSE support too for float, but
-        # given that it can be activated only for float and that most machines
-        # are new enough to have SSE2 it has been skipped not to complicate the
-        # recipe further.
-        # There is also altivec for float only
+        # Specific SIMD support.
         simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
                          'kcvi', 'vsx', 'neon']
         simd_options = []
@@ -178,6 +174,12 @@ class Fftw(AutotoolsPackage):
             # starting from FFTW 3
             if precision in ('float', 'double') and spec.satisfies('@3:'):
                 opts += simd_options
+
+            # float-only acceleration 
+            if precision == 'float':
+                for feature in ['sse', 'altivec']:
+                    msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
+                    opts.append(msg.format(feature))
 
             with working_dir(precision, create=True):
                 configure(*opts)
