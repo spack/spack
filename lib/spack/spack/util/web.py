@@ -264,7 +264,8 @@ def push_to_url(local_path, remote_path, **kwargs):
 
     else:
         raise NotImplementedError(
-            'Unrecognized URL scheme: {}'.format(remote_url.scheme))
+            'Unrecognized URL scheme: {SCHEME}'.format(
+                SCHEME=remote_url.scheme))
 
 
 def url_exists(url):

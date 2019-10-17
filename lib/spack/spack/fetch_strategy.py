@@ -1298,8 +1298,8 @@ def from_url_scheme(url, *args, **kwargs):
             return fetcher(url, *args, **kwargs)
 
     raise ValueError(
-        'No FetchStrategy found for url with scheme: "{}"'.format(
-            parsed_url.scheme))
+        'No FetchStrategy found for url with scheme: "{SCHEME}"'.format(
+            SCHEME=parsed_url.scheme))
 
 
 def from_list_url(pkg):

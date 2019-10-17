@@ -20,8 +20,8 @@ def create_s3_session(url):
 
     if url.scheme != 's3':
         raise ValueError(
-            'Can not create S3 session from URL with scheme: {}'.format(
-                url.scheme))
+            'Can not create S3 session from URL with scheme: {SCHEME}'.format(
+                SCHEME=url.scheme))
 
     # NOTE(opadron): import boto and friends as late as possible.  We don't
     # want to require boto as a dependency unless the user actually wants to
