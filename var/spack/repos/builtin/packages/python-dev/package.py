@@ -29,7 +29,6 @@ class PythonDev(Package):
     depends_on('py-lazy-property', type=('build', 'run'))
     depends_on('py-lxml', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
-    depends_on('py-pip', type=('build', 'run'))
     depends_on('py-pyspark', type=('build', 'run'))
     depends_on('py-pytest', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
@@ -54,7 +53,7 @@ class PythonDev(Package):
         open(os.path.join(prefix, 'success.txt'), 'w').close()
 
     def setup_environment(self, spack_env, run_env):
-        deps = ['py-pip', 'py-ipython', 'py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark',
+        deps = ['py-ipython', 'py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark',
                 'py-ipyparallel']
         for dep in deps:
             run_env.prepend_path('PATH', self.spec[dep].prefix.bin)
