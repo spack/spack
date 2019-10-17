@@ -68,9 +68,12 @@ class Elsi(CMakePackage):
     depends_on('petsc', when='+enable_sips')
     depends_on('superlu-dist', when='+use_external_superlu')
 
+    parallel = False
+
     def cmake_args(self):
         from os.path import dirname
 
+        spec = self.spec
         args = []
 
         # Compiler Information
@@ -104,5 +107,9 @@ class Elsi(CMakePackage):
             args += ["-DUSE_EXTERNAL_SUPERLU=ON"]
         if '-use_mpi_iallgather' in self.spec:
             args += ["-DUSE_MPI_IALLGATHER=OFF"]
+
+        # Only when using fujitsu compiler
+        if spec.satisfies('%fj'):
+            args += ["-DCMAKE_Fortran_MODDIR_FLAG=-M"]
 
         return args
