@@ -101,10 +101,10 @@ def join(base_url, path, *extra, **kwargs):
 
     If resolve_href is True, treat the base URL as though it where the locator
     of a web page, and the remaining URL path components as though they formed
-    a relative URL to be resolved against it (i.e.: as in
-    os.path.join(path, *extra)).  The result is an absolute URL to the resource
-    to which a user's browser would navigate if they clicked on a link with an
-    "href" attribute equal to the relative URL.
+    a relative URL to be resolved against it (i.e.: as in os.path.join(...)).
+    The result is an absolute URL to the resource to which a user's browser
+    would navigate if they clicked on a link with an "href" attribute equal to
+    the relative URL.
 
     If resolve_href is False (default), then the URL path components are joined
     as in os.path.join().
