@@ -1577,8 +1577,10 @@ env:
             install()
 
         shell = env('activate', '--sh', 'test')
+
         assert 'PATH' in shell
         assert os.path.join(viewdir, 'bin') in shell
+        assert 'FOOBAR=mpileaks' in shell
 
 
 def test_stack_view_no_activate_without_default(tmpdir, mock_fetch,
