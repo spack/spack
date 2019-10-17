@@ -13,6 +13,8 @@ class Gams(Package):
     linear, nonlinear, and mixed-integer optimization problems."""
 
     homepage = "https://www.gams.com/"
+    manual_download = True
+
     version('27.2', '4f3f3484a4389661e0522a4cfe0289fd', expand=False)
 
     def url_for_version(self, version):

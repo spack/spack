@@ -16,8 +16,6 @@ class Simulationio(CMakePackage):
 
     version('develop', branch='master')
     version('9.0.1', sha256='c2f6c99417165f6eb8cbb9c44822d119586675abb34eabd553eb80f44b53e0c8')
-    version('1.0.0', '5cbf1d0084eb436d861ffcdd297eaa08')
-    version('0.1.0', '00f7dabc08ed1ab77858785ce0809f50')
 
     variant('julia', default=False)
     variant('python', default=True)

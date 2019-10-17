@@ -20,7 +20,7 @@ class Lulesh(MakefilePackage):
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('visual', default=False,
-        description='Build with Visualization support (Silo, hdf5)')
+            description='Build with Visualization support (Silo, hdf5)')
 
     depends_on('mpi', when='+mpi')
     depends_on('silo', when='+visual')

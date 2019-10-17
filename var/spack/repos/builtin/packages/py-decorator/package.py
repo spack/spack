@@ -14,6 +14,6 @@ class PyDecorator(PythonPackage):
     url      = "https://pypi.io/packages/source/d/decorator/decorator-4.0.9.tar.gz"
 
     version('4.3.0', sha256='c39efa13fbdeb4506c476c9b3babf6a718da943dab7811c206005a4a956c080c')
-    version('4.0.9', 'f12c5651ccd707e12a0abaa4f76cd69a')
+    version('4.0.9', sha256='90022e83316363788a55352fe39cfbed357aa3a71d90e5f2803a35471de4bba8')
 
     depends_on('py-setuptools', type='build')

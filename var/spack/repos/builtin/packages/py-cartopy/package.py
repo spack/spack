@@ -12,7 +12,7 @@ class PyCartopy(PythonPackage):
     homepage = "http://scitools.org.uk/cartopy/"
     url      = "https://github.com/SciTools/cartopy/archive/v0.16.0.tar.gz"
 
-    version('0.16.0', 'f9e2e528d7758da7c64f824548a53f32')
+    version('0.16.0', sha256='cadf62434492c965220b37f0548bc58180466ad6894a1db57dbc51cd43467e5c')
 
     depends_on('py-setuptools@0.7.2:', type='build')
     depends_on('py-cython@0.15.1:',    type='build')

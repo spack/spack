@@ -17,4 +17,4 @@ class Hydra(AutotoolsPackage):
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
 
-    version('3.2', '4d670916695bf7e3a869cc336a881b39')
+    version('3.2', sha256='f7a67ec91a773d95cbbd479a80e926d44bee1ff9fc70a8d1df075ea53ea33889')

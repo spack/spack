@@ -17,7 +17,7 @@ class Cbench(MakefilePackage):
     list_url = "https://sourceforge.net/projects/cbench/files/cbench/"
     list_depth = 1
 
-    version('1.3.0', '2fb112876fdc96165d14e019b4a26f2e')
+    version('1.3.0', sha256='b40fdafd14869b86819e5906a107b0735290a1e58bae229d8166514a72f58732')
 
     depends_on('mpi')
     depends_on('blas')

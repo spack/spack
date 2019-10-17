@@ -15,7 +15,7 @@ class XorgDocs(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/doc/xorg-docs"
     url      = "https://www.x.org/archive/individual/doc/xorg-docs-1.7.1.tar.gz"
 
-    version('1.7.1', 'ca689ccbf8ebc362afbe5cc5792a4abd')
+    version('1.7.1', sha256='360707db2ba48f6deeb53d570deca9fa98218af48ead4a726a67f63e3ef63816')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -19,16 +19,16 @@ class Mpich(AutotoolsPackage):
     list_depth = 1
 
     version('develop', submodules=True)
-    version('3.3.1', 'fe551ef29c8eea8978f679484441ed8bb1d943f6ad25b63c235d4b9243d551e5')
-    version('3.3',   '574af413dc0dc7fbb929a761822beb06')
-    version('3.2.1', 'e175452f4d61646a52c73031683fc375')
-    version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
-    version('3.1.4', '2ab544607986486562e076b83937bba2')
-    version('3.1.3', '93cb17f91ac758cbf9174ecb03563778')
-    version('3.1.2', '7fbf4b81dcb74b07ae85939d1ceee7f1')
-    version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
-    version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
-    version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
+    version('3.3.1', sha256='fe551ef29c8eea8978f679484441ed8bb1d943f6ad25b63c235d4b9243d551e5')
+    version('3.3',   sha256='329ee02fe6c3d101b6b30a7b6fb97ddf6e82b28844306771fa9dd8845108fa0b')
+    version('3.2.1', sha256='5db53bf2edfaa2238eb6a0a5bc3d2c2ccbfbb1badd79b664a1a919d2ce2330f1')
+    version('3.2',   sha256='0778679a6b693d7b7caff37ff9d2856dc2bfc51318bf8373859bfa74253da3dc')
+    version('3.1.4', sha256='f68b5330e94306c00ca5a1c0e8e275c7f53517d01d6c524d51ce9359d240466b')
+    version('3.1.3', sha256='afb690aa828467721e9d9ab233fe00c68cae2b7b930d744cb5f7f3eb08c8602c')
+    version('3.1.2', sha256='37c3ba2d3cd3f4ea239497d9d34bd57a663a34e2ea25099c2cbef118c9156587')
+    version('3.1.1', sha256='455ccfaf4ec724d2cf5d8bff1f3d26a958ad196121e7ea26504fd3018757652d')
+    version('3.1',   sha256='fcf96dbddb504a64d33833dc455be3dda1e71c7b3df411dfcf9df066d7c32c39')
+    version('3.0.4', sha256='cf638c85660300af48b6f776e5ecd35b5378d5905ec5d34c3da7a27da0acf0b3')
 
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
@@ -110,29 +110,28 @@ spack package at this time.''',
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
 
-    def setup_environment(self, spack_env, run_env):
-        # mpich configure fails when F90 and F90FLAGS are set
-        spack_env.unset('F90')
-        spack_env.unset('F90FLAGS')
+    def setup_build_environment(self, env):
+        env.unset('F90')
+        env.unset('F90FLAGS')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
         if 'platform=cray' in self.spec:
-            spack_env.set('MPICC',  spack_cc)
-            spack_env.set('MPICXX', spack_cxx)
-            spack_env.set('MPIF77', spack_fc)
-            spack_env.set('MPIF90', spack_fc)
+            env.set('MPICC', spack_cc)
+            env.set('MPICXX', spack_cxx)
+            env.set('MPIF77', spack_fc)
+            env.set('MPIF90', spack_fc)
         else:
-            spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-            spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-            spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-            spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+            env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
+            env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+            env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+            env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-        spack_env.set('MPICH_CC', spack_cc)
-        spack_env.set('MPICH_CXX', spack_cxx)
-        spack_env.set('MPICH_F77', spack_f77)
-        spack_env.set('MPICH_F90', spack_fc)
-        spack_env.set('MPICH_FC', spack_fc)
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_fc)
+        env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
         if 'platform=cray' in self.spec:

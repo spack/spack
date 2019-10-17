@@ -13,4 +13,4 @@ class RDiptest(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/diptest_0.75-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/diptest"
 
-    version('0.75-7', '1a4a958fda763f7c99cb485dbe5954ab')
+    version('0.75-7', sha256='462900100ca598ef21dbe566bf1ab2ce7c49cdeab6b7a600a50489b05f61b61b')

@@ -12,7 +12,7 @@ class XcbDemo(AutotoolsPackage):
     homepage = "https://xcb.freedesktop.org/"
     url      = "https://xcb.freedesktop.org/dist/xcb-demo-0.1.tar.gz"
 
-    version('0.1', '803c5c91d54e734e6f6fa3f04f2463ff')
+    version('0.1', sha256='19ace2812a05313747356dc5e2331a9a6f5eb46631a26819cf30eeeaa38077f9')
 
     depends_on('libxcb')
     depends_on('xcb-util')

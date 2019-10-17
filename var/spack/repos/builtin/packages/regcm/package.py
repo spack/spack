@@ -37,10 +37,9 @@ class Regcm(AutotoolsPackage):
     # See also discussions: #974, #9934, #10797.
     extensions = ('knl', 'skl', 'bdw', 'nhl')
     variant('extension', values=any_combination_of(*extensions),
-            description=('Build extensions for a specific architecture. Only '
-                         'available for GCC and Intel compilers; moreover, '
-                         'GCC builds only one architecture optimization.')
-    )
+            description='Build extensions for a specific architecture. Only '
+            'available for GCC and Intel compilers; moreover, '
+            'GCC builds only one architecture optimization.')
 
     variant('pnetcdf', default=False,
             description='Build NetCDF using the high performance parallel '

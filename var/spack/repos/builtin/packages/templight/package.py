@@ -135,16 +135,18 @@ class Templight(CMakePackage):
 
         targets = ['NVPTX', 'AMDGPU']
 
-        if 'x86' in spec.architecture.target.lower():
+        if spec.target.family == 'x86' or spec.target.family == 'x86_64':
             targets.append('X86')
-        elif 'arm' in spec.architecture.target.lower():
+        elif spec.target.family == 'arm':
             targets.append('ARM')
-        elif 'aarch64' in spec.architecture.target.lower():
+        elif spec.target.family == 'aarch64':
             targets.append('AArch64')
-        elif 'sparc' in spec.architecture.target.lower():
+        elif spec.target.family == 'sparc' or spec.target.family == 'sparc64':
             targets.append('Sparc')
-        elif ('ppc' in spec.architecture.target.lower() or
-              'power' in spec.architecture.target.lower()):
+        elif (spec.target.family == 'ppc64' or
+              spec.target.family == 'ppc64le' or
+              spec.target.family == 'ppc' or
+              spec.target.family == 'ppcle'):
             targets.append('PowerPC')
 
         cmake_args.append(

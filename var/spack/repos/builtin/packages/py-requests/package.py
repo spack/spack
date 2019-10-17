@@ -24,10 +24,10 @@ class PyRequests(PythonPackage):
     ]
 
     version('2.21.0', sha256='502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e')
-    version('2.14.2', '4c3c169ed67466088a2a6947784fe444')
-    version('2.13.0', '921ec6b48f2ddafc8bb6160957baf444')
-    version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')
-    version('2.3.0',  '7449ffdc8ec9ac37bbcd286003c80f00')
+    version('2.14.2', sha256='a274abba399a23e8713ffd2b5706535ae280ebe2b8069ee6a941cb089440d153')
+    version('2.13.0', sha256='5722cd09762faa01276230270ff16af7acf7c5c45d623868d9ba116f15791ce8')
+    version('2.11.1', sha256='5acf980358283faba0b897c73959cecf8b841205bb4b2ad3ef545f46eae1a133')
+    version('2.3.0',  sha256='1c1473875d846fe563d70868acf05b1953a4472f4695b7b3566d1d978957b8fc')
 
     depends_on('py-setuptools', type='build')
 

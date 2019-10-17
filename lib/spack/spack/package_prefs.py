@@ -137,7 +137,10 @@ class PackagePrefs(object):
                 order = order.get(vpkg)
 
             if order:
-                return [str(s).strip() for s in order]
+                ret = [str(s).strip() for s in order]
+                if component == 'target':
+                    ret = ['target=%s' % tname for tname in ret]
+                return ret
 
         return []
 
@@ -167,6 +170,11 @@ class PackagePrefs(object):
     def has_preferred_providers(cls, pkgname, vpkg):
         """Whether specific package has a preferred vpkg providers."""
         return bool(cls.order_for_package(pkgname, 'providers', vpkg, False))
+
+    @classmethod
+    def has_preferred_targets(cls, pkg_name):
+        """Whether specific package has a preferred vpkg providers."""
+        return bool(cls.order_for_package(pkg_name, 'target'))
 
     @classmethod
     def preferred_variants(cls, pkg_name):

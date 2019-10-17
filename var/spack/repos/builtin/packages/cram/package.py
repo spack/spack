@@ -11,7 +11,7 @@ class Cram(CMakePackage):
     homepage = "https://github.com/llnl/cram"
     url      = "http://github.com/llnl/cram/archive/v1.0.1.tar.gz"
 
-    version('1.0.1', 'c73711e945cf5dc603e44395f6647f5e')
+    version('1.0.1', sha256='985888018f6481c3e9ab4f1d1788e25725d8b92a1cf52b1366ee93793614709a')
 
     extends('python@2.7:')
     depends_on('mpi')

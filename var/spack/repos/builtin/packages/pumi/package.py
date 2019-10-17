@@ -37,10 +37,10 @@ class Pumi(CMakePackage):
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
     variant('simmodsuite', default='none',
-        values=('none', 'base', 'kernels', 'full'),
-        description="Enable Simmetrix SimModSuite Support: 'base' enables "
-        "the minimum set of functionality, 'kernels' adds CAD kernel support "
-        "to 'base', and 'full' enables all functionality.")
+            values=('none', 'base', 'kernels', 'full'),
+            description="Enable Simmetrix SimModSuite Support: 'base' enables "
+            "the minimum set of functionality, 'kernels' adds CAD kernel "
+            "support to 'base', and 'full' enables all functionality.")
 
     depends_on('mpi')
     depends_on('cmake@3:', type='build')
@@ -51,11 +51,11 @@ class Pumi(CMakePackage):
     simfull = simkernels + "+abstract+adv+advmodel\
                             +import+paralleladapt+parallelmesh"
     depends_on('simmetrix-simmodsuite' + simbase,
-        when='simmodsuite=base')
+               when='simmodsuite=base')
     depends_on('simmetrix-simmodsuite' + simkernels,
-        when='simmodsuite=kernels')
+               when='simmodsuite=kernels')
     depends_on('simmetrix-simmodsuite' + simfull,
-        when='simmodsuite=full')
+               when='simmodsuite=full')
 
     def cmake_args(self):
         spec = self.spec

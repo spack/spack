@@ -50,7 +50,7 @@ class Blis(Package):
     )
 
     variant(
-        'cblas', default=False,
+        'cblas', default=True,
         description='CBLAS compatibility',
     )
 
@@ -72,6 +72,10 @@ class Blis(Package):
 
     provides('blas', when="+blas")
     provides('blas', when="+cblas")
+
+    # Problems with permissions on installed libraries:
+    # https://github.com/flame/blis/issues/343
+    patch('Makefile_0.6.0.patch', when='@0.4.0:0.6.0')
 
     phases = ['configure', 'build', 'install']
 
@@ -117,3 +121,9 @@ class Blis(Package):
 
     def install(self, spec, prefix):
         make('install')
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)

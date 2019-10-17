@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re
 import stat
 import sys
 import errno
@@ -17,7 +16,7 @@ from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import remove_linked_tree
+from llnl.util.filesystem import partition_path, remove_linked_tree
 
 import spack.paths
 import spack.caches
@@ -34,40 +33,63 @@ from spack.util.crypto import prefix_bits, bit_length
 _source_path_subdir = 'spack-src'
 
 # The temporary stage name prefix.
-_stage_prefix = 'spack-stage-'
+stage_prefix = 'spack-stage-'
 
 
 def _create_stage_root(path):
     """Create the stage root directory and ensure appropriate access perms."""
     assert path.startswith(os.path.sep) and len(path.strip()) > 1
 
-    curr_dir = os.path.sep
-    parts = path.strip(os.path.sep).split(os.path.sep)
-    for i, part in enumerate(parts):
-        curr_dir = os.path.join(curr_dir, part)
-        if not os.path.exists(curr_dir):
-            rest = os.path.join(os.path.sep, *parts[i + 1:])
-            user_parts = rest.partition(os.path.sep + getpass.getuser())
-            if len(user_parts[0]) > 0:
-                # Ensure access controls of subdirs created above `$user`
-                # inherit from the parent and share the group.
-                stats = os.stat(os.path.dirname(curr_dir))
-                curr_dir = ''.join([curr_dir, user_parts[0]])
-                mkdirp(curr_dir, group=stats.st_gid, mode=stats.st_mode)
+    err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
-            user_subdirs = ''.join(user_parts[1:])
-            if len(user_subdirs) > 0:
-                # Ensure access controls of subdirs from `$user` on down are
-                # restricted to the user.
-                curr_dir = ''.join([curr_dir, user_subdirs])
-                mkdirp(curr_dir, mode=stat.S_IRWXU)
+    user_uid = os.getuid()
 
-            assert os.getuid() == os.stat(curr_dir).st_uid
-            break
+    # Obtain lists of ancestor and descendant paths of the $user node, if any.
+    group_paths, user_node, user_paths = partition_path(path,
+                                                        getpass.getuser())
 
-    if not can_access(path):
-        raise OSError(errno.EACCES,
-                      'Cannot access %s: Permission denied' % curr_dir)
+    for p in group_paths:
+        if not os.path.exists(p):
+            # Ensure access controls of subdirs created above `$user` inherit
+            # from the parent and share the group.
+            par_stat = os.stat(os.path.dirname(p))
+            mkdirp(p, group=par_stat.st_gid, mode=par_stat.st_mode)
+
+            p_stat = os.stat(p)
+            if par_stat.st_gid != p_stat.st_gid:
+                tty.warn("Expected {0} to have group {1}, but it is {2}"
+                         .format(p, par_stat.st_gid, p_stat.st_gid))
+
+            if par_stat.st_mode & p_stat.st_mode != par_stat.st_mode:
+                tty.warn("Expected {0} to support mode {1}, but it is {2}"
+                         .format(p, par_stat.st_mode, p_stat.st_mode))
+
+            if not can_access(p):
+                raise OSError(errno.EACCES, err_msg.format(path, p))
+
+    # Add the path ending with the $user node to the user paths to ensure paths
+    # from $user (on down) meet the ownership and permission requirements.
+    if user_node:
+        user_paths.insert(0, user_node)
+
+    for p in user_paths:
+        # Ensure access controls of subdirs from `$user` on down are
+        # restricted to the user.
+        if not os.path.exists(p):
+            mkdirp(p, mode=stat.S_IRWXU)
+
+            p_stat = os.stat(p)
+            if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
+                tty.error("Expected {0} to support mode {1}, but it is {2}"
+                          .format(p, stat.S_IRWXU, p_stat.st_mode))
+
+                raise OSError(errno.EACCES, err_msg.format(path, p))
+        else:
+            p_stat = os.stat(p)
+
+        if user_uid != p_stat.st_uid:
+            tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
+                     .format(user_uid, p, p_stat.st_uid))
 
 
 def _first_accessible_path(paths):
@@ -91,18 +113,29 @@ def _first_accessible_path(paths):
 
 
 def _resolve_paths(candidates):
-    """Resolve paths, removing extra $user from $tempdir if needed."""
+    """
+    Resolve candidate paths and make user-related adjustments.
+
+    Adjustments involve removing extra $user from $tempdir if $tempdir includes
+    $user and appending $user if it is not present in the path.
+    """
     temp_path = sup.canonicalize_path('$tempdir')
-    tmp_has_usr = getpass.getuser() in temp_path.split(os.path.sep)
+    user = getpass.getuser()
+    tmp_has_usr = user in temp_path.split(os.path.sep)
 
     paths = []
     for path in candidates:
-        # First remove the extra `$user` node from a `$tempdir/$user` entry
-        # for hosts that automatically append `$user` to `$tempdir`.
+        # Remove the extra `$user` node from a `$tempdir/$user` entry for
+        # hosts that automatically append `$user` to `$tempdir`.
         if path.startswith(os.path.join('$tempdir', '$user')) and tmp_has_usr:
-            path = os.path.join('$tempdir', path[15:])
+            path = path.replace("/$user", "", 1)
 
-        paths.append(sup.canonicalize_path(path))
+        # Ensure the path is unique per user.
+        can_path = sup.canonicalize_path(path)
+        if user not in can_path:
+            can_path = os.path.join(can_path, user)
+
+        paths.append(can_path)
 
     return paths
 
@@ -124,14 +157,6 @@ def get_stage_root():
         if not path:
             raise StageError("No accessible stage paths in:",
                              ' '.join(resolved_candidates))
-
-        # Ensure that path is unique per user in an attempt to avoid
-        # conflicts in shared temporary spaces.  Emulate permissions from
-        # `tempfile.mkdtemp`.
-        user = getpass.getuser()
-        if user not in path:
-            path = os.path.join(path, user)
-            mkdirp(path, mode=stat.S_IRWXU)
 
         _stage_root = path
 
@@ -247,7 +272,7 @@ class Stage(object):
         # TODO: temporary stage area in _stage_root.
         self.name = name
         if name is None:
-            self.name = _stage_prefix + next(tempfile._get_candidate_names())
+            self.name = stage_prefix + next(tempfile._get_candidate_names())
         self.mirror_path = mirror_path
 
         # Use the provided path or construct an optionally named stage path.
@@ -677,11 +702,8 @@ def purge():
     """Remove all build directories in the top-level stage path."""
     root = get_stage_root()
     if os.path.isdir(root):
-        # TODO: Figure out a "standard" way to identify the hash length
-        # TODO: Should this support alternate base represenations?
-        dir_expr = re.compile(r'.*-[0-9a-f]{32}$')
         for stage_dir in os.listdir(root):
-            if re.match(dir_expr, stage_dir) or stage_dir == '.lock':
+            if stage_dir.startswith(stage_prefix) or stage_dir == '.lock':
                 stage_path = os.path.join(root, stage_dir)
                 remove_linked_tree(stage_path)
 

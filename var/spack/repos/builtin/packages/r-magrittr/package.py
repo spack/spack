@@ -17,4 +17,4 @@ class RMagrittr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/magrittr_1.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/magrittr"
 
-    version('1.5', 'e74ab7329f2b9833f0c3c1216f86d65a')
+    version('1.5', sha256='05c45943ada9443134caa0ab24db4a962b629f00b755ccf039a2a2a7b2c92ae8')

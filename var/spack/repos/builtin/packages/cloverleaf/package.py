@@ -20,7 +20,7 @@ class Cloverleaf(MakefilePackage):
 
     tags = ['proxy-app']
 
-    version('1.1', '65652b30a64eb237ec844a6fdd4cd518')
+    version('1.1', sha256='de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f')
 
     variant('build', default='ref', description='Type of Parallelism Build',
             values=('cuda', 'mpi_only', 'openacc_cray',

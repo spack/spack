@@ -492,8 +492,8 @@ class EnvironmentModifications(object):
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    cmds += _shell_set_strings[shell].format(name,
-                                                             new_env[name])
+                    cmds += _shell_set_strings[shell].format(
+                        name, cmd_quote(new_env[name]))
         return cmds
 
     @staticmethod

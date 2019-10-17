@@ -13,10 +13,9 @@ class Hadoop(Package):
     """
 
     homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz"
+    url      = "http://apache-mirror.8birdsvideo.com/hadoop/common/hadoop-3.1.2/hadoop-3.1.2-src.tar.gz"
 
-    version('3.1.1', '0b6ab06b59ae75f433de387783f19011')
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('3.1.2', sha256='02f277c9fc75d4b13c7697ed6be30dba41667841ab5e37442855267c39bec6b6')
 
     depends_on('java', type='run')
 

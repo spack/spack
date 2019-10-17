@@ -20,7 +20,7 @@ class PyShapely(PythonPackage):
     ]
 
     version('1.6.4.post2', sha256='c4b87bb61fc3de59fc1f85e71a79b0c709dc68364d9584473697aad4aa13240f')
-    version('1.6.4', '7581ef2d0fb346f9ed157f3efc75f6a4')
+    version('1.6.4', sha256='b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655')
 
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

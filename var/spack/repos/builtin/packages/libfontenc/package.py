@@ -12,7 +12,7 @@ class Libfontenc(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libfontenc"
     url      = "https://www.x.org/archive/individual/lib/libfontenc-1.1.3.tar.gz"
 
-    version('1.1.3', '0ffa28542aa7d246299b1f7211cdb768')
+    version('1.1.3', sha256='6fba26760ca8d5045f2b52ddf641c12cedc19ee30939c6478162b7db8b6220fb')
 
     depends_on('zlib')
 

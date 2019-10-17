@@ -18,9 +18,9 @@ class PyTables(PythonPackage):
     ]
 
     version('3.5.2', sha256='e4fc6f1194f02a8b10ff923e77364fb70710592f620d7de35f4d4e064dc70e91')
-    version('3.4.4', '2cd52095ebb097f5bf58fa65dc6574bb')
-    version('3.3.0', '056c161ae0fd2d6e585b766adacf3b0b')
-    version('3.2.2', '7cbb0972e4d6580f629996a5bed92441',
+    version('3.4.4', sha256='c9682c0f35d8175e12bbd38d925bdb606d47b7c8e358ba056a9dbf3b1f183114')
+    version('3.3.0', sha256='dceb15fef556a2775121bcc695561df4ff0e09248e0ce3a2d58f5244a9f61421')
+    version('3.2.2', sha256='2626e874caa6b3fcf2bfc28b9dd6a40a3f859c72e19ce0764a60a6d77e350008',
             url='https://github.com/PyTables/PyTables/archive/v.3.2.2.tar.gz')
 
     variant('zlib', default=True, description='Support for zlib compression')

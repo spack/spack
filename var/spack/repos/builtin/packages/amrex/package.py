@@ -17,6 +17,7 @@ class Amrex(CMakePackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('19.10', commit='52844b32b7da11e9733b9a7f4a782e51de7f5e1e')  # tag:19.10
     version('19.08', commit='bdd1146139e8727a513d451075f900c172eb81fd')  # tag:19.08
     version('18.10.1', commit='260b53169badaa760b91dfc60ea6b2ea3d9ccf06')  # tag:18.10.1
     version('18.10', commit='d37a266c38092e1174096e245326e9eead1f4e03')  # tag:18.10
