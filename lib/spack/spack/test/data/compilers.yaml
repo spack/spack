@@ -114,3 +114,15 @@ compilers:
       cflags: -O3
       cxxflags: -O3
     modules: 'None'
+- compiler:
+    spec: clang@8.0.0
+    operating_system: redhat7
+    paths:
+      cc: /path/to/clang-8
+      cxx: /path/to/clang++-8
+      f77: /path/to/gfortran-9
+      fc: /path/to/gfortran-9
+    flags:
+      cflags: -O3
+      cxxflags: -O3
+    modules: 'None'
