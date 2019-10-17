@@ -93,15 +93,15 @@ def deprecate(parser, args):
     if len(specs) != 2:
         raise SpackError('spack deprecate requires exactly two specs')
 
-    deprecated = find_single_matching_spec(specs[0], env,
-                                           installed=['installed',
-                                                      'deprecated'])
+    deprecated = spack.cmd.disambiguate_spec(specs[0], env, local=True,
+                                             installed=['installed',
+                                                        'deprecated'])
 
     if args.install:
         replacement = specs[1].concretized()
         replacement.package.do_install()
     else:
-        replacement = find_single_matching_spec(specs[1], env)
+        replacement = spack.cmd.disambiguate_spec(specs[1], env, local=True)
 
     # Check whether package to deprecate has active extensions
     if deprecated.package.extendable:

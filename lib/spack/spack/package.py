@@ -2178,10 +2178,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         spec = self.spec
         deprecated = spack.store.db.get_record(spec).deprecated_for
         if deprecated:
-            if deprecated == replacement.dag_hash():
-                s = spec.format('{name}/{hash:7}')
-                r = replacement.format('{name}/{hash:7}')
-                tty.error("spec %s already deprecated in favor of %s" % (s, r))
+            s = spec.format('{name}/{hash:7}')
+            r = replacement.format('{name}/{hash:7}')
+            tty.error("spec %s already deprecated in favor of %s" % (s, r))
         else:
             self_yaml = spack.store.layout.spec_file_path(spec)
             depr_yaml = spack.store.layout.deprecated_file_path(spec,

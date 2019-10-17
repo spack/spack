@@ -111,7 +111,7 @@ class DirectoryLayout(object):
                 except OSError as e:
                     raise RemoveFailedError(spec, path, e)
 
-        if os.path.exists(path):
+        elif os.path.exists(path):
             try:
                 shutil.rmtree(path)
             except OSError as e:

@@ -287,7 +287,7 @@ minimal impact to their dependents.
 .. warning::
 
   The ``spack deprecate`` command is designed for use only in
-  extroardinary circumstances. This is a VERY big hammer to be used
+  extraordinary circumstances. This is a VERY big hammer to be used
   with care.
 
 The ``spack deprecate`` command will remove one package and replace it

@@ -32,13 +32,13 @@ def test_deprecate_no_such_package(mock_packages, mock_archive, mock_fetch,
                                    install_mockery):
     output = deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13',
                        fail_on_error=False)
-    assert 'libelf@0.8.10 does not match any installed package' in output
+    assert "Spec 'libelf@0.8.10' matches no installed packages" in output
 
     install('libelf@0.8.10')
 
     output = deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13',
                        fail_on_error=False)
-    assert 'libelf@0.8.13 does not match any installed package' in output
+    assert "Spec 'libelf@0.8.13' matches no installed packages" in output
 
 
 def test_deprecate_install(mock_packages, mock_archive, mock_fetch,
