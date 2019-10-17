@@ -346,6 +346,10 @@ class AspGenerator(object):
         # dependencies
         for name, conditions in pkg.dependencies.items():
             for cond, dep in conditions.items():
+                named_cond = cond.copy()
+                if not named_cond.name:
+                    named_cond.name = pkg.name
+
                 if cond == spack.spec.Spec():
                     for t in dep.type:
                         self.fact(
@@ -354,9 +358,6 @@ class AspGenerator(object):
                             )
                         )
                 else:
-                    named_cond = cond.copy()
-                    if not named_cond.name:
-                        named_cond.name = pkg.name
                     for t in dep.type:
                         self.rule(
                             fn.declared_dependency(
@@ -366,6 +367,16 @@ class AspGenerator(object):
                                 *self.spec_clauses(named_cond, body=True)
                             )
                         )
+
+                # add constraints on the dependency from dep spec.
+                for clause in self.spec_clauses(dep.spec):
+                    self.rule(
+                        clause,
+                        self._and(
+                            fn.depends_on(dep.pkg.name, dep.spec.name),
+                            *self.spec_clauses(named_cond, body=True)
+                        )
+                    )
 
         # virtual preferences
         self.virtual_preferences(

@@ -17,7 +17,6 @@ version_declared(P, V) :- version_declared(P, V, _).
 version_possible(P, V) :- version_declared(P, V), not version_conflict(P, V).
 
 version_weight(P, V, N) :- version(P, V), version_declared(P, V, N).
-#minimize{ N@3,P,V : version_weight(P, V, N) }.
 
 #defined version_conflict/2.
 
@@ -53,9 +52,6 @@ provider_weight(D, 100)
     :- virtual(V), depends_on(P, D), provider(D, V),
        not pkg_provider_preference(P, V, D, _),
        not default_provider_preference(V, D, _).
-
-% pick most preferred virtual providers
-#minimize{ N@2,D : provider_weight(D, N) }.
 
 % all nodes must be reachable from some root
 needed(D) :- root(D), node(D).
@@ -99,8 +95,6 @@ variant_not_default(P, V, X, 0)
     :- variant_value(P, V, X),
        variant_default_value(P, V, X),
        node(P).
-
-#minimize { N@1,P,V,X : variant_not_default(P, V, X, N) }.
 
 % suppress wranings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
@@ -187,3 +181,36 @@ node_compiler_set(D, C)
 node_compiler_version_set(D, C, V)
   :- node(D), compiler(C), depends_on(P, D), node_compiler(D, C),
      node_compiler_version_set(P, C, V).
+
+
+%-----------------------------------------------------------------------------
+% How to optimize the spec (high to low priority)
+%-----------------------------------------------------------------------------
+% weight root preferences higher
+%
+% TODO: how best to deal with this issue?  It's not clear how best to
+% weight all the constraints. Without this root preference, `spack solve
+% hdf5` will pick mpich instead of openmpi, even if openmpi is the
+% preferred provider, because openmpi has a version constraint on hwloc.
+% It ends up choosing between settling for an old version of hwloc, or
+% picking the second-best provider.  This workaround weights root
+% preferences higher so that hdf5's prefs are more important, but it's
+% not clear this is a general solution.  It would be nice to weight by
+% distance to root, but that seems to slow down the solve a lot.
+%
+% One option is to make preferences hard constraints.  Or maybe we need
+% to look more closely at where a constraint came from and factor that
+% into our weights.  e.g., a non-default variant resulting from a version
+% constraint counts like a version constraint.  Needs more thought later.
+%
+root(D, 2) :- root(D), node(D).
+root(D, 1) :- not root(D), node(D).
+
+% pick most preferred virtual providers
+#minimize{ N*R@3,D : provider_weight(D, N), root(P, R) }.
+
+% prefer default variants
+#minimize { N*R@2,P,V,X : variant_not_default(P, V, X, N), root(P, R) }.
+
+% prefer more recent versions.
+#minimize{ N@1,P,V : version_weight(P, V, N) }.
