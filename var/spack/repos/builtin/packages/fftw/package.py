@@ -175,10 +175,13 @@ class Fftw(AutotoolsPackage):
             if precision in ('float', 'double') and spec.satisfies('@3:'):
                 opts += simd_options
 
-            # float-only acceleration 
+            # float-only acceleration
             if precision == 'float':
                 for feature in ['sse', 'altivec']:
-                    msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
+                    if feature in spec.target:
+                        msg = '--enable-{0}'
+                    else:
+                        msg = '--disable-{0}'
                     opts.append(msg.format(feature))
 
             with working_dir(precision, create=True):
