@@ -25,7 +25,6 @@ class Mvapich2(AutotoolsPackage):
 
     provides('mpi')
     provides('mpi@:3.1', when='@2.3:')
-    provides('mpi@:3.0', when='@2.2')
     provides('mpi@:3.0', when='@2.1')
 
     variant('debug', default=False,
