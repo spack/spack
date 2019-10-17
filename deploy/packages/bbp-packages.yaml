@@ -79,6 +79,7 @@ packages:
       - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel
       - brayns-brainatlas@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel
       - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel
+  
   gnu-stable-parallel-python:
     target_matrix:
       - gnu-stable
@@ -104,6 +105,7 @@ packages:
     specs:
       - steps@3.4.1+petsc
       - steps@3.5.0a+petsc
+      - nest@2.18.0
 
   gnu-stable-lapack-parallel:
     target_matrix:
