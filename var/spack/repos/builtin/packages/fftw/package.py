@@ -138,15 +138,19 @@ class Fftw(AutotoolsPackage):
             options.append('--enable-mpi')
 
         # Specific SIMD support.
+        # all precisions
         simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
                          'kcvi', 'vsx', 'neon']
+        # float only
+        float_simd_features = ['altivec' , 'sse']
+
         simd_options = []
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
             simd_options.append(msg.format(feature))
 
         # If no features are found, enable the generic ones
-        if not any(f in spec.target for f in simd_features):
+        if not any(f in spec.target for f in simd_features + float_simd_features):
             simd_options += [
                 '--enable-generic-simd128',
                 '--enable-generic-simd256'
@@ -177,7 +181,7 @@ class Fftw(AutotoolsPackage):
 
             # float-only acceleration
             if precision == 'float':
-                for feature in ['sse', 'altivec']:
+                for feature in float_simd_features:
                     if feature in spec.target:
                         msg = '--enable-{0}'
                     else:
