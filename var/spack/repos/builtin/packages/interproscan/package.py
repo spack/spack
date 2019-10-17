@@ -15,9 +15,11 @@ class Interproscan(Package):
     homepage = "https://www.ebi.ac.uk/interpro/interproscan.html"
     url      = "https://github.com/ebi-pf-team/interproscan/archive/5.36-75.0.tar.gz"
 
+    version('5.38-76.0', sha256='cb191ff8eee275689b789167a57b368ea5c06bbcd36b4de23e8bbbbdc0fc7434')
     version('5.36-75.0', sha256='383d7431e47c985056c856ceb6d4dcf7ed2559a4a3d5c210c01ce3975875addb')
 
-    depends_on('java@8.0:8.9', type=('build', 'run'))
+    depends_on('java@8.0:8.9', type=('build', 'run'), when='@:5.36-99.0')
+    depends_on('java@11.0:', type=('build', 'run'), when='@5.37-76.0:')
     depends_on('maven', type='build')
     depends_on('perl@5:', type=('build', 'run'))
     depends_on('python@3:', type=('build', 'run'))
