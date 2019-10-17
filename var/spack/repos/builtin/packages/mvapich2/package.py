@@ -248,6 +248,8 @@ class Mvapich2(AutotoolsPackage):
             "--enable-threads={0}".format(spec.variants['threads'].value),
             "--with-ch3-rank-bits={0}".format(
                 spec.variants['ch3_rank_bits'].value),
+            '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
+                                                spec else 'yes')
         ]
 
         args.extend(self.enable_or_disable('alloca'))
