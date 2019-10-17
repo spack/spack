@@ -16,6 +16,3 @@ class PyPythonOauth2(PythonPackage):
     version('1.1.1', sha256='d7a8544927ac18215ba5317edd8f640a5f1f0593921bcf3ce862178312c8c9a4')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-python-memcached', type=('build', 'run'))
-    depends_on('py-pymongo', type=('build', 'run'))
-    depends_on('py-redis', type=('build', 'run'))
