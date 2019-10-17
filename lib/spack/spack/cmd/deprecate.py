@@ -103,32 +103,6 @@ def deprecate(parser, args):
     else:
         replacement = spack.cmd.disambiguate_spec(specs[1], env, local=True)
 
-    # Check whether package to deprecate has active extensions
-    if deprecated.package.extendable:
-        view = spack.filesystem_view.YamlFilesystemView(deprecated.prefix,
-                                                        spack.store.layout)
-        active_exts = view.extensions_layout.extension_map(deprecated).values()
-        if active_exts:
-            short = deprecated.format('{name}/{hash:7}')
-            msg = "Spec %s has active extensions\n" % short
-            for active in active_exts:
-                msg += '        %s\n' % active.format('{name}/{hash:7}')
-                msg += "Deactivate extensions before deprecating %s" % short
-            tty.die(msg)
-
-    # Check whether package to deprecate is an active extension
-    if deprecated.package.is_extension:
-        extendee = deprecated.package.extendee_spec
-        view = spack.filesystem_view.YamlFilesystemView(extendee.prefix,
-                                                        spack.store.layout)
-        if deprecated.package.is_activated(view):
-            short = deprecated.format('{name}/{hash:7}')
-            short_extendee = extendee.format('{name}/{hash:7}')
-            msg = "Spec %s is an active extension of %s\n" % (short,
-                                                              short_extendee)
-            msg += "Deactivate %s to be able to deprecate it" % short
-            tty.die(msg)
-
     if not args.yes_to_all:
         tty.msg('The following package will be deprecated:\n')
         spack.cmd.display_specs([deprecated], **display_args)

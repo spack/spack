@@ -90,7 +90,7 @@ def test_deprecate_fails_extensions(mock_packages, mock_archive, mock_fetch,
     assert 'extension1' in output
     assert "Deactivate extensions before deprecating" in output
 
-    output = deprecate('-yi', 'extension1', 'libelf', fail_on_error=False)
+    output = deprecate('-yiD', 'extension1', 'libelf', fail_on_error=False)
     assert 'extendee' in output
     assert 'is an active extension of' in output
 

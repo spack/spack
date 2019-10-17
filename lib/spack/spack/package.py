@@ -2173,9 +2173,37 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Package.uninstall_by_spec(self.spec, force)
 
     def do_deprecate(self, replacement, link_fn):
-        """Deprecate this package in favor of spec"""
+        """Deprecate this package in favor of replacement spec"""
         # Copy metadata to deprecated directory of replacement
         spec = self.spec
+
+        # Check whether package to deprecate has active extensions
+        if self.extendable:
+            view = spack.filesystem_view.YamlFilesystemView(spec.prefix,
+                                                            spack.store.layout)
+            active_exts = view.extensions_layout.extension_map(spec).values()
+            if active_exts:
+                short = spec.format('{name}/{hash:7}')
+                m = "Spec %s has active extensions\n" % short
+                for active in active_exts:
+                    m += '        %s\n' % active.format('{name}/{hash:7}')
+                    m += "Deactivate extensions before deprecating %s" % short
+                tty.die(m)
+
+        # Check whether package to deprecate is an active extension
+        if self.is_extension:
+            extendee = self.extendee_spec
+            view = spack.filesystem_view.YamlFilesystemView(extendee.prefix,
+                                                            spack.store.layout)
+
+            if self.is_activated(view):
+                short = spec.format('{name}/{hash:7}')
+                short_ext = extendee.format('{name}/{hash:7}')
+                msg = "Spec %s is an active extension of %s\n" % (short,
+                                                                  short_ext)
+                msg += "Deactivate %s to be able to deprecate it" % short
+                tty.die(msg)
+
         deprecated = spack.store.db.get_record(spec).deprecated_for
         if deprecated:
             s = spec.format('{name}/{hash:7}')
