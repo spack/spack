@@ -172,15 +172,16 @@ def test_prs_update_old_api():
     ]
     failing = []
     for file in changed_package_files:
-        name = os.path.basename(os.path.dirname(file))
-        pkg = spack.repo.get(name)
+        if 'builtin.mock' not in file:  # don't restrict packages for tests
+            name = os.path.basename(os.path.dirname(file))
+            pkg = spack.repo.get(name)
 
-        # Check for old APIs
-        failed = (hasattr(pkg, 'setup_environment') or
-                  hasattr(pkg, 'setup_dependent_environment'))
-        if failed:
-            failing.append(pkg)
+            failed = (hasattr(pkg, 'setup_environment') or
+                      hasattr(pkg, 'setup_dependent_environment'))
+            if failed:
+                failing.append(name)
+
     msg = 'there are {0} packages still using old APIs in this PR [{1}]'
     assert not failing, msg.format(
-        len(failing), ','.join(x.name for x in failing)
+        len(failing), ','.join(failing)
     )
