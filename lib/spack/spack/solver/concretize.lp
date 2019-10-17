@@ -24,12 +24,15 @@ version_weight(P, V, N) :- version(P, V), version_declared(P, V, N).
 %-----------------------------------------------------------------------------
 % Dependency semantics
 %-----------------------------------------------------------------------------
+% Dependencies of any type imply that one package "depends on" another
+depends_on(P, D) :- depends_on(P, D, _).
+
 % declared dependencies are real if they're not virtual
-depends_on(P, D) :- declared_dependency(P, D), not virtual(D), node(P).
+depends_on(P, D, T) :- declared_dependency(P, D, T), not virtual(D), node(P).
 
 % if you declare a dependency on a virtual, you depend on one of its providers
-1 { depends_on(P, Q) : provides_virtual(Q, V) } 1
-    :- declared_dependency(P, V), virtual(V), node(P).
+1 { depends_on(P, Q, T) : provides_virtual(Q, V) } 1
+    :- declared_dependency(P, V, T), virtual(V), node(P).
 
 % for any virtual, there can only be one node providing it in the DAG
 provider(P, V) :- node(P), provides_virtual(P, V).
@@ -64,8 +67,8 @@ needed(D) :- needed(P), depends_on(P, D), node(P).
 node(D) :- node(P), depends_on(P, D).
 
 % do not warn if generated program contains none of these.
-#defined depends_on/2.
-#defined declared_dependency/2.
+#defined depends_on/3.
+#defined declared_dependency/3.
 #defined virtual/1.
 #defined provides_virtual/2.
 #defined pkg_provider_preference/4.

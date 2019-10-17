@@ -101,8 +101,9 @@ def solve(parser, args):
         assert best[1] == result.answers[-1][1]
 
         opt, i, answer = best
-        tty.msg("Best of %d answers." % (i + 1))
-        tty.msg("Optimization %s" % opt)
+        if not args.yaml:
+            tty.msg("Best of %d answers." % (i + 1))
+            tty.msg("Optimization %s" % opt)
 
         # iterate over roots from command line
         for spec in specs:
