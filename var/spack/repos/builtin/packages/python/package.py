@@ -183,7 +183,7 @@ class Python(AutotoolsPackage):
             r'\1setup.py\2 --no-user-cfg \3\6'
         )
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
 
         # TODO: The '--no-user-cfg' option for Python installation is only in
@@ -195,7 +195,7 @@ class Python(AutotoolsPackage):
                       'user configurations are present.').format(self.version))
 
         # Need this to allow python build to find the Python installation.
-        spack_env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
+        env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
     def configure_args(self):
         spec = self.spec
@@ -672,7 +672,7 @@ class Python(AutotoolsPackage):
     def easy_install_file(self):
         return join_path(self.site_packages_dir, "easy-install.pth")
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
 
@@ -680,11 +680,11 @@ class Python(AutotoolsPackage):
         # python is found in the build environment. This to prevent cases
         # where a system provided python is run against the standard libraries
         # of a Spack built python. See issue #7128
-        spack_env.set('PYTHONHOME', self.home)
+        env.set('PYTHONHOME', self.home)
 
         path = os.path.dirname(self.command.path)
         if not is_system_path(path):
-            spack_env.prepend_path('PATH', path)
+            env.prepend_path('PATH', path)
 
         python_paths = []
         for d in dependent_spec.traverse(
@@ -694,12 +694,13 @@ class Python(AutotoolsPackage):
                                               self.site_packages_dir))
 
         pythonpath = ':'.join(python_paths)
-        spack_env.set('PYTHONPATH', pythonpath)
+        env.set('PYTHONPATH', pythonpath)
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
         # For run time environment set only the path for
         # dependent_spec and prepend it to PYTHONPATH
         if dependent_spec.package.extends(self.spec):
-            run_env.prepend_path('PYTHONPATH', join_path(
+            env.prepend_path('PYTHONPATH', join_path(
                 dependent_spec.prefix, self.site_packages_dir))
 
     def setup_dependent_package(self, module, dependent_spec):
