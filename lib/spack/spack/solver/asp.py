@@ -691,7 +691,14 @@ class ResultParser(object):
                 opt = [int(x) for x in costs[1:]]
 
                 for spec in self._specs.values():
+                    # namespace assignment can be done after the fact, as
+                    # it is not part of the solve
+                    repo = spack.repo.path.repo_for_pkg(spec)
+                    spec.namespace = repo.namespace
+
+                    # once this is done, everything is concrete
                     spec._mark_concrete()
+
                 result.answers.append((opt, best_model_number, self._specs))
 
 
