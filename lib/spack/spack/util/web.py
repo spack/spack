@@ -604,12 +604,12 @@ def standardize_header_names(headers):
     """Replace certain header names with standardized spellings.
 
     Standardizes the spellings of the following header names:
-        - Accept-ranges
-        - Content-length
-        - Content-type
-        - Date
-        - Last-modified
-        - Server
+    - Accept-ranges
+    - Content-length
+    - Content-type
+    - Date
+    - Last-modified
+    - Server
 
     Every name considered is translated to one of the above names if the only
     difference between the two is how the first letters of each word are
@@ -619,12 +619,12 @@ def standardize_header_names(headers):
 
     For example: The standard spelling of "Content-length" would be substituted
     for any of the following names:
-        - Content-length
-        - content_length
-        - contentlength
-        - content_Length
-        - contentLength
-        - content Length
+    - Content-length
+    - content_length
+    - contentlength
+    - content_Length
+    - contentLength
+    - content Length
 
     ... and any other header name, such as "Content-encoding", would not be
     altered, regardless of spelling.
