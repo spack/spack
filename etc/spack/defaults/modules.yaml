@@ -43,3 +43,17 @@ modules:
   lmod:
     hierarchy:
       - mpi
+  tcl:
+    # fall back to more stable I/O implementation (ROMIO)
+    # https://github.com/spack/spack/pull/13216#issuecomment-542954437
+    openmpi:
+      environment:
+        set:
+          OMPI_MCA_io: '^ompio'
+    # This anonymous spec selects any package that
+    # depends on openmpi. The double colon at the
+    # end clears the set of rules that matched so far.
+    ^openmpi::
+      environment:
+        set:
+          OMPI_MCA_io: '^ompio'

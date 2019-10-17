@@ -312,6 +312,11 @@ class Openmpi(AutotoolsPackage):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
+    def setup_environment(self, spack_env, run_env):
+        # fall back to more stable I/O implementation (ROMIO)
+        # https://github.com/spack/spack/pull/13216#issuecomment-542954437
+        run_env.set('OMPI_MCA_io', '^ompio')
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
         spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
@@ -322,6 +327,10 @@ class Openmpi(AutotoolsPackage):
         spack_env.set('OMPI_CXX', spack_cxx)
         spack_env.set('OMPI_FC', spack_fc)
         spack_env.set('OMPI_F77', spack_f77)
+
+        # fall back to more stable I/O implementation (ROMIO)
+        # https://github.com/spack/spack/pull/13216#issuecomment-542954437
+        spack_env.set('OMPI_MCA_io', '^ompio')
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
