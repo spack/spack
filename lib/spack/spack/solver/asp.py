@@ -19,6 +19,7 @@ import llnl.util.tty.color as color
 import spack
 import spack.cmd
 import spack.config
+import spack.dependency
 import spack.spec
 import spack.package
 import spack.package_prefs
@@ -345,17 +346,26 @@ class AspGenerator(object):
         # dependencies
         for name, conditions in pkg.dependencies.items():
             for cond, dep in conditions.items():
-                decl = fn.declared_dependency(dep.pkg.name, dep.spec.name)
                 if cond == spack.spec.Spec():
-                    self.fact(decl)
+                    for t in dep.type:
+                        self.fact(
+                            fn.declared_dependency(
+                                dep.pkg.name, dep.spec.name, t
+                            )
+                        )
                 else:
                     named_cond = cond.copy()
                     if not named_cond.name:
                         named_cond.name = pkg.name
-                    self.rule(
-                        decl,
-                        self._and(*self.spec_clauses(named_cond, body=True))
-                    )
+                    for t in dep.type:
+                        self.rule(
+                            fn.declared_dependency(
+                                dep.pkg.name, dep.spec.name, t
+                            ),
+                            self._and(
+                                *self.spec_clauses(named_cond, body=True)
+                            )
+                        )
 
         # virtual preferences
         self.virtual_preferences(
@@ -586,9 +596,13 @@ class ResultParser(object):
         self._specs[pkg].compiler.versions = spack.version.VersionList(
             [version])
 
-    def depends_on(self, pkg, dep):
-        self._specs[pkg]._add_dependency(
-            self._specs[dep], ('link', 'run'))
+    def depends_on(self, pkg, dep, type):
+        dependency = self._specs[pkg]._dependencies.get(dep)
+        if not dependency:
+            self._specs[pkg]._add_dependency(
+                self._specs[dep], (type,))
+        else:
+            dependency.add_type(type)
 
     def call_actions_for_functions(self, function_strings):
         function_re = re.compile(r'(\w+)\(([^)]*)\)')
@@ -665,6 +679,8 @@ class ResultParser(object):
                 costs = re.split(r"\s+", next(output).strip())
                 opt = [int(x) for x in costs[1:]]
 
+                for spec in self._specs.values():
+                    spec._mark_concrete()
                 result.answers.append((opt, best_model_number, self._specs))
 
 

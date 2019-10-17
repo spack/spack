@@ -622,6 +622,11 @@ class DependencySpec(object):
     def copy(self):
         return DependencySpec(self.parent, self.spec, self.deptypes)
 
+    def add_type(self, type):
+        self.deptypes = dp.canonical_deptype(
+            self.deptypes + dp.canonical_deptype(type)
+        )
+
     def _cmp_key(self):
         return (self.parent.name if self.parent else None,
                 self.spec.name if self.spec else None,
