@@ -6,9 +6,6 @@
 """Caches used by Spack to store data"""
 import os
 
-import six.moves.urllib.parse as urllib_parse
-import six
-
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
 
@@ -19,7 +16,6 @@ import spack.fetch_strategy
 import spack.util.file_cache
 import spack.util.path
 import spack.util.url as url_util
-import spack.util.web as web_util
 
 
 def _misc_cache():

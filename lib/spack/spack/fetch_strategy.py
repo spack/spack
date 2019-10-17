@@ -460,9 +460,9 @@ class URLFetchStrategy(FetchStrategy):
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
         web_util.push_to_url(
-                self.archive_file,
-                destination,
-                keep_original=True)
+            self.archive_file,
+            destination,
+            keep_original=True)
 
     @_needs_stage
     def check(self):
