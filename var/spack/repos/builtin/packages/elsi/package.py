@@ -68,8 +68,6 @@ class Elsi(CMakePackage):
     depends_on('petsc', when='+enable_sips')
     depends_on('superlu-dist', when='+use_external_superlu')
 
-    parallel = False
-
     def cmake_args(self):
         from os.path import dirname
 
