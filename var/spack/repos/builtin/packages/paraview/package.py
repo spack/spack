@@ -12,7 +12,7 @@ class Paraview(CMakePackage, CudaPackage):
     visualization application."""
 
     homepage = 'https://www.paraview.org'
-    url      = "https://www.paraview.org/files/v5.6/ParaView-v5.6.2.tar.xz"
+    url      = "https://www.paraview.org/files/v5.7/ParaView-v5.7.0.tar.xz"
     list_url = "https://www.paraview.org/files"
     list_depth = 1
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
@@ -20,6 +20,7 @@ class Paraview(CMakePackage, CudaPackage):
     maintainers = ['chuckatkins', 'danlipsa']
 
     version('develop', branch='master', submodules=True)
+    version('5.7.0', sha256='e41e597e1be462974a03031380d9e5ba9a7efcdb22e4ca2f3fec50361f310874')
     version('5.6.2', sha256='1f3710b77c58a46891808dbe23dc59a1259d9c6b7bb123aaaeaa6ddf2be882ea')
     version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
     version('5.5.2', sha256='64561f34c4402b88f3cb20a956842394dde5838efd7ebb301157a837114a0e2d')
