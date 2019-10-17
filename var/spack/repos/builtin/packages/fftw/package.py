@@ -142,7 +142,7 @@ class Fftw(AutotoolsPackage):
         simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
                          'kcvi', 'vsx', 'neon']
         # float only
-        float_simd_features = ['altivec' , 'sse']
+        float_simd_features = ['altivec', 'sse']
 
         simd_options = []
         for feature in simd_features:
@@ -150,7 +150,8 @@ class Fftw(AutotoolsPackage):
             simd_options.append(msg.format(feature))
 
         # If no features are found, enable the generic ones
-        if not any(f in spec.target for f in simd_features + float_simd_features):
+        if not any(f in spec.target for f in
+                   simd_features + float_simd_features):
             simd_options += [
                 '--enable-generic-simd128',
                 '--enable-generic-simd256'
