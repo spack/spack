@@ -759,21 +759,35 @@ def _add_command_line_scopes(cfg, command_line_scopes):
 
 
 # to empower setting of a custom user configuration path
-# we create a temporary configuration containing only
-# the defaults so that we can parse etc/spack/defaults/config.yaml
-# before populating 'user' scope path
+# we create a temporary configuration that pulls in the
+# default value of user_path; users should replace this value in one
+# of the higher priority scopes (except the user scope itself
+# of course); early_fetch_settings() will move through
+# the scopes and parse out user_path following the usual
+# scope hierarchy
+# the behavior of this approach is verified in
+# test_get_config_user_path_priority()
 
-def early_fetch_defaults():
+def early_fetch_settings():
     cfg_temp = Configuration()
     defaults = InternalConfigScope('_builtin', config_defaults)
+
+    # the default scope should generally not be modified, but
+    # does contain the usual ~/.spack default for user_path
     cfg_temp.push_scope(defaults)
     cfg_temp.push_scope(ConfigScope('defaults',
                         os.path.join(spack.paths.etc_path,
                                      'spack', 'defaults')))
+    cfg_temp.push_scope(ConfigScope('system',
+                        os.path.join(spack.paths.system_etc_path,
+                                     'spack')))
+    cfg_temp.push_scope(ConfigScope('site',
+                        os.path.join(spack.paths.etc_path,
+                                     'spack')))
     return cfg_temp
 
 
-config_temp = llnl.util.lang.Singleton(early_fetch_defaults)
+config_temp = llnl.util.lang.Singleton(early_fetch_settings)
 
 #: Builtin paths to configuration files in Spack
 configuration_paths = (
@@ -825,6 +839,16 @@ def _config():
     # override configuration options.
     cfg.push_scope(InternalConfigScope('command_line'))
 
+    default_user_path = os.path.expanduser("~/.spack")
+    user_path = os.path.expanduser(cfg.get_config('config')['user_path'])
+
+    if user_path != default_user_path:
+        # the cached information on repos is re-rooted
+        # to user_path when set by user, otherwise
+        # we would still write to ~/.spack/cache even
+        # when no longer using ~/.spack for other purposes
+        cfg.update_config('config', {'misc_cache':
+                          os.path.join(user_path, 'cache')})
     return cfg
 
 
