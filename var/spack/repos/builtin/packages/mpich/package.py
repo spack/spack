@@ -180,6 +180,15 @@ spack package at this time.''',
                                                 spec else 'yes')
         ]
 
+        if '+slurm' in spec:
+            config_args.append('--with-slurm=yes')
+            config_args.append('--with-slurm-include={0}'.format(
+                spec['slurm'].prefix.include))
+            config_args.append('--with-slurm-lib={0}'.format(
+                spec['slurm'].prefix.lib))
+        else:
+            config_args.append('--with-slurm=no')
+
         if 'pmi=off' in spec:
             config_args.append('--with-pmi=no')
         elif 'pmi=pmi' in spec:
