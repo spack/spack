@@ -154,14 +154,20 @@ def read_from_url(url, accept_content_type=None):
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
-    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(parsed_url):
-        warn_no_ssl_cert_checking()
-    else:
-        # without a defined context, urlopen will not verify the ssl cert for
-        # python 3.x
-        context = (
-            ssl.create_default_context() if verify_ssl else
-            ssl._create_unverified_context())
+    # Don't even bother with a context unless the URL scheme is one that uses
+    # SSL certs.
+    if uses_ssl(parsed_url):
+        if verify_ssl:
+            if __UNABLE_TO_VERIFY_SSL:
+                # User wants SSL verification, but it cannot be provided.
+                warn_no_ssl_cert_checking()
+            else:
+                # User wants SSL verification, and it *can* be provided.
+                context = ssl.create_default_context()
+        else:
+            # User has explicitly indicated that they do not want SSL
+            # verification.
+            context = ssl._create_unverified_context()
 
     req = Request(url)
     content_type = None
@@ -382,10 +388,6 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
     pages = {}     # dict from page URL -> text content.
     links = set()  # set of all links seen on visited pages.
 
-    # root may end with index.html -- chop that off.
-    if root.endswith('/index.html'):
-        root = re.sub('/index.html$', '', root)
-
     try:
         response_url, _, response = read_from_url(url, 'text/html')
         if not response_url or not response:
@@ -507,7 +509,12 @@ def spider(root_url, depth=0):
        performance over a sequential fetch.
 
     """
-    pages, links = _spider(root_url, set(), root_url, 0, depth, False)
+    # root may end with index.html -- chop that off.
+    root = root_url
+    if root.endswith('/index.html'):
+        root = re.sub('/index.html$', '', root)
+
+    pages, links = _spider(root_url, set(), root, 0, depth, False)
     return pages, links
 
 

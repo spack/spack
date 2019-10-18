@@ -150,7 +150,7 @@ def join(base_url, path, *extra, **kwargs):
                 _split_all(extra_path) for extra_path in extra))
         if part and part != '/']
 
-    base_path_args = ['/']
+    base_path_args = ['/fake-root']
     if scheme == 's3':
         if netloc:
             base_path_args.append(netloc)
@@ -165,7 +165,7 @@ def join(base_url, path, *extra, **kwargs):
         base_path_args = [new_base_path]
 
     base_path_args.extend(path_tokens)
-    base_path = os.path.relpath(os.path.join(*base_path_args), '/')
+    base_path = os.path.relpath(os.path.join(*base_path_args), '/fake-root')
 
     if scheme == 's3':
         path_tokens = [
