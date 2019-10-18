@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class PerlDbfile(PerlPackage):
     """DB_File is a module which allows Perl programs to make use of the
     facilities provided by Berkeley DB version 1.x (if you have a newer version
@@ -24,14 +25,16 @@ class PerlDbfile(PerlPackage):
 
     def patch(self):
         if os.path.isfile('config.in'):
+            # Load the config file
             with open('config.in', 'r') as f:
-              filedata = f.read()
+                filedata = f.read()
 
-            # Replace the target string
-            filedata = filedata.replace('/usr/local/BerkeleyDB/', self.spec['berkeley-db'].prefix + '/')
+            # Replace the BerkeleyDB using the correct path
+            filedata = filedata.replace('/usr/local/BerkeleyDB/',
+                                        self.spec['berkeley-db'].prefix + '/')
 
-            # Write the file out again
-            with open('file.txt', 'w') as file:
-                file.write(filedata)
+            # Update the config file
+            with open('file.txt', 'w') as f:
+                f.write(filedata)
         else:
             raise InstallError("cannot find file config.in")
