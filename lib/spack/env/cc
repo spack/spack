@@ -343,6 +343,8 @@ while [ -n "$1" ]; do
                 fi
                 shift 3;
                 rp="$1"
+            elif [[ "$2" = "$dtags_to_disable" ]] ; then
+                shift  # We want to remove explicitly this flag
             else
                 other_args+=("$1")
             fi
