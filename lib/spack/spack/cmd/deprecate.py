@@ -67,24 +67,6 @@ def setup_parser(sp):
                     help="spec to replace and spec to replace with")
 
 
-def find_single_matching_spec(spec, env, installed=True):
-    hashes = env.all_hashes() if env else None
-
-    specs = spack.store.db.query_local(spec, hashes=hashes,
-                                       installed=installed)
-    if len(specs) > 1:
-        tty.error('%s matches multiple packages:' % spec)
-        print()
-        print(spack.cmd.display_specs(specs, **display_args))
-        print()
-        tty.die("Use a more specific spec to refer to %s" % spec)
-    elif not specs:
-        t = 'package in envrionment %s' % env if env else 'installed package'
-        tty.die('%s does not match any %s.' % (spec, t))
-
-    return specs[0]
-
-
 def deprecate(parser, args):
     """Deprecate one spec in favor of another"""
     env = ev.get_env(args, 'deprecate')
