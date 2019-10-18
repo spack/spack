@@ -105,8 +105,8 @@ def wrapper_environment():
             SPACK_RPATH_DIRS=None,
             SPACK_TARGET_ARGS='',
             SPACK_LINKER_ARG='-Wl,',
-            SPACK_DTAGS_TO_ENABLE='--disable-new-dtags',
-            SPACK_DTAGS_TO_DISABLE='--enable-new-dtags'):
+            SPACK_DTAGS_TO_ADD='--disable-new-dtags',
+            SPACK_DTAGS_TO_STRIP='--enable-new-dtags'):
         yield
 
 
