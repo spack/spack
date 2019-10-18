@@ -151,18 +151,17 @@ class Adios2(CMakePackage):
             args.append('-DADIOS2_USE_DataSpaces={0}'.format(
                 'ON' if '+dataspaces' in spec else 'OFF'))
 
-        # transitive dependencies in SST via DILL, FFS, EVPath, etc.
-        if spec.satisfies('~sst'):
-            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_LibFFI=TRUE')
-        if spec.satisfies('~sst'):
-            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_LIBFABRIC=TRUE')
-        # if spec.satisfies('~sst'):  # broken package
-        args.append('-DCMAKE_DISABLE_FIND_PACKAGE_BISON=TRUE')
-        # if spec.satisfies('~sst'):  # depends on BISON
-        args.append('-DCMAKE_DISABLE_FIND_PACKAGE_FLEX=TRUE')
-        # not yet packaged
-        args.append('-DCMAKE_DISABLE_FIND_PACKAGE_CrayDRC=TRUE')
-        args.append('-DCMAKE_DISABLE_FIND_PACKAGE_NVSTREAM=TRUE')
+        if '+sst' in spec:
+            args.extend([
+                # Broken dependency package
+                '-DCMAKE_DISABLE_FIND_PACKAGE_BISON=TRUE',
+                # Depends on ^
+                '-DCMAKE_DISABLE_FIND_PACKAGE_FLEX=TRUE',
+
+                # Not yet packaged
+                '-DCMAKE_DISABLE_FIND_PACKAGE_CrayDRC=TRUE',
+                '-DCMAKE_DISABLE_FIND_PACKAGE_NVSTREAM=TRUE'
+            ])
 
         if spec.satisfies('~shared'):
             args.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL={0}'.format(
