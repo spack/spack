@@ -224,7 +224,8 @@ class Microarchitecture(object):
             version, _, suffix = version.partition('-')
 
             # If the suffixes are not all equal there's no match
-            if suffix != min_suffix or suffix != max_suffix:
+            if ((suffix != min_suffix and min_version) or
+                (suffix != max_suffix and max_version)):
                 return False
 
             # Assume compiler versions fit into semver

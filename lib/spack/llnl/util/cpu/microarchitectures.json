@@ -485,7 +485,7 @@
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
-          "versions": ":",
+          "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
         }

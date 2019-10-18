@@ -175,7 +175,9 @@ def test_arch_spec_container_semantic(item, architecture_str):
     # Check compilers with version numbers from a single toolchain
     ('gcc@4.7.2', 'haswell', '-march=core-avx2 -mtune=core-avx2'),
     # Check mixed toolchains
-    ('clang@8.0.0', 'broadwell', '')
+    ('clang@8.0.0', 'broadwell', ''),
+    # Check clang compilers with 'apple' suffix
+    ('clang@9.1.0-apple', 'x86_64', '-march=x86-64 -mcpu=generic')
 ])
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 def test_optimization_flags(
