@@ -7,7 +7,6 @@ from io import BufferedReader
 
 import six.moves.urllib.response as urllib_response
 import six.moves.urllib.request as urllib_request
-import six.moves.urllib.parse as urllib_parse
 import six.moves.urllib.error as urllib_error
 
 import spack.util.s3 as s3_util
@@ -42,7 +41,7 @@ class WrapStream(BufferedReader):
 
 
 def _s3_open(url):
-    parsed = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
+    parsed = url_util.parse(url)
     s3 = s3_util.create_s3_session(parsed)
 
     bucket = parsed.netloc

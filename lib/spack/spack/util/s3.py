@@ -9,15 +9,11 @@ import six.moves.urllib.parse as urllib_parse
 import six
 
 import spack
+import spack.util.url as url_util
 
 
 def create_s3_session(url):
-    if isinstance(url, six.string_types):
-        url = urllib_parse.urlparse(
-            url,
-            scheme='file',
-            allow_fragments=False)
-
+    url = url_util.parse(url)
     if url.scheme != 's3':
         raise ValueError(
             'Can not create S3 session from URL with scheme: {SCHEME}'.format(
@@ -34,10 +30,7 @@ def create_s3_session(url):
 
     endpoint_url = os.environ.get('S3_ENDPOINT_URL')
     if endpoint_url:
-        if urllib_parse.urlparse(
-                endpoint_url,
-                scheme=None,
-                allow_fragments=False).scheme is None:
+        if urllib_parse.urlparse(endpoint_url, scheme=None).scheme is None:
             endpoint_url = '://'.join(('https', endpoint_url))
 
         s3_client_args['endpoint_url'] = endpoint_url

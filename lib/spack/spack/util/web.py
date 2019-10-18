@@ -20,7 +20,6 @@ from itertools import product
 import six
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
-import six.moves.urllib.parse as urllib_parse
 import multiprocessing.pool
 
 try:
@@ -128,10 +127,7 @@ def uses_ssl(parsed_url):
         if not endpoint_url:
             return True
 
-        if urllib_parse.urlparse(
-                endpoint_url,
-                scheme='https',
-                allow_fragments=False).scheme == 'https':
+        if url_util.parse(endpoint_url, scheme='https').scheme == 'https':
             return True
 
     return False
@@ -145,11 +141,7 @@ __UNABLE_TO_VERIFY_SSL = (
 
 
 def read_from_url(url, accept_content_type=None):
-    parsed_url = urllib_parse.urlparse(
-        url,
-        scheme='file',
-        allow_fragments=False)
-
+    parsed_url = url_util.parse(url)
     context = None
 
     verify_ssl = spack.config.get('config:verify_ssl')
@@ -206,32 +198,15 @@ def read_from_url(url, accept_content_type=None):
     return response.geturl(), response.headers, response
 
 
-def warn_no_ssl_cert_checking():
-    tty.warn("Spack will not check SSL certificates. You need to update "
-             "your Python to enable certificate verification.")
-
-
 def push_to_url(local_path, remote_path, **kwargs):
     keep_original = kwargs.get('keep_original', True)
 
-    local_url = (
-        urllib_parse.urlparse(
-            local_path,
-            scheme='file',
-            allow_fragments=False)
-        if isinstance(local_path, six.string_types) else local_path)
-
+    local_url = url_util.parse(local_path)
     local_file_path = url_util.local_file_path(local_url)
     if local_file_path is None:
         raise ValueError('local path must be a file:// url')
 
-    remote_url = (
-        urllib_parse.urlparse(
-            remote_path,
-            scheme='file',
-            allow_fragments=False)
-        if isinstance(remote_path, six.string_types) else remote_path)
-
+    remote_url = url_util.parse(remote_path)
     verify_ssl = spack.config.get('config:verify_ssl')
 
     if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_url):
@@ -275,9 +250,7 @@ def push_to_url(local_path, remote_path, **kwargs):
 
 
 def url_exists(url):
-    if isinstance(url, six.string_types):
-        url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
-
+    url = url_util.parse(url)
     local_path = url_util.local_file_path(url)
     if local_path:
         return os.path.exists(local_path)
@@ -303,8 +276,7 @@ def url_exists(url):
 
 
 def remove_url(url):
-    if isinstance(url, six.string_types):
-        url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
+    url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
@@ -358,8 +330,7 @@ def _iter_s3_prefix(client, url, num_entries=1024):
 
 
 def list_url(url):
-    if isinstance(url, six.string_types):
-        url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
+    url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
@@ -489,10 +460,7 @@ def _urlopen(req, *args, **kwargs):
         del kwargs['context']
 
     opener = urlopen
-    if urllib_parse.urlparse(
-            url,
-            scheme='file',
-            allow_fragments=False).scheme == 's3':
+    if url_util.parse(url).scheme == 's3':
         import spack.s3_handler
         opener = spack.s3_handler.open
 

@@ -17,7 +17,6 @@ import os.path
 import operator
 
 import six
-import six.moves.urllib.parse as urllib_parse
 
 import ruamel.yaml.error as yaml_error
 
@@ -60,13 +59,7 @@ class Mirror(object):
     to them.  These two URLs are usually the same.
     """
 
-    def __init__(self,
-                 fetch_url,
-                 push_url=None,
-                 name=None,
-                 canonicalize_local_file_paths=True):
-
-        self._canonicalize = canonicalize_local_file_paths
+    def __init__(self, fetch_url, push_url=None, name=None):
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
@@ -381,8 +374,7 @@ def create(path, specs, **kwargs):
     it creates specs for those versions.  If the version satisfies any spec
     in the specs list, it is downloaded and added to the mirror.
     """
-
-    parsed = urllib_parse.urlparse(path, scheme='file', allow_fragments=False)
+    parsed = url_util.parse(path)
     mirror_root = url_util.local_file_path(parsed)
 
     # Make sure nothing is in the way.

@@ -21,7 +21,8 @@ def _split_all(path):
 
     Returns the shortest list, L, of strings such that os.path.join(*L) == path
     and os.path.split(element) == ('', element) for every element in L except
-    possibly the first.  This first element may possibly have the value of '/'.
+    possibly the first.  This first element may possibly have the value of '/',
+    or some other OS-dependent path root.
     """
     result = []
     a = path
@@ -42,56 +43,50 @@ def local_file_path(url):
     file or directory referenced by it.  Otherwise, return None.
     """
     if isinstance(url, string_types):
-        url = urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
+        url = parse(url)
 
     if url.scheme == 'file':
-        return url.netloc + url.path
-
+        return url.path
     return None
 
 
-def canonicalize_local_file_url(url):
-    """Returns a canonicalized URL string.
+def parse(url, scheme='file'):
+    """Parse a mirror url.
 
-    For file:// URLs, the returned string is an equivalent URL, but with the
-    path canonicalized as in spack.util.path.canonicalize_path().
+    For file:// URLs, the netloc and path components are concatenated and
+    passed through spack.util.path.canoncalize_path().
 
-    All other URLs are returned unmodified.
+    Otherwise, the returned value is the same as urllib's urlparse() with
+    allow_fragments=False.
     """
 
-    url_obj = (
-        urllib_parse.urlparse(url, scheme='file', allow_fragments=False)
-        if isinstance(url, string_types) else url)
+    url_obj = (urllib_parse.urlparse(url, scheme=scheme, allow_fragments=False)
+            if isinstance(url, string_types) else url)
 
     (scheme, netloc, path, params, query, _) = url_obj
     scheme = (scheme or 'file').lower()
 
-    if scheme != 'file':
-        return url
-
-    path = spack.util.path.canonicalize_path(netloc + path)
-    while path.startswith('//'):
-        path = path[1:]
-    netloc = ''
+    if scheme == 'file':
+        path = spack.util.path.canonicalize_path(netloc + path)
+        while path.startswith('//'):
+            path = path[1:]
+        netloc = ''
 
     return urllib_parse.ParseResult(scheme=scheme,
                                     netloc=netloc,
                                     path=path,
                                     params=params,
                                     query=query,
-                                    fragment=None).geturl()
+                                    fragment=None)
 
 
 def format(parsed_url):
     """Format a URL string
 
-    Returns a standardized format of the given URL as a string.
+    Returns a canonicalized format of the given URL as a string.
     """
     if isinstance(parsed_url, string_types):
-        parsed_url = urllib_parse.urlparse(
-            parsed_url,
-            scheme='file',
-            allow_fragments=False)
+        parsed_url = parse(parsed_url)
 
     return parsed_url.geturl()
 
@@ -132,12 +127,7 @@ def join(base_url, path, *extra, **kwargs):
       spack.util.url.join(prefix, 'my-package', resolve_href=False) # default
       'https://mirror.spack.io/build_cache/my-package'
     """
-    if isinstance(base_url, string_types):
-        base_url = urllib_parse.urlparse(
-            base_url,
-            scheme='file',
-            allow_fragments=False)
-
+    base_url = parse(base_url)
     resolve_href = kwargs.get('resolve_href', False)
 
     (scheme, netloc, base_path, params, query, _) = base_url
