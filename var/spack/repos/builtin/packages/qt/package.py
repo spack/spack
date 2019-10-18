@@ -294,8 +294,6 @@ class Qt(Package):
     @when('@5')
     def patch(self):
         # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_COMPILER .*', 'QMAKE_COMPILER = cc',
-                    'qtbase/mkspecs/common/g++-base.conf')
         filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
                     'qtbase/mkspecs/common/g++-base.conf')
         filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
