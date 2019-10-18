@@ -129,6 +129,7 @@ packages:
       # - lapack
       - python
     specs:
+      - nest@2.18.0
       - py-bluepy
       - py-bluepymm@0.6.38
       - py-bluepyopt@1.6.56
