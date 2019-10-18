@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import os
 
 class PerlDbfile(PerlPackage):
     """DB_File is a module which allows Perl programs to make use of the
@@ -20,3 +20,18 @@ class PerlDbfile(PerlPackage):
     version('1.840', sha256='b7864707fad0f2d1488c748c4fa08f1fb8bcfd3da247c36909fd42f20bfab2c4')
 
     depends_on('perl-extutils-makemaker', type='build')
+    depends_on('berkeley-db', type='build')
+
+    def patch(self):
+        if os.path.isfile('config.in'):
+            with open('config.in', 'r') as f:
+              filedata = f.read()
+
+            # Replace the target string
+            filedata = filedata.replace('/usr/local/BerkeleyDB/', self.spec['berkeley-db'].prefix + '/')
+
+            # Write the file out again
+            with open('file.txt', 'w') as file:
+                file.write(filedata)
+        else:
+            raise InstallError("cannot find file config.in")
