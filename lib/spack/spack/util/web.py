@@ -477,10 +477,6 @@ def spider(root_url, depth=0):
        performance over a sequential fetch.
 
     """
-    # root may end with index.html -- chop that off.
-    root = root_url
-    if root.endswith('/index.html'):
-        root = re.sub('/index.html$', '', root)
 
     pages, links = _spider(root_url, set(), root, 0, depth, False)
     return pages, links
