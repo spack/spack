@@ -6,7 +6,6 @@
 import os
 
 import six.moves.urllib.parse as urllib_parse
-import six
 
 import spack
 import spack.util.url as url_util

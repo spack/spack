@@ -60,8 +60,9 @@ def parse(url, scheme='file'):
     allow_fragments=False.
     """
 
-    url_obj = (urllib_parse.urlparse(url, scheme=scheme, allow_fragments=False)
-            if isinstance(url, string_types) else url)
+    url_obj = (
+        urllib_parse.urlparse(url, scheme=scheme, allow_fragments=False)
+        if isinstance(url, string_types) else url)
 
     (scheme, netloc, path, params, query, _) = url_obj
     scheme = (scheme or 'file').lower()

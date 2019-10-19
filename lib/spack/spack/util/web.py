@@ -141,14 +141,14 @@ __UNABLE_TO_VERIFY_SSL = (
 
 
 def read_from_url(url, accept_content_type=None):
-    parsed_url = url_util.parse(url)
+    url = url_util.parse(url)
     context = None
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
     # Don't even bother with a context unless the URL scheme is one that uses
     # SSL certs.
-    if uses_ssl(parsed_url):
+    if uses_ssl(url):
         if verify_ssl:
             if __UNABLE_TO_VERIFY_SSL:
                 # User wants SSL verification, but it cannot be provided.
@@ -161,9 +161,9 @@ def read_from_url(url, accept_content_type=None):
             # verification.
             context = ssl._create_unverified_context()
 
-    req = Request(url)
+    req = Request(url_util.format(url))
     content_type = None
-    is_web_url = parsed_url.scheme in ('http', 'https')
+    is_web_url = url.scheme in ('http', 'https')
     if accept_content_type and is_web_url:
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
@@ -189,13 +189,18 @@ def read_from_url(url, accept_content_type=None):
 
     if reject_content_type:
         tty.debug("ignoring page {0}{1}{2}".format(
-            url,
+            url_util.format(url),
             " with content type " if content_type is not None else "",
             content_type or ""))
 
         return None, None, None
 
     return response.geturl(), response.headers, response
+
+
+def warn_no_ssl_cert_checking():
+    tty.warn("Spack will not check SSL certificates. You need to update "
+             "your Python to enable certificate verification.")
 
 
 def push_to_url(local_path, remote_path, **kwargs):
@@ -467,7 +472,7 @@ def _urlopen(req, *args, **kwargs):
     return opener(req, *args, **kwargs)
 
 
-def spider(root_url, depth=0):
+def spider(root, depth=0):
     """Gets web pages from a root URL.
 
        If depth is specified (e.g., depth=2), then this will also follow
@@ -478,7 +483,8 @@ def spider(root_url, depth=0):
 
     """
 
-    pages, links = _spider(root_url, set(), root, 0, depth, False)
+    root = url_util.parse(root)
+    pages, links = _spider(root, set(), root, 0, depth, False)
     return pages, links
 
 

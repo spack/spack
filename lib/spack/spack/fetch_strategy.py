@@ -42,6 +42,7 @@ import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.web as web_util
+import spack.util.url as url_util
 
 from spack.util.executable import which
 from spack.util.string import comma_and, quote

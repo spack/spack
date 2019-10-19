@@ -685,7 +685,7 @@ def get_specs(force=False):
             tty.msg("Finding buildcaches at %s" %
                     url_util.format(fetch_url_build_cache))
             p, links = web_util.spider(
-                    url_util.join(fetch_url_build_cache, 'index.html'))
+                url_util.join(fetch_url_build_cache, 'index.html'))
             for link in links:
                 if re.search("spec.yaml", link):
                     urls.add(link)
