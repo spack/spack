@@ -123,7 +123,13 @@ def package_ast(spec):
     RemoveDirectives(spec).visit(root)
 
     fmm = TagMultiMethods(spec)
-    fmm.visit(root)
+    try:
+        fmm.visit(root)
+    except Exception as e:
+        import llnl.util.tty as tty
+        tty.debug('[PACKAGE_HASH] ' +
+                  'TagMultiMethods(spec).visit(ast.parse(text)) ' +
+                  'produced Exception %s' % e)
 
     root = ResolveMultiMethods(fmm.methods).visit(root)
     return root
