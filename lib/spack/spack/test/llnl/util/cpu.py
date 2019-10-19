@@ -191,6 +191,7 @@ def test_target_json_schema():
 
 
 @pytest.mark.parametrize('target_name,compiler,version,expected_flags', [
+    # Test GCC
     ('x86_64', 'gcc', '4.9.3', '-march=x86-64 -mtune=generic'),
     ('x86_64', 'gcc', '4.2.0', '-march=x86-64 -mtune=generic'),
     ('x86_64', 'gcc', '4.1.1', '-march=x86-64 -mtune=x86-64'),
@@ -198,6 +199,12 @@ def test_target_json_schema():
     ('nehalem', 'gcc', '4.9.3', '-march=nehalem -mtune=nehalem'),
     ('nehalem', 'gcc', '4.8.5', '-march=corei7 -mtune=corei7'),
     ('sandybridge', 'gcc', '4.8.5', '-march=corei7-avx -mtune=corei7-avx'),
+    # Test Clang / LLVM
+    ('sandybridge', 'clang', '3.9.0', '-march=x86-64 -mcpu=sandybridge'),
+    ('icelake', 'clang', '6.0.0', '-march=x86-64 -mcpu=icelake'),
+    ('icelake', 'clang', '8.0.0', '-march=x86-64 -mcpu=icelake-client'),
+    ('zen2', 'clang', '9.0.0', '-march=x86-64 -mcpu=znver2'),
+    ('power9le', 'clang', '8.0.0', '-march=ppc64le -mcpu=pwr9'),
     # Test that an unknown compiler returns an empty string
     ('sandybridge', 'unknown', '4.8.5', ''),
 ])

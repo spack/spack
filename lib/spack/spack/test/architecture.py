@@ -169,3 +169,21 @@ def test_target_container_semantic(cpu_flag, target_name):
 def test_arch_spec_container_semantic(item, architecture_str):
     architecture = spack.spec.ArchSpec(architecture_str)
     assert item in architecture
+
+
+@pytest.mark.parametrize('compiler_spec,target_name,expected_flags', [
+    # Check compilers with version numbers from a single toolchain
+    ('gcc@4.7.2', 'haswell', '-march=core-avx2 -mtune=core-avx2'),
+    # Check mixed toolchains
+    ('clang@8.0.0', 'broadwell', ''),
+    # Check clang compilers with 'apple' suffix
+    ('clang@9.1.0-apple', 'x86_64', '-march=x86-64 -mcpu=generic')
+])
+@pytest.mark.filterwarnings("ignore:microarchitecture specific")
+def test_optimization_flags(
+        compiler_spec, target_name, expected_flags, config
+):
+    target = spack.architecture.Target(target_name)
+    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
+    opt_flags = target.optimization_flags(compiler)
+    assert opt_flags == expected_flags

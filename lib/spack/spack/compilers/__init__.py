@@ -676,6 +676,44 @@ def make_compiler_list(detected_versions):
     return compilers
 
 
+def is_mixed_toolchain(compiler):
+    """Returns True if the current compiler is a mixed toolchain,
+    False otherwise.
+
+    Args:
+        compiler (Compiler): a valid compiler object
+    """
+    cc = os.path.basename(compiler.cc or '')
+    cxx = os.path.basename(compiler.cxx or '')
+    f77 = os.path.basename(compiler.f77 or '')
+    fc = os.path.basename(compiler.fc or '')
+
+    toolchains = set()
+    for compiler_cls in all_compiler_types():
+        # Inspect all the compiler toolchain we know. If a compiler is the
+        # only compiler supported there it belongs to that toolchain.
+        def name_matches(name, name_list):
+            # This is such that 'gcc' matches variations
+            # like 'ggc-9' etc that are found in distros
+            name, _, _ = name.partition('-')
+            return len(name_list) == 1 and name and name in name_list
+
+        if any([
+            name_matches(cc, compiler_cls.cc_names),
+            name_matches(cxx, compiler_cls.cxx_names),
+            name_matches(f77, compiler_cls.f77_names),
+            name_matches(fc, compiler_cls.fc_names)
+        ]):
+            tty.debug("[TOOLCHAIN] MATCH {0}".format(compiler_cls.__name__))
+            toolchains.add(compiler_cls.__name__)
+
+    if len(toolchains) > 1:
+        tty.debug("[TOOLCHAINS] {0}".format(toolchains))
+        return True
+
+    return False
+
+
 class InvalidCompilerConfigurationError(spack.error.SpackError):
 
     def __init__(self, compiler_spec):

@@ -58,6 +58,7 @@ will be responsible for compiler detection.
 """
 import functools
 import inspect
+import warnings
 
 import six
 
@@ -184,6 +185,21 @@ class Target(object):
         return cpu_flag in self.microarchitecture
 
     def optimization_flags(self, compiler):
+        """Returns the flags needed to optimize for this target using
+        the compiler passed as argument.
+
+        Args:
+            compiler (CompilerSpec or Compiler): object that contains both the
+                name and the version of the compiler we want to use
+        """
+        if isinstance(compiler, spack.compiler.Compiler):
+            if spack.compilers.is_mixed_toolchain(compiler):
+                msg = ('microarchitecture specific optimizations are not '
+                       'supported yet on mixed compiler toolchains [check'
+                       ' {0.name}@{0.version} for further details]')
+                warnings.warn(msg.format(compiler))
+                return ''
+
         return self.microarchitecture.optimization_flags(
             compiler.name, str(compiler.version)
         )
