@@ -13,8 +13,8 @@ import spack.architecture
 class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
-    homepage = 'http://www.openblas.net'
-    url      = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
+    homepage = 'https://www.openblas.net'
+    url      = 'https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
