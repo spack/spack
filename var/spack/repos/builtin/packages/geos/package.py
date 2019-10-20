@@ -14,7 +14,7 @@ class Geos(AutotoolsPackage):
        operators, as well as specific JTS enhanced topology functions."""
 
     homepage = "http://trac.osgeo.org/geos/"
-    url      = "http://download.osgeo.org/geos/geos-3.7.2.tar.bz2"
+    url      = "https://download.osgeo.org/geos/geos-3.7.2.tar.bz2"
 
     maintainers = ['adamjstewart']
 
