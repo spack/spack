@@ -192,6 +192,8 @@ class Target(object):
             compiler (CompilerSpec or Compiler): object that contains both the
                 name and the version of the compiler we want to use
         """
+        # Mixed toolchains are not supported yet
+        import spack.compilers
         if isinstance(compiler, spack.compiler.Compiler):
             if spack.compilers.is_mixed_toolchain(compiler):
                 msg = ('microarchitecture specific optimizations are not '
@@ -200,13 +202,10 @@ class Target(object):
                 warnings.warn(msg.format(compiler))
                 return ''
 
-        try:
-            # Try to check if the current compiler comes with a
-            # version number supported by archspec.cpu
-            compiler_version = compiler.version
-            v, _, suffix = str(compiler_version).partition('-')
-            _ = tuple(int(y) for y in v.split('.'))
-        except (TypeError, ValueError):
+        # Try to check if the current compiler comes with a version number
+        compiler_version = compiler.version
+        version_number, _ = cpu.version_components(compiler.version)
+        if not version_number:
             # If not try to deduce the correct version. Depending on
             # where this function is called we might get either a
             # CompilerSpec or a fully fledged compiler object
