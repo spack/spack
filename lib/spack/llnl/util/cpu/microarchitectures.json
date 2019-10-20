@@ -65,6 +65,11 @@
           "versions": ":",
           "family": "x86-64",
           "flags": "-march={family} -mcpu=generic"
+        },
+        "intel": {
+          "versions": ":",
+          "name": "pentium4",
+          "flags": "-march={name} -mtune=generic"
         }
       }
     },
@@ -86,6 +91,11 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "pentium4",
+          "flags": "-march={name} -mtune=generic"
         }
       }
     },
@@ -107,6 +117,10 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "flags": "-march={name} -mtune={name}}"
         }
       }
     },
@@ -138,6 +152,11 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "corei7",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -164,6 +183,11 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "corei7",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -198,7 +222,18 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
-        }
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "corei7-avx",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
       }
     },
     "ivybridge": {
@@ -234,7 +269,18 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
-        }
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "core-avx-i",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
       }
     },
     "haswell": {
@@ -275,7 +321,18 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
-        }
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
       }
     },
     "broadwell": {
@@ -311,6 +368,10 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -350,6 +411,10 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -393,6 +458,11 @@
           "name": "knl",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "name": "knl",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -440,6 +510,11 @@
           "name": "skylake-avx512",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "name": "skylake-avx512",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -488,6 +563,10 @@
           "versions": "3.9:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -534,6 +613,10 @@
           "versions": "8.0:",
           "family": "x86-64",
           "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "19.0:",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -603,7 +686,12 @@
             "family": "x86-64",
             "flags": "-march={family} -mcpu={name}"
           }
-        ]
+        ],
+        "intel": {
+          "versions": "18.0:",
+          "name": "icelake-client",
+          "flags": "-march={name} -mtune={name}"
+        }
       }
     },
     "bulldozer": {
