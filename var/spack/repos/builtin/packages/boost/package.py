@@ -18,12 +18,13 @@ class Boost(Package):
        encourages both commercial and non-commercial use.
     """
     homepage = "http://www.boost.org"
-    url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
+    url      = "http://downloads.sourceforge.net/project/boost/boost/1.71.0/boost_1_71_0.tar.bz2"
     git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
 
     version('develop', branch='develop', submodules=True)
+    version('1.71.0', sha256='d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee')
     version('1.70.0', sha256='430ae8354789de4fd19ee52f3b1f739e1fba576f0aded0897c3c2bc00fb38778')
     version('1.69.0', sha256='8f32d4617390d1c2d16f26a27ab60d97807b35440d45891fa340fc2648b04406')
     version('1.68.0', sha256='7f6130bc3cf65f56a618888ce9d5ea704fa10b462be126ad053e80e553d6d8b7')
@@ -216,9 +217,6 @@ class Boost(Package):
         return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
-        if spec.satisfies("platform=darwin"):
-            return 'darwin'
-
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang',
