@@ -1138,7 +1138,7 @@ few Python libraries. We can run:
 
 Each package can be listed on a separate line, or combined into a single line.
 Notice that we're explicitly asking for Python 3 here. You can use any spec
-you would normally use on the command line.
+you would normally use on the command line with other Spack commands.
 
 Next, we want to manually configure a couple of things. In the ``myenv``
 directory, we can find the ``spack.yaml`` that actually defines our environment.
@@ -1182,17 +1182,31 @@ concretize all of the specs *together*.
 Here is what your ``spack.yaml`` looks like with these new settings, and with
 some of the sections we don't plan on using removed:
 
-.. code-block:: yaml
+.. code-block:: diff
 
    spack:
-     specs:
-     - bash
-     - 'python@3:'
-     - py-numpy
-     - py-scipy
-     - py-matplotlib
-     view: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
-     concretization: together
+   -  specs: [bash, 'python@3:', py-numpy, py-scipy, py-matplotlib]
+   +  specs:
+   +  - bash
+   +  - 'python@3:'
+   +  - py-numpy
+   +  - py-scipy
+   +  - py-matplotlib
+   -  view:
+   -    default:
+   -      root: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+   -      projections: {}
+   +  view: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+   -  config: {}
+   -  mirrors: {}
+   -  modules:
+   -    enable: []
+   -  packages: {}
+   -  repos: []
+   -  upstreams: {}
+   -  definitions: []
+   +  concretization: together
+   -  concretization: separately
 
 """"""""""""""""
 Symlink location
@@ -1232,11 +1246,17 @@ you can also manually set them in your ``.bashrc``.
 
    .. code-block:: bash
 
-      for directory in .spack bin include lib share
+      for directory in .spack bin contrib include lib man share
       do
-          sudo mkdir /usr/local/$directory
-          sudo chown $USER:staff /usr/local/$directory
+          sudo mkdir -p /usr/local/$directory
+          sudo chown $(id -un):$(id -gn) /usr/local/$directory
       done
+
+   Depending on the packages you install in your environment, the exact list of
+   directories you need to create may vary. You may also find some packages
+   like Java libraries that install a single file to the installation prefix
+   instead of in a subdirectory. In this case, the action is the same, just replace
+   ``mkdir -p`` with ``touch`` in the for-loop above.
 
    But again, it's safer just to use the default symlink location.
 
@@ -1261,6 +1281,23 @@ directory, simply run:
 
    $ spack install
 
+Now, when you type ``which python3``, it should find the one you just installed.
+
+In order to change the default shell to our newer Bash installation, we first
+need to add it to this list of acceptable shells. Run:
+
+.. code-block:: console
+
+   $ sudo vim /etc/shells
+
+and add the absolute path to your bash executable. Then run:
+
+.. code-block:: console
+
+   $ chsh -s /path/to/bash
+
+Now, when you log out and log back in, ``echo $SHELL`` should point to the
+newer version of Bash.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Updating Installed Packages
