@@ -20,3 +20,4 @@ class PyAlabaster(PythonPackage):
     version('0.7.9',  sha256='47afd43b08a4ecaa45e3496e139a193ce364571e7e10c6a87ca1a4c57eb7ea08')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-pygments', type='test')
