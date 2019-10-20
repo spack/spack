@@ -197,7 +197,7 @@ class PyNumpy(PythonPackage):
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
@@ -220,7 +220,7 @@ class PyNumpy(PythonPackage):
         else:
             blas = 'blas'
 
-        spack_env.set('NPY_BLAS_ORDER', blas)
+        env.set('NPY_BLAS_ORDER', blas)
 
         # https://numpy.org/devdocs/user/building.html#lapack
         if 'lapack' not in spec:
@@ -239,7 +239,7 @@ class PyNumpy(PythonPackage):
         else:
             lapack = 'lapack'
 
-        spack_env.set('NPY_LAPACK_ORDER', lapack)
+        env.set('NPY_LAPACK_ORDER', lapack)
 
     def build_args(self, spec, prefix):
         args = []
