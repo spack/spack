@@ -47,11 +47,11 @@ class PyTables(PythonPackage):
     depends_on('bzip2', when='+bzip2')
     depends_on('lzo', when='+lzo')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('HDF5_DIR', self.spec['hdf5'].prefix)
+    def setup_build_environment(self, env):
+        env.set('HDF5_DIR', self.spec['hdf5'].prefix)
         if '+bzip2' in self.spec:
-            spack_env.set('BZIP2_DIR', self.spec['bzip2'].prefix)
+            env.set('BZIP2_DIR', self.spec['bzip2'].prefix)
         if '+lzo' in self.spec:
-            spack_env.set('LZO_DIR', self.spec['lzo'].prefix)
+            env.set('LZO_DIR', self.spec['lzo'].prefix)
         if '^c-blosc' in self.spec:
-            spack_env.set('BLOSC_DIR', self.spec['c-blosc'].prefix)
+            env.set('BLOSC_DIR', self.spec['c-blosc'].prefix)
