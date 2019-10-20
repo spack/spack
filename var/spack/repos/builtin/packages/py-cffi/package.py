@@ -29,12 +29,12 @@ class PyCffi(PythonPackage):
     depends_on('py-py', type='test')
     depends_on('py-pytest', type='test')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # This sets the compiler (and flags) that distutils will use
         # to create the final shared library.  It will use the
         # compiler specified by the environment variable 'CC' for all
-        # other compilation.  We are setting the 'LDSHARED" to the
+        # other compilation.  We are setting 'LDSHARED' to the
         # spack compiler wrapper plus a few extra flags necessary for
         # building the shared library.
         if not sys.platform == 'darwin':
-            spack_env.set('LDSHARED', "{0} -shared -pthread".format(spack_cc))
+            env.set('LDSHARED', '{0} -shared -pthread'.format(spack_cc))
