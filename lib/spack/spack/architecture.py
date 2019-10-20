@@ -202,13 +202,15 @@ class Target(object):
                 warnings.warn(msg.format(compiler))
                 return ''
 
-        # Try to check if the current compiler comes with a version number
+        # Try to check if the current compiler comes with a version number or
+        # has an unexpected suffix. If so, treat it as a compiler with a
+        # custom spec.
         compiler_version = compiler.version
-        version_number, _ = cpu.version_components(compiler.version)
-        if not version_number:
-            # If not try to deduce the correct version. Depending on
-            # where this function is called we might get either a
-            # CompilerSpec or a fully fledged compiler object
+        version_number, suffix = cpu.version_components(compiler.version)
+        if not version_number or suffix not in ('', 'apple'):
+            # Try to deduce the correct version. Depending on where this
+            # function is called we might get either a CompilerSpec or a
+            # fully fledged compiler object
             import spack.spec
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()

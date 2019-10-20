@@ -195,6 +195,13 @@ def test_optimization_flags(
     # Check that custom string versions are accepted
     (spack.spec.CompilerSpec('gcc@foo'), '9.2.0', 'icelake',
      '-march=icelake-client -mtune=icelake-client'),
+    # Check that we run version detection (4.4.0 doesn't support icelake)
+    (spack.spec.CompilerSpec('gcc@4.4.0-special'), '9.2.0', 'icelake',
+     '-march=icelake-client -mtune=icelake-client'),
+    # Check that the special case for Apple's clang is treated correctly
+    # i.e. it won't try to dtect the version again
+    (spack.spec.CompilerSpec('clang@9.1.0-apple'), None, 'x86_64',
+     '-march=x86-64 -mcpu=generic'),
 ])
 def test_optimization_flags_with_custom_versions(
         compiler, real_version, target_str, expected_flags, monkeypatch, config
