@@ -50,6 +50,7 @@ class PyTorch(PythonPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
     version('1.0.1', tag='v1.0.1', submodules=True)
@@ -134,6 +135,12 @@ class PyTorch(PythonPackage):
     depends_on('redis', when='+redis')
     depends_on('zstd', when='+zstd')
     depends_on('tbb', when='+tbb')
+
+    # Test dependencies
+    depends_on('ninja', type='test')
+    depends_on('py-hypothesis', type='test')
+    depends_on('py-six', type='test')
+    depends_on('py-psutil', type='test')
 
     def setup_environment(self, build_env, run_env):
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):
