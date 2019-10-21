@@ -51,9 +51,11 @@ class Coreneuron(CMakePackage):
     variant('shared', default=True, description="Build shared library")
     variant('tests', default=False, description="Enable building tests")
 
+    depends_on('bison', type='build')
     depends_on('boost', when='+tests')
     depends_on('cmake@3:', type='build')
     depends_on('cuda', when='+gpu')
+    depends_on('flex', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('reportinglib', when='+report')
     depends_on('reportinglib+profile', when='+report+profile')

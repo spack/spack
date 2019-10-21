@@ -122,11 +122,6 @@ packages:
             py-matplotlib@2.2.2: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
         version: [2.2.2]
         buildable: False
-    py-numpy:
-        paths:
-            py-numpy@1.14.2: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
-        version: [1.14.2]
-        buildable: False
     py-pandas:
         paths:
             py-pandas@0.22.0: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
