@@ -22,4 +22,4 @@ class Libgcrypt(AutotoolsPackage):
     version('1.7.6', sha256='626aafee84af9d2ce253d2c143dc1c0902dda045780cc241f39970fc60be05bc')
     version('1.6.2', sha256='de084492a6b38cdb27b67eaf749ceba76bf7029f63a9c0c3c1b05c88c9885c4c')
 
-    depends_on("libgpg-error")
+    depends_on('libgpg-error@1.25:')
