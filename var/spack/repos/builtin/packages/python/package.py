@@ -145,6 +145,10 @@ class Python(AutotoolsPackage):
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
     patch('gcc-8-2.7.14.patch', when='@2.7.14 %gcc@8:')
 
+    # Fixes build with the Intel compilers
+    # https://github.com/python/cpython/pull/16717
+    patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1: %intel')
+
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
     conflicts(
@@ -154,11 +158,6 @@ class Python(AutotoolsPackage):
     )
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
-
-    # Python 3.6.7 and above can not be compiled with the Intel compiler
-    # https://bugs.python.org/issue35473
-    # https://bugs.python.org/issue37415
-    conflicts('%intel', when='@3.6.7:')
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
