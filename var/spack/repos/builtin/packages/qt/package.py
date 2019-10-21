@@ -109,6 +109,7 @@ class Qt(Package):
           sha256='c49b228c27e3ad46ec3af4bac0e9985af5b5b28760f238422d32e14f98e49b1e',
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
+
     # https://github.com/Homebrew/homebrew-core/pull/5951
     patch('qt5-restore-pc-files.patch', when='@5.9:5.11 platform=darwin')
     # https://github.com/spack/spack/issues/14400
@@ -116,6 +117,21 @@ class Qt(Package):
     patch('qt5-12-intel-overflow.patch', when='@5.12:5.14.0 %intel')
     # https://bugreports.qt.io/browse/QTBUG-78937
     patch('qt5-12-configure.patch', when='@5.12')
+
+    # Fix INT64 build failure with new versions
+    patch('https://github.com/qt/qtbase/pull/24.patch',
+          working_dir='qtbase',
+          sha256='ffa41e75d0d544a517e80f068464502623bb53a11f35cd22278b37372920cf46',
+          when='@5.13:5.13.99 %gcc@9')
+
+    # Fix build of QT4 with GCC 9
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=925811
+    patch("qt4-gcc9-qforeach.patch", when="@4:4.999 %gcc@9")
+
+    # https://bugreports.qt.io/browse/QTBUG-74196
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89585
+    patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
+    patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
