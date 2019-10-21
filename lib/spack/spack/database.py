@@ -198,13 +198,6 @@ class Database(object):
         if not os.path.exists(self._db_dir):
             mkdirp(self._db_dir)
 
-        self.is_upstream = is_upstream
-
-        if self.is_upstream:
-            self.lock = ForbiddenLock()
-        else:
-            self.lock = Lock(self._lock_path)
-
         # initialize rest of state.
         self.db_lock_timeout = (
             spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
@@ -216,8 +209,13 @@ class Database(object):
                               if self.package_lock_timeout else 'No timeout')
         tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
                   str(timeout_format_str)))
-        self.lock = Lock(self._lock_path,
-                         default_timeout=self.db_lock_timeout)
+
+        self.is_upstream = is_upstream
+        if self.is_upstream:
+            self.lock = ForbiddenLock()
+        else:
+            self.lock = Lock(self._lock_path,
+                             default_timeout=self.db_lock_timeout)
         self._data = {}
 
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
@@ -341,9 +339,13 @@ class Database(object):
         return spec
 
     def db_for_spec_hash(self, hash_key):
-        with self.read_transaction():
+        if self.is_upstream:
             if hash_key in self._data:
                 return self
+        else:
+            with self.read_transaction():
+                if hash_key in self._data:
+                    return self
 
         for db in self.upstream_dbs:
             if hash_key in db._data:
@@ -353,9 +355,13 @@ class Database(object):
         if data and hash_key in data:
             return False, data[hash_key]
         if not data:
-            with self.read_transaction():
+            if self.is_upstream:
                 if hash_key in self._data:
                     return False, self._data[hash_key]
+            else:
+                with self.read_transaction():
+                    if hash_key in self._data:
+                        return False, self._data[hash_key]
         for db in self.upstream_dbs:
             if hash_key in db._data:
                 return True, db._data[hash_key]
@@ -937,6 +943,30 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
+    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
+        """
+        Do the real work of looking up a spec in *this DB* by DAG hash, or by
+        a DAG hash prefix provided by ``get_by_hash_local``.
+        """
+        # hash is a full hash and is in the data somewhere
+        if dag_hash in self._data:
+            rec = self._data[dag_hash]
+            if installed is any or rec.installed == installed:
+                return [rec.spec]
+            else:
+                return default
+
+        # check if hash is a prefix of some installed (or previously
+        # installed) spec.
+        matches = [record.spec for h, record in self._data.items()
+                   if h.startswith(dag_hash) and
+                   (installed is any or installed == record.installed)]
+        if matches:
+            return matches
+
+        # nothing found
+        return default
+
     def get_by_hash_local(self, dag_hash, default=None, installed=any):
         """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
@@ -956,25 +986,11 @@ class Database(object):
             (list): a list of specs matching the hash or hash prefix
 
         """
-        with self.read_transaction():
-            # hash is a full hash and is in the data somewhere
-            if dag_hash in self._data:
-                rec = self._data[dag_hash]
-                if installed is any or rec.installed == installed:
-                    return [rec.spec]
-                else:
-                    return default
-
-            # check if hash is a prefix of some installed (or previously
-            # installed) spec.
-            matches = [record.spec for h, record in self._data.items()
-                       if h.startswith(dag_hash) and
-                       (installed is any or installed == record.installed)]
-            if matches:
-                return matches
-
-            # nothing found
-            return default
+        if self.is_upstream:
+            return self._get_by_hash_local(dag_hash, default, installed)
+        else:
+            with self.read_transaction():
+                return self._get_by_hash_local(dag_hash, default, installed)
 
     def get_by_hash(self, dag_hash, default=None, installed=any):
         """Look up a spec by DAG hash, or by a DAG hash prefix.
@@ -1100,8 +1116,11 @@ class Database(object):
         return results
 
     def query_local(self, *args, **kwargs):
-        with self.read_transaction():
+        if self.is_upstream:
             return sorted(self._query(*args, **kwargs))
+        else:
+            with self.read_transaction():
+                return sorted(self._query(*args, **kwargs))
 
     def query(self, *args, **kwargs):
         upstream_results = []
