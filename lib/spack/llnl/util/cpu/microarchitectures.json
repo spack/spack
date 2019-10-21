@@ -56,7 +56,7 @@
             "flags": "-march={name} -mtune=generic"
           },
           {
-            "versions": "4.0:4.1.2",
+            "versions": ":4.1.2",
             "name": "x86-64",
             "flags": "-march={name} -mtune={name}"
           }
@@ -79,7 +79,7 @@
       ],
       "compilers": {
         "gcc": {
-          "versions": "4:",
+          "versions": "4.0.4:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -100,7 +100,7 @@
       ],
       "compilers": {
         "gcc": {
-          "versions": "4:",
+          "versions": "4.3.0:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -225,7 +225,7 @@
             "flags": "-march={name} -mtune={name}"
           },
           {
-            "versions": ":4.8.5",
+            "versions": "4.6:4.8.5",
             "name": "core-avx-i",
             "flags": "-march={name} -mtune={name}"
           }
@@ -266,7 +266,7 @@
             "flags": "-march={name} -mtune={name}"
           },
           {
-            "versions": ":4.8.5",
+            "versions": "4.8:4.8.5",
             "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
           }
@@ -343,7 +343,7 @@
       ],
       "compilers": {
         "gcc": {
-          "versions": "5.3:",
+          "versions": "6.0:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -432,7 +432,7 @@
       "compilers": {
         "gcc": {
           "name": "skylake-avx512",
-          "versions": "5.3:",
+          "versions": "6.0:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -481,7 +481,7 @@
       ],
       "compilers": {
         "gcc": {
-          "versions": "8:",
+          "versions": "8.0:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -527,7 +527,7 @@
       ],
       "compilers": {
         "gcc": {
-          "versions": "9:",
+          "versions": "9.0:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -588,7 +588,7 @@
       "compilers": {
         "gcc": {
           "name": "icelake-client",
-          "versions": "8:",
+          "versions": "8.0:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": [
@@ -628,7 +628,7 @@
       "compilers": {
         "gcc": {
           "name": "bdver1",
-          "versions": "4.6:",
+          "versions": "4.7:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -788,7 +788,7 @@
       "compilers": {
         "gcc": {
           "name": "znver1",
-          "versions": "6:",
+          "versions": "6.0:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -833,7 +833,7 @@
       "compilers": {
         "gcc": {
           "name": "znver2",
-          "versions": "9:",
+          "versions": "9.0:",
           "flags": "-march={name} -mtune={name}"
         },
         "clang": {
@@ -851,7 +851,7 @@
       "compilers": {
         "gcc": {
           "name": "powerpc64",
-          "versions": "4:",
+          "versions": ":",
           "flags": "-mcpu={name} -mtune={name}"
         },
         "clang": {
@@ -868,7 +868,7 @@
       "features": [],
       "compilers": {
         "gcc": {
-          "versions": "4.5:",
+          "versions": "4.4:",
           "flags": "-mcpu={name} -mtune={name}"
         },
         "clang": {
@@ -911,7 +911,7 @@
       "features": [],
       "compilers": {
         "gcc": {
-          "versions": "6:",
+          "versions": "6.0:",
           "flags": "-mcpu={name} -mtune={name}"
         },
         "clang": {
@@ -929,7 +929,7 @@
       "compilers": {
         "gcc": {
           "name": "powerpc64le",
-          "versions": "4:",
+          "versions": "4.8:",
           "flags": "-mcpu={name} -mtune={name}"
         },
         "clang": {
@@ -974,7 +974,7 @@
       "compilers": {
         "gcc": {
           "name": "power9",
-          "versions": "6:",
+          "versions": "6.0:",
           "flags": "-mcpu={name} -mtune={name}"
         },
         "clang": {
@@ -991,7 +991,7 @@
       "features": [],
       "compilers": {
         "gcc": {
-          "versions": "4:",
+          "versions": "4.8.0:",
           "flags": "-march=armv8-a -mtune=generic"
         },
         "clang": {
