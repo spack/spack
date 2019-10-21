@@ -110,29 +110,28 @@ spack package at this time.''',
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
 
-    def setup_environment(self, spack_env, run_env):
-        # mpich configure fails when F90 and F90FLAGS are set
-        spack_env.unset('F90')
-        spack_env.unset('F90FLAGS')
+    def setup_build_environment(self, env):
+        env.unset('F90')
+        env.unset('F90FLAGS')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
         if 'platform=cray' in self.spec:
-            spack_env.set('MPICC',  spack_cc)
-            spack_env.set('MPICXX', spack_cxx)
-            spack_env.set('MPIF77', spack_fc)
-            spack_env.set('MPIF90', spack_fc)
+            env.set('MPICC', spack_cc)
+            env.set('MPICXX', spack_cxx)
+            env.set('MPIF77', spack_fc)
+            env.set('MPIF90', spack_fc)
         else:
-            spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-            spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-            spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-            spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+            env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
+            env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+            env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+            env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-        spack_env.set('MPICH_CC', spack_cc)
-        spack_env.set('MPICH_CXX', spack_cxx)
-        spack_env.set('MPICH_F77', spack_f77)
-        spack_env.set('MPICH_F90', spack_fc)
-        spack_env.set('MPICH_FC', spack_fc)
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_fc)
+        env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
         if 'platform=cray' in self.spec:

@@ -168,7 +168,7 @@ class R(AutotoolsPackage):
     def r_lib_dir(self):
         return join_path('rlib', 'R', 'library')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # Set R_LIBS to include the library dir for the
         # extension and any other R extensions it depends on.
         r_libs_path = []
@@ -178,27 +178,28 @@ class R(AutotoolsPackage):
                 r_libs_path.append(join_path(d.prefix, self.r_lib_dir))
 
         r_libs_path = ':'.join(r_libs_path)
-        spack_env.set('R_LIBS', r_libs_path)
-        spack_env.set('R_MAKEVARS_SITE',
-                      join_path(self.etcdir, 'Makeconf.spack'))
+        env.set('R_LIBS', r_libs_path)
+        env.set('R_MAKEVARS_SITE',
+                join_path(self.etcdir, 'Makeconf.spack'))
 
         # Use the number of make_jobs set in spack. The make program will
         # determine how many jobs can actually be started.
-        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
+        env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
         # For run time environment set only the path for dependent_spec and
         # prepend it to R_LIBS
         if dependent_spec.package.extends(self.spec):
-            run_env.prepend_path('R_LIBS', join_path(
+            env.prepend_path('R_LIBS', join_path(
                 dependent_spec.prefix, self.r_lib_dir))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'rlib', 'R', 'lib'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'rlib', 'R', 'lib'))
-        run_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'rlib', 'R', 'include'))
+    def setup_run_environment(self, env):
+        env.prepend_path('LIBRARY_PATH',
+                         join_path(self.prefix, 'rlib', 'R', 'lib'))
+        env.prepend_path('LD_LIBRARY_PATH',
+                         join_path(self.prefix, 'rlib', 'R', 'lib'))
+        env.prepend_path('CPATH',
+                         join_path(self.prefix, 'rlib', 'R', 'include'))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before R modules' install() methods. In most cases,

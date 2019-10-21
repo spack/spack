@@ -72,7 +72,11 @@ class Kokkos(Package):
                   'Pascal60', 'Pascal61',
                   'Volta70', 'Volta72')
 
-    cuda_options = ('force_uvm', 'use_ldg', 'rdc', 'enable_lambda')
+    # C++ standard variant
+    variant('cxxstd', default='none',
+            values=('c++11', 'c++14', 'c++17', 'c++1y', 'c++1z', 'c++2a'),
+            multi=False,
+            description='set cxxstandard Kokkos option')
 
     # Host architecture variant
     variant(
@@ -150,6 +154,11 @@ class Kokkos(Package):
             # PIC
             if '+pic' in spec:
                 g_args.append('--cxxflags=-fPIC')
+
+            # C++ standard
+            cxxstandard = spec.variants['cxxstd'].value
+            if cxxstandard != 'none':
+                g_args.append('--cxxstandard=%s' % cxxstandard)
 
             # Build Debug
             if '+debug' in spec:

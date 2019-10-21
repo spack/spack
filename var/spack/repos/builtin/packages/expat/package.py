@@ -37,7 +37,7 @@ class Expat(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = []
+        args = ['--without-docbook']
         if '+libbsd' in spec and '@2.2.1:' in spec:
-            args = ['--with-libbsd']
+            args.append('--with-libbsd')
         return args

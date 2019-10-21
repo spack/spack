@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
+import errno
 import os
 import collections
 import shutil
@@ -13,7 +14,7 @@ import getpass
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, touch, working_dir
+from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir
 
 import spack.paths
 import spack.stage
@@ -354,23 +355,34 @@ def check_stage_dir_perms(prefix, path):
     # Ensure the path's subdirectories -- to `$user` -- have their parent's
     # perms while those from `$user` on are owned and restricted to the
     # user.
-    status = os.stat(prefix)
-    gid = status.st_gid
-    uid = os.getuid()
+    assert path.startswith(prefix)
+
     user = getpass.getuser()
-    parts = path[len(prefix) + 1:].split(os.path.sep)
-    have_user = False
-    for part in parts:
-        if part == user:
-            have_user = True
-        prefix = os.path.join(prefix, part)
-        prefix_status = os.stat(prefix)
-        if not have_user:
-            assert gid == prefix_status.st_gid
-            assert status.st_mode == prefix_status.st_mode
-        else:
-            assert uid == status.st_uid
-            assert status.st_mode & stat.S_IRWXU == stat.S_IRWXU
+    prefix_status = os.stat(prefix)
+    uid = os.getuid()
+
+    # Obtain lists of ancestor and descendant paths of the $user node, if any.
+    #
+    # Skip processing prefix ancestors since no guarantee they will be in the
+    # required group (e.g. $TEMPDIR on HPC machines).
+    skip = prefix if prefix.endswith(os.sep) else prefix + os.sep
+    group_paths, user_node, user_paths = partition_path(path.replace(skip, ""),
+                                                        user)
+
+    for p in group_paths:
+        p_status = os.stat(os.path.join(prefix, p))
+        assert p_status.st_gid == prefix_status.st_gid
+        assert p_status.st_mode == prefix_status.st_mode
+
+    # Add the path ending with the $user node to the user paths to ensure paths
+    # from $user (on down) meet the ownership and permission requirements.
+    if user_node:
+        user_paths.insert(0, user_node)
+
+    for p in user_paths:
+        p_status = os.stat(os.path.join(prefix, p))
+        assert uid == p_status.st_uid
+        assert p_status.st_mode & stat.S_IRWXU == stat.S_IRWXU
 
 
 @pytest.mark.usefixtures('mock_packages')
@@ -643,7 +655,7 @@ class TestStage(object):
 
     def test_first_accessible_path(self, tmpdir):
         """Test _first_accessible_path names."""
-        spack_dir = tmpdir.join('spack-test-fap')
+        spack_dir = tmpdir.join('paths')
         name = str(spack_dir)
         files = [os.path.join(os.path.sep, 'no', 'such', 'path'), name]
 
@@ -671,9 +683,75 @@ class TestStage(object):
         # Cleanup
         shutil.rmtree(str(name))
 
+    def test_create_stage_root(self, tmpdir, no_path_access):
+        """Test _create_stage_root permissions."""
+        test_dir = tmpdir.join('path')
+        test_path = str(test_dir)
+
+        try:
+            if getpass.getuser() in str(test_path).split(os.sep):
+                # Simply ensure directory created if tmpdir includes user
+                spack.stage._create_stage_root(test_path)
+                assert os.path.exists(test_path)
+
+                p_stat = os.stat(test_path)
+                assert p_stat.st_mode & stat.S_IRWXU == stat.S_IRWXU
+            else:
+                # Ensure an OS Error is raised on created, non-user directory
+                with pytest.raises(OSError) as exc_info:
+                    spack.stage._create_stage_root(test_path)
+
+                assert exc_info.value.errno == errno.EACCES
+        finally:
+            try:
+                shutil.rmtree(test_path)
+            except OSError:
+                pass
+
+    @pytest.mark.nomockstage
+    def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):
+        """
+        Test the code path that uses an existing user path -- whether `$user`
+        in `$tempdir` or not -- and triggers the generation of the UID
+        mismatch warning.
+
+        This situation can happen with some `config:build_stage` settings
+        for teams using a common service account for installing software.
+        """
+        orig_stat = os.stat
+
+        class MinStat:
+            st_mode = -1
+            st_uid = -1
+
+        def _stat(path):
+            p_stat = orig_stat(path)
+
+            fake_stat = MinStat()
+            fake_stat.st_mode = p_stat.st_mode
+            return fake_stat
+
+        user_dir = tmpdir.join(getpass.getuser())
+        user_dir.ensure(dir=True)
+        user_path = str(user_dir)
+
+        # TODO: If we could guarantee access to the monkeypatch context
+        # function (i.e., 3.6.0 on), the call and assertion could be moved
+        # to a with block, such as:
+        #
+        #  with monkeypatch.context() as m:
+        #      m.setattr(os, 'stat', _stat)
+        #      spack.stage._create_stage_root(user_path)
+        #      assert os.stat(user_path).st_uid != os.getuid()
+        monkeypatch.setattr(os, 'stat', _stat)
+        spack.stage._create_stage_root(user_path)
+
+        # The following check depends on the patched os.stat as a poor
+        # substitute for confirming the generated warnings.
+        assert os.stat(user_path).st_uid != os.getuid()
+
     def test_resolve_paths(self):
         """Test _resolve_paths."""
-
         assert spack.stage._resolve_paths([]) == []
 
         # resolved path without user appends user
@@ -686,19 +764,24 @@ class TestStage(object):
         paths = [os.path.join(os.path.sep, 'spack-{0}'.format(user), 'stage')]
         assert spack.stage._resolve_paths(paths) == paths
 
-        # resolve paths where user
-        tmp = '$tempdir'
-        can_tmpdir = canonicalize_path(tmp)
-        temp_has_user = user in can_tmpdir.split(os.sep)
-        paths = [os.path.join(tmp, 'stage'), os.path.join(tmp, '$user')]
-        can_paths = [canonicalize_path(p) for p in paths]
+        tempdir = '$tempdir'
+        can_tempdir = canonicalize_path(tempdir)
+        user = getpass.getuser()
+        temp_has_user = user in can_tempdir.split(os.sep)
+        paths = [os.path.join(tempdir, 'stage'),
+                 os.path.join(tempdir, '$user'),
+                 os.path.join(tempdir, '$user', '$user'),
+                 os.path.join(tempdir, '$user', 'stage', '$user')]
 
+        res_paths = [canonicalize_path(p) for p in paths]
         if temp_has_user:
-            can_paths[1] = can_tmpdir
+            res_paths[1] = can_tempdir
+            res_paths[2] = os.path.join(can_tempdir, user)
+            res_paths[3] = os.path.join(can_tempdir, 'stage', user)
         else:
-            can_paths[0] = os.path.join(can_paths[0], user)
+            res_paths[0] = os.path.join(res_paths[0], user)
 
-        assert spack.stage._resolve_paths(paths) == can_paths
+        assert spack.stage._resolve_paths(paths) == res_paths
 
     def test_get_stage_root_bad_path(self, clear_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
@@ -711,9 +794,9 @@ class TestStage(object):
         assert spack.stage._stage_root is None
 
     @pytest.mark.parametrize(
-        'path,purged', [('stage-1234567890abcdef1234567890abcdef', True),
-                        ('stage-abcdef12345678900987654321fedcba', True),
-                        ('stage-a1b2c3', False)])
+        'path,purged', [('spack-stage-1234567890abcdef1234567890abcdef', True),
+                        ('spack-stage-anything-goes-here', True),
+                        ('stage-spack', False)])
     def test_stage_purge(self, tmpdir, clear_stage_root, path, purged):
         """Test purging of stage directories."""
         stage_dir = tmpdir.join('stage')
@@ -737,7 +820,6 @@ class TestStage(object):
 
     def test_get_stage_root_in_spack(self, clear_stage_root):
         """Ensure an instance path is an accessible build stage path."""
-
         base = canonicalize_path(os.path.join('$spack', '.spack-test-stage'))
         mkdirp(base)
         test_path = tempfile.mkdtemp(dir=base)

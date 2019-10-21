@@ -206,12 +206,14 @@ class Qt(Package):
 
         return url
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
-        run_env.set('QTDIR', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('QTDIR', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('QTDIR', self.prefix)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('QTDIR', self.prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))

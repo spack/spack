@@ -93,12 +93,11 @@ pattern_exemptions = dict(
     for file_pattern, error_dict in pattern_exemptions.items())
 
 
-def changed_files(args):
+def changed_files(base=None, untracked=True, all_files=False):
     """Get list of changed files in the Spack repository."""
 
     git = which('git', required=True)
 
-    base = args.base
     if base is None:
         base = os.environ.get('TRAVIS_BRANCH', 'develop')
 
@@ -114,11 +113,11 @@ def changed_files(args):
     ]
 
     # Add new files that are untracked
-    if args.untracked:
+    if untracked:
         git_args.append(['ls-files', '--exclude-standard', '--other'])
 
     # add everything if the user asked for it
-    if args.all:
+    if all_files:
         git_args.append(['ls-files', '--exclude-standard'])
 
     excludes = [os.path.realpath(f) for f in exclude_directories]
@@ -246,7 +245,7 @@ def flake8(parser, args):
 
         with working_dir(spack.paths.prefix):
             if not file_list:
-                file_list = changed_files(args)
+                file_list = changed_files(args.base, args.untracked, args.all)
 
         print('=======================================================')
         print('flake8: running flake8 code checks on spack.')

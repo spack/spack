@@ -26,7 +26,8 @@ class AsperaCli(Package):
         filter_file('INSTALL_DIR=~/.aspera',
                     'INSTALL_DIR=%s' % prefix,
                     runfile,
-                    string=True)
+                    string=True,
+                    stop_at='__ARCHIVE_FOLLOWS__')
         # Install
         chmod = which('chmod')
         chmod('+x', runfile)

@@ -61,16 +61,16 @@ class Elpa(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
 
-        spack_env.set('CC', spec['mpi'].mpicc)
-        spack_env.set('FC', spec['mpi'].mpifc)
-        spack_env.set('CXX', spec['mpi'].mpicxx)
+        env.set('CC', spec['mpi'].mpicc)
+        env.set('FC', spec['mpi'].mpifc)
+        env.set('CXX', spec['mpi'].mpicxx)
 
-        spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
-        spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
-        spack_env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
+        env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
+        env.append_flags('LIBS', spec['lapack'].libs.link_flags)
+        env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
 
     def configure_args(self):
         # TODO: set optimum flags for platform+compiler combo, see
