@@ -16,6 +16,10 @@ class Tut(WafPackage):
 
     patch('python3-octal.patch', when='@2016-12-19')
 
+    # Python 3.7 support is currently broken
+    # https://github.com/mrzechonek/tut-framework/issues/18
+    depends_on('python@:3.6', type='build')
+
     def build_args(self):
         args = []
 
