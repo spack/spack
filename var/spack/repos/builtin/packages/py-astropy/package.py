@@ -60,11 +60,15 @@ class PyAstropy(PythonPackage):
     depends_on('expat')
 
     def build_args(self, spec, prefix):
-        return [
-            '-j', str(make_jobs),
+        args = [
             '--use-system-libraries',
             '--use-system-erfa',
             '--use-system-wcslib',
             '--use-system-cfitsio',
             '--use-system-expat'
         ]
+
+        if spec.satisfies('^python@3:'):
+            args.extend(['-j', str(make_jobs)])
+
+        return args
