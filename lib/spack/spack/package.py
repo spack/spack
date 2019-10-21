@@ -2192,17 +2192,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Check whether package to deprecate is an active extension
         if self.is_extension:
+            tty.msg('AAAAAAAAAA')
             extendee = self.extendee_spec
             view = spack.filesystem_view.YamlFilesystemView(extendee.prefix,
                                                             spack.store.layout)
 
             if self.is_activated(view):
+                tty.msg('BBBBBBBB')
                 short = spec.format('{name}/{hash:7}')
                 short_ext = extendee.format('{name}/{hash:7}')
                 msg = "Spec %s is an active extension of %s\n" % (short,
                                                                   short_ext)
                 msg += "Deactivate %s to be able to deprecate it" % short
                 tty.die(msg)
+
+        # Install replacement if it isn't installed already
+        if not spack.store.db.query(replacement):
+            replacement.package.do_install()
 
         old_deprecator = spack.store.db.deprecator(spec)
         if old_deprecator:

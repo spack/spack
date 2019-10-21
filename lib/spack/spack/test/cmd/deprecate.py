@@ -87,11 +87,13 @@ def test_deprecate_fails_extensions(mock_packages, mock_archive, mock_fetch,
     install('extension1')
     activate('extension1')
 
-    output = deprecate('-yi', 'extendee', 'libelf', fail_on_error=False)
+    output = deprecate('-yi', 'extendee', 'extendee@nonexistent',
+                       fail_on_error=False)
     assert 'extension1' in output
     assert "Deactivate extensions before deprecating" in output
 
-    output = deprecate('-yiD', 'extension1', 'libelf', fail_on_error=False)
+    output = deprecate('-yiD', 'extension1', 'extension1@notaversion',
+                       fail_on_error=False)
     assert 'extendee' in output
     assert 'is an active extension of' in output
 
@@ -114,12 +116,53 @@ def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch,
 def test_deprecate_deprecated(mock_packages, mock_archive, mock_fetch,
                               install_mockery):
     install('libelf@0.8.13')
+    install('libelf@0.8.12')
     install('libelf@0.8.10')
 
-    deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13')
-    output = deprecate('-yi', 'libelf@0.8.10', 'libelf', fail_on_error=False)
+    deprecated_spec = spack.spec.Spec('libelf@0.8.10').concretized()
 
-    assert "already deprecated in favor of" in output
+    deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.12')
+
+    deprecator = spack.store.db.deprecator(deprecated_spec)
+    assert deprecator == spack.spec.Spec('libelf@0.8.12').concretized()
+
+    deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13')
+
+    non_deprecated = spack.store.db.query()
+    all_available = spack.store.db.query(installed=any)
+    assert len(non_deprecated) == 2
+    assert len(all_available) == 3
+
+    deprecator = spack.store.db.deprecator(deprecated_spec)
+    assert deprecator == spack.spec.Spec('libelf@0.8.13').concretized()
+
+
+def test_deprecate_deprecator(mock_packages, mock_archive, mock_fetch,
+                              install_mockery):
+    install('libelf@0.8.13')
+    install('libelf@0.8.12')
+    install('libelf@0.8.10')
+
+    first_deprecated_spec = spack.spec.Spec('libelf@0.8.10').concretized()
+    second_deprecated_spec = spack.spec.Spec('libelf@0.8.12').concretized()
+    final_deprecator = spack.spec.Spec('libelf@0.8.13').concretized()
+
+    deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.12')
+
+    deprecator = spack.store.db.deprecator(first_deprecated_spec)
+    assert deprecator == second_deprecated_spec
+
+    deprecate('-y', 'libelf@0.8.12', 'libelf@0.8.13')
+
+    non_deprecated = spack.store.db.query()
+    all_available = spack.store.db.query(installed=any)
+    assert len(non_deprecated) == 1
+    assert len(all_available) == 3
+
+    first_deprecator = spack.store.db.deprecator(first_deprecated_spec)
+    assert first_deprecator == final_deprecator
+    second_deprecator = spack.store.db.deprecator(second_deprecated_spec)
+    assert second_deprecator == final_deprecator
 
 
 def test_concretize_deprecated(mock_packages, mock_archive, mock_fetch,

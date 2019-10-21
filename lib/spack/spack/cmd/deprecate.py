@@ -83,7 +83,6 @@ def deprecate(parser, args):
 
     if args.install:
         replacement = specs[1].concretized()
-        replacement.package.do_install()
     else:
         replacement = spack.cmd.disambiguate_spec(specs[1], env, local=True)
 

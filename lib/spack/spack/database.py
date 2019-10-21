@@ -85,6 +85,26 @@ class InstallStatuses(object):
     DEPRECATED = InstallStatus('deprecated')
     MISSING = InstallStatus('missing')
 
+    @classmethod
+    def canonicalize(cls, query_arg):
+        if query_arg is True:
+            return [cls.INSTALLED]
+        elif query_arg is False:
+            return [cls.MISSING]
+        elif query_arg is any:
+            return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
+        elif isinstance(query_arg, InstallStatus):
+            return [query_arg]
+        else:
+            try:  # Try block catches if it is not an iterable at all
+                if any(type(x) != InstallStatus for x in query_arg):
+                    raise TypeError
+            except TypeError:
+                raise TypeError(
+                    'installation query must be `any`, boolean, '
+                    'InstallStatus, or iterable of InstallStatus')
+            return query_arg
+
 
 class InstallRecord(object):
     """A record represents one installation in the DB.
@@ -130,35 +150,13 @@ class InstallRecord(object):
         self.deprecated_for = deprecated_for
 
     def install_type_matches(self, installed):
-        if installed == any:
-            return True
-        if isinstance(installed, bool):
-            return self.installed == installed
-        elif isinstance(installed, InstallStatus):
-            if self.installed:
-                return installed == InstallStatuses.INSTALLED
-            elif self.deprecated_for:
-                return installed == InstallStatuses.DEPRECATED
-            else:
-                return installed == InstallStatuses.MISSING
+        installed = InstallStatuses.canonicalize(installed)
+        if self.installed:
+            return InstallStatuses.INSTALLED in installed
+        elif self.deprecated_for:
+            return InstallStatuses.DEPRECATED in installed
         else:
-            try:
-                if any(type(x) != InstallStatus for x in installed):
-                    for x in installed:
-                        print(x, type(x))
-                    raise ValueError(
-                        'installation query must be `any`, boolean, '
-                        'InstallStatus, or iterable of InstallStatus')
-                if self.installed:
-                    return InstallStatuses.INSTALLED in installed
-                elif self.deprecated_for:
-                    return InstallStatuses.DEPRECATED in installed
-                else:
-                    return InstallStatuses.MISSING in installed
-            except TypeError:
-                raise ValueError(
-                    'installation query must be `any`, boolean, InstallStatus,'
-                    ' or iterable of InstallStatus')
+            return InstallStatuses.MISSING in installed
 
     def to_dict(self):
         rec_dict = {
