@@ -15,7 +15,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.2.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.3.zip"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -27,6 +27,7 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('1.17.3', sha256='a0678793096205a4d784bd99f32803ba8100f639cf3b932dc63b21621390ea7e')
     version('1.17.2', sha256='73615d3edc84dd7c4aeb212fa3748fb83217e00d201875a47327f55363cef2df')
     version('1.17.1', sha256='f11331530f0eff69a758d62c2461cd98cdc2eae0147279d8fc86e0464eb7e8ca')
     version('1.17.0', sha256='951fefe2fb73f84c620bec4e001e80a80ddaa1b84dce244ded7f1e0cbe0ed34a')
@@ -196,7 +197,7 @@ class PyNumpy(PythonPackage):
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
@@ -219,7 +220,7 @@ class PyNumpy(PythonPackage):
         else:
             blas = 'blas'
 
-        spack_env.set('NPY_BLAS_ORDER', blas)
+        env.set('NPY_BLAS_ORDER', blas)
 
         # https://numpy.org/devdocs/user/building.html#lapack
         if 'lapack' not in spec:
@@ -238,7 +239,7 @@ class PyNumpy(PythonPackage):
         else:
             lapack = 'lapack'
 
-        spack_env.set('NPY_LAPACK_ORDER', lapack)
+        env.set('NPY_LAPACK_ORDER', lapack)
 
     def build_args(self, spec, prefix):
         args = []
