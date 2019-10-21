@@ -242,3 +242,15 @@ def test_automatic_conversion_on_comparisons(operation, expected_result):
     target = llnl.util.cpu.targets[target]
     code = 'target ' + operator + 'other_target'
     assert eval(code) is expected_result
+
+
+@pytest.mark.parametrize('version,expected_number,expected_suffix', [
+    ('4.2.0', '4.2.0', ''),
+    ('4.2.0-apple', '4.2.0', 'apple'),
+    ('my-funny-name-with-dashes', '', 'my-funny-name-with-dashes'),
+    ('10.3.56~svnr64537', '10.3.56', '~svnr64537')
+])
+def test_version_components(version, expected_number, expected_suffix):
+    number, suffix = llnl.util.cpu.version_components(version)
+    assert number == expected_number
+    assert suffix == expected_suffix
