@@ -2204,21 +2204,29 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 msg += "Deactivate %s to be able to deprecate it" % short
                 tty.die(msg)
 
-        deprecated = spack.store.db.get_record(spec).deprecated_for
-        if deprecated:
-            s = spec.format('{name}/{hash:7}')
-            r = replacement.format('{name}/{hash:7}')
-            tty.error("spec %s already deprecated in favor of %s" % (s, r))
+        old_deprecator = spack.store.db.deprecator(spec)
+        if old_deprecator:
+            # Find this specs yaml file from its old deprecation
+            self_yaml = spack.store.layout.deprecated_file_path(spec,
+                                                                old_deprecator)
         else:
             self_yaml = spack.store.layout.spec_file_path(spec)
-            depr_yaml = spack.store.layout.deprecated_file_path(spec,
-                                                                replacement)
-            fs.mkdirp(spack.store.layout.deprecated_dir_path(replacement))
-            shutil.copy2(self_yaml, depr_yaml)
 
-            Package.uninstall_by_spec(self.spec, force=True,
-                                      replace=replacement)
-            link_fn(replacement.prefix, self.spec.prefix)
+        # copy spec metadata to "deprecated" dir of replacement
+        depr_yaml = spack.store.layout.deprecated_file_path(spec,
+                                                            replacement)
+        fs.mkdirp(spack.store.layout.deprecated_dir_path(replacement))
+        shutil.copy2(self_yaml, depr_yaml)
+
+        # Any specs deprecated in favor of this spec are re-deprecated in
+        # favor of its replacement
+        for deprecatee in spack.store.db.deprecatees(spec):
+            deprecatee.package.do_deprecate(replacement, link_fn)
+
+        # Now that we've handled metadata, uninstall and replace with link
+        Package.uninstall_by_spec(self.spec, force=True,
+                                  replace=replacement)
+        link_fn(replacement.prefix, self.spec.prefix)
 
     def _check_extendable(self):
         if not self.extendable:

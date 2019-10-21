@@ -78,8 +78,8 @@ def deprecate(parser, args):
         raise SpackError('spack deprecate requires exactly two specs')
 
     install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
-    deprecated = spack.cmd.disambiguate_spec(specs[0], env, local=True,
-                                             installed=install_query)
+    deprecate = spack.cmd.disambiguate_spec(specs[0], env, local=True,
+                                            installed=install_query)
 
     if args.install:
         replacement = specs[1].concretized()
@@ -87,24 +87,44 @@ def deprecate(parser, args):
     else:
         replacement = spack.cmd.disambiguate_spec(specs[1], env, local=True)
 
+    # calculate all deprecation pairs for errors and warning message
+    all_deprecate = []
+    all_replacements = []
+
+    generator = deprecate.traverse(
+        order='post', type='link', root=True
+    ) if args.dependencies else [deprecate]
+    for spec in generator:
+        all_deprecate.append(spec)
+        all_replacements.append(replacement[spec.name])
+        # This will throw a key error if replament does not have a dep
+        # that matches the name of a dep of the spec
+
     if not args.yes_to_all:
-        tty.msg('The following package will be deprecated:\n')
-        spack.cmd.display_specs([deprecated], **display_args)
-        tty.msg("In favor of:\n")
-        spack.cmd.display_specs([replacement], **display_args)
+        tty.msg('The following packages will be deprecated:\n')
+        spack.cmd.display_specs(all_deprecate, **display_args)
+        tty.msg("In favor of (respectively):\n")
+        spack.cmd.display_specs(all_replacements, **display_args)
+        print()
+
+        already_deprecated = []
+        already_deprecated_for = []
+        for spec in all_deprecate:
+            deprecated_for = spack.store.db.deprecator(spec)
+            if deprecated_for:
+                already_deprecated.append(spec)
+                already_deprecated_for.append(deprecated_for)
+
+        tty.msg('The following packages are already deprecated:\n')
+        spack.cmd.display_specs(already_deprecated, **display_args)
+        tty.msg('In favor of (respectively):\n')
+        spack.cmd.display_specs(already_deprecated_for, **display_args)
+
         answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
         if not answer:
             tty.die('Will not deprecate any packages.')
 
     link_fn = os.link if args.link_type == 'hard' else os.symlink
 
-    if args.dependencies:
-        for dep in deprecated.traverse(type='link', root=False):
-            try:
-                repl = replacement[dep.name]
-                dep.package.do_deprecate(repl, link_fn)
-            except KeyError as e:
-                if "No spec with name" not in e.message:
-                    raise e
-
-    deprecated.package.do_deprecate(replacement, link_fn)
+    for depr, repl in zip(all_deprecate, all_replacements):
+        depr.package.do_deprecate(repl, link_fn)

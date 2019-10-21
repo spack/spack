@@ -949,6 +949,23 @@ class Database(object):
         with self.write_transaction():
             return self._remove(spec)
 
+    def deprecator(self, spec):
+        """Return the spec that the given spec is deprecated for, or None"""
+        with self.read_transaction():
+            spec_key = self._get_matching_spec_key(spec)
+            spec_rec = self._data[spec_key]
+
+            if spec_rec.deprecated_for:
+                return self._data[spec_rec.deprecated_for].spec
+            else:
+                return None
+
+    def deprecatees(self, spec):
+        """Return all specs deprecated in favor of the given spec"""
+        with self.read_transaction():
+            return [rec.spec for rec in self._data.values()
+                    if rec.deprecated_for == spec.dag_hash()]
+
     def _deprecate(self, spec, replacement):
         spec_key = self._get_matching_spec_key(spec)
         spec_rec = self._data[spec_key]
@@ -956,6 +973,11 @@ class Database(object):
         replacement_key = self._get_matching_spec_key(replacement)
 
         self._increment_ref_count(replacement)
+
+        # If spec was already deprecated, update old replacement's ref count
+        if spec_rec.deprecated_for:
+            old_repl_rec = self._data[spec_rec.deprecated_for]
+            self._decrement_ref_count(old_repl_rec.spec)
 
         spec_rec.deprecated_for = replacement_key
         spec_rec.installed = False
