@@ -34,7 +34,7 @@ echo "0.0.0"
 """)
         os.chmod('gcc', 0o700)
 
-    os.environ['PATH'] = str(tmpdir)
+    os.environ['PATH'] = '/usr/sbin:' + str(tmpdir)
     output = compiler('find', '--scope=site')
 
     assert 'gcc' in output
