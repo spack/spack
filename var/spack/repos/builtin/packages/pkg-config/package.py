@@ -32,7 +32,9 @@ class PkgConfig(AutotoolsPackage):
         env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)
 
     def configure_args(self):
-        config_args = ['--enable-shared']
+        config_args = ['--enable-shared',
+                       '--without-system-include-path',
+                       '--without-system-library-path']
 
         if '+internal_glib' in self.spec:
             # There's a bootstrapping problem here;
