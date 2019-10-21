@@ -45,7 +45,6 @@ from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
-from spack.util.string import comma_and
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -77,11 +76,14 @@ def _autospec(function):
     return converter
 
 
-_valid_install_states = [
-    'installed',
-    'deprecated',
-    'missing',
-]
+class InstallStatus(str):
+    pass
+
+
+class InstallStatuses(object):
+    INSTALLED = InstallStatus('installed')
+    DEPRECATED = InstallStatus('deprecated')
+    MISSING = InstallStatus('missing')
 
 
 class InstallRecord(object):
@@ -132,21 +134,31 @@ class InstallRecord(object):
             return True
         if isinstance(installed, bool):
             return self.installed == installed
+        elif isinstance(installed, InstallStatus):
+            if self.installed:
+                return installed == InstallStatuses.INSTALLED
+            elif self.deprecated_for:
+                return installed == InstallStatuses.DEPRECATED
+            else:
+                return installed == InstallStatuses.MISSING
         else:
             try:
-                if any(x not in _valid_install_states for x in installed):
-                    state_str = comma_and(list(map(lambda x: "'%d'" % x,
-                                                   _valid_install_states)))
-                    raise ValueError('Valid install states are %s' % state_str)
+                if any(type(x) != InstallStatus for x in installed):
+                    for x in installed:
+                        print(x, type(x))
+                    raise ValueError(
+                        'installation query must be `any`, boolean, '
+                        'InstallStatus, or iterable of InstallStatus')
                 if self.installed:
-                    return 'installed' in installed
+                    return InstallStatuses.INSTALLED in installed
                 elif self.deprecated_for:
-                    return 'deprecated' in installed
+                    return InstallStatuses.DEPRECATED in installed
                 else:
-                    return 'missing' in installed
+                    return InstallStatuses.MISSING in installed
             except TypeError:
                 raise ValueError(
-                    'installation query must be `any`, boolean, or iterable')
+                    'installation query must be `any`, boolean, InstallStatus,'
+                    ' or iterable of InstallStatus')
 
     def to_dict(self):
         rec_dict = {
@@ -1025,12 +1037,13 @@ class Database(object):
             dag_hash (str): hash (or hash prefix) to look up
             default (object, optional): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, or iterable, optional): if ``True``,
-                includes only installed specs in the search; if ``False`` only
-                missing specs, and if ``any``, all specs in database. If an
-                iterable, returns installed specs if 'installed' in iterable,
-                deprecated specs if 'deprecated' in iterable, and missing specs
-                if 'missing' in iterable. (default: any)
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
         known hash.  Note that ``query()`` and ``query_one()`` differ in
@@ -1067,12 +1080,13 @@ class Database(object):
             dag_hash (str): hash (or hash prefix) to look up
             default (object, optional): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, or iterable, optional): if ``True``,
-                includes only installed specs in the search; if ``False`` only
-                missing specs, and if ``any``, all specs in database. If an
-                iterable, returns installed specs if 'installed' in iterable,
-                deprecated specs if 'deprecated' in iterable, and missing specs
-                if 'missing' in iterable. (default: any)
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
         known hash.  Note that ``query()`` and ``query_one()`` differ in
@@ -1117,12 +1131,13 @@ class Database(object):
                 Spack, but have since either changed their name or
                 been removed
 
-            installed (bool or any, or iterable, optional): if ``True``,
-                includes only installed specs in the search; if ``False`` only
-                missing specs, and if ``any``, all specs in database. If an
-                iterable, returns installed specs if 'installed' in iterable,
-                deprecated specs if 'deprecated' in iterable, and missing specs
-                if 'missing' in iterable. (default: True)
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: any)
 
             explicit (bool or any, optional): A spec that was installed
                 following a specific user request is marked as explicit. If

@@ -23,7 +23,9 @@ import spack.cmd
 import spack.store
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+
 from spack.error import SpackError
+from spack.database import InstallStatuses
 
 description = "Replace one package with another via symlinks"
 section = "admin"
@@ -75,9 +77,9 @@ def deprecate(parser, args):
     if len(specs) != 2:
         raise SpackError('spack deprecate requires exactly two specs')
 
+    install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
     deprecated = spack.cmd.disambiguate_spec(specs[0], env, local=True,
-                                             installed=['installed',
-                                                        'deprecated'])
+                                             installed=install_query)
 
     if args.install:
         replacement = specs[1].concretized()

@@ -182,9 +182,9 @@ def disambiguate_spec(spec, env, local=False, installed=True):
         env (spack.environment.Environment): a spack environment,
             if one is active, or None if no environment is active
         local (boolean, default False): do not search chained spack instances
-        installed (iterable or boolean, default True): iterable of install
-            status to match. If true, use ['installed']. If false, use
-            ['missing'].
+        installed (boolean or any, or spack.database.InstallStatus or iterable
+            of spack.database.InstallStatus): install status argument passed to
+            database query. See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
     if local:
