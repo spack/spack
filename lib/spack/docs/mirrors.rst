@@ -187,6 +187,18 @@ You can tell your Spack installation to use that mirror like this:
 
 Each mirror has a name so that you can refer to it again later.
 
+Support is also available for adding mirrors at relative file paths.
+If this is done on the Spack command line, the relative path will
+be modified internally so that it is written to the ``mirrors.yaml``
+file as a path relative to that file. In this way, relative path
+addition via the command line or via direct editing of the ``mirrors.yaml``
+file can agree on a single convention. Additionally, with this approach,
+fetching from a relative path is not subject to the spack command
+working directory. Note that spack currently stores the path
+to the ``mirrors.yaml`` file inside the file itself as a mirror
+named ``yaml_path``, so this mirror name should be treated as reserved.
+
+
 .. _cmd-spack-mirror-list:
 
 ---------------------

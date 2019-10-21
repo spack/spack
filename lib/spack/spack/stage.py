@@ -401,12 +401,16 @@ class Stage(object):
             path_string = 'file://'
             # resolve relative paths to absolute for fetching
             # purposes
+            yaml_path = mirrors.pop('yaml_path', None)
             for key in mirrors.keys():
                 current_path = mirrors[key]
                 target_path = current_path.replace(path_string, '')
-                if current_path.startswith(path_string) and not (
+                if current_path.startswith((path_string, '..')) and not (
                         os.path.isabs(target_path)):
-                    absolute_target_path = os.path.abspath(target_path)
+                    # produce an absolute path based on path relative
+                    # to yaml file
+                    absolute_target_path = os.path.normpath(os.path.join(
+                        yaml_path, target_path))
                     # we concatenate the paths because the prefix
                     # path string "file://" is unnatural
                     mirrors[key] = path_string + absolute_target_path

@@ -144,12 +144,35 @@ class ConfigScope(object):
             schema = section_schemas[section]
             data   = _read_config_file(path, schema)
             self.sections[section] = data
+
+        if self.sections and self.sections[section] is not None:
+            if section == 'mirrors':
+                # storing the absolute path to the yaml file is useful
+                # for enabling resolution of relative paths stored in
+                # the yaml file
+                yaml_path = self.get_section_filename(section)
+                self.sections[section]['mirrors']['yaml_path'] = yaml_path
         return self.sections[section]
 
     def write_section(self, section):
         filename = self.get_section_filename(section)
         data = self.get_section(section)
         validate(data, section_schemas[section])
+
+        if section == 'mirrors':
+            for mirror_key in data['mirrors']:
+                mirror_path = data['mirrors'][mirror_key].replace('file://',
+                                                                  '')
+                if not os.path.isabs(mirror_path):
+                    # adjust written relative mirror paths such
+                    # that they are relative to the yaml file itself;
+                    # that way, adding mirrors programmatically is consistent
+                    # with adding them manually in the yaml file, and also
+                    # prevents relative mirror fetching from being anchored to
+                    # the spack working directory
+                    new_relpath = os.path.relpath(mirror_path,
+                                                  filename.replace('file://', ''))
+                    data['mirrors'][mirror_key] = new_relpath
 
         try:
             mkdirp(self.path)

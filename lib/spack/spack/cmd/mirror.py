@@ -84,7 +84,9 @@ def setup_parser(subparser):
 def mirror_add(args):
     """Add a mirror to Spack."""
     url = args.url
-    if url.startswith('/'):
+
+    # add appropriate prefix to absolute or relative paths
+    if url.startswith(('/', '..')):
         url = 'file://' + url
 
     mirrors = spack.config.get('mirrors', scope=args.scope)
