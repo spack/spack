@@ -32,7 +32,7 @@ class FluxCore(AutotoolsPackage):
 
     depends_on("libzmq@4.0.4:")
     depends_on("czmq")
-    depends_on("czmq@2.2:3.99", when="@0.1:0.6.99")
+    depends_on("czmq@2.2:3.99", when="@0.1:0.6")
     depends_on("czmq@3.0.1:", when="@0.7:")
     depends_on("hwloc@1.11.1:1.99")
     depends_on("hwloc +cuda", when='+cuda')
@@ -52,7 +52,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-jsonschema", type=('build', 'run'), when="@0.12.0:")
     depends_on("jansson")
     depends_on("pkgconfig")
-    depends_on("yaml-cpp", when="@:0.11.99")
+    depends_on("yaml-cpp", when="@:0.11")
     depends_on("lz4", when="@0.11.0:")
 
     # versions up to 0.8.0 uses pylint to check Flux's python binding
