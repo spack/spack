@@ -117,6 +117,10 @@ def sysctl_info_dict():
         info['flags'] += ' sse4_2'
     if 'avx1.0' in info['flags']:
         info['flags'] += ' avx'
+    if 'clfsopt' in info['flags']:
+        info['flags'] += ' clflushopt'
+    if 'xsave' in info['flags']:
+        info['flags'] += ' xsavec xsaveopt'
 
     return info
 
