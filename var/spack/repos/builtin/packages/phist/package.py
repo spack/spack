@@ -26,13 +26,14 @@ class Phist(CMakePackage):
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.8.0', sha256='ee42946bce187e126452053b5f5c200b57b6e40ee3f5bcf0751f3ced585adeb0')
     version('1.7.5', sha256='f11fe27f2aa13d69eb285cc0f32c33c1603fa1286b84e54c81856c6f2bdef500')
     version('1.7.4', sha256='ef0c97fda9984f53011020aff3e61523833320f5f5719af2f2ed84463cccb98b')
     version('1.7.3', sha256='ab2d853c9ba13bcd3069fcc61c359cb412466a2e4b22ebbd2f5263cffa685126')
     version('1.7.2', sha256='29b504d78b5efd57b87d2ca6e20bc8a32b1ba55b40f5a5b7189cc0d28e43bcc0')
     version('1.6.1', sha256='4ed4869f24f920a494aeae0f7d1d94fe9efce55ebe0d298a5948c9603e07994d')
-    version('1.6.0', '751f855230d6227b972b5ab7bce2c65f')
-    version('1.4.3', 'af3300378d4282366d148e38c3a3199a')
+    version('1.6.0', sha256='667a967b37d248242c275226c96efc447ef73a2b15f241c6a588d570d7fac07b')
+    version('1.4.3', sha256='9cc1c7ba7f7a04e94f4497da14199e4631a0d02d0e4187f3e16f4c242dc777c1')
 
     variant(name='kernel_lib', default='builtin',
             description='select the kernel library (backend) for phist',
@@ -110,6 +111,10 @@ class Phist(CMakePackage):
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
     conflicts('+fortran', when='@:1.6.99')
+
+    # older gcc's may produce incorrect SIMD code and fail
+    # to compile some OpenMP statements
+    conflicts('%gcc@:4.9.1')
 
     def cmake_args(self):
         spec = self.spec

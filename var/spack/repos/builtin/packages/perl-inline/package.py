@@ -12,6 +12,6 @@ class PerlInline(PerlPackage):
     homepage = "http://search.cpan.org/~ingy/Inline-0.80/lib/Inline.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/I/IN/INGY/Inline-0.80.tar.gz"
 
-    version('0.80', '510bbac46e727bcaf240b7feac2646c9')
+    version('0.80', sha256='7e2bd984b1ebd43e336b937896463f2c6cb682c956cbd2c311a464363d2ccef6')
 
     depends_on('perl-test-warn', type=('build', 'run'))

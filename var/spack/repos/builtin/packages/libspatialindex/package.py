@@ -7,7 +7,9 @@ from spack import *
 
 
 class Libspatialindex(CMakePackage):
-    homepage = "http://libspatialindex.github.io"
+    """C++ implementation of R*-tree, an MVR-tree and a TPR-tree with C API."""
+
+    homepage = "https://libspatialindex.org/"
     url      = "https://github.com/libspatialindex/libspatialindex/tarball/1.8.5"
 
-    version('1.8.5', 'a95d8159714dbda9a274792cd273d298')
+    version('1.8.5', sha256='271f0d1425c527fd7d8b4be45b27e9383b244047b5918225877105616e7c0ad2')

@@ -5,7 +5,7 @@
 
 """Schema for packages.yaml configuration files.
 
-.. literalinclude:: ../spack/schema/packages.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
    :lines: 13-
 """
 
@@ -28,6 +28,12 @@ properties = {
                         # version strings
                         'items': {'anyOf': [{'type': 'string'},
                                             {'type': 'number'}]}},
+                    'target': {
+                        'type': 'array',
+                        'default': [],
+                        # target names
+                        'items': {'type': 'string'},
+                    },
                     'compiler': {
                         'type': 'array',
                         'default': [],

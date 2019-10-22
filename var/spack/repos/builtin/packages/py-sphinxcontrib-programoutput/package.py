@@ -16,7 +16,7 @@ class PySphinxcontribProgramoutput(PythonPackage):
     # FIXME: These import tests don't work for some reason
     # import_modules = ['sphinxcontrib', 'sphinxcontrib.programoutput']
 
-    version('0.10', '8e511e476c67696c7ae2c08b15644eb4')
+    version('0.10', sha256='fdee94fcebb0d8fddfccac5c4fa560f6177d5340c4349ee447c890bea8857094')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx@1.3.5:', type=('build', 'run'))

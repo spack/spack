@@ -18,6 +18,7 @@ class Trf(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://tandem.bu.edu/trf/trf.html"
+    manual_download = True
 
     version('4.09', '0c594fe666e0332db1df9d160d7fabc8', expand=False,
             url='file://{0}/trf409.linux64'.format(os.getcwd()))

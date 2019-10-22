@@ -52,11 +52,21 @@ class Nekbone(Package):
         install(makenek, prefix.bin)
         install(nekpmpi, prefix.bin)
 
+        error = Executable(fc)('empty.f', output=str, error=str,
+                               fail_on_error=False)
+
+        fflags = ''
+        if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
+            # Use '-std=legacy' to suppress an error that used to be a
+            # warning in previous versions of gfortran.
+            fflags = ' -std=legacy'
+
         with working_dir(prefix.bin):
             filter_file(r'^SOURCE_ROOT\s*=.*', 'SOURCE_ROOT=\"' +
                         prefix.bin.Nekbone + '/src\"', 'makenek')
             filter_file(r'^CC\s*=.*', 'CC=\"' + cc + '\"', 'makenek')
-            filter_file(r'^F77\s*=.*', 'F77=\"' + fc + '\"', 'makenek')
+            filter_file(r'^F77\s*=.*', 'F77=\"' + fc + fflags + '\"',
+                        'makenek')
 
             if '+mpi' not in spec:
                 filter_file(r'^#IFMPI=\"false\"', 'IFMPI=\"false\"', 'makenek')

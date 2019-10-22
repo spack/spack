@@ -38,6 +38,7 @@ class Snap(MakefilePackage):
                 makefile.filter('MPI = yes', 'MPI = no')
             if '~openmp' in spec:
                 makefile.filter('OPENMP = yes', 'OPENMP = no')
+            makefile.filter('FFLAGS =.*', 'FFLAGS =')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

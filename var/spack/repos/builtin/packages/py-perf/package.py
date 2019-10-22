@@ -11,10 +11,10 @@ class PyPerf(PythonPackage):
     analyze benchmarks.
     """
 
-    homepage = "https://pypi.python.org/pypi/perf"
-    url = "https://github.com/vstinner/perf/archive/1.5.1.tar.gz"
+    homepage = "https://pypi.python.org/pypi/pyperf"
+    url = "https://github.com/vstinner/pyperf/archive/1.5.1.tar.gz"
 
-    version('1.5.1', 'e3dc532fdbaf44f2d921556164bd74e5')
+    version('1.5.1', sha256='9c271862bc2911be8eb01031a4a86cbc3f5bb615971514383802d3dcf46f18ed')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))

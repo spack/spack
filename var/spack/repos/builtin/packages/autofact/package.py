@@ -19,7 +19,7 @@ class Autofact(Package):
     depends_on('perl-bio-perl', type='run')
     depends_on('perl-io-string', type='run')
     depends_on('perl-lwp', type='run')
-    depends_on('blast-plus', type='run')
+    depends_on('blast-legacy', type='run')
 
     def patch(self):
         with working_dir('scripts'):

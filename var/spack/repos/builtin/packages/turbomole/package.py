@@ -20,6 +20,7 @@ class Turbomole(Package):
     see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.turbomole-gmbh.com/"
+    manual_download = True
 
     version('7.0.2', '92b97e1e52e8dcf02a4d9ac0147c09d6',
             url="file://%s/turbolinux702.tar.gz" % os.getcwd())

@@ -12,7 +12,7 @@ class PyIminuit(PythonPackage):
     homepage = "https://pypi.python.org/pypi/iminuit"
     url      = "https://pypi.io/packages/source/i/iminuit/iminuit-1.2.tar.gz"
 
-    version('1.2', '4701ec472cae42015e26251703e6e984')
+    version('1.2', sha256='7651105fc3f186cfb5742f075ffebcc5088bf7797d8ed124c00977eebe0d1c64')
 
     # Required dependencies
     depends_on('py-setuptools', type='build')

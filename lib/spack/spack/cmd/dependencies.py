@@ -8,10 +8,11 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack.environment as ev
-import spack.store
-import spack.repo
 import spack.cmd
+import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.repo
+import spack.store
 
 description = "show dependencies of a package"
 section = "basic"
@@ -26,6 +27,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-t', '--transitive', action='store_true', default=False,
         help="show all transitive dependencies")
+    arguments.add_common_arguments(subparser, ['deptype'])
     subparser.add_argument(
         '-V', '--no-expand-virtuals', action='store_false', default=True,
         dest="expand_virtuals", help="do not expand virtual dependencies")
@@ -42,9 +44,10 @@ def dependencies(parser, args):
         env = ev.get_env(args, 'dependencies')
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
-        tty.msg("Dependencies of %s" % spec.format('$_$@$%@$/', color=True))
+        format_string = '{name}{@version}{%compiler}{/hash:7}'
+        tty.msg("Dependencies of %s" % spec.format(format_string, color=True))
         deps = spack.store.db.installed_relatives(
-            spec, 'children', args.transitive)
+            spec, 'children', args.transitive, deptype=args.deptype)
         if deps:
             spack.cmd.display_specs(deps, long=True)
         else:
@@ -62,9 +65,9 @@ def dependencies(parser, args):
 
         dependencies = set()
         for pkg in packages:
-            dependencies.update(
-                set(pkg.possible_dependencies(
-                    args.transitive, args.expand_virtuals)))
+            possible = pkg.possible_dependencies(
+                args.transitive, args.expand_virtuals, deptype=args.deptype)
+            dependencies.update(possible)
 
         if spec.name in dependencies:
             dependencies.remove(spec.name)

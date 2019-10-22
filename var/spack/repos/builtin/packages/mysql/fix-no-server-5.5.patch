@@ -1,0 +1,33 @@
+diff -Naur mysql-5.5.62/CMakeLists.txt mysql-5.5.62-new/CMakeLists.txt
+--- mysql-5.5.62/CMakeLists.txt	2017-06-05 01:38:02.000000000 -0500
++++ mysql-5.5.62-new/CMakeLists.txt	2017-09-22 09:17:29.000000000 -0500
+@@ -450,6 +450,13 @@
+   ADD_SUBDIRECTORY(packaging/rpm-oel)
+   ADD_SUBDIRECTORY(packaging/rpm-sles)
+   ADD_SUBDIRECTORY(packaging/rpm-docker)
++ELSE()
++  ADD_SUBDIRECTORY(client)
++  ADD_SUBDIRECTORY(sql/share)
++  ADD_SUBDIRECTORY(scripts)
++  IF(UNIX)
++    ADD_SUBDIRECTORY(man)
++  ENDIF()
+ ENDIF()
+ 
+ INCLUDE(cmake/abi_check.cmake)
+diff -Naur mysql-5.5.62/client/mysql.cc mysql-5.5.62-new/client/mysql.cc
+--- mysql-5.5.62/unittest/mysys/CMakeLists.txt	2017-06-05 01:38:02.000000000 -0500
++++ mysql-5.5.62-new/unittest/mysys/CMakeLists.txt	2017-09-22 09:17:29.000000000 -0500
+@@ -31,6 +31,7 @@
+   MY_ADD_TEST(${testname})
+ ENDFOREACH()
+ 
++IF(NOT WITHOUT_SERVER)
+ IF(WIN32)
+   ADD_EXECUTABLE(explain_filename-t explain_filename-t.cc
+                                     ../../sql/nt_servc.cc)
+@@ -39,3 +40,4 @@
+ ENDIF()
+ TARGET_LINK_LIBRARIES(explain_filename-t sql mytap)
+ ADD_TEST(explain_filename explain_filename-t)
++ENDIF(NOT WITHOUT_SERVER)

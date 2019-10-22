@@ -24,10 +24,10 @@ If Spack reported an error, provide the error message. If it did not report an e
 but the output appears incorrect, provide the incorrect output. If there was no error
 message and no output but the result is incorrect, describe how it does not match
 what you expect. To provide more information you might re-run the commands with 
-the additional -sd flags:
+the additional -d/--stacktrace flags:
 ```console
-$ spack -sd <command1> <spec>
-$ spack -sd <command2> <spec>
+$ spack -d --stacktrace <command1> <spec>
+$ spack -d --stacktrace <command2> <spec>
 ...
 ```
 that activate the full debug output. 

@@ -83,3 +83,11 @@ PackageLicenseDeclared: MIT
 PackageName: six
 PackageHomePage: https://pypi.python.org/pypi/six
 PackageLicenseDeclared: MIT
+
+PackageName: macholib
+PackageHomePage: https://macholib.readthedocs.io/en/latest/index.html
+PackageLicenseDeclared: MIT
+
+PackageName: altgraph
+PackageHomePage: https://altgraph.readthedocs.io/en/latest/index.html
+PackageLicenseDeclared: MIT

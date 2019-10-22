@@ -1,0 +1,10 @@
+--- portage/portage/interpolate/interpolate_1st_order.h.orig	2019-06-19 13:52:51.930855056 -0600
++++ portage/portage/interpolate/interpolate_1st_order.h	2019-06-19 13:53:05.087946460 -0600
+@@ -13,6 +13,7 @@
+ #include <iostream>
+ #include <utility>
+ #include <vector>
++#include <math.h>
+ 
+ #include "portage/support/portage.h"
+ 

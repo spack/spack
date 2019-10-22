@@ -14,6 +14,8 @@ class Graphmap(MakefilePackage):
 
     version('0.3.0', commit='eb8c75d68b03be95464318afa69b645a59f8f6b7')
 
+    depends_on('zlib', type='link')
+
     def edit(self, spec, prefix):
         mkdirp(prefix.bin)
         makefile = FileFilter('Makefile')

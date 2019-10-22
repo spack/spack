@@ -5,7 +5,7 @@
 
 """Schema for mirrors.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/mirrors.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
    :lines: 13-
 """
 

@@ -13,7 +13,7 @@ class FastxToolkit(AutotoolsPackage):
     homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
     url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('0.0.14', sha256='9e1f00c4c9f286be59ac0e07ddb7504f3b6433c93c5c7941d6e3208306ff5806')
 
     depends_on('libgtextutils')
 

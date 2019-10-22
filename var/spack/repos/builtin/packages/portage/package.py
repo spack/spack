@@ -17,14 +17,26 @@ class Portage(CMakePackage):
 
     # tarballs don't have submodules, so use git tags
     version('develop', branch='master', submodules=True)
+    version('1.2.2', tag='v1.2.2', submodules=True)
     version('1.1.1', tag='v1.1.1', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
+
+    # fabs() needs math.h for gcc-7, got fixed in
+    # versions above 1.2.2
+    patch('gcc-7.patch', when='@:1.2.2 %gcc@7:')
+    # part of https://github.com/laristra/cinch/commit/f87f848269fac25aa5b8d0bd5d9c9b2d2d6fb0ad
+    # fixed in version above 1.2.2
+    patch('p_lapacke_config.patch', when='@1.2.2')
+    # don't enable debug prints in RelWithDebInfo build
+    # fixed in version above 1.2.2
+    patch('rel-with-deb-info.patch', when='@1.2.2')
 
     variant('mpi', default=True, description='Support MPI')
 
     depends_on("cmake@3.1:", type='build')
     depends_on('mpi', when='+mpi')
     depends_on('lapack')
+    depends_on('boost')
 
     def cmake_args(self):
         options = ['-DENABLE_UNIT_TESTS=ON', '-DENABLE_APP_TESTS=ON']
@@ -38,5 +50,8 @@ class Portage(CMakePackage):
             ])
         else:
             options.append('-DENABLE_MPI=OFF')
+
+        options.append("-DLAPACKE_LIBRARIES=" +
+                       self.spec["lapack"].libs.joined(";"))
 
         return options

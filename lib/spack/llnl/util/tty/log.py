@@ -5,6 +5,8 @@
 
 """Utility classes for logging the output of blocks of code.
 """
+from __future__ import unicode_literals
+
 import multiprocessing
 import os
 import re

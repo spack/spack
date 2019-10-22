@@ -14,7 +14,7 @@ class Libapplewm(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libAppleWM"
     url      = "https://www.x.org/archive/individual/lib/libAppleWM-1.4.1.tar.gz"
 
-    version('1.4.1', '52c587641eb57f00978d28d98d487af8')
+    version('1.4.1', sha256='d7fb098d65ad4d840f60e5c92de7f58f1725bd70d0d132755ea453462fd50049')
 
     depends_on('libx11')
     depends_on('libxext')

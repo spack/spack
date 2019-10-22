@@ -61,11 +61,11 @@ __write() {
 }
 
 __revparse_head() {
-    head="`git -C /spack rev-parse $@ HEAD 2>/dev/null`"
+    head="`git -C "$SPACK_ROOT" rev-parse $@ HEAD 2>/dev/null`"
     result="$?"
     if [ "$result" '!=' '0' ] ; then
-        head="`git --git-dir=/spack/.git \\
-              --work-tree=/spack rev-parse $@ HEAD 2>/dev/null`"
+        head="`git --git-dir="$SPACK_ROOT"/.git \\
+              --work-tree="$SPACK_ROOT" rev-parse $@ HEAD 2>/dev/null`"
         result="$?"
     fi
 

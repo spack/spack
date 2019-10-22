@@ -219,6 +219,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     # name/downloads/name-ver.ver
     ('dolfin', '2016.1.0',
      'https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2016.1.0.tar.gz'),
+
     # Common Repositories - sourceforge downloads
 
     # name-ver.ver
@@ -356,6 +357,47 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     # name-namever.ver_ver.ver
     ('STAR-CCM+', '11.06.010_02',
      'file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz'.format(os.getcwd())),
+
+    # Various extensions
+    # .tar.gz
+    ('libXcursor', '1.1.14',
+     'https://www.x.org/archive/individual/lib/libXcursor-1.1.14.tar.gz'),
+    # .tar.bz2
+    ('mpfr', '4.0.1', 'https://ftpmirror.gnu.org/mpfr/mpfr-4.0.1.tar.bz2'),
+    # .tar.xz
+    ('pkgconf', '1.5.4',
+     'http://distfiles.dereferenced.org/pkgconf/pkgconf-1.5.4.tar.xz'),
+    # .tar.Z
+    ('Gblocks', '0.91b',
+     'http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux64_0.91b.tar.Z'),
+    # .tar.zip
+    ('bcl2fastq2', '2.19.1.403',
+     'ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v2.19.1.403-tar.zip'),
+    # .tar, .TAR
+    ('python-meep', '1.4.2',
+     'https://launchpad.net/python-meep/1.4/1.4/+download/python-meep-1.4.2.tar'),
+    ('python-meep', '1.4.2',
+     'https://launchpad.net/python-meep/1.4/1.4/+download/python-meep-1.4.2.TAR'),
+    # .gz
+    ('libXcursor', '1.1.14',
+     'https://www.x.org/archive/individual/lib/libXcursor-1.1.14.gz'),
+    # .bz2
+    ('mpfr', '4.0.1', 'https://ftpmirror.gnu.org/mpfr/mpfr-4.0.1.bz2'),
+    # .xz
+    ('pkgconf', '1.5.4',
+     'http://distfiles.dereferenced.org/pkgconf/pkgconf-1.5.4.xz'),
+    # .Z
+    ('Gblocks', '0.91b',
+     'http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux64_0.91b.Z'),
+    # .zip
+    ('bliss', '0.73', 'http://www.tcs.hut.fi/Software/bliss/bliss-0.73.zip'),
+    # .tgz
+    ('ADOL-C', '2.6.1',
+     'http://www.coin-or.org/download/source/ADOL-C/ADOL-C-2.6.1.tgz'),
+    # .tbz2
+    ('mpfr', '4.0.1', 'https://ftpmirror.gnu.org/mpfr/mpfr-4.0.1.tbz2'),
+    # .txz
+    ('kim-api', '2.1.0', 'https://s3.openkim.org/kim-api/kim-api-2.1.0.txz'),
 
     # Weird URLS
 

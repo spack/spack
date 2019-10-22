@@ -19,6 +19,7 @@ class Gotcha(CMakePackage):
     version('0.0.2', tag='0.0.2')
 
     variant('test', default=False, description='Build tests for Gotcha')
+    patch('arm.patch', when='@1.0.2')
 
     def configure_args(self):
         spec = self.spec

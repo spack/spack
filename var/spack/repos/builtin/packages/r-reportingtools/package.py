@@ -41,7 +41,7 @@ class RReportingtools(RPackage):
     depends_on('r-gseabase', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))
-    depends_on('r-utils', type=('build', 'run'))
+    depends_on('r-r-utils', type=('build', 'run'))
     depends_on('r-deseq2', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-ggbio', type=('build', 'run'))

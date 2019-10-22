@@ -26,7 +26,7 @@ class AspellDictPackage(AutotoolsPackage):
 
     def view_destination(self, view):
         aspell_spec = self.spec['aspell']
-        if view.root != aspell_spec.prefix:
+        if view.get_projection_for_spec(aspell_spec) != aspell_spec.prefix:
             raise ExtensionError(
                 'aspell does not support non-global extensions')
         aspell = aspell_spec.command

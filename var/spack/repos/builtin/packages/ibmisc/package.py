@@ -12,7 +12,9 @@ class Ibmisc(CMakePackage):
     homepage = "https://github.com/citibeth/ibmisc"
     url      = "https://github.com/citibeth/ibmisc/archive/v0.1.0.tar.gz"
 
-    version('0.1.0', '18c63db3e466c5a6fc2db3f903d06ecb')
+    maintainers = ['citibeth']
+
+    version('0.1.0', sha256='38481a8680aad4b40eca6723b2898b344cf0ef891ebc3581f5e99fbe420fa0d8')
 
     variant('everytrace', default=False,
             description='Report errors through Everytrace')
@@ -35,7 +37,7 @@ class Ibmisc(CMakePackage):
 
     depends_on('eigen')
     depends_on('everytrace', when='+everytrace')
-    depends_on('proj', when='+proj')
+    depends_on('proj@:4', when='+proj')
     depends_on('blitz', when='+blitz')
     depends_on('netcdf-cxx4', when='+netcdf')
     depends_on('udunits2', when='+udunits2')

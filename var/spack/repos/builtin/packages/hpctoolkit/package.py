@@ -16,9 +16,29 @@ class Hpctoolkit(AutotoolsPackage):
 
     homepage = "http://hpctoolkit.org"
     git      = "https://github.com/HPCToolkit/hpctoolkit.git"
+    maintainers = ['mwkrentel']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('gpu', branch='master-gpu')
+    version('2019.08.14', commit='6ea44ed3f93ede2d0a48937f288a2d41188a277c')
+    version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc')
     version('2018.11.05', commit='d0c43e39020e67095b1f1d8bb89b75f22b12aee9')
+
+    # Options for MPI and hpcprof-mpi.  We always support profiling
+    # MPI applications.  These options add hpcprof-mpi, the MPI
+    # version of hpcprof.  Cray and Blue Gene need separate options
+    # because an MPI module in packages.yaml doesn't work on these
+    # systems.
+    variant('cray', default=False,
+            description='Build for Cray compute nodes, including '
+            'hpcprof-mpi.')
+
+    variant('bgq', default=False,
+            description='Build for Blue Gene compute nodes, including '
+            'hpcprof-mpi.')
+
+    variant('mpi', default=False,
+            description='Build hpcprof-mpi, the MPI version of hpcprof.')
 
     # We can't build with both PAPI and perfmon for risk of segfault
     # from mismatched header files (unless PAPI installs the perfmon
@@ -27,41 +47,49 @@ class Hpctoolkit(AutotoolsPackage):
             description='Use PAPI instead of perfmon for access to '
             'the hardware performance counters.')
 
-    # We always support profiling MPI applications.  +mpi builds
-    # hpcprof-mpi, the MPI version of hpcprof.
-    variant('mpi', default=False,
-            description='Build hpcprof-mpi, the MPI version of hpcprof.')
-
     variant('all-static', default=False,
             description='Needed when MPICXX builds static binaries '
             'for the compute nodes.')
 
-    boost_libs = '+atomic +graph +regex +serialization'  \
-        '+shared +multithreaded'
+    variant('cuda', default=False,
+            description='Support CUDA on NVIDIA GPUs (gpu branch only).')
 
-    depends_on('binutils+libiberty~nls')
+    boost_libs = '+atomic +chrono +date_time +filesystem +system +thread' \
+                 '+timer +graph +regex +shared +multithreaded'
+
+    depends_on('binutils+libiberty~nls', type='link')
     depends_on('boost' + boost_libs)
-    depends_on('bzip2')
+    depends_on('boost' + ' visibility=global', when='@gpu')
+    depends_on('bzip2', type='link')
     depends_on('dyninst')
-    depends_on('elfutils~nls')
+    depends_on('elfutils~nls', type='link')
     depends_on('intel-tbb')
     depends_on('libdwarf')
-    depends_on('libmonitor+hpctoolkit')
+    depends_on('libmonitor+hpctoolkit', when='~bgq')
+    depends_on('libmonitor+hpctoolkit+bgq', when='+bgq')
     depends_on('libunwind@2018.10.0:')
     depends_on('xerces-c transcoder=iconv')
-    depends_on('xz')
+    depends_on('xz', type='link')
     depends_on('zlib')
 
-    depends_on('intel-xed', when='target=x86_64')
+    depends_on('cuda', when='+cuda')
+    depends_on('intel-xed', when='target=x86_64:')
+    depends_on('mbedtls+pic', when='@gpu')
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='~papi')
     depends_on('mpi', when='+mpi')
+
+    conflicts('%gcc@:4.7.99', when='^dyninst@10.0.0:',
+              msg='hpctoolkit requires gnu gcc 4.8.x or later')
+    conflicts('%gcc@:4.99.99', when='@gpu',
+              msg='the gpu branch requires gnu gcc 5.x or later')
+    conflicts('+cuda', when='@2018.0.0:',
+              msg='cuda is only available on the gpu branch')
 
     flag_handler = AutotoolsPackage.build_system_flags
 
     def configure_args(self):
         spec = self.spec
-        target = spec.architecture.target
 
         args = [
             '--with-binutils=%s'     % spec['binutils'].prefix,
@@ -78,7 +106,17 @@ class Hpctoolkit(AutotoolsPackage):
             '--with-zlib=%s'         % spec['zlib'].prefix,
         ]
 
-        if target == 'x86_64':
+        if '+cuda' in spec:
+            cupti_path = join_path(spec['cuda'].prefix, 'extras', 'CUPTI')
+            args.extend([
+                '--with-cuda=%s' % spec['cuda'].prefix,
+                '--with-cupti=%s' % cupti_path,
+            ])
+
+        if spec.satisfies('@gpu'):
+            args.append('--with-mbedtls=%s' % spec['mbedtls'].prefix)
+
+        if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
 
         if '+papi' in spec:
@@ -86,7 +124,19 @@ class Hpctoolkit(AutotoolsPackage):
         else:
             args.append('--with-perfmon=%s' % spec['libpfm4'].prefix)
 
-        if '+mpi' in spec:
+        # MPI options for hpcprof-mpi.
+        if '+cray' in spec:
+            args.extend([
+                '--enable-mpi-search=cray',
+                '--enable-all-static',
+            ])
+        elif '+bgq' in spec:
+            args.extend([
+                '--enable-mpi-search=bgq',
+                '--enable-all-static',
+                '--enable-bgq',
+            ])
+        elif '+mpi' in spec:
             args.append('MPICXX=%s' % spec['mpi'].mpicxx)
 
         if '+all-static' in spec:

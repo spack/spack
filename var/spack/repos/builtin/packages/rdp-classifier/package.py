@@ -14,7 +14,7 @@ class RdpClassifier(Package):
     homepage = "http://rdp.cme.msu.edu/"
     url      = "https://downloads.sourceforge.net/project/rdp-classifier/rdp-classifier/rdp_classifier_2.12.zip"
 
-    version('2.12', '7fdfa33512629810f0ff06b905642ddd')
+    version('2.12', sha256='977896248189a1ce2146dd3a61d203c3c6bc9aa3982c60332d463832922f7d0a')
 
     depends_on('java', type=('build', 'run'))
 

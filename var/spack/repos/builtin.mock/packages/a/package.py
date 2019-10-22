@@ -16,11 +16,8 @@ class A(AutotoolsPackage):
     version('2.0', '2.0_a_hash')
 
     variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
+        'foo', description='',
+        values=any_combination_of('bar', 'baz', 'fee').with_default('bar'),
     )
 
     variant(
@@ -34,6 +31,8 @@ class A(AutotoolsPackage):
     variant('bvv', default=True, description='The good old BV variant')
 
     depends_on('b', when='foobar=bar')
+
+    parallel = False
 
     def with_or_without_fee(self, activated):
         if not activated:

@@ -5,7 +5,7 @@
 
 """Schema for config.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/config.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
 
@@ -25,6 +25,10 @@ properties = {
                     {'type': 'array',
                      'items': {'type': 'string'}}],
             },
+            'extensions': {
+                'type': 'array',
+                'items': {'type': 'string'}
+            },
             'template_dirs': {
                 'type': 'array',
                 'items': {'type': 'string'}
@@ -37,10 +41,18 @@ properties = {
                     'lmod': {'type': 'string'},
                     'dotkit': {'type': 'string'},
                 },
+                'deprecatedProperties': {
+                    'properties': ['dotkit'],
+                    'message': 'specifying a "{property}" module root has no '
+                               'effect [support for {property} module files'
+                               ' has been dropped]',
+                    'error': False
+                },
             },
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
             'verify_ssl': {'type': 'boolean'},
+            'install_missing_compilers': {'type': 'boolean'},
             'debug': {'type': 'boolean'},
             'checksum': {'type': 'boolean'},
             'locks': {'type': 'boolean'},

@@ -10,10 +10,11 @@ class Gettext(AutotoolsPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
     homepage = "https://www.gnu.org/software/gettext/"
-    url      = "https://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
+    url      = "https://ftpmirror.gnu.org/gettext/gettext-0.20.1.tar.xz"
 
-    version('0.19.8.1', 'df3f5690eaa30fd228537b00cb7b7590')
-    version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
+    version('0.20.1', sha256='53f02fbbec9e798b0faaf7c73272f83608e835c6288dd58be6c9bb54624a3800')
+    version('0.19.8.1', sha256='105556dbc5c3fbbc2aa0edb46d22d055748b6f5c7cd7a8d99f8e7eb84e938be4')
+    version('0.19.7',   sha256='378fa86a091cec3acdece3c961bb8d8c0689906287809a8daa79dc0c6398d934')
 
     # Recommended variants
     variant('curses',   default=True, description='Use libncurses')
@@ -34,7 +35,7 @@ class Gettext(AutotoolsPackage):
     depends_on('tar',      when='+tar')
     # depends_on('gzip',     when='+gzip')
     depends_on('bzip2',    when='+bzip2')
-    depends_on('xz',       when='+xz')
+    depends_on('xz',       when='+xz', type=('build', 'link', 'run'))
 
     # Optional dependencies
     # depends_on('glib')  # circular dependency?
@@ -85,3 +86,11 @@ class Gettext(AutotoolsPackage):
             config_args.append('--with-included-libunistring')
 
         return config_args
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc",
+                "libintl"],
+            root=self.prefix, recursive=True
+        )

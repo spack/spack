@@ -22,7 +22,7 @@ class LdcBootstrap(CMakePackage):
     url = "https://github.com/ldc-developers/ldc/releases/download/v0.17.4/ldc-0.17.4-src.tar.gz"
 
     # This is the last version that does not require a D compiler to bootstrap
-    version('0.17.4', '000e006426d6094fabd2a2bdab0ff0b7')
+    version('0.17.4', sha256='48428afde380415640f3db4e38529345f3c8485b1913717995547f907534c1c3')
 
     depends_on('llvm@3.7:')
     depends_on('zlib')

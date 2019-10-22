@@ -32,6 +32,7 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 import copy
 import os
+import re
 import sys
 import multiprocessing
 from contextlib import contextmanager
@@ -55,6 +56,7 @@ import spack.schema.repos
 import spack.schema.packages
 import spack.schema.modules
 import spack.schema.config
+import spack.schema.upstreams
 from spack.error import SpackError
 
 # Hacked yaml for configuration files preserves line numbers.
@@ -69,6 +71,7 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
+    'upstreams': spack.schema.upstreams.schema
 }
 
 #: Builtin paths to configuration files in Spack
@@ -98,13 +101,17 @@ config_defaults = {
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
-        'build_jobs': multiprocessing.cpu_count(),
+        'build_jobs': min(16, multiprocessing.cpu_count()),
+        'build_stage': '$tempdir/spack-stage',
     }
 }
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
 scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
+
+#: Base name for the (internal) overrides scope.
+overrides_base_name = 'overrides-'
 
 
 def first_existing(dictionary, keys):
@@ -142,12 +149,12 @@ class ConfigScope(object):
     def write_section(self, section):
         filename = self.get_section_filename(section)
         data = self.get_section(section)
-        _validate(data, section_schemas[section])
+        validate(data, section_schemas[section])
 
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
-                _validate(data, section_schemas[section])
+                validate(data, section_schemas[section])
                 syaml.dump(data, stream=f, default_flow_style=False)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
@@ -233,7 +240,7 @@ class SingleFileScope(ConfigScope):
         return self.sections[section]
 
     def write_section(self, section):
-        _validate(self.sections, self.schema)
+        validate(self.sections, self.schema)
         try:
             parent = os.path.dirname(self.path)
             mkdirp(parent)
@@ -277,7 +284,7 @@ class InternalConfigScope(ConfigScope):
         if data:
             for section in data:
                 dsec = data[section]
-                _validate({section: dsec}, section_schemas[section])
+                validate({section: dsec}, section_schemas[section])
                 self.sections[section] = _mark_internal(
                     syaml.syaml_dict({section: dsec}), name)
 
@@ -295,7 +302,7 @@ class InternalConfigScope(ConfigScope):
         """This only validates, as the data is already in memory."""
         data = self.get_section(section)
         if data is not None:
-            _validate(data, section_schemas[section])
+            validate(data, section_schemas[section])
         self.sections[section] = _mark_internal(data, self.name)
 
     def __repr__(self):
@@ -350,6 +357,15 @@ class Configuration(object):
     def highest_precedence_scope(self):
         """Non-internal scope with highest precedence."""
         return next(reversed(self.file_scopes), None)
+
+    def matching_scopes(self, reg_expr):
+        """
+        List of all scopes whose names match the provided regular expression.
+
+        For example, matching_scopes(r'^command') will return all scopes
+        whose names begin with `command`.
+        """
+        return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
     def _validate_scope(self, scope):
         """Ensure that scope is valid in this configuration.
@@ -540,9 +556,21 @@ def override(path_or_scope, value=None):
         overrides = path_or_scope
         config.push_scope(path_or_scope)
     else:
-        overrides = InternalConfigScope('overrides')
+        base_name = overrides_base_name
+        # Ensure the new override gets a unique scope name
+        current_overrides = [s.name for s in
+                             config.matching_scopes(r'^{0}'.format(base_name))]
+        num_overrides = len(current_overrides)
+        while True:
+            scope_name = '{0}{1}'.format(base_name, num_overrides)
+            if scope_name in current_overrides:
+                num_overrides += 1
+            else:
+                break
+
+        overrides = InternalConfigScope(scope_name)
         config.push_scope(overrides)
-        config.set(path_or_scope, value, scope='overrides')
+        config.set(path_or_scope, value, scope=scope_name)
 
     yield config
 
@@ -646,7 +674,7 @@ def _validate_section_name(section):
             % (section, " ".join(section_schemas.keys())))
 
 
-def _validate(data, schema, set_defaults=True):
+def validate(data, schema, set_defaults=True):
     """Validate data read in from a Spack YAML file.
 
     Arguments:
@@ -683,7 +711,7 @@ def _read_config_file(filename, schema):
             data = _mark_overrides(syaml.load(f))
 
         if data:
-            _validate(data, schema)
+            validate(data, schema)
         return data
 
     except MarkedYAMLError as e:
