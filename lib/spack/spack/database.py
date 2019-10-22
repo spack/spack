@@ -1157,7 +1157,7 @@ class Database(object):
                 ``any``, all specs in database. If an InstallStatus or iterable
                 of InstallStatus, returns specs whose install status
                 (installed, deprecated, or missing) matches (one of) the
-                InstallStatus. (default: any)
+                InstallStatus. (default: True)
 
             explicit (bool or any, optional): A spec that was installed
                 following a specific user request is marked as explicit. If
