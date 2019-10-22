@@ -351,7 +351,8 @@ class Sundials(CMakePackage):
                 '-DEXAMPLES_ENABLE_F90=%s'    % on_off('+examples-f90'),
                 '-DEXAMPLES_ENABLE_F2003=%s'  % on_off('+examples-f2003'),
                 '-DEXAMPLES_ENABLE_CUDA=%s'   % on_off('+examples-cuda'),
-                '-DEXAMPLES_ENABLE_RAJA=%s'   % on_off('+raja') # option removed in 5.0.0
+                # option removed in 5.0.0
+                '-DEXAMPLES_ENABLE_RAJA=%s'   % on_off('+raja')
             ])
         else:
             args.extend([
