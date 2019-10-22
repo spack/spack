@@ -141,7 +141,11 @@ class Conduit(Package):
     # Documentation related
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
+    depends_on("py-sphinx-rtd-theme", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc+doxygen")
+
+    # build phases used by this package
+    phases = ["configure", "build", "install"]
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -163,9 +167,9 @@ class Conduit(Package):
             return "https://github.com/LLNL/conduit/releases/download/v{0}/conduit-v{1}-src-with-blt.tar.gz".format(v, v)
         return url
 
-    def install(self, spec, prefix):
+    def configure(self, spec, prefix):
         """
-        Build and install Conduit.
+        Configure Conduit.
         """
         with working_dir('spack-build', create=True):
             py_site_pkgs_dir = None
@@ -175,6 +179,9 @@ class Conduit(Package):
             host_cfg_fname = self.create_host_config(spec,
                                                      prefix,
                                                      py_site_pkgs_dir)
+            # save this filename for 
+            # other package recipe steps to access
+            self.host_cfg_fname = host_cfg_fname
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
@@ -188,17 +195,31 @@ class Conduit(Package):
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
             print("Configuring Conduit...")
             cmake(*cmake_args)
+
+    def build(self, spec, prefix):
+        """
+        Build Conduit.
+        """
+        with working_dir('spack-build'):
             print("Building Conduit...")
             make()
-            # run unit tests if requested
-            if "+test" in spec and self.run_tests:
-                print("Running Conduit Unit Tests...")
-                make("test")
-            print("Installing Conduit...")
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        with working_dir('spack-build'):
+            print("Running Conduit Unit Tests...")
+            make("test")
+
+    def install(self, spec, prefix):
+        """
+        Install Conduit.
+        """
+        with working_dir('spack-build'):
             make("install")
             # install copy of host config for provenance
             print("Installing Conduit CMake Host Config File...")
-            install(host_cfg_fname, prefix)
+            install(self.host_cfg_fname, prefix)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -221,7 +242,7 @@ class Conduit(Package):
                           example_src_dir]
             cmake(*cmake_args)
             make()
-            example = Executable('./example')
+            example = Executable('./conduit_example')
             example()
         print("Checking using-with-make example...")
         example_src_dir = join_path(install_prefix,
@@ -234,7 +255,7 @@ class Conduit(Package):
             for example_file in example_files:
                 shutil.copy(example_file, ".")
             make("CONDUIT_DIR={0}".format(install_prefix))
-            example = Executable('./example')
+            example = Executable('./conduit_example')
             example()
 
     def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
