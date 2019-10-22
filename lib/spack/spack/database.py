@@ -579,7 +579,7 @@ class Database(object):
 
     def _construct_entry_from_directory_layout(self, directory_layout,
                                                old_data, spec,
-                                               replacement=None):
+                                               deprecator=None):
         # Try to recover explicit value from old DB, but
         # default it to True if DB was corrupt. This is
         # just to be conservative in case a command like
@@ -599,8 +599,8 @@ class Database(object):
             'installation_time': inst_time
         }
         self._add(spec, directory_layout, **extra_args)
-        if replacement:
-            self._deprecate(spec, replacement)
+        if deprecator:
+            self._deprecate(spec, deprecator)
 
     def _construct_from_directory_layout(self, directory_layout, old_data):
         # Read first the `spec.yaml` files in the prefixes. They should be
@@ -620,10 +620,10 @@ class Database(object):
                                                             old_data, spec)
                 processed_specs.add(spec)
 
-            for spec, replacement in directory_layout.all_deprecated_specs():
+            for spec, deprecator in directory_layout.all_deprecated_specs():
                 self._construct_entry_from_directory_layout(directory_layout,
                                                             old_data, spec,
-                                                            replacement)
+                                                            deprecator)
                 processed_specs.add(spec)
 
             for key, entry in old_data.items():
@@ -958,34 +958,34 @@ class Database(object):
             else:
                 return None
 
-    def deprecatees(self, spec):
+    def specs_deprecated_by(self, spec):
         """Return all specs deprecated in favor of the given spec"""
         with self.read_transaction():
             return [rec.spec for rec in self._data.values()
                     if rec.deprecated_for == spec.dag_hash()]
 
-    def _deprecate(self, spec, replacement):
+    def _deprecate(self, spec, deprecator):
         spec_key = self._get_matching_spec_key(spec)
         spec_rec = self._data[spec_key]
 
-        replacement_key = self._get_matching_spec_key(replacement)
+        deprecator_key = self._get_matching_spec_key(deprecator)
 
-        self._increment_ref_count(replacement)
+        self._increment_ref_count(deprecator)
 
-        # If spec was already deprecated, update old replacement's ref count
+        # If spec was already deprecated, update old deprecator's ref count
         if spec_rec.deprecated_for:
             old_repl_rec = self._data[spec_rec.deprecated_for]
             self._decrement_ref_count(old_repl_rec.spec)
 
-        spec_rec.deprecated_for = replacement_key
+        spec_rec.deprecated_for = deprecator_key
         spec_rec.installed = False
         self._data[spec_key] = spec_rec
 
     @_autospec
-    def deprecate(self, spec, replacement):
-        """Marks a spec as deprecated in favor of its replacement"""
+    def deprecate(self, spec, deprecator):
+        """Marks a spec as deprecated in favor of its deprecator"""
         with self.write_transaction():
-            return self._deprecate(spec, replacement)
+            return self._deprecate(spec, deprecator)
 
     @_autospec
     def installed_relatives(self, spec, direction='children', transitive=True,

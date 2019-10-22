@@ -11,7 +11,7 @@ installation as deprecated, remove it, and link another installation into its
 place.
 
 It is up to the user to ensure binary compatibility between the deprecated
-installation and its replacement.
+installation and its deprecator.
 '''
 from __future__ import print_function
 import argparse
@@ -54,19 +54,19 @@ def setup_parser(sp):
                       help='Do not deprecate dependencies')
 
     install = sp.add_mutually_exclusive_group()
-    install.add_argument('-i', '--install-replacement', action='store_true',
+    install.add_argument('-i', '--install-deprecator', action='store_true',
                          default=False, dest='install',
-                         help='Concretize and install replacement spec')
-    install.add_argument('-I', '--no-install-replacement',
+                         help='Concretize and install deprecator spec')
+    install.add_argument('-I', '--no-install-deprecator',
                          action='store_false', default=False, dest='install',
-                         help='Replacement spec must already be installed (default)')  # noqa 501
+                         help='Deprecator spec must already be installed (default)')  # noqa 501
 
     sp.add_argument('-l', '--link-type', type=str,
                     default='soft', choices=['soft', 'hard'],
                     help="Type of filesystem link to use for deprecation (default soft)")  # noqa 501
 
     sp.add_argument('specs', nargs=argparse.REMAINDER,
-                    help="spec to replace and spec to replace with")
+                    help="spec to deprecate and spec to use as deprecator")
 
 
 def deprecate(parser, args):
@@ -82,28 +82,28 @@ def deprecate(parser, args):
                                             installed=install_query)
 
     if args.install:
-        replacement = specs[1].concretized()
+        deprecator = specs[1].concretized()
     else:
-        replacement = spack.cmd.disambiguate_spec(specs[1], env, local=True)
+        deprecator = spack.cmd.disambiguate_spec(specs[1], env, local=True)
 
     # calculate all deprecation pairs for errors and warning message
     all_deprecate = []
-    all_replacements = []
+    all_deprecators = []
 
     generator = deprecate.traverse(
         order='post', type='link', root=True
     ) if args.dependencies else [deprecate]
     for spec in generator:
         all_deprecate.append(spec)
-        all_replacements.append(replacement[spec.name])
-        # This will throw a key error if replament does not have a dep
+        all_deprecators.append(deprecator[spec.name])
+        # This will throw a key error if deprecator does not have a dep
         # that matches the name of a dep of the spec
 
     if not args.yes_to_all:
         tty.msg('The following packages will be deprecated:\n')
         spack.cmd.display_specs(all_deprecate, **display_args)
         tty.msg("In favor of (respectively):\n")
-        spack.cmd.display_specs(all_replacements, **display_args)
+        spack.cmd.display_specs(all_deprecators, **display_args)
         print()
 
         already_deprecated = []
@@ -125,5 +125,5 @@ def deprecate(parser, args):
 
     link_fn = os.link if args.link_type == 'hard' else os.symlink
 
-    for depr, repl in zip(all_deprecate, all_replacements):
-        depr.package.do_deprecate(repl, link_fn)
+    for dcate, dcator in zip(all_deprecate, all_deprecators):
+        dcate.package.do_deprecate(dcator, link_fn)

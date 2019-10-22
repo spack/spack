@@ -2112,14 +2112,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise NotImplementedError(msg)
 
     @staticmethod
-    def uninstall_by_spec(spec, force=False, replace=False):
+    def uninstall_by_spec(spec, force=False, deprecator=None):
         if not os.path.isdir(spec.prefix):
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
             specs = spack.store.db.query(spec, installed=True)
             if specs:
-                if replace:
-                    spack.store.db.deprecate(specs[0], replace)
+                if deprecator:
+                    spack.store.db.deprecate(specs[0], deprecator)
                     tty.msg("Deprecating stale DB entry for %s")
                 else:
                     spack.store.db.remove(specs[0])
@@ -2150,13 +2150,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if not spec.external:
                 msg = 'Deleting package prefix [{0}]'
                 tty.debug(msg.format(spec.short_spec))
-                deprecated = spack.store.db.get_record(spec).deprecated_for
+                deprecated = bool(spack.store.db.deprecator(spec))
                 spack.store.layout.remove_install_directory(spec, deprecated)
             # Delete DB entry
-            if replace:
+            if deprecator:
                 msg = 'deprecating DB entry [{0}] in favor of [{1}]'
-                tty.debug(msg.format(spec.short_spec, replace.short_spec))
-                spack.store.db.deprecate(spec, replace)
+                tty.debug(msg.format(spec.short_spec, deprecator.short_spec))
+                spack.store.db.deprecate(spec, deprecator)
             else:
                 msg = 'Deleting DB entry [{0}]'
                 tty.debug(msg.format(spec.short_spec))
@@ -2172,9 +2172,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # delegate to instance-less method.
         Package.uninstall_by_spec(self.spec, force)
 
-    def do_deprecate(self, replacement, link_fn):
-        """Deprecate this package in favor of replacement spec"""
-        # Copy metadata to deprecated directory of replacement
+    def do_deprecate(self, deprecator, link_fn):
+        """Deprecate this package in favor of deprecator spec"""
         spec = self.spec
 
         # Check whether package to deprecate has active extensions
@@ -2204,9 +2203,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 msg += "Deactivate %s to be able to deprecate it" % short
                 tty.die(msg)
 
-        # Install replacement if it isn't installed already
-        if not spack.store.db.query(replacement):
-            replacement.package.do_install()
+        # Install deprecator if it isn't installed already
+        if not spack.store.db.query(deprecator):
+            deprecator.package.do_install()
 
         old_deprecator = spack.store.db.deprecator(spec)
         if old_deprecator:
@@ -2216,21 +2215,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         else:
             self_yaml = spack.store.layout.spec_file_path(spec)
 
-        # copy spec metadata to "deprecated" dir of replacement
+        # copy spec metadata to "deprecated" dir of deprecator
         depr_yaml = spack.store.layout.deprecated_file_path(spec,
-                                                            replacement)
-        fs.mkdirp(spack.store.layout.deprecated_dir_path(replacement))
+                                                            deprecator)
+        fs.mkdirp(os.path.join(depr_yaml))
         shutil.copy2(self_yaml, depr_yaml)
 
         # Any specs deprecated in favor of this spec are re-deprecated in
-        # favor of its replacement
-        for deprecatee in spack.store.db.deprecatees(spec):
-            deprecatee.package.do_deprecate(replacement, link_fn)
+        # favor of its new deprecator
+        for deprecated in spack.store.db.specs_deprecated_by(spec):
+            deprecated.package.do_deprecate(deprecator, link_fn)
 
         # Now that we've handled metadata, uninstall and replace with link
-        Package.uninstall_by_spec(self.spec, force=True,
-                                  replace=replacement)
-        link_fn(replacement.prefix, self.spec.prefix)
+        Package.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+        link_fn(deprecator.prefix, spec.prefix)
 
     def _check_extendable(self):
         if not self.extendable:
