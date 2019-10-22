@@ -25,7 +25,6 @@ def no_compilers_yaml(mutable_config, monkeypatch):
 
 
 @pytest.mark.regression('11678,13138')
-@pytest.mark.filterwarnings('error')
 def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
     with tmpdir.as_cwd():
         with open('gcc', 'w') as f:
