@@ -156,6 +156,7 @@ def test_architecture_family(target_name, expected_family):
     ('skylake', 'sse3'),
     ('power8', 'altivec'),
     ('broadwell', 'sse4.1'),
+    ('aarch64', 'neon')
 ])
 def test_features_query(target_name, feature):
     target = llnl.util.cpu.targets[target_name]
@@ -190,6 +191,7 @@ def test_target_json_schema():
 
 
 @pytest.mark.parametrize('target_name,compiler,version,expected_flags', [
+    # Test GCC
     ('x86_64', 'gcc', '4.9.3', '-march=x86-64 -mtune=generic'),
     ('x86_64', 'gcc', '4.2.0', '-march=x86-64 -mtune=generic'),
     ('x86_64', 'gcc', '4.1.1', '-march=x86-64 -mtune=x86-64'),
@@ -197,6 +199,21 @@ def test_target_json_schema():
     ('nehalem', 'gcc', '4.9.3', '-march=nehalem -mtune=nehalem'),
     ('nehalem', 'gcc', '4.8.5', '-march=corei7 -mtune=corei7'),
     ('sandybridge', 'gcc', '4.8.5', '-march=corei7-avx -mtune=corei7-avx'),
+    # Test Clang / LLVM
+    ('sandybridge', 'clang', '3.9.0', '-march=x86-64 -mcpu=sandybridge'),
+    ('icelake', 'clang', '6.0.0', '-march=x86-64 -mcpu=icelake'),
+    ('icelake', 'clang', '8.0.0', '-march=x86-64 -mcpu=icelake-client'),
+    ('zen2', 'clang', '9.0.0', '-march=x86-64 -mcpu=znver2'),
+    ('power9le', 'clang', '8.0.0', '-march=ppc64le -mcpu=pwr9'),
+    # Test Intel on Intel CPUs
+    ('sandybridge', 'intel', '17.0.2', '-march=corei7-avx -mtune=corei7-avx'),
+    ('sandybridge', 'intel', '18.0.5',
+     '-march=sandybridge -mtune=sandybridge'),
+    # Test Intel on AMD CPUs
+    pytest.param('steamroller', 'intel', '17.0.2', '-msse4.2',
+                 marks=pytest.mark.filterwarnings('ignore::UserWarning')),
+    pytest.param('zen', 'intel', '17.0.2', '-march=core-avx2 -mtune=core-avx2',
+                 marks=pytest.mark.filterwarnings('ignore::UserWarning')),
     # Test that an unknown compiler returns an empty string
     ('sandybridge', 'unknown', '4.8.5', ''),
 ])
@@ -234,3 +251,15 @@ def test_automatic_conversion_on_comparisons(operation, expected_result):
     target = llnl.util.cpu.targets[target]
     code = 'target ' + operator + 'other_target'
     assert eval(code) is expected_result
+
+
+@pytest.mark.parametrize('version,expected_number,expected_suffix', [
+    ('4.2.0', '4.2.0', ''),
+    ('4.2.0-apple', '4.2.0', 'apple'),
+    ('my-funny-name-with-dashes', '', 'my-funny-name-with-dashes'),
+    ('10.3.56~svnr64537', '10.3.56', '~svnr64537')
+])
+def test_version_components(version, expected_number, expected_suffix):
+    number, suffix = llnl.util.cpu.version_components(version)
+    assert number == expected_number
+    assert suffix == expected_suffix

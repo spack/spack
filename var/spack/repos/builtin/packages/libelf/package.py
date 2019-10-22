@@ -21,8 +21,7 @@ class Libelf(AutotoolsPackage):
     homepage = "https://directory.fsf.org/wiki/Libelf"
     url      = "https://fossies.org/linux/misc/old/libelf-0.8.13.tar.gz"
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    # version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
+    version('0.8.13', sha256='591a9b4ec81c1f2042a97aa60564e0cb79d041c52faa7416acb38bc95bd2c76d')
 
     provides('elf@0')
 

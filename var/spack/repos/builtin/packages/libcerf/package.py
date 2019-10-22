@@ -16,7 +16,7 @@ class Libcerf(AutotoolsPackage):
     homepage = "http://sourceforge.net/projects/libcerf"
     url      = "http://downloads.sourceforge.net/project/libcerf/libcerf-1.3.tgz"
 
-    version('1.3', 'b3504c467204df71e62aeccf73a25612')
+    version('1.3', sha256='d7059e923d3f370c89fb4d19ed4f827d381bc3f0e36da5595a04aeaaf3e6a859')
 
     def configure_args(self):
         spec = self.spec

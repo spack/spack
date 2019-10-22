@@ -12,6 +12,7 @@ class Gaussian(Package):
 
     homepage = "http://www.gaussian.com/"
     url = "file://{0}/g09.tgz".format(os.getcwd())
+    manual_download = True
 
     version('09', '7d4c95b535e68e48af183920df427e4e')
 

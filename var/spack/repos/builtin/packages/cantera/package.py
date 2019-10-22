@@ -15,8 +15,8 @@ class Cantera(SConsPackage):
     url      = "https://github.com/Cantera/cantera/archive/v2.3.0.tar.gz"
 
     version('2.4.0', sha256='0dc771693b657d8f4ba835dd229939e5b9cfd8348d2f5ba82775451a524365a5')
-    version('2.3.0', 'aebbd8d891cb1623604245398502b72e')
-    version('2.2.1', '9d1919bdef39ddec54485fc8a741a3aa')
+    version('2.3.0', sha256='06624f0f06bdd2acc9c0dba13443d945323ba40f68a9d422d95247c02e539b57')
+    version('2.2.1', sha256='c7bca241848f541466f56e479402521c618410168e8983e2b54ae48888480e1e')
 
     variant('python',     default=False,
             description='Build the Cantera Python module')

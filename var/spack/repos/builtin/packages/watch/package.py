@@ -24,6 +24,7 @@ class Watch(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('pkgconfig@0.9.0:', type='build')
+    depends_on('gettext', type='build')
     depends_on('ncurses')
 
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/watch.rb

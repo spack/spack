@@ -23,6 +23,7 @@ in order to build it.  They need to define the following methods:
         Archive a source directory, e.g. for creating a mirror.
 """
 import os
+import os.path
 import sys
 import re
 import shutil
@@ -30,6 +31,7 @@ import copy
 import xml.etree.ElementTree
 from functools import wraps
 from six import string_types, with_metaclass
+import six.moves.urllib.parse as urllib_parse
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -39,6 +41,9 @@ import spack.config
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
+import spack.util.web as web_util
+import spack.util.url as url_util
+
 from spack.util.executable import which
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
@@ -47,6 +52,17 @@ from spack.util.compression import decompressor_for, extension
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
+
+CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
+    "The contents of {subject} look like {content_type}.  Either the URL"
+    " you are trying to use does not exist or you have an internet gateway"
+    " issue.  You can remove the bad archive using 'spack clean"
+    " <package>', then try again using the correct URL.")
+
+
+def warn_content_type_mismatch(subject, content_type='HTML'):
+    tty.warn(CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE.format(
+        subject=subject, content_type=content_type))
 
 
 def _needs_stage(fun):
@@ -351,12 +367,7 @@ class URLFetchStrategy(FetchStrategy):
         content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
                                    flags=re.IGNORECASE)
         if content_types and 'text/html' in content_types[-1]:
-            msg = ("The contents of {0} look like HTML. Either the URL "
-                   "you are trying to use does not exist or you have an "
-                   "internet gateway issue. You can remove the bad archive "
-                   "using 'spack clean <package>', then try again using "
-                   "the correct URL.")
-            tty.warn(msg.format(self.archive_file or "the archive"))
+            warn_content_type_mismatch(self.archive_file or "the archive")
 
         if save_file:
             os.rename(partial_file, save_file)
@@ -449,7 +460,10 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        shutil.copyfile(self.archive_file, destination)
+        web_util.push_to_url(
+            self.archive_file,
+            destination,
+            keep_original=True)
 
     @_needs_stage
     def check(self):
@@ -1063,6 +1077,54 @@ class HgFetchStrategy(VCSFetchStrategy):
         return "[hg] %s" % self.url
 
 
+class S3FetchStrategy(URLFetchStrategy):
+    """FetchStrategy that pulls from an S3 bucket."""
+    enabled = True
+    url_attr = 's3'
+
+    def __init__(self, *args, **kwargs):
+        try:
+            super(S3FetchStrategy, self).__init__(*args, **kwargs)
+        except ValueError:
+            if not kwargs.get('url'):
+                raise ValueError(
+                    "S3FetchStrategy requires a url for fetching.")
+
+    @_needs_stage
+    def fetch(self):
+        if self.archive_file:
+            tty.msg("Already downloaded %s" % self.archive_file)
+            return
+
+        parsed_url = url_util.parse(self.url)
+        if parsed_url.scheme != 's3':
+            raise ValueError(
+                'S3FetchStrategy can only fetch from s3:// urls.')
+
+        tty.msg("Fetching %s" % self.url)
+
+        basename = os.path.basename(parsed_url.path)
+
+        with working_dir(self.stage.path):
+            _, headers, stream = web_util.read_from_url(self.url)
+
+            with open(basename, 'wb') as f:
+                shutil.copyfileobj(stream, f)
+
+            content_type = headers['Content-type']
+
+        if content_type == 'text/html':
+            warn_content_type_mismatch(self.archive_file or "the archive")
+
+        if self.stage.save_filename:
+            os.rename(
+                os.path.join(self.stage.path, basename),
+                self.stage.save_filename)
+
+        if not self.archive_file:
+            raise FailedDownloadError(self.url)
+
+
 def from_url(url):
     """Given a URL, find an appropriate fetch strategy for it.
        Currently just gives you a URLFetchStrategy that uses curl.
@@ -1204,6 +1266,34 @@ def for_package_version(pkg, version):
             return _from_merged_attrs(fetcher, pkg, version)
 
     raise InvalidArgsError(pkg, version, **args)
+
+
+def from_url_scheme(url, *args, **kwargs):
+    """Finds a suitable FetchStrategy by matching its url_attr with the scheme
+       in the given url."""
+
+    url = kwargs.get('url', url)
+    parsed_url = urllib_parse.urlparse(url, scheme='file')
+
+    scheme_mapping = (
+        kwargs.get('scheme_mapping') or
+        {
+            'file': 'url',
+            'http': 'url',
+            'https': 'url'
+        })
+
+    scheme = parsed_url.scheme
+    scheme = scheme_mapping.get(scheme, scheme)
+
+    for fetcher in all_strategies:
+        url_attr = getattr(fetcher, 'url_attr', None)
+        if url_attr and url_attr == scheme:
+            return fetcher(url, *args, **kwargs)
+
+    raise ValueError(
+        'No FetchStrategy found for url with scheme: "{SCHEME}"'.format(
+            SCHEME=parsed_url.scheme))
 
 
 def from_list_url(pkg):

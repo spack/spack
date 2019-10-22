@@ -17,7 +17,7 @@ class Fio(AutotoolsPackage):
     url = "https://github.com/axboe/fio/archive/fio-2.19.tar.gz"
 
     version('3.16', sha256='c7731a9e831581bab7104da9ea60c9f44e594438dbe95dff26726ca0285e7b93')
-    version('2.19', '67125b60210a4daa689a4626fc66c612')
+    version('2.19', sha256='61fb03a18703269b781aaf195cb0d7931493bbb5bfcc8eb746d5d66d04ed77f7')
 
     variant('gui', default=False, description='Enable building of gtk gfio')
     variant('doc', default=False, description='Generate documentation')

@@ -87,8 +87,9 @@ class AutotoolsPackage(PackageBase):
         config.guess fails for PPC64LE for version prior to a 2013-06-10
         build date (automake 1.13.4) and for ARM (aarch64)."""
 
-        if not self.patch_config_guess or (not self.spec.satisfies(
-                'target=ppc64le') and not self.spec.satisfies('target=aarch64')
+        if not self.patch_config_guess or (
+                not self.spec.satisfies('target=ppc64le:') and
+                not self.spec.satisfies('target=aarch64:')
         ):
             return
         my_config_guess = None

@@ -395,6 +395,10 @@ class ArchSpec(object):
             if not sep and self_target == t_min:
                 return True
 
+            if not sep and self_target != t_min:
+                return False
+
+            # Check against a range
             min_ok = self_target.microarchitecture >= t_min if t_min else True
             max_ok = self_target.microarchitecture <= t_max if t_max else True
 
@@ -2895,7 +2899,7 @@ class Spec(object):
 
             selfdeps = self.traverse(root=False)
             otherdeps = other.traverse(root=False)
-            if not all(any(d.satisfies(dep) for d in selfdeps)
+            if not all(any(d.satisfies(dep, strict=True) for d in selfdeps)
                        for dep in otherdeps):
                 return False
 

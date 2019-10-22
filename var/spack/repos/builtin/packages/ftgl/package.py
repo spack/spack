@@ -17,7 +17,7 @@ class Ftgl(AutotoolsPackage):
     list_depth = 1
 
     version('2.1.3-rc5', sha256='5458d62122454869572d39f8aa85745fc05d5518001bcefa63bd6cbb8d26565b')
-    version('2.1.2', 'f81c0a7128192ba11e036186f9a968f2')
+    version('2.1.2', sha256='2759cbd5fac0b631e8b012923cd0d2add320f6e541b399a7cda37163ad034075')
 
     variant('doc', default=False, description='Build docs')
     conflicts('+doc', when='@2.1.3-rc5')

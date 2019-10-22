@@ -277,6 +277,40 @@ the tarballs in question to it (see :ref:`mirrors`):
 
        $ spack install galahad
 
+-----------------------
+Verifying installations
+-----------------------
+
+The ``spack verify`` command can be used to verify the validity of
+Spack-installed packages any time after installation.
+
+At installation time, Spack creates a manifest of every file in the
+installation prefix. For links, Spack tracks the mode, ownership, and
+destination. For directories, Spack tracks the mode, and
+ownership. For files, Spack tracks the mode, ownership, modification
+time, hash, and size. The Spack verify command will check, for every
+file in each package, whether any of those attributes have changed. It
+will also check for newly added files or deleted files from the
+installation prefix. Spack can either check all installed packages
+using the `-a,--all` or accept specs listed on the command line to
+verify.
+
+The ``spack verify`` command can also verify for individual files that
+they haven't been altered since installation time. If the given file
+is not in a Spack installation prefix, Spack will report that it is
+not owned by any package. To check individual files instead of specs,
+use the ``-f,--files`` option.
+
+Spack installation manifests are part of the tarball signed by Spack
+for binary package distribution. When installed from a binary package,
+Spack uses the packaged installation manifest instead of creating one
+at install time.
+
+The ``spack verify`` command also accepts the ``-l,--local`` option to
+check only local packages (as opposed to those used transparently from
+``upstream`` spack instances) and the ``-j,--json`` option to output
+machine-readable json data for any errors.
+
 -------------------------
 Seeing installed packages
 -------------------------

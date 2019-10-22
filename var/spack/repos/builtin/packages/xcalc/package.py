@@ -13,7 +13,7 @@ class Xcalc(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xcalc"
     url      = "https://www.x.org/archive/individual/app/xcalc-1.0.6.tar.gz"
 
-    version('1.0.6', 'a192ebb5e5f33925c71713501173d8e0')
+    version('1.0.6', sha256='7fd5cd9a35160925c41cbadfb1ea23599fa20fd26cd873dab20a650b24efe8d1')
 
     depends_on('libxaw')
     depends_on('libxt')

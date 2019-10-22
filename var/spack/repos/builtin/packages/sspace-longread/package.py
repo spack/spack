@@ -18,6 +18,7 @@ class SspaceLongread(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/SSPACE-longread"
+    manual_download = True
 
     version('1.1', '0bb5d8603d7ead4ff1596135a520cc26')
 

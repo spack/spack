@@ -39,11 +39,11 @@ class Conduit(Package):
 
     version('master', branch='master', submodules=True, preferred=True)
     version('0.4.0', sha256='c228e6f0ce5a9c0ffb98e0b3d886f2758ace1a4b40d00f3f118542c0747c1f52')
-    version('0.3.1', 'b98d1476199a46bde197220cd9cde042')
-    version('0.3.0', '6396f1d1ca16594d7c66d4535d4f898e')
+    version('0.3.1', sha256='7b358ca03bb179876291d4a55d6a1c944b7407a80a588795b9e47940b1990521')
+    version('0.3.0', sha256='52e9cf5720560e5f7492876c39ef2ea20ae73187338361d2744bdf67567da155')
     # note: checksums on github automatic release source tars changed ~9/17
-    version('0.2.1', 'ed7358af3463ba03f07eddd6a6e626ff')
-    version('0.2.0', 'a7b398d493fd71b881a217993a9a29d4')
+    version('0.2.1', sha256='796576b9c69717c52f0035542c260eb7567aa351ee892d3fbe3521c38f1520c4')
+    version('0.2.0', sha256='31eff8dbc654a4b235cfcbc326a319e1752728684296721535c7ca1c9b463061')
 
     maintainers = ['cyrush']
 

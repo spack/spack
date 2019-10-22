@@ -15,7 +15,7 @@ class Typhonio(CMakePackage):
     git      = "https://github.com/UK-MAC/typhonio.git"
 
     version('develop', branch='cmake_build')
-    version('1.6_CMake', '8e8b2940a57874205e6d451856db5c2755884bf9')
+    version('1.6_CMake', sha256='c9b7b2a7f4fa0b786f6b69c6426b67f42efc4ea6871323139d52cd44f4d0ff7c')
 
     variant('build_type', default='Release', description='The build type to build',
         values=('Debug', 'Release'))

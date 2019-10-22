@@ -12,7 +12,7 @@ class PySphinxautomodapi(PythonPackage):
     homepage = "https://sphinx-automodapi.readthedocs.io/en/latest/"
     url      = "https://github.com/astropy/sphinx-automodapi/archive/v0.9.tar.gz"
 
-    version('0.9', '017817812e9266319fdcfcc89ddfbe570935ca87a3bda62d61c8507cf1337aa8')
+    version('0.9', sha256='017817812e9266319fdcfcc89ddfbe570935ca87a3bda62d61c8507cf1337aa8')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx@1.3:', type=('build', 'run'))

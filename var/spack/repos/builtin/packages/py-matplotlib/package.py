@@ -29,16 +29,16 @@ class PyMatplotlib(PythonPackage):
     ]
 
     version('3.1.1', sha256='1febd22afe1489b13c6749ea059d392c03261b2950d1d45c17e3aed812080c93')
-    version('3.0.2', 'd6af3dfae557ea4046fef96cf617fa24')
-    version('3.0.0', '39c7f44c8fa0f24cbf684137371ce4ae')
-    version('2.2.3', '403b0bddd751d71187416f20d4cff100')
-    version('2.2.2', 'dd1e49e041309a7fd4e32be8bf17c3b6')
-    version('2.0.2', '061111784278bde89b5d4987014be4ca')
-    version('2.0.0', '7aa54b06327f0e1c4f3877fc2f7d6b17')
-    version('1.5.3', 'ba993b06113040fee6628d74b80af0fd')
-    version('1.5.1', 'f51847d8692cb63df64cd0bd0304fd20')
-    version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
-    version('1.4.2', '7d22efb6cce475025733c50487bd8898')
+    version('3.0.2', sha256='c94b792af431f6adb6859eb218137acd9a35f4f7442cea57e4a59c54751c36af')
+    version('3.0.0', sha256='b4e2333c98a7c2c1ff6eb930cd2b57d4b818de5437c5048802096b32f66e65f9')
+    version('2.2.3', sha256='7355bf757ecacd5f0ac9dd9523c8e1a1103faadf8d33c22664178e17533f8ce5')
+    version('2.2.2', sha256='4dc7ef528aad21f22be85e95725234c5178c0f938e2228ca76640e5e84d8cde8')
+    version('2.0.2', sha256='0ffbc44faa34a8b1704bc108c451ecf87988f900ef7ce757b8e2e84383121ff1')
+    version('2.0.0', sha256='36cf0985829c1ab2b8b1dae5e2272e53ae681bf33ab8bedceed4f0565af5f813')
+    version('1.5.3', sha256='a0a5dc39f785014f2088fed2c6d2d129f0444f71afbb9c44f7bdf1b14d86ebbc')
+    version('1.5.1', sha256='3ab8d968eac602145642d0db63dd8d67c85e9a5444ce0e2ecb2a8fedc7224d40')
+    version('1.4.3', sha256='61f201c6a82e89e4d9e324266203fad44f95fd8f36d8eec0d8690273e1182f75')
+    version('1.4.2', sha256='17a3c7154f152d8dfed1f37517c0a8c5db6ade4f6334f684989c36dab84ddb54')
 
     # https://matplotlib.org/tutorials/introductory/usage.html#backends
     # From `matplotlib.rcsetup`:

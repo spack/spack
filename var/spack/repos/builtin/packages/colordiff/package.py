@@ -12,7 +12,7 @@ class Colordiff(Package):
     homepage = "https://www.colordiff.org"
     url      = "https://www.colordiff.org/colordiff-1.0.18.tar.gz"
 
-    version('1.0.18', '07658f09a44f30a3b5c1cea9c132baed')
+    version('1.0.18', sha256='29cfecd8854d6e19c96182ee13706b84622d7b256077df19fbd6a5452c30d6e0')
 
     depends_on('perl')
 

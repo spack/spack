@@ -13,7 +13,7 @@ class PyReadmeRenderer(PythonPackage):
     homepage = "https://github.com/pypa/readme_renderer"
     url      = "https://pypi.io/packages/source/r/readme_renderer/readme_renderer-16.0.tar.gz"
 
-    version('16.0', '70321cea986956bcf2deef9981569f39')
+    version('16.0', sha256='c46b3418ddef3c3c3f819a4a9cfd56ede15c03d12197962a7e7a89edf1823dd5')
 
     depends_on('python@2.6:2.8,3.2:3.3')
     depends_on('py-setuptools', type='build')

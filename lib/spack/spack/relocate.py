@@ -10,7 +10,6 @@ import platform
 import spack.repo
 import spack.cmd
 import llnl.util.lang
-import llnl.util.filesystem as fs
 from spack.util.executable import Executable, ProcessError
 import llnl.util.tty as tty
 
@@ -290,23 +289,15 @@ def modify_object_macholib(cur_path, old_dir, new_dir):
         return
     try:
         from macholib.MachO import MachO
-        from macholib.mach_o import LC_RPATH
     except ImportError as e:
         raise MissingMacholibException(e)
 
     def match_func(cpath):
-        return str(cpath).replace(old_dir, new_dir)
+        rpath = cpath.replace(old_dir, new_dir)
+        return rpath
 
     dll = MachO(cur_path)
     dll.rewriteLoadCommands(match_func)
-    for header in dll.headers:
-        for (idx, (lc, cmd, data))  in enumerate(header.commands):
-            if lc.cmd == LC_RPATH:
-                rpath = data
-                rpath = rpath.strip('\x00')
-                new_rpath = match_func(rpath)
-                header.rewriteDataForCommand(idx, new_rpath)
-
     try:
         f = open(dll.filename, 'rb+')
         for header in dll.headers:
@@ -364,6 +355,26 @@ def needs_text_relocation(m_type, m_subtype):
     return (m_type == "text")
 
 
+def replace_prefix_text(path_name, old_dir, new_dir):
+    """
+    Replace old install prefix with new install prefix
+    in text files using utf-8 encoded strings.
+    """
+
+    def replace(match):
+        return match.group().replace(old_dir.encode('utf-8'),
+                                     new_dir.encode('utf-8'))
+    with open(path_name, 'rb+') as f:
+        data = f.read()
+        f.seek(0)
+        pat = re.compile(old_dir.encode('utf-8'))
+        if not pat.search(data):
+            return
+        ndata = pat.sub(replace, data)
+        f.write(ndata)
+        f.truncate()
+
+
 def replace_prefix_bin(path_name, old_dir, new_dir):
     """
     Attempt to replace old install prefix with new install prefix
@@ -372,23 +383,27 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
     """
 
     def replace(match):
-        occurances = match.group().count(old_dir)
-        padding = (len(old_dir) - len(new_dir)) * occurances
+        occurances = match.group().count(old_dir.encode('utf-8'))
+        olen = len(old_dir.encode('utf-8'))
+        nlen = len(new_dir.encode('utf-8'))
+        padding = (olen - nlen) * occurances
         if padding < 0:
             return data
-        return match.group().replace(old_dir, new_dir) + b'\0' * padding
+        return match.group().replace(old_dir.encode('utf-8'),
+                                     new_dir.encode('utf-8')) + b'\0' * padding
 
     with open(path_name, 'rb+') as f:
         data = f.read()
         f.seek(0)
         original_data_len = len(data)
-        pat = re.compile(re.escape(old_dir) + b'([^\0]*?)\0')
+        pat = re.compile(old_dir.encode('utf-8') + b'([^\0]*?)\0')
+        if not pat.search(data):
+            return
         ndata = pat.sub(replace, data)
-        new_data_len = len(ndata)
-        if not new_data_len == original_data_len:
+        if not len(ndata) == original_data_len:
             raise BinaryStringReplacementException(
-                path_name, original_data_len, new_data_len)
-        f.write(data)
+                path_name, original_data_len, len(ndata))
+        f.write(ndata)
         f.truncate()
 
 
@@ -429,7 +444,8 @@ def relocate_macho_binaries(path_names, old_dir, new_dir, allow_root):
             modify_object_macholib(path_name, placeholder, new_dir)
             modify_object_macholib(path_name, old_dir, new_dir)
         if len(new_dir) <= len(old_dir):
-            replace_prefix_bin(path_name, old_dir, new_dir)
+            replace_prefix_bin(path_name, old_dir,
+                               new_dir)
         else:
             tty.warn('Cannot do a binary string replacement'
                      ' with padding for %s'
@@ -562,16 +578,15 @@ def relocate_links(path_names, old_dir, new_dir):
 
 def relocate_text(path_names, oldpath, newpath, oldprefix, newprefix):
     """
-    Replace old path with new path in text file path_name
+    Replace old path with new path in text files
+    including the path the the spack sbang script.
     """
-    fs.filter_file('%s' % oldpath, '%s' % newpath, *path_names,
-                   backup=False, string=True)
     sbangre = '#!/bin/bash %s/bin/sbang' % oldprefix
     sbangnew = '#!/bin/bash %s/bin/sbang' % newprefix
-    fs.filter_file(sbangre, sbangnew, *path_names,
-                   backup=False, string=True)
-    fs.filter_file(oldprefix, newprefix, *path_names,
-                   backup=False, string=True)
+    for path_name in path_names:
+        replace_prefix_text(path_name, oldpath, newpath)
+        replace_prefix_text(path_name, sbangre, sbangnew)
+        replace_prefix_text(path_name, oldprefix, newprefix)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):

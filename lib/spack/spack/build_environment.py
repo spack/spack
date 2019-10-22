@@ -673,35 +673,26 @@ def load_external_modules(pkg):
 
 def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
-    spack_env = EnvironmentModifications()
-    run_env = EnvironmentModifications()
+    build_env = EnvironmentModifications()
 
     if not dirty:
         clean_environment()
 
-    set_compiler_environment_variables(pkg, spack_env)
-    set_build_environment_variables(pkg, spack_env, dirty)
-    pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
+    set_compiler_environment_variables(pkg, build_env)
+    set_build_environment_variables(pkg, build_env, dirty)
+    pkg.architecture.platform.setup_platform_environment(pkg, build_env)
 
-    # traverse in postorder so package can use vars from its dependencies
-    spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False,
-                                   deptype=('build', 'test')):
-        spkg = dspec.package
-        set_module_variables_for_package(spkg)
+    build_env.extend(
+        modifications_from_dependencies(pkg.spec, context='build')
+    )
 
-        # Allow dependencies to modify the module
-        dpkg = dspec.package
-        dpkg.setup_dependent_package(pkg.module, spec)
-        dpkg.setup_dependent_environment(spack_env, run_env, spec)
-
-    if (not dirty) and (not spack_env.is_unset('CPATH')):
+    if (not dirty) and (not build_env.is_unset('CPATH')):
         tty.debug("A dependency has updated CPATH, this may lead pkg-config"
                   " to assume that the package is part of the system"
                   " includes and omit it when invoked with '--cflags'.")
 
     set_module_variables_for_package(pkg)
-    pkg.setup_environment(spack_env, run_env)
+    pkg.setup_build_environment(build_env)
 
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
@@ -711,7 +702,7 @@ def setup_package(pkg, dirty):
     # unnecessary. Modules affecting these variables will be overwritten anyway
     with preserve_environment('CC', 'CXX', 'FC', 'F77'):
         # All module loads that otherwise would belong in previous
-        # functions have to occur after the spack_env object has its
+        # functions have to occur after the build_env object has its
         # modifications applied. Otherwise the environment modifications
         # could undo module changes, such as unsetting LD_LIBRARY_PATH
         # after a module changes it.
@@ -727,8 +718,39 @@ def setup_package(pkg, dirty):
         load_external_modules(pkg)
 
     # Make sure nothing's strange about the Spack environment.
-    validate(spack_env, tty.warn)
-    spack_env.apply_modifications()
+    validate(build_env, tty.warn)
+    build_env.apply_modifications()
+
+
+def modifications_from_dependencies(spec, context):
+    """Returns the environment modifications that are required by
+    the dependencies of a spec and also applies modifications
+    to this spec's package at module scope, if need be.
+
+    Args:
+        spec (Spec): spec for which we want the modifications
+        context (str): either 'build' for build-time modifications or 'run'
+            for run-time modifications
+    """
+    env = EnvironmentModifications()
+    pkg = spec.package
+
+    # Maps the context to deptype and method to be called
+    deptype_and_method = {
+        'build': (('build', 'link', 'test'),
+                  'setup_dependent_build_environment'),
+        'run': (('link', 'run'), 'setup_dependent_run_environment')
+    }
+    deptype, method = deptype_and_method[context]
+
+    for dspec in spec.traverse(order='post', root=False, deptype=deptype):
+        dpkg = dspec.package
+        set_module_variables_for_package(dpkg)
+        # Allow dependencies to modify the module
+        dpkg.setup_dependent_package(pkg.module, spec)
+        getattr(dpkg, method)(env, spec)
+
+    return env
 
 
 def fork(pkg, function, dirty, fake):

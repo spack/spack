@@ -42,8 +42,10 @@ import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
 import spack.mixins
+import spack.multimethod
 import spack.repo
 import spack.url
+import spack.util.environment
 import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
@@ -56,7 +58,7 @@ from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
-from spack.stage import Stage, ResourceStage, StageComposite
+from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
@@ -138,7 +140,8 @@ class InstallPhase(object):
 
 class PackageMeta(
     spack.directives.DirectiveMeta,
-    spack.mixins.PackageMixinsMeta
+    spack.mixins.PackageMixinsMeta,
+    spack.multimethod.MultiMethodMeta
 ):
     """
     Package metaclass for supporting directives (e.g., depends_on) and phases
@@ -465,10 +468,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: _spack_build_envfile.
     archive_files = []
 
+    #: Boolean. Set to ``True`` for packages that require a manual download.
+    #: This is currently only used by package sanity tests.
+    manual_download = False
+
     #
     # Set default licensing information
     #
-
     #: Boolean. If set to ``True``, this software requires a license.
     #: If set to ``False``, all of the ``license_*`` attributes will
     #: be ignored. Defaults to ``False``.
@@ -750,7 +756,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         mp = spack.mirror.mirror_archive_path(self.spec, fetcher)
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
+        stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version,
+                                             s.dag_hash())
 
         def download_search():
             dynamic_fetcher = fs.from_list_url(self)
@@ -1496,6 +1503,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             restage (bool): Force spack to restage the package source.
             force (bool): Install again, even if already installed.
             use_cache (bool): Install from binary package, if available.
+            cache_only (bool): Fail if binary package unavailable.
             stop_at (InstallPhase): last installation phase to be executed
                 (or None)
         """
@@ -1514,6 +1522,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         tests = kwargs.get('tests', False)
         dirty = kwargs.get('dirty', False)
         restage = kwargs.get('restage', False)
+
+        # install_self defaults True and is popped so that dependencies are
+        # always installed regardless of whether the root was installed
+        install_self = kwargs.pop('install_package', True)
+        # explicit defaults False so that dependents are implicit regardless
+        # of whether their dependents are implicitly or explicitly installed.
+        # Spack ensures root packages of install commands are always marked to
+        # install explicit
+        explicit = kwargs.pop('explicit', False)
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
@@ -1564,6 +1581,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if install_deps:
             Package._install_bootstrap_compiler(self, **kwargs)
 
+        if not install_self:
+            return
+
         # Then, install the package proper
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
@@ -1574,6 +1594,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 print_pkg(self.prefix)
                 spack.hooks.post_install(self.spec)
                 return
+            elif kwargs.get('cache_only', False):
+                tty.die('No binary for %s found and cache-only specified')
 
             tty.msg('No binary for %s found: installing from source'
                     % self.name)
@@ -1789,7 +1811,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if restage and self.stage.managed_by_spack:
             self.stage.destroy()
-            self.stage.create()
 
         return partial
 
@@ -1931,68 +1952,108 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return (None, None, flags)
 
-    def setup_environment(self, spack_env, run_env):
-        """Set up the compile and runtime environments for a package.
+    def _get_legacy_environment_method(self, method_name):
+        legacy_fn = getattr(self, method_name, None)
+        name_prefix = method_name.split('_environment')[0]
+        if legacy_fn:
+            msg = '[DEPRECATED METHOD]\n"{0}" ' \
+                  'still defines the deprecated method "{1}" ' \
+                  '[should be split into "{2}_build_environment" and ' \
+                  '"{2}_run_environment"]'
+            tty.debug(msg.format(self.name, method_name, name_prefix))
+        return legacy_fn
 
-        ``spack_env`` and ``run_env`` are ``EnvironmentModifications``
-        objects. Package authors can call methods on them to alter
-        the environment within Spack and at runtime.
+    def setup_build_environment(self, env):
+        """Sets up the build environment for a package.
 
-        Both ``spack_env`` and ``run_env`` are applied within the build
-        process, before this package's ``install()`` method is called.
-
-        Modifications in ``run_env`` will *also* be added to the
-        generated environment modules for this package.
-
-        Default implementation does nothing, but this can be
-        overridden if the package needs a particular environment.
-
-        Example:
-
-        1. Qt extensions need ``QTDIR`` set.
+        This method will be called before the current package prefix exists in
+        Spack's store.
 
         Args:
-            spack_env (EnvironmentModifications): List of environment
-                modifications to be applied when this package is built
-                within Spack.
-            run_env (EnvironmentModifications): List of environment
-                modifications to be applied when this package is run outside
-                of Spack. These are added to the resulting module file.
+            env (EnvironmentModifications): environment modifications to be
+                applied when the package is built. Package authors can call
+                methods on it to alter the build environment.
         """
-        pass
+        legacy_fn = self._get_legacy_environment_method('setup_environment')
+        if legacy_fn:
+            _ = spack.util.environment.EnvironmentModifications()
+            legacy_fn(env, _)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Set up the environment of packages that depend on this one.
-
-        This is similar to ``setup_environment``, but it is used to
-        modify the compile and runtime environments of packages that
-        *depend* on this one. This gives packages like Python and
-        others that follow the extension model a way to implement
-        common environment or compile-time settings for dependencies.
-
-        This is useful if there are some common steps to installing
-        all extensions for a certain package.
-
-        Example:
-
-        1. Installing python modules generally requires ``PYTHONPATH`` to point
-           to the ``lib/pythonX.Y/site-packages`` directory in the module's
-           install prefix. This method could be used to set that variable.
+    def setup_run_environment(self, env):
+        """Sets up the run environment for a package.
 
         Args:
-            spack_env (EnvironmentModifications): List of environment
-                modifications to be applied when the dependent package is
-                built within Spack.
-            run_env (EnvironmentModifications): List of environment
-                modifications to be applied when the dependent package is
-                run outside of Spack. These are added to the resulting
-                module file.
-            dependent_spec (Spec): The spec of the dependent package
+            env (EnvironmentModifications): environment modifications to be
+                applied when the package is run. Package authors can call
+                methods on it to alter the run environment.
+        """
+        legacy_fn = self._get_legacy_environment_method('setup_environment')
+        if legacy_fn:
+            _ = spack.util.environment.EnvironmentModifications()
+            legacy_fn(_, env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        """Sets up the build environment of packages that depend on this one.
+
+        This is similar to ``setup_build_environment``, but it is used to
+        modify the build environments of packages that *depend* on this one.
+
+        This gives packages like Python and others that follow the extension
+        model a way to implement common environment or compile-time settings
+        for dependencies.
+
+        This method will be called before the dependent package prefix exists
+        in Spack's store.
+
+        Examples:
+            1. Installing python modules generally requires ``PYTHONPATH``
+            to point to the ``lib/pythonX.Y/site-packages`` directory in the
+            module's install prefix. This method could be used to set that
+            variable.
+
+        Args:
+            env (EnvironmentModifications): environment modifications to be
+                applied when the dependent package is built. Package authors
+                can call methods on it to alter the build environment.
+
+            dependent_spec (Spec): the spec of the dependent package
                 about to be built. This allows the extendee (self) to query
                 the dependent's state. Note that *this* package's spec is
-                available as ``self.spec``.
+                available as ``self.spec``
         """
-        pass
+        legacy_fn = self._get_legacy_environment_method(
+            'setup_dependent_environment'
+        )
+        if legacy_fn:
+            _ = spack.util.environment.EnvironmentModifications()
+            legacy_fn(env, _, dependent_spec)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Sets up the run environment of packages that depend on this one.
+
+        This is similar to ``setup_run_environment``, but it is used to
+        modify the run environments of packages that *depend* on this one.
+
+        This gives packages like Python and others that follow the extension
+        model a way to implement common environment or run-time settings
+        for dependencies.
+
+        Args:
+            env (EnvironmentModifications): environment modifications to be
+                applied when the dependent package is run. Package authors
+                can call methods on it to alter the build environment.
+
+            dependent_spec (Spec): The spec of the dependent package
+                about to be run. This allows the extendee (self) to query
+                the dependent's state. Note that *this* package's spec is
+                available as ``self.spec``
+        """
+        legacy_fn = self._get_legacy_environment_method(
+            'setup_dependent_environment'
+        )
+        if legacy_fn:
+            _ = spack.util.environment.EnvironmentModifications()
+            legacy_fn(_, env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.

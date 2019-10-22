@@ -26,6 +26,8 @@ class Supernova(Package):
     http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://support.10xgenomics.com/de-novo-assembly/software/overview/latest/welcome"
+    manual_download = True
+
     version('2.1.1', sha256='2f58eb66951e257b89359134ab8e35ad638c4ed51cb3fb8121625dfcc7761938')
     version('2.0.1', '3697ce043c798fcb672fe0a66c56d6f0')
 

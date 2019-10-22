@@ -13,7 +13,7 @@ class Cnvnator(MakefilePackage):
     homepage = "https://github.com/abyzovlab/CNVnator"
     url      = "https://github.com/abyzovlab/CNVnator/archive/v0.3.3.tar.gz"
 
-    version('0.3.3', 'f9fc0c2e79abe85decab00d3748d8904')
+    version('0.3.3', sha256='58c5acf61f9a1e5febf546c196f8917a5e084b729e5c4cfd3eba83471b3fe5c1')
 
     depends_on('samtools')
     depends_on('htslib')

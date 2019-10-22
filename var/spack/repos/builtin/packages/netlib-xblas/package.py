@@ -23,7 +23,7 @@ class NetlibXblas(AutotoolsPackage):
     homepage = "http://www.netlib.org/xblas"
     url      = "http://www.netlib.org/xblas/xblas.tar.gz"
 
-    version('1.0.248', '990c680fb5e446bb86c10936e4cd7f88')
+    version('1.0.248', sha256='b5fe7c71c2da1ed9bcdc5784a12c5fa9fb417577513fe8a38de5de0007f7aaa1')
 
     variant('fortran', default=True,
             description='Build Fortran interfaces')

@@ -36,7 +36,7 @@ class PerlBioPerl(PerlPackage):
     url      = "https://cpan.metacpan.org/authors/id/C/CD/CDRAUG/BioPerl-1.7.6.tar.gz"
 
     version('1.7.6', sha256='df2a3efc991b9b5d7cc9d038a1452c6dac910c9ad2a0e47e408dd692c111688d')
-    version('1.7.2', 'a912c92b56d009198f1786b4cf560d5c',
+    version('1.7.2', sha256='17aa3aaab2f381bbcaffdc370002eaf28f2c341b538068d6586b2276a76464a1',
             url="http://search.cpan.org/CPAN/authors/id/C/CJ/CJFIELDS/BioPerl-1.007002.tar.gz")
 
     # According to cpandeps.grinnz.com Module-Build is both a build and run

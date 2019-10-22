@@ -19,6 +19,8 @@ class Graphviz(AutotoolsPackage):
     homepage = 'http://www.graphviz.org'
     git      = 'https://gitlab.com/graphviz/graphviz.git'
 
+    # This commit hash is tag='stable_release_2.42.2'
+    version('2.42.2', commit='da4c2ec6f24ca1b6d1752c6b5bc4389e55682147')
     # This commit hash is tag='stable_release_2.40.1'
     version('2.40.1', commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
 
@@ -92,7 +94,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('glib', when='+pangocairo')
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
-    depends_on('zlib', when='+pangocairo')
+    depends_on('zlib')
     depends_on('qt@4', when='+qt')
     depends_on('libx11', when="+x")
 

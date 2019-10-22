@@ -12,4 +12,4 @@ class PerlFontTtf(PerlPackage):
     homepage = "http://search.cpan.org/~bhallissy/Font-TTF-1.06/lib/Font/TTF.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/B/BH/BHALLISSY/Font-TTF-1.06.tar.gz"
 
-    version('1.06', '241b59310ad4450e6e050d5e790f1b21')
+    version('1.06', sha256='4b697d444259759ea02d2c442c9bffe5ffe14c9214084a01f743693a944cc293')

@@ -20,7 +20,7 @@ class RGgdendro(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ggdendro_0.1-20.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ggdendro"
 
-    version('0.1-20', '787552e346432c758633d8f4b2675eb6')
+    version('0.1-20', sha256='125cae904fa5d426cccaf32ebe9c6297e9ef0c6fd3f19f61513834d03a0cf8ff')
 
     depends_on('r-ggplot2@0.9.2:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

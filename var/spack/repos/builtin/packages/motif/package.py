@@ -14,7 +14,7 @@ class Motif(AutotoolsPackage):
     homepage = "http://motif.ics.com/"
     url = "http://cfhcable.dl.sourceforge.net/project/motif/Motif%202.3.8%20Source%20Code/motif-2.3.8.tar.gz"
 
-    version('2.3.8', '7572140bb52ba21ec2f0c85b2605e2b1')
+    version('2.3.8', sha256='859b723666eeac7df018209d66045c9853b50b4218cecadb794e2359619ebce7')
 
     depends_on("flex")
     depends_on("libx11")
