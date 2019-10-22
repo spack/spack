@@ -165,10 +165,9 @@ class Sundials(CMakePackage):
 
     # Other parallelism dependencies
     depends_on('cuda', when='+cuda')
-    depends_on('raja', when='+raja')
+    depends_on('raja +cuda ~openmp', when='+raja')
 
     # External libraries
-    depends_on('blas',                when='+lapack')
     depends_on('lapack',              when='+lapack')
     depends_on('suite-sparse',        when='+klu')
     depends_on('petsc +mpi',          when='+petsc')
