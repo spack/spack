@@ -84,7 +84,7 @@ def check_output(args, env):
 
 
 @info_dict(operating_system='Darwin')
-def sysctl():
+def sysctl_info_dict():
     """Returns a raw info dictionary parsing the output of sysctl."""
     # Make sure that /sbin and /usr/sbin are in PATH as sysctl is
     # usually found there
@@ -95,27 +95,19 @@ def sysctl():
             search_paths.append(additional_path)
     child_environment['PATH'] = os.pathsep.join(search_paths)
 
-    info = {}
-    info['vendor_id'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.vendor'],
-        env=child_environment
-    ).strip()
-    info['flags'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.features'],
-        env=child_environment
-    ).strip().lower()
-    info['flags'] += ' ' + check_output(
-        ['sysctl', '-n', 'machdep.cpu.leaf7_features'],
-        env=child_environment
-    ).strip().lower()
-    info['model'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.model'],
-        env=child_environment
-    ).strip()
-    info['model name'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.brand_string'],
-        env=child_environment
-    ).strip()
+    def sysctl(*args):
+        return check_output(
+            ['sysctl'] + list(args), env=child_environment
+        ).strip()
+
+    flags = (sysctl('-n', 'machdep.cpu.features').lower() + ' '
+             + sysctl('-n', 'machdep.cpu.leaf7_features').lower())
+    info = {
+        'vendor_id': sysctl('-n', 'machdep.cpu.vendor'),
+        'flags': flags,
+        'model': sysctl('-n', 'machdep.cpu.model'),
+        'model name': sysctl('-n', 'machdep.cpu.brand_string')
+    }
 
     # Super hacky way to deal with slight representation differences
     # Would be better to somehow consider these "identical"
