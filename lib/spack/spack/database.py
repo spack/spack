@@ -230,10 +230,18 @@ class Database(object):
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
+        if self.is_upstream:
+            raise UpstreamDatabaseLockingError(
+                "Cannot obtain a write lock on an upstream database")
+
         return WriteTransaction(self.lock, self._read, self._write)
 
     def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
+        if self.is_upstream:
+            raise UpstreamDatabaseLockingError(
+                "Cannot obtain a read lock on an upstream database")
+
         return ReadTransaction(self.lock, self._read)
 
     def prefix_lock(self, spec):
@@ -808,8 +816,13 @@ class Database(object):
         ``add()`` will lock and read from the DB on disk.
 
         """
+        if self.is_upstream:
+            raise UpstreamDatabaseLockingError(
+                "Cannot add a spec to an upstream database")
+
         # TODO: ensure that spec is concrete?
         # Entire add is transactional.
+
         with self.write_transaction():
             self._add(spec, directory_layout, explicit=explicit)
 
@@ -876,6 +889,10 @@ class Database(object):
              and removes them if they are no longer needed.
 
         """
+        if self.is_upstream:
+            raise UpstreamDatabaseLockingError(
+                "Cannot remove a spec from an upstream database")
+
         # Take a lock around the entire removal.
         with self.write_transaction():
             return self._remove(spec)
