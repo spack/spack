@@ -5,10 +5,8 @@
 
 from __future__ import division, print_function
 from collections import defaultdict
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
+
+import six.moves.urllib.parse as urllib_parse
 
 import spack.fetch_strategy as fs
 import spack.repo
@@ -262,7 +260,7 @@ def url_stats(args):
                 self.checksums[algo] += 1
 
                 # parse out the URL scheme (https/http/ftp/etc.)
-                urlinfo = urlparse(fetcher.url)
+                urlinfo = urllib_parse.urlparse(fetcher.url)
                 self.schemes[urlinfo.scheme] += 1
 
             elif url_type == 'git':

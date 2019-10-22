@@ -595,6 +595,7 @@ def test_bad_config_section(mock_config):
         spack.config.get('foobar')
 
 
+@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
 def test_bad_command_line_scopes(tmpdir, mock_config):
     cfg = spack.config.Configuration()
 
