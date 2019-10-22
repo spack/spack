@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import functools
+import os
 import platform
 import re
 import subprocess
@@ -75,30 +76,45 @@ def proc_cpuinfo():
     return info
 
 
-def check_output(args):
-    output = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
+def check_output(args, env):
+    output = subprocess.Popen(
+        args, stdout=subprocess.PIPE, env=env
+    ).communicate()[0]
     return six.text_type(output.decode('utf-8'))
 
 
 @info_dict(operating_system='Darwin')
 def sysctl():
     """Returns a raw info dictionary parsing the output of sysctl."""
+    # Make sure that /sbin and /usr/sbin are in PATH as sysctl is
+    # usually found there
+    child_environment = dict(os.environ.items())
+    search_paths = child_environment.get('PATH', '').split(os.pathsep)
+    for additional_path in ('/sbin', '/usr/sbin'):
+        if additional_path not in search_paths:
+            search_paths.append(additional_path)
+    child_environment['PATH'] = os.pathsep.join(search_paths)
 
     info = {}
     info['vendor_id'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.vendor']
+        ['sysctl', '-n', 'machdep.cpu.vendor'],
+        env=child_environment
     ).strip()
     info['flags'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.features']
+        ['sysctl', '-n', 'machdep.cpu.features'],
+        env=child_environment
     ).strip().lower()
     info['flags'] += ' ' + check_output(
-        ['sysctl', '-n', 'machdep.cpu.leaf7_features']
+        ['sysctl', '-n', 'machdep.cpu.leaf7_features'],
+        env=child_environment
     ).strip().lower()
     info['model'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.model']
+        ['sysctl', '-n', 'machdep.cpu.model'],
+        env=child_environment
     ).strip()
     info['model name'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.brand_string']
+        ['sysctl', '-n', 'machdep.cpu.brand_string'],
+        env=child_environment
     ).strip()
 
     # Super hacky way to deal with slight representation differences
