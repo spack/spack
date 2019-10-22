@@ -3,11 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from os import environ as env
 from spack import *
 
 
-class Ace(Package):
+class Ace(MakefilePackage):
     """ACE is an open-source framework that provides many components and
        patterns for developing high-performance, distributed real-time and
        embedded systems. ACE provides powerful, yet efficient abstractions
@@ -15,17 +14,13 @@ class Ace(Package):
        primitives."""
 
     homepage = "http://www.dre.vanderbilt.edu/~schmidt/ACE.html"
-    url = "http://download.dre.vanderbilt.edu/previous_versions/" \
-          "ACE-6.5.1.tar.gz"
+    url = "http://download.dre.vanderbilt.edu/previous_versions/ACE-6.5.1.tar.gz"
 
-    version('6.5.6', '7717cad84d4a9c3d6b2c47963eb555d96de0be657870bcab6fcef4'
-                     'c0423af0de')
-    version('6.5.1', '1f318adadb19da23c9be570a9c600a330056b18950fe0bf0eb1cf5'
-                     'cac8b72a32')
-    version('6.5.0', 'b6f9ec922fbdcecb4348e16d851d0d1f135df1836dfe77d2e0b642'
-                     '95ddb83066')
+    version('6.5.6', '7717cad84d4a9c3d6b2c47963eb555d96de0be657870bcab6fcef4c0423af0de')
+    version('6.5.1', '1f318adadb19da23c9be570a9c600a330056b18950fe0bf0eb1cf5cac8b72a32')
+    version('6.5.0', 'b6f9ec922fbdcecb4348e16d851d0d1f135df1836dfe77d2e0b64295ddb83066')
 
-    def install(self, spec, prefix):
+    def edit(self, spec, prefix):
 
         # Dictionary mapping: compiler-name : ACE config-label
         supported = {'intel': '_icc', 'gcc': ''}
@@ -48,5 +43,3 @@ class Ace(Package):
                         + ".GNU\n")
                 f.write("INSTALL_PREFIX=%s" % prefix)
 
-        make()
-        make('install')
