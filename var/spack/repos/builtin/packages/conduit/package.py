@@ -412,14 +412,14 @@ class Conduit(Package):
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 
-         #######################
-         # ZFP
-         #######################
-         cfg.write("# zfp from spack \n")
-         if "+zfp" in spec:
-             cfg.write(cmake_cache_entry("ZFP_DIR", spec['zfp'].prefix))
-         else:
-             cfg.write("# zfp not built by spack \n")
+        #######################
+        # ZFP
+        #######################
+        cfg.write("# zfp from spack \n")
+        if "+zfp" in spec:
+            cfg.write(cmake_cache_entry("ZFP_DIR", spec['zfp'].prefix))
+        else:
+            cfg.write("# zfp not built by spack \n")
 
         #######################################################################
         # I/O Packages
