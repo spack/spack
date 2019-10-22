@@ -66,6 +66,9 @@ class Conduit(Package):
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
 
+    # zfp compression
+    variant("zfp", default=True, description="Build Conduit ZFP support")
+
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
     # doxygen support is wip, since doxygen has several dependencies
@@ -94,6 +97,10 @@ class Conduit(Package):
     #######################
     # I/O Packages
     #######################
+
+    ###############
+    # HDF5
+    ###############
     # TODO: cxx variant is disabled due to build issue Cyrus
     # experienced on BGQ. When on, the static build tries
     # to link against shared libs.
@@ -105,14 +112,25 @@ class Conduit(Package):
     depends_on("hdf5~cxx~mpi~fortran", when="+hdf5~hdf5_compat+shared")
     depends_on("hdf5~shared~cxx~mpi~fortran", when="+hdf5~hdf5_compat~shared")
 
+    ###############
+    # Silo
+    ###############
     # we are not using silo's fortran features
     depends_on("silo~fortran", when="+silo+shared")
     depends_on("silo~shared~fortran", when="+silo~shared")
 
+    ###############
+    # ADIOS
+    ###############
     depends_on("adios+mpi~hdf5+shared",       when="+adios+mpi+shared")
     depends_on("adios+mpi~hdf5~shared~blosc", when="+adios+mpi~shared")
     depends_on("adios~mpi~hdf5+shared",       when="+adios~mpi+shared")
     depends_on("adios~mpi~hdf5~shared~blosc", when="+adios~mpi~shared")
+
+    #######################
+    # ZFP
+    #######################
+    depends_on("zfp", when="+zfp")
 
     #######################
     # MPI
@@ -393,6 +411,15 @@ class Conduit(Package):
                                                 mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
+
+         #######################
+         # ZFP
+         #######################
+         cfg.write("# zfp from spack \n")
+         if "+zfp" in spec:
+             cfg.write(cmake_cache_entry("ZFP_DIR", spec['zfp'].prefix))
+         else:
+             cfg.write("# zfp not built by spack \n")
 
         #######################################################################
         # I/O Packages
