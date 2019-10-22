@@ -19,7 +19,7 @@ class PyBiomFormat(PythonPackage):
 
     variant('h5py', default=True, description='For use with BIOM 2.0+ files')
 
-    depends_on('python@:3.6', when='@:2.1.7')
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython', type='build')
     depends_on('py-h5py', type=('build', 'run'), when='+h5py')
