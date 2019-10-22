@@ -100,13 +100,8 @@ class DirectoryLayout(object):
         if deprecated:
             if os.path.exists(path):
                 try:
-                    dep_file_name = self.deprecated_file_name(spec)
-                    metapath = os.path.join(os.readlink(path),
-                                            self.metadata_dir,
-                                            self.deprecated_dir,
-                                            dep_file_name)
+                    metapath = self.deprecated_file_path(spec)
                     os.unlink(path)
-
                     os.remove(metapath)
                 except OSError as e:
                     raise RemoveFailedError(spec, path, e)
@@ -247,23 +242,28 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
-    def _deprecated_dir_path(self, spec):
-        """Gets full path to spec deprecated dir
-
-        directory of spec files for specs deprecated in favor of this spec"""
-        _check_concrete(spec)
-        return os.path.join(self.metadata_path(spec), self.deprecated_dir)
-
     def deprecated_file_name(self, spec):
         """Gets name of deprecated spec file in deprecated dir"""
         _check_concrete(spec)
         return spec.dag_hash() + '_' + self.spec_file_name
 
-    def deprecated_file_path(self, deprecated_spec, replacement_spec):
-        """Gets full path to spec file for deprecated spec"""
+    def deprecated_file_path(self, deprecated_spec, deprecator_spec=None):
+        """Gets full path to spec file for deprecated spec
+
+        If the deprecator_spec is provided, use that. Otherwise, assume
+        deprecated_spec is already deprecated and its prefix links to the
+        prefix of its deprecator."""
         _check_concrete(deprecated_spec)
-        _check_concrete(replacement_spec)
-        return os.path.join(self._deprecated_dir_path(replacement_spec),
+        if deprecator_spec:
+            _check_concrete(deprecator_spec)
+
+        # If deprecator spec is None, assume deprecated_spec already deprecated
+        # and use its link to find the file.
+        base_dir = self.path_for_spec(
+            deprecator_spec
+        ) if deprecator_spec else os.readlink(deprecated_spec.prefix)
+
+        return os.path.join(base_dir, self.metadata_dir, self.deprecated_dir,
                             self.deprecated_file_name(deprecated_spec))
 
     @contextmanager
