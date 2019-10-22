@@ -13,6 +13,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.util.web
 import spack.repo
+import spack.stage
 from spack.spec import Spec
 from spack.util.editor import editor
 from spack.util.executable import which, ProcessError
@@ -618,7 +619,7 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.util.web.get_checksums_for_versions(
+        versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
             keep_stage=args.keep_stage)
     else:
