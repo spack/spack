@@ -15,7 +15,7 @@ import spack.repo
 import spack.cmd.common.arguments as arguments
 from spack.stage import DIYStage
 
-description = "DEPRECATED: do-it-yourself: build from local source directory"
+description = "developer build: build from code in current working directory"
 section = "build"
 level = "long"
 
@@ -34,7 +34,7 @@ def setup_parser(subparser):
         help="do not remove the install prefix if installation fails")
     subparser.add_argument(
         '--skip-patch', action='store_true',
-        help="skip patching for the DIY build")
+        help="skip patching for the developer build")
     subparser.add_argument(
         '-q', '--quiet', action='store_true', dest='quiet',
         help="do not display verbose build output while installing")
@@ -49,14 +49,13 @@ def setup_parser(subparser):
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
 
-def diy(self, args):
-    tty.warn("`spack diy` is deprecated in favor of `spack dev-build`.")
+def dev_build(self, args):
     if not args.spec:
-        tty.die("spack diy requires a package spec argument.")
+        tty.die("spack dev-build requires a package spec argument.")
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
-        tty.die("spack diy only takes one spec.")
+        tty.die("spack dev-build only takes one spec.")
 
     spec = specs[0]
     if not spack.repo.path.exists(spec.name):
@@ -65,7 +64,7 @@ def diy(self, args):
 
     if not spec.versions.concrete:
         tty.die(
-            "spack diy spec must have a single, concrete version. "
+            "spack dev-build spec must have a single, concrete version. "
             "Did you forget a package version number?")
 
     spec.concretize()
@@ -73,7 +72,7 @@ def diy(self, args):
 
     if package.installed:
         tty.error("Already installed in %s" % package.prefix)
-        tty.msg("Uninstall or try adding a version suffix for this DIY build.")
+        tty.msg("Uninstall or try adding a version suffix for this dev build.")
         sys.exit(1)
 
     source_path = args.source_path
@@ -93,6 +92,6 @@ def diy(self, args):
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
-        keep_stage=True,   # don't remove source dir for DIY.
+        keep_stage=True,   # don't remove source dir for dev build.
         dirty=args.dirty,
         stop_at=args.until)
