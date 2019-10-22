@@ -27,9 +27,9 @@ class FluxSched(AutotoolsPackage):
 
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
-    depends_on("boost+graph@1.53.0,1.59.0:", when='@0.5.0:,master')
-    depends_on("py-pyyaml", when="@0.7.0:,master")
-    depends_on("libxml2@2.9.1:", when="@0.6.0,master")
+    depends_on("boost+graph@1.53.0,1.59.0:", when='@0.5.0:')
+    depends_on("py-pyyaml", when="@0.7.0:")
+    depends_on("libxml2@2.9.1:", when="@0.6.0")
     depends_on("yaml-cpp", when="@0.7.0:")
     depends_on("libuuid")
     depends_on("pkgconfig")

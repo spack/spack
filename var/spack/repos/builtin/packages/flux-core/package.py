@@ -33,7 +33,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("libzmq@4.0.4:")
     depends_on("czmq")
     depends_on("czmq@2.2:3.99", when="@0.1:0.6.99")
-    depends_on("czmq@3.0.1:", when="@0.7:,master")
+    depends_on("czmq@3.0.1:", when="@0.7:")
     depends_on("hwloc@1.11.1:1.99")
     depends_on("hwloc +cuda", when='+cuda')
     # Provide version hints for lua so that the concretizer succeeds when no
@@ -45,15 +45,15 @@ class FluxCore(AutotoolsPackage):
     depends_on("munge", when="@0.1.0:0.10.0")
     depends_on("python", type=('build', 'run'))
     depends_on("python@2.7:2.99", when="@0.1.0:0.11.0")
-    depends_on("python@2.7:", when="@0.11.1:,master")
+    depends_on("python@2.7:", when="@0.11.1:")
     depends_on("py-cffi", type=('build', 'run'))
-    depends_on("py-six", type=('build', 'run'), when="@0.11.0:,master")
-    depends_on("py-pyyaml", type=('build', 'run'), when="@0.11.0:,master")
-    depends_on("py-jsonschema", type=('build', 'run'), when="@0.12.0:,master")
+    depends_on("py-six", type=('build', 'run'), when="@0.11.0:")
+    depends_on("py-pyyaml", type=('build', 'run'), when="@0.11.0:")
+    depends_on("py-jsonschema", type=('build', 'run'), when="@0.12.0:")
     depends_on("jansson")
     depends_on("pkgconfig")
     depends_on("yaml-cpp", when="@:0.11.99")
-    depends_on("lz4", when="@0.11.0:,master")
+    depends_on("lz4", when="@0.11.0:")
 
     # versions up to 0.8.0 uses pylint to check Flux's python binding
     # later versions provide a configure flag and disable the check by default
