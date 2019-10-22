@@ -1,0 +1,23 @@
+*** spack-src/setup.py	Tue Jul 30 07:25:06 2019
+--- spack-src/setup.py.new	Tue Jul 30 07:44:00 2019
+***************
+*** 620,627 ****
+          min_version = get_version_requirement(script_dir, name)
+          pkg_config_version_check(name, min_version)
+          ext.include_dirs += pkg_config_parse("--cflags-only-I", name)
+          ext.library_dirs += pkg_config_parse("--libs-only-L", name)
+          ext.libraries += pkg_config_parse("--libs-only-l", name)
+  
+  
+  du_build_ext = get_command_class("build_ext")
+--- 620,629 ----
+          min_version = get_version_requirement(script_dir, name)
+          pkg_config_version_check(name, min_version)
+          ext.include_dirs += pkg_config_parse("--cflags-only-I", name)
+          ext.library_dirs += pkg_config_parse("--libs-only-L", name)
+          ext.libraries += pkg_config_parse("--libs-only-l", name)
++         for libdir in ext.library_dirs:
++             ext.extra_link_args.append('-Wl,-rpath=%s' %libdir)
+  
+  
+  du_build_ext = get_command_class("build_ext")

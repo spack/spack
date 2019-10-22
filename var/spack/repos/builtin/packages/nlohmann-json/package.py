@@ -13,6 +13,7 @@ class NlohmannJson(CMakePackage):
     url      = "https://github.com/nlohmann/json/archive/v3.1.2.tar.gz"
     maintainers = ['ax3l']
 
+    version('3.7.0', sha256='d51a3a8d3efbb1139d7608e28782ea9efea7e7933157e8ff8184901efd8ee760')
     version('3.5.0', sha256='e0b1fc6cc6ca05706cce99118a87aca5248bd9db3113e703023d23f044995c1d')
     version('3.4.0', sha256='c377963a95989270c943d522bfefe7b889ef5ed0e1e15d535fd6f6f16ed70732')
     version('3.3.0', sha256='2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801')
@@ -21,9 +22,7 @@ class NlohmannJson(CMakePackage):
     version('3.1.1', sha256='9f3549824af3ca7e9707a2503959886362801fb4926b869789d6929098a79e47')
 
     variant('single_header', default=True,
-        description='Use amalgamated single-header')
-    variant('test', default=True,
-        description='Build the tests')
+            description='Use amalgamated single-header')
 
     depends_on('cmake@3.8:', type='build')
 
@@ -42,7 +41,7 @@ class NlohmannJson(CMakePackage):
             '-DJSON_MultipleHeaders:BOOL={0}'.format(
                 'ON' if '~single_header' in spec else 'OFF'),
             '-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if '+test' in spec else 'OFF')
+                'ON' if self.run_tests else 'OFF')
         ]
 
         return args

@@ -11,6 +11,7 @@ import re
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
+from llnl.util.filesystem import working_dir
 
 import spack.cmd
 import spack.paths
@@ -79,12 +80,28 @@ def packages_path():
         return spack.repo.path.get_repo('builtin').packages_path
 
 
+class GitExe:
+    # Wrapper around Executable for git to set working directory for all
+    # invocations.
+    #
+    # Not using -C as that is not supported for git < 1.8.5.
+    def __init__(self):
+        self._git_cmd = which('git', required=True)
+
+    def __call__(self, *args, **kwargs):
+        with working_dir(packages_path()):
+            return self._git_cmd(*args, **kwargs)
+
+
+_git = None
+
+
 def get_git():
     """Get a git executable that runs *within* the packages path."""
-    git = which('git', required=True)
-    git.add_default_arg('-C')
-    git.add_default_arg(packages_path())
-    return git
+    global _git
+    if _git is None:
+        _git = GitExe()
+    return _git
 
 
 def list_packages(rev):
@@ -102,13 +119,14 @@ def list_packages(rev):
 
 def pkg_add(args):
     """add a package to the git stage with `git add`"""
+    git = get_git()
+
     for pkg_name in args.packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" %
                     pkg_name, filename)
 
-        git = get_git()
         git('add', filename)
 
 

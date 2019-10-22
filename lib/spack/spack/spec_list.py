@@ -54,16 +54,7 @@ class SpecList(object):
             constraints = []
             for item in self.specs_as_yaml_list:
                 if isinstance(item, dict):  # matrix of specs
-                    excludes = item.get('exclude', [])
-                    for combo in itertools.product(*(item['matrix'])):
-                        # Test against the excludes using a single spec
-                        ordered_combo = sorted(combo, key=spec_ordering_key)
-                        test_spec = Spec(' '.join(ordered_combo))
-                        if any(test_spec.satisfies(x) for x in excludes):
-                            continue
-
-                        # Add as list of constraints
-                        constraints.append([Spec(x) for x in ordered_combo])
+                    constraints.extend(_expand_matrix_constraints(item))
                 else:  # individual spec
                     constraints.append([Spec(item)])
             self._constraints = constraints
@@ -159,6 +150,36 @@ class SpecList(object):
 
     def __getitem__(self, key):
         return self.specs[key]
+
+
+def _expand_matrix_constraints(object, specify=True):
+    # recurse so we can handle nexted matrices
+    expanded_rows = []
+    for row in object['matrix']:
+        new_row = []
+        for r in row:
+            if isinstance(r, dict):
+                new_row.extend(_expand_matrix_constraints(r, specify=False))
+            else:
+                new_row.append([r])
+        expanded_rows.append(new_row)
+
+    results = []
+    excludes = object.get('exclude', [])  # only compute once
+    for combo in itertools.product(*expanded_rows):
+        # Construct a combined spec to test against excludes
+        flat_combo = [constraint for list in combo for constraint in list]
+        ordered_combo = sorted(flat_combo, key=spec_ordering_key)
+        test_spec = Spec(' '.join(ordered_combo))
+        if any(test_spec.satisfies(x) for x in excludes):
+            continue
+
+        # Add to list of constraints
+        if specify:
+            results.append([Spec(x) for x in ordered_combo])
+        else:
+            results.append(ordered_combo)
+    return results
 
 
 class SpecListError(SpackError):

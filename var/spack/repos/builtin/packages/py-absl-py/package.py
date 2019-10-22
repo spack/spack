@@ -21,5 +21,6 @@ class PyAbslPy(PythonPackage):
     version('0.1.6', sha256='02c577d618a8bc0a2a5d1a51f160d3649745d7a2516d87025322f46ac1391a22')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build'))
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')

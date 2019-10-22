@@ -19,6 +19,8 @@ class Libxc(AutotoolsPackage):
     version('2.2.2', sha256='6ca1d0bb5fdc341d59960707bc67f23ad54de8a6018e19e02eee2b16ea7cc642')
     version('2.2.1', sha256='ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00')
 
+    patch('configure_add_fj.patch')
+
     def url_for_version(self, version):
         if version < Version('3.0.0'):
             return ("http://www.tddft.org/programs/octopus/"

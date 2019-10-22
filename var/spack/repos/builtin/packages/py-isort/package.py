@@ -12,6 +12,6 @@ class PyIsort(PythonPackage):
     homepage = "https://github.com/timothycrosley/isort"
     url      = "https://pypi.io/packages/source/i/isort/isort-4.2.15.tar.gz"
 
-    version('4.2.15', '34915a2ce60e6fe3dbcbf5982deef9b4')
+    version('4.2.15', sha256='79f46172d3a4e2e53e7016e663cc7a8b538bec525c36675fcfd2767df30b3983')
 
     depends_on('py-setuptools', type='build')

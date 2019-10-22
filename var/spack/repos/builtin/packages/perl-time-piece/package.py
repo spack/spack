@@ -12,4 +12,4 @@ class PerlTimePiece(PerlPackage):
     homepage = "http://search.cpan.org/~esaym/Time-Piece/Piece.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/E/ES/ESAYM/Time-Piece-1.3203.tar.gz"
 
-    version('1.3203', '515c1306f123a00116a95335cf543501')
+    version('1.3203', sha256='6971faf6476e4f715a5b5336f0a97317f36e7880fcca6c4db7c3e38e764a6f41')

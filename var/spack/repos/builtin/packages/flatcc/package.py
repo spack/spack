@@ -16,9 +16,10 @@ class Flatcc(CMakePackage):
     easier than C++."""
 
     homepage = "https://github.com/dvidelabs/flatcc"
-    url      = "https://github.com/dvidelabs/flatcc/archive/v0.5.2.tar.gz"
+    url      = "https://github.com/dvidelabs/flatcc/archive/v0.5.3.tar.gz"
     git      = "https://github.com/dvidelabs/flatcc.git"
 
+    version('0.5.3',  sha256='d7519a97569ebdc9d12b162be0f9861fdc2724244f68595264a411ac48e4e983')
     version('0.5.2',  sha256='02dac93d3daf8d0a290aa8711a9b8a53f047436ec5331adb1972389061ec6615')
     version('0.5.1',  sha256='8c4560ca32e3c555716d9363bed469e2c60e0f443ec32bc08e7abfe681e25ca9')
     version('0.5.0',  sha256='ef97a1c983b6d3a08572af535643600d03a6ff422f64b3dfa380a7193630695c')

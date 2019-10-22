@@ -12,6 +12,8 @@ from spack.paths import mock_packages_path
 from spack.util.naming import mod_to_class
 from spack.spec import Spec
 from spack.util.package_hash import package_content
+from spack.version import VersionChecksumError
+import spack.directives
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -369,3 +371,20 @@ def test_rpath_args(mutable_database):
     rpath_args = rec.spec.package.rpath_args
     assert '-rpath' in rpath_args
     assert 'mpich' in rpath_args
+
+
+def test_bundle_version_checksum(mock_directive_bundle,
+                                 clear_directive_functions):
+    """Test raising exception on a version checksum with a bundle package."""
+    with pytest.raises(VersionChecksumError, match="Checksums not allowed"):
+        version = spack.directives.version('1.0', checksum='1badpkg')
+        version(mock_directive_bundle)
+
+
+def test_bundle_patch_directive(mock_directive_bundle,
+                                clear_directive_functions):
+    """Test raising exception on a patch directive with a bundle package."""
+    with pytest.raises(spack.directives.UnsupportedPackageDirective,
+                       match="Patches are not allowed"):
+        patch = spack.directives.patch('mock/patch.txt')
+        patch(mock_directive_bundle)

@@ -11,21 +11,21 @@ Environments
 
 An environment is used to group together a set of specs for the
 purpose of building, rebuilding and deploying in a coherent fashion.
-Environments provide a number of advantages over the a la carte
+Environments provide a number of advantages over the *à la carte*
 approach of building and loading individual Spack modules:
 
 #. Environments separate the steps of (a) choosing what to
    install, (b) concretizing, and (c) installing.  This allows
    Environments to remain stable and repeatable, even if Spack packages
    are upgraded: specs are only re-concretized when the user
-   explicitly asks for it.  It is even be possible to reliably
+   explicitly asks for it.  It is even possible to reliably
    transport environments between different computers running
    different versions of Spack!
 #. Environments allow several specs to be built at once; a more robust
    solution than ad-hoc scripts making multiple calls to ``spack
    install``.
 #. An Environment that is built as a whole can be loaded as a whole
-   into the user environment. An Environment can be build to maintain
+   into the user environment. An Environment can be built to maintain
    a filesystem view of its packages, and the environment can load
    that view into the user environment at activation time. Spack can
    also generate a script to load all modules related to an
@@ -86,7 +86,7 @@ an Environment, the ``.spack-env`` directory also contains:
 
   * ``repo/``: A repo consisting of the Spack packages used in this
     environment.  This allows the environment to build the same, in
-    theory, even on different verions of Spack with different
+    theory, even on different versions of Spack with different
     packages!
   * ``logs/``: A directory containing the build logs for the packages
     in this Environment.
@@ -206,7 +206,7 @@ Environment has been activated. Similarly, the ``install`` and
   ######################################################################## 100.0%
   ==> Staging archive: /spack/var/spack/stage/zlib-1.2.11-3r4cfkmx3wwfqeof4bc244yduu2mz4ur/zlib-1.2.11.tar.gz
   ==> Created stage in /spack/var/spack/stage/zlib-1.2.11-3r4cfkmx3wwfqeof4bc244yduu2mz4ur
- ==> No patches needed for zlib
+  ==> No patches needed for zlib
   ==> Building zlib [Package]
   ==> Executing phase: 'install'
   ==> Successfully installed zlib
@@ -292,19 +292,37 @@ or
 
    $ spack -E myenv add python
 
+.. _environments_concretization:
+
 ^^^^^^^^^^^^
 Concretizing
 ^^^^^^^^^^^^
 
 Once some user specs have been added to an environment, they can be
-concretized.  The following command will concretize all user specs
-that have been added and not yet concretized:
+concretized. *By default specs are concretized separately*, one after
+the other. This mode of operation permits to deploy a full
+software stack where multiple configurations of the same package
+need to be installed alongside each other. Central installations done
+at HPC centers by system administrators or user support groups
+are a common case that fits in this behavior.
+Environments *can also be configured to concretize all
+the root specs in a self-consistent way* to ensure that
+each package in the environment comes with a single configuration. This
+mode of operation is usually what is required by software developers that
+want to deploy their development environment.
+
+Regardless of which mode of operation has been chosen, the following
+command will ensure all the root specs are concretized according to the
+constraints that are prescribed in the configuration:
 
 .. code-block:: console
 
    [myenv]$ spack concretize
 
-This command will re-concretize all specs:
+In the case of specs that are not concretized together, the command
+above will concretize only the specs that were added and not yet
+concretized. Forcing a re-concretization of all the specs can be done
+instead with this command:
 
 .. code-block:: console
 
@@ -318,7 +336,7 @@ The ``concretize`` command does not install any packages. For packages
 that have already been installed outside of the environment, the
 process of adding the spec and concretizing is identical to installing
 the spec assuming it concretizes to the exact spec that was installed
-ouside of the environment.
+outside of the environment.
 
 The ``spack find`` command can show concretized specs separately from
 installed specs using the ``-c`` (``--concretized``) flag.
@@ -419,7 +437,7 @@ a ``packages.yaml`` file) could contain:
      ...
      packages:
        all:
-         compilers: [intel]
+         compiler: [intel]
      ...
 
 This configuration sets the default compiler for all packages to
@@ -440,7 +458,7 @@ them to the Environment.
      - relative/path/to/config.yaml
      - /absolute/path/to/packages.yaml
 
-Environments can include files either with a relative or absolute
+Environments can include files with either relative or absolute
 paths. Inline configurations take precedence over included
 configurations, so you don't have to change shared configuration files
 to make small changes to an individual Environment. Included configs
@@ -466,6 +484,34 @@ the ``spack.yaml`` manifest under the heading ``specs``.
 Appending to this list in the yaml is identical to using the ``spack
 add`` command from the command line. However, there is more power
 available from the yaml file.
+
+"""""""""""""""""""
+Spec concretization
+"""""""""""""""""""
+
+Specs can be concretized separately or together, as already
+explained in :ref:`environments_concretization`. The behavior active
+under any environment is determined by the ``concretization`` property:
+
+.. code-block:: yaml
+
+   spack:
+       specs:
+         - ncview
+         - netcdf
+         - nco
+         - py-sphinx
+       concretization: together
+
+which can currently take either one of the two allowed values ``together`` or ``separately``
+(the default).
+
+.. admonition:: Re-concretization of user specs
+
+   When concretizing specs together the entire set of specs will be
+   re-concretized after any addition of new user specs, to ensure that
+   the environment remains consistent. When instead the specs are concretized
+   separately only the new specs will be re-concretized after any addition.
 
 """""""""""""
 Spec Matrices
@@ -526,7 +572,7 @@ the same specs:
        - hdf5+mpi ^openmpi@3.1.0
 
 This allows one to create toolchains out of combinations of
-constraints and apply them somewhat indiscriminantly to packages,
+constraints and apply them somewhat indiscriminately to packages,
 without regard for the applicability of the constraint.
 
 """"""""""""""""""""
@@ -573,7 +619,7 @@ files are identical.
 
 .. note::
 
-   Named a spec list in the definitions section may only refer
+   Named spec lists in the definitions section may only refer
    to a named list defined above itself. Order matters.
 
 In short files like the example, it may be easier to simply list the
@@ -586,7 +632,7 @@ one to add to named lists in the definitions section of the manifest
 file directly from the command line.
 
 The ``when`` directive can be used to conditionally add specs to a
-named list. The ``when`` directive takes a string of python code
+named list. The ``when`` directive takes a string of Python code
 referring to a restricted set of variables, and evaluates to a
 boolean. The specs listed are appended to the named list if the
 ``when`` string evaluates to ``True``. In the following snippet, the
@@ -620,9 +666,9 @@ The valid variables for a ``when`` clause are:
 #. ``architecture`` or ``arch``. The full string of the
    default Spack architecture on the system.
 
-#. ``re``. The standard regex module in python.
+#. ``re``. The standard regex module in Python.
 
-#. ``env``. The user environment (usually ``os.environ`` in python).
+#. ``env``. The user environment (usually ``os.environ`` in Python).
 
 #. ``hostname``. The hostname of the system (if ``hostname`` is an
    executable in the user's PATH).
@@ -632,7 +678,7 @@ Environment-managed Views
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spack Environments can define filesystem views of their software,
-which are maintained as packages are installed and uninstalled from
+which are maintained as packages and can be installed and uninstalled from
 the Environment. Filesystem views provide an access point for packages
 from the filesystem for users who want to access those packages
 directly. For more information on filesystem views, see the section
@@ -651,7 +697,7 @@ The Spack Environment manifest file has a top-level keyword
 by a name. The view descriptor contains the root of the view, and
 optionally the projections for the view, and ``select`` and
 ``exclude`` lists for the view. For example, in the following manifest
-file snipped we define a view named ``mpis``, rooted at
+file snippet we define a view named ``mpis``, rooted at
 ``/path/to/view`` in which all projections use the package name,
 version, and compiler name to determine the path for a given
 package. This view selects all packages that depend on MPI, and
@@ -726,9 +772,9 @@ the manifest. Environments can be configured without views using
 with no ``view`` key are treated the same as ``view: True``.
 
 From the command line, the ``spack env create`` command takes an
-argument ``with-view [PATH]`` that sets the path for a single, default
+argument ``--with-view [PATH]`` that sets the path for a single, default
 view. If no path is specified, the default path is used (``view:
-True``). The argument ``without-view`` can be used to create an
+True``). The argument ``--without-view`` can be used to create an
 environment without any view configured.
 
 The ``spack env view`` command can be used to change the manage views
@@ -764,8 +810,8 @@ ACLOCAL_PATH        share/aclocal
 LD_LIBRARY_PATH     lib, lib64
 LIBRARY_PATH        lib, lib64
 CPATH               include
-PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig
-CMAKE_PREFIX_PATH   ''
+PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
+CMAKE_PREFIX_PATH   .
 =================== =========
 
 Each of these paths are appended to the view root, and added to the

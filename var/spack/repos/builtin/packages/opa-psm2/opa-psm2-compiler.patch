@@ -1,0 +1,45 @@
+--- opa-psm2-PSM2_11.2.77/buildflags.mak	2019-01-16 09:21:55.000000000 -0800
++++ opa-psm2-PSM2_11.2.77.compiler_fix/buildflags.mak	2019-08-12 10:17:01.044565000 -0700
+@@ -61,13 +61,13 @@ export os ?= $(shell uname -s | tr '[A-Z
+ export arch := $(shell uname -m | sed -e 's,\(i[456]86\|athlon$$\),i386,')
+ 
+ ifeq (${CCARCH},gcc)
+-	export CC := gcc
++	export CC := cc
+ else
+ 	ifeq (${CCARCH},gcc4)
+ 		export CC := gcc4
+ 	else
+ 		ifeq (${CCARCH},icc)
+-		     export CC := icc
++		     export CC := cc
+ 		else
+ 		     anerr := $(error Unknown C compiler arch: ${CCARCH})
+ 		endif # ICC
+@@ -107,7 +107,7 @@ BASECFLAGS +=-Wall $(WERROR)
+ #
+ # test if compiler supports 32B(AVX2)/64B(AVX512F) move instruction.
+ #
+-ifeq (${CC},icc)
++ifeq (${CCARCH},icc)
+   ifeq ($(PSM_DISABLE_AVX2),)
+     MAVX2=-xATOM_SSE4.2 -DPSM_AVX512
+   else
+@@ -121,7 +121,7 @@ else
+   endif
+ endif
+ 
+-ifneq (icc,${CC})
++ifneq (icc,${CCARCH})
+   ifeq ($(PSM_DISABLE_AVX2),)
+     RET := $(shell echo "int main() {}" | ${CC} ${MAVX2} -E -dM -xc - 2>&1 | grep -q AVX2 ; echo $$?)
+   else
+@@ -141,7 +141,7 @@ endif
+ # This support is dynamic at runtime, so is OK to enable as long as compiler can generate
+ # the code.
+ ifneq (,${PSM_AVX512})
+-  ifneq (icc,${CC})
++  ifneq (icc,${CCARCH})
+     RET := $(shell echo "int main() {}" | ${CC} -mavx512f -E -dM -xc - 2>&1 | grep -q AVX512 ; echo $$?)
+     ifeq (0,${RET})
+       BASECFLAGS += -mavx512f

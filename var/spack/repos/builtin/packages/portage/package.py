@@ -27,6 +27,9 @@ class Portage(CMakePackage):
     # part of https://github.com/laristra/cinch/commit/f87f848269fac25aa5b8d0bd5d9c9b2d2d6fb0ad
     # fixed in version above 1.2.2
     patch('p_lapacke_config.patch', when='@1.2.2')
+    # don't enable debug prints in RelWithDebInfo build
+    # fixed in version above 1.2.2
+    patch('rel-with-deb-info.patch', when='@1.2.2')
 
     variant('mpi', default=True, description='Support MPI')
 
@@ -47,5 +50,8 @@ class Portage(CMakePackage):
             ])
         else:
             options.append('-DENABLE_MPI=OFF')
+
+        options.append("-DLAPACKE_LIBRARIES=" +
+                       self.spec["lapack"].libs.joined(";"))
 
         return options

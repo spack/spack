@@ -21,6 +21,8 @@ class Plasma(CMakePackage):
     maintainers = ['luszczek']
 
     version("develop", hg=hg)
+    version("19.8.1", sha256="3a5db6eabf91aec782b7f27b17a7f6b8ce2c9d8e648c0e9c0ff5d87277ba4d17")
+    version("19.8.0", sha256="19a950ade8a7c8d082f372789c9f874274a63217ecff26e33f366402f060f071")
     version("18.11.1", sha256="0581cc8b1188932fd9c29bd258ffe2dc8fb26b1530c5dc3d91f8de369e44edbc")
     version("18.11.0", sha256="36501488be5b4b2b973524824e1afd27779d37addfeeb34c1871ba753b6c06bf")
     version("18.10.0", sha256="93dceae93f57a2fbd79b85d2fbf7907d1d32e158b8d1d93892d9ff3df9963210")
@@ -64,14 +66,14 @@ class Plasma(CMakePackage):
     conflicts("%xl_r")
 
     patch("remove_absolute_mkl_include.patch", when="@17.1")
+    patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
+    patch("fix_cmake_include.patch", when="@19.8.0:19.8.9")
 
     @when("@18.9.0:")
     def cmake_args(self):
         options = list()
 
         options.extend([
-            "-DCMAKE_INSTALL_PREFIX=%s" % prefix,
-            "-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib" % prefix,
             "-DBLAS_LIBRARIES=%s" % self.spec["blas"].libs.joined(";"),
             "-DLAPACK_LIBRARIES=%s" % self.spec["lapack"].libs.joined(";")
         ])

@@ -21,11 +21,13 @@ class Seacas(CMakePackage):
     """
     homepage = "http://gsjaardema.github.io/seacas/"
     git      = "https://github.com/gsjaardema/seacas.git"
-
+    url      = "https://github.com/gsjaardema/seacas/archive/v2019-08-20.tar.gz"
     maintainers = ['gsjaardema']
 
     # ###################### Versions ##########################
     version('master', branch='master')
+    version('2019-08-20', sha256='a82c1910c2b37427616dc3716ca0b3c1c77410db6723aefb5bea9f47429666e5')
+    version('2019-07-26', sha256='651dac832b0cfee0f63527f563415c8a65b8e4d79242735c1e2aec606f6b2e17')
 
     # ###################### Variants ##########################
     # Package options
@@ -54,6 +56,8 @@ class Seacas(CMakePackage):
             description='Enable thread-safe exodus and IOSS libraries')
 
     # TPLs (alphabet order)
+    variant('adios2',         default=False,
+            description='Enable ADIOS2')
     variant('cgns',         default=True,
             description='Enable CGNS')
     variant('matio',        default=True,
@@ -71,6 +75,8 @@ class Seacas(CMakePackage):
     depends_on('netcdf@4.6.2:~mpi', when='~mpi')
     depends_on('cgns@develop+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@develop~mpi+scoping', when='+cgns ~mpi')
+    depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
+    depends_on('adios2@develop+mpi', when='+adios2 +mpi')
     depends_on('matio', when='+matio')
     depends_on('metis+int64+real64', when='+metis ~mpi')
     depends_on('parmetis+int64+real64', when='+metis +mpi')
@@ -236,6 +242,16 @@ class Seacas(CMakePackage):
         else:
             options.extend([
                 '-DTPL_ENABLE_CGNS:BOOL=OFF'
+            ])
+
+        if '+adios2' in spec:
+            options.extend([
+                '-DTPL_ENABLE_ADIOS2:BOOL=ON',
+                '-DADIOS2_ROOT:PATH=%s' % spec['adios2'].prefix,
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_ADIOS2:BOOL=OFF'
             ])
 
         # ################# RPath Handling ######################

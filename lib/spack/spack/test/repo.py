@@ -64,3 +64,9 @@ def test_repo_last_mtime():
     latest_mtime = max(os.path.getmtime(p.module.__file__)
                        for p in spack.repo.path.all_packages())
     assert spack.repo.path.last_mtime() == latest_mtime
+
+
+def test_repo_invisibles(repo_for_test, extra_repo):
+    with open(os.path.join(extra_repo.root, 'packages', '.invisible'), 'w'):
+        pass
+    extra_repo.all_package_names()

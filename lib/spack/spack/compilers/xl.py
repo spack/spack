@@ -29,6 +29,10 @@ class Xl(Compiler):
     version_argument = '-qversion'
     version_regex = r'([0-9]?[0-9]\.[0-9])'
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-V"
+
     @property
     def openmp_flag(self):
         return "-qsmp=omp"

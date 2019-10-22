@@ -37,12 +37,12 @@ class PyScikitLearn(PythonPackage):
     version('0.21.1', sha256='228d0611e69e5250946f8cd7bbefec75347950f0ca426d0c518db8f06583f660')
     version('0.20.2', sha256='bc5bc7c7ee2572a1edcb51698a6caf11fae554194aaab9a38105d9ec419f29e6')
     version('0.20.0', sha256='97d1d971f8ec257011e64b7d655df68081dd3097322690afa1a71a1d755f8c18')
-    version('0.19.1', 'b67143988c108862735a96cf2b1e827a')
-    version('0.18.1', '6b0ff1eaa5010043895dd63d1e3c60c9')
-    version('0.15.2', 'd9822ad0238e17b382a3c756ea94fe0d')
-    version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
-    version('0.17.1', 'a2f8b877e6d99b1ed737144f5a478dfc')
-    version('0.13.1', 'acba398e1d46274b8470f40d0926e6a4')
+    version('0.19.1', sha256='5ca0ad32ee04abe0d4ba02c8d89d501b4e5e0304bdf4d45c2e9875a735b323a0')
+    version('0.18.1', sha256='1eddfc27bb37597a5d514de1299981758e660e0af56981c0bfdf462c9568a60c')
+    version('0.15.2', sha256='1a8a881f6f13edc0ac58931ce21f899eb7920af50aa08802413d1239e2aa5fa6')
+    version('0.16.1', sha256='c0721e295056c95c7002e05726f2bd271a7923e88bdeab34a2b60aac2b0ee6e4')
+    version('0.17.1', sha256='9f4cf58e57d81783289fc503caaed1f210bab49b7a6f680bf3c04b1e0a96e5f0')
+    version('0.13.1', sha256='a6e4759a779ba792435d096c882a0d66ee29d369755c09209f1a4e50877bdc94')
 
     variant('openmp', default=True, description='Build with OpenMP support')
 

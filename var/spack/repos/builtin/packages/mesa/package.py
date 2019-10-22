@@ -101,6 +101,9 @@ class Mesa(AutotoolsPackage):
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []
 
+        if spec.target.family == 'arm':
+            args.append('--disable-libunwind')
+
         num_frontends = 0
         if '+osmesa' in spec:
             num_frontends += 1

@@ -16,6 +16,7 @@ from spack.build_systems.waf import WafPackage
 from spack.build_systems.perl import PerlPackage
 from spack.build_systems.intel import IntelPackage
 from spack.build_systems.meson import MesonPackage
+from spack.build_systems.sip import SIPPackage
 
 description = 'stage and configure a package but do not install'
 section = "build"
@@ -30,6 +31,7 @@ build_system_to_phase = {
     PerlPackage: 'configure',
     IntelPackage: 'configure',
     MesonPackage: 'meson',
+    SIPPackage: 'configure',
 }
 
 

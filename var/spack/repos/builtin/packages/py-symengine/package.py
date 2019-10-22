@@ -14,7 +14,7 @@ class PySymengine(PythonPackage):
     git      = "https://github.com/symengine/symengine.py.git"
 
     version('develop', branch='master')
-    version('0.2.0', 'e1d114fa12be4c8c7e9f24007e07718c')
+    version('0.2.0', sha256='8f6468137baa7f799e047dd0b9149c4017d8d32e755f1e0329209680879c1f8f')
 
     # Build dependencies
     depends_on('python@2.7:2.8,3.3:')

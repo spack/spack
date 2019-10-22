@@ -148,7 +148,8 @@ Here's an example ``packages.yaml`` file that sets preferred packages:
      gperftools:
        version: [2.2, 2.4, 2.3]
      all:
-       compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
+       compiler: [gcc@4.4.7, 'gcc@4.6:', intel, clang, pgi]
+       target: [sandybridge]
        providers:
          mpi: [mvapich2, mpich, openmpi]
 
@@ -162,11 +163,11 @@ on the command line if explicitly requested.
 
 Each ``packages.yaml`` file begins with the string ``packages:`` and
 package names are specified on the next level. The special string ``all``
-applies settings to each package. Underneath each package name is
-one or more components: ``compiler``, ``variants``, ``version``,
-or ``providers``.  Each component has an ordered list of spec
-``constraints``, with earlier entries in the list being preferred over
-later entries.
+applies settings to *all* packages. Underneath each package name is one
+or more components: ``compiler``, ``variants``, ``version``,
+``providers``, and ``target``.  Each component has an ordered list of
+spec ``constraints``, with earlier entries in the list being preferred
+over later entries.
 
 Sometimes a package installation may have constraints that forbid
 the first concretization rule, in which case Spack will use the first

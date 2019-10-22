@@ -935,6 +935,11 @@ class IntelPackage(PackageBase):
                 'MPIF90': compiler_wrapper_commands['MPIF90'],
             })
 
+        # Ensure that the directory containing the compiler wrappers is in the
+        # PATH. Spack packages add `prefix.bin` to their dependents' paths,
+        # but because of the intel directory hierarchy that is insufficient.
+        spack_env.prepend_path('PATH', os.path.dirname(wrapper_vars['MPICC']))
+
         for key, value in wrapper_vars.items():
             spack_env.set(key, value)
 

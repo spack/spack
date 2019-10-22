@@ -9,9 +9,9 @@ from spack import *
 class RDesc(RPackage):
     """desc: Manipulate DESCRIPTION Files"""
 
-    homepage = "https://cran.r-project.org/package=desc"
-    url      = "https://cran.r-project.org/src/contrib/desc_1.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/desc/"
+    homepage = "https://cloud.r-project.org/package=desc"
+    url      = "https://cloud.r-project.org/src/contrib/desc_1.2.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/desc/"
 
     version('1.2.0', sha256='e66fb5d4fc7974bc558abcdc107a1f258c9177a29dcfcf9164bc6b33dd08dae8')
 

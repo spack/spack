@@ -40,6 +40,7 @@ on these ideas for each distinct build system that Spack supports:
    build_systems/cmakepackage
    build_systems/mesonpackage
    build_systems/qmakepackage
+   build_systems/sippackage
 
 .. toctree::
    :maxdepth: 1

@@ -18,7 +18,7 @@ class Root(CMakePackage):
 
     # Master branch
     version('master', git="https://github.com/root-project/root.git",
-        branch='master')
+            branch='master')
 
     # Development version (when more recent than production).
 
@@ -68,108 +68,108 @@ class Root(CMakePackage):
     # ###################### Variants ##########################
 
     variant('avahi', default=False,
-        description='Compile with avahi')
+            description='Compile with avahi')
     variant('aqua', default=False,
-        description='Enable Aqua interface')
+            description='Enable Aqua interface')
     # No need for a specific variant: libafterimage is not provided by spack
     # By default always true, we get the builtin included in the source
     # variant('asimage', default=True,
-    #    description='Enable image processing support')
+    #         description='Enable image processing support')
     variant('davix', default=True,
-        description='Compile with external Davix')
+            description='Compile with external Davix')
     variant('emacs', default=False,
-        description='Enable Emacs support')
+            description='Enable Emacs support')
     variant('examples', default=True,
-        description='Install examples')
+            description='Install examples')
     variant('fftw', default=False,
-        description='Enable Fast Fourier Transform support')
+            description='Enable Fast Fourier Transform support')
     variant('fits', default=False,
-        description='Enable support for images and data from FITS files')
+            description='Enable support for images and data from FITS files')
     variant('fortran', default=False,
-        description='Enable the Fortran components of ROOT')
+            description='Enable the Fortran components of ROOT')
     variant('graphviz', default=False,
-        description='Enable graphviz support')
+            description='Enable graphviz support')
     variant('gdml', default=True,
-        description='Enable GDML writer and reader')
+            description='Enable GDML writer and reader')
     variant('gminimal', default=True,
-        description='Ignore most of Root\'s feature defaults except for '
-        'basic graphic options')
+            description='Ignore most of Root\'s feature defaults except for '
+            'basic graphic options')
     variant('gsl', default=True,
-        description='Enable linking against shared libraries for GSL')
+            description='Enable linking against shared libraries for GSL')
     variant('http', default=False,
-        description='Enable HTTP server support')
+            description='Enable HTTP server support')
     variant('jemalloc', default=False,
-        description='Enable using the jemalloc allocator')
+            description='Enable using the jemalloc allocator')
     variant('kerberos', default=False,
-        description='Enable Kerberos support')
+            description='Enable Kerberos support')
     variant('ldap', default=False,
-        description='Enable LDAP support')
+            description='Enable LDAP support')
     variant('libcxx', default=False,
-        description='Build using libc++')
+            description='Build using libc++')
     variant('math', default=True,
-        description='Build the new libMathMore extended math library')
+            description='Build the new libMathMore extended math library')
     variant('memstat', default=False,
-        description='Enable a memory stats utility to detect memory leaks')
+            description='Enable a memory stats utility to detect memory leaks')
     # Minuit must not be installed as a dependency of root
     # otherwise it crashes with the internal minuit library
     variant('minuit', default=True,
-        description='Automatically search for support libraries')
+            description='Automatically search for support libraries')
     variant('mysql', default=False)
     variant('odbc', default=False,
-        description='Enable ODBC support')
+            description='Enable ODBC support')
     variant('opengl', default=True,
-        description='Enable OpenGL support')
+            description='Enable OpenGL support')
     # variant('oracle', default=False) - not supported by spack
     variant('postgres', default=False,
-        description='Enable postgres support')
+            description='Enable postgres support')
     variant('pythia6', default=False,
-        description='Enable pythia6 support')
+            description='Enable pythia6 support')
     # variant('pythia8', default=False, - not suported by spack
-    #    description='Enable pythia8 support')
+    #       description='Enable pythia8 support')
     variant('python', default=True,
-        description='Enable Python ROOT bindings')
+            description='Enable Python ROOT bindings')
     variant('qt4', default=False,
-        description='Enable Qt graphics backend')
+            description='Enable Qt graphics backend')
     variant('r', default=False,
-        description='Enable R ROOT bindings')
+            description='Enable R ROOT bindings')
     variant('rpath', default=True,
-        description='Enable RPATH')
+            description='Enable RPATH')
     variant('rootfit', default=True,
-        description='Build the libRooFit advanced fitting package')
+            description='Build the libRooFit advanced fitting package')
     variant('root7', default=False,
-        description='Enable ROOT 7 support')
+            description='Enable ROOT 7 support')
     variant('shadow', default=False,
-        description='Enable shadow password support')
+            description='Enable shadow password support')
     variant('sqlite', default=False,
-        description='Enable SQLite support')
+            description='Enable SQLite support')
     variant('ssl', default=False,
-        description='Enable SSL encryption support')
+            description='Enable SSL encryption support')
     variant('table', default=False,
-        description='Build libTable contrib library')
+            description='Build libTable contrib library')
     variant('tbb', default=True,
-        description='TBB multi-threading support')
+            description='TBB multi-threading support')
     variant('test', default=False,
-        description='Enable test suit of ROOT with CTest')
+            description='Enable test suit of ROOT with CTest')
     variant('threads', default=True,
-        description='Enable using thread library')
+            description='Enable using thread library')
     variant('tiff', default=True,
-        description='Include Tiff support in image processing')
+            description='Include Tiff support in image processing')
     variant('tmva', default=True,
-        description='Build TMVA multi variate analysis library')
+            description='Build TMVA multi variate analysis library')
     variant('unuran', default=True,
-        description='Use UNURAN for random number generation')
+            description='Use UNURAN for random number generation')
     variant('vc', default=False,
-        description='Enable Vc for adding new types for SIMD programming')
+            description='Enable Vc for adding new types for SIMD programming')
     variant('vdt', default=True,
-        description='Enable set of fast and vectorisable math functions')
+            description='Enable set of fast and vectorisable math functions')
     variant('x', default=True,
-        description='Enable set of graphical options')
+            description='Enable set of graphical options')
     # variant('xinetd', default=False,  - not supported by spack
-    #    description='Enable a daemon process manager')
+    #       description='Enable a daemon process manager')
     variant('xml', default=True,
-        description='Enable XML parser interface')
+            description='Enable XML parser interface')
     variant('xrootd', default=False,
-        description='Build xrootd file server and its client')
+            description='Build xrootd file server and its client')
 
     # ###################### Compiler variants ########################
 
@@ -444,7 +444,7 @@ class Root(CMakePackage):
             '-Dvc:BOOL=%s' % (
                 'ON' if '+vc' in spec else 'OFF'),
             '-Dveccore:BOOL=%s' % (
-                 'ON' if '+veccore' in spec else 'OFF'),  # not supported
+                'ON' if '+veccore' in spec else 'OFF'),  # not supported
             '-Dvdt:BOOL=%s' % (
                 'ON' if '+vdt' in spec else 'OFF'),
             '-Dxml:BOOL=%s' % (

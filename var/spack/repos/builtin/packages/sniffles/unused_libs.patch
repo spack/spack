@@ -1,0 +1,41 @@
+--- spack-src.org/CMakeLists.txt	2017-11-14 04:24:46.000000000 +0900
++++ spack-src/CMakeLists.txt	2019-10-08 09:10:10.409449275 +0900
+@@ -29,8 +29,4 @@
+     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+ endif()
+ 
+-
+-add_subdirectory(lib/zlib-1.2.7)
+-add_subdirectory(lib/bamtools-2.3.0)
+-
+ add_subdirectory(src)
+--- spack-src.org/src/CMakeLists.txt	2017-11-14 04:24:46.000000000 +0900
++++ spack-src/src/CMakeLists.txt	2019-10-08 09:21:52.569644934 +0900
+@@ -1,7 +1,6 @@
+ cmake_minimum_required(VERSION 2.8)
+ project(Sniffles)
+ 
+-include_directories (../lib/bamtools-2.3.0/src)
+ include_directories(../lib/tclap-1.2.1/include)
+ 
+ configure_file( Version.h.in ${CMAKE_SOURCE_DIR}/src/Version.h )
+@@ -32,8 +31,8 @@
+ 					)										
+ 					
+ #target_link_libraries(ngm-core pthread)	
+-TARGET_LINK_LIBRARIES(sniffles BamTools-static)
+-TARGET_LINK_LIBRARIES(sniffles zlibstatic)
++TARGET_LINK_LIBRARIES(sniffles bamtools)
++TARGET_LINK_LIBRARIES(sniffles z)
+ 	
+ add_executable(sniffles-debug 	
+                     tree/Breakpoint_Tree.cpp
+@@ -63,6 +62,6 @@
+ SET_TARGET_PROPERTIES(sniffles-debug PROPERTIES COMPILE_FLAGS "-g3 -O0")
+ 
+ #target_link_libraries(sniffles-debug pthread)
+-TARGET_LINK_LIBRARIES(sniffles-debug BamTools-static)
+-TARGET_LINK_LIBRARIES(sniffles-debug zlibstatic)
++TARGET_LINK_LIBRARIES(sniffles-debug bamtools)
++TARGET_LINK_LIBRARIES(sniffles-debug z)
+ 

@@ -27,15 +27,14 @@ def interface():
 def implementation(interface):
     """Returns an implementation of the interface"""
     class Implementation(interface):
+        def __init__(self, value):
+            self.value = value
 
-            def __init__(self, value):
-                self.value = value
+        def add(self):
+            interface.counter += self.value
 
-            def add(self):
-                interface.counter += self.value
-
-            def subtract(self):
-                interface.counter -= self.value
+        def subtract(self):
+            interface.counter -= self.value
 
     return Implementation
 

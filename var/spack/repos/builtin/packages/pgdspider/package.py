@@ -14,7 +14,7 @@ class Pgdspider(Package):
     homepage = "http://www.cmpg.unibe.ch/software/PGDSpider"
     url      = "http://www.cmpg.unibe.ch/software/PGDSpider/PGDSpider_2.1.1.2.zip"
 
-    version('2.1.1.2', '170e5b4a002277ff66866486da920693')
+    version('2.1.1.2', sha256='a630ef9f3ef0c36be0d613867c5293378d77b52396ac701bc7b9ec5d3ba7f2e1')
 
     depends_on('java', type=('build', 'run'))
     depends_on('bcftools')

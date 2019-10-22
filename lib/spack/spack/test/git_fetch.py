@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import copy
 import os
 import shutil
 
@@ -26,7 +27,8 @@ pytestmark = pytest.mark.skipif(
 _mock_transport_error = 'Mock HTTP transport error'
 
 
-@pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1', '1.7.10', '1.7.0'])
+@pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1',
+                        '1.7.10', '1.7.1', '1.7.0'])
 def git_version(request, monkeypatch):
     """Tests GitFetchStrategy behavior for different git versions.
 
@@ -39,7 +41,8 @@ def git_version(request, monkeypatch):
     real_git_version = ver(git('--version', output=str).lstrip('git version '))
 
     if request.param is None:
-        yield    # don't patch; run with the real git_version method.
+        # Don't patch; run with the real git_version method.
+        yield real_git_version
     else:
         test_git_version = ver(request.param)
         if test_git_version > real_git_version:
@@ -48,8 +51,8 @@ def git_version(request, monkeypatch):
         # Patch the fetch strategy to think it's using a lower git version.
         # we use this to test what we'd need to do with older git versions
         # using a newer git installation.
-        monkeypatch.setattr(GitFetchStrategy, 'git_version', ver('1.7.1'))
-        yield
+        monkeypatch.setattr(GitFetchStrategy, 'git_version', test_git_version)
+        yield test_git_version
 
 
 @pytest.fixture
@@ -169,3 +172,48 @@ def test_needs_stage():
                        matches=_mock_transport_error):
         fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
         fetcher.fetch()
+
+
+@pytest.mark.parametrize("get_full_repo", [True, False])
+def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
+                       config, mutable_mock_packages):
+    """Ensure that we can clone a full repository."""
+
+    if git_version < ver('1.7.1'):
+        pytest.skip('Not testing get_full_repo for older git {0}'.
+                    format(git_version))
+
+    secure = True
+    type_of_test = 'tag-branch'
+
+    t = mock_git_repository.checks[type_of_test]
+
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    args = copy.copy(t.args)
+    args['get_full_repo'] = get_full_repo
+    pkg.versions[ver('git')] = args
+
+    with pkg.stage:
+        with spack.config.override('config:verify_ssl', secure):
+            pkg.do_stage()
+            with working_dir(pkg.stage.source_path):
+                branches\
+                    = mock_git_repository.git_exe('branch', '-a',
+                                                  output=str).splitlines()
+                nbranches = len(branches)
+                commits\
+                    = mock_git_repository.\
+                    git_exe('log', '--graph',
+                            '--pretty=format:%h -%d %s (%ci) <%an>',
+                            '--abbrev-commit',
+                            output=str).splitlines()
+                ncommits = len(commits)
+
+        if get_full_repo:
+            assert(nbranches == 5)
+            assert(ncommits == 2)
+        else:
+            assert(nbranches == 2)
+            assert(ncommits == 1)

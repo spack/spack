@@ -16,9 +16,9 @@ class FluxSched(AutotoolsPackage):
 
     version('master', branch='master')
     version('0.7.0', sha256='69267a3aaacaedd9896fd90cfe17aef266cba4fb28c77f8123d95a31ce739a7b')
-    version('0.6.0', '8aad185949038c7fb6b277e6a8282947917084ebbec5c5bf0ee3a81a0dcdbe41ba18b1df837c669ae7b48ca5f1e492a5172bffa6b9feb4dda1c6a7a85abed4e8')
-    version('0.5.0', 'a9835c9c478aa41123a4e12672500052228aaf1ea770f74cb0901dbf4a049bd7d329e99d8d3484e39cfed1f911705030b2775dcfede39bc8bea59c6afe2549b1')
-    version('0.4.0', '82732641ac4594ffe9b94ca442a99e92bf5f91bc14745af92203a887a40610dd44edda3ae07f9b6c8d63799b2968d87c8da28f1488edef1310d0d12be9bd6319')
+    version('0.6.0', sha256='3301d4c10810414228e5969b84b75fe1285abb97453070eb5a77f386d8184f8d')
+    version('0.5.0', sha256='d6347f5c85c12c76364dccb39d63c007094ca9cbbbae4e8f4e98d8b1c0b07e89')
+    version('0.4.0', sha256='00768a0b062aec42aa9b31d9d7006efd3a3e9cb9c24878d50487643c8af15e8a')
 
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543

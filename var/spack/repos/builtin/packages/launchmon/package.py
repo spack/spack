@@ -14,7 +14,7 @@ class Launchmon(AutotoolsPackage):
     git      = "https://github.com/llnl/launchmon.git"
 
     version('master', branch='master')
-    version('1.0.2', '8d6ba77a0ec2eff2fde2c5cc8fa7ff7a')
+    version('1.0.2', sha256='1d301ccccfe0873efcd66da87ed5e4d7bafc560b00aee396d8a9365f53b3a33a')
 
     depends_on('autoconf', type='build', when='@master')
     depends_on('automake', type='build', when='@master')
@@ -25,6 +25,8 @@ class Launchmon(AutotoolsPackage):
     depends_on("elf", type='link')
     depends_on("boost")
     depends_on("spectrum-mpi", when='arch=ppc64le')
+
+    patch('launchmon-char-conv.patch', when='@1.0.2')
 
     def setup_environment(self, spack_env, run_env):
         if self.spec.satisfies('@master'):

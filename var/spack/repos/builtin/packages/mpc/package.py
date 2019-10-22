@@ -15,9 +15,9 @@ class Mpc(AutotoolsPackage):
     url      = "https://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz"
     list_url = "http://www.multiprecision.org/mpc/download.html"
 
-    version('1.1.0', '4125404e41e482ec68282a2e687f6c73')
-    version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
-    version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
+    version('1.1.0', sha256='6985c538143c1208dcb1ac42cedad6ff52e267b47e5f970183a3e75125b43c2e')
+    version('1.0.3', sha256='617decc6ea09889fb08ede330917a00b16809b8db88c29c31bfbb49cbf88ecc3')
+    version('1.0.2', sha256='b561f54d8a479cee3bc891ee52735f18ff86712ba30f036f8b8537bae380c488')
 
     # Could also be built against mpir instead
     depends_on('gmp@4.3.2:')

@@ -16,7 +16,7 @@ class Xsd(MakefilePackage):
     homepage = "https://www.codesynthesis.com"
     url      = "https://www.codesynthesis.com/download/xsd/4.0/xsd-4.0.0+dep.tar.bz2"
 
-    version('4.0.0', 'ad3de699eb140e747a0a214462d95fc81a21b494')
+    version('4.0.0', sha256='eca52a9c8f52cdbe2ae4e364e4a909503493a0d51ea388fc6c9734565a859817')
 
     depends_on('xerces-c')
     depends_on('libtool', type='build')

@@ -20,6 +20,15 @@ class Masurca(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('boost')
     depends_on('zlib')
+    patch('arm.patch', when='target=aarch64:')
+
+    def patch(self):
+        if self.spec.target.family == 'aarch64':
+            for makefile in 'Makefile.am', 'Makefile.in':
+                m = join_path('global-1', 'prepare', makefile)
+                filter_file('-minline-all-stringops', '', m)
+                m = join_path('global-1', makefile)
+                filter_file('-minline-all-stringops', '', m)
 
     def install(self, spec, prefix):
         installer = Executable('./install.sh')

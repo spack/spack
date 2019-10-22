@@ -13,7 +13,7 @@ class PyMacs2(PythonPackage):
     homepage = "https://github.com/taoliu/MACS"
     url      = "https://pypi.io/packages/source/M/MACS2/MACS2-2.1.1.20160309.tar.gz"
 
-    version('2.1.1.20160309', '2008ba838f83f34f8e0fddefe2a3a0159f4a740707c68058f815b31ddad53d26')
+    version('2.1.1.20160309', sha256='2008ba838f83f34f8e0fddefe2a3a0159f4a740707c68058f815b31ddad53d26')
 
     depends_on('python@2.7:2.8')
 

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import os
 import re
 import sys
@@ -19,6 +20,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
+import spack.concretize
 import spack.error
 import spack.hash_types as ht
 import spack.repo
@@ -514,6 +516,9 @@ class Environment(object):
                 path to the view.
         """
         self.path = os.path.abspath(path)
+        # This attribute will be set properly from configuration
+        # during concretization
+        self.concretization = None
         self.clear()
 
         if init_file:
@@ -591,6 +596,9 @@ class Environment(object):
                               for name, values in enable_view.items())
         else:
             self.views = {}
+        # Retrieve the current concretization strategy
+        configuration = config_dict(self.yaml)
+        self.concretization = configuration.get('concretization')
 
     @property
     def user_specs(self):
@@ -822,7 +830,7 @@ class Environment(object):
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
 
-    def concretize(self, force=False, _display=True):
+    def concretize(self, force=False):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -834,6 +842,10 @@ class Environment(object):
         Arguments:
             force (bool): re-concretize ALL specs, even those that were
                already concretized
+
+        Returns:
+            List of specs that have been concretized. Each entry is a tuple of
+            the user spec and the corresponding concretized spec.
         """
         if force:
             # Clear previously concretized specs
@@ -841,6 +853,59 @@ class Environment(object):
             self.concretized_order = []
             self.specs_by_hash = {}
 
+        # Pick the right concretization strategy
+        if self.concretization == 'together':
+            return self._concretize_together()
+        if self.concretization == 'separately':
+            return self._concretize_separately()
+
+        msg = 'concretization strategy not implemented [{0}]'
+        raise SpackEnvironmentError(msg.format(self.concretization))
+
+    def _concretize_together(self):
+        """Concretization strategy that concretizes all the specs
+        in the same DAG.
+        """
+        # Exit early if the set of concretized specs is the set of user specs
+        user_specs_did_not_change = not bool(
+            set(self.user_specs) - set(self.concretized_user_specs)
+        )
+        if user_specs_did_not_change:
+            return []
+
+        # Check that user specs don't have duplicate packages
+        counter = collections.defaultdict(int)
+        for user_spec in self.user_specs:
+            counter[user_spec.name] += 1
+
+        duplicates = []
+        for name, count in counter.items():
+            if count > 1:
+                duplicates.append(name)
+
+        if duplicates:
+            msg = ('environment that are configured to concretize specs'
+                   ' together cannot contain more than one spec for each'
+                   ' package [{0}]'.format(', '.join(duplicates)))
+            raise SpackEnvironmentError(msg)
+
+        # Proceed with concretization
+        self.concretized_user_specs = []
+        self.concretized_order = []
+        self.specs_by_hash = {}
+
+        concrete_specs = spack.concretize.concretize_specs_together(
+            *self.user_specs
+        )
+        concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
+        for abstract, concrete in concretized_specs:
+            self._add_concrete_spec(abstract, concrete)
+        return concretized_specs
+
+    def _concretize_separately(self):
+        """Concretization strategy that concretizes separately one
+        user spec after the other.
+        """
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
@@ -855,21 +920,15 @@ class Environment(object):
                 concrete = old_specs_by_hash[h]
                 self._add_concrete_spec(s, concrete, new=False)
 
-        # concretize any new user specs that we haven't concretized yet
+        # Concretize any new user specs that we haven't concretized yet
+        concretized_specs = []
         for uspec, uspec_constraints in zip(
                 self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
-                tty.msg('Concretizing %s' % uspec)
                 concrete = _concretize_from_constraints(uspec_constraints)
                 self._add_concrete_spec(uspec, concrete)
-
-                if _display:
-                    # Display concretized spec to the user
-                    sys.stdout.write(concrete.tree(
-                        recurse_dependencies=True,
-                        status_fn=spack.spec.Spec.install_status,
-                        hashlen=7, hashes=True)
-                    )
+                concretized_specs.append((uspec, concrete))
+        return concretized_specs
 
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
@@ -877,6 +936,13 @@ class Environment(object):
         This will automatically concretize the single spec, but it won't
         affect other as-yet unconcretized specs.
         """
+        if self.concretization == 'together':
+            msg = 'cannot install a single spec in an environment that is ' \
+                  'configured to be concretized together. Run instead:\n\n' \
+                  '    $ spack add <spec>\n' \
+                  '    $ spack install\n'
+            raise SpackEnvironmentError(msg)
+
         spec = Spec(user_spec)
 
         if self.add(spec):
@@ -951,15 +1017,15 @@ class Environment(object):
             ('LD_LIBRARY_PATH', ['lib', 'lib64']),
             ('LIBRARY_PATH', ['lib', 'lib64']),
             ('CPATH', ['include']),
-            ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig']),
+            ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig',
+                                 'share/pkgconfig']),
             ('CMAKE_PREFIX_PATH', ['']),
         ]
+
         path_updates = list()
         if default_view_name in self.views:
-            for var, subdirs in updates:
-                paths = filter(lambda x: os.path.exists(x),
-                               list(os.path.join(self.default_view.root, x)
-                                    for x in subdirs))
+            for var, dirs in updates:
+                paths = [os.path.join(self.default_view.root, x) for x in dirs]
                 path_updates.append((var, paths))
         return path_updates
 
@@ -1237,9 +1303,11 @@ class Environment(object):
             # Remove any specs in yaml that are not in internal representation
             for ayl in active_yaml_lists:
                 # If it's not a string, it's a matrix. Those can't have changed
+                # If it is a string that starts with '$', it's a reference.
+                # Those also can't have changed.
                 ayl[name][:] = [s for s in ayl.setdefault(name, [])
-                                if not isinstance(s, six.string_types) or
-                                Spec(s) in speclist.specs]
+                                if (not isinstance(s, six.string_types)) or
+                                s.startswith('$') or Spec(s) in speclist.specs]
 
             # Put the new specs into the first active list from the yaml
             new_specs = [entry for entry in speclist.yaml_list
@@ -1292,12 +1360,31 @@ class Environment(object):
     def __enter__(self):
         self._previous_active = _active_environment
         activate(self)
-        return
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def display_specs(concretized_specs):
+    """Displays the list of specs returned by `Environment.concretize()`.
+
+    Args:
+        concretized_specs (list): list of specs returned by
+            `Environment.concretize()`
+    """
+    def _tree_to_display(spec):
+        return spec.tree(
+            recurse_dependencies=True,
+            status_fn=spack.spec.Spec.install_status,
+            hashlen=7, hashes=True)
+
+    for user_spec, concrete_spec in concretized_specs:
+        tty.msg('Concretized {0}'.format(user_spec))
+        sys.stdout.write(_tree_to_display(concrete_spec))
+        print('')
 
 
 def _concretize_from_constraints(spec_constraints):
@@ -1321,25 +1408,21 @@ def _concretize_from_constraints(spec_constraints):
         try:
             return s.concretized()
         except spack.spec.InvalidDependencyError as e:
-            dep_index = e.message.index('depend on ') + len('depend on ')
-            invalid_msg = e.message[dep_index:]
-            invalid_deps_string = ['^' + d.strip(',')
-                                   for d in invalid_msg.split()
-                                   if d != 'or']
+            invalid_deps_string = ['^' + d for d in e.invalid_deps]
             invalid_deps = [c for c in spec_constraints
-                            if any(c.satisfies(invd)
+                            if any(c.satisfies(invd, strict=True)
                                    for invd in invalid_deps_string)]
             if len(invalid_deps) != len(invalid_deps_string):
                 raise e
             invalid_constraints.extend(invalid_deps)
         except UnknownVariantError as e:
-            invalid_variants = re.findall(r"'(\w+)'", e.message)
-            invalid_deps = [c for c in spec_constraints
-                            if any(name in c.variants
-                                   for name in invalid_variants)]
-            if len(invalid_deps) != len(invalid_variants):
+            invalid_variants = e.unknown_variants
+            inv_variant_constraints = [c for c in spec_constraints
+                                       if any(name in c.variants
+                                              for name in invalid_variants)]
+            if len(inv_variant_constraints) != len(invalid_variants):
                 raise e
-            invalid_constraints.extend(invalid_deps)
+            invalid_constraints.extend(inv_variant_constraints)
 
 
 def make_repo_path(root):

@@ -10,8 +10,8 @@ class RGrbase(RPackage):
     """gRbase: A Package for Graphical Modelling in R"""
 
     homepage = "http://people.math.aau.dk/~sorenh/software/gR/"
-    url      = "https://cran.r-project.org/src/contrib/gRbase_1.8-3.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gRbase"
+    url      = "https://cloud.r-project.org/src/contrib/gRbase_1.8-3.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gRbase"
 
     version('1.8-3.4', sha256='d35f94c2fb7cbd4ce3991570424dfe6723a849658da32e13df29f53b6ea2cc2c')
 

@@ -87,8 +87,9 @@ class AutotoolsPackage(PackageBase):
         config.guess fails for PPC64LE for version prior to a 2013-06-10
         build date (automake 1.13.4) and for ARM (aarch64)."""
 
-        if not self.patch_config_guess or (not self.spec.satisfies(
-                'target=ppc64le') and not self.spec.satisfies('target=aarch64')
+        if not self.patch_config_guess or (
+                not self.spec.satisfies('target=ppc64le:') and
+                not self.spec.satisfies('target=aarch64:')
         ):
             return
         my_config_guess = None
@@ -191,10 +192,6 @@ class AutotoolsPackage(PackageBase):
         tty.warn('*********************************************************')
         with working_dir(self.configure_directory):
             m = inspect.getmodule(self)
-            # This part should be redundant in principle, but
-            # won't hurt
-            m.libtoolize()
-            m.aclocal()
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']

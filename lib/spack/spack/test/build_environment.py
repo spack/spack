@@ -42,13 +42,21 @@ def build_environment(working_env):
     os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
-
     os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
+    os.environ['SPACK_TARGET_ARGS'] = ''
 
     if 'SPACK_DEPENDENCIES' in os.environ:
         del os.environ['SPACK_DEPENDENCIES']
 
     yield {'cc': cc, 'cxx': cxx, 'fc': fc}
+
+    for name in ('SPACK_CC', 'SPACK_CXX', 'SPACK_FC', 'SPACK_PREFIX',
+                 'SPACK_ENV_PATH', 'SPACK_DEBUG_LOG_DIR',
+                 'SPACK_COMPILER_SPEC', 'SPACK_SHORT_SPEC',
+                 'SPACK_CC_RPATH_ARG', 'SPACK_CXX_RPATH_ARG',
+                 'SPACK_F77_RPATH_ARG', 'SPACK_FC_RPATH_ARG',
+                 'SPACK_TARGET_ARGS'):
+        del os.environ[name]
 
 
 def test_static_to_shared_library(build_environment):

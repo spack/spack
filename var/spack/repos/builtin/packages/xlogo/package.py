@@ -12,7 +12,7 @@ class Xlogo(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xlogo"
     url      = "https://www.x.org/archive/individual/app/xlogo-1.0.4.tar.gz"
 
-    version('1.0.4', '4c4f82c196a55a90800a77906f4353fb')
+    version('1.0.4', sha256='0072eb3b41af77d5edfafb12998c7dd875f2795dc94735a998fd2ed8fc246e57')
 
     depends_on('libsm')
     depends_on('libxaw')

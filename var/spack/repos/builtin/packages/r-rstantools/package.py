@@ -10,7 +10,9 @@ class RRstantools(RPackage):
     """rstantools: Tools for Developing R Packages Interfacing with 'Stan'"""
 
     homepage = "http://discourse.mc-stan.org/"
-    url      = "https://cran.r-project.org/src/contrib/rstantools_1.5.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstantools"
+    url      = "https://cloud.r-project.org/src/contrib/rstantools_1.5.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rstantools"
 
     version('1.5.1', sha256='5cab16c132c12e84bd08e18cd6ef25ba39d67a04ce61015fc4490659c7cfb485')
+
+    depends_on('pandoc', type='build')
