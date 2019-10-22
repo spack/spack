@@ -572,6 +572,9 @@ class Python(AutotoolsPackage):
         pythonpath = ':'.join(python_paths)
         spack_env.set('PYTHONPATH', pythonpath)
 
+        if self.spec.satisfies('%intel'):
+            spack_env.set('LDSHARED', '%s -shared' % spack_cc)
+
         # For run time environment set path for all dependent_spec
         # recursively and prepend it to PYTHONPATH
         python_paths = set()

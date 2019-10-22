@@ -30,7 +30,7 @@ modules:
       - hdf5+mpi
       - highfive+mpi
       - petsc
-      - py-mpi4py
+      - py-mpi4py%gcc
       - trilinos
       - neuron~debug+mpi
       - omega-h

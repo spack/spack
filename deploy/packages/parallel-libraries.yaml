@@ -19,7 +19,6 @@ packages:
       - compiler
       - mpi
     specs:
-      - py-mpi4py@3.0.0
       - hdf5+mpi@1.10.4
       - highfive+mpi@2.0
       - ospray@1.7.3
@@ -88,3 +87,5 @@ packages:
     specs:
       - neuron@7.6.8
       - neuron+debug@7.6.8
+      - py-h5py@2.9.0
+      - py-mpi4py@3.0.0

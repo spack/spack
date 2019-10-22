@@ -33,6 +33,8 @@ modules:
       - highfive~mpi
       - neuron
       - python-dev
+      - py-h5py%gcc
+      - py-numpy%gcc
       - py-virtualenv
       - 'tensorflow@1.12.0'
     blacklist:
