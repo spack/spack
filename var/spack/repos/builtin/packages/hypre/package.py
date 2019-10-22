@@ -49,7 +49,7 @@ class Hypre(Package):
     variant('int64', default=False,
             description="Use 64bit integers")
     variant('mixedint', default=False,
-            description="Use 64bit integers while reducing the memory use of int64 option")
+            description="Use 64bit integers while reducing memory use")
     variant('complex', default=False, description='Use complex values')
     variant('mpi', default=True, description='Enable MPI support')
     variant('openmp', default=False, description='Enable OpenMP support')
