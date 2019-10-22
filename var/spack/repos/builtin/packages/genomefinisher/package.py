@@ -16,7 +16,7 @@ class Genomefinisher(Package):
     homepage = "http://gfinisher.sourceforge.net"
     url      = "https://sourceforge.net/projects/gfinisher/files/GenomeFinisher_1.4.zip"
 
-    version('1.4', 'bd9bbca656fe15ecbe615c4732714bc7')
+    version('1.4', sha256='8efbebaab4b577c72193f14c2c362b96fb949981fd66d2cca1364839af8bf1e3')
 
     depends_on('java@8:', type='run')
 

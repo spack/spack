@@ -44,8 +44,7 @@ class Openspeedshop(CMakePackage):
             description="build with cuda packages included.")
 
     variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
-            description='Build or not build a GUI of choice'
-    )
+            description='Build or not build a GUI of choice')
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
@@ -141,6 +140,7 @@ class Openspeedshop(CMakePackage):
     depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
+    patch('arm.patch', when='target=aarch64:')
     parallel = False
 
     build_directory = 'build_openspeedshop'

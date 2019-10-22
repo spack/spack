@@ -30,7 +30,7 @@ class MofemUsersModules(CMakePackage):
     maintainers = ['likask']
 
     variant('copy_user_modules', default=True,
-        description='Copy user modules directory instead linking')
+            description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
     depends_on('mofem-cephas@0.8.17', when='@0.8.17')

@@ -10,8 +10,8 @@ class RQtl(RPackage):
     """qtl: Tools for Analyzing QTL Experiments"""
 
     homepage = "http://rqtl.org"
-    url      = "https://cran.r-project.org/src/contrib/qtl_1.44-9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/qtl"
+    url      = "https://cloud.r-project.org/src/contrib/qtl_1.44-9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/qtl"
 
     version('1.44-9', sha256='315063f0c3fbb95cd2169eb4109ade0339e8f3c28670b38c3167214b9bdf950e')
 

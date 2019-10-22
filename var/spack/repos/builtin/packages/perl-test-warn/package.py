@@ -12,4 +12,4 @@ class PerlTestWarn(PerlPackage):
     homepage = "http://search.cpan.org/~chorny/Test-Warn-0.30/Warn.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/Test-Warn-0.30.tar.gz"
 
-    version('0.30', '8306b998a96d2cc69266b5248d550472')
+    version('0.30', sha256='8197555b94189d919349a03f7058f83861f145af9bee59f505bfe47562144e41')

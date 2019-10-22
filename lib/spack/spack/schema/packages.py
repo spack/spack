@@ -28,6 +28,12 @@ properties = {
                         # version strings
                         'items': {'anyOf': [{'type': 'string'},
                                             {'type': 'number'}]}},
+                    'target': {
+                        'type': 'array',
+                        'default': [],
+                        # target names
+                        'items': {'type': 'string'},
+                    },
                     'compiler': {
                         'type': 'array',
                         'default': [],

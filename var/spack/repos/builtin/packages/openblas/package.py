@@ -13,8 +13,8 @@ import spack.architecture
 class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
-    homepage = 'http://www.openblas.net'
-    url      = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
+    homepage = 'https://www.openblas.net'
+    url      = 'https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
@@ -25,13 +25,13 @@ class Openblas(MakefilePackage):
     version('0.3.3', sha256='49d88f4494ae780e3d7fa51769c00d982d7cdb73e696054ac3baa81d42f13bab')
     version('0.3.2', sha256='e8ba64f6b103c511ae13736100347deb7121ba9b41ba82052b1a018a65c0cb15')
     version('0.3.1', sha256='1f5e956f35f3acdd3c74516e955d797a320c2e0135e31d838cbdb3ea94d0eb33')
-    version('0.3.0',  '42cde2c1059a8a12227f1e6551c8dbd2')
-    version('0.2.20', '48637eb29f5b492b91459175dcc574b1')
-    version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
-    version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
-    version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
-    version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
-    version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
+    version('0.3.0',  sha256='cf51543709abe364d8ecfb5c09a2b533d2b725ea1a66f203509b21a8e9d8f1a1')
+    version('0.2.20', sha256='5ef38b15d9c652985774869efd548b8e3e972e1e99475c673b25537ed7bcf394')
+    version('0.2.19', sha256='9c40b5e4970f27c5f6911cb0a28aa26b6c83f17418b69f8e5a116bb983ca8557')
+    version('0.2.18', sha256='7d9f8d4ea4a65ab68088f3bb557f03a7ac9cb5036ef2ba30546c3a28774a4112')
+    version('0.2.17', sha256='0fe836dfee219ff4cadcc3567fb2223d9e0da5f60c7382711fb9e2c35ecf0dbf')
+    version('0.2.16', sha256='766f350d0a4be614812d535cead8c816fc3ad3b9afcd93167ea5e4df9d61869b')
+    version('0.2.15', sha256='73c40ace5978282224e5e122a41c8388c5a19e65a6f2329c2b7c0b61bacc9044')
 
     variant(
         'shared',
@@ -86,7 +86,7 @@ class Openblas(MakefilePackage):
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
-    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=ppc64')
+    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=power8')
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
@@ -109,6 +109,9 @@ class Openblas(MakefilePackage):
     patch('https://github.com/xianyi/OpenBLAS/commit/79ea839b635d1fd84b6ce8a47e086f01d64198e6.patch',
           sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
           when='@0.3.0:0.3.3')
+
+    # Add conditions to f_check to determine the Fujitsu compiler
+    patch('openblas_fujitsu.patch', when='%fj')
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
 
@@ -198,7 +201,7 @@ class Openblas(MakefilePackage):
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
 
-        if 'x86' in self.spec.architecture.target.lower():
+        if self.spec.target.family == 'x86_64':
             if '~avx2' in self.spec:
                 make_defs += ['NO_AVX2=1']
             if '~avx512' in self.spec:

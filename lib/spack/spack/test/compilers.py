@@ -70,7 +70,7 @@ def test_multiple_conflicting_compiler_definitions(mutable_config):
     compiler_config[0]['compiler']['paths']['f77'] = 'f77'
     mutable_config.update_config('compilers', compiler_config)
 
-    arch_spec = spack.spec.ArchSpec('test', 'test', 'test')
+    arch_spec = spack.spec.ArchSpec(('test', 'test', 'test'))
     cspec = compiler_config[0]['compiler']['spec']
     cmp = compilers.compiler_for_spec(cspec, arch_spec)
     assert cmp.f77 == 'f77'
@@ -169,6 +169,24 @@ class MockCompiler(Compiler):
     @property
     def version(self):
         return "1.0.0"
+
+    required_libs = ['libgfortran']
+
+
+def test_implicit_rpaths(dirs_with_libfiles, monkeypatch):
+    lib_to_dirs, all_dirs = dirs_with_libfiles
+
+    def try_all_dirs(*args):
+        return all_dirs
+
+    monkeypatch.setattr(MockCompiler, '_get_compiler_link_paths', try_all_dirs)
+
+    expected_rpaths = set(lib_to_dirs['libstdc++'] +
+                          lib_to_dirs['libgfortran'])
+
+    compiler = MockCompiler()
+    retrieved_rpaths = compiler.implicit_rpaths()
+    assert set(retrieved_rpaths) == expected_rpaths
 
 
 # Get the desired flag from the specified compiler spec.
@@ -303,12 +321,19 @@ def test_fj_flags():
     supported_flag_test("cxx98_flag", "-std=c++98", "fj@4.0.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "fj@4.0.0")
     supported_flag_test("cxx14_flag", "-std=c++14", "fj@4.0.0")
+    supported_flag_test("c99_flag", "-std=c99", "fj@4.0.0")
+    supported_flag_test("c11_flag", "-std=c11", "fj@4.0.0")
     supported_flag_test("pic_flag", "-KPIC", "fj@4.0.0")
 
 
 @pytest.mark.regression('10191')
 @pytest.mark.parametrize('version_str,expected_version', [
     # macOS clang
+    ('Apple clang version 11.0.0 (clang-1100.0.33.8)\n'
+     'Target: x86_64-apple-darwin18.7.0\n'
+     'Thread model: posix\n'
+     'InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n',  # noqa
+     '11.0.0-apple'),
     ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
      'Target: x86_64-apple-darwin15.2.0\n'
      'Thread model: posix\n', '7.0.2-apple'),
@@ -320,6 +345,10 @@ def test_fj_flags():
     ('clang version 3.1 (trunk 149096)\n'
      'Target: x86_64-unknown-linux-gnu\n'
      'Thread model: posix\n', '3.1'),
+    ('clang version 8.0.0-3~ubuntu18.04.1 (tags/RELEASE_800/final)\n'
+     'Target: x86_64-pc-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '8.0.0')
 ])
 def test_clang_version_detection(version_str, expected_version):
     version = compilers.clang.Clang.extract_version_from_output(version_str)
@@ -440,3 +469,11 @@ def test_cce_version_detection(version_str, expected_version):
 def test_fj_version_detection(version_str, expected_version):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
     assert version == expected_version
+
+
+@pytest.mark.parametrize('compiler_spec,expected_result', [
+    ('gcc@4.7.2', False), ('clang@3.3', False), ('clang@8.0.0', True)
+])
+def test_detecting_mixed_toolchains(compiler_spec, expected_result, config):
+    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
+    assert spack.compilers.is_mixed_toolchain(compiler) is expected_result

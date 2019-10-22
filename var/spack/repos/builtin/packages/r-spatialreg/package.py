@@ -9,9 +9,9 @@ from spack import *
 class RSpatialreg(RPackage):
     """spatialreg: Spatial Regression Analysis"""
 
-    homepage = "https://cran.r-project.org/package=spatialreg"
-    url      = "https://cran.r-project.org/src/contrib/spatialreg_1.1-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/spatialreg"
+    homepage = "https://cloud.r-project.org/package=spatialreg"
+    url      = "https://cloud.r-project.org/src/contrib/spatialreg_1.1-3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/spatialreg"
 
     version('1.1-3', sha256='7609cdfcdfe427d2643a0db6b5360be3f6d60ede8229436ab52092d1c9cf0480')
 
@@ -26,3 +26,4 @@ class RSpatialreg(RPackage):
     depends_on('r-nlme', type=('build', 'run'))
     depends_on('r-spdata', type=('build', 'run'))
     depends_on('r-spdep', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))

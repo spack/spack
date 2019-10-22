@@ -13,6 +13,6 @@ class PyRanger(PythonPackage):
     homepage = "http://ranger.nongnu.org/"
     url      = "https://github.com/ranger/ranger/archive/v1.7.2.tar.gz"
 
-    version('1.7.2', '27805c3ab7ec4b129e1b93249506d925')
+    version('1.7.2', sha256='80917c93396e46272b6de63816d925eb708291a9f7a559d49b24c571ea0eeeb3')
 
     depends_on('python@2.6:')

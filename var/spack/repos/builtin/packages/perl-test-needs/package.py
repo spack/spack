@@ -12,4 +12,4 @@ class PerlTestNeeds(PerlPackage):
     homepage = "http://search.cpan.org/~haarg/Test-Needs-0.002005/lib/Test/Needs.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/H/HA/HAARG/Test-Needs-0.002005.tar.gz"
 
-    version('0.002005', '356634a56c99282e8059f290f5d534c8')
+    version('0.002005', sha256='5a4f33983586edacdbe00a3b429a9834190140190dab28d0f873c394eb7df399')

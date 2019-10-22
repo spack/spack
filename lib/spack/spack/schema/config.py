@@ -41,6 +41,13 @@ properties = {
                     'lmod': {'type': 'string'},
                     'dotkit': {'type': 'string'},
                 },
+                'deprecatedProperties': {
+                    'properties': ['dotkit'],
+                    'message': 'specifying a "{property}" module root has no '
+                               'effect [support for {property} module files'
+                               ' has been dropped]',
+                    'error': False
+                },
             },
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},

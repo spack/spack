@@ -194,6 +194,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
         self.packages_dir        = 'repos'  # archive of package.py files
+        self.manifest_file_name  = 'install_manifest.json'
 
     @property
     def hidden_file_paths(self):
@@ -429,6 +430,11 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
 
     def _write_extensions(self, spec, extensions):
         path = self.extension_file_path(spec)
+
+        if not extensions:
+            # Remove the empty extensions file
+            os.remove(path)
+            return
 
         # Create a temp file in the same directory as the actual file.
         dirname, basename = os.path.split(path)

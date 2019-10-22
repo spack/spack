@@ -10,8 +10,8 @@ class RRrblup(RPackage):
     """rrBLUP: Ridge Regression and Other Kernels for Genomic Selection"""
 
     homepage = "http://potatobreeding.cals.wisc.edu/software"
-    url      = "https://cran.r-project.org/src/contrib/rrBLUP_4.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rrBLUP"
+    url      = "https://cloud.r-project.org/src/contrib/rrBLUP_4.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rrBLUP"
 
     version('4.6', sha256='28b475a1466fcdc1780caace75cf34155338fda496cebd5799315598a4bc84af')
 

@@ -15,6 +15,6 @@ class XapianCore(AutotoolsPackage):
     homepage = "https://xapian.org"
     url      = "http://oligarchy.co.uk/xapian/1.4.3/xapian-core-1.4.3.tar.xz"
 
-    version('1.4.3', '143f72693219f7fc5913815ed858f295')
+    version('1.4.3', sha256='7d5295511ca2de70463a29e75f6a2393df5dc1485bf33074b778c66e1721e475')
 
     depends_on('zlib')

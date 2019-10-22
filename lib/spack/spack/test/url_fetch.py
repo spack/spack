@@ -45,6 +45,11 @@ def test_urlfetchstrategy_bad_url(tmpdir):
 
 
 @pytest.mark.parametrize('secure', [True, False])
+@pytest.mark.parametrize('mock_archive',
+                         [('.tar.gz', 'z'), ('.tgz', 'z'),
+                          ('.tar.bz2', 'j'), ('.tbz2', 'j'),
+                          ('.tar.xz', 'J'), ('.txz', 'J')],
+                         indirect=True)
 def test_fetch(
         mock_archive,
         secure,

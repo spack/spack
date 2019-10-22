@@ -23,10 +23,6 @@ class Mpifileutils(Package):
     version('develop', branch='master')
     version('0.9.1', sha256='15a22450f86b15e7dc4730950b880fda3ef6f59ac82af0b268674d272aa61c69')
     version('0.9', sha256='1b8250af01aae91c985ca5d61521bfaa4564e46efa15cee65cd0f82cf5a2bcfb')
-    version('0.8.1', 'acbd5b5c15919a67392509614bb7871e')
-    version('0.8', '1082600e7ac4e6b2c13d91bbec40cffb')
-    version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
-    version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
 
     conflicts('platform=darwin')
 
@@ -43,17 +39,17 @@ class Mpifileutils(Package):
     depends_on('cmake@3.1:', when='@0.9:', type='build')
 
     variant('xattr', default=True,
-        description="Enable code for extended attributes")
+            description="Enable code for extended attributes")
 
     variant('lustre', default=False,
-        description="Enable optimizations and features for Lustre")
+            description="Enable optimizations and features for Lustre")
 
     variant('experimental', default=False,
-        description="Install experimental tools")
+            description="Install experimental tools")
     conflicts('+experimental', when='@:0.6')
 
     variant('gpfs', default=False,
-        description="Enable optimizations and features for GPFS")
+            description="Enable optimizations and features for GPFS")
     conflicts('+gpfs', when='@:0.8.1')
 
     def cmake_args(self):

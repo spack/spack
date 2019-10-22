@@ -10,8 +10,8 @@ class RIntervals(RPackage):
     """intervals: Tools for Working with Points and Intervals"""
 
     homepage = "http://github.com/edzer/intervals"
-    url      = "https://cran.r-project.org/src/contrib/intervals_0.15.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/intervals"
+    url      = "https://cloud.r-project.org/src/contrib/intervals_0.15.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/intervals"
 
     version('0.15.1', sha256='9a8b3854300f2055e1492c71932cc808b02feac8c4d3dbf6cba1c7dbd09f4ae4')
 

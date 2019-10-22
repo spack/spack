@@ -21,9 +21,7 @@ class Libgd(AutotoolsPackage):
     homepage = "https://github.com/libgd/libgd"
     url      = 'https://github.com/libgd/libgd/releases/download/gd-2.2.4/libgd-2.2.4.tar.gz'
 
-    version('2.2.4', '0a3c307b5075edbe1883543dd1153c02')
-    version('2.2.3', 'a67bd15fa33d4aac0a1c7904aed19f49')
-    version('2.1.1', 'e91a1a99903e460e7ba00a794e72cc1e')
+    version('2.2.4', sha256='487a650aa614217ed08ab1bd1aa5d282f9d379cfd95c756aed0b43406381be65')
 
     # Build dependencies
     depends_on('autoconf', type='build')

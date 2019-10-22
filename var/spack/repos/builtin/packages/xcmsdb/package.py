@@ -15,7 +15,7 @@ class Xcmsdb(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xcmsdb"
     url      = "https://www.x.org/archive/individual/app/xcmsdb-1.0.5.tar.gz"
 
-    version('1.0.5', 'e7b1699c831b44d7005bff45977ed56a')
+    version('1.0.5', sha256='8442352ee5eb3ea0d3a489c26d734e784ef6964150c2a173401d0dc6638ca236')
 
     depends_on('libx11')
 

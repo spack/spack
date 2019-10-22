@@ -23,8 +23,8 @@ class Libsharp(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('mpi', when='+mpi')
 
-    patch('arm.patch', when='@2018-01-17 target=aarch64')
-    patch('1.0.0-arm.patch', when='@1.0.0 target=aarch64')
+    patch('arm.patch', when='@2018-01-17 target=aarch64:')
+    patch('1.0.0-arm.patch', when='@1.0.0 target=aarch64:')
 
     def autoreconf(self, spec, prefix):
         """Generate autotools configuration"""
