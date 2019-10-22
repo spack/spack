@@ -217,9 +217,9 @@ class Mfem(Package):
     patch('mfem-4.0.0-makefile-syntax-fix.patch', when='@4.0.0')
     phases = ['configure', 'build', 'install']
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.unset('MFEM_DIR')
-        spack_env.unset('MFEM_BUILD_DIR')
+    def setup_build_environment(self, env):
+        env.unset('MFEM_DIR')
+        env.unset('MFEM_BUILD_DIR')
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
