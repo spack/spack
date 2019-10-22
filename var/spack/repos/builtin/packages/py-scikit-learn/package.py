@@ -10,7 +10,7 @@ class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 
     homepage = "https://pypi.python.org/pypi/scikit-learn"
-    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.21.2.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.21.3.tar.gz"
     git      = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers = ['adamjstewart']
@@ -33,6 +33,7 @@ class PyScikitLearn(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('0.21.3', sha256='eb9b8ebf59eddd8b96366428238ab27d05a19e89c5516ce294abc35cea75d003')
     version('0.21.2', sha256='0aafc312a55ebf58073151b9308761a5fcfa45b7f7730cea4b1f066f824c72db')
     version('0.21.1', sha256='228d0611e69e5250946f8cd7bbefec75347950f0ca426d0c518db8f06583f660')
     version('0.20.2', sha256='bc5bc7c7ee2572a1edcb51698a6caf11fae554194aaab9a38105d9ec419f29e6')
@@ -46,18 +47,18 @@ class PyScikitLearn(PythonPackage):
 
     variant('openmp', default=True, description='Build with OpenMP support')
 
-    depends_on('python@2.6:2.8,3.3:', when='@:0.19')
-    depends_on('python@2.7:2.8,3.4:', when='@0.20.0:0.20.999')
-    depends_on('python@3.5:', when='@0.21:')
-    depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='@:0.19')
-    depends_on('py-numpy@1.8.2:', type=('build', 'run'), when='@0.20.0:0.20.999')
-    depends_on('py-numpy@1.11.0:', type=('build', 'run'), when='@0.21:')
-    depends_on('py-scipy@0.9:', type=('build', 'run'), when='@:0.19')
-    depends_on('py-scipy@0.13.3:', type=('build', 'run'), when='@0.20.0:0.20.999')
-    depends_on('py-scipy@0.17.0:', type=('build', 'run'), when='@0.21:')
+    depends_on('python@2.6:2.8,3.3:', when='@:0.19', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@0.20.0:0.20.999', type=('build', 'run'))
+    depends_on('python@3.5:', when='@0.21:', type=('build', 'run'))
+    depends_on('py-numpy@1.6.1:', when='@:0.19', type=('build', 'run'))
+    depends_on('py-numpy@1.8.2:', when='@0.20.0:0.20.999', type=('build', 'run'))
+    depends_on('py-numpy@1.11.0:', when='@0.21:', type=('build', 'run'))
+    depends_on('py-scipy@0.9:', when='@:0.19', type=('build', 'run'))
+    depends_on('py-scipy@0.13.3:', when='@0.20.0:0.20.999', type=('build', 'run'))
+    depends_on('py-scipy@0.17.0:', when='@0.21:', type=('build', 'run'))
     depends_on('py-joblib@0.11:', type=('build', 'run'))
     depends_on('py-cython@0.23:', type='build')
-    depends_on('py-cython@0.28.5:', type='build', when='@0.21:')
+    depends_on('py-cython@0.28.5:', when='@0.21:', type='build')
     depends_on('py-pytest@3.3.0:', type='test')
     depends_on('py-pandas', type='test')
     depends_on('py-setuptools', type='build')
@@ -71,34 +72,20 @@ class PyScikitLearn(PythonPackage):
     # See https://github.com/scikit-learn/scikit-learn/issues/14332
     conflicts('~openmp', when='@:999', msg='Only master supports ~openmp')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#building-from-source
         if self.spec.satisfies('~openmp'):
-            spack_env.set('SKLEARN_NO_OPENMP', 'True')
+            env.set('SKLEARN_NO_OPENMP', 'True')
         # https://scikit-learn.org/stable/developers/advanced_installation.html#mac-osx
         elif self.spec.satisfies('@0.21: %clang platform=darwin +openmp'):
-            spack_env.append_flags(
+            env.append_flags(
                 'CPPFLAGS', '-Xpreprocessor -fopenmp')
-            spack_env.append_flags(
+            env.append_flags(
                 'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
-            spack_env.append_flags(
-                'CXXFLAGS',
-                self.spec['llvm-openmp'].headers.include_flags)
-            spack_env.append_flags(
+            env.append_flags(
+                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
-            spack_env.append_flags(
-                'DYLD_LIBRARY_PATH',
-                self.spec['llvm-openmp'].libs.directories[0])
-
-            run_env.append_flags(
-                'DYLD_LIBRARY_PATH',
-                self.spec['llvm-openmp'].libs.directories[0])
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if self.spec.satisfies('@0.21: %clang platform=darwin +openmp'):
-            spack_env.append_flags(
-                'DYLD_LIBRARY_PATH',
-                self.spec['llvm-openmp'].libs.directories[0])
 
     def install_test(self):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#testing
