@@ -116,15 +116,23 @@ class Hypre(Package):
 
         if '+openmp' in self.spec:
             configure_args.append('--with-openmp')
+        else:
+            configure_args.append('--without-openmp')
 
         if '+int64' in self.spec:
             configure_args.append('--enable-bigint')
+        else:
+            configure_args.append('--disable-bigint')
 
         if '+mixedint' in self.spec:
             configure_args.append('--enable-mixedint')
+        else:
+            configure_args.append('--disable-mixedint')
 
         if '+complex' in self.spec:
             configure_args.append('--enable-complex')
+        else:
+            configure_args.append('--disable-complex')
 
         if '+shared' in self.spec:
             configure_args.append("--enable-shared")
