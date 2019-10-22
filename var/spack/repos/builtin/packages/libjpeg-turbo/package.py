@@ -31,12 +31,12 @@ class LibjpegTurbo(Package):
     # only nasm is used. In order to use yasm an environmental variable
     # NASM must be set.
     # TODO: Implement the selection between two supported assemblers.
-    # depends_on("yasm", type='build')
-    depends_on("nasm", type='build')
-    depends_on('autoconf', type='build', when="@1.3.1:1.5.3")
-    depends_on('automake', type='build', when="@1.3.1:1.5.3")
-    depends_on('libtool', type='build', when="@1.3.1:1.5.3")
-    depends_on('cmake', type='build', when="@1.5.90:")
+    # depends_on('yasm', type='build')
+    depends_on('nasm', type='build')
+    depends_on('autoconf', type='build', when='@1.3.1:1.5.3')
+    depends_on('automake', type='build', when='@1.3.1:1.5.3')
+    depends_on('libtool', type='build', when='@1.3.1:1.5.3')
+    depends_on('cmake', type='build', when='@1.5.90:')
     depends_on('java', when='+java', type='build')
 
     @property
