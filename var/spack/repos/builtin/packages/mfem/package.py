@@ -45,13 +45,18 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('4.0.0-xsdk', tag='v4.0.0xsdk')
+
+    version('4.0', url='https://bit.ly/mfem-4-0', extension='.tar.gz',
+            sha256='df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727',   
+            preferred=True)
+
     # Tagged development version used by the laghos package:
     version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
 
     version('3.4.0',
             sha256='4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
-            url='https://bit.ly/mfem-3-4', extension='.tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-3-4', extension='.tar.gz')
 
     version('3.3.2',
             sha256='b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
@@ -166,7 +171,8 @@ class Mfem(Package):
     depends_on('sundials@2.7.0', when='@:3.3.0+sundials~mpi')
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
-    depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
+    depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:4.0+sundials+mpi')
+    depends_on('sundials@5.0.0', when='@4.0.0xsdk:+sundials~mpi')
     depends_on('pumi', when='+pumi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
