@@ -22,6 +22,11 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=flake8
+# Shell integration with module files
+    - python: '3.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=bootstrap ]
     - stage: 'unit tests + documentation'
       python: '2.6'
       dist: trusty

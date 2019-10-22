@@ -16,5 +16,9 @@ class BppCore(CMakePackage):
 
     depends_on('cmake@2.6:', type='build')
 
+    # Clarify isnan's namespace, because Fujitsu compiler can't
+    # resolve ambiguous of 'isnan' function.
+    patch('clarify_isnan.patch', when='%fj')
+
     def cmake_args(self):
         return ['-DBUILD_TESTING=FALSE']
