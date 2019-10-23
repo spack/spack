@@ -36,6 +36,7 @@ packages:
       - py-entity-management@1.0.16
       - py-jupyter-notebook@4.2.3
       - brion@3.0.0 +python ^boost@1.65.0
+      - py-bbp-analysis-framework@1.6.39
 
   gnu-stable-serial-ophiophob:
     target_matrix:
