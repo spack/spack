@@ -183,13 +183,6 @@ class OrderedLineDumper(RoundTripDumper):
         return super(OrderedLineDumper, self).represent_str(data)
 
 
-# Make our special objects look like normal YAML ones.
-OrderedLineDumper.add_representer(syaml_dict, OrderedLineDumper.represent_dict)
-OrderedLineDumper.add_representer(syaml_list, OrderedLineDumper.represent_list)
-OrderedLineDumper.add_representer(syaml_str, OrderedLineDumper.represent_str)
-OrderedLineDumper.add_representer(syaml_int, OrderedLineDumper.represent_int)
-
-
 class SafeDumper(RoundTripDumper):
 
     def ignore_aliases(self, _data):
@@ -197,10 +190,12 @@ class SafeDumper(RoundTripDumper):
         return True
 
 
-# Allow syaml_dict objects to be represented by ruamel.yaml.dump. With this,
-# syaml_dict allows a user to provide an ordered dictionary to yaml.dump when
-# the RoundTripDumper is used.
+# Make our special objects look like normal YAML ones.
 RoundTripDumper.add_representer(syaml_dict, RoundTripDumper.represent_dict)
+RoundTripDumper.add_representer(syaml_list, RoundTripDumper.represent_list)
+RoundTripDumper.add_representer(syaml_int, RoundTripDumper.represent_int)
+RoundTripDumper.add_representer(syaml_str, RoundTripDumper.represent_str)
+OrderedLineDumper.add_representer(syaml_str, OrderedLineDumper.represent_str)
 
 
 #: Max integer helps avoid passing too large a value to cyaml.
