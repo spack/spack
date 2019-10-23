@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import pytest
 import os
 import spack.spec
 from spack.main import SpackCommand
@@ -71,6 +70,3 @@ def test_dev_build_fails_nonexistent_package_name(mock_packages):
 def test_dev_build_fails_no_version(mock_packages):
     output = dev_build('dev-build-test-install', fail_on_error=False)
     assert 'dev-build spec must have a single, concrete version' in output
-
-
-
