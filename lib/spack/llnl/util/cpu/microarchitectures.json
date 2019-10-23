@@ -694,6 +694,38 @@
         }
       }
     },
+    "k10": {
+      "from": "x86_64",
+      "vendor": "AuthenticAMD",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "abm",
+        "cx16",
+        "3dnow",
+        "3dnowext"
+      ],
+      "compilers": {
+        "gcc": {
+          "name": "amdfam10",
+          "versions": "4.3:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "name": "amdfam10",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+          "flags": "-msse2"
+        }
+      }
+    },
     "bulldozer": {
       "from": "x86_64",
       "vendor": "AuthenticAMD",
@@ -705,7 +737,7 @@
         "abm",
         "avx",
         "xop",
-        "lwp",
+        "fma4",
         "aes",
         "pclmulqdq",
         "cx16",
@@ -743,7 +775,7 @@
         "abm",
         "avx",
         "xop",
-        "lwp",
+        "fma4",
         "aes",
         "pclmulqdq",
         "cx16",
@@ -785,7 +817,7 @@
         "abm",
         "avx",
         "xop",
-        "lwp",
+        "fma4",
         "aes",
         "pclmulqdq",
         "cx16",
@@ -828,7 +860,7 @@
         "abm",
         "avx",
         "xop",
-        "lwp",
+        "fma4",
         "aes",
         "pclmulqdq",
         "cx16",
