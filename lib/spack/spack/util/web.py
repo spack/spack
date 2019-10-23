@@ -203,13 +203,8 @@ def warn_no_ssl_cert_checking():
              "your Python to enable certificate verification.")
 
 
-def push_to_url(local_path, remote_path, **kwargs):
+def push_to_url(local_file_path, remote_path, **kwargs):
     keep_original = kwargs.get('keep_original', True)
-
-    local_url = url_util.parse(local_path)
-    local_file_path = url_util.local_file_path(local_url)
-    if local_file_path is None:
-        raise ValueError('local path must be a file:// url')
 
     remote_url = url_util.parse(remote_path)
     verify_ssl = spack.config.get('config:verify_ssl')
