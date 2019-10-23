@@ -13,6 +13,7 @@ level = "long"
 def setup_parser(subparser):
     spack.cmd.dev_build.setup_parser(subparser)
 
+
 def diy(self, args):
     tty.warn("`spack diy` has been renamed to `spack dev-build`."
              "The `diy` command will be removed in a future version of Spack")
