@@ -102,8 +102,8 @@ class QuantumEspresso(Package):
 
     conflicts(
         'hdf5=serial',
-        when='~mpi @6.1:6.3',
-        msg='serial HDF5 in serial QE only works in develop version'
+        when='~mpi',
+        msg='serial HDF5 detection with serial QE is broken'
     )
 
     # Elpa is formally supported by @:5.4.0, but QE configure searches
