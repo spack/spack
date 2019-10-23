@@ -305,7 +305,9 @@ class Boost(Package):
                 '-s', 'BZIP2_INCLUDE=%s' % spec['bzip2'].prefix.include,
                 '-s', 'BZIP2_LIBPATH=%s' % spec['bzip2'].prefix.lib,
                 '-s', 'ZLIB_INCLUDE=%s' % spec['zlib'].prefix.include,
-                '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib])
+                '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib,
+                '-s', 'NO_LZMA=1',
+                '-s', 'NO_ZSTD=1'])
 
         link_types = ['static']
         if '+shared' in spec:

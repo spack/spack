@@ -67,7 +67,7 @@ def expected_target(request, monkeypatch):
                 key, value = line.split(':')
                 info[key.strip()] = value.strip()
 
-        def _check_output(args):
+        def _check_output(args, env):
             current_key = args[-1]
             return info[current_key]
 

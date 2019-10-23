@@ -5,6 +5,7 @@
 
 import os
 import pytest
+import re
 
 import spack
 import spack.environment as ev
@@ -122,6 +123,6 @@ spack:
             release_jobs('--output-file', outputfile)
 
         with open(outputfile) as f:
-            contents = f.read()
+            contents = f.read().replace(os.linesep, '')
             assert('archive-files' in contents)
-            assert('stages: [stage-0' in contents)
+            assert(re.search(r'stages:\s*\[\s*stage-0', contents))

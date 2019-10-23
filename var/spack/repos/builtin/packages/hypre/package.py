@@ -41,14 +41,18 @@ class Hypre(Package):
     # between versions 2.12.1 and 2.13.0.
     variant('shared', default=(sys.platform != 'darwin'),
             description="Build shared library (disables static library)")
-    # SuperluDist have conflicting headers with those in Hypre
-    variant('internal-superlu', default=True,
-            description="Use internal Superlu routines")
+    # Use internal SuperLU routines for FEI - version 2.12.1 and below
+    variant('internal-superlu', default=False,
+            description="Use internal SuperLU routines")
     variant('superlu-dist', default=False,
-            description='Activates support for SuperluDist')
+            description='Activates support for SuperLU_Dist library')
     variant('int64', default=False,
             description="Use 64bit integers")
+    variant('mixedint', default=False,
+            description="Use 64bit integers while reducing memory use")
+    variant('complex', default=False, description='Use complex values')
     variant('mpi', default=True, description='Enable MPI support')
+    variant('openmp', default=False, description='Enable OpenMP support')
     variant('debug', default=False,
             description='Build debug instead of optimized version')
 
@@ -70,6 +74,16 @@ class Hypre(Package):
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
     conflicts("+shared@:2.12.99 platform=darwin")
+
+    # Conflicts
+    # Option added in v2.13.0
+    conflicts('+superlu-dist', when='@:2.12.99')
+
+    # Internal SuperLU Option removed in v2.13.0
+    conflicts('+internal-superlu', when='@2.13.0:')
+
+    # Option added in v2.16.0
+    conflicts('+mixedint', when='@:2.15.99')
 
     def url_for_version(self, version):
         if version >= Version('2.12.0'):
@@ -100,8 +114,25 @@ class Hypre(Package):
         else:
             configure_args.append('--without-MPI')
 
+        if '+openmp' in self.spec:
+            configure_args.append('--with-openmp')
+        else:
+            configure_args.append('--without-openmp')
+
         if '+int64' in self.spec:
             configure_args.append('--enable-bigint')
+        else:
+            configure_args.append('--disable-bigint')
+
+        if '+mixedint' in self.spec:
+            configure_args.append('--enable-mixedint')
+        else:
+            configure_args.append('--disable-mixedint')
+
+        if '+complex' in self.spec:
+            configure_args.append('--enable-complex')
+        else:
+            configure_args.append('--disable-complex')
 
         if '+shared' in self.spec:
             configure_args.append("--enable-shared")
@@ -112,7 +143,7 @@ class Hypre(Package):
             configure_args.append("--without-mli")
             configure_args.append("--without-fei")
 
-        if 'superlu-dist' in self.spec:
+        if '+superlu-dist' in self.spec:
             configure_args.append('--with-dsuperlu-include=%s' %
                                   spec['superlu-dist'].prefix.include)
             configure_args.append('--with-dsuperlu-lib=%s' %
