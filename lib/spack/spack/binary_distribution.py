@@ -11,6 +11,7 @@ import shutil
 import tempfile
 import hashlib
 from contextlib import closing
+import ruamel.yaml as yaml
 
 import json
 
@@ -139,7 +140,7 @@ def read_buildinfo_file(prefix):
     filename = buildinfo_file_name(prefix)
     with open(filename, 'r') as inputfile:
         content = inputfile.read()
-        buildinfo = syaml.load(content)
+        buildinfo = yaml.load(content)
     return buildinfo
 
 
@@ -380,10 +381,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     checksum = checksum_tarball(tarfile_path)
 
     # add sha256 checksum to spec.yaml
-    spec_dict = {}
     with open(spec_file, 'r') as inputfile:
         content = inputfile.read()
-        spec_dict = syaml.load(content)
+        spec_dict = yaml.load(content)
     bchecksum = {}
     bchecksum['hash_algorithm'] = 'sha256'
     bchecksum['hash'] = checksum

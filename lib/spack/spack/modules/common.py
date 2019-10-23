@@ -235,7 +235,7 @@ def generate_module_index(root, modules):
     index_path = os.path.join(root, 'module-index.yaml')
     llnl.util.filesystem.mkdirp(root)
     with open(index_path, 'w') as index_file:
-        syaml.dump(index, index_file, default_flow_style=False)
+        syaml.dump(index, default_flow_style=False, stream=index_file)
 
 
 def _generate_upstream_module_index():

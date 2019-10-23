@@ -11,7 +11,6 @@ import shutil
 import copy
 import socket
 
-import ruamel.yaml
 import six
 
 from ordereddict_backport import OrderedDict
@@ -27,6 +26,7 @@ import spack.repo
 import spack.schema.env
 import spack.spec
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 import spack.config
 import spack.build_environment as build_env
 
@@ -401,7 +401,7 @@ def validate(data, filename=None):
 
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
-    data = ruamel.yaml.load(str_or_file, ruamel.yaml.RoundTripLoader)
+    data = syaml.load_config(str_or_file)
     filename = getattr(str_or_file, 'name', None)
     validate(data, filename)
     return data
@@ -411,8 +411,7 @@ def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, 'name', None)
     validate(data, filename)
-    ruamel.yaml.dump(data, str_or_file, Dumper=ruamel.yaml.RoundTripDumper,
-                     default_flow_style=False)
+    syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
 def _eval_conditional(string):

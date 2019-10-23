@@ -211,7 +211,7 @@ class YamlFilesystemView(FilesystemView):
         if self.projections:
             mkdirp(os.path.dirname(self.projections_path))
             with open(self.projections_path, 'w') as f:
-                f.write(s_yaml.dump({'projections': self.projections}))
+                f.write(s_yaml.dump_config({'projections': self.projections}))
 
     def read_projections(self):
         if os.path.exists(self.projections_path):
