@@ -29,6 +29,7 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'linux-rhel6-piledriver',
     'linux-centos7-power8le',
     'darwin-mojave-ivybridge',
+    'darwin-mojave-haswell',
     'darwin-mojave-skylake',
     'bgq-rhel6-power7'
 ])
