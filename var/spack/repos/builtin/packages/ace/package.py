@@ -42,4 +42,3 @@ class Ace(MakefilePackage):
                         "platform_linux" + supported[self.compiler.name]
                         + ".GNU\n")
                 f.write("INSTALL_PREFIX=%s" % prefix)
-
