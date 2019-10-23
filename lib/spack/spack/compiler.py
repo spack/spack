@@ -230,13 +230,13 @@ class Compiler(object):
 
     @property
     def disable_new_dtags(self):
-        if platform.platform().lower() == 'macos':
+        if platform.system() == 'Darwin':
             return ''
         return '--disable-new-dtags'
 
     @property
     def enable_new_dtags(self):
-        if platform.platform().lower() == 'macos':
+        if platform.system() == 'Darwin':
             return ''
         return '--enable-new-dtags'
 
