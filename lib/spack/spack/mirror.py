@@ -323,7 +323,7 @@ def get_all_versions(base_specs):
             continue
 
         for version in pkg.versions:
-            version_spec = Spec(pkg.name)
+            version_spec = spack.spec.Spec(pkg.name)
             version_spec.versions = VersionList([version])
             version_specs.append(version_spec)
 
