@@ -199,6 +199,15 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
+    env.set('SPACK_LINKER_ARG', compiler.linker_arg)
+
+    # Check whether we want to force RPATH or RUNPATH
+    if spack.config.get('config:shared_linking') == 'rpath':
+        env.set('SPACK_DTAGS_TO_STRIP', compiler.enable_new_dtags)
+        env.set('SPACK_DTAGS_TO_ADD', compiler.disable_new_dtags)
+    else:
+        env.set('SPACK_DTAGS_TO_STRIP', compiler.disable_new_dtags)
+        env.set('SPACK_DTAGS_TO_ADD', compiler.enable_new_dtags)
 
     # Set the target parameters that the compiler will add
     isa_arg = spec.architecture.target.optimization_flags(compiler)
