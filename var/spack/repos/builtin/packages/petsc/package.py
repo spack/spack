@@ -377,19 +377,20 @@ class Petsc(Package):
                         '-pc_type', 'hypre',
                         '-pc_hypre_type', 'boomeramg')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # configure fails if these env vars are set outside of Spack
-        spack_env.unset('PETSC_DIR')
-        spack_env.unset('PETSC_ARCH')
+        env.unset('PETSC_DIR')
+        env.unset('PETSC_ARCH')
 
+    def setup_run_environment(self, env):
         # Set PETSC_DIR in the module file
-        run_env.set('PETSC_DIR', self.prefix)
-        run_env.unset('PETSC_ARCH')
+        env.set('PETSC_DIR', self.prefix)
+        env.unset('PETSC_ARCH')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # Set up PETSC_DIR for everyone using PETSc package
-        spack_env.set('PETSC_DIR', self.prefix)
-        spack_env.unset('PETSC_ARCH')
+        env.set('PETSC_DIR', self.prefix)
+        env.unset('PETSC_ARCH')
 
     @property
     def headers(self):
