@@ -29,7 +29,7 @@ def concretize_scope(config, tmpdir):
 
 @pytest.fixture()
 def configure_permissions():
-    conf = syaml.load("""\
+    conf = syaml.load_config("""\
 all:
   permissions:
     read: group
@@ -182,9 +182,9 @@ class TestConcretizePreferences(object):
         """Verify that virtuals are not allowed in packages.yaml."""
 
         # set up a packages.yaml file with a vdep as a key.  We use
-        # syaml.load here to make sure source lines in the config are
+        # syaml.load_config here to make sure source lines in the config are
         # attached to parsed strings, as the error message uses them.
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 mpi:
     paths:
       mpi-with-lapack@2.1: /path/to/lapack
@@ -197,7 +197,7 @@ mpi:
 
     def test_all_is_not_a_virtual(self):
         """Verify that `all` is allowed in packages.yaml."""
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 all:
         variants: [+mpi]
 """)
@@ -214,7 +214,7 @@ all:
         assert not spec['mpi'].external
 
         # load config
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 all:
     providers:
         mpi: [mpich]

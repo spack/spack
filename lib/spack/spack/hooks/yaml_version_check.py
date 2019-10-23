@@ -24,7 +24,7 @@ def check_compiler_yaml_version():
         data = None
         if os.path.isfile(file_name):
             with open(file_name) as f:
-                data = syaml.load(f)
+                data = syaml.load_config(f)
 
         if data:
             compilers = data.get('compilers')
