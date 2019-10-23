@@ -2151,6 +2151,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if not spec.external:
                 msg = 'Deleting package prefix [{0}]'
                 tty.debug(msg.format(spec.short_spec))
+                # test if spec is already deprecated, not whether we want to
+                # deprecate it now
                 deprecated = bool(spack.store.db.deprecator(spec))
                 spack.store.layout.remove_install_directory(spec, deprecated)
             # Delete DB entry
