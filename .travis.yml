@@ -56,6 +56,7 @@ jobs:
     - os: osx
       language: generic
       env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
+      if: type != pull_request
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
