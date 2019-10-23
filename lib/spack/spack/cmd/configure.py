@@ -83,5 +83,6 @@ def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
 
 def configure(parser, args):
     tty.warn("This command is deprecated. Use `spack install --until` to"
-             " select an end phase instead")
+             " select an end phase instead. The `spack configure` command will"
+             " be removed in a future version of Spack.")
     _stop_at_phase_during_install(args, configure, build_system_to_phase)

@@ -40,5 +40,6 @@ def setup_parser(subparser):
 
 def build(parser, args):
     tty.warn("This command is deprecated. Use `spack install --until` to"
-             " select an end phase instead")
+             " select an end phase instead. The `spack build` command will be"
+             " removed in a future version of Spack")
     cfg._stop_at_phase_during_install(args, build, build_system_to_phase)
