@@ -45,6 +45,8 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a') # tag v4.0.1-xsdk
+    
     version('4.0.0',
             'df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727',
             url='https://bit.ly/mfem-4-0', extension='.tar.gz',
