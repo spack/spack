@@ -13,12 +13,13 @@ class Sundials(CMakePackage):
     Solvers)"""
 
     homepage = "https://computing.llnl.gov/projects/sundials"
-    url = "https://computing.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
+    url = "https://computing.llnl.gov/projects/sundials/download/sundials-5.0.0.tar.gz"
     maintainers = ['cswoodward', 'gardner48', 'balos1']
 
     # ==========================================================================
     # Versions
     # ==========================================================================
+    version('5.0.0', sha256='345141ec01c641d0bdfb3476c478b7e74fd6a7192a478a27cafe75d9da2d7dd3')
     version('4.1.0', sha256='280de1c27b2360170a6f46cb3799b2aee9dff3bddbafc8b08c291a47ab258aa5')
     version('4.0.1', sha256='29e409c8620e803990edbda1ebf49e03a38c08b9187b90658d86bddae913aed4')
     version('3.2.1', sha256='47d94d977ab2382cdcdd02f72a25ebd4ba8ca2634bbb2f191fe1636e71c86808')
@@ -87,6 +88,8 @@ class Sundials(CMakePackage):
     # Fortran interface
     variant('fcmix', default=False,
             description='Enable Fortran interface')
+    variant('f2003', default=False,
+            description='Enable Fortran 2003 interface')
 
     # Examples
     variant('examples-c',       default=True,
@@ -97,6 +100,8 @@ class Sundials(CMakePackage):
             description='Enable Fortran 77 examples')
     variant('examples-f90',     default=False,
             description='Enable Fortran 90 examples')
+    variant('examples-f03',     default=False,
+            description='Enable Fortran 2003 examples')
     variant('examples-cuda',    default=False,
             description='Enable CUDA examples')
     variant('examples-raja',    default=False,
@@ -231,7 +236,12 @@ class Sundials(CMakePackage):
                 args.extend(['-DSUNDIALS_INDEX_TYPE=int32_t'])
 
         # Fortran interface
-        args.extend(['-DFCMIX_ENABLE=%s' % on_off('+fcmix')])
+        if spec.satisfies('@5.0.0:'):
+            args.extend(['-DF77_INTERFACE_ENABLE=%s' % on_off('+fcmix')])
+            args.extend(['-DF2003_INTERFACE_ENABLE=%s' % on_off('+f2003')])
+            args.extend(['-DFortran_INSTALL_MODDIR=fortran'])
+        else:
+            args.extend(['-DFCMIX_ENABLE=%s' % on_off('+fcmix')])
 
         # library type
         args.extend([
@@ -321,7 +331,17 @@ class Sundials(CMakePackage):
             ])
 
         # Examples
-        if spec.satisfies('@3.0.0:'):
+        if spec.satisfies('@5.0.0:'):
+            args.extend([
+                '-DEXAMPLES_ENABLE_C=%s'    % on_off('+examples-c'),
+                '-DEXAMPLES_ENABLE_CXX=%s'  % on_off('+examples-cxx'),
+                '-DEXAMPLES_ENABLE_F77=%s'  % on_off('+examples-f77'),
+                '-DEXAMPLES_ENABLE_F90=%s'  % on_off('+examples-f90'),
+                '-DEXAMPLES_ENABLE_F2003=%s'  % on_off('+examples-f03'),
+                '-DEXAMPLES_ENABLE_CUDA=%s' % on_off('+examples-cuda'),
+                '-DEXAMPLES_ENABLE_RAJA=%s' % on_off('+examples-raja')
+            ])
+        elif spec.satisfies('@3.0.0:'):
             args.extend([
                 '-DEXAMPLES_ENABLE_C=%s'    % on_off('+examples-c'),
                 '-DEXAMPLES_ENABLE_CXX=%s'  % on_off('+examples-cxx'),
