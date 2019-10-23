@@ -2241,6 +2241,21 @@ class Spec(object):
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
 
+        # If any spec in the DAG is deprecated, throw an error
+        deprecated = []
+        for x in self.traverse():
+            _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
+            if rec and rec.deprecated_for:
+                deprecated.append(rec)
+        if deprecated:
+            msg = "\n    The following specs have been deprecated"
+            msg += " in favor of specs with the hashes shown:\n"
+            for rec in deprecated:
+                msg += '        %s  --> %s\n' % (rec.spec, rec.deprecated_for)
+            msg += '\n'
+            msg += "    For each package listed, choose another spec\n"
+            raise SpecDeprecatedError(msg)
+
         # Now that the spec is concrete we should check if
         # there are declared conflicts
         #
@@ -4493,3 +4508,7 @@ class ConflictsInSpecError(SpecError, RuntimeError):
 class SpecDependencyNotFoundError(SpecError):
     """Raised when a failure is encountered writing the dependencies of
     a spec."""
+
+
+class SpecDeprecatedError(SpecError):
+    """Raised when a spec concretizes to a deprecated spec or dependency."""

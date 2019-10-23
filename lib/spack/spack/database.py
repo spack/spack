@@ -46,7 +46,6 @@ from spack.error import SpackError
 from spack.version import Version
 from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
 
-
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
 
@@ -75,6 +74,36 @@ def _autospec(function):
         return function(self, spec_like, *args, **kwargs)
 
     return converter
+
+
+class InstallStatus(str):
+    pass
+
+
+class InstallStatuses(object):
+    INSTALLED = InstallStatus('installed')
+    DEPRECATED = InstallStatus('deprecated')
+    MISSING = InstallStatus('missing')
+
+    @classmethod
+    def canonicalize(cls, query_arg):
+        if query_arg is True:
+            return [cls.INSTALLED]
+        elif query_arg is False:
+            return [cls.MISSING]
+        elif query_arg is any:
+            return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
+        elif isinstance(query_arg, InstallStatus):
+            return [query_arg]
+        else:
+            try:  # Try block catches if it is not an iterable at all
+                if any(type(x) != InstallStatus for x in query_arg):
+                    raise TypeError
+            except TypeError:
+                raise TypeError(
+                    'installation query must be `any`, boolean, '
+                    'InstallStatus, or iterable of InstallStatus')
+            return query_arg
 
 
 class InstallRecord(object):
@@ -109,7 +138,8 @@ class InstallRecord(object):
             installed,
             ref_count=0,
             explicit=False,
-            installation_time=None
+            installation_time=None,
+            deprecated_for=None
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -117,16 +147,29 @@ class InstallRecord(object):
         self.ref_count = ref_count
         self.explicit = explicit
         self.installation_time = installation_time or _now()
+        self.deprecated_for = deprecated_for
+
+    def install_type_matches(self, installed):
+        installed = InstallStatuses.canonicalize(installed)
+        if self.installed:
+            return InstallStatuses.INSTALLED in installed
+        elif self.deprecated_for:
+            return InstallStatuses.DEPRECATED in installed
+        else:
+            return InstallStatuses.MISSING in installed
 
     def to_dict(self):
-        return {
+        rec_dict = {
             'spec': self.spec.to_node_dict(),
             'path': self.path,
             'installed': self.installed,
             'ref_count': self.ref_count,
             'explicit': self.explicit,
-            'installation_time': self.installation_time
+            'installation_time': self.installation_time,
         }
+        if self.deprecated_for:
+            rec_dict.update({'deprecated_for': self.deprecated_for})
+        return rec_dict
 
     @classmethod
     def from_dict(cls, spec, dictionary):
@@ -136,6 +179,7 @@ class InstallRecord(object):
         # Old databases may have "None" for path for externals
         if d['path'] == 'None':
             d['path'] = None
+
         return InstallRecord(spec, **d)
 
 
@@ -533,13 +577,37 @@ class Database(object):
                 self._data = old_data
                 raise
 
+    def _construct_entry_from_directory_layout(self, directory_layout,
+                                               old_data, spec,
+                                               deprecator=None):
+        # Try to recover explicit value from old DB, but
+        # default it to True if DB was corrupt. This is
+        # just to be conservative in case a command like
+        # "autoremove" is run by the user after a reindex.
+        tty.debug(
+            'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
+        explicit = True
+        inst_time = os.stat(spec.prefix).st_ctime
+        if old_data is not None:
+            old_info = old_data.get(spec.dag_hash())
+            if old_info is not None:
+                explicit = old_info.explicit
+                inst_time = old_info.installation_time
+
+        extra_args = {
+            'explicit': explicit,
+            'installation_time': inst_time
+        }
+        self._add(spec, directory_layout, **extra_args)
+        if deprecator:
+            self._deprecate(spec, deprecator)
+
     def _construct_from_directory_layout(self, directory_layout, old_data):
         # Read first the `spec.yaml` files in the prefixes. They should be
         # considered authoritative with respect to DB reindexing, as
         # entries in the DB may be corrupted in a way that still makes
         # them readable. If we considered DB entries authoritative
         # instead, we would perpetuate errors over a reindex.
-
         with directory_layout.disable_upstream_check():
             # Initialize data in the reconstructed DB
             self._data = {}
@@ -548,26 +616,14 @@ class Database(object):
             processed_specs = set()
 
             for spec in directory_layout.all_specs():
-                # Try to recover explicit value from old DB, but
-                # default it to True if DB was corrupt. This is
-                # just to be conservative in case a command like
-                # "autoremove" is run by the user after a reindex.
-                tty.debug(
-                    'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
-                explicit = True
-                inst_time = os.stat(spec.prefix).st_ctime
-                if old_data is not None:
-                    old_info = old_data.get(spec.dag_hash())
-                    if old_info is not None:
-                        explicit = old_info.explicit
-                        inst_time = old_info.installation_time
+                self._construct_entry_from_directory_layout(directory_layout,
+                                                            old_data, spec)
+                processed_specs.add(spec)
 
-                extra_args = {
-                    'explicit': explicit,
-                    'installation_time': inst_time
-                }
-                self._add(spec, directory_layout, **extra_args)
-
+            for spec, deprecator in directory_layout.all_deprecated_specs():
+                self._construct_entry_from_directory_layout(directory_layout,
+                                                            old_data, spec,
+                                                            deprecator)
                 processed_specs.add(spec)
 
             for key, entry in old_data.items():
@@ -624,6 +680,10 @@ class Database(object):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
+
+            if rec.deprecated_for:
+                counts.setdefault(rec.deprecated_for, 0)
+                counts[rec.deprecated_for] += 1
 
         for rec in self._data.values():
             key = rec.spec.dag_hash()
@@ -761,7 +821,7 @@ class Database(object):
                     installed = True
                 except DirectoryLayoutError as e:
                     tty.warn(
-                        'Dependency missing due to corrupt install directory:',
+                        'Dependency missing: may be deprecated or corrupted:',
                         path, str(e))
             elif spec.external_path:
                 path = spec.external_path
@@ -840,6 +900,15 @@ class Database(object):
             for dep in spec.dependencies(_tracked_deps):
                 self._decrement_ref_count(dep)
 
+    def _increment_ref_count(self, spec):
+        key = spec.dag_hash()
+
+        if key not in self._data:
+            return
+
+        rec = self._data[key]
+        rec.ref_count += 1
+
     def _remove(self, spec):
         """Non-locking version of remove(); does real work.
         """
@@ -853,6 +922,10 @@ class Database(object):
         del self._data[key]
         for dep in rec.spec.dependencies(_tracked_deps):
             self._decrement_ref_count(dep)
+
+        if rec.deprecated_for:
+            new_spec = self._data[rec.deprecated_for].spec
+            self._decrement_ref_count(new_spec)
 
         # Returns the concrete spec so we know it in the case where a
         # query spec was passed in.
@@ -873,6 +946,46 @@ class Database(object):
         # Take a lock around the entire removal.
         with self.write_transaction():
             return self._remove(spec)
+
+    def deprecator(self, spec):
+        """Return the spec that the given spec is deprecated for, or None"""
+        with self.read_transaction():
+            spec_key = self._get_matching_spec_key(spec)
+            spec_rec = self._data[spec_key]
+
+            if spec_rec.deprecated_for:
+                return self._data[spec_rec.deprecated_for].spec
+            else:
+                return None
+
+    def specs_deprecated_by(self, spec):
+        """Return all specs deprecated in favor of the given spec"""
+        with self.read_transaction():
+            return [rec.spec for rec in self._data.values()
+                    if rec.deprecated_for == spec.dag_hash()]
+
+    def _deprecate(self, spec, deprecator):
+        spec_key = self._get_matching_spec_key(spec)
+        spec_rec = self._data[spec_key]
+
+        deprecator_key = self._get_matching_spec_key(deprecator)
+
+        self._increment_ref_count(deprecator)
+
+        # If spec was already deprecated, update old deprecator's ref count
+        if spec_rec.deprecated_for:
+            old_repl_rec = self._data[spec_rec.deprecated_for]
+            self._decrement_ref_count(old_repl_rec.spec)
+
+        spec_rec.deprecated_for = deprecator_key
+        spec_rec.installed = False
+        self._data[spec_key] = spec_rec
+
+    @_autospec
+    def deprecate(self, spec, deprecator):
+        """Marks a spec as deprecated in favor of its deprecator"""
+        with self.write_transaction():
+            return self._deprecate(spec, deprecator)
 
     @_autospec
     def installed_relatives(self, spec, direction='children', transitive=True,
@@ -944,9 +1057,13 @@ class Database(object):
             dag_hash (str): hash (or hash prefix) to look up
             default (object, optional): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, optional): if ``True``, includes only
-                installed specs in the search; if ``False`` only missing specs,
-                and if ``any``, either installed or missing (default: any)
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
         known hash.  Note that ``query()`` and ``query_one()`` differ in
@@ -960,7 +1077,7 @@ class Database(object):
             # hash is a full hash and is in the data somewhere
             if dag_hash in self._data:
                 rec = self._data[dag_hash]
-                if installed is any or rec.installed == installed:
+                if rec.install_type_matches(installed):
                     return [rec.spec]
                 else:
                     return default
@@ -969,7 +1086,7 @@ class Database(object):
             # installed) spec.
             matches = [record.spec for h, record in self._data.items()
                        if h.startswith(dag_hash) and
-                       (installed is any or installed == record.installed)]
+                       record.install_type_matches(installed)]
             if matches:
                 return matches
 
@@ -983,9 +1100,13 @@ class Database(object):
             dag_hash (str): hash (or hash prefix) to look up
             default (object, optional): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, optional): if ``True``, includes only
-                installed specs in the search; if ``False`` only missing specs,
-                and if ``any``, either installed or missing (default: any)
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
         known hash.  Note that ``query()`` and ``query_one()`` differ in
@@ -1030,10 +1151,13 @@ class Database(object):
                 Spack, but have since either changed their name or
                 been removed
 
-            installed (bool or any, optional): Specs for which a prefix exists
-                are "installed". A spec that is NOT installed will be in the
-                database if some other spec depends on it but its installation
-                has gone away since Spack installed it.
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: True)
 
             explicit (bool or any, optional): A spec that was installed
                 following a specific user request is marked as explicit. If
@@ -1078,7 +1202,7 @@ class Database(object):
             if hashes is not None and rec.spec.dag_hash() not in hashes:
                 continue
 
-            if installed is not any and rec.installed != installed:
+            if not rec.install_type_matches(installed):
                 continue
 
             if explicit is not any and rec.explicit != explicit:

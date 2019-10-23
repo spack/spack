@@ -2112,14 +2112,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise NotImplementedError(msg)
 
     @staticmethod
-    def uninstall_by_spec(spec, force=False):
+    def uninstall_by_spec(spec, force=False, deprecator=None):
         if not os.path.isdir(spec.prefix):
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
             specs = spack.store.db.query(spec, installed=True)
             if specs:
-                spack.store.db.remove(specs[0])
-                tty.msg("Removed stale DB entry for %s" % spec.short_spec)
+                if deprecator:
+                    spack.store.db.deprecate(specs[0], deprecator)
+                    tty.msg("Deprecating stale DB entry for "
+                            "%s" % spec.short_spec)
+                else:
+                    spack.store.db.remove(specs[0])
+                    tty.msg("Removed stale DB entry for %s" % spec.short_spec)
                 return
             else:
                 raise InstallError(str(spec) + " is not installed.")
@@ -2130,7 +2135,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
 
-        # Try to get the pcakage for the spec
+        # Try to get the package for the spec
         try:
             pkg = spec.package
         except spack.repo.UnknownEntityError:
@@ -2146,11 +2151,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if not spec.external:
                 msg = 'Deleting package prefix [{0}]'
                 tty.debug(msg.format(spec.short_spec))
-                spack.store.layout.remove_install_directory(spec)
+                # test if spec is already deprecated, not whether we want to
+                # deprecate it now
+                deprecated = bool(spack.store.db.deprecator(spec))
+                spack.store.layout.remove_install_directory(spec, deprecated)
             # Delete DB entry
-            msg = 'Deleting DB entry [{0}]'
-            tty.debug(msg.format(spec.short_spec))
-            spack.store.db.remove(spec)
+            if deprecator:
+                msg = 'deprecating DB entry [{0}] in favor of [{1}]'
+                tty.debug(msg.format(spec.short_spec, deprecator.short_spec))
+                spack.store.db.deprecate(spec, deprecator)
+            else:
+                msg = 'Deleting DB entry [{0}]'
+                tty.debug(msg.format(spec.short_spec))
+                spack.store.db.remove(spec)
 
         if pkg is not None:
             spack.hooks.post_uninstall(spec)
@@ -2161,6 +2174,64 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Uninstall this package by spec."""
         # delegate to instance-less method.
         Package.uninstall_by_spec(self.spec, force)
+
+    def do_deprecate(self, deprecator, link_fn):
+        """Deprecate this package in favor of deprecator spec"""
+        spec = self.spec
+
+        # Check whether package to deprecate has active extensions
+        if self.extendable:
+            view = spack.filesystem_view.YamlFilesystemView(spec.prefix,
+                                                            spack.store.layout)
+            active_exts = view.extensions_layout.extension_map(spec).values()
+            if active_exts:
+                short = spec.format('{name}/{hash:7}')
+                m = "Spec %s has active extensions\n" % short
+                for active in active_exts:
+                    m += '        %s\n' % active.format('{name}/{hash:7}')
+                    m += "Deactivate extensions before deprecating %s" % short
+                tty.die(m)
+
+        # Check whether package to deprecate is an active extension
+        if self.is_extension:
+            extendee = self.extendee_spec
+            view = spack.filesystem_view.YamlFilesystemView(extendee.prefix,
+                                                            spack.store.layout)
+
+            if self.is_activated(view):
+                short = spec.format('{name}/{hash:7}')
+                short_ext = extendee.format('{name}/{hash:7}')
+                msg = "Spec %s is an active extension of %s\n" % (short,
+                                                                  short_ext)
+                msg += "Deactivate %s to be able to deprecate it" % short
+                tty.die(msg)
+
+        # Install deprecator if it isn't installed already
+        if not spack.store.db.query(deprecator):
+            deprecator.package.do_install()
+
+        old_deprecator = spack.store.db.deprecator(spec)
+        if old_deprecator:
+            # Find this specs yaml file from its old deprecation
+            self_yaml = spack.store.layout.deprecated_file_path(spec,
+                                                                old_deprecator)
+        else:
+            self_yaml = spack.store.layout.spec_file_path(spec)
+
+        # copy spec metadata to "deprecated" dir of deprecator
+        depr_yaml = spack.store.layout.deprecated_file_path(spec,
+                                                            deprecator)
+        fs.mkdirp(os.path.dirname(depr_yaml))
+        shutil.copy2(self_yaml, depr_yaml)
+
+        # Any specs deprecated in favor of this spec are re-deprecated in
+        # favor of its new deprecator
+        for deprecated in spack.store.db.specs_deprecated_by(spec):
+            deprecated.package.do_deprecate(deprecator, link_fn)
+
+        # Now that we've handled metadata, uninstall and replace with link
+        Package.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+        link_fn(deprecator.prefix, spec.prefix)
 
     def _check_extendable(self):
         if not self.extendable:
