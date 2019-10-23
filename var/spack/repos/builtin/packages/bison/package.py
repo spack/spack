@@ -21,6 +21,9 @@ class Bison(AutotoolsPackage):
     version('3.0.4', sha256='b67fd2daae7a64b5ba862c66c07c1addb9e6b1b05c5f2049392cfd8a2172952e')
     version('2.7',   sha256='19bbe7374fd602f7a6654c131c21a15aebdc06cc89493e8ff250cb7f9ed0a831')
 
+    # https://lists.gnu.org/archive/html/bug-bison/2019-08/msg00008.html
+    patch('parallel.patch', when='@3.4.2')
+
     depends_on('diffutils', type='build')
     depends_on('m4', type=('build', 'run'))
     depends_on('perl', type='build')
@@ -32,7 +35,3 @@ class Bison(AutotoolsPackage):
         patch('secure_snprintf.patch', level=0, when='@3.0.4')
 
     build_directory = 'spack-build'
-
-    @property
-    def parallel(self):
-        return not self.spec.satisfies('@3.4.2')
