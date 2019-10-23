@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class PerlDbfile(PerlPackage):
@@ -24,17 +23,4 @@ class PerlDbfile(PerlPackage):
     depends_on('berkeley-db', type='build')
 
     def patch(self):
-        if os.path.isfile('config.in'):
-            # Load the config file
-            with open('config.in', 'r') as f:
-                filedata = f.read()
-
-            # Replace the BerkeleyDB using the correct path
-            filedata = filedata.replace('/usr/local/BerkeleyDB/',
-                                        self.spec['berkeley-db'].prefix + '/')
-
-            # Update the config file
-            with open('file.txt', 'w') as f:
-                f.write(filedata)
-        else:
-            raise InstallError("cannot find file config.in")
+        filter_file('/usr/local/BerkeleyDB', self.spec['berkeley-db'].prefix, 'config.in')
