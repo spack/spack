@@ -218,21 +218,24 @@ def test_remove_command():
         assert 'mpileaks@' not in find('--show-concretized')
 
 
-def test_environment_status(capfd, tmpdir):
-    with capfd.disabled():
-        with tmpdir.as_cwd():
+def test_environment_status(capsys, tmpdir):
+    with tmpdir.as_cwd():
+        with capsys.disabled():
             assert 'No active environment' in env('status')
 
-            with ev.create('test'):
+        with ev.create('test'):
+            with capsys.disabled():
                 assert 'In environment test' in env('status')
 
-            with ev.Environment('local_dir'):
+        with ev.Environment('local_dir'):
+            with capsys.disabled():
                 assert os.path.join(os.getcwd(), 'local_dir') in env('status')
 
-                e = ev.Environment('myproject')
-                e.write()
-                with tmpdir.join('myproject').as_cwd():
-                    with e:
+            e = ev.Environment('myproject')
+            e.write()
+            with tmpdir.join('myproject').as_cwd():
+                with e:
+                    with capsys.disabled():
                         assert 'in current directory' in env('status')
 
 
