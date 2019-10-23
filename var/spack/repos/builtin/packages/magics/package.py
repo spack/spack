@@ -5,6 +5,7 @@
 
 from spack import *
 import glob
+import os
 
 
 class Magics(CMakePackage):
@@ -105,7 +106,11 @@ class Magics(CMakePackage):
         for plfile in glob.glob('*/*.pl'):
             filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', plfile)
         for pyfile in glob.glob('*/*.py'):
-            filter_file('#!/usr/bin/python', '#!/usr/bin/env python', pyfile)
+            filter_file('#!/usr/bin/python',
+                        '#!/usr/bin/env {0}'.format(
+                            os.path.basename(
+                                self.spec['python'].command.path)),
+                        pyfile)
 
     def cmake_args(self):
         args = [
