@@ -51,6 +51,12 @@ class Coreneuron(CMakePackage):
     variant('shared', default=True, description="Build shared library")
     variant('tests', default=False, description="Enable building tests")
 
+    # nmodl specific options
+    variant('nmodl', default=False, description="Use NMODL instead of MOD2C")
+    variant('sympy', default=False, description="Use NMODL with SymPy to solve ODEs")
+    variant('sympyopt', default=False, description="Use NMODL with SymPy Optimizations")
+    variant('ispc', default=False, description="Enable ISPC backend")
+
     depends_on('bison', type='build')
     depends_on('boost', when='+tests')
     depends_on('cmake@3:', type='build')
@@ -61,6 +67,11 @@ class Coreneuron(CMakePackage):
     depends_on('reportinglib+profile', when='+report+profile')
     depends_on('tau', when='+profile')
 
+    # nmodl specific dependency
+    depends_on('nmodl', when='+nmodl')
+    depends_on('eigen@3.3.4:~metis~scotch~fftw~suitesparse~mpfr', when='+nmodl')
+    depends_on('ispc', when='+ispc')
+
     # Old versions. Required by previous neurodamus package.
     version('master',      git=url, submodules=True)
     version('mousify',     git=url, submodules=True)
@@ -70,6 +81,11 @@ class Coreneuron(CMakePackage):
     depends_on('neurodamus-base@mousify', when='@mousify')
     depends_on('neurodamus-base@plasticity', when='@plasticity')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
+
+   # sympy and ispc options are only usable with nmodl
+    conflicts('+sympyopt', when='~sympy')
+    conflicts('+sympy', when='~nmodl')
+    conflicts('+ispc', when='~nmodl')
 
     @run_before('build')
     def profiling_wrapper_on(self):
@@ -108,16 +124,7 @@ class Coreneuron(CMakePackage):
         spec   = self.spec
         flags = self.get_flags()
 
-        if spec.satisfies('+profile'):
-            env['CC']  = 'tau_cc'
-            env['CXX'] = 'tau_cxx'
-        elif 'bgq' in spec.architecture and spec.satisfies('+mpi'):
-            env['CC']  = spec['mpi'].mpicc
-            env['CXX'] = spec['mpi'].mpicxx
-
         options = ['-DENABLE_SPLAYTREE_QUEUING=ON',
-                   '-DCMAKE_C_FLAGS=%s' % flags,
-                   '-DCMAKE_CXX_FLAGS=%s' % flags,
                    '-DCMAKE_BUILD_TYPE=CUSTOM',
                    '-DENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
                    '-DENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
@@ -127,6 +134,38 @@ class Coreneuron(CMakePackage):
                    '-DENABLE_HEADER_INSTALL=ON',  # for compiling mods to corenrn-special
                    '-DDISABLE_NRN_TIMEOUT=ON'
                    ]
+
+        if spec.satisfies('+profile'):
+            env['CC']  = 'tau_cc'
+            env['CXX'] = 'tau_cxx'
+        elif 'bgq' in spec.architecture and spec.satisfies('+mpi'):
+            env['CC']  = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+
+        if spec.satisfies('+nmodl'):
+            options.append('-DENABLE_NMODL=ON')
+            options.append('-DNMODL_ROOT=%s' % spec['nmodl'].prefix)
+            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
+
+        nmodl_options = 'codegen --force passes --verbatim-rename --inline'
+
+        if spec.satisfies('+ispc'):
+            options.append('-DENABLE_ISPC_TARGET=ON')
+            if '+knl' in spec:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=avx512knl-i32x16')
+            else:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=host')
+
+        if spec.satisfies('+sympy'):
+            nmodl_options += ' sympy --analytic'
+
+        if spec.satisfies('+sympyopt'):
+            nmodl_options += ' --conductance --pade --cse'
+
+        options.append('-DNMODL_EXTRA_FLAGS=%s' % nmodl_options)
+
+        options.extend(['-DCMAKE_C_FLAGS=%s' % flags,
+                        '-DCMAKE_CXX_FLAGS=%s' % flags])
 
         if spec.satisfies('~shared') or spec.satisfies('+gpu'):
             options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
