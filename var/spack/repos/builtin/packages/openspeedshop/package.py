@@ -335,3 +335,6 @@ class Openspeedshop(CMakePackage):
         run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
         run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
         run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
+        mpath = '/share/man'
+        run_env.prepend_path('MANPATH', self.prefix + mpath)
+        run_env.prepend_path('MANPATH', self.spec['cbtf-krell'].prefix + mpath)

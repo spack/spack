@@ -262,3 +262,10 @@ class CbtfKrell(CMakePackage):
 
         run_env.set('CBTF_MRNET_BACKEND_PATH',
                     self.prefix.sbin.cbtf_libcbtf_mrnet_backend)
+
+        run_env.prepend_path('PATH', self.spec['libmonitor'].prefix.bin)
+        run_env.prepend_path('PATH', self.spec['papi'].prefix.bin)
+        run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
+        mpath = '/share/man'
+        run_env.prepend_path('MANPATH', self.prefix + mpath)
+        run_env.prepend_path('MANPATH', self.spec['cbtf-krell'].prefix + mpath)
