@@ -103,8 +103,6 @@ class Coreneuron(CMakePackage):
     def get_flags(self):
         spec = self.spec
         flags = "-g -O2"
-        if 'bgq' in spec.architecture and '%xl' in spec:
-            flags = '-O3 -qtune=qp -qarch=qp -q64 -qhot=simd -qsmp -qthreaded -g'
         if '%intel' in spec:
             flags = '-g -xHost -O2 -qopt-report=5'
             if '+knl' in spec:
@@ -120,7 +118,8 @@ class Coreneuron(CMakePackage):
             flags += ' -DTAU -DR123_USE_GNU_UINT128=0'
         return flags
 
-    def cmake_args(self):
+
+    def get_cmake_args(self):
         spec   = self.spec
         flags = self.get_flags()
 
@@ -138,9 +137,6 @@ class Coreneuron(CMakePackage):
         if spec.satisfies('+profile'):
             env['CC']  = 'tau_cc'
             env['CXX'] = 'tau_cxx'
-        elif 'bgq' in spec.architecture and spec.satisfies('+mpi'):
-            env['CC']  = spec['mpi'].mpicc
-            env['CXX'] = spec['mpi'].mpicxx
 
         if spec.satisfies('+nmodl'):
             options.append('-DENABLE_NMODL=ON')
@@ -170,9 +166,6 @@ class Coreneuron(CMakePackage):
         if spec.satisfies('~shared') or spec.satisfies('+gpu'):
             options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
 
-        if 'bgq' in spec.architecture and '%xl' in spec:
-            options.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
-
         if spec.satisfies('+gpu'):
             gcc = which("gcc")
             options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
@@ -192,6 +185,68 @@ class Coreneuron(CMakePackage):
             options.append('-DADDITIONAL_MECHPATH=%s' % modlib_dir)
 
         return options
+
+
+    @when('@develop')
+    def get_cmake_args(self):
+        spec   = self.spec
+        flags = self.get_flags()
+
+        if spec.satisfies('+profile'):
+            env['CC']  = 'tau_cc'
+            env['CXX'] = 'tau_cxx'
+
+        options = ['-DCORENRN_ENABLE_SPLAYTREE_QUEUING=ON',
+                   '-DCMAKE_C_FLAGS=%s' % flags,
+                   '-DCMAKE_CXX_FLAGS=%s' % flags,
+                   '-DCMAKE_BUILD_TYPE=CUSTOM',
+                   '-DCORENRN_ENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_UNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_TIMEOUT=OFF'
+                   ]
+
+        if spec.satisfies('+nmodl'):
+            options.append('-DCORENRN_ENABLE_NMODL=ON')
+            options.append('-DCORENRN_NMODL_ROOT=%s' % spec['nmodl'].prefix)
+            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
+
+        nmodl_options = 'codegen --force passes --verbatim-rename --inline'
+
+        if spec.satisfies('+ispc'):
+            options.append('-DCORENRN_ENABLE_ISPC=ON')
+            if '+knl' in spec:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=avx512knl-i32x16')
+            else:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=host')
+
+        if spec.satisfies('+sympy'):
+            nmodl_options += ' sympy --analytic'
+
+        if spec.satisfies('+sympyopt'):
+            nmodl_options += ' --conductance --pade --cse'
+
+        options.append('-DCORENRN_NMODL_FLAGS=%s' % nmodl_options)
+
+        if spec.satisfies('~shared') or spec.satisfies('+gpu'):
+            options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
+
+        if spec.satisfies('+gpu'):
+            gcc = which("gcc")
+            options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
+                            '-DCUDA_PROPAGATE_HOST_FLAGS=OFF',
+                            '-DCORENRN_ENABLE_GPU=ON'])
+            # PGI compiler not able to compile nrnreport.cpp when enabled
+            # OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU
+            options.append('-DCORENRN_ENABLE_REPORTINGLIB=OFF')
+
+        return options
+
+
+    def cmake_args(self):
+        return self.get_cmake_args()
+
 
     @run_after('install')
     def filter_compilers(self):
