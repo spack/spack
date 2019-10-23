@@ -2120,7 +2120,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if specs:
                 if deprecator:
                     spack.store.db.deprecate(specs[0], deprecator)
-                    tty.msg("Deprecating stale DB entry for %s")
+                    tty.msg("Deprecating stale DB entry for "
+                            "%s" % spec.short_spec)
                 else:
                     spack.store.db.remove(specs[0])
                     tty.msg("Removed stale DB entry for %s" % spec.short_spec)
@@ -2134,7 +2135,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
 
-        # Try to get the pcakage for the spec
+        # Try to get the package for the spec
         try:
             pkg = spec.package
         except spack.repo.UnknownEntityError:
