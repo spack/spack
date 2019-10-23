@@ -60,7 +60,17 @@
             "name": "x86-64",
             "flags": "-march={name} -mtune={name}"
           }
-        ]
+        ],
+        "clang": {
+          "versions": ":",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu=generic"
+        },
+        "intel": {
+          "versions": ":",
+          "name": "pentium4",
+          "flags": "-march={name} -mtune=generic"
+        }
       }
     },
     "nocona": {
@@ -76,6 +86,16 @@
         "gcc": {
           "versions": "4:",
           "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "pentium4",
+          "flags": "-march={name} -mtune=generic"
         }
       }
     },
@@ -92,6 +112,15 @@
         "gcc": {
           "versions": "4:",
           "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "flags": "-march={name} -mtune={name}}"
         }
       }
     },
@@ -118,7 +147,17 @@
             "name": "corei7",
             "flags": "-march={name} -mtune={name}"
           }
-        ]
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "corei7",
+          "flags": "-march={name} -mtune={name}"
+        }
       }
     },
     "westmere": {
@@ -138,6 +177,16 @@
       "compilers": {
         "gcc": {
           "versions": "4.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "corei7",
           "flags": "-march={name} -mtune={name}"
         }
       }
@@ -166,6 +215,22 @@
           {
             "versions": "4.6:4.8.5",
             "name": "corei7-avx",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "corei7-avx",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -197,6 +262,22 @@
           {
             "versions": ":4.8.5",
             "name": "core-avx-i",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "core-avx-i",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -235,6 +316,22 @@
             "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -265,6 +362,15 @@
       "compilers": {
         "gcc": {
           "versions": "4.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
           "flags": "-march={name} -mtune={name}"
         }
       }
@@ -299,6 +405,15 @@
       "compilers": {
         "gcc": {
           "versions": "5.3:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
           "flags": "-march={name} -mtune={name}"
         }
       }
@@ -335,6 +450,17 @@
       "compilers": {
         "gcc": {
           "versions": "5.1:",
+          "name": "knl",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "name": "knl",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
           "name": "knl",
           "flags": "-march={name} -mtune={name}"
         }
@@ -377,6 +503,17 @@
         "gcc": {
           "name": "skylake-avx512",
           "versions": "5.3:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "name": "skylake-avx512",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "name": "skylake-avx512",
           "flags": "-march={name} -mtune={name}"
         }
       }
@@ -421,6 +558,15 @@
         "gcc": {
           "versions": "8:",
           "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -461,6 +607,15 @@
       "compilers": {
         "gcc": {
           "versions": "9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "8.0:",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "19.0:",
           "flags": "-march={name} -mtune={name}"
         }
       }
@@ -518,6 +673,24 @@
           "name": "icelake-client",
           "versions": "8:",
           "flags": "-march={name} -mtune={name}"
+        },
+        "clang": [
+          {
+            "versions": "7.0:",
+            "name": "icelake-client",
+            "family": "x86-64",
+            "flags": "-march={family} -mcpu={name}"
+          },
+          {
+            "versions": "6.0:6.9",
+            "family": "x86-64",
+            "flags": "-march={family} -mcpu={name}"
+          }
+        ],
+        "intel": {
+          "versions": "18.0:",
+          "name": "icelake-client",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -545,6 +718,17 @@
           "name": "bdver1",
           "versions": "4.6:",
           "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "name": "bdver1",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+          "flags": "-msse3"
         }
       }
     },
@@ -576,6 +760,17 @@
           "name": "bdver2",
           "versions": "4.7:",
           "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "name": "bdver2",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+          "flags": "-msse3"
         }
       }
     },
@@ -608,6 +803,17 @@
           "name": "bdver3",
           "versions": "4.8:",
           "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "name": "bdver3",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+          "flags": "-msse4.2"
         }
       }
     },
@@ -642,6 +848,18 @@
         "gcc": {
           "name": "bdver4",
           "versions": "4.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "name": "bdver4",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+          "name": "core-avx2",
           "flags": "-march={name} -mtune={name}"
         }
       }
@@ -680,6 +898,18 @@
         "gcc": {
           "name": "znver1",
           "versions": "6:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "4.0:",
+          "name": "znver1",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+          "name": "core-avx2",
           "flags": "-march={name} -mtune={name}"
         }
       }
@@ -720,6 +950,18 @@
           "name": "znver2",
           "versions": "9:",
           "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "9.0:",
+          "name": "znver2",
+          "family": "x86-64",
+          "flags": "-march={family} -mcpu={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+          "name": "core-avx2",
+          "flags": "-march={name} -mtune={name}"
         }
       }
     },
@@ -732,6 +974,11 @@
           "name": "powerpc64",
           "versions": "4:",
           "flags": "-mcpu={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": ":",
+          "family": "ppc64",
+          "flags": "-march={family} -mcpu=generic"
         }
       }
     },
@@ -744,6 +991,12 @@
         "gcc": {
           "versions": "4.5:",
           "flags": "-mcpu={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "ppc64",
+          "name": "pwr7",
+          "flags": "-march={family} -mcpu={name}"
         }
       }
     },
@@ -763,7 +1016,13 @@
             "warnings": "Using GCC 4.8 to optimize for Power 8 might not work if you are not on Red Hat Enterprise Linux 7, where a custom backport of the feature has been done. Upstream support from GCC starts in version 4.9",
             "flags": "-mcpu={name} -mtune={name}"
           }
-        ]
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "family": "ppc64",
+          "name": "pwr8",
+          "flags": "-march={family} -mcpu={name}"
+        }
       }
     },
     "power9": {
@@ -775,6 +1034,12 @@
         "gcc": {
           "versions": "6:",
           "flags": "-mcpu={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "ppc64",
+          "name": "pwr9",
+          "flags": "-march={family} -mcpu={name}"
         }
       }
     },
@@ -787,6 +1052,11 @@
           "name": "powerpc64le",
           "versions": "4:",
           "flags": "-mcpu={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": ":",
+          "family": "ppc64le",
+          "flags": "-march={family} -mcpu=generic"
         }
       }
     },
@@ -808,7 +1078,13 @@
             "name": "power8",
             "flags": "-mcpu={name} -mtune={name}"
           }
-        ]
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "family": "ppc64le",
+          "name": "pwr8",
+          "flags": "-march={family} -mcpu={name}"
+        }
       }
     },
     "power9le": {
@@ -821,6 +1097,12 @@
           "name": "power9",
           "versions": "6:",
           "flags": "-mcpu={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "family": "ppc64le",
+          "name": "pwr9",
+          "flags": "-march={family} -mcpu={name}"
         }
       }
     },
@@ -832,6 +1114,11 @@
         "gcc": {
           "versions": "4:",
           "flags": "-march=armv8-a -mtune=generic"
+        },
+        "clang": {
+          "versions": ":",
+          "family": "aarch64",
+          "flags": "-march={family} -mcpu=generic"
         }
       }
     },
@@ -840,6 +1127,11 @@
       "vendor": "generic",
       "features": [],
       "compilers": {
+        "clang": {
+          "versions": ":",
+          "family": "arm",
+          "flags": "-march={family} -mcpu=generic"
+        }
       }
     },
     "ppc": {

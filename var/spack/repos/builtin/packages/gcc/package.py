@@ -100,6 +100,7 @@ class Gcc(AutotoolsPackage):
     depends_on('isl@0.15:0.18', when='@6:8.9')
     depends_on('isl@0.15:0.20', when='@9:')
     depends_on('zlib', when='@6:')
+    depends_on('libiconv')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
@@ -195,6 +196,14 @@ class Gcc(AutotoolsPackage):
             # https://trac.macports.org/ticket/56502#no1
             # see also: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83531
             patch('darwin/headers-10.13-fix.patch', when='@5.5.0')
+        if macos_version() >= Version('10.15'):
+            # Fix system headers for Catalina SDK
+            # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
+            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/b8b8e65e/gcc/9.2.0-catalina.patch',
+                  sha256='0b8d14a7f3c6a2f0d2498526e86e088926671b5da50a554ffa6b7f73ac4f132b', when='@9.2.0:')
+        # Use -headerpad_max_install_names in the build,
+        # otherwise updated load commands won't fit in the Mach-O header.
+        # This is needed because `gcc` avoids the superenv shim.
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
@@ -255,18 +264,24 @@ class Gcc(AutotoolsPackage):
                         '-I{0}'.format(spec['zlib'].prefix.include),
                         'gcc/Makefile.in')
 
+    # https://gcc.gnu.org/install/configure.html
     def configure_args(self):
         spec = self.spec
 
         # Generic options to compile GCC
         options = [
+            # Distributor options
+            '--with-pkgversion=Spack GCC',
+            '--with-bugurl=https://github.com/spack/spack/issues',
+            # Xcode 10 dropped 32-bit support
             '--disable-multilib',
             '--enable-languages={0}'.format(
                 ','.join(spec.variants['languages'].value)),
+            # Drop gettext dependency
+            '--disable-nls',
+            '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix),
             '--with-mpfr={0}'.format(spec['mpfr'].prefix),
             '--with-gmp={0}'.format(spec['gmp'].prefix),
-            '--enable-lto',
-            '--with-quad'
         ]
 
         # Use installed libz
@@ -280,7 +295,7 @@ class Gcc(AutotoolsPackage):
         # Binutils
         if spec.satisfies('+binutils'):
             static_bootstrap_flags = '-static-libstdc++ -static-libgcc'
-            binutils_options = [
+            options.extend([
                 '--with-sysroot=/',
                 '--with-stage1-ldflags={0} {1}'.format(
                     self.rpath_args, static_bootstrap_flags),
@@ -290,8 +305,7 @@ class Gcc(AutotoolsPackage):
                 '--with-ld={0}/ld'.format(spec['binutils'].prefix.bin),
                 '--with-gnu-as',
                 '--with-as={0}/as'.format(spec['binutils'].prefix.bin),
-            ]
-            options.extend(binutils_options)
+            ])
 
         # MPC
         if 'mpc' in spec:
@@ -300,10 +314,6 @@ class Gcc(AutotoolsPackage):
         # ISL
         if 'isl' in spec:
             options.append('--with-isl={0}'.format(spec['isl'].prefix))
-
-        # macOS
-        if sys.platform == 'darwin':
-            options.append('--with-build-config=bootstrap-debug')
 
         # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):
@@ -381,12 +391,6 @@ class Gcc(AutotoolsPackage):
             configure(*options)
             make()
             make('install')
-
-    @property
-    def build_targets(self):
-        if sys.platform == 'darwin':
-            return ['bootstrap']
-        return []
 
     @property
     def install_targets(self):

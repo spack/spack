@@ -50,6 +50,7 @@ class PyTorch(PythonPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
     version('1.0.1', tag='v1.0.1', submodules=True)
@@ -135,7 +136,13 @@ class PyTorch(PythonPackage):
     depends_on('zstd', when='+zstd')
     depends_on('tbb', when='+tbb')
 
-    def setup_environment(self, build_env, run_env):
+    # Test dependencies
+    depends_on('ninja', type='test')
+    depends_on('py-hypothesis', type='test')
+    depends_on('py-six', type='test')
+    depends_on('py-psutil', type='test')
+
+    def setup_build_environment(self, env):
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):
             """Set environment variable to enable or disable support for a
             particular variant.
@@ -153,43 +160,39 @@ class PyTorch(PythonPackage):
             # But some newer variants have always used USE_* or BUILD_*
             if self.spec.satisfies('@1.1:') or newer:
                 if '+' + variant in self.spec:
-                    build_env.set(keyword + '_' + var, 'ON')
+                    env.set(keyword + '_' + var, 'ON')
                 else:
-                    build_env.set(keyword + '_' + var, 'OFF')
+                    env.set(keyword + '_' + var, 'OFF')
             else:
                 if '+' + variant in self.spec:
-                    build_env.unset('NO_' + var)
+                    env.unset('NO_' + var)
                 else:
-                    build_env.set('NO_' + var, 'ON')
+                    env.set('NO_' + var, 'ON')
 
-        build_env.set('MAX_JOBS', make_jobs)
+        env.set('MAX_JOBS', make_jobs)
 
         enable_or_disable('cuda')
         if '+cuda' in self.spec:
-            build_env.set('CUDA_HOME', self.spec['cuda'].prefix)
+            env.set('CUDA_HOME', self.spec['cuda'].prefix)
 
         enable_or_disable('cudnn')
         if '+cudnn' in self.spec:
-            build_env.set('CUDNN_LIB_DIR',
-                          self.spec['cudnn'].libs.directories[0])
-            build_env.set('CUDNN_INCLUDE_DIR',
-                          self.spec['cudnn'].prefix.include)
-            build_env.set('CUDNN_LIBRARY', self.spec['cudnn'].libs[0])
+            env.set('CUDNN_LIB_DIR', self.spec['cudnn'].libs.directories[0])
+            env.set('CUDNN_INCLUDE_DIR', self.spec['cudnn'].prefix.include)
+            env.set('CUDNN_LIBRARY', self.spec['cudnn'].libs[0])
 
         enable_or_disable('fbgemm')
         enable_or_disable('test', keyword='BUILD')
 
         enable_or_disable('miopen')
         if '+miopen' in self.spec:
-            build_env.set('MIOPEN_LIB_DIR',
-                          self.spec['miopen'].libs.directories[0])
-            build_env.set('MIOPEN_INCLUDE_DIR',
-                          self.spec['miopen'].prefix.include)
-            build_env.set('MIOPEN_LIBRARY', self.spec['miopen'].libs[0])
+            env.set('MIOPEN_LIB_DIR', self.spec['miopen'].libs.directories[0])
+            env.set('MIOPEN_INCLUDE_DIR', self.spec['miopen'].prefix.include)
+            env.set('MIOPEN_LIBRARY', self.spec['miopen'].libs[0])
 
         enable_or_disable('mkldnn')
         if '+mkldnn' in self.spec:
-            build_env.set('MKLDNN_HOME', self.spec['intel-mkl'].prefix)
+            env.set('MKLDNN_HOME', self.spec['intel-mkl'].prefix)
 
         enable_or_disable('nnpack')
         enable_or_disable('qnnpack')
@@ -198,10 +201,9 @@ class PyTorch(PythonPackage):
         enable_or_disable('nccl')
         enable_or_disable('nccl', var='SYSTEM_NCCL')
         if '+nccl' in self.spec:
-            build_env.set('NCCL_ROOT', self.spec['nccl'].prefix)
-            build_env.set('NCCL_LIB_DIR',
-                          self.spec['nccl'].libs.directories[0])
-            build_env.set('NCCL_INCLUDE_DIR', self.spec['nccl'].prefix.include)
+            env.set('NCCL_ROOT', self.spec['nccl'].prefix)
+            env.set('NCCL_LIB_DIR', self.spec['nccl'].libs.directories[0])
+            env.set('NCCL_INCLUDE_DIR', self.spec['nccl'].prefix.include)
 
         enable_or_disable('caffe2', keyword='BUILD', var='CAFFE2_OPS')
         enable_or_disable('gloo', newer=True)
@@ -213,18 +215,18 @@ class PyTorch(PythonPackage):
         enable_or_disable('lmdb', newer=True)
         enable_or_disable('binary', keyword='BUILD', newer=True)
 
-        build_env.set('PYTORCH_BUILD_VERSION', self.version)
-        build_env.set('PYTORCH_BUILD_NUMBER', 0)
+        env.set('PYTORCH_BUILD_VERSION', self.version)
+        env.set('PYTORCH_BUILD_NUMBER', 0)
 
         # BLAS to be used by Caffe2. Can be MKL, Eigen, ATLAS, or OpenBLAS.
         if '^mkl' in self.spec:
-            build_env.set('BLAS', 'MKL')
+            env.set('BLAS', 'MKL')
         elif '^eigen' in self.spec:
-            build_env.set('BLAS', 'Eigen')
+            env.set('BLAS', 'Eigen')
         elif '^atlas' in self.spec:
-            build_env.set('BLAS', 'ATLAS')
+            env.set('BLAS', 'ATLAS')
         elif '^openblas' in self.spec:
-            build_env.set('BLAS', 'OpenBLAS')
+            env.set('BLAS', 'OpenBLAS')
 
         enable_or_disable('redis', newer=True)
         enable_or_disable('zstd', newer=True)

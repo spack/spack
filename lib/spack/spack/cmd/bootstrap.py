@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.cpu
 import llnl.util.tty as tty
 
 import spack.repo
@@ -56,7 +57,12 @@ def bootstrap(parser, args, **kwargs):
     # Define requirement dictionary defining general specs which need
     # to be satisfied, and the specs to install when the general spec
     # isn't satisfied.
-    requirement_dict = {'environment-modules': 'environment-modules~X'}
+    requirement_dict = {
+        # Install environment-modules with generic optimizations
+        'environment-modules': 'environment-modules~X target={0}'.format(
+            llnl.util.cpu.host().family
+        )
+    }
 
     for requirement in requirement_dict:
         installed_specs = spack.store.db.query(requirement)

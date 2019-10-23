@@ -9,11 +9,13 @@ import os
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
 
+import spack.error
 import spack.paths
 import spack.config
 import spack.fetch_strategy
 import spack.util.file_cache
-from spack.util.path import canonicalize_path
+import spack.util.path
+import spack.util.url as url_util
 
 
 def _misc_cache():
@@ -25,7 +27,7 @@ def _misc_cache():
     path = spack.config.get('config:misc_cache')
     if not path:
         path = os.path.join(spack.paths.user_config_path, 'cache')
-    path = canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path)
 
     return spack.util.file_cache.FileCache(path)
 
@@ -43,7 +45,7 @@ def _fetch_cache():
     path = spack.config.get('config:source_cache')
     if not path:
         path = os.path.join(spack.paths.var_path, "cache")
-    path = canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path)
 
     return spack.fetch_strategy.FsCache(path)
 
@@ -55,7 +57,6 @@ class MirrorCache(object):
     def store(self, fetcher, relative_dest, cosmetic_path=None):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
-
         dst = os.path.join(self.root, relative_dest)
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)

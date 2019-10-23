@@ -469,3 +469,11 @@ def test_cce_version_detection(version_str, expected_version):
 def test_fj_version_detection(version_str, expected_version):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
     assert version == expected_version
+
+
+@pytest.mark.parametrize('compiler_spec,expected_result', [
+    ('gcc@4.7.2', False), ('clang@3.3', False), ('clang@8.0.0', True)
+])
+def test_detecting_mixed_toolchains(compiler_spec, expected_result, config):
+    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
+    assert spack.compilers.is_mixed_toolchain(compiler) is expected_result

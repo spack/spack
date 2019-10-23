@@ -30,6 +30,8 @@ class Openjpeg(CMakePackage):
     version('1.5.2', sha256='3734e95edd0bef6e056815591755efd822228dc3cd866894e00a2c929026b16d')
     version('1.5.1', sha256='6a42fcc23cb179f69a1e94429089e5a5926aee1ffe582a0a6bd91299d297e61a')
 
+    depends_on('zlib')
+
     # The problem with install name of the library on MacOs was fixed starting
     # version 2.1.1: https://github.com/uclouvain/openjpeg/commit/b9a247b559e62e55f5561624cf4a19aee3c8afdc
     # The solution works for the older versions (at least starting 1.5.1) too.
