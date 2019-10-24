@@ -20,7 +20,7 @@ class Fstrack(MakefilePackage):
     variant('flow', default=True, description='Build the flow tracker')
 
     depends_on('gmt@4.0:4.999', when='+flow')
-    depends_on('netcdf', when='+flow')
+    depends_on('netcdf-c', when='+flow')
 
     parallel = False
 
@@ -38,7 +38,7 @@ class Fstrack(MakefilePackage):
 
         if '+flow' in self.spec:
             spack_env.set('GMTHOME', self.spec['gmt'].prefix)
-            spack_env.set('NETCDFDIR', self.spec['netcdf'].prefix)
+            spack_env.set('NETCDFDIR', self.spec['netcdf-c'].prefix)
 
     def build(self, spec, prefix):
         with working_dir('eispack'):

@@ -86,7 +86,7 @@ class Vtk(CMakePackage):
     depends_on('jsoncpp')
     depends_on('libxml2')
     depends_on('lz4')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('netcdf-cxx')
     depends_on('libpng')
     depends_on('libtiff')
@@ -120,8 +120,8 @@ class Vtk(CMakePackage):
             '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
             '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
 
-            '-DNETCDF_DIR={0}'.format(spec['netcdf'].prefix),
-            '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
+            '-DNETCDF_DIR={0}'.format(spec['netcdf-c'].prefix),
+            '-DNETCDF_C_ROOT={0}'.format(spec['netcdf-c'].prefix),
             '-DNETCDF_CXX_ROOT={0}'.format(spec['netcdf-cxx'].prefix),
 
             # Allow downstream codes (e.g. VisIt) to override VTK's classes

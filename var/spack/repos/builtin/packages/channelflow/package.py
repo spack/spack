@@ -34,8 +34,8 @@ class Channelflow(CMakePackage):
 
     # Support for different I/O formats
     depends_on('hdf5+cxx', when='+hdf5')
-    depends_on('netcdf', when='netcdf=serial')
-    depends_on('netcdf+mpi', when='netcdf=parallel')
+    depends_on('netcdf-c', when='netcdf=serial')
+    depends_on('netcdf-c+mpi', when='netcdf=parallel')
 
     # Python bindings
     depends_on('boost+python', when='+python')
@@ -69,7 +69,7 @@ class Channelflow(CMakePackage):
         }
 
         args.append('-DWITH_NETCDF:STRING={0}'.format(
-            netcdf_str[spec.variants['netcdf'].value]
+            netcdf_str[spec.variants['netcdf-c'].value]
         ))
 
         # Set an MPI compiler for parallel builds

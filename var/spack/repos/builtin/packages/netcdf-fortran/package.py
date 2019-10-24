@@ -7,7 +7,10 @@ from spack import *
 
 
 class NetcdfFortran(AutotoolsPackage):
-    """Fortran interface for NetCDF4"""
+    """NetCDF (network Common Data Form) is a set of software libraries and
+    machine-independent data formats that support the creation, access, and
+    sharing of array-oriented scientific data. This is the Fortran
+    distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
     url      = "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.5.2.tar.gz"
@@ -20,7 +23,7 @@ class NetcdfFortran(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
-    depends_on('netcdf')
+    depends_on('netcdf-c')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
@@ -30,14 +33,14 @@ class NetcdfFortran(AutotoolsPackage):
         if name in ['cflags', 'fflags'] and '+pic' in self.spec:
             flags.append(self.compiler.pic_flag)
         elif name == 'cppflags':
-            flags.append(self.spec['netcdf'].headers.cpp_flags)
+            flags.append(self.spec['netcdf-c'].headers.cpp_flags)
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs
             # in libnetcdff.la, so packages that use libtool for linking
             # could correctly link to all the dependencies even when the
             # building takes place outside of Spack environment, i.e.
             # without Spack's compiler wrappers.
-            flags.append(self.spec['netcdf'].libs.search_flags)
+            flags.append(self.spec['netcdf-c'].libs.search_flags)
 
         return None, None, flags
 

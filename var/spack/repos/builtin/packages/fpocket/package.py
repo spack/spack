@@ -14,7 +14,7 @@ class Fpocket(MakefilePackage):
     version('master', branch='master',
             git='https://github.com/Discngine/fpocket.git')
 
-    depends_on("netcdf")
+    depends_on("netcdf-c")
 
     def setup_environment(self, spack_env, run_env):
         if self.compiler.name == 'gcc':

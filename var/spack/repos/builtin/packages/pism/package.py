@@ -73,7 +73,7 @@ class Pism(CMakePackage):
     depends_on('fftw')
     depends_on('gsl')
     depends_on('mpi')
-    depends_on('netcdf')    # Only the C interface is used, no netcdf-cxx4
+    depends_on('netcdf-c')    # Only the C interface is used, no netcdf-cxx4
     depends_on('petsc')
     depends_on('udunits')
     depends_on('proj@:4')

@@ -30,7 +30,7 @@ class Nco(AutotoolsPackage):
 
     # See "Compilation Requirements" at:
     # http://nco.sourceforge.net/#bld
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('antlr@2.7.7+cxx')  # required for ncap2
     depends_on('gsl')              # desirable for ncap2
     depends_on('udunits')          # allows dimensional unit transformations
@@ -47,7 +47,7 @@ class Nco(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
-        spack_env.set('NETCDF_INC', spec['netcdf'].prefix.include)
-        spack_env.set('NETCDF_LIB', spec['netcdf'].prefix.lib)
+        spack_env.set('NETCDF_INC', spec['netcdf-c'].prefix.include)
+        spack_env.set('NETCDF_LIB', spec['netcdf-c'].prefix.lib)
         spack_env.set('ANTLR_ROOT', spec['antlr'].prefix)
         spack_env.set('UDUNITS2_PATH', spec['udunits'].prefix)

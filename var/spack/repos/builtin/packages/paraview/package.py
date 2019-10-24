@@ -93,7 +93,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('libxml2')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('expat')
     # depends_on('netcdf-cxx')
     # depends_on('protobuf') # version mismatches?

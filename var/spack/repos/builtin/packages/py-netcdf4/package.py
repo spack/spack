@@ -22,7 +22,7 @@ class PyNetcdf4(PythonPackage):
     depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-cftime', type=('build', 'run'))
 
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('hdf5@1.8.0:+hl')
 
     def setup_environment(self, spack_env, run_env):
@@ -32,5 +32,5 @@ class PyNetcdf4(PythonPackage):
         spack_env.set('USE_SETUPCFG', '0')
         spack_env.set('HDF5_INCDIR', self.spec['hdf5'].prefix.include)
         spack_env.set('HDF5_LIBDIR', self.spec['hdf5'].prefix.lib)
-        spack_env.set('NETCDF4_INCDIR', self.spec['netcdf'].prefix.include)
-        spack_env.set('NETCDF4_LIBDIR', self.spec['netcdf'].prefix.lib)
+        spack_env.set('NETCDF4_INCDIR', self.spec['netcdf-c'].prefix.include)
+        spack_env.set('NETCDF4_LIBDIR', self.spec['netcdf-c'].prefix.lib)

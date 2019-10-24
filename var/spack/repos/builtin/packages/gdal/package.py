@@ -114,7 +114,7 @@ class Gdal(AutotoolsPackage):
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
     depends_on('kealib', when='+kea @2:')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('jasper@1.900.1', patches='uuid.patch', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
@@ -299,7 +299,7 @@ class Gdal(AutotoolsPackage):
 
         # https://trac.osgeo.org/gdal/wiki/NetCDF
         if '+netcdf' in spec:
-            args.append('--with-netcdf={0}'.format(spec['netcdf'].prefix))
+            args.append('--with-netcdf={0}'.format(spec['netcdf-c'].prefix))
         else:
             args.append('--with-netcdf=no')
 

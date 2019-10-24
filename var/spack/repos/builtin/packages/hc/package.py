@@ -17,7 +17,7 @@ class Hc(MakefilePackage):
     version('1.0.7', sha256='7499ea76ac4739a9c0941bd57d124fb681fd387c8d716ebb358e6af3395103ed')
 
     depends_on('gmt@4.2.1:4.999')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
 
     # Build phase fails in parallel with the following error messages:
     # /usr/bin/ld: cannot find -lrick
@@ -27,7 +27,7 @@ class Hc(MakefilePackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GMTHOME', self.spec['gmt'].prefix)
-        spack_env.set('NETCDFHOME', self.spec['netcdf'].prefix)
+        spack_env.set('NETCDFHOME', self.spec['netcdf-c'].prefix)
         spack_env.set('HC_HOME', self.prefix)
         spack_env.unset('ARCH')
 

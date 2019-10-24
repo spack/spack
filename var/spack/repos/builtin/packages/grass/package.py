@@ -69,7 +69,7 @@ class Grass(AutotoolsPackage):
     depends_on('readline', when='+readline')
     depends_on('opencl', when='+opencl')
     depends_on('bzip2', when='+bzlib')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('geos', when='+geos')
 
     def url_for_version(self, version):
@@ -184,7 +184,7 @@ class Grass(AutotoolsPackage):
 
         if '+netcdf' in spec:
             args.append('--with-netcdf={0}/bin/nc-config'.format(
-                spec['netcdf'].prefix))
+                spec['netcdf-c'].prefix))
         else:
             args.append('--without-netcdf')
 

@@ -110,7 +110,7 @@ class Amp(CMakePackage):
         if '+netcdf' in spec:
             tpl_list = tpl_list + ";NETCDF"
             options.extend(['-DTPL_NETCDF_INSTALL_DIR=%s' %
-                            spec['netcdf'].prefix, ])
+                            spec['netcdf-c'].prefix, ])
         if '+hypre' in spec:
             tpl_list = tpl_list + ";HYPRE"
             options.extend(['-DTPL_HYPRE_INSTALL_DIR=%s' %

@@ -16,13 +16,13 @@ def is_integral(x):
         return False
 
 
-class Netcdf(AutotoolsPackage):
-    """NetCDF is a set of software libraries and self-describing,
-    machine-independent data formats that support the creation, access,
-    and sharing of array-oriented scientific data."""
+class NetcdfC(AutotoolsPackage):
+    """NetCDF (network Common Data Form) is a set of software libraries and
+    machine-independent data formats that support the creation, access, and
+    sharing of array-oriented scientific data. This is the C distribution."""
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
-    git      = "https://github.com/Unidata/netcdf-c"
+    git      = "https://github.com/Unidata/netcdf-c.git"
     url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.7.2.tar.gz"
 
     def url_for_version(self, version):
@@ -45,7 +45,7 @@ class Netcdf(AutotoolsPackage):
     # Version 4.4.1.1 is having problems in tests
     #    https://github.com/Unidata/netcdf-c/issues/343
     version('4.4.1.1', sha256='4d44c6f4d02a8faf10ea619bfe1ba8224cd993024f4da12988c7465f663c8cae')
-    # netcdf@4.4.1 can crash on you (in real life and in tests).  See:
+    # Version 4.4.1 can crash on you (in real life and in tests).  See:
     #    https://github.com/Unidata/netcdf-c/issues/282
     version('4.4.1',   sha256='8915cc69817f7af6165fbe69a8d1dfe21d5929d7cca9d10b10f568669ec6b342')
     version('4.4.0',   sha256='0d40cb7845abd03c363abcd5f57f16e3c0685a0faf8badb2c59867452f6bcf78')
@@ -121,20 +121,20 @@ class Netcdf(AutotoolsPackage):
     # Starting version 4.4.0, it became possible to disable parallel I/O even
     # if HDF5 supports it. For previous versions of the library we need
     # HDF5 without mpi support to disable parallel I/O.
-    # The following doesn't work if hdf5+mpi by default and netcdf~mpi is
+    # The following doesn't work if hdf5+mpi by default and netcdf-c~mpi is
     # specified in packages.yaml
     # depends_on('hdf5~mpi', when='@:4.3~mpi')
     # Thus, we have to introduce a conflict
     conflicts('~mpi', when='@:4.3^hdf5+mpi',
-              msg='netcdf@:4.3~mpi requires hdf5~mpi')
+              msg='netcdf-c@:4.3~mpi requires hdf5~mpi')
 
     # We need HDF5 with mpi support to enable parallel I/O.
-    # The following doesn't work if hdf5~mpi by default and netcdf+mpi is
+    # The following doesn't work if hdf5~mpi by default and netcdf-c+mpi is
     # specified in packages.yaml
     # depends_on('hdf5+mpi', when='+mpi')
     # Thus, we have to introduce a conflict
     conflicts('+mpi', when='^hdf5~mpi',
-              msg='netcdf+mpi requires hdf5+mpi')
+              msg='netcdf-c+mpi requires hdf5+mpi')
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
     # https://github.com/Unidata/netcdf-c/issues/250
@@ -264,3 +264,10 @@ class Netcdf(AutotoolsPackage):
     def check(self):
         # h5_test fails when run in parallel
         make('check', parallel=False)
+
+    @property
+    def libs(self):
+        shared = '+shared' in self.spec
+        return find_libraries(
+            'libnetcdf', root=self.prefix, shared=shared, recursive=True
+        )

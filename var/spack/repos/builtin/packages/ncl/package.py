@@ -42,7 +42,7 @@ class Ncl(Package):
 
     # Non-optional dependencies according to the manual:
     depends_on('jpeg')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('cairo+X+pdf')
 
     # Extra dependencies that may be missing from build system:
@@ -65,7 +65,7 @@ class Ncl(Package):
     depends_on('bzip2')
     depends_on('freetype')
 
-    # In Spack, we do not have an option to compile netcdf without netcdf-4
+    # In Spack, we do not have an option to compile netcdf-c without netcdf-4
     # support, so we will tell the ncl configuration script that we want
     # support for netcdf-4, but the script assumes that hdf5 is compiled with
     # szip support. We introduce this restriction with the following dependency
@@ -76,7 +76,7 @@ class Ncl(Package):
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
     depends_on('esmf', type='run')
 
-    # In Spack, we also do not have an option to compile netcdf without DAP
+    # In Spack, we also do not have an option to compile netcdf-c without DAP
     # support, so we will tell the ncl configuration script that we have it.
 
     # Some of the optional dependencies according to the manual:

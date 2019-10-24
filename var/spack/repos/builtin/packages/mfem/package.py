@@ -189,7 +189,7 @@ class Mfem(Package):
     # depends_on('petsc@3.8:+mpi+double+hypre+suite-sparse+mumps',
     #            when='+petsc')
     depends_on('mpfr', when='+mpfr')
-    depends_on('netcdf@4.1.3:', when='+netcdf')
+    depends_on('netcdf-c@4.1.3:', when='+netcdf')
     depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
@@ -368,9 +368,9 @@ class Mfem(Package):
 
         if '+netcdf' in spec:
             options += [
-                'NETCDF_OPT=-I%s' % spec['netcdf'].prefix.include,
+                'NETCDF_OPT=-I%s' % spec['netcdf-c'].prefix.include,
                 'NETCDF_LIB=%s' %
-                ld_flags_from_dirs([spec['netcdf'].prefix.lib], ['netcdf'])]
+                ld_flags_from_dirs([spec['netcdf-c'].prefix.lib], ['netcdf'])]
 
         if '+gzstream' in spec:
             if "@:3.3.2" in spec:
