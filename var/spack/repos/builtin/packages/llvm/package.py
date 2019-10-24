@@ -619,9 +619,9 @@ class Llvm(CMakePackage):
 
         except ProcessError:
             explanation = ('The "lldb_codesign" identity must be available'
-                           ' to build LLVM with LLDB. See https://github.com/'
-                           'jevinskie/llvm-lldb/blob/master/docs/code-signing'
-                           '.txt for details on how to create this identity.')
+                           ' to build LLVM with LLDB. See https://lldb.llvm'
+                           '.org/resources/build.html#code-signing-on-macos'
+                           'for details on how to create this identity.')
             raise RuntimeError(explanation)
 
     def setup_environment(self, spack_env, run_env):
