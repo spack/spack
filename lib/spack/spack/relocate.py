@@ -6,6 +6,7 @@
 
 import os
 import re
+import shutil
 import platform
 import spack.repo
 import spack.cmd
@@ -86,7 +87,14 @@ def get_existing_elf_rpaths(path_name):
     Return the RPATHS returned by patchelf --print-rpath path_name
     as a list of strings.
     """
-    patchelf = Executable(get_patchelf())
+
+    # if we're relocating patchelf itself, use it
+
+    if path_name[-13:] == "/bin/patchelf":
+        patchelf = Executable(path_name)
+    else:
+        patchelf = Executable(get_patchelf())
+
     try:
         output = patchelf('--print-rpath', '%s' %
                           path_name, output=str, error=str)
@@ -326,8 +334,18 @@ def modify_elf_object(path_name, new_rpaths):
     """
     Replace orig_rpath with new_rpath in RPATH of elf object path_name
     """
+
     new_joined = ':'.join(new_rpaths)
-    patchelf = Executable(get_patchelf())
+
+    # if we're relocating patchelf itself, use it
+
+    if path_name[-13:] == "/bin/patchelf":
+        bak_path = path_name + ".bak"
+        shutil.copy(path_name,bak_path)
+        patchelf = Executable(bak_path)
+    else:
+        patchelf = Executable(get_patchelf())
+
     try:
         patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
                  '%s' % path_name, output=str, error=str)
@@ -659,7 +677,13 @@ def file_is_relocatable(file):
         raise ValueError('{0} is not an absolute path'.format(file))
 
     strings = Executable('strings')
-    patchelf = Executable(get_patchelf())
+
+    # if we're relocating patchelf itself, use it
+
+    if path_name[-13:] == "/bin/patchelf":
+        patchelf = Executable(path_name)
+    else:
+        patchelf = Executable(get_patchelf())
 
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
