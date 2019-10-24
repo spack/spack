@@ -31,8 +31,6 @@ import copy
 import xml.etree.ElementTree
 from functools import wraps
 from six import string_types, with_metaclass
-import base64
-import hashlib
 import six.moves.urllib.parse as urllib_parse
 
 import llnl.util.tty as tty
@@ -85,25 +83,6 @@ def _ensure_one_stage_entry(stage_path):
     stage_entries = os.listdir(stage_path)
     assert len(stage_entries) == 1
     return os.path.join(stage_path, stage_entries[0])
-
-
-# TODO: this should be extracted into a utility function and that should be
-# shared with Spec._spec_hash
-def _hash(content):
-    sha = hashlib.sha1(content.encode('utf-8'))
-    b32_hash = base64.b32encode(sha.digest()).lower()
-
-    if sys.version_info[0] >= 3:
-        b32_hash = b32_hash.decode('utf-8')
-
-    return b32_hash
-
-
-def _global_dir(fname):
-    # Given a filename that will be placed in a directory of many files,
-    # produce a directory name that can be used to split the files evenly
-    # among many directories.
-    return _hash(fname)[:2]
 
 
 class FSMeta(type):
