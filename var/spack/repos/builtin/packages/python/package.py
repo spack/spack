@@ -857,6 +857,9 @@ class Python(AutotoolsPackage):
                 # the spack install tree is located at a symlink or a
                 # descendent of a symlink. What we need here is the real
                 # relative path from the python prefix to src
+                # TODO: generalize this logic in the link_tree object
+                #    add a method to resolve a link relative to the link_tree
+                #    object root.
                 realpath_src = os.path.realpath(src)
                 realpath_prefix = os.path.realpath(self.spec.prefix)
                 realpath_rel = os.path.relpath(realpath_src, realpath_prefix)
