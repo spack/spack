@@ -1046,7 +1046,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only fetch concrete packages.")
 
         if not self.has_code:
-            raise InvalidPackageOpError("Can only fetch a package with a URL.")
+            tty.msg(
+                "No fetch required for %s: package has no code." % self.name
+            )
 
         start_time = time.time()
         checksum = spack.config.get('config:checksum')

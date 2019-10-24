@@ -201,28 +201,16 @@ class BundleFetchStrategy(FetchStrategy):
     url_attr = ''
 
     def fetch(self):
-        tty.msg("No code to fetch.")
+        """Simply report success -- there is no code to fetch."""
         return True
-
-    def check(self):
-        tty.msg("No code to check.")
-
-    def expand(self):
-        tty.msg("No archive to expand.")
-
-    def reset(self):
-        tty.msg("No code to reset.")
-
-    def archive(self, destination):
-        tty.msg("No code to archive.")
 
     @property
     def cachable(self):
-        tty.msg("No code to cache.")
+        """Report False as there is no code to cache."""
         return False
 
     def source_id(self):
-        tty.msg("No code to be uniquely identified.")
+        """BundlePackages don't have a source id."""
         return ''
 
 
