@@ -50,7 +50,9 @@ from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9.3')
+# Increment by one when the database format changes.
+# versions before 5 were not integers
+_db_version = Version('5')
 
 # Timeout for spack database locks in seconds
 _db_lock_timeout = 120
