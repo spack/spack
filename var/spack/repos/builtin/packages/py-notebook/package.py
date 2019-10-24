@@ -12,6 +12,7 @@ class PyNotebook(PythonPackage):
     homepage = "https://github.com/jupyter/notebook"
     url      = "https://pypi.io/packages/source/n/notebook/notebook-4.2.3.tar.gz"
 
+    version('6.0.1', sha256='660976fe4fe45c7aa55e04bf4bccb9f9566749ff637e9020af3422f9921f9a5d')
     version('4.2.3', sha256='39a9603d3fe88b60de2903680c965cf643acf2c16fb2c6bac1d905e1042b5851')
     version('4.2.2', sha256='418ba230c9b2e7e739940cae9fb4625e10a63f038e9c95cf1a9b7a244256ba38')
     version('4.2.1', sha256='a49de524dabb99f214bdf2a58f26c7892650251a23a3669c6492fb180492e197')
@@ -24,6 +25,7 @@ class PyNotebook(PythonPackage):
     variant('terminal', default=False, description="Enable terminal functionality")
 
     depends_on('python@2.7:2.8,3.3:')
+    depends_on('py-setuptools', type='build', when='@6:')
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-tornado@4:', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))
@@ -37,3 +39,8 @@ class PyNotebook(PythonPackage):
     depends_on('py-ipykernel@5.1.0:', when='@4.2.0:', type=('build', 'run'))
     depends_on('py-terminado@0.3.3:', when="+terminal", type=('build', 'run'))
     depends_on('py-ipywidgets', when="+terminal", type=('build', 'run'))
+    # required for 6.0.1, not sure about 5.x.x, as there is no version in spack
+    # right now treat them as 6-or-newer dependencies
+    depends_on('py-prometheus-client', type=('build', 'run'), when='@6:')
+    depends_on('py-terminado', type=('build', 'run'), when='@6:')
+    depends_on('py-send2trash', type=('build', 'run'), when='@6:')
