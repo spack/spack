@@ -26,8 +26,10 @@ class Brayns(CMakePackage):
     variant('viewer', default=True, description='Build braynsViewer app')
     variant('optix', default=False, description='Build Optix engine')
     variant('test', default=False, description='Enable extra tests')
+    variant('doc', default=False, description='Build documentation')
 
     depends_on('cmake@3.1:', type='build')
+    depends_on('doxygen', type='build', when='+doc')
     depends_on('ispc', type='build')
     depends_on('ninja', type='build')
 
@@ -85,3 +87,5 @@ class Brayns(CMakePackage):
             if '+optix' in self.spec:
                 ninja('braynsOptixEngine')
             ninja()
+            if '+doc' in self.spec:
+                ninja('doxygen')
