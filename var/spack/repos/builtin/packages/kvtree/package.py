@@ -11,7 +11,7 @@ class Kvtree(CMakePackage):
     hashes."""
 
     homepage = "https://github.com/ECP-VeloC/KVTree"
-    url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.1.zip"
+    url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.2.zip"
     git      = "https://github.com/ecp-veloc/kvtree.git"
 
     tags = ['ecp']

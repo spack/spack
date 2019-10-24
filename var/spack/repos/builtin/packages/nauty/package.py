@@ -48,8 +48,8 @@ class Nauty(AutotoolsPackage):
     }
     # Iterate over patches
     for condition, urls in urls_for_patches.items():
-        for url, sha256 in urls:
-            patch(url, when=condition, level=1, sha256=sha256)
+        for path, sha256 in urls:
+            patch(path, when=condition, level=1, sha256=sha256)
 
     depends_on('m4',  type='build', when='@2.6r7')
     depends_on('autoconf',  type='build', when='@2.6r7')

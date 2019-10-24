@@ -10,7 +10,7 @@ class Pism(CMakePackage):
     """Parallel Ice Sheet Model"""
 
     homepage = "http://pism-docs.org/wiki/doku.php:="
-    url      = "https://github.com/pism/pism/archive/v0.7.3.tar.gz"
+    url      = "https://github.com/pism/pism/archive/v1.1.4.tar.gz"
     git      = "https://github.com/pism/pism.git"
 
     maintainers = ['citibeth']
@@ -75,7 +75,7 @@ class Pism(CMakePackage):
     depends_on('mpi')
     depends_on('netcdf')    # Only the C interface is used, no netcdf-cxx4
     depends_on('petsc')
-    depends_on('udunits2')
+    depends_on('udunits')
     depends_on('proj@:4')
     depends_on('everytrace', when='+everytrace')
 

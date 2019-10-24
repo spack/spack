@@ -18,10 +18,6 @@ class Pagit(Package):
     depends_on('java', type=('build', 'run'))
     depends_on('perl', type=('build', 'run'))
 
-    def url_for_version(self, version):
-        url = 'ftp://ftp.sanger.ac.uk/pub/resources/software/pagit/PAGIT.V{0}.64bit.tgz'
-        return url.format(version)
-
     def install(self, spec, prefix):
         with working_dir('PAGIT'):
             install_tree('ABACAS', prefix.ABACAS)

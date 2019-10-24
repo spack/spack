@@ -446,10 +446,24 @@ def name_parsed_correctly(pkg, name):
         pkg_name = pkg_name[2:]
     elif pkg_name.startswith('py-'):
         pkg_name = pkg_name[3:]
+    elif pkg_name.startswith('tcl-'):
+        pkg_name = pkg_name[4:]
+    elif pkg_name.startswith('lua-'):
+        pkg_name = pkg_name[4:]
     elif pkg_name.startswith('perl-'):
         pkg_name = pkg_name[5:]
+    elif pkg_name.startswith('ruby-'):
+        pkg_name = pkg_name[5:]
+    elif pkg_name.startswith('llvm-'):
+        pkg_name = pkg_name[5:]
+    elif pkg_name.startswith('intel-'):
+        pkg_name = pkg_name[6:]
+    elif pkg_name.startswith('votca-'):
+        pkg_name = pkg_name[6:]
     elif pkg_name.startswith('octave-'):
         pkg_name = pkg_name[7:]
+    elif pkg_name.startswith('gtkorvo-'):
+        pkg_name = pkg_name[8:]
 
     return name == pkg_name
 

@@ -16,7 +16,7 @@ class Augustus(MakefilePackage):
     # Releases have moved to github
 
     version('3.3.2', sha256='d09f972cfd88deb34b19b69878eb8af3bbbe4f1cde1434b69cedc2aa6247a0f2')
-    version('3.3.1', sha256='011379606f381ee21b9716f83e8a1a57b2aaa01aefeebd2748104efa08c47cab',
+    version('3.3.1-tag1', sha256='011379606f381ee21b9716f83e8a1a57b2aaa01aefeebd2748104efa08c47cab',
             url='https://github.com/Gaius-Augustus/Augustus/archive/v3.3.1-tag1.tar.gz')
     version('3.3',   sha256='b5eb811a4c33a2cc3bbd16355e19d530eeac6d1ac923e59f48d7a79f396234ee',
             url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.3.tar.gz')

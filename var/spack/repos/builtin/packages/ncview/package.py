@@ -14,7 +14,7 @@ class Ncview(AutotoolsPackage):
     version('2.1.7', sha256='a14c2dddac0fc78dad9e4e7e35e2119562589738f4ded55ff6e0eca04d682c82')
 
     depends_on('netcdf')
-    depends_on('udunits2')
+    depends_on('udunits')
     depends_on('libpng')
     depends_on('libxaw')
 

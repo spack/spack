@@ -10,7 +10,7 @@ class Davix(CMakePackage):
     """High-performance file management over WebDAV/HTTP."""
 
     homepage = "https://dmc.web.cern.ch/projects/davix"
-    url      = "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/0.6.7/davix-0.6.7.tar.gz"
+    url      = "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/0.6.8/davix-0.6.8.tar.gz"
     list_url = "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/"
     list_depth = 1
 

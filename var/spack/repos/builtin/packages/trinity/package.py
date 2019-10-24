@@ -52,7 +52,7 @@ class Trinity(MakefilePackage):
     depends_on("samtools", type="run")
     depends_on("py-numpy", type="run")
     depends_on("express", type="run")
-    depends_on("perl-dbfile", type="run")
+    depends_on("perl-db-file", type="run")
     depends_on("perl-uri", type="run")
     depends_on("r-fastcluster", type="run")
     depends_on("r-ctc", type="run")

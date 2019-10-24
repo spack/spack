@@ -11,7 +11,7 @@ class Adlbx(AutotoolsPackage):
     """ADLB/X: Master-worker library + work stealing and data dependencies"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/adlbx-0.0.0.tar.gz'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/adlbx-0.9.2.tar.gz'
     git      = "https://github.com/swift-lang/swift-t.git"
 
     version('master', branch='master')

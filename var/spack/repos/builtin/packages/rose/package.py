@@ -16,8 +16,7 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    # url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.7.0.tar.gz"
-    url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.9.104.zip"
+    url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.10.0.zip"
     git = "https://github.com/rose-compiler/rose-develop.git"
 
     # --------------------------------------------------------------------------

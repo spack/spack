@@ -14,7 +14,7 @@ class Dislin(Package):
     homepage = "http://www.mps.mpg.de/dislin"
     url      = "ftp://ftp.gwdg.de/pub/grafik/dislin/linux/i586_64/dislin-11.0.linux.i586_64.tar.gz"
 
-    version('11.2.linux.i586_64', sha256='13d28188924e0b0b803d72aa4b48be4067e98e890701b0aa6f54a11c7d34dd10')
+    version('11.0', sha256='13d28188924e0b0b803d72aa4b48be4067e98e890701b0aa6f54a11c7d34dd10')
 
     depends_on('motif')
     depends_on('gl')

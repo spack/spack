@@ -10,7 +10,6 @@ class TrilinosCatalystIossAdapter(CMakePackage):
     """Adapter for Trilinos Seacas Ioss and Paraview Catalyst"""
 
     homepage = "https://trilinos.org/"
-    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
     version('develop', branch='develop')

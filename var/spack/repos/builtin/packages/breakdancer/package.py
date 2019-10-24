@@ -32,7 +32,7 @@ class Breakdancer(CMakePackage):
 
     depends_on('perl-statistics-descriptive', type='run')
     depends_on('perl-math-cdf', type='run')
-    depends_on('perl-gd-graph', type='run')
+    depends_on('perl-gdgraph', type='run')
     depends_on('perl-gdgraph-histogram', type='run')
     depends_on('perl-list-moreutils', type='run')
     depends_on('perl-exporter-tiny', type='run')

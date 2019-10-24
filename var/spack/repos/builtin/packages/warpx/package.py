@@ -16,10 +16,10 @@ class Warpx(MakefilePackage):
     """
 
     homepage = "https://ecp-warpx.github.io/index.html"
-    url      = "https://github.com/ECP-WarpX/WarpX"
+    git      = "https://github.com/ECP-WarpX/WarpX.git"
 
-    version('master', git='https://github.com/ECP-WarpX/WarpX.git', tag='master')
-    version('dev', git='https://github.com/ECP-WarpX/WarpX.git', tag='dev')
+    version('master', tag='master')
+    version('dev', tag='dev')
 
     depends_on('mpi')
 

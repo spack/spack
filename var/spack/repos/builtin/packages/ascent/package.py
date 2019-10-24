@@ -96,15 +96,17 @@ class Ascent(Package):
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtkh@develop",             when="+vtkh")
-    depends_on("vtkh@develop~openmp",      when="+vtkh~openmp")
-    depends_on("vtkh@develop+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("vtkh@develop+cuda~openmp", when="+vtkh+cuda~openmp")
+    depends_on("vtk-m", when="+vtkh")
 
-    depends_on("vtkh@develop~shared",             when="~shared+vtkh")
-    depends_on("vtkh@develop~shared~openmp",      when="~shared+vtkh~openmp")
-    depends_on("vtkh@develop~shared+cuda",        when="~shared+vtkh+cuda")
-    depends_on("vtkh@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
+    depends_on("vtk-h@develop",             when="+vtkh")
+    depends_on("vtk-h@develop~openmp",      when="+vtkh~openmp")
+    depends_on("vtk-h@develop+cuda+openmp", when="+vtkh+cuda+openmp")
+    depends_on("vtk-h@develop+cuda~openmp", when="+vtkh+cuda~openmp")
+
+    depends_on("vtk-h@develop~shared",             when="~shared+vtkh")
+    depends_on("vtk-h@develop~shared~openmp",      when="~shared+vtkh~openmp")
+    depends_on("vtk-h@develop~shared+cuda",        when="~shared+vtkh+cuda")
+    depends_on("vtk-h@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
 
     # mfem
     depends_on("mfem+shared+mpi+conduit", when="+shared+mfem+mpi")
@@ -178,8 +180,8 @@ class Ascent(Package):
                          create=True):
             cmake_args = ["-DASCENT_DIR={0}".format(install_prefix),
                           "-DCONDUIT_DIR={0}".format(spec['conduit'].prefix),
-                          "-DVTKM_DIR={0}".format(spec['vtkm'].prefix),
-                          "-DVTKH_DIR={0}".format(spec['vtkh'].prefix),
+                          "-DVTKM_DIR={0}".format(spec['vtk-m'].prefix),
+                          "-DVTKH_DIR={0}".format(spec['vtk-h'].prefix),
                           example_src_dir]
             cmake(*cmake_args)
             make()
@@ -396,10 +398,10 @@ class Ascent(Package):
 
         if "+vtkh" in spec:
             cfg.write("# vtk-m from spack\n")
-            cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
+            cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtk-m'].prefix))
 
             cfg.write("# vtk-h from spack\n")
-            cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
+            cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtk-h'].prefix))
 
         else:
             cfg.write("# vtk-h not built by spack \n")

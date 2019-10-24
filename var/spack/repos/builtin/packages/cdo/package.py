@@ -63,7 +63,7 @@ class Cdo(AutotoolsPackage):
 
     depends_on('hdf5+threadsafe', when='+hdf5')
 
-    depends_on('udunits2', when='+udunits2')
+    depends_on('udunits', when='+udunits2')
     depends_on('libxml2', when='+libxml2')
     depends_on('proj@:5', when='+proj')
     depends_on('curl', when='+curl')

@@ -12,11 +12,9 @@ class DotnetCoreSdk(Package):
     applications for all types of infrastructure."""
 
     homepage = "https://www.microsoft.com/net/"
-    url      = "https://github.com/dotnet/core/"
 
     version('2.1.300',
-            url='https://download.microsoft.com/download/8/8/5/88544F33-836A'
-                '-49A5-8B67-451C24709A8F/dotnet-sdk-2.1.300-linux-x64.tar.gz',
+            url='https://download.microsoft.com/download/8/8/5/88544F33-836A-49A5-8B67-451C24709A8F/dotnet-sdk-2.1.300-linux-x64.tar.gz',
             sha256='fabca4c8825182ff18e5a2f82dfe75aecd10260ee9e7c85a8c4b3d108e5d8e1b')
 
     variant('telemetry', default=False,

@@ -27,7 +27,7 @@ class FluxCore(AutotoolsPackage):
     variant('docs', default=False, description='Build flux manpages')
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
-    depends_on("zeromq@4.0.4:")
+    depends_on("libzmq@4.0.4:")
     depends_on("czmq")
     depends_on("czmq@2.2:3.99", when="@0.1:0.6.99")
     depends_on("czmq@3.0.1:", when="@0.7:,master")

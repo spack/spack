@@ -16,9 +16,9 @@ class Autofact(Package):
     version('3_4', sha256='1465d263b19adb42f01f6e636ac40ef1c2e3dbd63461f977b89da9493fe9c6f4')
 
     depends_on('perl', type='run')
-    depends_on('perl-bio-perl', type='run')
+    depends_on('perl-bioperl', type='run')
     depends_on('perl-io-string', type='run')
-    depends_on('perl-lwp', type='run')
+    depends_on('perl-libwww-perl', type='run')
     depends_on('blast-legacy', type='run')
 
     def patch(self):

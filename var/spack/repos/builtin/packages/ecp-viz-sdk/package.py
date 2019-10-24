@@ -37,7 +37,7 @@ class EcpVizSdk(CMakePackage):
     depends_on('paraview', when='+paraview')
     depends_on('sz', when='+sz')
     depends_on('visit', when='+visit')
-    depends_on('vtkm', when='+vtkm')
+    depends_on('vtk-m', when='+vtkm')
     depends_on('zfp', when='+zfp')
 
     def cmake_args(self):

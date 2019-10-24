@@ -17,7 +17,7 @@ class Thrift(Package):
     """
 
     homepage = "http://thrift.apache.org"
-    url      = "http://apache.mirrors.ionfish.org/thrift/0.9.2/thrift-0.9.2.tar.gz"
+    url      = "http://apache.mirrors.ionfish.org/thrift/0.11.0/thrift-0.11.0.tar.gz"
 
     version('0.11.0', sha256='c4ad38b6cb4a3498310d405a91fef37b9a8e79a50cd0968148ee2524d2fa60c2')
     version('0.10.0', sha256='2289d02de6e8db04cbbabb921aeb62bfe3098c4c83f36eec6c31194301efa10b')

@@ -25,7 +25,7 @@ class Cmor(AutotoolsPackage):
 
     depends_on('uuid')
     depends_on('netcdf')
-    depends_on('udunits2')
+    depends_on('udunits')
     depends_on('hdf5@:1.8.19')
 
     extends('python', when='+python')

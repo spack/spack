@@ -17,7 +17,7 @@ class Guidance(MakefilePackage):
     version('2.02', sha256='825e105dde526759fb5bda1cd539b24db0b90b8b586f26b1df74d9c5abaa7844')
 
     depends_on('perl', type=('build', 'run'))
-    depends_on('perl-bio-perl', type=('build', 'run'))
+    depends_on('perl-bioperl', type=('build', 'run'))
     depends_on('ruby')
     depends_on('prank')
     depends_on('clustalw')

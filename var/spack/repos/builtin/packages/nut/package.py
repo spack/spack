@@ -13,7 +13,7 @@ class Nut(CMakePackage):
     and performance issues."""
 
     homepage = "https://github.com/lanl/NuT"
-    url      = "https://github.com/lanl/NuT/archive/0.1.0.tar.gz"
+    url      = "https://github.com/lanl/NuT/archive/0.1.1.tar.gz"
     git      = "https://github.com/lanl/NuT.git"
 
     tags = ['proxy-app']

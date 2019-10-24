@@ -33,7 +33,7 @@ class Nco(AutotoolsPackage):
     depends_on('netcdf')
     depends_on('antlr@2.7.7+cxx')  # required for ncap2
     depends_on('gsl')              # desirable for ncap2
-    depends_on('udunits2')         # allows dimensional unit transformations
+    depends_on('udunits')          # allows dimensional unit transformations
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')
@@ -50,4 +50,4 @@ class Nco(AutotoolsPackage):
         spack_env.set('NETCDF_INC', spec['netcdf'].prefix.include)
         spack_env.set('NETCDF_LIB', spec['netcdf'].prefix.lib)
         spack_env.set('ANTLR_ROOT', spec['antlr'].prefix)
-        spack_env.set('UDUNITS2_PATH', spec['udunits2'].prefix)
+        spack_env.set('UDUNITS2_PATH', spec['udunits'].prefix)

@@ -12,13 +12,9 @@ class Channelflow(CMakePackage):
     """
 
     homepage = 'https://github.com/epfl-ecps/channelflow'
-    url = 'https://github.com/epfl-ecps/channelflow.git'
+    git      = 'https://github.com/epfl-ecps/channelflow.git'
 
-    version(
-        'develop',
-        git='https://github.com/epfl-ecps/channelflow.git',
-        branch='master'
-    )
+    version('master', branch='master')
 
     variant('shared', default=True, description='Build shared libs')
     variant('mpi', default=True, description='Enable MPI parallelism')
