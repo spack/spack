@@ -325,7 +325,7 @@ class URLFetchStrategy(FetchStrategy):
         # truncating the digest to avoid creating a directory with too many
         # entries
         return os.path.sep.join(
-            ['archive', _global_dir(self.digest), self.digest])
+            ['archive', self.digest[:2], self.digest])
 
     @_needs_stage
     def fetch(self):
@@ -782,11 +782,11 @@ class GitFetchStrategy(VCSFetchStrategy):
         return self.commit or self.tag
 
     def mirror_id(self):
-        id = _hash(self.url)
         repo_ref = self.commit or self.tag or self.branch
         if repo_ref:
-            id += "-" + repo_ref
-        return os.path.sep.join(['git', _global_dir(id), id])
+            repo_path = url_util.parse(self.url).path
+            result = os.path.sep.join(['git', repo_path, repo_ref])
+            return result
 
     def get_source_id(self):
         if not self.branch:
@@ -970,10 +970,10 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return info.find('entry/commit').get('revision')
 
     def mirror_id(self):
-        id = _hash(self.url)
         if self.revision:
-            id += "-" + self.revision
-        return os.path.sep.join(['svn', _global_dir(id), id])
+            repo_path = url_util.parse(self.url).path
+            result = os.path.sep.join(['svn', repo_path, self.revision])
+            return result
 
     @_needs_stage
     def fetch(self):
@@ -1079,10 +1079,10 @@ class HgFetchStrategy(VCSFetchStrategy):
         return self.revision
 
     def mirror_id(self):
-        id = _hash(self.url)
         if self.revision:
-            id += "-" + self.revision
-        return os.path.sep.join(['hg', _global_dir(id), id])
+            repo_path = url_util.parse(self.url).path
+            result = os.path.sep.join(['hg', repo_path, self.revision])
+            return result
 
     def get_source_id(self):
         output = self.hg('id', self.url, output=str)
