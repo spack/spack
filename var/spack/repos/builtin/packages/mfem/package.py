@@ -295,6 +295,9 @@ class Mfem(Package):
                         'MFEM_USE_RAJA=%s' % yes_no('+raja')]
 
         cxxflags = spec.compiler_flags['cxxflags']
+        if self.spec.satisfies('@4.0:'):
+            cxxflags.append(self.compiler.cxx11_flag)
+
         if cxxflags:
             # The cxxflags are set by the spack c++ compiler wrapper. We also
             # set CXXFLAGS explicitly, for clarity, and to properly export the
