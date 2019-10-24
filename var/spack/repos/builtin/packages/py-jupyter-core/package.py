@@ -10,8 +10,9 @@ class PyJupyterCore(PythonPackage):
     """Core Jupyter functionality"""
 
     homepage = "http://jupyter-core.readthedocs.io/"
-    url      = "https://github.com/jupyter/jupyter_core/archive/4.2.0.tar.gz"
+    url      = "https://pypi.io/packages/source/j/jupyter-core/jupyter_core-1.17.2.tar.gz"
 
+    version('4.6.0', sha256='85103cee6548992780912c1a0a9ec2583a4a18f1ef79a248ec0db4446500bce3')
     version('4.4.0', sha256='a3c693cb4cd1251f887f034eba4b74e5ad1beab5baef43cc3ae9387450e72367')
     version('4.2.0', sha256='ca2db4bc44b870ad9039bfdcad81bb0466e6bf0e6e2e03626815977ee73dc7a7')
     version('4.1.1', sha256='1908dd9eceb8994c1f0b1bb81c20a52dbb01692e4f1fdf5d12e04846b94eb05c')
@@ -25,4 +26,5 @@ class PyJupyterCore(PythonPackage):
     version('4.0',   sha256='2b491a5da687ffab4e5702e37d3cb8b6b184cd46520cae9c459bdb1fd144f026')
 
     depends_on('python@2.7:2.8,3.3:')
+    depends_on('py-setuptools', type='build')
     depends_on('py-traitlets', type=('build', 'run'))
