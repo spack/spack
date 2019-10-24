@@ -15,7 +15,6 @@ import spack.config
 import spack.fetch_strategy
 import spack.util.file_cache
 import spack.util.path
-import spack.util.url as url_util
 
 
 def _misc_cache():
